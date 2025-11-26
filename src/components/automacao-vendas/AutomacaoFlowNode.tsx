@@ -219,13 +219,13 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
               title="Não"
             />
           </>
-        ) : (data as any).type !== "fim" ? (
+        ) : (
           <Handle 
             type="source" 
             position={Position.Bottom} 
             className="!bg-primary !w-3 !h-3 !border-2 !border-white" 
           />
-        ) : null}
+        )}
       </Card>
 
       {/* Dialog de confirmação de exclusão */}

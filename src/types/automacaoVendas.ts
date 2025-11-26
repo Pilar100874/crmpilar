@@ -2,7 +2,6 @@ export type AutomacaoVendasBlockType =
   // Blocos de sistema
   | "inicio"
   | "iniciar_validacao"
-  | "fim"
   // Blocos de condição
   | "condicao_se"
   | "condicao_valor"
@@ -281,13 +280,5 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     defaultData: {
       tipoAplicacao: "automatico",
     },
-  },
-  {
-    type: "fim",
-    label: "Fim",
-    description: "Fim da automação",
-    icon: "Square",
-    color: "#6b7280",
-    category: "sistema",
   },
 ];
