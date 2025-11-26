@@ -263,6 +263,17 @@ function EditorRegrasContent() {
     [setEdges]
   );
 
+  const onEdgesDelete = useCallback(
+    (edgesToDelete: Edge[]) => {
+      setHasUnsavedChanges(true);
+      toast({
+        title: "Conexão excluída",
+        description: "Conexão removida com sucesso!",
+      });
+    },
+    []
+  );
+
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
@@ -589,6 +600,7 @@ function EditorRegrasContent() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onEdgesDelete={onEdgesDelete}
             onInit={setReactFlowInstance}
             onDrop={onDrop}
             onDragOver={onDragOver}
@@ -596,6 +608,9 @@ function EditorRegrasContent() {
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
             defaultViewport={{ x: 0, y: 0, zoom: 0.33 }}
+            deleteKeyCode="Delete"
+            multiSelectionKeyCode="Shift"
+            selectNodesOnDrag={false}
             className="bg-background"
               defaultEdgeOptions={{
                 animated: true,
