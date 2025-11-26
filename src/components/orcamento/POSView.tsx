@@ -678,17 +678,46 @@ export default function POSView({
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-foreground">Itens do Conjunto</h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setConjuntoSelecionado(null);
-                      setConjuntoItens([]);
-                    }}
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Fechar
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => {
+                        const itensComQuantidade = conjuntoItens.filter(item => item.quantidade > 0 && item.preco > 0);
+                        if (itensComQuantidade.length === 0) {
+                          toast.error("Nenhum item com quantidade e preço preenchidos");
+                          return;
+                        }
+                        
+                        itensComQuantidade.forEach(item => {
+                          const produto = produtos.find(p => p.id === item.produto_id);
+                          if (produto) {
+                            for (let i = 0; i < item.quantidade; i++) {
+                              addToCart(produto);
+                            }
+                          }
+                        });
+                        
+                        toast.success(`${itensComQuantidade.length} item(ns) adicionado(s) ao carrinho`);
+                        setConjuntoSelecionado(null);
+                        setConjuntoItens([]);
+                      }}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Adicionar Todos
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setConjuntoSelecionado(null);
+                        setConjuntoItens([]);
+                      }}
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Fechar
+                    </Button>
+                  </div>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
