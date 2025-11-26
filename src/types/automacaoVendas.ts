@@ -19,6 +19,7 @@ export type AutomacaoVendasBlockType =
   | "desconto_tempo_desde_ultimo"
   | "validar_empresa"
   | "validar_usuario"
+  | "validar_produto"
   // Blocos de lógica
   | "logica_e"
   | "logica_ou"
@@ -150,7 +151,7 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
   },
   {
     type: "desconto_valor_compra",
-    label: "Desconto Percentual",
+    label: "Desconto em Percentual no total do orçamento",
     description: "Aplica desconto percentual diretamente no valor total (sem validação de valor mínimo)",
     icon: "Percent",
     color: "#3b82f6",
@@ -277,6 +278,17 @@ export const AUTOMACAO_VENDAS_BLOCKS: BlockDefinition[] = [
     category: "condicao",
     defaultData: {
       usuarioId: "",
+    },
+  },
+  {
+    type: "validar_produto",
+    label: "Validar Produto",
+    description: "Valida se o orçamento contém um produto específico",
+    icon: "Package",
+    color: "#f59e0b",
+    category: "condicao",
+    defaultData: {
+      produtoId: "",
     },
   },
   {
