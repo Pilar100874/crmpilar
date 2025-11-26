@@ -44,6 +44,8 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
   const [editingConjunto, setEditingConjunto] = useState<{ id: string; nome: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"nome" | "created_at">("nome");
+  const [itemSearchQuery, setItemSearchQuery] = useState("");
+  const [itemSortBy, setItemSortBy] = useState<"nome" | "quantidade" | "preco">("nome");
 
   useEffect(() => {
     if (open) {
@@ -148,6 +150,8 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
     setItems([]);
     setShowNewForm(false);
     setFormData({ nome: "", descricao: "" });
+    setItemSearchQuery("");
+    setItemSortBy("nome");
     onClose();
   };
 
@@ -400,31 +404,63 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Preencha as quantidades e preços dos itens:
-              </p>
+            <div className="flex items-center justify-between gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Pesquisar produtos..."
+                  value={itemSearchQuery}
+                  onChange={(e) => setItemSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={itemSortBy} onValueChange={(value: "nome" | "quantidade" | "preco") => setItemSortBy(value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nome">Nome (A-Z)</SelectItem>
+                  <SelectItem value="quantidade">Quantidade</SelectItem>
+                  <SelectItem value="preco">Preço</SelectItem>
+                </SelectContent>
+              </Select>
               <Button variant="outline" size="sm" onClick={() => setSelectedConjunto(null)}>
                 Voltar
               </Button>
             </div>
 
-            {items.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Este conjunto não possui itens cadastrados.
-              </div>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Produto</TableHead>
-                      <TableHead className="w-32">Quantidade</TableHead>
-                      <TableHead className="w-32">Preço Unit.</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {items.map((item) => (
+            {(() => {
+              let filteredItems = items.filter(item =>
+                item.produto?.nome.toLowerCase().includes(itemSearchQuery.toLowerCase())
+              );
+
+              // Ordenar itens
+              filteredItems = [...filteredItems].sort((a, b) => {
+                if (itemSortBy === "nome") {
+                  return (a.produto?.nome || "").localeCompare(b.produto?.nome || "");
+                } else if (itemSortBy === "quantidade") {
+                  return b.quantidade - a.quantidade;
+                } else {
+                  return b.preco - a.preco;
+                }
+              });
+
+              return filteredItems.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {itemSearchQuery ? "Nenhum produto encontrado com esse nome." : "Este conjunto não possui itens cadastrados."}
+                </div>
+              ) : (
+                <>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Produto</TableHead>
+                        <TableHead className="w-32">Quantidade</TableHead>
+                        <TableHead className="w-32">Preço Unit.</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredItems.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">
                           {item.produto?.nome}
@@ -465,7 +501,8 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
                   </Button>
                 </div>
               </>
-            )}
+              );
+            })()}
           </div>
         )}
       </DialogContent>
