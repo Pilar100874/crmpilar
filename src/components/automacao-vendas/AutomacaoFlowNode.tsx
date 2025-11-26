@@ -126,16 +126,51 @@ export const AutomacaoFlowNode = memo(({ data, selected, id }: NodeProps) => {
             📝 {String(note)}
           </div>
         )}
+
+        {/* Mostrar faixas para desconto_por_total_pedido */}
+        {(data as any).type === "desconto_por_total_pedido" && (data as any).config?.faixas && (
+          <div className="mt-2 pt-2 border-t border-slate-200">
+            <div className="text-xs font-medium text-slate-600 mb-1">Faixas de Valor:</div>
+            <div className="space-y-1">
+              {((data as any).config.faixas || []).map((faixa: any, index: number) => (
+                <div key={index} className="text-xs text-slate-500 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  {faixa.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         </div>
 
-        {/* Handle inferior - não renderizar para bloco fim */}
-        {(data as any).type !== "fim" && (
+        {/* Handle inferior - renderizar múltiplas saídas para desconto_por_total_pedido */}
+        {(data as any).type === "desconto_por_total_pedido" ? (
+          <>
+            {((data as any).config?.faixas || []).map((faixa: any, index: number) => {
+              const totalFaixas = ((data as any).config?.faixas || []).length;
+              const step = 100 / (totalFaixas + 1);
+              const left = step * (index + 1);
+              
+              return (
+                <Handle
+                  key={`faixa-${index}`}
+                  type="source"
+                  position={Position.Bottom}
+                  id={`faixa-${index}`}
+                  className="!bg-primary !w-3 !h-3 !border-2 !border-white"
+                  style={{ left: `${left}%` }}
+                  title={faixa.label}
+                />
+              );
+            })}
+          </>
+        ) : (data as any).type !== "fim" ? (
           <Handle 
             type="source" 
             position={Position.Bottom} 
             className="!bg-primary !w-3 !h-3 !border-2 !border-white" 
           />
-        )}
+        ) : null}
       </Card>
 
       {/* Dialog de confirmação de exclusão */}
