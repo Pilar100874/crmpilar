@@ -174,6 +174,17 @@ export default function PedagioAPIConfigCRUD({ estabelecimentoId }: PedagioAPICo
 
     setSaving(true);
     try {
+      // Se está ativando, desativa todos os outros primeiro
+      if (ativo) {
+        const otherActiveConfigs = configs.filter(c => c.id !== editingId && c.ativo);
+        for (const otherConfig of otherActiveConfigs) {
+          await (supabase as any)
+            .from("pedagio_api_config")
+            .update({ ativo: false })
+            .eq("id", otherConfig.id);
+        }
+      }
+
       const payload = {
         estabelecimento_id: estabelecimentoId,
         provider: selectedProvider,
@@ -219,6 +230,17 @@ export default function PedagioAPIConfigCRUD({ estabelecimentoId }: PedagioAPICo
 
   const handleToggleAtivo = async (config: PedagioConfig) => {
     try {
+      // Se está ativando, desativa todos os outros primeiro
+      if (!config.ativo) {
+        const otherActiveConfigs = configs.filter(c => c.id !== config.id && c.ativo);
+        for (const otherConfig of otherActiveConfigs) {
+          await (supabase as any)
+            .from("pedagio_api_config")
+            .update({ ativo: false })
+            .eq("id", otherConfig.id);
+        }
+      }
+
       const { error } = await (supabase as any)
         .from("pedagio_api_config")
         .update({ ativo: !config.ativo })
