@@ -151,29 +151,6 @@ export function PedagioDetailsDialog({ open, onClose, pedagioData }: PedagioDeta
               </div>
             </div>
 
-            {/* Total */}
-            <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Truck className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Total da Viagem (Ida + Volta)</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 mt-4">
-                <div className="text-center p-2 bg-background rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Distância Total</p>
-                  <p className="text-lg font-semibold">{pedagioData.distanciaTotalKm.toFixed(1)} km</p>
-                </div>
-                <div className="text-center p-2 bg-background rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Tempo Total</p>
-                  <p className="text-lg font-semibold">{formatTime(pedagioData.tempoTotalMin)}</p>
-                </div>
-                <div className="text-center p-2 bg-background rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Pedágio Total</p>
-                  <p className="text-lg font-semibold text-primary">{formatCurrency(pedagioData.total)}</p>
-                </div>
-              </div>
-            </div>
           </div>
         </ScrollArea>
       </DialogContent>
