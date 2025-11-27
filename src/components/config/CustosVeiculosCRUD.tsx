@@ -501,11 +501,11 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
                       <TableCell className="text-xs text-right">{v.consumo_cidade} km/l</TableCell>
                       <TableCell className="text-xs text-right">{v.consumo_estrada} km/l</TableCell>
                       <TableCell className="text-xs text-right">{v.peso_maximo_kg.toLocaleString()} kg</TableCell>
-                      <TableCell className="text-xs text-right">R$ {v.custo_manutencao_mensal.toFixed(2)}</TableCell>
-                      <TableCell className="text-xs text-right">R$ {v.custo_funcionario_mensal.toFixed(2)}</TableCell>
-                      <TableCell className="text-xs text-right">R$ {v.valor_ajudante.toFixed(2)}</TableCell>
-                      <TableCell className="text-xs text-right">R$ {v.valor_refeicao.toFixed(2)}</TableCell>
-                      <TableCell className="text-xs text-right">R$ {v.extras.toFixed(2)}</TableCell>
+                      <TableCell className="text-xs text-right">{v.custo_manutencao_mensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                      <TableCell className="text-xs text-right">{v.custo_funcionario_mensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                      <TableCell className="text-xs text-right">{v.valor_ajudante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                      <TableCell className="text-xs text-right">{v.valor_refeicao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                      <TableCell className="text-xs text-right">{v.extras.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           <Button
