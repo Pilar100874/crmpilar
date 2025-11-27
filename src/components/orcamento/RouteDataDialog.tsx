@@ -6,9 +6,13 @@ import {
   Code, 
   MapPin, 
   Navigation,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface RouteDataDialogProps {
   open: boolean;
@@ -29,6 +33,8 @@ export function RouteDataDialog({
   origemEndereco,
   destinoEndereco
 }: RouteDataDialogProps) {
+  const [copied, setCopied] = useState(false);
+
   const getGoogleMapsUrl = () => {
     // Prefer addresses over coordinates for better Google Maps results
     if (origemEndereco && destinoEndereco) {
@@ -44,6 +50,19 @@ export function RouteDataDialog({
   };
 
   const googleMapsUrl = getGoogleMapsUrl();
+
+  const copyToClipboard = async () => {
+    if (googleMapsUrl) {
+      try {
+        await navigator.clipboard.writeText(googleMapsUrl);
+        setCopied(true);
+        toast.success("Link copiado! Cole em uma nova aba do navegador.");
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        toast.error("Erro ao copiar link");
+      }
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -65,27 +84,40 @@ export function RouteDataDialog({
           <TabsContent value="summary" className="mt-4">
             <div className="space-y-4">
               {/* Ações rápidas */}
-              <div className="flex gap-2">
-                {googleMapsUrl ? (
-                  <a 
-                    href={googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Abrir no Google Maps
-                  </a>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    disabled
-                    className="gap-2"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Abrir no Google Maps
-                  </Button>
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  {googleMapsUrl ? (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={copyToClipboard}
+                        className="gap-2"
+                      >
+                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {copied ? "Copiado!" : "Copiar Link"}
+                      </Button>
+                      <a 
+                        href={googleMapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Abrir no Google Maps
+                      </a>
+                    </>
+                  ) : (
+                    <Button variant="outline" size="sm" disabled className="gap-2">
+                      <ExternalLink className="w-4 h-4" />
+                      Google Maps indisponível
+                    </Button>
+                  )}
+                </div>
+                {googleMapsUrl && (
+                  <p className="text-xs text-muted-foreground">
+                    Se o link não abrir, copie e cole em uma nova aba do navegador.
+                  </p>
                 )}
               </div>
 
