@@ -1,8 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface RouteInfo {
   distance: number; // km
   duration: number; // minutes
+}
+
+interface RouteCache {
+  origemCep: string;
+  destinoCep: string;
+  idaEVolta: boolean;
+  routeInfo: RouteInfo;
 }
 
 // Get address details from CEP using ViaCEP
@@ -84,62 +91,104 @@ export function useRouteCalculation(
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const cacheRef = useRef<RouteCache | null>(null);
+  const lastCalculationRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    const calculateRoute = async () => {
-      if ((!origemEndereco && !origemCep) || (!destinoEndereco && !destinoCep)) {
+  const calculateRoute = useCallback(async () => {
+    if ((!origemEndereco && !origemCep) || (!destinoEndereco && !destinoCep)) {
+      setRouteInfo(null);
+      return;
+    }
+
+    const cleanOrigemCep = origemCep?.replace(/\D/g, '') || '';
+    const cleanDestinoCep = destinoCep?.replace(/\D/g, '') || '';
+    
+    // Create a unique key for this calculation
+    const calculationKey = `${cleanOrigemCep}-${cleanDestinoCep}`;
+    
+    // Check cache - only recalculate if CEPs changed
+    if (cacheRef.current && 
+        cacheRef.current.origemCep === cleanOrigemCep && 
+        cacheRef.current.destinoCep === cleanDestinoCep) {
+      // Same route, just adjust for ida e volta
+      const cachedBase = cacheRef.current.routeInfo;
+      const baseDistance = cacheRef.current.idaEVolta ? cachedBase.distance / 2 : cachedBase.distance;
+      const baseDuration = cacheRef.current.idaEVolta ? cachedBase.duration / 2 : cachedBase.duration;
+      
+      const multiplier = idaEVolta ? 2 : 1;
+      setRouteInfo({
+        distance: baseDistance * multiplier,
+        duration: baseDuration * multiplier
+      });
+      return;
+    }
+
+    // Prevent duplicate calculations
+    if (lastCalculationRef.current === calculationKey && loading) {
+      return;
+    }
+    
+    lastCalculationRef.current = calculationKey;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const origemCoords = await geocodeAddress(origemEndereco || '', origemCep || undefined);
+      const destinoCoords = await geocodeAddress(destinoEndereco || '', destinoCep || undefined);
+
+      if (!origemCoords) {
+        setError('Não foi possível localizar o endereço de origem');
         setRouteInfo(null);
+        setLoading(false);
         return;
       }
 
-      setLoading(true);
-      setError(null);
-
-      try {
-        const origemCoords = await geocodeAddress(origemEndereco || '', origemCep || undefined);
-        const destinoCoords = await geocodeAddress(destinoEndereco || '', destinoCep || undefined);
-
-        if (!origemCoords) {
-          setError('Não foi possível localizar o endereço de origem');
-          setRouteInfo(null);
-          setLoading(false);
-          return;
-        }
-
-        if (!destinoCoords) {
-          setError('Não foi possível localizar o endereço de destino');
-          setRouteInfo(null);
-          setLoading(false);
-          return;
-        }
-
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origemCoords.lng},${origemCoords.lat};${destinoCoords.lng},${destinoCoords.lat}?overview=false`;
-        
-        const response = await fetch(osrmUrl);
-        const data = await response.json();
-
-        if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
-          const route = data.routes[0];
-          const multiplier = idaEVolta ? 2 : 1;
-          setRouteInfo({
-            distance: (route.distance / 1000) * multiplier, // km
-            duration: (route.duration / 60) * multiplier, // minutes
-          });
-        } else {
-          setError('Não foi possível calcular a rota');
-          setRouteInfo(null);
-        }
-      } catch (error) {
-        console.error('Route calculation error:', error);
-        setError('Erro ao calcular rota');
+      if (!destinoCoords) {
+        setError('Não foi possível localizar o endereço de destino');
         setRouteInfo(null);
+        setLoading(false);
+        return;
       }
 
-      setLoading(false);
-    };
+      const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origemCoords.lng},${origemCoords.lat};${destinoCoords.lng},${destinoCoords.lat}?overview=false`;
+      
+      const response = await fetch(osrmUrl);
+      const data = await response.json();
 
-    calculateRoute();
+      if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        const multiplier = idaEVolta ? 2 : 1;
+        const newRouteInfo = {
+          distance: (route.distance / 1000) * multiplier, // km
+          duration: (route.duration / 60) * multiplier, // minutes
+        };
+        
+        // Cache the result (store as one-way for easier recalculation)
+        cacheRef.current = {
+          origemCep: cleanOrigemCep,
+          destinoCep: cleanDestinoCep,
+          idaEVolta,
+          routeInfo: newRouteInfo
+        };
+        
+        setRouteInfo(newRouteInfo);
+      } else {
+        setError('Não foi possível calcular a rota');
+        setRouteInfo(null);
+      }
+    } catch (error) {
+      console.error('Route calculation error:', error);
+      setError('Erro ao calcular rota');
+      setRouteInfo(null);
+    }
+
+    setLoading(false);
   }, [origemEndereco, destinoEndereco, origemCep, destinoCep, idaEVolta]);
+
+  // Only recalculate when CEPs change or idaEVolta toggles
+  useEffect(() => {
+    calculateRoute();
+  }, [origemCep, destinoCep, idaEVolta]);
 
   return { routeInfo, loading, error };
 }

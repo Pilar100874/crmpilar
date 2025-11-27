@@ -146,10 +146,10 @@ export default function POSView({
   const [freteIdaEVolta, setFreteIdaEVolta] = useState(true);
   const [showRegrasInDetails, setShowRegrasInDetails] = useState(false);
 
-  // Hook para cálculo de pedágio
+  // Hook para cálculo de pedágio (manual)
   const pedagioResult = usePedagioCalculation(estabelecimentoId, selectedEmpresa);
   
-  // Hook para cálculo automático de rota
+  // Hook para cálculo automático de rota (só calcula uma vez por orçamento)
   const { routeInfo: autoRouteInfo, loading: routeLoading } = useRouteCalculation(
     pedagioResult.origemEndereco,
     pedagioResult.destinoEndereco,
@@ -157,6 +157,11 @@ export default function POSView({
     pedagioResult.destinoCep,
     freteIdaEVolta
   );
+
+  // Reset pedágio quando trocar empresa
+  useEffect(() => {
+    pedagioResult.reset();
+  }, [selectedEmpresa]);
 
   useEffect(() => {
     loadProdutos();
@@ -1575,39 +1580,39 @@ export default function POSView({
             <Button
               variant="outline"
               size="sm"
-              className="flex-col h-12 bg-muted/50 border-border/50 hover:bg-muted text-[10px] p-1"
+              className="h-10 bg-muted/50 border-border/50 hover:bg-muted p-1"
               onClick={() => setShowPhotoModal(true)}
+              title="Foto"
             >
-              <Camera className="w-3.5 h-3.5 mb-0.5" />
-              <span>Foto</span>
+              <Camera className="w-4 h-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="flex-col h-12 bg-muted/50 border-border/50 hover:bg-muted text-[10px] p-1"
+              className="h-10 bg-muted/50 border-border/50 hover:bg-muted p-1"
               onClick={() => setShowSuggestionsModal(true)}
+              title="Sugestões"
             >
-              <Lightbulb className="w-3.5 h-3.5 mb-0.5" />
-              <span>Sugestões</span>
+              <Lightbulb className="w-4 h-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="flex-col h-12 bg-muted/50 border-border/50 hover:bg-muted text-[10px] p-1"
+              className="h-10 bg-muted/50 border-border/50 hover:bg-muted p-1"
               onClick={() => setShowShareModal(true)}
               disabled={!shareLink}
+              title="Compartilhar"
             >
-              <Share2 className="w-3.5 h-3.5 mb-0.5" />
-              <span>Compartilhar</span>
+              <Share2 className="w-4 h-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="flex-col h-12 bg-muted/50 border-border/50 hover:bg-muted text-[10px] p-1"
+              className="h-10 bg-muted/50 border-border/50 hover:bg-muted p-1"
               onClick={() => setActiveTab("details")}
+              title="Status"
             >
-              <History className="w-3.5 h-3.5 mb-0.5" />
-              <span>Status</span>
+              <History className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -1798,7 +1803,29 @@ export default function POSView({
                     </span>
                   </div>
                 )}
-                {pedagioResult.loading ? (
+                
+                {/* Botão para calcular pedágio ou mostrar resultado */}
+                {!pedagioResult.calculated ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1"
+                    onClick={() => pedagioResult.calculate()}
+                    disabled={pedagioResult.loading}
+                  >
+                    {pedagioResult.loading ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Calculando...
+                      </>
+                    ) : (
+                      <>
+                        <Truck className="w-3 h-3" />
+                        Ver Pedágios
+                      </>
+                    )}
+                  </Button>
+                ) : pedagioResult.loading ? (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-sm">Calculando...</span>
