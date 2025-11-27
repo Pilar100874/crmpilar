@@ -8,6 +8,8 @@ interface RouteMapEmbedProps {
   destinoCoords: { lat: number; lng: number } | null;
   origemEndereco?: string | null;
   destinoEndereco?: string | null;
+  origemCep?: string | null;
+  destinoCep?: string | null;
 }
 
 // Decode polyline from OSRM (uses polyline encoding algorithm)
@@ -49,37 +51,69 @@ function decodePolyline(encoded: string): [number, number][] {
   return points;
 }
 
-// Geocode address using Nominatim (OpenStreetMap)
-async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', Brasil')}&limit=1`,
-      {
-        headers: {
-          'Accept-Language': 'pt-BR',
-        },
-      }
-    );
-    const data = await response.json();
-    
-    if (data && data.length > 0) {
-      return {
-        lat: parseFloat(data[0].lat),
-        lng: parseFloat(data[0].lon),
-      };
-    }
-    return null;
-  } catch (error) {
-    console.error('Error geocoding address:', error);
-    return null;
+// Geocode address using Nominatim (OpenStreetMap) with multiple strategies
+async function geocodeAddress(address: string, cep?: string): Promise<{ lat: number; lng: number } | null> {
+  const searchQueries: string[] = [];
+  
+  // Strategy 1: Try with CEP first (most accurate)
+  if (cep) {
+    searchQueries.push(`${cep}, Brasil`);
   }
+  
+  // Strategy 2: Full address
+  searchQueries.push(`${address}, Brasil`);
+  
+  // Strategy 3: Simplified address (remove numbers and special chars)
+  const simplified = address
+    .replace(/\d+/g, '')
+    .replace(/,\s*/g, ', ')
+    .trim();
+  if (simplified !== address) {
+    searchQueries.push(`${simplified}, Brasil`);
+  }
+  
+  // Strategy 4: Just city and state
+  const parts = address.split(',').map(p => p.trim());
+  if (parts.length >= 2) {
+    const cityState = parts.slice(-2).join(', ');
+    searchQueries.push(`${cityState}, Brasil`);
+  }
+
+  for (const query of searchQueries) {
+    try {
+      console.log('Trying geocode query:', query);
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=br`,
+        {
+          headers: {
+            'Accept-Language': 'pt-BR',
+          },
+        }
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        console.log('Geocode success for:', query, data[0]);
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+        };
+      }
+    } catch (error) {
+      console.error('Error geocoding address:', query, error);
+    }
+  }
+  
+  return null;
 }
 
 export function RouteMapEmbed({ 
   origemCoords, 
   destinoCoords,
   origemEndereco,
-  destinoEndereco
+  destinoEndereco,
+  origemCep,
+  destinoCep
 }: RouteMapEmbedProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -109,11 +143,11 @@ export function RouteMapEmbed({
         let newDestinoCoords = destinoCoords;
 
         if (!origemCoords && origemEndereco) {
-          newOrigemCoords = await geocodeAddress(origemEndereco);
+          newOrigemCoords = await geocodeAddress(origemEndereco, origemCep || undefined);
         }
 
         if (!destinoCoords && destinoEndereco) {
-          newDestinoCoords = await geocodeAddress(destinoEndereco);
+          newDestinoCoords = await geocodeAddress(destinoEndereco, destinoCep || undefined);
         }
 
         if (newOrigemCoords && newDestinoCoords) {
@@ -128,7 +162,7 @@ export function RouteMapEmbed({
     };
 
     resolveCoordinates();
-  }, [origemCoords, destinoCoords, origemEndereco, destinoEndereco]);
+  }, [origemCoords, destinoCoords, origemEndereco, destinoEndereco, origemCep, destinoCep]);
 
   useEffect(() => {
     if (!mapRef.current || !resolvedOrigemCoords || !resolvedDestinoCoords) return;

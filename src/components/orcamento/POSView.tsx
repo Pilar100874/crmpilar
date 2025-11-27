@@ -2187,6 +2187,8 @@ export default function POSView({
         destinoCoords={pedagioResult.destinoCoords}
         origemEndereco={pedagioResult.origemEndereco}
         destinoEndereco={pedagioResult.destinoEndereco}
+        origemCep={pedagioResult.origemCep}
+        destinoCep={pedagioResult.destinoCep}
       />
     </div>
   );

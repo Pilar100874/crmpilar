@@ -20,6 +20,8 @@ interface RouteDataDialogProps {
   destinoCoords: { lat: number; lng: number } | null;
   origemEndereco?: string | null;
   destinoEndereco?: string | null;
+  origemCep?: string | null;
+  destinoCep?: string | null;
 }
 
 export function RouteDataDialog({ 
@@ -29,7 +31,9 @@ export function RouteDataDialog({
   origemCoords, 
   destinoCoords,
   origemEndereco,
-  destinoEndereco
+  destinoEndereco,
+  origemCep,
+  destinoCep
 }: RouteDataDialogProps) {
   const [copied, setCopied] = useState(false);
 
@@ -85,6 +89,8 @@ export function RouteDataDialog({
               destinoCoords={destinoCoords}
               origemEndereco={origemEndereco}
               destinoEndereco={destinoEndereco}
+              origemCep={origemCep}
+              destinoCep={destinoCep}
             />
           </TabsContent>
 
