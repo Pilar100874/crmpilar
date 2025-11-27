@@ -82,60 +82,67 @@ async function calculateTollGuru(
   destinoCoords: Coords
 ): Promise<{ ida: number; volta: number; error: string | null }> {
   try {
-    // TollGuru API call for outbound trip
-    const idaResponse = await fetch('https://apis.tollguru.com/toll/v2/complete-polyline-from-mapping-service', {
+    // Use origin-destination-pair endpoint (works with basic API keys)
+    const idaResponse = await fetch('https://apis.tollguru.com/toll/v2/origin-destination-pair', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey
       },
       body: JSON.stringify({
-        source: 'here',
         from: { lat: origemCoords.lat, lng: origemCoords.lng },
         to: { lat: destinoCoords.lat, lng: destinoCoords.lng },
-        vehicle: {
-          type: configuracoes?.vehicle_type || '2AxlesAuto'
-        }
+        vehicleType: configuracoes?.vehicle_type || '2AxlesAuto',
+        departure_time: new Date().toISOString()
       })
     });
 
     if (!idaResponse.ok) {
       const errorData = await idaResponse.json().catch(() => ({}));
       console.error('TollGuru ida error:', errorData);
-      return { ida: 0, volta: 0, error: `Erro TollGuru: ${errorData.message || idaResponse.statusText}` };
+      return { ida: 0, volta: 0, error: `Erro TollGuru: ${errorData.message || errorData.error || idaResponse.statusText}` };
     }
 
     const idaData = await idaResponse.json();
     console.log('TollGuru ida response:', JSON.stringify(idaData, null, 2));
     
-    const idaToll = idaData?.route?.costs?.tag || idaData?.route?.costs?.cash || 0;
+    // Extract toll from response - structure may vary
+    const idaToll = idaData?.routes?.[0]?.costs?.tag || 
+                    idaData?.routes?.[0]?.costs?.cash ||
+                    idaData?.summary?.route?.costs?.tag ||
+                    idaData?.summary?.route?.costs?.cash ||
+                    idaData?.costs?.tag ||
+                    idaData?.costs?.cash || 0;
 
-    // TollGuru API call for return trip
-    const voltaResponse = await fetch('https://apis.tollguru.com/toll/v2/complete-polyline-from-mapping-service', {
+    // Calculate return trip
+    const voltaResponse = await fetch('https://apis.tollguru.com/toll/v2/origin-destination-pair', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey
       },
       body: JSON.stringify({
-        source: 'here',
         from: { lat: destinoCoords.lat, lng: destinoCoords.lng },
         to: { lat: origemCoords.lat, lng: origemCoords.lng },
-        vehicle: {
-          type: configuracoes?.vehicle_type || '2AxlesAuto'
-        }
+        vehicleType: configuracoes?.vehicle_type || '2AxlesAuto',
+        departure_time: new Date().toISOString()
       })
     });
 
     if (!voltaResponse.ok) {
       console.error('TollGuru volta error');
-      return { ida: idaToll, volta: idaToll, error: null }; // Use same value for return
+      return { ida: idaToll, volta: idaToll, error: null };
     }
 
     const voltaData = await voltaResponse.json();
     console.log('TollGuru volta response:', JSON.stringify(voltaData, null, 2));
     
-    const voltaToll = voltaData?.route?.costs?.tag || voltaData?.route?.costs?.cash || 0;
+    const voltaToll = voltaData?.routes?.[0]?.costs?.tag || 
+                      voltaData?.routes?.[0]?.costs?.cash ||
+                      voltaData?.summary?.route?.costs?.tag ||
+                      voltaData?.summary?.route?.costs?.cash ||
+                      voltaData?.costs?.tag ||
+                      voltaData?.costs?.cash || 0;
 
     return { ida: idaToll, volta: voltaToll, error: null };
   } catch (error: any) {
