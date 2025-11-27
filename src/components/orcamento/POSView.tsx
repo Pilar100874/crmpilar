@@ -1205,9 +1205,22 @@ export default function POSView({
                 <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
                 Carrinho
               </TabsTrigger>
-              <TabsTrigger value="details" className="data-[state=active]:bg-muted text-xs flex-1">
+              <TabsTrigger value="details" className="data-[state=active]:bg-muted text-xs flex-1 relative">
                 <Tag className="w-3.5 h-3.5 mr-1.5" />
                 Detalhes
+                {regrasAplicadas.length > 0 && (
+                  <span 
+                    className="ml-1.5 w-5 h-5 rounded-full bg-green-500 text-white text-[10px] font-bold flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveTab("details");
+                      setShowRegrasDialog(true);
+                    }}
+                    title={`${regrasAplicadas.length} regra(s) aplicada(s)`}
+                  >
+                    {regrasAplicadas.length}
+                  </span>
+                )}
               </TabsTrigger>
             </TabsList>
             {onToggleClientDetails && (
@@ -1696,21 +1709,11 @@ export default function POSView({
                       currency: 'BRL'
                     }).format(getTotal())}
                   </div>
-                  <div className="text-foreground font-bold text-3xl flex items-center gap-2">
+                  <div className="text-foreground font-bold text-3xl">
                     {new Intl.NumberFormat('pt-BR', {
                       style: 'currency',
                       currency: 'BRL'
                     }).format(valorComRegras)}
-                    <span 
-                      className="w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors"
-                      onClick={() => {
-                        setPedagioDialogDefaultTab("regras");
-                        setShowPedagioDetailsDialog(true);
-                      }}
-                      title={`${regrasAplicadas.length} regra(s) aplicada(s)`}
-                    >
-                      {regrasAplicadas.length}
-                    </span>
                   </div>
                 </>
               ) : (
@@ -1772,7 +1775,11 @@ export default function POSView({
                     {pedagioResult.error && (
                       <div className="flex items-center gap-1 text-yellow-600 mb-2">
                         <AlertCircle className="w-4 h-4" />
-                        <span className="text-xs">{pedagioResult.error}</span>
+                        <span className="text-xs">
+                          {pedagioResult.error.includes('exceeded') || pedagioResult.error.includes('quota') 
+                            ? 'Erro: Créditos de cálculo de frete excedido.' 
+                            : pedagioResult.error}
+                        </span>
                       </div>
                     )}
                     
