@@ -63,7 +63,6 @@ import { cn } from "@/lib/utils";
 import ImageItemExtractor from "./ImageItemExtractor";
 import { ConjuntoSelectorDialog } from "./ConjuntoSelectorDialog";
 import { PedagioDetailsDialog } from "./PedagioDetailsDialog";
-import { RouteDataDialog } from "./RouteDataDialog";
 import {
   Dialog,
   DialogContent,
@@ -78,7 +77,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Info, Map as MapIcon } from "lucide-react";
+import { Info } from "lucide-react";
 
 interface POSViewProps {
   estabelecimentoId: string;
@@ -143,7 +142,6 @@ export default function POSView({
   const [gruposQuantities, setGruposQuantities] = useState<Map<string, number>>(new Map());
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
   const [showPedagioDetailsDialog, setShowPedagioDetailsDialog] = useState(false);
-  const [showRouteDataDialog, setShowRouteDataDialog] = useState(false);
   const [freteIdaEVolta, setFreteIdaEVolta] = useState(true);
 
   // Hook para cálculo de pedágio
@@ -1844,17 +1842,6 @@ export default function POSView({
                           Detalhes
                         </Button>
                       )}
-                      {(pedagioResult.origemEndereco || pedagioResult.destinoEndereco) && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs gap-1"
-                          onClick={() => setShowRouteDataDialog(true)}
-                        >
-                          <MapIcon className="w-3 h-3" />
-                          Rota
-                        </Button>
-                      )}
                     </div>
                   </div>
                 )}
@@ -2195,18 +2182,6 @@ export default function POSView({
         }}
       />
 
-      {/* Diálogo de Dados da Rota */}
-      <RouteDataDialog
-        open={showRouteDataDialog}
-        onClose={() => setShowRouteDataDialog(false)}
-        rawResponse={pedagioResult.rawResponse}
-        origemCoords={pedagioResult.origemCoords}
-        destinoCoords={pedagioResult.destinoCoords}
-        origemEndereco={pedagioResult.origemEndereco}
-        destinoEndereco={pedagioResult.destinoEndereco}
-        origemCep={pedagioResult.origemCep}
-        destinoCep={pedagioResult.destinoCep}
-      />
     </div>
   );
 }
