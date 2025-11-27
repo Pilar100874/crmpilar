@@ -175,11 +175,16 @@ async function calculatePedagioBR(
   try {
     // API calcularpedagio.com.br uses coordinates
     // Documentation: https://www.calcularpedagio.com.br/documentacao
+    // Clean API key - remove "Bearer " prefix if present
+    const cleanApiKey = apiKey.replace(/^Bearer\s+/i, '');
+    
+    console.log('Calling calcularpedagio API with Authorization Bearer');
+    
     const idaResponse = await fetch('https://www.calcularpedagio.com.br/api/coordenadas/v3', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'api_key': apiKey
+        'Authorization': `Bearer ${cleanApiKey}`
       },
       body: JSON.stringify({
         pontos: [
@@ -190,9 +195,9 @@ async function calculatePedagioBR(
     });
 
     if (!idaResponse.ok) {
-      const errorText = await idaResponse.text().catch(() => '');
-      console.error('CalcularPedagio ida error:', errorText);
-      return { ida: 0, volta: 0, error: `Erro API: ${idaResponse.status} - ${errorText || idaResponse.statusText}` };
+      const errorData = await idaResponse.json().catch(() => ({}));
+      console.error('CalcularPedagio ida error:', JSON.stringify(errorData));
+      return { ida: 0, volta: 0, error: `Erro API: ${errorData.error || errorData.message || idaResponse.statusText}` };
     }
 
     const idaData = await idaResponse.json();
@@ -212,7 +217,7 @@ async function calculatePedagioBR(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'api_key': apiKey
+        'Authorization': `Bearer ${cleanApiKey}`
       },
       body: JSON.stringify({
         pontos: [
