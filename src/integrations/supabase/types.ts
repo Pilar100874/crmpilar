@@ -6242,6 +6242,7 @@ export type Database = {
           extras: number | null
           id: string
           observacoes: string | null
+          peso_maximo_kg: number | null
           tipo_combustivel: string
           tipo_veiculo: string
           updated_at: string
@@ -6258,6 +6259,7 @@ export type Database = {
           extras?: number | null
           id?: string
           observacoes?: string | null
+          peso_maximo_kg?: number | null
           tipo_combustivel?: string
           tipo_veiculo: string
           updated_at?: string
@@ -6274,6 +6276,7 @@ export type Database = {
           extras?: number | null
           id?: string
           observacoes?: string | null
+          peso_maximo_kg?: number | null
           tipo_combustivel?: string
           tipo_veiculo?: string
           updated_at?: string
