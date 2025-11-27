@@ -31,7 +31,8 @@ export function RouteDataDialog({
 }: RouteDataDialogProps) {
   const getGoogleMapsUrl = () => {
     if (origemCoords && destinoCoords) {
-      return `https://www.google.com/maps/dir/?api=1&origin=${origemCoords.lat},${origemCoords.lng}&destination=${destinoCoords.lat},${destinoCoords.lng}&travelmode=driving`;
+      // Using the older saddr/daddr format which is more reliable
+      return `https://maps.google.com/maps?saddr=${origemCoords.lat},${origemCoords.lng}&daddr=${destinoCoords.lat},${destinoCoords.lng}`;
     }
     return null;
   };
