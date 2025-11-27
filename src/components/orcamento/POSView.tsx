@@ -143,6 +143,7 @@ export default function POSView({
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
   const [showPedagioDetailsDialog, setShowPedagioDetailsDialog] = useState(false);
   const [showRouteDataDialog, setShowRouteDataDialog] = useState(false);
+  const [mapRouteInfo, setMapRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
 
   // Hook para cálculo de pedágio
   const pedagioResult = usePedagioCalculation(estabelecimentoId, selectedEmpresa);
@@ -1728,6 +1729,19 @@ export default function POSView({
                   <Truck className="w-3 h-3" />
                   <span>Rota & Pedágio</span>
                 </div>
+                {/* Mostrar distância e tempo do mapa se disponível */}
+                {mapRouteInfo && (
+                  <div className="flex items-center gap-3 text-xs mb-1">
+                    <span className="text-muted-foreground">
+                      <span className="font-medium text-foreground">{mapRouteInfo.distance.toFixed(1)} km</span>
+                    </span>
+                    <span className="text-muted-foreground">
+                      <span className="font-medium text-foreground">
+                        {Math.floor(mapRouteInfo.duration / 60)}h {Math.round(mapRouteInfo.duration % 60)}min
+                      </span>
+                    </span>
+                  </div>
+                )}
                 {/* Sempre mostrar CEPs se disponíveis */}
                 {(pedagioResult.origemCep || pedagioResult.destinoCep) && (
                   <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
@@ -2189,6 +2203,7 @@ export default function POSView({
         destinoEndereco={pedagioResult.destinoEndereco}
         origemCep={pedagioResult.origemCep}
         destinoCep={pedagioResult.destinoCep}
+        onRouteCalculated={setMapRouteInfo}
       />
     </div>
   );

@@ -10,6 +10,7 @@ interface RouteMapEmbedProps {
   destinoEndereco?: string | null;
   origemCep?: string | null;
   destinoCep?: string | null;
+  onRouteCalculated?: (routeInfo: { distance: number; duration: number } | null) => void;
 }
 
 // Decode polyline from OSRM (uses polyline encoding algorithm)
@@ -113,7 +114,8 @@ export function RouteMapEmbed({
   origemEndereco,
   destinoEndereco,
   origemCep,
-  destinoCep
+  destinoCep,
+  onRouteCalculated
 }: RouteMapEmbedProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -123,6 +125,13 @@ export function RouteMapEmbed({
   const [resolvedOrigemCoords, setResolvedOrigemCoords] = useState<{ lat: number; lng: number } | null>(origemCoords);
   const [resolvedDestinoCoords, setResolvedDestinoCoords] = useState<{ lat: number; lng: number } | null>(destinoCoords);
   const [geocodeError, setGeocodeError] = useState<string | null>(null);
+
+  // Callback when route info is calculated
+  useEffect(() => {
+    if (onRouteCalculated) {
+      onRouteCalculated(routeInfo);
+    }
+  }, [routeInfo, onRouteCalculated]);
 
   // Geocode addresses if coordinates are not available
   useEffect(() => {
