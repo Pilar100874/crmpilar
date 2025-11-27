@@ -28,39 +28,30 @@ async function getAddressFromCep(cep: string): Promise<{ logradouro: string; bai
 async function geocodeAddress(address: string, cep?: string): Promise<{ lat: number; lng: number } | null> {
   const searchQueries: string[] = [];
   
-  // Strategy 1: If we have CEP, get address from ViaCEP and use city + state (most reliable)
   if (cep) {
     const viaCepData = await getAddressFromCep(cep);
     if (viaCepData) {
-      // Most reliable: city + state
       searchQueries.push(`${viaCepData.localidade}, ${viaCepData.uf}, Brasil`);
-      // Try with neighborhood
       if (viaCepData.bairro) {
         searchQueries.push(`${viaCepData.bairro}, ${viaCepData.localidade}, ${viaCepData.uf}, Brasil`);
       }
     }
-    // Also try CEP directly
     searchQueries.push(`${cep.replace(/\D/g, '')}, Brasil`);
   }
   
-  // Strategy 2: Extract city and state from address
   if (address) {
     const parts = address.split(',').map(p => p.trim()).filter(p => p);
     if (parts.length >= 2) {
-      // Try last two parts (usually city, state)
       const cityState = parts.slice(-2).join(', ');
       searchQueries.push(`${cityState}, Brasil`);
     }
-    // Try full address
     searchQueries.push(`${address}, Brasil`);
   }
 
-  // Remove duplicates
   const uniqueQueries = [...new Set(searchQueries)];
 
   for (const query of uniqueQueries) {
     try {
-      console.log('Trying geocode query:', query);
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=br`,
         { headers: { 'Accept-Language': 'pt-BR' } }
@@ -68,7 +59,6 @@ async function geocodeAddress(address: string, cep?: string): Promise<{ lat: num
       const data = await response.json();
       
       if (data && data.length > 0) {
-        console.log('Geocode success for:', query, data[0]);
         return {
           lat: parseFloat(data[0].lat),
           lng: parseFloat(data[0].lon),
@@ -78,7 +68,6 @@ async function geocodeAddress(address: string, cep?: string): Promise<{ lat: num
       console.error('Geocode error for query:', query, error);
     }
     
-    // Small delay to avoid rate limiting
     await new Promise(resolve => setTimeout(resolve, 100));
   }
   
@@ -89,7 +78,8 @@ export function useRouteCalculation(
   origemEndereco: string | null | undefined,
   destinoEndereco: string | null | undefined,
   origemCep: string | null | undefined,
-  destinoCep: string | null | undefined
+  destinoCep: string | null | undefined,
+  idaEVolta: boolean = true
 ) {
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [loading, setLoading] = useState(false);
@@ -97,7 +87,6 @@ export function useRouteCalculation(
 
   useEffect(() => {
     const calculateRoute = async () => {
-      // Need at least CEP or address for both origin and destination
       if ((!origemEndereco && !origemCep) || (!destinoEndereco && !destinoCep)) {
         setRouteInfo(null);
         return;
@@ -107,12 +96,10 @@ export function useRouteCalculation(
       setError(null);
 
       try {
-        // Geocode addresses
         const origemCoords = await geocodeAddress(origemEndereco || '', origemCep || undefined);
         const destinoCoords = await geocodeAddress(destinoEndereco || '', destinoCep || undefined);
 
         if (!origemCoords) {
-          console.log('Failed to geocode origin');
           setError('Não foi possível localizar o endereço de origem');
           setRouteInfo(null);
           setLoading(false);
@@ -120,16 +107,12 @@ export function useRouteCalculation(
         }
 
         if (!destinoCoords) {
-          console.log('Failed to geocode destination');
           setError('Não foi possível localizar o endereço de destino');
           setRouteInfo(null);
           setLoading(false);
           return;
         }
 
-        console.log('Coords found - Origin:', origemCoords, 'Destination:', destinoCoords);
-
-        // Get route from OSRM
         const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origemCoords.lng},${origemCoords.lat};${destinoCoords.lng},${destinoCoords.lat}?overview=false`;
         
         const response = await fetch(osrmUrl);
@@ -137,13 +120,12 @@ export function useRouteCalculation(
 
         if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
           const route = data.routes[0];
-          console.log('Route found:', route.distance, 'meters,', route.duration, 'seconds');
+          const multiplier = idaEVolta ? 2 : 1;
           setRouteInfo({
-            distance: route.distance / 1000, // km
-            duration: route.duration / 60, // minutes
+            distance: (route.distance / 1000) * multiplier, // km
+            duration: (route.duration / 60) * multiplier, // minutes
           });
         } else {
-          console.log('OSRM failed:', data);
           setError('Não foi possível calcular a rota');
           setRouteInfo(null);
         }
@@ -157,7 +139,7 @@ export function useRouteCalculation(
     };
 
     calculateRoute();
-  }, [origemEndereco, destinoEndereco, origemCep, destinoCep]);
+  }, [origemEndereco, destinoEndereco, origemCep, destinoCep, idaEVolta]);
 
   return { routeInfo, loading, error };
 }
