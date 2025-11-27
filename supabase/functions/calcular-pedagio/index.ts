@@ -120,8 +120,8 @@ async function calculateTollGuru(
     
     console.log('Request body:', JSON.stringify(requestBody));
     
-    // Use origin-destination-pair endpoint
-    const idaResponse = await fetch('https://apis.tollguru.com/toll/v2/origin-destination-pair', {
+    // Use origin-destination-waypoints endpoint (correct TollGuru endpoint)
+    const idaResponse = await fetch('https://apis.tollguru.com/toll/v2/origin-destination-waypoints', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -165,7 +165,7 @@ async function calculateTollGuru(
       }
     };
     
-    const voltaResponse = await fetch('https://apis.tollguru.com/toll/v2/origin-destination-pair', {
+    const voltaResponse = await fetch('https://apis.tollguru.com/toll/v2/origin-destination-waypoints', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
