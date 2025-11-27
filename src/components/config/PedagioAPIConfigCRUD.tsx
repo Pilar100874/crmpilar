@@ -63,7 +63,7 @@ const PROVIDERS = [
   {
     id: "tollguru",
     name: "TollGuru",
-    description: "API internacional com suporte a mais de 60 países",
+    description: "API internacional com suporte a mais de 60 países, inclui distância e tempo",
     url: "https://tollguru.com",
     apiKeyPlaceholder: "Sua TollGuru API Key",
     docsUrl: "https://tollguru.com/developers/docs",
@@ -85,27 +85,6 @@ const PROVIDERS = [
         { value: "USD", label: "Dólar (USD)" },
         { value: "EUR", label: "Euro (EUR)" },
       ]},
-    ]
-  },
-  {
-    id: "calcular_pedagio",
-    name: "CalcularPedagio.com.br",
-    description: "API brasileira especializada em pedágios nacionais",
-    url: "https://calcularpedagio.com.br",
-    apiKeyPlaceholder: "Sua API Key do CalcularPedagio",
-    docsUrl: "https://calcularpedagio.com.br/docs",
-    fields: [
-      { key: "tipo_veiculo", label: "Tipo de Veículo Padrão", type: "select", options: [
-        { value: "carro", label: "Carro" },
-        { value: "moto", label: "Moto" },
-        { value: "caminhao_2_eixos", label: "Caminhão (2 eixos)" },
-        { value: "caminhao_3_eixos", label: "Caminhão (3 eixos)" },
-        { value: "caminhao_4_eixos", label: "Caminhão (4 eixos)" },
-        { value: "caminhao_5_eixos", label: "Caminhão (5 eixos)" },
-        { value: "caminhao_6_eixos", label: "Caminhão (6+ eixos)" },
-        { value: "onibus", label: "Ônibus" },
-      ]},
-      { key: "incluir_retorno", label: "Incluir Retorno", type: "boolean" },
     ]
   }
 ];

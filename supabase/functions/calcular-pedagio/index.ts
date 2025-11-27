@@ -206,87 +206,6 @@ async function calculateTollGuru(
   }
 }
 
-async function calculatePedagioBR(
-  apiKey: string,
-  configuracoes: any,
-  origemCoords: Coords,
-  destinoCoords: Coords
-): Promise<{ ida: number; volta: number; error: string | null }> {
-  try {
-    // API calcularpedagio.com.br uses coordinates
-    // Documentation: https://www.calcularpedagio.com.br/documentacao
-    // Clean API key - remove "Bearer " prefix if present
-    const cleanApiKey = apiKey.replace(/^Bearer\s+/i, '').trim();
-    
-    console.log('Calling calcularpedagio API with api_key header:', cleanApiKey.substring(0, 8) + '...');
-    
-    // Try with api_key header as per documentation
-    const idaResponse = await fetch('https://www.calcularpedagio.com.br/api/coordenadas/v3', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api_key': cleanApiKey
-      },
-      body: JSON.stringify({
-        pontos: [
-          [origemCoords.lat, origemCoords.lng],
-          [destinoCoords.lat, destinoCoords.lng]
-        ]
-      })
-    });
-
-    if (!idaResponse.ok) {
-      const errorData = await idaResponse.json().catch(() => ({}));
-      console.error('CalcularPedagio ida error:', JSON.stringify(errorData));
-      return { ida: 0, volta: 0, error: `Erro API: ${errorData.error || errorData.message || idaResponse.statusText}` };
-    }
-
-    const idaData = await idaResponse.json();
-    console.log('CalcularPedagio ida response:', JSON.stringify(idaData, null, 2));
-
-    if (idaData.status !== 'OK') {
-      return { ida: 0, volta: 0, error: `Erro API: ${idaData.message || idaData.status}` };
-    }
-
-    // Sum all tolls in the route
-    const idaToll = idaData?.dados?.pedagiosRota?.reduce((sum: number, toll: any) => {
-      return sum + (toll?.tarifas?.tarifa2Eixos || toll?.tarifas?.tarifaBasica || 0);
-    }, 0) || 0;
-
-    // Calculate return trip
-    const voltaResponse = await fetch('https://www.calcularpedagio.com.br/api/coordenadas/v3', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api_key': cleanApiKey
-      },
-      body: JSON.stringify({
-        pontos: [
-          [destinoCoords.lat, destinoCoords.lng],
-          [origemCoords.lat, origemCoords.lng]
-        ]
-      })
-    });
-
-    let voltaToll = idaToll; // Default to same as ida if volta fails
-    if (voltaResponse.ok) {
-      const voltaData = await voltaResponse.json();
-      console.log('CalcularPedagio volta response:', JSON.stringify(voltaData, null, 2));
-      
-      if (voltaData.status === 'OK') {
-        voltaToll = voltaData?.dados?.pedagiosRota?.reduce((sum: number, toll: any) => {
-          return sum + (toll?.tarifas?.tarifa2Eixos || toll?.tarifas?.tarifaBasica || 0);
-        }, 0) || 0;
-      }
-    }
-
-    return { ida: idaToll, volta: voltaToll, error: null };
-  } catch (error: any) {
-    console.error('Erro calcularpedagio:', error);
-    return { ida: 0, volta: 0, error: error.message };
-  }
-}
-
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -325,44 +244,31 @@ serve(async (req) => {
 
     console.log('Coords:', { origemCoords, destinoCoords });
 
-    if (provider === 'tollguru') {
-      const result = await calculateTollGuru(api_key, configuracoes, origemCoords, destinoCoords);
+    if (provider !== 'tollguru') {
       return new Response(
-        JSON.stringify({
-          ida: result.ida,
-          volta: result.volta,
-          total: result.ida + result.volta,
-          distanciaIdaKm: result.distanciaIdaKm,
-          distanciaVoltaKm: result.distanciaVoltaKm,
-          distanciaTotalKm: result.distanciaIdaKm + result.distanciaVoltaKm,
-          tempoIdaMin: result.tempoIdaMin,
-          tempoVoltaMin: result.tempoVoltaMin,
-          tempoTotalMin: result.tempoIdaMin + result.tempoVoltaMin,
-          error: result.error,
-          origem_coords: origemCoords,
-          destino_coords: destinoCoords
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } else if (provider === 'calcularpedagio' || provider === 'calcular_pedagio') {
-      const result = await calculatePedagioBR(api_key, configuracoes, origemCoords, destinoCoords);
-      return new Response(
-        JSON.stringify({
-          ida: result.ida,
-          volta: result.volta,
-          total: result.ida + result.volta,
-          error: result.error,
-          origem_coords: origemCoords,
-          destino_coords: destinoCoords
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } else {
-      return new Response(
-        JSON.stringify({ error: 'Provedor de API não suportado' }),
+        JSON.stringify({ error: 'Apenas o provedor TollGuru é suportado' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const result = await calculateTollGuru(api_key, configuracoes, origemCoords, destinoCoords);
+    return new Response(
+      JSON.stringify({
+        ida: result.ida,
+        volta: result.volta,
+        total: result.ida + result.volta,
+        distanciaIdaKm: result.distanciaIdaKm,
+        distanciaVoltaKm: result.distanciaVoltaKm,
+        distanciaTotalKm: result.distanciaIdaKm + result.distanciaVoltaKm,
+        tempoIdaMin: result.tempoIdaMin,
+        tempoVoltaMin: result.tempoVoltaMin,
+        tempoTotalMin: result.tempoIdaMin + result.tempoVoltaMin,
+        error: result.error,
+        origem_coords: origemCoords,
+        destino_coords: destinoCoords
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error: any) {
     console.error('Error:', error);
