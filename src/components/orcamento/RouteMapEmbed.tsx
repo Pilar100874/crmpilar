@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin } from 'lucide-react';
 
 interface RouteMapEmbedProps {
   origemCoords: { lat: number; lng: number } | null;
@@ -49,6 +49,32 @@ function decodePolyline(encoded: string): [number, number][] {
   return points;
 }
 
+// Geocode address using Nominatim (OpenStreetMap)
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', Brasil')}&limit=1`,
+      {
+        headers: {
+          'Accept-Language': 'pt-BR',
+        },
+      }
+    );
+    const data = await response.json();
+    
+    if (data && data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon),
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error geocoding address:', error);
+    return null;
+  }
+}
+
 export function RouteMapEmbed({ 
   origemCoords, 
   destinoCoords,
@@ -58,10 +84,54 @@ export function RouteMapEmbed({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const [loading, setLoading] = useState(true);
+  const [geocoding, setGeocoding] = useState(false);
   const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
+  const [resolvedOrigemCoords, setResolvedOrigemCoords] = useState<{ lat: number; lng: number } | null>(origemCoords);
+  const [resolvedDestinoCoords, setResolvedDestinoCoords] = useState<{ lat: number; lng: number } | null>(destinoCoords);
+  const [geocodeError, setGeocodeError] = useState<string | null>(null);
+
+  // Geocode addresses if coordinates are not available
+  useEffect(() => {
+    const resolveCoordinates = async () => {
+      // If we already have coordinates, use them
+      if (origemCoords && destinoCoords) {
+        setResolvedOrigemCoords(origemCoords);
+        setResolvedDestinoCoords(destinoCoords);
+        return;
+      }
+
+      // Try to geocode addresses
+      if (origemEndereco || destinoEndereco) {
+        setGeocoding(true);
+        setGeocodeError(null);
+
+        let newOrigemCoords = origemCoords;
+        let newDestinoCoords = destinoCoords;
+
+        if (!origemCoords && origemEndereco) {
+          newOrigemCoords = await geocodeAddress(origemEndereco);
+        }
+
+        if (!destinoCoords && destinoEndereco) {
+          newDestinoCoords = await geocodeAddress(destinoEndereco);
+        }
+
+        if (newOrigemCoords && newDestinoCoords) {
+          setResolvedOrigemCoords(newOrigemCoords);
+          setResolvedDestinoCoords(newDestinoCoords);
+        } else {
+          setGeocodeError('Não foi possível localizar os endereços no mapa');
+        }
+
+        setGeocoding(false);
+      }
+    };
+
+    resolveCoordinates();
+  }, [origemCoords, destinoCoords, origemEndereco, destinoEndereco]);
 
   useEffect(() => {
-    if (!mapRef.current || !origemCoords || !destinoCoords) return;
+    if (!mapRef.current || !resolvedOrigemCoords || !resolvedDestinoCoords) return;
 
     // Cleanup previous map instance
     if (mapInstanceRef.current) {
@@ -73,8 +143,8 @@ export function RouteMapEmbed({
       setLoading(true);
 
       // Calculate center
-      const centerLat = (origemCoords.lat + destinoCoords.lat) / 2;
-      const centerLng = (origemCoords.lng + destinoCoords.lng) / 2;
+      const centerLat = (resolvedOrigemCoords.lat + resolvedDestinoCoords.lat) / 2;
+      const centerLng = (resolvedOrigemCoords.lng + resolvedDestinoCoords.lng) / 2;
 
       // Create map
       const map = L.map(mapRef.current!).setView([centerLat, centerLng], 6);
@@ -101,17 +171,17 @@ export function RouteMapEmbed({
       });
 
       // Add markers
-      L.marker([origemCoords.lat, origemCoords.lng], { icon: originIcon })
+      L.marker([resolvedOrigemCoords.lat, resolvedOrigemCoords.lng], { icon: originIcon })
         .addTo(map)
-        .bindPopup(`<b>Origem</b><br/>${origemEndereco || 'Coordenadas: ' + origemCoords.lat.toFixed(4) + ', ' + origemCoords.lng.toFixed(4)}`);
+        .bindPopup(`<b>Origem</b><br/>${origemEndereco || 'Coordenadas: ' + resolvedOrigemCoords.lat.toFixed(4) + ', ' + resolvedOrigemCoords.lng.toFixed(4)}`);
 
-      L.marker([destinoCoords.lat, destinoCoords.lng], { icon: destinationIcon })
+      L.marker([resolvedDestinoCoords.lat, resolvedDestinoCoords.lng], { icon: destinationIcon })
         .addTo(map)
-        .bindPopup(`<b>Destino</b><br/>${destinoEndereco || 'Coordenadas: ' + destinoCoords.lat.toFixed(4) + ', ' + destinoCoords.lng.toFixed(4)}`);
+        .bindPopup(`<b>Destino</b><br/>${destinoEndereco || 'Coordenadas: ' + resolvedDestinoCoords.lat.toFixed(4) + ', ' + resolvedDestinoCoords.lng.toFixed(4)}`);
 
       // Fetch real route from OSRM
       try {
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origemCoords.lng},${origemCoords.lat};${destinoCoords.lng},${destinoCoords.lat}?overview=full&geometries=polyline`;
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${resolvedOrigemCoords.lng},${resolvedOrigemCoords.lat};${resolvedDestinoCoords.lng},${resolvedDestinoCoords.lat}?overview=full&geometries=polyline`;
         
         const response = await fetch(osrmUrl);
         const data = await response.json();
@@ -139,8 +209,8 @@ export function RouteMapEmbed({
           // Fallback to straight line if OSRM fails
           const routeLine = L.polyline(
             [
-              [origemCoords.lat, origemCoords.lng],
-              [destinoCoords.lat, destinoCoords.lng]
+              [resolvedOrigemCoords.lat, resolvedOrigemCoords.lng],
+              [resolvedDestinoCoords.lat, resolvedDestinoCoords.lng]
             ],
             {
               color: '#3b82f6',
@@ -151,8 +221,8 @@ export function RouteMapEmbed({
           ).addTo(map);
 
           const bounds = L.latLngBounds(
-            [origemCoords.lat, origemCoords.lng],
-            [destinoCoords.lat, destinoCoords.lng]
+            [resolvedOrigemCoords.lat, resolvedOrigemCoords.lng],
+            [resolvedDestinoCoords.lat, resolvedDestinoCoords.lng]
           );
           map.fitBounds(bounds, { padding: [50, 50] });
         }
@@ -161,8 +231,8 @@ export function RouteMapEmbed({
         // Fallback to straight line
         const routeLine = L.polyline(
           [
-            [origemCoords.lat, origemCoords.lng],
-            [destinoCoords.lat, destinoCoords.lng]
+            [resolvedOrigemCoords.lat, resolvedOrigemCoords.lng],
+            [resolvedDestinoCoords.lat, resolvedDestinoCoords.lng]
           ],
           {
             color: '#3b82f6',
@@ -173,8 +243,8 @@ export function RouteMapEmbed({
         ).addTo(map);
 
         const bounds = L.latLngBounds(
-          [origemCoords.lat, origemCoords.lng],
-          [destinoCoords.lat, destinoCoords.lng]
+          [resolvedOrigemCoords.lat, resolvedOrigemCoords.lng],
+          [resolvedDestinoCoords.lat, resolvedDestinoCoords.lng]
         );
         map.fitBounds(bounds, { padding: [50, 50] });
       }
@@ -191,12 +261,45 @@ export function RouteMapEmbed({
         mapInstanceRef.current = null;
       }
     };
-  }, [origemCoords, destinoCoords, origemEndereco, destinoEndereco]);
+  }, [resolvedOrigemCoords, resolvedDestinoCoords, origemEndereco, destinoEndereco]);
 
-  if (!origemCoords || !destinoCoords) {
+  // Show geocoding state
+  if (geocoding) {
     return (
-      <div className="w-full h-[400px] bg-muted/50 rounded-lg flex items-center justify-center">
+      <div className="w-full h-[400px] bg-muted/50 rounded-lg flex flex-col items-center justify-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Localizando endereços...</p>
+      </div>
+    );
+  }
+
+  // Show error if geocoding failed
+  if (geocodeError) {
+    return (
+      <div className="w-full h-[400px] bg-muted/50 rounded-lg flex flex-col items-center justify-center gap-3">
+        <MapPin className="h-8 w-8 text-muted-foreground" />
+        <p className="text-muted-foreground">{geocodeError}</p>
+        {(origemEndereco || destinoEndereco) && (
+          <div className="text-xs text-muted-foreground text-center space-y-1 mt-2">
+            {origemEndereco && <p><strong>Origem:</strong> {origemEndereco}</p>}
+            {destinoEndereco && <p><strong>Destino:</strong> {destinoEndereco}</p>}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (!resolvedOrigemCoords || !resolvedDestinoCoords) {
+    return (
+      <div className="w-full h-[400px] bg-muted/50 rounded-lg flex flex-col items-center justify-center gap-3">
+        <MapPin className="h-8 w-8 text-muted-foreground" />
         <p className="text-muted-foreground">Coordenadas não disponíveis para exibir o mapa</p>
+        {(origemEndereco || destinoEndereco) && (
+          <div className="text-xs text-muted-foreground text-center space-y-1 mt-2">
+            {origemEndereco && <p><strong>Origem:</strong> {origemEndereco}</p>}
+            {destinoEndereco && <p><strong>Destino:</strong> {destinoEndereco}</p>}
+          </div>
+        )}
       </div>
     );
   }
