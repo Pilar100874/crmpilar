@@ -5,6 +5,7 @@ import { Produto, Orcamento, OrcamentoItem } from "@/types/orcamento";
 import { aplicarRegrasAutomacao } from "@/services/automacaoFlowEngine";
 import { usePedagioCalculation } from "@/hooks/usePedagioCalculation";
 import { useRouteCalculation } from "@/hooks/useRouteCalculation";
+import { useRouteAddresses } from "@/hooks/useRouteAddresses";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -146,17 +147,20 @@ export default function POSView({
   const [freteIdaEVolta, setFreteIdaEVolta] = useState(true);
   const [showRegrasInDetails, setShowRegrasInDetails] = useState(false);
 
-  // Hook para cálculo de pedágio (manual)
-  const pedagioResult = usePedagioCalculation(estabelecimentoId, selectedEmpresa);
+  // Hook para buscar endereços automaticamente quando empresa muda
+  const routeAddresses = useRouteAddresses(selectedEmpresa || null);
   
-  // Hook para cálculo automático de rota (só calcula uma vez por orçamento)
+  // Hook para cálculo automático de rota (km/tempo) - executa imediatamente
   const { routeInfo: autoRouteInfo, loading: routeLoading } = useRouteCalculation(
-    pedagioResult.origemEndereco,
-    pedagioResult.destinoEndereco,
-    pedagioResult.origemCep,
-    pedagioResult.destinoCep,
+    routeAddresses.origemEndereco,
+    routeAddresses.destinoEndereco,
+    routeAddresses.origemCep,
+    routeAddresses.destinoCep,
     freteIdaEVolta
   );
+  
+  // Hook para cálculo de pedágio (manual - só quando clicar no botão)
+  const pedagioResult = usePedagioCalculation(estabelecimentoId, selectedEmpresa);
 
   // Reset pedágio quando trocar empresa
   useEffect(() => {
@@ -1785,10 +1789,15 @@ export default function POSView({
                   </label>
                 </div>
                 {/* Mostrar distância e tempo da rota automaticamente */}
-                {routeLoading ? (
+                {(routeAddresses.loading || routeLoading) ? (
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
                     <Loader2 className="w-3 h-3 animate-spin" />
                     <span>Calculando rota...</span>
+                  </div>
+                ) : routeAddresses.error ? (
+                  <div className="flex items-center gap-1 text-xs text-yellow-600 mb-1">
+                    <AlertCircle className="w-3 h-3" />
+                    <span>{routeAddresses.error}</span>
                   </div>
                 ) : autoRouteInfo && (
                   <div className="flex items-center gap-3 text-xs mb-1">
