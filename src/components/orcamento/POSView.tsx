@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { Produto, Orcamento, OrcamentoItem } from "@/types/orcamento";
 import { aplicarRegrasAutomacao } from "@/services/automacaoFlowEngine";
+import { usePedagioCalculation } from "@/hooks/usePedagioCalculation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -32,7 +33,10 @@ import {
   ChevronLeft,
   Package,
   Maximize2,
-  Eye
+  Eye,
+  Truck,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 import {
   Select,
@@ -134,6 +138,9 @@ export default function POSView({
   const [showRegrasDialog, setShowRegrasDialog] = useState(false);
   const [gruposQuantities, setGruposQuantities] = useState<Map<string, number>>(new Map());
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
+
+  // Hook para cálculo de pedágio
+  const pedagioResult = usePedagioCalculation(estabelecimentoId, selectedEmpresa);
 
   useEffect(() => {
     loadProdutos();
@@ -1706,6 +1713,69 @@ export default function POSView({
               )}
             </div>
           </div>
+          
+          {/* Valor de Pedágio */}
+          {selectedEmpresa && (
+            <>
+              <div className="h-8 w-px bg-border" />
+              <div>
+                <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
+                  <Truck className="w-3 h-3" />
+                  <span>Pedágio</span>
+                </div>
+                {pedagioResult.loading ? (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Calculando...</span>
+                  </div>
+                ) : pedagioResult.error ? (
+                  <div className="flex items-center gap-1 text-yellow-600">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-xs">{pedagioResult.error}</span>
+                  </div>
+                ) : (
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-muted-foreground">Ida</span>
+                        <span className="font-medium text-foreground">
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                          }).format(pedagioResult.ida)}
+                        </span>
+                      </div>
+                      <div className="text-muted-foreground">+</div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-muted-foreground">Volta</span>
+                        <span className="font-medium text-foreground">
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                          }).format(pedagioResult.volta)}
+                        </span>
+                      </div>
+                      <div className="text-muted-foreground">=</div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-muted-foreground">Total</span>
+                        <span className="font-semibold text-primary">
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL'
+                          }).format(pedagioResult.total)}
+                        </span>
+                      </div>
+                    </div>
+                    {pedagioResult.origemCep && pedagioResult.destinoCep && (
+                      <div className="text-[10px] text-muted-foreground">
+                        {pedagioResult.origemCep.replace(/(\d{5})(\d{3})/, '$1-$2')} → {pedagioResult.destinoCep.replace(/(\d{5})(\d{3})/, '$1-$2')}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
         
         <Button 
