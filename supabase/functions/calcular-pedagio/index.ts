@@ -216,6 +216,14 @@ serve(async (req) => {
     const { provider, api_key, configuracoes, origem_cep, destino_cep }: TollRequest = await req.json();
 
     console.log('Calculating toll:', { provider, origem_cep, destino_cep });
+    console.log('API Key presente:', api_key ? `Sim (${api_key.substring(0, 8)}...)` : 'Não');
+
+    if (!api_key) {
+      return new Response(
+        JSON.stringify({ error: 'API Key do TollGuru não configurada' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!origem_cep || !destino_cep) {
       return new Response(
