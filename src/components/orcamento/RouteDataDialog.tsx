@@ -8,11 +8,13 @@ import {
   Navigation,
   ExternalLink,
   Copy,
-  Check
+  Check,
+  Map
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
+import { RouteMapEmbed } from "./RouteMapEmbed";
 
 interface RouteDataDialogProps {
   open: boolean;
@@ -75,8 +77,12 @@ export function RouteDataDialog({
         </DialogHeader>
 
         <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="summary">Resumo</TabsTrigger>
+            <TabsTrigger value="map" className="gap-1">
+              <Map className="w-3 h-3" />
+              Mapa
+            </TabsTrigger>
             <TabsTrigger value="coordinates">Coordenadas</TabsTrigger>
             <TabsTrigger value="raw">Dados Brutos</TabsTrigger>
           </TabsList>
@@ -194,6 +200,15 @@ export function RouteDataDialog({
                 </div>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="map" className="mt-4">
+            <RouteMapEmbed
+              origemCoords={origemCoords}
+              destinoCoords={destinoCoords}
+              origemEndereco={origemEndereco}
+              destinoEndereco={destinoEndereco}
+            />
           </TabsContent>
 
           <TabsContent value="coordinates" className="mt-4">
