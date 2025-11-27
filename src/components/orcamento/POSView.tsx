@@ -107,9 +107,10 @@ export default function POSView({
   const [currentOrcamentoId, setCurrentOrcamentoId] = useState<string | null>(null);
   const [shareLink, setShareLink] = useState<string>("");
   const [showPhotoModal, setShowPhotoModal] = useState(false);
-  const [regrasAplicadas, setRegrasAplicadas] = useState<string[]>([]);
+  const [regrasAplicadas, setRegrasAplicadas] = useState<Array<{ nome: string; detalhes: string; desconto?: number; percentual?: number }>>([]);
   const [valorComRegras, setValorComRegras] = useState<number>(0);
   const [detalhesRegras, setDetalhesRegras] = useState<string>("");
+  const [expandedRegraIndex, setExpandedRegraIndex] = useState<number | null>(null);
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -255,7 +256,22 @@ export default function POSView({
         );
 
         setValorComRegras(resultado.valorFinal);
-        setRegrasAplicadas(resultado.regrasAplicadas);
+        
+        // Converter para formato com detalhes
+        const regrasComDetalhes = resultado.regrasAplicadas.map((nome, index) => {
+          const desconto = resultado.descontos[index];
+          const valorDesconto = desconto ? desconto.valor : 0;
+          const percentualDesconto = desconto ? desconto.percentual : 0;
+          const detalhe = resultado.detalhes[index] || '';
+          
+          return {
+            nome,
+            detalhes: detalhe || `Desconto: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorDesconto)}${percentualDesconto ? ` (${percentualDesconto}%)` : ''}`,
+            desconto: valorDesconto,
+            percentual: percentualDesconto
+          };
+        });
+        setRegrasAplicadas(regrasComDetalhes);
         
         // Criar texto descritivo das regras
         let detalhes = "";
@@ -1353,14 +1369,32 @@ export default function POSView({
                     </h4>
                   </div>
                   
-                  {/* Lista de Regras */}
+                  {/* Lista de Regras - Expandível */}
                   {regrasAplicadas.map((regra, index) => (
-                    <div key={index} className="bg-muted/50 rounded p-2.5 border border-border/50">
-                      <div className="flex items-start gap-2">
+                    <div 
+                      key={index} 
+                      className="bg-muted/50 rounded border border-border/50 overflow-hidden cursor-pointer transition-colors hover:bg-muted/70"
+                      onClick={() => setExpandedRegraIndex(expandedRegraIndex === index ? null : index)}
+                    >
+                      <div className="p-2.5 flex items-start gap-2">
                         <div className="p-1 rounded-full bg-green-500/10 mt-0.5">
                           <Check className="w-3 h-3 text-green-600" />
                         </div>
-                        <p className="text-xs text-foreground">{regra}</p>
+                        <div className="flex-1">
+                          <p className="text-xs text-foreground font-medium">{regra.nome}</p>
+                          {expandedRegraIndex === index && (
+                            <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
+                              <p className="text-xs text-muted-foreground">{regra.detalhes}</p>
+                              {regra.desconto !== undefined && regra.desconto > 0 && (
+                                <p className="text-xs text-green-600">
+                                  Desconto: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(regra.desconto)}
+                                  {regra.percentual ? ` (${regra.percentual}%)` : ''}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${expandedRegraIndex === index ? 'rotate-90' : ''}`} />
                       </div>
                     </div>
                   ))}
@@ -2196,12 +2230,8 @@ export default function POSView({
                         <Check className="w-4 h-4 text-green-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground mb-1">{regra}</p>
-                        {detalhesRegras.split('\n')[index] && (
-                          <p className="text-sm text-muted-foreground">
-                            {detalhesRegras.split('\n')[index]}
-                          </p>
-                        )}
+                        <p className="font-medium text-foreground mb-1">{regra.nome}</p>
+                        <p className="text-sm text-muted-foreground">{regra.detalhes}</p>
                       </div>
                       <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 flex-shrink-0">
                         Ativa
