@@ -154,31 +154,70 @@ async function calculateTollGuru(
 async function calculatePedagioBR(
   apiKey: string,
   configuracoes: any,
-  origemCep: string,
-  destinoCep: string
+  origemCoords: Coords,
+  destinoCoords: Coords
 ): Promise<{ ida: number; volta: number; error: string | null }> {
   try {
-    const response = await fetch(`https://api.calcularpedagio.com.br/v1/pedagio`, {
+    // API calcularpedagio.com.br uses coordinates
+    // Documentation: https://www.calcularpedagio.com.br/documentacao
+    const idaResponse = await fetch('https://www.calcularpedagio.com.br/api/coordenadas/v3', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'api_key': apiKey
       },
       body: JSON.stringify({
-        origem: origemCep,
-        destino: destinoCep,
-        eixos: configuracoes?.eixos || 2
+        pontos: [
+          [origemCoords.lat, origemCoords.lng],
+          [destinoCoords.lat, destinoCoords.lng]
+        ]
       })
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return { ida: 0, volta: 0, error: `Erro API: ${errorData.message || response.statusText}` };
+    if (!idaResponse.ok) {
+      const errorText = await idaResponse.text().catch(() => '');
+      console.error('CalcularPedagio ida error:', errorText);
+      return { ida: 0, volta: 0, error: `Erro API: ${idaResponse.status} - ${errorText || idaResponse.statusText}` };
     }
 
-    const data = await response.json();
-    const idaToll = data?.valor_pedagio || data?.ida || 0;
-    const voltaToll = data?.valor_pedagio || data?.volta || idaToll;
+    const idaData = await idaResponse.json();
+    console.log('CalcularPedagio ida response:', JSON.stringify(idaData, null, 2));
+
+    if (idaData.status !== 'OK') {
+      return { ida: 0, volta: 0, error: `Erro API: ${idaData.message || idaData.status}` };
+    }
+
+    // Sum all tolls in the route
+    const idaToll = idaData?.dados?.pedagiosRota?.reduce((sum: number, toll: any) => {
+      return sum + (toll?.tarifas?.tarifa2Eixos || toll?.tarifas?.tarifaBasica || 0);
+    }, 0) || 0;
+
+    // Calculate return trip
+    const voltaResponse = await fetch('https://www.calcularpedagio.com.br/api/coordenadas/v3', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api_key': apiKey
+      },
+      body: JSON.stringify({
+        pontos: [
+          [destinoCoords.lat, destinoCoords.lng],
+          [origemCoords.lat, origemCoords.lng]
+        ]
+      })
+    });
+
+    let voltaToll = idaToll; // Default to same as ida if volta fails
+    if (voltaResponse.ok) {
+      const voltaData = await voltaResponse.json();
+      console.log('CalcularPedagio volta response:', JSON.stringify(voltaData, null, 2));
+      
+      if (voltaData.status === 'OK') {
+        voltaToll = voltaData?.dados?.pedagiosRota?.reduce((sum: number, toll: any) => {
+          return sum + (toll?.tarifas?.tarifa2Eixos || toll?.tarifas?.tarifaBasica || 0);
+        }, 0) || 0;
+      }
+    }
 
     return { ida: idaToll, volta: voltaToll, error: null };
   } catch (error: any) {
@@ -229,8 +268,8 @@ serve(async (req) => {
 
     if (provider === 'tollguru') {
       result = await calculateTollGuru(api_key, configuracoes, origemCoords, destinoCoords);
-    } else if (provider === 'calcularpedagio') {
-      result = await calculatePedagioBR(api_key, configuracoes, origem_cep, destino_cep);
+    } else if (provider === 'calcularpedagio' || provider === 'calcular_pedagio') {
+      result = await calculatePedagioBR(api_key, configuracoes, origemCoords, destinoCoords);
     } else {
       return new Response(
         JSON.stringify({ error: 'Provedor de API não suportado' }),
