@@ -142,6 +142,7 @@ export default function POSView({
   const [gruposQuantities, setGruposQuantities] = useState<Map<string, number>>(new Map());
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
   const [showPedagioDetailsDialog, setShowPedagioDetailsDialog] = useState(false);
+  const [pedagioDialogDefaultTab, setPedagioDialogDefaultTab] = useState("map");
   const [freteIdaEVolta, setFreteIdaEVolta] = useState(true);
 
   // Hook para cálculo de pedágio
@@ -1695,26 +1696,21 @@ export default function POSView({
                       currency: 'BRL'
                     }).format(getTotal())}
                   </div>
-                  <div className="text-foreground font-bold text-3xl">
+                  <div className="text-foreground font-bold text-3xl flex items-center gap-2">
                     {new Intl.NumberFormat('pt-BR', {
                       style: 'currency',
                       currency: 'BRL'
                     }).format(valorComRegras)}
-                  </div>
-                  <div className="flex flex-col">
-                    <Badge 
-                      variant="secondary" 
-                      className="bg-green-500/10 text-green-600 border-green-500/20 text-xs cursor-pointer hover:bg-green-500/20 transition-colors"
-                      onClick={() => setShowRegrasDialog(true)}
+                    <span 
+                      className="w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors"
+                      onClick={() => {
+                        setPedagioDialogDefaultTab("regras");
+                        setShowPedagioDetailsDialog(true);
+                      }}
+                      title={`${regrasAplicadas.length} regra(s) aplicada(s)`}
                     >
-                      {regrasAplicadas.length} regra(s) aplicada(s) 
-                      <ChevronRight className="w-3 h-3 ml-1" />
-                    </Badge>
-                    {detalhesRegras && (
-                      <span className="text-[10px] text-muted-foreground mt-1 whitespace-pre-line">
-                        {detalhesRegras.split('\n')[0]}...
-                      </span>
-                    )}
+                      {regrasAplicadas.length}
+                    </span>
                   </div>
                 </>
               ) : (
@@ -1836,7 +1832,10 @@ export default function POSView({
                           variant="outline"
                           size="sm"
                           className="h-7 text-xs gap-1"
-                          onClick={() => setShowPedagioDetailsDialog(true)}
+                          onClick={() => {
+                            setPedagioDialogDefaultTab("map");
+                            setShowPedagioDetailsDialog(true);
+                          }}
                         >
                           <Info className="w-3 h-3" />
                           Detalhes
@@ -2161,7 +2160,10 @@ export default function POSView({
       {/* Diálogo de Detalhes do Pedágio */}
       <PedagioDetailsDialog
         open={showPedagioDetailsDialog}
-        onClose={() => setShowPedagioDetailsDialog(false)}
+        onClose={() => {
+          setShowPedagioDetailsDialog(false);
+          setPedagioDialogDefaultTab("map");
+        }}
         pedagioData={{
           ida: pedagioResult.ida,
           volta: pedagioResult.volta,
@@ -2180,6 +2182,8 @@ export default function POSView({
           destinoCoords: pedagioResult.destinoCoords,
           rawResponse: pedagioResult.rawResponse
         }}
+        regrasAplicadas={regrasAplicadas}
+        defaultTab={pedagioDialogDefaultTab}
       />
 
     </div>
