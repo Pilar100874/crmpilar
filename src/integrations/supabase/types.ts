@@ -976,6 +976,47 @@ export type Database = {
           },
         ]
       }
+      combustiveis_precos: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          preco_diesel: number | null
+          preco_eletrico: number | null
+          preco_etanol: number | null
+          preco_gasolina: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          preco_diesel?: number | null
+          preco_eletrico?: number | null
+          preco_etanol?: number | null
+          preco_gasolina?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          preco_diesel?: number | null
+          preco_eletrico?: number | null
+          preco_etanol?: number | null
+          preco_gasolina?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combustiveis_precos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       condicoes_pagamento: {
         Row: {
           ativo: boolean | null
@@ -6186,6 +6227,65 @@ export type Database = {
             columns: ["unidade_id"]
             isOneToOne: false
             referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      veiculos_custos: {
+        Row: {
+          consumo_cidade: number | null
+          consumo_estrada: number | null
+          created_at: string
+          custo_funcionario_mensal: number | null
+          custo_manutencao_mensal: number | null
+          estabelecimento_id: string
+          extras: number | null
+          id: string
+          observacoes: string | null
+          tipo_combustivel: string
+          tipo_veiculo: string
+          updated_at: string
+          valor_ajudante: number | null
+          valor_refeicao: number | null
+        }
+        Insert: {
+          consumo_cidade?: number | null
+          consumo_estrada?: number | null
+          created_at?: string
+          custo_funcionario_mensal?: number | null
+          custo_manutencao_mensal?: number | null
+          estabelecimento_id: string
+          extras?: number | null
+          id?: string
+          observacoes?: string | null
+          tipo_combustivel?: string
+          tipo_veiculo: string
+          updated_at?: string
+          valor_ajudante?: number | null
+          valor_refeicao?: number | null
+        }
+        Update: {
+          consumo_cidade?: number | null
+          consumo_estrada?: number | null
+          created_at?: string
+          custo_funcionario_mensal?: number | null
+          custo_manutencao_mensal?: number | null
+          estabelecimento_id?: string
+          extras?: number | null
+          id?: string
+          observacoes?: string | null
+          tipo_combustivel?: string
+          tipo_veiculo?: string
+          updated_at?: string
+          valor_ajudante?: number | null
+          valor_refeicao?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "veiculos_custos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
             referencedColumns: ["id"]
           },
         ]

@@ -30,7 +30,8 @@ import { AtendentesFilaManager } from "@/components/atendimento/AtendentesFilaMa
 import { SkillsFilaManager } from "@/components/atendimento/SkillsFilaManager";
 import { AutomacaoVendasCRUD } from "./AutomacaoVendasCRUD";
 import PedagioAPIConfigCRUD from "./PedagioAPIConfigCRUD";
-import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock, ClipboardCheck, Brain, HelpCircle, Zap, BookOpen, Navigation } from "lucide-react";
+import { CustosVeiculosCRUD } from "./CustosVeiculosCRUD";
+import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock, ClipboardCheck, Brain, HelpCircle, Zap, BookOpen, Navigation, Fuel, Truck } from "lucide-react";
 import PesquisasSatisfacaoCRUD from "@/components/atendimento/PesquisasSatisfacaoCRUD";
 import KnowledgeBaseCRUD from "./KnowledgeBaseCRUD";
 import IAConfigCRUD from "./IAConfigCRUD";
@@ -2399,6 +2400,50 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
                   <PedagioAPIConfigCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="custos-veiculos" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Custos de Veículos e Combustíveis</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "custos-veiculos"} onOpenChange={(open) => setHelpDialogOpen(open ? "custos-veiculos" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Custos de Veículos e Combustíveis - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">⛽ Preços de Combustíveis</h4>
+                              <p className="text-sm">Cadastre os preços atualizados de Diesel, Etanol, Gasolina e Energia Elétrica (R$/kWh) para cálculos precisos de custo de frete.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🚛 Custos por Tipo de Veículo</h4>
+                              <p className="text-sm">Configure custos específicos para cada tipo de veículo: consumo na cidade e estrada, manutenção mensal, funcionário, ajudante, refeição e extras.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">📊 Cálculo de Frete</h4>
+                              <p className="text-sm">Os dados cadastrados são utilizados automaticamente para calcular o custo real de entregas e viagens, considerando distância, tipo de veículo e combustível.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">💰 Custos Fixos</h4>
+                              <p className="text-sm">Inclua custos fixos mensais como manutenção preventiva, salário do motorista, ajudantes e despesas com refeições em viagem.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <CustosVeiculosCRUD estabelecimentoId={estabelecimentoId} />
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
