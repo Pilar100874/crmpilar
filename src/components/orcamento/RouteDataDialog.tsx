@@ -30,9 +30,15 @@ export function RouteDataDialog({
   destinoEndereco
 }: RouteDataDialogProps) {
   const getGoogleMapsUrl = () => {
+    // Prefer addresses over coordinates for better Google Maps results
+    if (origemEndereco && destinoEndereco) {
+      const origem = encodeURIComponent(`${origemEndereco}, Brasil`);
+      const destino = encodeURIComponent(`${destinoEndereco}, Brasil`);
+      return `https://www.google.com/maps/dir/${origem}/${destino}`;
+    }
+    // Fallback to coordinates if addresses not available
     if (origemCoords && destinoCoords) {
-      // Using the older saddr/daddr format which is more reliable
-      return `https://maps.google.com/maps?saddr=${origemCoords.lat},${origemCoords.lng}&daddr=${destinoCoords.lat},${destinoCoords.lng}`;
+      return `https://www.google.com/maps/dir/${origemCoords.lat},${origemCoords.lng}/${destinoCoords.lat},${destinoCoords.lng}`;
     }
     return null;
   };
