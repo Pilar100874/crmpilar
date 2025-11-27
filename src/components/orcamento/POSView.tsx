@@ -144,6 +144,7 @@ export default function POSView({
   const [showPedagioDetailsDialog, setShowPedagioDetailsDialog] = useState(false);
   const [pedagioDialogDefaultTab, setPedagioDialogDefaultTab] = useState("map");
   const [freteIdaEVolta, setFreteIdaEVolta] = useState(true);
+  const [showRegrasInDetails, setShowRegrasInDetails] = useState(false);
 
   // Hook para cálculo de pedágio
   const pedagioResult = usePedagioCalculation(estabelecimentoId, selectedEmpresa);
@@ -1039,6 +1040,7 @@ export default function POSView({
                         className="absolute top-2 left-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={(e) => {
                           e.stopPropagation();
+                          setShowRegrasInDetails(false);
                           setSelectedProduto(produto);
                           setActiveTab("details");
                         }}
@@ -1137,6 +1139,7 @@ export default function POSView({
                           className="h-9 w-9"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setShowRegrasInDetails(false);
                             setSelectedProduto(produto);
                             setActiveTab("details");
                           }}
@@ -1205,22 +1208,9 @@ export default function POSView({
                 <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
                 Carrinho
               </TabsTrigger>
-              <TabsTrigger value="details" className="data-[state=active]:bg-muted text-xs flex-1 relative">
+              <TabsTrigger value="details" className="data-[state=active]:bg-muted text-xs flex-1">
                 <Tag className="w-3.5 h-3.5 mr-1.5" />
                 Detalhes
-                {regrasAplicadas.length > 0 && (
-                  <span 
-                    className="ml-1.5 w-5 h-5 rounded-full bg-green-500 text-white text-[10px] font-bold flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveTab("details");
-                      setShowRegrasDialog(true);
-                    }}
-                    title={`${regrasAplicadas.length} regra(s) aplicada(s)`}
-                  >
-                    {regrasAplicadas.length}
-                  </span>
-                )}
               </TabsTrigger>
             </TabsList>
             {onToggleClientDetails && (
@@ -1344,7 +1334,40 @@ export default function POSView({
 
           <TabsContent value="details" className="flex-1 m-0">
             <ScrollArea className="h-[calc(100vh-400px)] p-2">
-              {selectedProduto ? (
+              {showRegrasInDetails && regrasAplicadas.length > 0 ? (
+                <div className="space-y-2">
+                  {/* Header das Regras */}
+                  <div className="bg-green-50 dark:bg-green-950/30 rounded p-2.5 border border-green-200 dark:border-green-800">
+                    <h4 className="text-xs font-medium text-green-700 dark:text-green-300 mb-1 flex items-center gap-2">
+                      <Tag className="w-3.5 h-3.5" />
+                      Regras Aplicadas ({regrasAplicadas.length})
+                    </h4>
+                  </div>
+                  
+                  {/* Lista de Regras */}
+                  {regrasAplicadas.map((regra, index) => (
+                    <div key={index} className="bg-muted/50 rounded p-2.5 border border-border/50">
+                      <div className="flex items-start gap-2">
+                        <div className="p-1 rounded-full bg-green-500/10 mt-0.5">
+                          <Check className="w-3 h-3 text-green-600" />
+                        </div>
+                        <p className="text-xs text-foreground">{regra}</p>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Botão para voltar */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setShowRegrasInDetails(false)}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Fechar Regras
+                  </Button>
+                </div>
+              ) : selectedProduto ? (
                 <div className="space-y-2">
                   {/* Imagem do Produto */}
                   {selectedProduto.foto_url && (
@@ -1709,11 +1732,22 @@ export default function POSView({
                       currency: 'BRL'
                     }).format(getTotal())}
                   </div>
-                  <div className="text-foreground font-bold text-3xl">
+                  <div className="text-foreground font-bold text-3xl flex items-center gap-2">
                     {new Intl.NumberFormat('pt-BR', {
                       style: 'currency',
                       currency: 'BRL'
                     }).format(valorComRegras)}
+                    <span 
+                      className="w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors"
+                      onClick={() => {
+                        setSelectedProduto(null);
+                        setShowRegrasInDetails(true);
+                        setActiveTab("details");
+                      }}
+                      title={`${regrasAplicadas.length} regra(s) aplicada(s)`}
+                    >
+                      {regrasAplicadas.length}
+                    </span>
                   </div>
                 </>
               ) : (
