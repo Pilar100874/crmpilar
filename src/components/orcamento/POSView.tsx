@@ -1767,20 +1767,6 @@ export default function POSView({
                     </span>
                   </div>
                 )}
-                {/* Sempre mostrar CEPs se disponíveis */}
-                {(pedagioResult.origemCep || pedagioResult.destinoCep) && (
-                  <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                    <span className="font-medium">Origem:</span>
-                    <span className="bg-muted px-1 py-0.5 rounded text-[11px]">
-                      {pedagioResult.origemCep ? pedagioResult.origemCep.replace(/(\d{5})(\d{3})/, '$1-$2') : 'N/A'}
-                    </span>
-                    <span className="mx-1">→</span>
-                    <span className="font-medium">Destino:</span>
-                    <span className="bg-muted px-1 py-0.5 rounded text-[11px]">
-                      {pedagioResult.destinoCep ? pedagioResult.destinoCep.replace(/(\d{5})(\d{3})/, '$1-$2') : 'N/A'}
-                    </span>
-                  </div>
-                )}
                 {pedagioResult.loading ? (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin" />
