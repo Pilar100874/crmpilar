@@ -42,7 +42,7 @@ interface PedagioDetailsDialogProps {
     destinoCoords: { lat: number; lng: number } | null;
     rawResponse: any | null;
   };
-  regrasAplicadas?: string[];
+  regrasAplicadas?: Array<{ nome: string; detalhes: string; desconto?: number; percentual?: number }>;
   defaultTab?: string;
 }
 
@@ -258,7 +258,14 @@ export function PedagioDetailsDialog({ open, onClose, pedagioData, regrasAplicad
                           <CheckCircle2 className="w-4 h-4 text-green-600" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-foreground">{regra}</p>
+                          <p className="text-sm font-medium text-foreground">{regra.nome}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{regra.detalhes}</p>
+                          {regra.desconto !== undefined && regra.desconto > 0 && (
+                            <p className="text-xs text-green-600 mt-1">
+                              Desconto: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(regra.desconto)}
+                              {regra.percentual ? ` (${regra.percentual}%)` : ''}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </Card>
