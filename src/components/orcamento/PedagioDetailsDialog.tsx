@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { 
   MapPin, 
   Navigation, 
@@ -12,7 +13,9 @@ import {
   Map,
   Copy,
   Check,
-  Info
+  Info,
+  Tag,
+  CheckCircle2
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -39,9 +42,11 @@ interface PedagioDetailsDialogProps {
     destinoCoords: { lat: number; lng: number } | null;
     rawResponse: any | null;
   };
+  regrasAplicadas?: string[];
+  defaultTab?: string;
 }
 
-export function PedagioDetailsDialog({ open, onClose, pedagioData }: PedagioDetailsDialogProps) {
+export function PedagioDetailsDialog({ open, onClose, pedagioData, regrasAplicadas = [], defaultTab = "map" }: PedagioDetailsDialogProps) {
   const [copied, setCopied] = useState(false);
 
   const formatCurrency = (value: number) => {
@@ -99,8 +104,8 @@ export function PedagioDetailsDialog({ open, onClose, pedagioData }: PedagioDeta
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="map" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs defaultValue={defaultTab} className="w-full">
+          <TabsList className={`grid w-full ${regrasAplicadas.length > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <TabsTrigger value="map" className="gap-1">
               <Map className="w-3 h-3" />
               Mapa
@@ -109,6 +114,12 @@ export function PedagioDetailsDialog({ open, onClose, pedagioData }: PedagioDeta
               <Info className="w-3 h-3" />
               Detalhes
             </TabsTrigger>
+            {regrasAplicadas.length > 0 && (
+              <TabsTrigger value="regras" className="gap-1">
+                <Tag className="w-3 h-3" />
+                Regras ({regrasAplicadas.length})
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="map" className="mt-4">
@@ -232,6 +243,30 @@ export function PedagioDetailsDialog({ open, onClose, pedagioData }: PedagioDeta
               </div>
             </ScrollArea>
           </TabsContent>
+
+          {regrasAplicadas.length > 0 && (
+            <TabsContent value="regras" className="mt-4">
+              <ScrollArea className="max-h-[calc(85vh-200px)]">
+                <div className="space-y-3 pr-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">
+                    Regras Aplicadas ({regrasAplicadas.length})
+                  </h3>
+                  {regrasAplicadas.map((regra, index) => (
+                    <Card key={index} className="p-3 border-border hover:border-primary/50 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className="p-1.5 rounded-full bg-green-500/10">
+                          <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-foreground">{regra}</p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          )}
         </Tabs>
       </DialogContent>
     </Dialog>
