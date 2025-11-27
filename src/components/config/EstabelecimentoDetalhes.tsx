@@ -29,7 +29,8 @@ import { SkillsManager } from "@/components/atendimento/SkillsManager";
 import { AtendentesFilaManager } from "@/components/atendimento/AtendentesFilaManager";
 import { SkillsFilaManager } from "@/components/atendimento/SkillsFilaManager";
 import { AutomacaoVendasCRUD } from "./AutomacaoVendasCRUD";
-import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock, ClipboardCheck, Brain, HelpCircle, Zap, BookOpen } from "lucide-react";
+import PedagioAPIConfigCRUD from "./PedagioAPIConfigCRUD";
+import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock, ClipboardCheck, Brain, HelpCircle, Zap, BookOpen, Navigation } from "lucide-react";
 import PesquisasSatisfacaoCRUD from "@/components/atendimento/PesquisasSatisfacaoCRUD";
 import KnowledgeBaseCRUD from "./KnowledgeBaseCRUD";
 import IAConfigCRUD from "./IAConfigCRUD";
@@ -2354,6 +2355,50 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
                   <AutomacaoVendasCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="pedagio-api" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <Navigation className="w-4 h-4 text-primary" />
+                      <span className="font-medium">APIs de Pedágio</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "pedagio-api"} onOpenChange={(open) => setHelpDialogOpen(open ? "pedagio-api" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>APIs de Pedágio - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">🛣️ Cálculo de Pedágios</h4>
+                              <p className="text-sm">Configure APIs para calcular automaticamente o custo de pedágios em rotas de entrega ou viagem.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🌎 TollGuru</h4>
+                              <p className="text-sm">API internacional com suporte a mais de 60 países, ideal para operações globais e rotas complexas.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🇧🇷 CalcularPedágio.com.br</h4>
+                              <p className="text-sm">API brasileira especializada em pedágios nacionais, com dados precisos das rodovias do Brasil.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">🚛 Tipos de Veículos</h4>
+                              <p className="text-sm">Configure tipos de veículo padrão para cálculos precisos conforme a categoria (carro, moto, caminhão, ônibus).</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <PedagioAPIConfigCRUD estabelecimentoId={estabelecimentoId} />
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
