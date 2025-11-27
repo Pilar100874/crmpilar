@@ -52,44 +52,65 @@ function decodePolyline(encoded: string): [number, number][] {
   return points;
 }
 
-// Geocode address using Nominatim (OpenStreetMap) with multiple strategies
+// Get address details from CEP using ViaCEP
+async function getAddressFromCep(cep: string): Promise<{ logradouro: string; bairro: string; localidade: string; uf: string } | null> {
+  try {
+    const cleanCep = cep.replace(/\D/g, '');
+    const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+    const data = await response.json();
+    if (data.erro) return null;
+    return {
+      logradouro: data.logradouro || '',
+      bairro: data.bairro || '',
+      localidade: data.localidade || '',
+      uf: data.uf || ''
+    };
+  } catch (error) {
+    console.error('ViaCEP error:', error);
+    return null;
+  }
+}
+
+// Geocode address using Nominatim with multiple strategies
 async function geocodeAddress(address: string, cep?: string): Promise<{ lat: number; lng: number } | null> {
   const searchQueries: string[] = [];
   
-  // Strategy 1: Try with CEP first (most accurate)
+  // Strategy 1: If we have CEP, get address from ViaCEP and use city + state (most reliable)
   if (cep) {
-    searchQueries.push(`${cep}, Brasil`);
+    const viaCepData = await getAddressFromCep(cep);
+    if (viaCepData) {
+      // Most reliable: city + state
+      searchQueries.push(`${viaCepData.localidade}, ${viaCepData.uf}, Brasil`);
+      // Try with neighborhood
+      if (viaCepData.bairro) {
+        searchQueries.push(`${viaCepData.bairro}, ${viaCepData.localidade}, ${viaCepData.uf}, Brasil`);
+      }
+    }
+    // Also try CEP directly
+    searchQueries.push(`${cep.replace(/\D/g, '')}, Brasil`);
   }
   
-  // Strategy 2: Full address
-  searchQueries.push(`${address}, Brasil`);
-  
-  // Strategy 3: Simplified address (remove numbers and special chars)
-  const simplified = address
-    .replace(/\d+/g, '')
-    .replace(/,\s*/g, ', ')
-    .trim();
-  if (simplified !== address) {
-    searchQueries.push(`${simplified}, Brasil`);
-  }
-  
-  // Strategy 4: Just city and state
-  const parts = address.split(',').map(p => p.trim());
-  if (parts.length >= 2) {
-    const cityState = parts.slice(-2).join(', ');
-    searchQueries.push(`${cityState}, Brasil`);
+  // Strategy 2: Extract city and state from address
+  if (address) {
+    const parts = address.split(',').map(p => p.trim()).filter(p => p);
+    if (parts.length >= 2) {
+      // Try last two parts (usually city, state)
+      const cityState = parts.slice(-2).join(', ');
+      searchQueries.push(`${cityState}, Brasil`);
+    }
+    // Try full address
+    searchQueries.push(`${address}, Brasil`);
   }
 
-  for (const query of searchQueries) {
+  // Remove duplicates
+  const uniqueQueries = [...new Set(searchQueries)];
+
+  for (const query of uniqueQueries) {
     try {
       console.log('Trying geocode query:', query);
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=br`,
-        {
-          headers: {
-            'Accept-Language': 'pt-BR',
-          },
-        }
+        { headers: { 'Accept-Language': 'pt-BR' } }
       );
       const data = await response.json();
       
@@ -101,8 +122,11 @@ async function geocodeAddress(address: string, cep?: string): Promise<{ lat: num
         };
       }
     } catch (error) {
-      console.error('Error geocoding address:', query, error);
+      console.error('Geocode error for query:', query, error);
     }
+    
+    // Small delay to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 100));
   }
   
   return null;
