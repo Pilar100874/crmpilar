@@ -33,6 +33,7 @@ interface VeiculoCusto {
   valor_ajudante: number;
   valor_refeicao: number;
   extras: number;
+  peso_maximo_kg: number;
   observacoes?: string;
 }
 
@@ -80,6 +81,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
     valor_ajudante: 0,
     valor_refeicao: 0,
     extras: 0,
+    peso_maximo_kg: 0,
     observacoes: "",
   };
 
@@ -128,6 +130,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
           valor_ajudante: Number(v.valor_ajudante) || 0,
           valor_refeicao: Number(v.valor_refeicao) || 0,
           extras: Number(v.extras) || 0,
+          peso_maximo_kg: Number(v.peso_maximo_kg) || 0,
           observacoes: v.observacoes || "",
         })));
       }
@@ -194,6 +197,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
             valor_ajudante: editingVeiculo.valor_ajudante,
             valor_refeicao: editingVeiculo.valor_refeicao,
             extras: editingVeiculo.extras,
+            peso_maximo_kg: editingVeiculo.peso_maximo_kg,
             observacoes: editingVeiculo.observacoes,
           })
           .eq("id", editingVeiculo.id);
@@ -210,6 +214,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
           valor_ajudante: editingVeiculo.valor_ajudante,
           valor_refeicao: editingVeiculo.valor_refeicao,
           extras: editingVeiculo.extras,
+          peso_maximo_kg: editingVeiculo.peso_maximo_kg,
           observacoes: editingVeiculo.observacoes,
         });
         toast.success("Veículo adicionado com sucesso!");
@@ -437,7 +442,16 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
                       onChange={e => setEditingVeiculo(prev => prev ? { ...prev, extras: Number(e.target.value) } : null)}
                     />
                   </div>
-                  <div className="space-y-1 col-span-2 md:col-span-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Peso Máximo (kg)</Label>
+                    <Input
+                      type="number"
+                      step="1"
+                      value={editingVeiculo?.peso_maximo_kg || 0}
+                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, peso_maximo_kg: Number(e.target.value) } : null)}
+                    />
+                  </div>
+                  <div className="space-y-1 col-span-2">
                     <Label className="text-xs">Observações</Label>
                     <Input
                       value={editingVeiculo?.observacoes || ""}
@@ -470,6 +484,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
                     <TableHead className="text-xs">Combustível</TableHead>
                     <TableHead className="text-xs text-right">Cidade</TableHead>
                     <TableHead className="text-xs text-right">Estrada</TableHead>
+                    <TableHead className="text-xs text-right">Peso Máx.</TableHead>
                     <TableHead className="text-xs text-right">Manutenção</TableHead>
                     <TableHead className="text-xs text-right">Funcionário</TableHead>
                     <TableHead className="text-xs text-right">Ajudante</TableHead>
@@ -485,6 +500,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
                       <TableCell className="text-xs">{getTipoCombustivelLabel(v.tipo_combustivel)}</TableCell>
                       <TableCell className="text-xs text-right">{v.consumo_cidade} km/l</TableCell>
                       <TableCell className="text-xs text-right">{v.consumo_estrada} km/l</TableCell>
+                      <TableCell className="text-xs text-right">{v.peso_maximo_kg.toLocaleString()} kg</TableCell>
                       <TableCell className="text-xs text-right">R$ {v.custo_manutencao_mensal.toFixed(2)}</TableCell>
                       <TableCell className="text-xs text-right">R$ {v.custo_funcionario_mensal.toFixed(2)}</TableCell>
                       <TableCell className="text-xs text-right">R$ {v.valor_ajudante.toFixed(2)}</TableCell>
