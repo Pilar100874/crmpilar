@@ -11,6 +11,8 @@ interface TollRequest {
   configuracoes: any;
   origem_cep: string;
   destino_cep: string;
+  origem_endereco?: string;
+  destino_endereco?: string;
 }
 
 interface Coords {
@@ -26,19 +28,46 @@ async function fetchWithRetry(url: string, options?: RequestInit, retries = 3): 
     } catch (error) {
       console.log(`Tentativa ${i + 1} falhou para ${url}:`, error);
       if (i === retries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
     }
   }
   throw new Error('Max retries reached');
 }
 
-async function getCoordsFromCep(cep: string): Promise<Coords | null> {
+async function getCoordsFromAddress(endereco: string, cep: string): Promise<Coords | null> {
   try {
-    // Clean CEP
-    const cleanCep = cep.replace(/\D/g, '');
-    console.log(`Buscando coordenadas para CEP: ${cleanCep}`);
+    console.log(`Buscando coordenadas para endereço: ${endereco} / CEP: ${cep}`);
     
-    // Get address from ViaCEP with retry
+    const cleanCep = cep.replace(/\D/g, '');
+    
+    // Try with full address first (more precise)
+    if (endereco && endereco.length > 5) {
+      const searchAddress = `${endereco}, Brasil`;
+      console.log('Buscando por endereço completo:', searchAddress);
+      
+      const nominatimResponse = await fetchWithRetry(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress)}&limit=1&countrycodes=br`,
+        {
+          headers: {
+            'User-Agent': 'OrcamentoApp/1.0'
+          }
+        }
+      );
+      
+      if (nominatimResponse.ok) {
+        const nominatimData = await nominatimResponse.json();
+        if (nominatimData.length > 0) {
+          console.log('Coordenadas encontradas por endereço:', nominatimData[0]);
+          return {
+            lat: parseFloat(nominatimData[0].lat),
+            lng: parseFloat(nominatimData[0].lon)
+          };
+        }
+      }
+    }
+
+    // Fallback: Get address from ViaCEP
+    console.log('Fallback: usando ViaCEP para CEP:', cleanCep);
     const viaCepResponse = await fetchWithRetry(`https://viacep.com.br/ws/${cleanCep}/json/`);
     if (!viaCepResponse.ok) {
       console.error('ViaCEP response not ok:', viaCepResponse.status);
@@ -53,13 +82,18 @@ async function getCoordsFromCep(cep: string): Promise<Coords | null> {
 
     console.log('ViaCEP data:', viaCepData);
 
-    // Try with city and state first (more reliable)
-    const searchAddress = `${viaCepData.localidade}, ${viaCepData.uf}, Brasil`;
+    // Use full address from ViaCEP if available
+    let searchAddress = '';
+    if (viaCepData.logradouro) {
+      searchAddress = `${viaCepData.logradouro}, ${viaCepData.bairro}, ${viaCepData.localidade}, ${viaCepData.uf}, Brasil`;
+    } else {
+      searchAddress = `${viaCepData.localidade}, ${viaCepData.uf}, Brasil`;
+    }
+    
     console.log('Buscando coordenadas para:', searchAddress);
     
-    // Get coordinates from Nominatim with retry
     const nominatimResponse = await fetchWithRetry(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress)}&limit=1`,
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress)}&limit=1&countrycodes=br`,
       {
         headers: {
           'User-Agent': 'OrcamentoApp/1.0'
@@ -222,9 +256,9 @@ serve(async (req) => {
   }
 
   try {
-    const { provider, api_key, configuracoes, origem_cep, destino_cep }: TollRequest = await req.json();
+    const { provider, api_key, configuracoes, origem_cep, destino_cep, origem_endereco, destino_endereco }: TollRequest = await req.json();
 
-    console.log('Calculating toll:', { provider, origem_cep, destino_cep });
+    console.log('Calculating toll:', { provider, origem_cep, destino_cep, origem_endereco, destino_endereco });
     console.log('API Key presente:', api_key ? `Sim (${api_key.substring(0, 8)}...)` : 'Não');
 
     if (!api_key) {
@@ -241,20 +275,20 @@ serve(async (req) => {
       );
     }
 
-    // Get coordinates for both CEPs
-    const origemCoords = await getCoordsFromCep(origem_cep);
-    const destinoCoords = await getCoordsFromCep(destino_cep);
+    // Get coordinates using full address when available
+    const origemCoords = await getCoordsFromAddress(origem_endereco || '', origem_cep);
+    const destinoCoords = await getCoordsFromAddress(destino_endereco || '', destino_cep);
 
     if (!origemCoords) {
       return new Response(
-        JSON.stringify({ error: 'Não foi possível obter coordenadas do CEP de origem' }),
+        JSON.stringify({ error: 'Não foi possível obter coordenadas do endereço de origem' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     if (!destinoCoords) {
       return new Response(
-        JSON.stringify({ error: 'Não foi possível obter coordenadas do CEP de destino' }),
+        JSON.stringify({ error: 'Não foi possível obter coordenadas do endereço de destino' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -282,7 +316,9 @@ serve(async (req) => {
         tempoTotalMin: result.tempoIdaMin + result.tempoVoltaMin,
         error: result.error,
         origem_coords: origemCoords,
-        destino_coords: destinoCoords
+        destino_coords: destinoCoords,
+        origem_endereco: origem_endereco,
+        destino_endereco: destino_endereco
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

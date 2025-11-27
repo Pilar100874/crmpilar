@@ -2159,6 +2159,8 @@ export default function POSView({
           tempoTotalMin: pedagioResult.tempoTotalMin,
           origemCep: pedagioResult.origemCep,
           destinoCep: pedagioResult.destinoCep,
+          origemEndereco: pedagioResult.origemEndereco,
+          destinoEndereco: pedagioResult.destinoEndereco,
           origemCoords: pedagioResult.origemCoords,
           destinoCoords: pedagioResult.destinoCoords,
           rawResponse: pedagioResult.rawResponse
@@ -2172,6 +2174,8 @@ export default function POSView({
         rawResponse={pedagioResult.rawResponse}
         origemCoords={pedagioResult.origemCoords}
         destinoCoords={pedagioResult.destinoCoords}
+        origemEndereco={pedagioResult.origemEndereco}
+        destinoEndereco={pedagioResult.destinoEndereco}
       />
     </div>
   );
