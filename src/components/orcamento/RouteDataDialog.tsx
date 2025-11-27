@@ -31,9 +31,10 @@ export function RouteDataDialog({
 }: RouteDataDialogProps) {
   const openGoogleMaps = () => {
     if (origemCoords && destinoCoords) {
-      const url = `https://www.google.com/maps/dir/${origemCoords.lat},${origemCoords.lng}/${destinoCoords.lat},${destinoCoords.lng}`;
+      // Using official Google Maps Directions API format
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${origemCoords.lat},${origemCoords.lng}&destination=${destinoCoords.lat},${destinoCoords.lng}&travelmode=driving`;
       console.log('Opening Google Maps URL:', url);
-      window.open(url, '_blank', 'noopener,noreferrer');
+      window.open(url, '_blank');
     } else {
       console.log('Cannot open Google Maps - missing coordinates:', { origemCoords, destinoCoords });
     }
