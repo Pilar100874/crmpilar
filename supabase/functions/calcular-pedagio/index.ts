@@ -40,10 +40,10 @@ async function getCoordsFromAddress(endereco: string, cep: string): Promise<Coor
     
     const cleanCep = cep.replace(/\D/g, '');
     
-    // Try with full address first (more precise)
+    // Strategy 1: Try with full address first (more precise)
     if (endereco && endereco.length > 5) {
       const searchAddress = `${endereco}, Brasil`;
-      console.log('Buscando por endereço completo:', searchAddress);
+      console.log('Estratégia 1 - Buscando por endereço completo:', searchAddress);
       
       const nominatimResponse = await fetchWithRetry(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress)}&limit=1&countrycodes=br`,
@@ -57,43 +57,86 @@ async function getCoordsFromAddress(endereco: string, cep: string): Promise<Coor
       if (nominatimResponse.ok) {
         const nominatimData = await nominatimResponse.json();
         if (nominatimData.length > 0) {
-          console.log('Coordenadas encontradas por endereço:', nominatimData[0]);
+          console.log('Coordenadas encontradas por endereço completo:', nominatimData[0]);
           return {
             lat: parseFloat(nominatimData[0].lat),
             lng: parseFloat(nominatimData[0].lon)
           };
         }
       }
+      
+      // Strategy 2: Try with simplified address (city + state only)
+      const addressParts = endereco.split(',').map(p => p.trim());
+      if (addressParts.length >= 2) {
+        // Try to get city and state from the end
+        const lastParts = addressParts.slice(-2);
+        const simplifiedAddress = `${lastParts.join(', ')}, Brasil`;
+        console.log('Estratégia 2 - Buscando por cidade/estado:', simplifiedAddress);
+        
+        const simplifiedResponse = await fetchWithRetry(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(simplifiedAddress)}&limit=1&countrycodes=br`,
+          {
+            headers: {
+              'User-Agent': 'OrcamentoApp/1.0'
+            }
+          }
+        );
+        
+        if (simplifiedResponse.ok) {
+          const simplifiedData = await simplifiedResponse.json();
+          if (simplifiedData.length > 0) {
+            console.log('Coordenadas encontradas por cidade/estado:', simplifiedData[0]);
+            return {
+              lat: parseFloat(simplifiedData[0].lat),
+              lng: parseFloat(simplifiedData[0].lon)
+            };
+          }
+        }
+      }
     }
 
-    // Fallback: Get address from ViaCEP
-    console.log('Fallback: usando ViaCEP para CEP:', cleanCep);
-    const viaCepResponse = await fetchWithRetry(`https://viacep.com.br/ws/${cleanCep}/json/`);
-    if (!viaCepResponse.ok) {
-      console.error('ViaCEP response not ok:', viaCepResponse.status);
-      return null;
-    }
-    
-    const viaCepData = await viaCepResponse.json();
-    if (viaCepData.erro) {
-      console.error('ViaCEP retornou erro para CEP:', cleanCep);
-      return null;
+    // Strategy 3: Fallback to ViaCEP + Nominatim
+    console.log('Estratégia 3 - Usando ViaCEP para CEP:', cleanCep);
+    try {
+      const viaCepResponse = await fetchWithRetry(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      if (viaCepResponse.ok) {
+        const viaCepData = await viaCepResponse.json();
+        if (!viaCepData.erro) {
+          console.log('ViaCEP data:', viaCepData);
+
+          // Try with city only from ViaCEP
+          const searchAddress = `${viaCepData.localidade}, ${viaCepData.uf}, Brasil`;
+          console.log('Buscando coordenadas para cidade:', searchAddress);
+          
+          const nominatimResponse = await fetchWithRetry(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress)}&limit=1&countrycodes=br`,
+            {
+              headers: {
+                'User-Agent': 'OrcamentoApp/1.0'
+              }
+            }
+          );
+          
+          if (nominatimResponse.ok) {
+            const nominatimData = await nominatimResponse.json();
+            if (nominatimData.length > 0) {
+              console.log('Coordenadas encontradas via ViaCEP:', nominatimData[0]);
+              return {
+                lat: parseFloat(nominatimData[0].lat),
+                lng: parseFloat(nominatimData[0].lon)
+              };
+            }
+          }
+        }
+      }
+    } catch (viaCepError) {
+      console.log('ViaCEP falhou, tentando busca direta pelo CEP');
     }
 
-    console.log('ViaCEP data:', viaCepData);
-
-    // Use full address from ViaCEP if available
-    let searchAddress = '';
-    if (viaCepData.logradouro) {
-      searchAddress = `${viaCepData.logradouro}, ${viaCepData.bairro}, ${viaCepData.localidade}, ${viaCepData.uf}, Brasil`;
-    } else {
-      searchAddress = `${viaCepData.localidade}, ${viaCepData.uf}, Brasil`;
-    }
-    
-    console.log('Buscando coordenadas para:', searchAddress);
-    
-    const nominatimResponse = await fetchWithRetry(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress)}&limit=1&countrycodes=br`,
+    // Strategy 4: Try direct CEP search in Nominatim
+    console.log('Estratégia 4 - Buscando pelo CEP diretamente:', cleanCep);
+    const cepResponse = await fetchWithRetry(
+      `https://nominatim.openstreetmap.org/search?format=json&postalcode=${cleanCep}&country=Brazil&limit=1`,
       {
         headers: {
           'User-Agent': 'OrcamentoApp/1.0'
@@ -101,23 +144,19 @@ async function getCoordsFromAddress(endereco: string, cep: string): Promise<Coor
       }
     );
     
-    if (!nominatimResponse.ok) {
-      console.error('Nominatim response not ok:', nominatimResponse.status);
-      return null;
+    if (cepResponse.ok) {
+      const cepData = await cepResponse.json();
+      if (cepData.length > 0) {
+        console.log('Coordenadas encontradas pelo CEP:', cepData[0]);
+        return {
+          lat: parseFloat(cepData[0].lat),
+          lng: parseFloat(cepData[0].lon)
+        };
+      }
     }
-    
-    const nominatimData = await nominatimResponse.json();
-    console.log('Nominatim data:', nominatimData);
-    
-    if (nominatimData.length === 0) {
-      console.error('Nominatim não encontrou coordenadas para:', searchAddress);
-      return null;
-    }
-    
-    return {
-      lat: parseFloat(nominatimData[0].lat),
-      lng: parseFloat(nominatimData[0].lon)
-    };
+
+    console.error('Todas as estratégias falharam para encontrar coordenadas');
+    return null;
   } catch (error) {
     console.error('Erro ao obter coordenadas:', error);
     return null;
