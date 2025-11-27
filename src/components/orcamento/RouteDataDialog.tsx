@@ -76,7 +76,7 @@ export function RouteDataDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="summary" className="w-full">
+        <Tabs defaultValue="map" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="summary">Resumo</TabsTrigger>
             <TabsTrigger value="map" className="gap-1">
