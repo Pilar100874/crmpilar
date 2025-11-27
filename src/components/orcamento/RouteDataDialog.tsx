@@ -1,12 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Code, 
-  MapPin, 
   Navigation,
-  ExternalLink,
   Copy,
   Check,
   Map
@@ -38,13 +34,11 @@ export function RouteDataDialog({
   const [copied, setCopied] = useState(false);
 
   const getGoogleMapsUrl = () => {
-    // Prefer addresses over coordinates for better Google Maps results
     if (origemEndereco && destinoEndereco) {
       const origem = encodeURIComponent(`${origemEndereco}, Brasil`);
       const destino = encodeURIComponent(`${destinoEndereco}, Brasil`);
       return `https://www.google.com/maps/dir/${origem}/${destino}`;
     }
-    // Fallback to coordinates if addresses not available
     if (origemCoords && destinoCoords) {
       return `https://www.google.com/maps/dir/${origemCoords.lat},${origemCoords.lng}/${destinoCoords.lat},${destinoCoords.lng}`;
     }
@@ -72,60 +66,47 @@ export function RouteDataDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Navigation className="w-5 h-5 text-primary" />
-            Dados da Rota - TollGuru
+            Dados da Rota
           </DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="map" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="summary">Resumo</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="map" className="gap-1">
               <Map className="w-3 h-3" />
               Mapa
             </TabsTrigger>
-            <TabsTrigger value="coordinates">Coordenadas</TabsTrigger>
-            <TabsTrigger value="raw">Dados Brutos</TabsTrigger>
+            <TabsTrigger value="summary">Resumo</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="map" className="mt-4">
+            <RouteMapEmbed
+              origemCoords={origemCoords}
+              destinoCoords={destinoCoords}
+              origemEndereco={origemEndereco}
+              destinoEndereco={destinoEndereco}
+            />
+          </TabsContent>
 
           <TabsContent value="summary" className="mt-4">
             <div className="space-y-4">
-              {/* Ações rápidas */}
-              <div className="flex flex-col gap-2">
-                <div className="flex gap-2">
-                  {googleMapsUrl ? (
-                    <>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={copyToClipboard}
-                        className="gap-2"
-                      >
-                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                        {copied ? "Copiado!" : "Copiar Link"}
-                      </Button>
-                      <a 
-                        href={googleMapsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        Abrir no Google Maps
-                      </a>
-                    </>
-                  ) : (
-                    <Button variant="outline" size="sm" disabled className="gap-2">
-                      <ExternalLink className="w-4 h-4" />
-                      Google Maps indisponível
-                    </Button>
-                  )}
-                </div>
-                {googleMapsUrl && (
+              {/* Ação de copiar link */}
+              {googleMapsUrl && (
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={copyToClipboard}
+                    className="gap-2 w-fit"
+                  >
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copied ? "Copiado!" : "Copiar Link do Google Maps"}
+                  </Button>
                   <p className="text-xs text-muted-foreground">
-                    Se o link não abrir, copie e cole em uma nova aba do navegador.
+                    Cole o link em uma nova aba do navegador para ver no Google Maps.
                   </p>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Endereços */}
               {(origemEndereco || destinoEndereco) && (
@@ -145,7 +126,7 @@ export function RouteDataDialog({
                 </div>
               )}
 
-              {/* Dados resumidos */}
+              {/* Coordenadas */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h4 className="text-sm font-medium mb-2">Coordenadas Origem</h4>
@@ -200,65 +181,6 @@ export function RouteDataDialog({
                 </div>
               )}
             </div>
-          </TabsContent>
-
-          <TabsContent value="map" className="mt-4">
-            <RouteMapEmbed
-              origemCoords={origemCoords}
-              destinoCoords={destinoCoords}
-              origemEndereco={origemEndereco}
-              destinoEndereco={destinoEndereco}
-            />
-          </TabsContent>
-
-          <TabsContent value="coordinates" className="mt-4">
-            <div className="space-y-4">
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  Coordenadas de Origem
-                </h4>
-                {origemCoords ? (
-                  <div className="font-mono text-sm bg-background p-3 rounded border">
-                    {JSON.stringify(origemCoords, null, 2)}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Não disponível</p>
-                )}
-              </div>
-
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  Coordenadas de Destino
-                </h4>
-                {destinoCoords ? (
-                  <div className="font-mono text-sm bg-background p-3 rounded border">
-                    {JSON.stringify(destinoCoords, null, 2)}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Não disponível</p>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="raw" className="mt-4">
-            <ScrollArea className="h-[400px]">
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                  <Code className="w-4 h-4" />
-                  Resposta da API TollGuru
-                </h4>
-                {rawResponse ? (
-                  <pre className="font-mono text-xs bg-background p-4 rounded border overflow-auto whitespace-pre-wrap">
-                    {JSON.stringify(rawResponse, null, 2)}
-                  </pre>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Nenhum dado disponível</p>
-                )}
-              </div>
-            </ScrollArea>
           </TabsContent>
         </Tabs>
       </DialogContent>
