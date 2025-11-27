@@ -144,6 +144,7 @@ export default function POSView({
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
   const [showPedagioDetailsDialog, setShowPedagioDetailsDialog] = useState(false);
   const [showRouteDataDialog, setShowRouteDataDialog] = useState(false);
+  const [freteIdaEVolta, setFreteIdaEVolta] = useState(true);
 
   // Hook para cálculo de pedágio
   const pedagioResult = usePedagioCalculation(estabelecimentoId, selectedEmpresa);
@@ -153,7 +154,8 @@ export default function POSView({
     pedagioResult.origemEndereco,
     pedagioResult.destinoEndereco,
     pedagioResult.origemCep,
-    pedagioResult.destinoCep
+    pedagioResult.destinoCep,
+    freteIdaEVolta
   );
 
   useEffect(() => {
@@ -1733,9 +1735,18 @@ export default function POSView({
             <>
               <div className="h-8 w-px bg-border" />
               <div>
-                <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
+                <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
                   <Truck className="w-3 h-3" />
                   <span>Rota & Pedágio</span>
+                  <label className="flex items-center gap-1 ml-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={freteIdaEVolta}
+                      onChange={(e) => setFreteIdaEVolta(e.target.checked)}
+                      className="w-3 h-3 rounded border-muted-foreground"
+                    />
+                    <span className="text-[10px]">Ida e volta</span>
+                  </label>
                 </div>
                 {/* Mostrar distância e tempo da rota automaticamente */}
                 {routeLoading ? (
@@ -1747,6 +1758,7 @@ export default function POSView({
                   <div className="flex items-center gap-3 text-xs mb-1">
                     <span className="text-muted-foreground">
                       <span className="font-medium text-foreground">{autoRouteInfo.distance.toFixed(1)} km</span>
+                      <span className="text-[10px] ml-1">({freteIdaEVolta ? 'ida+volta' : 'só ida'})</span>
                     </span>
                     <span className="text-muted-foreground">
                       <span className="font-medium text-foreground">
@@ -1784,60 +1796,52 @@ export default function POSView({
                       </div>
                     )}
                     
-                    {/* Distância e Tempo - só mostra se não houver erro */}
-                    {!pedagioResult.error && (pedagioResult.distanciaTotalKm > 0 || pedagioResult.tempoTotalMin > 0) && (
-                      <div className="flex items-center gap-4 text-xs">
-                        {pedagioResult.distanciaTotalKm > 0 && (
-                          <div className="flex flex-col">
-                            <span className="text-[10px] text-muted-foreground">Distância (ida+volta)</span>
-                            <span className="font-medium text-foreground">
-                              {pedagioResult.distanciaTotalKm.toFixed(1)} km
-                            </span>
-                          </div>
-                        )}
-                        {pedagioResult.tempoTotalMin > 0 && (
-                          <div className="flex flex-col">
-                            <span className="text-[10px] text-muted-foreground">Tempo (ida+volta)</span>
-                            <span className="font-medium text-foreground">
-                              {Math.floor(pedagioResult.tempoTotalMin / 60)}h {Math.round(pedagioResult.tempoTotalMin % 60)}min
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
                     {/* Pedágio - só mostra se não houver erro */}
-                    {!pedagioResult.error && (
+                    {!pedagioResult.error && (pedagioResult.ida > 0 || pedagioResult.volta > 0) && (
                       <div className="flex items-center gap-4 text-sm">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-muted-foreground">Pedágio Ida</span>
-                          <span className="font-medium text-foreground">
-                            {new Intl.NumberFormat('pt-BR', {
-                              style: 'currency',
-                              currency: 'BRL'
-                            }).format(pedagioResult.ida)}
-                          </span>
-                        </div>
-                        <div className="text-muted-foreground">+</div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-muted-foreground">Pedágio Volta</span>
-                          <span className="font-medium text-foreground">
-                            {new Intl.NumberFormat('pt-BR', {
-                              style: 'currency',
-                              currency: 'BRL'
-                            }).format(pedagioResult.volta)}
-                          </span>
-                        </div>
-                        <div className="text-muted-foreground">=</div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-muted-foreground">Total Pedágio</span>
-                          <span className="font-semibold text-primary">
-                            {new Intl.NumberFormat('pt-BR', {
-                              style: 'currency',
-                              currency: 'BRL'
-                            }).format(pedagioResult.total)}
-                          </span>
-                        </div>
+                        {freteIdaEVolta ? (
+                          <>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground">Pedágio Ida</span>
+                              <span className="font-medium text-foreground">
+                                {new Intl.NumberFormat('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL'
+                                }).format(pedagioResult.ida)}
+                              </span>
+                            </div>
+                            <div className="text-muted-foreground">+</div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground">Pedágio Volta</span>
+                              <span className="font-medium text-foreground">
+                                {new Intl.NumberFormat('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL'
+                                }).format(pedagioResult.volta)}
+                              </span>
+                            </div>
+                            <div className="text-muted-foreground">=</div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground">Total Pedágio</span>
+                              <span className="font-semibold text-primary">
+                                {new Intl.NumberFormat('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL'
+                                }).format(pedagioResult.total)}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground">Pedágio (só ida)</span>
+                            <span className="font-semibold text-primary">
+                              {new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                              }).format(pedagioResult.ida)}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                     
