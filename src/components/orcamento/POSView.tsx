@@ -1747,15 +1747,18 @@ export default function POSView({
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-sm">Calculando...</span>
                   </div>
-                ) : pedagioResult.error ? (
-                  <div className="flex items-center gap-1 text-yellow-600">
-                    <AlertCircle className="w-4 h-4" />
-                    <span className="text-xs">{pedagioResult.error}</span>
-                  </div>
                 ) : (
                   <div className="space-y-2">
-                    {/* Distância e Tempo */}
-                    {(pedagioResult.distanciaTotalKm > 0 || pedagioResult.tempoTotalMin > 0) && (
+                    {/* Mostrar erro se houver */}
+                    {pedagioResult.error && (
+                      <div className="flex items-center gap-1 text-yellow-600 mb-2">
+                        <AlertCircle className="w-4 h-4" />
+                        <span className="text-xs">{pedagioResult.error}</span>
+                      </div>
+                    )}
+                    
+                    {/* Distância e Tempo - só mostra se não houver erro */}
+                    {!pedagioResult.error && (pedagioResult.distanciaTotalKm > 0 || pedagioResult.tempoTotalMin > 0) && (
                       <div className="flex items-center gap-4 text-xs">
                         {pedagioResult.distanciaTotalKm > 0 && (
                           <div className="flex flex-col">
@@ -1775,58 +1778,66 @@ export default function POSView({
                         )}
                       </div>
                     )}
-                    {/* Pedágio */}
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground">Pedágio Ida</span>
-                        <span className="font-medium text-foreground">
-                          {new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL'
-                          }).format(pedagioResult.ida)}
-                        </span>
+                    
+                    {/* Pedágio - só mostra se não houver erro */}
+                    {!pedagioResult.error && (
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-muted-foreground">Pedágio Ida</span>
+                          <span className="font-medium text-foreground">
+                            {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL'
+                            }).format(pedagioResult.ida)}
+                          </span>
+                        </div>
+                        <div className="text-muted-foreground">+</div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-muted-foreground">Pedágio Volta</span>
+                          <span className="font-medium text-foreground">
+                            {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL'
+                            }).format(pedagioResult.volta)}
+                          </span>
+                        </div>
+                        <div className="text-muted-foreground">=</div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] text-muted-foreground">Total Pedágio</span>
+                          <span className="font-semibold text-primary">
+                            {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL'
+                            }).format(pedagioResult.total)}
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-muted-foreground">+</div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground">Pedágio Volta</span>
-                        <span className="font-medium text-foreground">
-                          {new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL'
-                          }).format(pedagioResult.volta)}
-                        </span>
-                      </div>
-                      <div className="text-muted-foreground">=</div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground">Total Pedágio</span>
-                        <span className="font-semibold text-primary">
-                          {new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL'
-                          }).format(pedagioResult.total)}
-                        </span>
-                      </div>
-                    </div>
-                    {/* Botões de detalhes */}
+                    )}
+                    
+                    {/* Botões de detalhes - sempre mostra Rota se tem endereços */}
                     <div className="flex gap-2 mt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs gap-1"
-                        onClick={() => setShowPedagioDetailsDialog(true)}
-                      >
-                        <Info className="w-3 h-3" />
-                        Detalhes
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs gap-1"
-                        onClick={() => setShowRouteDataDialog(true)}
-                      >
-                        <MapIcon className="w-3 h-3" />
-                        Rota
-                      </Button>
+                      {!pedagioResult.error && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => setShowPedagioDetailsDialog(true)}
+                        >
+                          <Info className="w-3 h-3" />
+                          Detalhes
+                        </Button>
+                      )}
+                      {(pedagioResult.origemEndereco || pedagioResult.destinoEndereco) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => setShowRouteDataDialog(true)}
+                        >
+                          <MapIcon className="w-3 h-3" />
+                          Rota
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
