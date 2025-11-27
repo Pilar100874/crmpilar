@@ -1721,7 +1721,7 @@ export default function POSView({
               <div>
                 <div className="flex items-center gap-1 text-muted-foreground text-xs mb-1">
                   <Truck className="w-3 h-3" />
-                  <span>Pedágio</span>
+                  <span>Rota & Pedágio</span>
                 </div>
                 {/* Sempre mostrar CEPs se disponíveis */}
                 {(pedagioResult.origemCep || pedagioResult.destinoCep) && (
@@ -1748,10 +1748,32 @@ export default function POSView({
                     <span className="text-xs">{pedagioResult.error}</span>
                   </div>
                 ) : (
-                  <div className="space-y-0.5">
+                  <div className="space-y-2">
+                    {/* Distância e Tempo */}
+                    {(pedagioResult.distanciaTotalKm > 0 || pedagioResult.tempoTotalMin > 0) && (
+                      <div className="flex items-center gap-4 text-xs">
+                        {pedagioResult.distanciaTotalKm > 0 && (
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground">Distância (ida+volta)</span>
+                            <span className="font-medium text-foreground">
+                              {pedagioResult.distanciaTotalKm.toFixed(1)} km
+                            </span>
+                          </div>
+                        )}
+                        {pedagioResult.tempoTotalMin > 0 && (
+                          <div className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground">Tempo (ida+volta)</span>
+                            <span className="font-medium text-foreground">
+                              {Math.floor(pedagioResult.tempoTotalMin / 60)}h {Math.round(pedagioResult.tempoTotalMin % 60)}min
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {/* Pedágio */}
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground">Ida</span>
+                        <span className="text-[10px] text-muted-foreground">Pedágio Ida</span>
                         <span className="font-medium text-foreground">
                           {new Intl.NumberFormat('pt-BR', {
                             style: 'currency',
@@ -1761,7 +1783,7 @@ export default function POSView({
                       </div>
                       <div className="text-muted-foreground">+</div>
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground">Volta</span>
+                        <span className="text-[10px] text-muted-foreground">Pedágio Volta</span>
                         <span className="font-medium text-foreground">
                           {new Intl.NumberFormat('pt-BR', {
                             style: 'currency',
@@ -1771,7 +1793,7 @@ export default function POSView({
                       </div>
                       <div className="text-muted-foreground">=</div>
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-muted-foreground">Total</span>
+                        <span className="text-[10px] text-muted-foreground">Total Pedágio</span>
                         <span className="font-semibold text-primary">
                           {new Intl.NumberFormat('pt-BR', {
                             style: 'currency',

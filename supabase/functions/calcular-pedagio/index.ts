@@ -90,14 +90,26 @@ async function getCoordsFromCep(cep: string): Promise<Coords | null> {
   }
 }
 
+interface TollGuruResult {
+  ida: number;
+  volta: number;
+  distanciaIdaKm: number;
+  distanciaVoltaKm: number;
+  tempoIdaMin: number;
+  tempoVoltaMin: number;
+  error: string | null;
+}
+
 async function calculateTollGuru(
   apiKey: string,
   configuracoes: any,
   origemCoords: Coords,
   destinoCoords: Coords
-): Promise<{ ida: number; volta: number; error: string | null }> {
+): Promise<TollGuruResult> {
   try {
-    // Use origin-destination-pair endpoint (works with basic API keys)
+    console.log('TollGuru: Calculando ida...');
+    
+    // Use origin-destination-pair endpoint
     const idaResponse = await fetch('https://apis.tollguru.com/toll/v2/origin-destination-pair', {
       method: 'POST',
       headers: {
@@ -107,29 +119,38 @@ async function calculateTollGuru(
       body: JSON.stringify({
         from: { lat: origemCoords.lat, lng: origemCoords.lng },
         to: { lat: destinoCoords.lat, lng: destinoCoords.lng },
-        vehicleType: configuracoes?.vehicle_type || '2AxlesAuto',
+        vehicleType: configuracoes?.vehicle_type || '2AxlesTruck',
         departure_time: new Date().toISOString()
       })
     });
 
     if (!idaResponse.ok) {
       const errorData = await idaResponse.json().catch(() => ({}));
-      console.error('TollGuru ida error:', errorData);
-      return { ida: 0, volta: 0, error: `Erro TollGuru: ${errorData.message || errorData.error || idaResponse.statusText}` };
+      console.error('TollGuru ida error:', JSON.stringify(errorData));
+      return { 
+        ida: 0, volta: 0, 
+        distanciaIdaKm: 0, distanciaVoltaKm: 0,
+        tempoIdaMin: 0, tempoVoltaMin: 0,
+        error: `Erro TollGuru: ${errorData.message || errorData.error || idaResponse.statusText}` 
+      };
     }
 
     const idaData = await idaResponse.json();
     console.log('TollGuru ida response:', JSON.stringify(idaData, null, 2));
     
-    // Extract toll from response - structure may vary
-    const idaToll = idaData?.routes?.[0]?.costs?.tag || 
-                    idaData?.routes?.[0]?.costs?.cash ||
-                    idaData?.summary?.route?.costs?.tag ||
-                    idaData?.summary?.route?.costs?.cash ||
-                    idaData?.costs?.tag ||
-                    idaData?.costs?.cash || 0;
+    // Extract toll, distance and duration from response
+    const idaRoute = idaData?.routes?.[0] || idaData?.summary?.route || idaData;
+    const idaToll = idaRoute?.costs?.tag || idaRoute?.costs?.cash || idaRoute?.costs?.minimumTollCost || 0;
+    const idaDistanceMeters = idaRoute?.distance?.value || idaRoute?.summary?.distance?.value || idaRoute?.distance || 0;
+    const idaDurationSeconds = idaRoute?.duration?.value || idaRoute?.summary?.duration?.value || idaRoute?.duration || 0;
+    
+    const distanciaIdaKm = idaDistanceMeters / 1000;
+    const tempoIdaMin = idaDurationSeconds / 60;
+
+    console.log('TollGuru ida parsed:', { idaToll, distanciaIdaKm, tempoIdaMin });
 
     // Calculate return trip
+    console.log('TollGuru: Calculando volta...');
     const voltaResponse = await fetch('https://apis.tollguru.com/toll/v2/origin-destination-pair', {
       method: 'POST',
       headers: {
@@ -139,30 +160,49 @@ async function calculateTollGuru(
       body: JSON.stringify({
         from: { lat: destinoCoords.lat, lng: destinoCoords.lng },
         to: { lat: origemCoords.lat, lng: origemCoords.lng },
-        vehicleType: configuracoes?.vehicle_type || '2AxlesAuto',
+        vehicleType: configuracoes?.vehicle_type || '2AxlesTruck',
         departure_time: new Date().toISOString()
       })
     });
 
-    if (!voltaResponse.ok) {
-      console.error('TollGuru volta error');
-      return { ida: idaToll, volta: idaToll, error: null };
+    let voltaToll = idaToll;
+    let distanciaVoltaKm = distanciaIdaKm;
+    let tempoVoltaMin = tempoIdaMin;
+
+    if (voltaResponse.ok) {
+      const voltaData = await voltaResponse.json();
+      console.log('TollGuru volta response:', JSON.stringify(voltaData, null, 2));
+      
+      const voltaRoute = voltaData?.routes?.[0] || voltaData?.summary?.route || voltaData;
+      voltaToll = voltaRoute?.costs?.tag || voltaRoute?.costs?.cash || voltaRoute?.costs?.minimumTollCost || idaToll;
+      const voltaDistanceMeters = voltaRoute?.distance?.value || voltaRoute?.summary?.distance?.value || voltaRoute?.distance || idaDistanceMeters;
+      const voltaDurationSeconds = voltaRoute?.duration?.value || voltaRoute?.summary?.duration?.value || voltaRoute?.duration || idaDurationSeconds;
+      
+      distanciaVoltaKm = voltaDistanceMeters / 1000;
+      tempoVoltaMin = voltaDurationSeconds / 60;
+      
+      console.log('TollGuru volta parsed:', { voltaToll, distanciaVoltaKm, tempoVoltaMin });
+    } else {
+      console.error('TollGuru volta error, usando valores da ida');
     }
 
-    const voltaData = await voltaResponse.json();
-    console.log('TollGuru volta response:', JSON.stringify(voltaData, null, 2));
-    
-    const voltaToll = voltaData?.routes?.[0]?.costs?.tag || 
-                      voltaData?.routes?.[0]?.costs?.cash ||
-                      voltaData?.summary?.route?.costs?.tag ||
-                      voltaData?.summary?.route?.costs?.cash ||
-                      voltaData?.costs?.tag ||
-                      voltaData?.costs?.cash || 0;
-
-    return { ida: idaToll, volta: voltaToll, error: null };
+    return { 
+      ida: idaToll, 
+      volta: voltaToll, 
+      distanciaIdaKm,
+      distanciaVoltaKm,
+      tempoIdaMin,
+      tempoVoltaMin,
+      error: null 
+    };
   } catch (error: any) {
     console.error('Erro TollGuru:', error);
-    return { ida: 0, volta: 0, error: error.message };
+    return { 
+      ida: 0, volta: 0, 
+      distanciaIdaKm: 0, distanciaVoltaKm: 0,
+      tempoIdaMin: 0, tempoVoltaMin: 0,
+      error: error.message 
+    };
   }
 }
 
@@ -285,30 +325,44 @@ serve(async (req) => {
 
     console.log('Coords:', { origemCoords, destinoCoords });
 
-    let result: { ida: number; volta: number; error: string | null };
-
     if (provider === 'tollguru') {
-      result = await calculateTollGuru(api_key, configuracoes, origemCoords, destinoCoords);
+      const result = await calculateTollGuru(api_key, configuracoes, origemCoords, destinoCoords);
+      return new Response(
+        JSON.stringify({
+          ida: result.ida,
+          volta: result.volta,
+          total: result.ida + result.volta,
+          distanciaIdaKm: result.distanciaIdaKm,
+          distanciaVoltaKm: result.distanciaVoltaKm,
+          distanciaTotalKm: result.distanciaIdaKm + result.distanciaVoltaKm,
+          tempoIdaMin: result.tempoIdaMin,
+          tempoVoltaMin: result.tempoVoltaMin,
+          tempoTotalMin: result.tempoIdaMin + result.tempoVoltaMin,
+          error: result.error,
+          origem_coords: origemCoords,
+          destino_coords: destinoCoords
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     } else if (provider === 'calcularpedagio' || provider === 'calcular_pedagio') {
-      result = await calculatePedagioBR(api_key, configuracoes, origemCoords, destinoCoords);
+      const result = await calculatePedagioBR(api_key, configuracoes, origemCoords, destinoCoords);
+      return new Response(
+        JSON.stringify({
+          ida: result.ida,
+          volta: result.volta,
+          total: result.ida + result.volta,
+          error: result.error,
+          origem_coords: origemCoords,
+          destino_coords: destinoCoords
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     } else {
       return new Response(
         JSON.stringify({ error: 'Provedor de API não suportado' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    return new Response(
-      JSON.stringify({
-        ida: result.ida,
-        volta: result.volta,
-        total: result.ida + result.volta,
-        error: result.error,
-        origem_coords: origemCoords,
-        destino_coords: destinoCoords
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
 
   } catch (error: any) {
     console.error('Error:', error);
