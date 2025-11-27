@@ -22,6 +22,7 @@ interface RouteDataDialogProps {
   destinoEndereco?: string | null;
   origemCep?: string | null;
   destinoCep?: string | null;
+  onRouteCalculated?: (routeInfo: { distance: number; duration: number } | null) => void;
 }
 
 export function RouteDataDialog({ 
@@ -33,7 +34,8 @@ export function RouteDataDialog({
   origemEndereco,
   destinoEndereco,
   origemCep,
-  destinoCep
+  destinoCep,
+  onRouteCalculated
 }: RouteDataDialogProps) {
   const [copied, setCopied] = useState(false);
 
@@ -91,6 +93,7 @@ export function RouteDataDialog({
               destinoEndereco={destinoEndereco}
               origemCep={origemCep}
               destinoCep={destinoCep}
+              onRouteCalculated={onRouteCalculated}
             />
           </TabsContent>
 
