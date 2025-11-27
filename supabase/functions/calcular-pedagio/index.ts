@@ -18,20 +18,48 @@ interface Coords {
   lng: number;
 }
 
+async function fetchWithRetry(url: string, options?: RequestInit, retries = 3): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      return response;
+    } catch (error) {
+      console.log(`Tentativa ${i + 1} falhou para ${url}:`, error);
+      if (i === retries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Exponential backoff
+    }
+  }
+  throw new Error('Max retries reached');
+}
+
 async function getCoordsFromCep(cep: string): Promise<Coords | null> {
   try {
-    // Get address from ViaCEP
-    const viaCepResponse = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-    if (!viaCepResponse.ok) return null;
+    // Clean CEP
+    const cleanCep = cep.replace(/\D/g, '');
+    console.log(`Buscando coordenadas para CEP: ${cleanCep}`);
+    
+    // Get address from ViaCEP with retry
+    const viaCepResponse = await fetchWithRetry(`https://viacep.com.br/ws/${cleanCep}/json/`);
+    if (!viaCepResponse.ok) {
+      console.error('ViaCEP response not ok:', viaCepResponse.status);
+      return null;
+    }
     
     const viaCepData = await viaCepResponse.json();
-    if (viaCepData.erro) return null;
+    if (viaCepData.erro) {
+      console.error('ViaCEP retornou erro para CEP:', cleanCep);
+      return null;
+    }
 
-    const address = `${viaCepData.logradouro}, ${viaCepData.bairro}, ${viaCepData.localidade}, ${viaCepData.uf}, Brasil`;
+    console.log('ViaCEP data:', viaCepData);
+
+    // Try with city and state first (more reliable)
+    const searchAddress = `${viaCepData.localidade}, ${viaCepData.uf}, Brasil`;
+    console.log('Buscando coordenadas para:', searchAddress);
     
-    // Get coordinates from Nominatim
-    const nominatimResponse = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+    // Get coordinates from Nominatim with retry
+    const nominatimResponse = await fetchWithRetry(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchAddress)}&limit=1`,
       {
         headers: {
           'User-Agent': 'OrcamentoApp/1.0'
@@ -39,30 +67,17 @@ async function getCoordsFromCep(cep: string): Promise<Coords | null> {
       }
     );
     
-    if (!nominatimResponse.ok) return null;
+    if (!nominatimResponse.ok) {
+      console.error('Nominatim response not ok:', nominatimResponse.status);
+      return null;
+    }
     
     const nominatimData = await nominatimResponse.json();
+    console.log('Nominatim data:', nominatimData);
+    
     if (nominatimData.length === 0) {
-      // Try with just city and state
-      const fallbackAddress = `${viaCepData.localidade}, ${viaCepData.uf}, Brasil`;
-      const fallbackResponse = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackAddress)}&limit=1`,
-        {
-          headers: {
-            'User-Agent': 'OrcamentoApp/1.0'
-          }
-        }
-      );
-      
-      if (!fallbackResponse.ok) return null;
-      
-      const fallbackData = await fallbackResponse.json();
-      if (fallbackData.length === 0) return null;
-      
-      return {
-        lat: parseFloat(fallbackData[0].lat),
-        lng: parseFloat(fallbackData[0].lon)
-      };
+      console.error('Nominatim não encontrou coordenadas para:', searchAddress);
+      return null;
     }
     
     return {
