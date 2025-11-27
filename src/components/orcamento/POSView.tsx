@@ -61,6 +61,8 @@ import {
 import { cn } from "@/lib/utils";
 import ImageItemExtractor from "./ImageItemExtractor";
 import { ConjuntoSelectorDialog } from "./ConjuntoSelectorDialog";
+import { PedagioDetailsDialog } from "./PedagioDetailsDialog";
+import { RouteDataDialog } from "./RouteDataDialog";
 import {
   Dialog,
   DialogContent,
@@ -75,6 +77,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Info, Map as MapIcon } from "lucide-react";
 
 interface POSViewProps {
   estabelecimentoId: string;
@@ -138,6 +141,8 @@ export default function POSView({
   const [showRegrasDialog, setShowRegrasDialog] = useState(false);
   const [gruposQuantities, setGruposQuantities] = useState<Map<string, number>>(new Map());
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
+  const [showPedagioDetailsDialog, setShowPedagioDetailsDialog] = useState(false);
+  const [showRouteDataDialog, setShowRouteDataDialog] = useState(false);
 
   // Hook para cálculo de pedágio
   const pedagioResult = usePedagioCalculation(estabelecimentoId, selectedEmpresa);
@@ -1802,6 +1807,27 @@ export default function POSView({
                         </span>
                       </div>
                     </div>
+                    {/* Botões de detalhes */}
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs gap-1"
+                        onClick={() => setShowPedagioDetailsDialog(true)}
+                      >
+                        <Info className="w-3 h-3" />
+                        Detalhes
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs gap-1"
+                        onClick={() => setShowRouteDataDialog(true)}
+                      >
+                        <MapIcon className="w-3 h-3" />
+                        Rota
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -2116,6 +2142,37 @@ export default function POSView({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Diálogo de Detalhes do Pedágio */}
+      <PedagioDetailsDialog
+        open={showPedagioDetailsDialog}
+        onClose={() => setShowPedagioDetailsDialog(false)}
+        pedagioData={{
+          ida: pedagioResult.ida,
+          volta: pedagioResult.volta,
+          total: pedagioResult.total,
+          distanciaIdaKm: pedagioResult.distanciaIdaKm,
+          distanciaVoltaKm: pedagioResult.distanciaVoltaKm,
+          distanciaTotalKm: pedagioResult.distanciaTotalKm,
+          tempoIdaMin: pedagioResult.tempoIdaMin,
+          tempoVoltaMin: pedagioResult.tempoVoltaMin,
+          tempoTotalMin: pedagioResult.tempoTotalMin,
+          origemCep: pedagioResult.origemCep,
+          destinoCep: pedagioResult.destinoCep,
+          origemCoords: pedagioResult.origemCoords,
+          destinoCoords: pedagioResult.destinoCoords,
+          rawResponse: pedagioResult.rawResponse
+        }}
+      />
+
+      {/* Diálogo de Dados da Rota */}
+      <RouteDataDialog
+        open={showRouteDataDialog}
+        onClose={() => setShowRouteDataDialog(false)}
+        rawResponse={pedagioResult.rawResponse}
+        origemCoords={pedagioResult.origemCoords}
+        destinoCoords={pedagioResult.destinoCoords}
+      />
     </div>
   );
 }

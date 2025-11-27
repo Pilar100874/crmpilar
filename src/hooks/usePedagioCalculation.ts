@@ -15,6 +15,9 @@ interface PedagioResult {
   error: string | null;
   origemCep: string | null;
   destinoCep: string | null;
+  origemCoords: { lat: number; lng: number } | null;
+  destinoCoords: { lat: number; lng: number } | null;
+  rawResponse: any | null;
 }
 
 export const usePedagioCalculation = (
@@ -34,7 +37,10 @@ export const usePedagioCalculation = (
     loading: false,
     error: null,
     origemCep: null,
-    destinoCep: null
+    destinoCep: null,
+    origemCoords: null,
+    destinoCoords: null,
+    rawResponse: null
   });
 
   useEffect(() => {
@@ -45,7 +51,9 @@ export const usePedagioCalculation = (
           ida: 0, volta: 0, total: 0, 
           distanciaIdaKm: 0, distanciaVoltaKm: 0, distanciaTotalKm: 0,
           tempoIdaMin: 0, tempoVoltaMin: 0, tempoTotalMin: 0,
-          origemCep: null, destinoCep: null 
+          origemCep: null, destinoCep: null,
+          origemCoords: null, destinoCoords: null,
+          rawResponse: null
         }));
         return;
       }
@@ -173,7 +181,10 @@ export const usePedagioCalculation = (
             loading: false,
             error: tollData.error,
             origemCep,
-            destinoCep
+            destinoCep,
+            origemCoords: null,
+            destinoCoords: null,
+            rawResponse: null
           });
           return;
         }
@@ -191,7 +202,10 @@ export const usePedagioCalculation = (
           loading: false,
           error: null,
           origemCep,
-          destinoCep
+          destinoCep,
+          origemCoords: tollData?.origem_coords || null,
+          destinoCoords: tollData?.destino_coords || null,
+          rawResponse: tollData
         });
 
       } catch (error: any) {
