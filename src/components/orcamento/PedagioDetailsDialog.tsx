@@ -2,16 +2,27 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   MapPin, 
   Navigation, 
-  Clock, 
-  DollarSign, 
-  Truck,
   ArrowRight,
   Route,
-  Milestone
+  Truck,
+  ListOrdered
 } from "lucide-react";
+
+interface TollPoint {
+  name?: string;
+  road?: string;
+  state?: string;
+  country?: string;
+  lat?: number;
+  lng?: number;
+  tagCost?: number;
+  cashCost?: number;
+  cost?: number;
+}
 
 interface PedagioDetailsDialogProps {
   open: boolean;
@@ -55,6 +66,33 @@ export function PedagioDetailsDialog({ open, onClose, pedagioData }: PedagioDeta
     return cep.replace(/(\d{5})(\d{3})/, '$1-$2');
   };
 
+  // Extract toll points from rawResponse if available
+  const extractTollPoints = (): TollPoint[] => {
+    if (!pedagioData.rawResponse) return [];
+    
+    const raw = pedagioData.rawResponse;
+    
+    // TollGuru API returns tolls in different formats
+    const tolls = raw.routes?.[0]?.tolls || 
+                  raw.tolls || 
+                  raw.summary?.route?.tolls || 
+                  [];
+    
+    return tolls.map((toll: any) => ({
+      name: toll.name || toll.tollName || 'Pedágio',
+      road: toll.road || toll.roadName || toll.highway || '',
+      state: toll.state || toll.region || '',
+      country: toll.country || 'Brasil',
+      lat: toll.lat || toll.location?.lat,
+      lng: toll.lng || toll.location?.lng,
+      tagCost: toll.tagCost || toll.tagPrice || toll.tag,
+      cashCost: toll.cashCost || toll.cashPrice || toll.cash,
+      cost: toll.cost || toll.tagCost || toll.cashCost || toll.tag || toll.cash || 0
+    }));
+  };
+
+  const tollPoints = extractTollPoints();
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-w-2xl max-h-[85vh]">
@@ -65,128 +103,206 @@ export function PedagioDetailsDialog({ open, onClose, pedagioData }: PedagioDeta
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(85vh-100px)]">
-          <div className="space-y-6 pr-4">
-            {/* CEPs e Coordenadas */}
-            <div className="bg-muted/50 rounded-lg p-4">
-              <h3 className="font-medium text-sm mb-3 flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                Trajeto
-              </h3>
-              <div className="flex items-center gap-4">
-                <div className="flex-1 p-3 bg-background rounded-lg border">
-                  <p className="text-xs text-muted-foreground mb-1">Origem</p>
-                  <p className="font-medium">{formatCep(pedagioData.origemCep)}</p>
-                  {pedagioData.origemEndereco && (
-                    <p className="text-xs text-muted-foreground mt-1">{pedagioData.origemEndereco}</p>
-                  )}
-                  {pedagioData.origemCoords && (
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      {pedagioData.origemCoords.lat.toFixed(4)}, {pedagioData.origemCoords.lng.toFixed(4)}
+        <Tabs defaultValue="resumo" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="resumo">Resumo</TabsTrigger>
+            <TabsTrigger value="pedagios" className="gap-1">
+              <ListOrdered className="w-3 h-3" />
+              Pedágios
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="resumo" className="mt-4">
+            <ScrollArea className="max-h-[calc(85vh-180px)]">
+              <div className="space-y-6 pr-4">
+                {/* CEPs e Coordenadas */}
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <h3 className="font-medium text-sm mb-3 flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    Trajeto
+                  </h3>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 p-3 bg-background rounded-lg border">
+                      <p className="text-xs text-muted-foreground mb-1">Origem</p>
+                      <p className="font-medium">{formatCep(pedagioData.origemCep)}</p>
+                      {pedagioData.origemEndereco && (
+                        <p className="text-xs text-muted-foreground mt-1">{pedagioData.origemEndereco}</p>
+                      )}
+                      {pedagioData.origemCoords && (
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {pedagioData.origemCoords.lat.toFixed(4)}, {pedagioData.origemCoords.lng.toFixed(4)}
+                        </p>
+                      )}
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                    <div className="flex-1 p-3 bg-background rounded-lg border">
+                      <p className="text-xs text-muted-foreground mb-1">Destino</p>
+                      <p className="font-medium">{formatCep(pedagioData.destinoCep)}</p>
+                      {pedagioData.destinoEndereco && (
+                        <p className="text-xs text-muted-foreground mt-1">{pedagioData.destinoEndereco}</p>
+                      )}
+                      {pedagioData.destinoCoords && (
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {pedagioData.destinoCoords.lat.toFixed(4)}, {pedagioData.destinoCoords.lng.toFixed(4)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Resumo da Rota */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Ida */}
+                  <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                    <h3 className="font-medium text-sm mb-3 flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                      <Route className="w-4 h-4" />
+                      Ida
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Distância</span>
+                        <span className="font-medium">{pedagioData.distanciaIdaKm.toFixed(1)} km</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Tempo</span>
+                        <span className="font-medium">{formatTime(pedagioData.tempoIdaMin)}</span>
+                      </div>
+                      <Separator className="my-2" />
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Pedágio</span>
+                        <span className="font-semibold text-blue-700 dark:text-blue-300">
+                          {formatCurrency(pedagioData.ida)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Volta */}
+                  <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                    <h3 className="font-medium text-sm mb-3 flex items-center gap-2 text-green-700 dark:text-green-300">
+                      <Route className="w-4 h-4 rotate-180" />
+                      Volta
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Distância</span>
+                        <span className="font-medium">{pedagioData.distanciaVoltaKm.toFixed(1)} km</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Tempo</span>
+                        <span className="font-medium">{formatTime(pedagioData.tempoVoltaMin)}</span>
+                      </div>
+                      <Separator className="my-2" />
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Pedágio</span>
+                        <span className="font-semibold text-green-700 dark:text-green-300">
+                          {formatCurrency(pedagioData.volta)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Truck className="w-5 h-5 text-primary" />
+                      <span className="font-medium">Total da Viagem (Ida + Volta)</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 mt-4">
+                    <div className="text-center p-2 bg-background rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Distância Total</p>
+                      <p className="text-lg font-semibold">{pedagioData.distanciaTotalKm.toFixed(1)} km</p>
+                    </div>
+                    <div className="text-center p-2 bg-background rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Tempo Total</p>
+                      <p className="text-lg font-semibold">{formatTime(pedagioData.tempoTotalMin)}</p>
+                    </div>
+                    <div className="text-center p-2 bg-background rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-1">Pedágio Total</p>
+                      <p className="text-lg font-semibold text-primary">{formatCurrency(pedagioData.total)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="pedagios" className="mt-4">
+            <ScrollArea className="max-h-[calc(85vh-180px)]">
+              <div className="space-y-3 pr-4">
+                {tollPoints.length > 0 ? (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {tollPoints.length} pedágio(s) encontrado(s) no trajeto
                     </p>
-                  )}
-                </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                <div className="flex-1 p-3 bg-background rounded-lg border">
-                  <p className="text-xs text-muted-foreground mb-1">Destino</p>
-                  <p className="font-medium">{formatCep(pedagioData.destinoCep)}</p>
-                  {pedagioData.destinoEndereco && (
-                    <p className="text-xs text-muted-foreground mt-1">{pedagioData.destinoEndereco}</p>
-                  )}
-                  {pedagioData.destinoCoords && (
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      {pedagioData.destinoCoords.lat.toFixed(4)}, {pedagioData.destinoCoords.lng.toFixed(4)}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Resumo da Rota */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Ida */}
-              <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-                <h3 className="font-medium text-sm mb-3 flex items-center gap-2 text-blue-700 dark:text-blue-300">
-                  <Route className="w-4 h-4" />
-                  Ida
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Distância</span>
-                    <span className="font-medium">{pedagioData.distanciaIdaKm.toFixed(1)} km</span>
+                    {tollPoints.map((toll, index) => (
+                      <div 
+                        key={index} 
+                        className="p-4 bg-muted/50 rounded-lg border flex items-center justify-between"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">{toll.name}</p>
+                            {toll.road && (
+                              <p className="text-xs text-muted-foreground">{toll.road}</p>
+                            )}
+                            {toll.state && (
+                              <Badge variant="outline" className="mt-1 text-[10px]">
+                                {toll.state}
+                              </Badge>
+                            )}
+                            {toll.lat && toll.lng && (
+                              <p className="text-[10px] text-muted-foreground mt-1">
+                                {toll.lat.toFixed(4)}, {toll.lng.toFixed(4)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          {toll.tagCost !== undefined && toll.tagCost !== toll.cashCost && (
+                            <p className="text-xs text-muted-foreground">
+                              Tag: {formatCurrency(toll.tagCost)}
+                            </p>
+                          )}
+                          {toll.cashCost !== undefined && toll.cashCost !== toll.tagCost && (
+                            <p className="text-xs text-muted-foreground">
+                              Dinheiro: {formatCurrency(toll.cashCost)}
+                            </p>
+                          )}
+                          <p className="font-semibold text-primary">
+                            {formatCurrency(toll.cost)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Total dos pedágios listados */}
+                    <div className="p-4 bg-primary/10 rounded-lg border border-primary/20 mt-4">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Total dos Pedágios</span>
+                        <span className="font-bold text-lg text-primary">
+                          {formatCurrency(tollPoints.reduce((sum, t) => sum + (t.cost || 0), 0))}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <ListOrdered className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p className="text-sm">Detalhamento individual dos pedágios não disponível</p>
+                    <p className="text-xs mt-1">O valor total do pedágio está disponível na aba Resumo</p>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tempo</span>
-                    <span className="font-medium">{formatTime(pedagioData.tempoIdaMin)}</span>
-                  </div>
-                  <Separator className="my-2" />
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Pedágio</span>
-                    <span className="font-semibold text-blue-700 dark:text-blue-300">
-                      {formatCurrency(pedagioData.ida)}
-                    </span>
-                  </div>
-                </div>
+                )}
               </div>
-
-              {/* Volta */}
-              <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-4 border border-green-200 dark:border-green-800">
-                <h3 className="font-medium text-sm mb-3 flex items-center gap-2 text-green-700 dark:text-green-300">
-                  <Route className="w-4 h-4 rotate-180" />
-                  Volta
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Distância</span>
-                    <span className="font-medium">{pedagioData.distanciaVoltaKm.toFixed(1)} km</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tempo</span>
-                    <span className="font-medium">{formatTime(pedagioData.tempoVoltaMin)}</span>
-                  </div>
-                  <Separator className="my-2" />
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Pedágio</span>
-                    <span className="font-semibold text-green-700 dark:text-green-300">
-                      {formatCurrency(pedagioData.volta)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Total */}
-            <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Truck className="w-5 h-5 text-primary" />
-                  <span className="font-medium">Total da Viagem (Ida + Volta)</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 mt-4">
-                <div className="text-center p-2 bg-background rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Distância Total</p>
-                  <p className="text-lg font-semibold">{pedagioData.distanciaTotalKm.toFixed(1)} km</p>
-                </div>
-                <div className="text-center p-2 bg-background rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Tempo Total</p>
-                  <p className="text-lg font-semibold">{formatTime(pedagioData.tempoTotalMin)}</p>
-                </div>
-                <div className="text-center p-2 bg-background rounded-lg">
-                  <p className="text-xs text-muted-foreground mb-1">Pedágio Total</p>
-                  <p className="text-lg font-semibold text-primary">{formatCurrency(pedagioData.total)}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Link para TollGuru */}
-            {pedagioData.origemCoords && pedagioData.destinoCoords && (
-              <div className="text-center text-xs text-muted-foreground">
-                <p>Dados calculados via TollGuru API</p>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
