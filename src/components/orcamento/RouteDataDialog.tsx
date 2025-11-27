@@ -29,16 +29,14 @@ export function RouteDataDialog({
   origemEndereco,
   destinoEndereco
 }: RouteDataDialogProps) {
-  const openGoogleMaps = () => {
+  const getGoogleMapsUrl = () => {
     if (origemCoords && destinoCoords) {
-      // Using official Google Maps Directions API format
-      const url = `https://www.google.com/maps/dir/?api=1&origin=${origemCoords.lat},${origemCoords.lng}&destination=${destinoCoords.lat},${destinoCoords.lng}&travelmode=driving`;
-      console.log('Opening Google Maps URL:', url);
-      window.open(url, '_blank');
-    } else {
-      console.log('Cannot open Google Maps - missing coordinates:', { origemCoords, destinoCoords });
+      return `https://www.google.com/maps/dir/?api=1&origin=${origemCoords.lat},${origemCoords.lng}&destination=${destinoCoords.lat},${destinoCoords.lng}&travelmode=driving`;
     }
+    return null;
   };
+
+  const googleMapsUrl = getGoogleMapsUrl();
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -61,16 +59,27 @@ export function RouteDataDialog({
             <div className="space-y-4">
               {/* Ações rápidas */}
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={openGoogleMaps}
-                  className="gap-2"
-                  disabled={!origemCoords || !destinoCoords}
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Abrir no Google Maps
-                </Button>
+                {googleMapsUrl ? (
+                  <a 
+                    href={googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Abrir no Google Maps
+                  </a>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled
+                    className="gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Abrir no Google Maps
+                  </Button>
+                )}
               </div>
 
               {/* Endereços */}
