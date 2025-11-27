@@ -5,6 +5,12 @@ interface PedagioResult {
   ida: number;
   volta: number;
   total: number;
+  distanciaIdaKm: number;
+  distanciaVoltaKm: number;
+  distanciaTotalKm: number;
+  tempoIdaMin: number;
+  tempoVoltaMin: number;
+  tempoTotalMin: number;
   loading: boolean;
   error: string | null;
   origemCep: string | null;
@@ -19,6 +25,12 @@ export const usePedagioCalculation = (
     ida: 0,
     volta: 0,
     total: 0,
+    distanciaIdaKm: 0,
+    distanciaVoltaKm: 0,
+    distanciaTotalKm: 0,
+    tempoIdaMin: 0,
+    tempoVoltaMin: 0,
+    tempoTotalMin: 0,
     loading: false,
     error: null,
     origemCep: null,
@@ -28,7 +40,13 @@ export const usePedagioCalculation = (
   useEffect(() => {
     const calculatePedagio = async () => {
       if (!empresaId || !estabelecimentoId) {
-        setResult(prev => ({ ...prev, ida: 0, volta: 0, total: 0, origemCep: null, destinoCep: null }));
+        setResult(prev => ({ 
+          ...prev, 
+          ida: 0, volta: 0, total: 0, 
+          distanciaIdaKm: 0, distanciaVoltaKm: 0, distanciaTotalKm: 0,
+          tempoIdaMin: 0, tempoVoltaMin: 0, tempoTotalMin: 0,
+          origemCep: null, destinoCep: null 
+        }));
         return;
       }
 
@@ -146,6 +164,12 @@ export const usePedagioCalculation = (
             ida: 0,
             volta: 0,
             total: 0,
+            distanciaIdaKm: 0,
+            distanciaVoltaKm: 0,
+            distanciaTotalKm: 0,
+            tempoIdaMin: 0,
+            tempoVoltaMin: 0,
+            tempoTotalMin: 0,
             loading: false,
             error: tollData.error,
             origemCep,
@@ -158,6 +182,12 @@ export const usePedagioCalculation = (
           ida: tollData?.ida || 0,
           volta: tollData?.volta || 0,
           total: tollData?.total || 0,
+          distanciaIdaKm: tollData?.distanciaIdaKm || 0,
+          distanciaVoltaKm: tollData?.distanciaVoltaKm || 0,
+          distanciaTotalKm: tollData?.distanciaTotalKm || 0,
+          tempoIdaMin: tollData?.tempoIdaMin || 0,
+          tempoVoltaMin: tollData?.tempoVoltaMin || 0,
+          tempoTotalMin: tollData?.tempoTotalMin || 0,
           loading: false,
           error: null,
           origemCep,
