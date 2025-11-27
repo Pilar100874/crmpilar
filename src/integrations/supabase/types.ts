@@ -3565,6 +3565,47 @@ export type Database = {
           },
         ]
       }
+      pedagio_api_config: {
+        Row: {
+          api_key: string
+          ativo: boolean | null
+          configuracoes: Json | null
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          api_key: string
+          ativo?: boolean | null
+          configuracoes?: Json | null
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string
+          ativo?: boolean | null
+          configuracoes?: Json | null
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedagio_api_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pesquisas_respostas: {
         Row: {
           atendente_id: string | null
