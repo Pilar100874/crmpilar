@@ -108,6 +108,17 @@ async function calculateTollGuru(
 ): Promise<TollGuruResult> {
   try {
     console.log('TollGuru: Calculando ida...');
+    console.log('Using API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'MISSING');
+    
+    const requestBody = {
+      from: { lat: origemCoords.lat, lng: origemCoords.lng },
+      to: { lat: destinoCoords.lat, lng: destinoCoords.lng },
+      vehicle: {
+        type: configuracoes?.vehicle_type || '2AxlesTruck'
+      }
+    };
+    
+    console.log('Request body:', JSON.stringify(requestBody));
     
     // Use origin-destination-pair endpoint
     const idaResponse = await fetch('https://apis.tollguru.com/toll/v2/origin-destination-pair', {
@@ -116,12 +127,7 @@ async function calculateTollGuru(
         'Content-Type': 'application/json',
         'x-api-key': apiKey
       },
-      body: JSON.stringify({
-        from: { lat: origemCoords.lat, lng: origemCoords.lng },
-        to: { lat: destinoCoords.lat, lng: destinoCoords.lng },
-        vehicleType: configuracoes?.vehicle_type || '2AxlesTruck',
-        departure_time: new Date().toISOString()
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!idaResponse.ok) {
@@ -151,18 +157,21 @@ async function calculateTollGuru(
 
     // Calculate return trip
     console.log('TollGuru: Calculando volta...');
+    const voltaRequestBody = {
+      from: { lat: destinoCoords.lat, lng: destinoCoords.lng },
+      to: { lat: origemCoords.lat, lng: origemCoords.lng },
+      vehicle: {
+        type: configuracoes?.vehicle_type || '2AxlesTruck'
+      }
+    };
+    
     const voltaResponse = await fetch('https://apis.tollguru.com/toll/v2/origin-destination-pair', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': apiKey
       },
-      body: JSON.stringify({
-        from: { lat: destinoCoords.lat, lng: destinoCoords.lng },
-        to: { lat: origemCoords.lat, lng: origemCoords.lng },
-        vehicleType: configuracoes?.vehicle_type || '2AxlesTruck',
-        departure_time: new Date().toISOString()
-      })
+      body: JSON.stringify(voltaRequestBody)
     });
 
     let voltaToll = idaToll;
