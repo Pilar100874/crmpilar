@@ -28,6 +28,8 @@ interface PedagioDetailsDialogProps {
     tempoTotalMin: number;
     origemCep: string | null;
     destinoCep: string | null;
+    origemEndereco?: string | null;
+    destinoEndereco?: string | null;
     origemCoords: { lat: number; lng: number } | null;
     destinoCoords: { lat: number; lng: number } | null;
     rawResponse: any | null;
@@ -75,8 +77,11 @@ export function PedagioDetailsDialog({ open, onClose, pedagioData }: PedagioDeta
                 <div className="flex-1 p-3 bg-background rounded-lg border">
                   <p className="text-xs text-muted-foreground mb-1">Origem</p>
                   <p className="font-medium">{formatCep(pedagioData.origemCep)}</p>
+                  {pedagioData.origemEndereco && (
+                    <p className="text-xs text-muted-foreground mt-1">{pedagioData.origemEndereco}</p>
+                  )}
                   {pedagioData.origemCoords && (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-[10px] text-muted-foreground mt-1">
                       {pedagioData.origemCoords.lat.toFixed(4)}, {pedagioData.origemCoords.lng.toFixed(4)}
                     </p>
                   )}
@@ -85,8 +90,11 @@ export function PedagioDetailsDialog({ open, onClose, pedagioData }: PedagioDeta
                 <div className="flex-1 p-3 bg-background rounded-lg border">
                   <p className="text-xs text-muted-foreground mb-1">Destino</p>
                   <p className="font-medium">{formatCep(pedagioData.destinoCep)}</p>
+                  {pedagioData.destinoEndereco && (
+                    <p className="text-xs text-muted-foreground mt-1">{pedagioData.destinoEndereco}</p>
+                  )}
                   {pedagioData.destinoCoords && (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-[10px] text-muted-foreground mt-1">
                       {pedagioData.destinoCoords.lat.toFixed(4)}, {pedagioData.destinoCoords.lng.toFixed(4)}
                     </p>
                   )}

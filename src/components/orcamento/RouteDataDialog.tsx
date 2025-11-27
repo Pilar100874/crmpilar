@@ -16,13 +16,26 @@ interface RouteDataDialogProps {
   rawResponse: any;
   origemCoords: { lat: number; lng: number } | null;
   destinoCoords: { lat: number; lng: number } | null;
+  origemEndereco?: string | null;
+  destinoEndereco?: string | null;
 }
 
-export function RouteDataDialog({ open, onClose, rawResponse, origemCoords, destinoCoords }: RouteDataDialogProps) {
+export function RouteDataDialog({ 
+  open, 
+  onClose, 
+  rawResponse, 
+  origemCoords, 
+  destinoCoords,
+  origemEndereco,
+  destinoEndereco
+}: RouteDataDialogProps) {
   const openGoogleMaps = () => {
     if (origemCoords && destinoCoords) {
       const url = `https://www.google.com/maps/dir/${origemCoords.lat},${origemCoords.lng}/${destinoCoords.lat},${destinoCoords.lng}`;
-      window.open(url, '_blank');
+      console.log('Opening Google Maps URL:', url);
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      console.log('Cannot open Google Maps - missing coordinates:', { origemCoords, destinoCoords });
     }
   };
 
@@ -47,23 +60,40 @@ export function RouteDataDialog({ open, onClose, rawResponse, origemCoords, dest
             <div className="space-y-4">
               {/* Ações rápidas */}
               <div className="flex gap-2">
-                {origemCoords && destinoCoords && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={openGoogleMaps}
-                    className="gap-2"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Abrir no Google Maps
-                  </Button>
-                )}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={openGoogleMaps}
+                  className="gap-2"
+                  disabled={!origemCoords || !destinoCoords}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Abrir no Google Maps
+                </Button>
               </div>
+
+              {/* Endereços */}
+              {(origemEndereco || destinoEndereco) && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <h4 className="text-sm font-medium mb-2">Endereço de Origem</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {origemEndereco || 'Não disponível'}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <h4 className="text-sm font-medium mb-2">Endereço de Destino</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {destinoEndereco || 'Não disponível'}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Dados resumidos */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-muted/50 rounded-lg">
-                  <h4 className="text-sm font-medium mb-2">Origem</h4>
+                  <h4 className="text-sm font-medium mb-2">Coordenadas Origem</h4>
                   {origemCoords ? (
                     <div className="space-y-1 text-sm">
                       <p>Latitude: <Badge variant="outline">{origemCoords.lat.toFixed(6)}</Badge></p>
@@ -74,7 +104,7 @@ export function RouteDataDialog({ open, onClose, rawResponse, origemCoords, dest
                   )}
                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
-                  <h4 className="text-sm font-medium mb-2">Destino</h4>
+                  <h4 className="text-sm font-medium mb-2">Coordenadas Destino</h4>
                   {destinoCoords ? (
                     <div className="space-y-1 text-sm">
                       <p>Latitude: <Badge variant="outline">{destinoCoords.lat.toFixed(6)}</Badge></p>
