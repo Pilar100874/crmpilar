@@ -176,15 +176,16 @@ async function calculatePedagioBR(
     // API calcularpedagio.com.br uses coordinates
     // Documentation: https://www.calcularpedagio.com.br/documentacao
     // Clean API key - remove "Bearer " prefix if present
-    const cleanApiKey = apiKey.replace(/^Bearer\s+/i, '');
+    const cleanApiKey = apiKey.replace(/^Bearer\s+/i, '').trim();
     
-    console.log('Calling calcularpedagio API with Authorization Bearer');
+    console.log('Calling calcularpedagio API with api_key header:', cleanApiKey.substring(0, 8) + '...');
     
+    // Try with api_key header as per documentation
     const idaResponse = await fetch('https://www.calcularpedagio.com.br/api/coordenadas/v3', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${cleanApiKey}`
+        'api_key': cleanApiKey
       },
       body: JSON.stringify({
         pontos: [
@@ -217,7 +218,7 @@ async function calculatePedagioBR(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${cleanApiKey}`
+        'api_key': cleanApiKey
       },
       body: JSON.stringify({
         pontos: [
