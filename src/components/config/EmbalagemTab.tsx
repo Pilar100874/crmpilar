@@ -110,25 +110,24 @@ export function EmbalagemTab({
   const [printQuantity, setPrintQuantity] = useState("1");
 
   const handleEan13Change = (value: string) => {
-    // Apenas números
-    const cleanValue = value.replace(/\D/g, "").substring(0, 13);
-    onEan13Change(cleanValue);
+    // Apenas números, máximo 12 dígitos (sem o DV)
+    const cleanValue = value.replace(/\D/g, "").substring(0, 12);
+    
+    if (cleanValue.length === 12) {
+      // Calcula o dígito verificador
+      const checkDigit = calcularDigitoVerificadorEan13(cleanValue);
+      const fullEan13 = cleanValue + checkDigit.toString();
+      
+      onEan13Change(fullEan13);
+      setEan13Valid(true);
 
-    if (cleanValue.length === 13) {
-      const isValid = validarEan13(cleanValue);
-      setEan13Valid(isValid);
-
-      if (isValid) {
-        // Calcula EAN-14 automaticamente
-        const ean14_1_calc = calcularEan14(cleanValue, 1);
-        const ean14_2_calc = calcularEan14(cleanValue, 2);
-        onEan14_1Change(ean14_1_calc);
-        onEan14_2Change(ean14_2_calc);
-      } else {
-        onEan14_1Change("");
-        onEan14_2Change("");
-      }
+      // Calcula EAN-14 automaticamente
+      const ean14_1_calc = calcularEan14(fullEan13, 1);
+      const ean14_2_calc = calcularEan14(fullEan13, 2);
+      onEan14_1Change(ean14_1_calc);
+      onEan14_2Change(ean14_2_calc);
     } else {
+      onEan13Change(cleanValue);
       setEan13Valid(null);
       onEan14_1Change("");
       onEan14_2Change("");
@@ -295,16 +294,27 @@ export function EmbalagemTab({
       </div>
 
       <div className="flex gap-4 items-start">
-        {/* Campo EAN */}
+        {/* Campo EAN + Dígito Verificador */}
         <div className="flex-1">
-          <Input
-            value={value}
-            onChange={(e) => onChange?.(e.target.value)}
-            placeholder={isCalculated ? "Calculado automaticamente" : "Digite o EAN-13"}
-            readOnly={isCalculated}
-            className={`font-mono ${isCalculated ? "bg-muted/50" : ""}`}
-            maxLength={isCalculated ? 14 : 13}
-          />
+          <div className="flex gap-2 items-center">
+            <Input
+              value={value.length > 0 ? value.slice(0, -1) : value}
+              onChange={(e) => onChange?.(e.target.value)}
+              placeholder={isCalculated ? "Calculado automaticamente" : "Digite o EAN-13"}
+              readOnly={isCalculated}
+              className={`font-mono flex-1 ${isCalculated ? "bg-muted/50" : ""}`}
+              maxLength={isCalculated ? 13 : 12}
+            />
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] text-muted-foreground mb-0.5">DV</span>
+              <Input
+                value={value.length >= (isCalculated ? 14 : 13) ? value.slice(-1) : ""}
+                readOnly
+                className="w-12 text-center font-mono font-bold bg-muted/50"
+                title="Dígito Verificador"
+              />
+            </div>
+          </div>
           {isCalculated && (
             <p className="text-xs text-muted-foreground mt-1">
               Calculado a partir do EAN-13
