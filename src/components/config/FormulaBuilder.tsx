@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,8 @@ import {
   Hash,
   ChevronRight,
   Check,
-  GripVertical
+  GripVertical,
+  Move
 } from "lucide-react";
 import {
   Tooltip,
@@ -39,6 +40,25 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "@/lib/toast-config";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 // Variáveis disponíveis para a fórmula
 const VARIAVEIS_DISPONIVEIS = [
@@ -142,6 +162,104 @@ export function createDefaultFormula(): SavedFormula {
 
 export { VARIAVEIS_DISPONIVEIS, FORMULA_PADRAO_FRETE };
 
+// Sortable Token Component
+interface SortableTokenProps {
+  token: FormulaToken;
+  index: number;
+  isSelected: boolean;
+  onClick: () => void;
+  onRemove: () => void;
+}
+
+function SortableToken({ token, index, isSelected, onClick, onRemove }: SortableTokenProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: token.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const isOperator = token.tipo === "operador";
+  const isParenthesis = token.tipo === "parentese";
+  const isVariable = token.tipo === "variavel";
+  const isNumber = token.tipo === "numero";
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`group relative flex items-center ${isDragging ? "z-50" : ""}`}
+    >
+      <div
+        className={`
+          flex items-center gap-1 rounded-lg border-2 transition-all cursor-pointer
+          ${isSelected ? "ring-2 ring-primary ring-offset-2 border-primary" : "border-transparent"}
+          ${isDragging ? "shadow-lg scale-105" : "hover:shadow-md"}
+          ${isVariable ? "bg-gradient-to-r from-primary/90 to-primary text-primary-foreground px-3 py-2" : ""}
+          ${isNumber ? "bg-gradient-to-r from-secondary/90 to-secondary text-secondary-foreground px-3 py-2" : ""}
+          ${isOperator ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white w-11 h-11 justify-center text-xl font-bold" : ""}
+          ${isParenthesis ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white w-10 h-11 justify-center text-xl font-bold" : ""}
+        `}
+        onClick={onClick}
+      >
+        {/* Drag Handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className={`cursor-grab active:cursor-grabbing ${isOperator || isParenthesis ? "hidden" : ""}`}
+        >
+          <GripVertical className="h-3.5 w-3.5 text-current opacity-50 hover:opacity-100" />
+        </div>
+        
+        <span className={`font-medium ${isVariable || isNumber ? "text-sm" : ""}`}>
+          {token.display}
+        </span>
+      </div>
+      
+      {/* Delete Button */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onRemove(); }}
+        className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-xs shadow-md hover:scale-110"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+// Token Preview for Drag Overlay
+function TokenPreview({ token }: { token: FormulaToken }) {
+  const isOperator = token.tipo === "operador";
+  const isParenthesis = token.tipo === "parentese";
+  const isVariable = token.tipo === "variavel";
+  const isNumber = token.tipo === "numero";
+
+  return (
+    <div
+      className={`
+        flex items-center gap-1 rounded-lg shadow-xl border-2 border-primary
+        ${isVariable ? "bg-gradient-to-r from-primary/90 to-primary text-primary-foreground px-3 py-2" : ""}
+        ${isNumber ? "bg-gradient-to-r from-secondary/90 to-secondary text-secondary-foreground px-3 py-2" : ""}
+        ${isOperator ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white w-11 h-11 justify-center text-xl font-bold" : ""}
+        ${isParenthesis ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white w-10 h-11 justify-center text-xl font-bold" : ""}
+      `}
+    >
+      <Move className={`h-3.5 w-3.5 opacity-50 ${isOperator || isParenthesis ? "hidden" : ""}`} />
+      <span className={`font-medium ${isVariable || isNumber ? "text-sm" : ""}`}>
+        {token.display}
+      </span>
+    </div>
+  );
+}
+
 export function FormulaBuilder({ 
   formula: initialFormula, 
   onChange, 
@@ -159,7 +277,19 @@ export function FormulaBuilder({
   const [grupoExpandido, setGrupoExpandido] = useState<string>("Custos");
   const [newFormulaName, setNewFormulaName] = useState("");
   const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [cursorPosition, setCursorPosition] = useState<number | null>(null); // Position to insert new tokens
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const variaveisPorGrupo = useMemo(() => {
     const grupos: Record<string, typeof VARIAVEIS_DISPONIVEIS> = {};
@@ -170,23 +300,53 @@ export function FormulaBuilder({
     return grupos;
   }, []);
 
-  const insertToken = (token: FormulaToken) => {
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (over && active.id !== over.id) {
+      const oldIndex = formula.findIndex((t) => t.id === active.id);
+      const newIndex = formula.findIndex((t) => t.id === over.id);
+
+      const newFormula = arrayMove(formula, oldIndex, newIndex);
+      setFormula(newFormula);
+      onChange?.(newFormula);
+      
+      // Update selected index if needed
+      if (selectedIndex === oldIndex) {
+        setSelectedIndex(newIndex);
+      } else if (selectedIndex !== null) {
+        if (oldIndex < selectedIndex && newIndex >= selectedIndex) {
+          setSelectedIndex(selectedIndex - 1);
+        } else if (oldIndex > selectedIndex && newIndex <= selectedIndex) {
+          setSelectedIndex(selectedIndex + 1);
+        }
+      }
+    }
+  };
+
+  const insertToken = useCallback((token: FormulaToken) => {
     let newFormula: FormulaToken[];
-    if (cursorPosition !== null && cursorPosition < formula.length) {
-      // Insert at cursor position
+    if (selectedIndex !== null && selectedIndex < formula.length) {
+      // Insert after selected position
       newFormula = [
-        ...formula.slice(0, cursorPosition),
+        ...formula.slice(0, selectedIndex + 1),
         token,
-        ...formula.slice(cursorPosition)
+        ...formula.slice(selectedIndex + 1)
       ];
-      setCursorPosition(cursorPosition + 1);
+      setSelectedIndex(selectedIndex + 1);
     } else {
       // Append to end
       newFormula = [...formula, token];
+      setSelectedIndex(newFormula.length - 1);
     }
     setFormula(newFormula);
     onChange?.(newFormula);
-  };
+  }, [formula, selectedIndex, onChange]);
 
   const addVariavel = (variavel: typeof VARIAVEIS_DISPONIVEIS[0]) => {
     insertToken({
@@ -224,15 +384,19 @@ export function FormulaBuilder({
     const newFormula = formula.filter((_, i) => i !== index);
     setFormula(newFormula);
     onChange?.(newFormula);
-    if (cursorPosition !== null && cursorPosition > index) {
-      setCursorPosition(cursorPosition - 1);
+    if (selectedIndex !== null) {
+      if (selectedIndex === index) {
+        setSelectedIndex(null);
+      } else if (selectedIndex > index) {
+        setSelectedIndex(selectedIndex - 1);
+      }
     }
   };
 
   const clearFormula = () => {
     setFormula([]);
     onChange?.([]);
-    setCursorPosition(null);
+    setSelectedIndex(null);
   };
 
   const handleSaveFormula = () => {
@@ -264,18 +428,11 @@ export function FormulaBuilder({
       setFormula(selected.tokens);
       onChange?.(selected.tokens);
       onSelectFormula?.(selected);
-      setCursorPosition(null);
+      setSelectedIndex(null);
     }
   };
 
-  const handleTokenClick = (index: number) => {
-    // Toggle cursor position: if clicking same position, deselect
-    if (cursorPosition === index) {
-      setCursorPosition(null);
-    } else {
-      setCursorPosition(index);
-    }
-  };
+  const activeToken = activeId ? formula.find(t => t.id === activeId) : null;
 
   const resultadoSimulacao = useMemo(() => {
     if (!valoresSimulacao || formula.length === 0) return null;
@@ -296,50 +453,14 @@ export function FormulaBuilder({
     }
   }, [formula, valoresSimulacao]);
 
-  const renderToken = (token: FormulaToken, index: number) => {
-    const isOperator = token.tipo === "operador";
-    const isParenthesis = token.tipo === "parentese";
-    const isVariable = token.tipo === "variavel";
-    const isNumber = token.tipo === "numero";
-    const isSelected = cursorPosition === index;
-
-    return (
-      <div key={`${token.id}_${index}`} className="flex items-center gap-0.5">
-        {/* Cursor indicator before token */}
-        {cursorPosition === index && (
-          <div className="w-0.5 h-10 bg-primary animate-pulse rounded-full" />
-        )}
-        <div className="group relative">
-          <button
-            onClick={() => handleTokenClick(index)}
-            className={`
-              transition-all text-sm font-medium rounded-md inline-flex items-center justify-center
-              ${isSelected ? "ring-2 ring-primary ring-offset-2" : ""}
-              ${isVariable ? "bg-primary text-primary-foreground px-3 py-2 hover:bg-primary/90" : ""}
-              ${isNumber ? "bg-secondary text-secondary-foreground px-3 py-2 hover:bg-secondary/90" : ""}
-              ${isOperator ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 w-10 h-10 text-xl font-bold hover:bg-blue-200 dark:hover:bg-blue-800" : ""}
-              ${isParenthesis ? "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 w-8 h-10 text-xl font-bold hover:bg-amber-200 dark:hover:bg-amber-800" : ""}
-            `}
-          >
-            {token.display}
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); removeToken(index); }}
-            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
-          >
-            ×
-          </button>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <Card>
-      <CardHeader className="pb-3">
+    <Card className="border-2">
+      <CardHeader className="pb-3 bg-gradient-to-r from-muted/50 to-muted/30">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <Calculator className="h-4 w-4" />
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Calculator className="h-4 w-4 text-primary" />
+            </div>
             Editor de Fórmula
           </CardTitle>
           
@@ -375,43 +496,76 @@ export function FormulaBuilder({
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Formula Area */}
+      <CardContent className="space-y-4 pt-4">
+        {/* Formula Area with Drag and Drop */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <Label className="text-xs text-muted-foreground">Fórmula Atual</Label>
-            {cursorPosition !== null && (
-              <Badge variant="outline" className="text-xs">
-                Inserindo na posição {cursorPosition + 1}
+            <Label className="text-xs text-muted-foreground flex items-center gap-2">
+              <Move className="h-3 w-3" />
+              Fórmula Atual (arraste para reordenar)
+            </Label>
+            {selectedIndex !== null && (
+              <Badge variant="secondary" className="text-xs">
+                Inserindo após posição {selectedIndex + 1}
               </Badge>
             )}
           </div>
-          <div 
-            className="min-h-[80px] p-4 rounded-lg border-2 border-dashed border-muted bg-muted/5 flex flex-wrap gap-2 items-center content-start cursor-text"
-            onClick={() => setCursorPosition(formula.length)}
+          
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
           >
-            {formula.length === 0 ? (
-              <span className="text-sm text-muted-foreground">
-                Clique nas variáveis e operadores abaixo para montar sua fórmula
-              </span>
-            ) : (
-              <>
-                {formula.map((token, index) => renderToken(token, index))}
-                {/* Cursor at end */}
-                {cursorPosition === formula.length && (
-                  <div className="w-0.5 h-10 bg-primary animate-pulse rounded-full" />
-                )}
-              </>
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            💡 Clique em um token para posicionar o cursor e inserir novos elementos nessa posição
+            <div 
+              className="min-h-[100px] p-4 rounded-xl border-2 border-dashed border-muted-foreground/30 bg-gradient-to-b from-muted/20 to-muted/5 flex flex-wrap gap-3 items-center content-start"
+              onClick={() => setSelectedIndex(formula.length > 0 ? formula.length - 1 : null)}
+            >
+              {formula.length === 0 ? (
+                <div className="w-full flex flex-col items-center justify-center py-6 text-center">
+                  <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
+                    <Calculator className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <span className="text-sm text-muted-foreground font-medium">
+                    Fórmula vazia
+                  </span>
+                  <span className="text-xs text-muted-foreground mt-1">
+                    Clique nas variáveis e operadores abaixo para montar
+                  </span>
+                </div>
+              ) : (
+                <SortableContext
+                  items={formula.map(t => t.id)}
+                  strategy={horizontalListSortingStrategy}
+                >
+                  {formula.map((token, index) => (
+                    <SortableToken
+                      key={token.id}
+                      token={token}
+                      index={index}
+                      isSelected={selectedIndex === index}
+                      onClick={() => setSelectedIndex(index)}
+                      onRemove={() => removeToken(index)}
+                    />
+                  ))}
+                </SortableContext>
+              )}
+            </div>
+            
+            <DragOverlay>
+              {activeToken ? <TokenPreview token={activeToken} /> : null}
+            </DragOverlay>
+          </DndContext>
+          
+          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+            <span className="text-primary">💡</span>
+            Clique em um token para selecionar. Novos elementos serão inseridos após a seleção.
           </p>
         </div>
 
         {/* Result */}
         {resultadoSimulacao !== null && (
-          <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+          <div className="p-4 rounded-xl bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border border-green-200 dark:border-green-800">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-green-700 dark:text-green-400">Resultado:</span>
               <span className="text-xl font-bold text-green-700 dark:text-green-400">
@@ -427,9 +581,9 @@ export function FormulaBuilder({
             <RotateCcw className="h-4 w-4 mr-1" />
             Limpar
           </Button>
-          {cursorPosition !== null && (
-            <Button size="sm" variant="outline" onClick={() => setCursorPosition(null)}>
-              Ir para o final
+          {selectedIndex !== null && (
+            <Button size="sm" variant="outline" onClick={() => setSelectedIndex(null)}>
+              Desmarcar
             </Button>
           )}
           
@@ -454,14 +608,14 @@ export function FormulaBuilder({
                     placeholder="Ex: Frete Simples..."
                   />
                 </div>
-                <div className="p-3 rounded-lg bg-muted/50 max-h-32 overflow-auto">
+                <div className="p-3 rounded-xl bg-muted/50 max-h-32 overflow-auto">
                   <Label className="text-xs text-muted-foreground">Prévia:</Label>
-                  <div className="flex flex-wrap gap-1 mt-2">
+                  <div className="flex flex-wrap gap-1.5 mt-2">
                     {formula.map((t, i) => (
-                      <span key={i} className={`text-xs px-2 py-1 rounded ${
+                      <span key={i} className={`text-xs px-2 py-1 rounded-md font-medium ${
                         t.tipo === "variavel" ? "bg-primary/20 text-primary" :
-                        t.tipo === "operador" ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold" :
-                        t.tipo === "parentese" ? "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300" :
+                        t.tipo === "operador" ? "bg-blue-500/20 text-blue-700 dark:text-blue-300" :
+                        t.tipo === "parentese" ? "bg-amber-500/20 text-amber-700 dark:text-amber-300" :
                         "bg-secondary text-secondary-foreground"
                       }`}>
                         {t.display}
@@ -482,13 +636,22 @@ export function FormulaBuilder({
 
         {/* Operators */}
         <div>
-          <Label className="text-xs text-muted-foreground mb-3 block">Operadores</Label>
+          <Label className="text-xs text-muted-foreground mb-3 block font-medium">Operadores</Label>
           <div className="flex gap-2 flex-wrap items-center">
             {OPERADORES.map(op => (
               <TooltipProvider key={op.id}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button size="lg" variant="outline" className="w-12 h-12 text-xl font-bold" onClick={() => addOperador(op)}>
+                    <Button 
+                      size="lg" 
+                      variant="outline" 
+                      className={`w-12 h-12 text-xl font-bold transition-all hover:scale-105 ${
+                        op.tipo === "operador" 
+                          ? "hover:bg-blue-500 hover:text-white hover:border-blue-500" 
+                          : "hover:bg-amber-500 hover:text-white hover:border-amber-500"
+                      }`}
+                      onClick={() => addOperador(op)}
+                    >
                       {op.nome}
                     </Button>
                   </TooltipTrigger>
@@ -496,7 +659,7 @@ export function FormulaBuilder({
                 </Tooltip>
               </TooltipProvider>
             ))}
-            <div className="flex gap-2 items-center ml-2 pl-2 border-l">
+            <div className="flex gap-2 items-center ml-2 pl-4 border-l-2">
               <Input
                 type="number"
                 step="any"
@@ -506,7 +669,7 @@ export function FormulaBuilder({
                 className="w-24 h-12"
                 onKeyDown={e => e.key === "Enter" && addNumero()}
               />
-              <Button variant="secondary" onClick={addNumero} className="h-12">
+              <Button variant="secondary" onClick={addNumero} className="h-12 hover:scale-105 transition-transform">
                 <Hash className="h-4 w-4 mr-1" />
                 Add
               </Button>
@@ -518,28 +681,35 @@ export function FormulaBuilder({
 
         {/* Variables */}
         <div>
-          <Label className="text-xs text-muted-foreground mb-3 block">Variáveis</Label>
+          <Label className="text-xs text-muted-foreground mb-3 block font-medium">Variáveis Disponíveis</Label>
           <div className="space-y-2">
             {Object.entries(variaveisPorGrupo).map(([grupo, vars]) => (
-              <div key={grupo} className="border rounded-lg overflow-hidden">
+              <div key={grupo} className="border rounded-xl overflow-hidden">
                 <button
-                  className="w-full px-4 py-2 bg-muted/50 hover:bg-muted flex items-center justify-between text-sm font-medium"
+                  className="w-full px-4 py-3 bg-gradient-to-r from-muted/50 to-muted/30 hover:from-muted/70 hover:to-muted/50 flex items-center justify-between text-sm font-medium transition-colors"
                   onClick={() => setGrupoExpandido(grupoExpandido === grupo ? "" : grupo)}
                 >
                   <span className="flex items-center gap-2">
-                    <Variable className="h-4 w-4" />
+                    <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                      <Variable className="h-3.5 w-3.5 text-primary" />
+                    </div>
                     {grupo}
                     <Badge variant="outline" className="text-xs">{vars.length}</Badge>
                   </span>
-                  <ChevronRight className={`h-4 w-4 transition-transform ${grupoExpandido === grupo ? "rotate-90" : ""}`} />
+                  <ChevronRight className={`h-4 w-4 transition-transform duration-200 ${grupoExpandido === grupo ? "rotate-90" : ""}`} />
                 </button>
                 {grupoExpandido === grupo && (
-                  <div className="p-3 flex flex-wrap gap-2 bg-background">
+                  <div className="p-3 flex flex-wrap gap-2 bg-background border-t">
                     {vars.map(v => (
                       <TooltipProvider key={v.id}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button size="sm" variant="secondary" className="h-auto py-1.5 px-2 text-xs" onClick={() => addVariavel(v)}>
+                            <Button 
+                              size="sm" 
+                              variant="secondary" 
+                              className="h-auto py-2 px-3 text-xs hover:bg-primary hover:text-primary-foreground transition-all hover:scale-105" 
+                              onClick={() => addVariavel(v)}
+                            >
                               <Plus className="h-3 w-3 mr-1" />
                               {v.nome}
                             </Button>
