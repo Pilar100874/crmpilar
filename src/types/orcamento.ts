@@ -18,6 +18,7 @@ export interface ProdutoCategoria {
 export interface Produto {
   id: string;
   estabelecimento_id: string;
+  codigo?: string;
   nome: string;
   largura?: number;
   gramatura?: number;
@@ -26,6 +27,8 @@ export interface Produto {
   foto_url?: string;
   categoria_id?: string;
   grupo_id?: string;
+  ncm_id?: string;
+  ncm?: string;
   ativo: boolean;
   created_at: string;
   updated_at: string;
