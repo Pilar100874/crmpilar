@@ -70,6 +70,12 @@ interface CampoCustomizado {
   placeholder: string | null;
   unidade: string | null;
   ativo: boolean;
+  pesquisa_faixa?: boolean;
+}
+
+interface RangeFilter {
+  min: string;
+  max: string;
 }
 
 interface FormData {
@@ -179,9 +185,62 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   
+  // Range filter states for custom fields
+  const [filterCamposCustomizados, setFilterCamposCustomizados] = useState<CampoCustomizado[]>([]);
+  const [rangeFilters, setRangeFilters] = useState<Record<string, RangeFilter>>({});
+  
   // Sort states
   const [sortField, setSortField] = useState<string>("nome");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Load filter campos customizados when filterGrupo changes
+  useEffect(() => {
+    if (filterGrupo && filterGrupo !== "all") {
+      loadFilterCamposCustomizados(filterGrupo);
+    } else {
+      setFilterCamposCustomizados([]);
+      setRangeFilters({});
+    }
+  }, [filterGrupo]);
+
+  const loadFilterCamposCustomizados = async (grupoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('produto_campos_customizados')
+        .select('*')
+        .eq('grupo_id', grupoId)
+        .eq('ativo', true)
+        .eq('tipo', 'numero')
+        .eq('pesquisa_faixa', true)
+        .order('ordem');
+
+      if (error) throw error;
+      setFilterCamposCustomizados(data || []);
+      
+      // Initialize range filters for new campos
+      const newRangeFilters: Record<string, RangeFilter> = {};
+      (data || []).forEach(campo => {
+        newRangeFilters[campo.campo_key] = { min: "", max: "" };
+      });
+      setRangeFilters(newRangeFilters);
+    } catch (error) {
+      console.error('Erro ao carregar campos para filtro:', error);
+      setFilterCamposCustomizados([]);
+    }
+  };
+
+  const updateRangeFilter = (campoKey: string, field: "min" | "max", value: string) => {
+    setRangeFilters(prev => ({
+      ...prev,
+      [campoKey]: {
+        ...prev[campoKey],
+        [field]: value
+      }
+    }));
+  };
+
+  // Check if any range filter has values
+  const hasRangeFilters = Object.values(rangeFilters).some(rf => rf.min || rf.max);
 
   // Filtered and sorted products
   const filteredAndSortedProdutos = useMemo(() => {
@@ -208,6 +267,26 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     if (filterStatus !== "all") {
       result = result.filter(p => filterStatus === "ativo" ? p.ativo : !p.ativo);
     }
+    
+    // Apply range filters for custom fields
+    filterCamposCustomizados.forEach(campo => {
+      const range = rangeFilters[campo.campo_key];
+      if (range) {
+        const minVal = range.min ? parseFloat(range.min) : 0;
+        const maxVal = range.max ? parseFloat(range.max) : 99999;
+        
+        // Only apply filter if at least one value is set
+        if (range.min || range.max) {
+          result = result.filter(p => {
+            const camposCustom = (p as any).campos_customizados;
+            if (!camposCustom) return false;
+            
+            const fieldValue = parseFloat(camposCustom[campo.campo_key]) || 0;
+            return fieldValue >= minVal && fieldValue <= maxVal;
+          });
+        }
+      }
+    });
     
     // Apply sorting
     result.sort((a, b) => {
@@ -244,7 +323,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     });
     
     return result;
-  }, [produtos, searchTerm, filterCategoria, filterGrupo, filterStatus, sortField, sortDirection]);
+  }, [produtos, searchTerm, filterCategoria, filterGrupo, filterStatus, sortField, sortDirection, rangeFilters, filterCamposCustomizados]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -267,9 +346,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     setFilterCategoria("all");
     setFilterGrupo("all");
     setFilterStatus("all");
+    setRangeFilters({});
   };
 
-  const hasActiveFilters = searchTerm || filterCategoria !== "all" || filterGrupo !== "all" || filterStatus !== "all";
+  const hasActiveFilters = searchTerm || filterCategoria !== "all" || filterGrupo !== "all" || filterStatus !== "all" || hasRangeFilters;
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -758,6 +838,41 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               </SelectContent>
             </Select>
           </div>
+          
+          {/* Range filters for custom fields */}
+          {filterCamposCustomizados.length > 0 && (
+            <div className="border-t pt-3 mt-3">
+              <span className="text-xs font-medium text-muted-foreground mb-2 block">
+                Filtros por faixa de valores
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {filterCamposCustomizados.map(campo => (
+                  <div key={campo.id} className="bg-background rounded-md p-3 border">
+                    <Label className="text-xs font-medium mb-2 block">
+                      {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        placeholder="De"
+                        value={rangeFilters[campo.campo_key]?.min || ""}
+                        onChange={(e) => updateRangeFilter(campo.campo_key, "min", e.target.value)}
+                        className="text-sm h-8"
+                      />
+                      <span className="text-xs text-muted-foreground">até</span>
+                      <Input
+                        type="number"
+                        placeholder="Até"
+                        value={rangeFilters[campo.campo_key]?.max || ""}
+                        onChange={(e) => updateRangeFilter(campo.campo_key, "max", e.target.value)}
+                        className="text-sm h-8"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
