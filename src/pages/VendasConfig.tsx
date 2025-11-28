@@ -14,7 +14,7 @@ import {
   Box,
   LucideIcon
 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProdutosCRUD } from '@/components/config/ProdutosCRUD';
@@ -29,8 +29,8 @@ import { TiposPagamentoCRUD } from '@/components/config/TiposPagamentoCRUD';
 import { AutomacaoVendasCRUD } from '@/components/config/AutomacaoVendasCRUD';
 import { CustosVeiculosCRUD } from '@/components/config/CustosVeiculosCRUD';
 import PedagioAPIConfigCRUD from '@/components/config/PedagioAPIConfigCRUD';
-import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
 interface TabItem {
   id: string;
@@ -61,16 +61,7 @@ export default function VendasConfig() {
   const { data: estabelecimentoId } = useQuery({
     queryKey: ['user-estabelecimento-vendas'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-      
-      const { data: usuario } = await supabase
-        .from('usuarios')
-        .select('estabelecimento_id')
-        .eq('email', user.email)
-        .single();
-      
-      return usuario?.estabelecimento_id || null;
+      return await getEstabelecimentoId();
     }
   });
 
