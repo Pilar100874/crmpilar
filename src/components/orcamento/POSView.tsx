@@ -1472,8 +1472,8 @@ export default function POSView({
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="details" className="flex-1 m-0">
-            <ScrollArea className="h-[calc(100vh-400px)] p-2">
+          <TabsContent value="details" className="flex-1 m-0 overflow-hidden">
+            <ScrollArea className="h-[calc(100vh-280px)] p-2">
               {/* Navegação rápida quando há conteúdo selecionado */}
               {(showFreteInDetails || showRegrasInDetails || selectedProduto) && (
                 <div className="flex gap-1 mb-2 p-1 bg-muted/30 rounded-lg">
