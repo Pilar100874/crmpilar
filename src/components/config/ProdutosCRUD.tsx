@@ -46,6 +46,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Trash2, Pencil, Plus, Image, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, Download, Loader2 } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
+import { DynamicProductFields } from "./DynamicProductFields";
 import { cn } from "@/lib/utils";
 
 interface ProdutosCRUDProps {
@@ -56,6 +57,18 @@ interface NcmCodigo {
   id: string;
   codigo: string;
   descricao: string;
+}
+
+interface CampoCustomizado {
+  id: string;
+  nome: string;
+  campo_key: string;
+  tipo: string;
+  opcoes: any;
+  obrigatorio: boolean;
+  placeholder: string | null;
+  unidade: string | null;
+  ativo: boolean;
 }
 
 interface FormData {
@@ -91,6 +104,8 @@ interface FormData {
   embalagem_img_ean13: string;
   embalagem_img_ean14_1: string;
   embalagem_img_ean14_2: string;
+  // Campos customizados
+  campos_customizados: Record<string, any>;
 }
 
 const initialFormData: FormData = {
@@ -126,6 +141,8 @@ const initialFormData: FormData = {
   embalagem_img_ean13: "",
   embalagem_img_ean14_1: "",
   embalagem_img_ean14_2: "",
+  // Campos customizados
+  campos_customizados: {},
 };
 
 export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
@@ -143,12 +160,38 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [ncmOpen, setNcmOpen] = useState(false);
   const [ncmSearch, setNcmSearch] = useState("");
   const [importingNcm, setImportingNcm] = useState(false);
+  const [camposCustomizados, setCamposCustomizados] = useState<CampoCustomizado[]>([]);
 
   useEffect(() => {
     if (estabelecimentoId) {
       loadData();
     }
   }, [estabelecimentoId]);
+
+  // Load campos customizados when grupo changes
+  useEffect(() => {
+    if (formData.grupo_id) {
+      loadCamposCustomizados(formData.grupo_id);
+    } else {
+      setCamposCustomizados([]);
+    }
+  }, [formData.grupo_id]);
+
+  const loadCamposCustomizados = async (grupoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('produto_campos_customizados')
+        .select('*')
+        .eq('grupo_id', grupoId)
+        .eq('ativo', true)
+        .order('ordem');
+
+      if (error) throw error;
+      setCamposCustomizados(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar campos customizados:', error);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -403,6 +446,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         embalagem_img_ean13: formData.embalagem_img_ean13 || null,
         embalagem_img_ean14_1: formData.embalagem_img_ean14_1 || null,
         embalagem_img_ean14_2: formData.embalagem_img_ean14_2 || null,
+        // Campos customizados do grupo
+        campos_customizados: formData.campos_customizados || {},
       };
 
       if (editingProduto) {
@@ -493,6 +538,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       embalagem_img_ean13: p.embalagem_img_ean13 || "",
       embalagem_img_ean14_1: p.embalagem_img_ean14_1 || "",
       embalagem_img_ean14_2: p.embalagem_img_ean14_2 || "",
+      // Campos customizados
+      campos_customizados: p.campos_customizados || {},
     });
     setShowDialog(true);
   };
@@ -765,70 +812,29 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   </Popover>
                 </div>
 
-                <div>
-                  <Label>Largura (cm)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.largura}
-                    onChange={(e) => setFormData({ ...formData, largura: e.target.value })}
-                    placeholder="0.00"
-                  />
-                </div>
+                {/* Campos Customizados do Grupo */}
+                {camposCustomizados.length > 0 && (
+                  <div className="col-span-2">
+                    <DynamicProductFields
+                      campos={camposCustomizados}
+                      values={formData.campos_customizados}
+                      onChange={(key, value) => setFormData({
+                        ...formData,
+                        campos_customizados: {
+                          ...formData.campos_customizados,
+                          [key]: value,
+                        },
+                      })}
+                    />
+                  </div>
+                )}
 
-                <div>
-                  <Label>Altura (cm)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.altura}
-                    onChange={(e) => setFormData({ ...formData, altura: e.target.value })}
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <Label>Comprimento (cm)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.comprimento}
-                    onChange={(e) => setFormData({ ...formData, comprimento: e.target.value })}
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <Label>Gramatura (g/m²)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.gramatura}
-                    onChange={(e) => setFormData({ ...formData, gramatura: e.target.value })}
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <Label>Número de Folhas</Label>
-                  <Input
-                    type="number"
-                    value={formData.numero_folhas}
-                    onChange={(e) => setFormData({ ...formData, numero_folhas: e.target.value })}
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <Label>Peso Unitário (kg)</Label>
-                  <Input
-                    type="number"
-                    step="0.001"
-                    value={formData.peso_unitario}
-                    onChange={(e) => setFormData({ ...formData, peso_unitario: e.target.value })}
-                    placeholder="0.000"
-                  />
-                </div>
+                {camposCustomizados.length === 0 && formData.grupo_id && (
+                  <div className="col-span-2 text-sm text-muted-foreground p-4 border rounded-lg bg-muted/30">
+                    Nenhum campo customizado configurado para este grupo. 
+                    Configure os campos em "Campos Customizados por Grupo".
+                  </div>
+                )}
 
                 <div className="col-span-2">
                   <Label>Foto do Produto</Label>
