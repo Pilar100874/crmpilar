@@ -16,6 +16,7 @@ import { ProdutosCRUD } from "./ProdutosCRUD";
 import { ProdutoCategoriasCRUD } from "./ProdutoCategoriasCRUD";
 import { ProdutoGruposCRUD } from "./ProdutoGruposCRUD";
 import { ProdutoCamposCustomizadosCRUD } from "./ProdutoCamposCustomizadosCRUD";
+import { NcmCRUD } from "./NcmCRUD";
 import { CondicoesPagamentoCRUD } from "./CondicoesPagamentoCRUD";
 import { TabelasPrecoCRUD } from "./TabelasPrecoCRUD";
 import { TiposPagamentoCRUD } from "./TiposPagamentoCRUD";
@@ -32,7 +33,7 @@ import { SkillsFilaManager } from "@/components/atendimento/SkillsFilaManager";
 import { AutomacaoVendasCRUD } from "./AutomacaoVendasCRUD";
 import PedagioAPIConfigCRUD from "./PedagioAPIConfigCRUD";
 import { CustosVeiculosCRUD } from "./CustosVeiculosCRUD";
-import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock, ClipboardCheck, Brain, HelpCircle, Zap, BookOpen, Navigation, Fuel, Truck } from "lucide-react";
+import { Users, Building2, Tag, FolderTree, UserCog, Share2, MessageSquare, Link as LinkIcon, Globe, Webhook, Key, Bell, Shield, Mail, Package, FolderOpen, Layers, CreditCard, DollarSign, Wallet, Calendar, Phone, MessageSquareQuote, Award, Workflow, ListTree, Star, Clock, ClipboardCheck, Brain, HelpCircle, Zap, BookOpen, Navigation, Fuel, Truck, FileCode } from "lucide-react";
 import PesquisasSatisfacaoCRUD from "@/components/atendimento/PesquisasSatisfacaoCRUD";
 import KnowledgeBaseCRUD from "./KnowledgeBaseCRUD";
 import IAConfigCRUD from "./IAConfigCRUD";
@@ -2325,6 +2326,46 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
                   <ProdutoCategoriasCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="ncm-codigos" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center justify-between w-full pr-2">
+                    <div className="flex items-center gap-2">
+                      <FileCode className="w-4 h-4 text-primary" />
+                      <span className="font-medium">Códigos NCM</span>
+                    </div>
+                    <Dialog open={helpDialogOpen === "ncm-codigos"} onOpenChange={(open) => setHelpDialogOpen(open ? "ncm-codigos" : null)}>
+                      <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                          <HelpCircle className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Códigos NCM - Ajuda</DialogTitle>
+                          <DialogDescription className="text-left space-y-4 pt-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">📋 NCM (Nomenclatura Comum do Mercosul)</h4>
+                              <p className="text-sm">Código de 8 dígitos que classifica mercadorias para fins fiscais e tributários.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">📥 Importação</h4>
+                              <p className="text-sm">Use o botão 'Importar NCM' para carregar automaticamente todos os códigos da API oficial da Receita Federal.</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">✏️ Gerenciamento</h4>
+                              <p className="text-sm">Você pode criar, editar ou excluir códigos NCM conforme necessário para seu negócio.</p>
+                            </div>
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <NcmCRUD />
                 </AccordionContent>
               </AccordionItem>
 

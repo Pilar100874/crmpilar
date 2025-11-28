@@ -43,7 +43,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Trash2, Pencil, Plus, Image, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, Download, Loader2 } from "lucide-react";
+import { Trash2, Pencil, Plus, Image, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
 import { DynamicProductFields } from "./DynamicProductFields";
@@ -159,7 +159,6 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [activeTab, setActiveTab] = useState("basico");
   const [ncmOpen, setNcmOpen] = useState(false);
   const [ncmSearch, setNcmSearch] = useState("");
-  const [importingNcm, setImportingNcm] = useState(false);
   const [camposCustomizados, setCamposCustomizados] = useState<CampoCustomizado[]>([]);
 
   useEffect(() => {
@@ -233,34 +232,6 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       toast.error("Erro ao carregar produtos");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const importNcm = async () => {
-    try {
-      setImportingNcm(true);
-      toast.info("Importando códigos NCM da Receita Federal...");
-      
-      const { data, error } = await supabase.functions.invoke('importar-ncm');
-      
-      if (error) throw error;
-      
-      if (data?.success) {
-        toast.success(`${data.inserted} códigos NCM importados com sucesso!`);
-        // Reload NCM codes
-        const { data: ncmRes } = await supabase
-          .from('ncm_codigos')
-          .select('*')
-          .order('codigo');
-        setNcmCodigos(ncmRes || []);
-      } else {
-        throw new Error(data?.error || "Erro desconhecido");
-      }
-    } catch (error: any) {
-      console.error('Erro ao importar NCM:', error);
-      toast.error(`Erro ao importar NCM: ${error.message}`);
-    } finally {
-      setImportingNcm(false);
     }
   };
 
@@ -586,24 +557,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Produtos</h3>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={importNcm}
-            disabled={importingNcm}
-          >
-            {importingNcm ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4 mr-2" />
-            )}
-            {importingNcm ? "Importando NCM..." : "Importar NCM"}
-          </Button>
-          <Button onClick={openNewDialog}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Produto
-          </Button>
-        </div>
+        <Button onClick={openNewDialog}>
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Produto
+        </Button>
       </div>
 
       <Table>
@@ -779,7 +736,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                         <CommandList>
                           <CommandEmpty>
                             {ncmCodigos.length === 0 
-                              ? "Nenhum NCM cadastrado. Clique em 'Importar NCM' para carregar os códigos."
+                              ? "Nenhum NCM cadastrado. Configure os códigos NCM em 'Códigos NCM'."
                               : "Nenhum NCM encontrado."}
                           </CommandEmpty>
                           <CommandGroup className="max-h-[300px] overflow-y-auto">
