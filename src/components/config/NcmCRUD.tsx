@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
-import { Trash2, Pencil, Plus, Download, Loader2, Search, FileCode } from "lucide-react";
+import { Trash2, Pencil, Plus, Download, Loader2, Search, FileCode, Upload } from "lucide-react";
+import * as XLSX from "xlsx";
 
 interface NcmCodigo {
   id: string;
@@ -51,6 +52,7 @@ export function NcmCRUD() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ncmToDelete, setNcmToDelete] = useState<NcmCodigo | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadNcmCodigos();
@@ -83,24 +85,68 @@ export function NcmCRUD() {
     }
   };
 
-  const importNcm = async () => {
+  const downloadTemplate = () => {
+    const templateData = [
+      { codigo: "0101.21.00", descricao: "Cavalos reprodutores de raça pura" },
+      { codigo: "0101.29.00", descricao: "Outros cavalos vivos" },
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    ws["!cols"] = [{ wch: 15 }, { wch: 60 }];
+    
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "NCM");
+    XLSX.writeFile(wb, "modelo_ncm.xlsx");
+    toast.success("Modelo baixado com sucesso");
+  };
+
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
     setImporting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("importar-ncm");
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json<{ codigo: string; descricao: string }>(worksheet);
+
+      if (jsonData.length === 0) {
+        toast.error("Arquivo vazio ou formato inválido");
+        return;
+      }
+
+      const codePattern = /^\d{4}\.\d{2}\.\d{2}$/;
+      const validRecords = jsonData.filter(
+        (row) => row.codigo && row.descricao && codePattern.test(row.codigo.toString().trim())
+      );
+
+      if (validRecords.length === 0) {
+        toast.error("Nenhum registro válido encontrado. Verifique o formato (XXXX.XX.XX)");
+        return;
+      }
+
+      const ncmToInsert = validRecords.map((row) => ({
+        codigo: row.codigo.toString().trim(),
+        descricao: row.descricao.toString().trim(),
+      }));
+
+      const { error } = await supabase
+        .from("ncm_codigos")
+        .upsert(ncmToInsert, { onConflict: "codigo" });
 
       if (error) throw error;
 
-      if (data?.success) {
-        toast.success(`NCM importado: ${data.inserted} códigos inseridos`);
-        loadNcmCodigos();
-      } else {
-        throw new Error(data?.error || "Erro desconhecido");
-      }
+      toast.success(`${validRecords.length} códigos NCM importados com sucesso`);
+      loadNcmCodigos();
     } catch (error: any) {
-      console.error("Erro ao importar NCM:", error);
-      toast.error("Erro ao importar NCM: " + error.message);
+      console.error("Erro ao importar arquivo:", error);
+      toast.error("Erro ao importar arquivo: " + error.message);
     } finally {
       setImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -244,13 +290,28 @@ export function NcmCRUD() {
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={importNcm} disabled={importing}>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileImport}
+            accept=".xlsx,.xls"
+            className="hidden"
+          />
+          <Button variant="outline" onClick={downloadTemplate}>
+            <Download className="w-4 h-4 mr-2" />
+            Baixar Modelo
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => fileInputRef.current?.click()} 
+            disabled={importing}
+          >
             {importing ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
-              <Download className="w-4 h-4 mr-2" />
+              <Upload className="w-4 h-4 mr-2" />
             )}
-            {importing ? "Importando..." : "Importar NCM"}
+            {importing ? "Importando..." : "Importar Excel"}
           </Button>
           <Button onClick={openNewDialog}>
             <Plus className="w-4 h-4 mr-2" />
@@ -284,7 +345,7 @@ export function NcmCRUD() {
                 <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
                   {searchTerm
                     ? "Nenhum NCM encontrado com esse filtro"
-                    : "Nenhum NCM cadastrado. Clique em 'Importar NCM' para importar da API oficial."}
+                    : "Nenhum NCM cadastrado. Baixe o modelo Excel e importe seus códigos."}
                 </TableCell>
               </TableRow>
             ) : (
