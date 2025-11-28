@@ -78,6 +78,14 @@ interface RangeFilter {
   max: string;
 }
 
+interface CustomFieldFilters {
+  range: Record<string, RangeFilter>;  // For numeric fields with pesquisa_faixa
+  text: Record<string, string>;         // For text fields
+  select: Record<string, string>;       // For selection fields
+  checkbox: Record<string, boolean | null>; // For checkbox fields (null = any)
+  number: Record<string, string>;       // For numeric fields without pesquisa_faixa
+}
+
 interface FormData {
   nome: string;
   codigo: string;
@@ -185,9 +193,15 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   
-  // Range filter states for custom fields
+  // Custom field filter states
   const [filterCamposCustomizados, setFilterCamposCustomizados] = useState<CampoCustomizado[]>([]);
-  const [rangeFilters, setRangeFilters] = useState<Record<string, RangeFilter>>({});
+  const [customFieldFilters, setCustomFieldFilters] = useState<CustomFieldFilters>({
+    range: {},
+    text: {},
+    select: {},
+    checkbox: {},
+    number: {}
+  });
   
   // Sort states
   const [sortField, setSortField] = useState<string>("nome");
@@ -199,7 +213,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       loadFilterCamposCustomizados(filterGrupo);
     } else {
       setFilterCamposCustomizados([]);
-      setRangeFilters({});
+      setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
     }
   }, [filterGrupo]);
 
@@ -210,37 +224,63 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         .select('*')
         .eq('grupo_id', grupoId)
         .eq('ativo', true)
-        .eq('tipo', 'numero')
-        .eq('pesquisa_faixa', true)
         .order('ordem');
 
       if (error) throw error;
       setFilterCamposCustomizados(data || []);
       
-      // Initialize range filters for new campos
-      const newRangeFilters: Record<string, RangeFilter> = {};
+      // Initialize filters for each campo based on type
+      const newFilters: CustomFieldFilters = { range: {}, text: {}, select: {}, checkbox: {}, number: {} };
       (data || []).forEach(campo => {
-        newRangeFilters[campo.campo_key] = { min: "", max: "" };
+        if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+          newFilters.range[campo.campo_key] = { min: "", max: "" };
+        } else if (campo.tipo === 'numero') {
+          newFilters.number[campo.campo_key] = "";
+        } else if (campo.tipo === 'texto') {
+          newFilters.text[campo.campo_key] = "";
+        } else if (campo.tipo === 'selecao') {
+          newFilters.select[campo.campo_key] = "";
+        } else if (campo.tipo === 'checkbox') {
+          newFilters.checkbox[campo.campo_key] = null;
+        }
       });
-      setRangeFilters(newRangeFilters);
+      setCustomFieldFilters(newFilters);
     } catch (error) {
       console.error('Erro ao carregar campos para filtro:', error);
       setFilterCamposCustomizados([]);
     }
   };
 
-  const updateRangeFilter = (campoKey: string, field: "min" | "max", value: string) => {
-    setRangeFilters(prev => ({
+  const updateCustomFilter = (type: keyof CustomFieldFilters, campoKey: string, value: any) => {
+    setCustomFieldFilters(prev => ({
       ...prev,
-      [campoKey]: {
-        ...prev[campoKey],
-        [field]: value
+      [type]: {
+        ...prev[type],
+        [campoKey]: value
       }
     }));
   };
 
-  // Check if any range filter has values
-  const hasRangeFilters = Object.values(rangeFilters).some(rf => rf.min || rf.max);
+  const updateRangeFilter = (campoKey: string, field: "min" | "max", value: string) => {
+    setCustomFieldFilters(prev => ({
+      ...prev,
+      range: {
+        ...prev.range,
+        [campoKey]: {
+          ...prev.range[campoKey],
+          [field]: value
+        }
+      }
+    }));
+  };
+
+  // Check if any custom filter has values
+  const hasCustomFilters = 
+    Object.values(customFieldFilters.range).some(rf => rf?.min || rf?.max) ||
+    Object.values(customFieldFilters.text).some(v => v) ||
+    Object.values(customFieldFilters.select).some(v => v) ||
+    Object.values(customFieldFilters.checkbox).some(v => v !== null) ||
+    Object.values(customFieldFilters.number).some(v => v);
 
   // Filtered and sorted products
   const filteredAndSortedProdutos = useMemo(() => {
@@ -268,21 +308,64 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       result = result.filter(p => filterStatus === "ativo" ? p.ativo : !p.ativo);
     }
     
-    // Apply range filters for custom fields
+    // Apply custom field filters
     filterCamposCustomizados.forEach(campo => {
-      const range = rangeFilters[campo.campo_key];
-      if (range) {
-        const minVal = range.min ? parseFloat(range.min) : 0;
-        const maxVal = range.max ? parseFloat(range.max) : 99999;
-        
-        // Only apply filter if at least one value is set
-        if (range.min || range.max) {
+      const camposCustom = (p: any) => (p as any).campos_customizados || {};
+      
+      // Range filter (numeric with pesquisa_faixa)
+      if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+        const range = customFieldFilters.range[campo.campo_key];
+        if (range && (range.min || range.max)) {
+          const minVal = range.min ? parseFloat(range.min) : 0;
+          const maxVal = range.max ? parseFloat(range.max) : 99999;
           result = result.filter(p => {
-            const camposCustom = (p as any).campos_customizados;
-            if (!camposCustom) return false;
-            
-            const fieldValue = parseFloat(camposCustom[campo.campo_key]) || 0;
+            const fieldValue = parseFloat(camposCustom(p)[campo.campo_key]) || 0;
             return fieldValue >= minVal && fieldValue <= maxVal;
+          });
+        }
+      }
+      
+      // Simple number filter
+      else if (campo.tipo === 'numero') {
+        const filterVal = customFieldFilters.number[campo.campo_key];
+        if (filterVal) {
+          result = result.filter(p => {
+            const fieldValue = String(camposCustom(p)[campo.campo_key] || "");
+            return fieldValue.includes(filterVal);
+          });
+        }
+      }
+      
+      // Text filter
+      else if (campo.tipo === 'texto') {
+        const filterVal = customFieldFilters.text[campo.campo_key];
+        if (filterVal) {
+          const term = filterVal.toLowerCase();
+          result = result.filter(p => {
+            const fieldValue = String(camposCustom(p)[campo.campo_key] || "").toLowerCase();
+            return fieldValue.includes(term);
+          });
+        }
+      }
+      
+      // Selection filter
+      else if (campo.tipo === 'selecao') {
+        const filterVal = customFieldFilters.select[campo.campo_key];
+        if (filterVal) {
+          result = result.filter(p => {
+            const fieldValue = camposCustom(p)[campo.campo_key];
+            return fieldValue === filterVal;
+          });
+        }
+      }
+      
+      // Checkbox filter
+      else if (campo.tipo === 'checkbox') {
+        const filterVal = customFieldFilters.checkbox[campo.campo_key];
+        if (filterVal !== null) {
+          result = result.filter(p => {
+            const fieldValue = Boolean(camposCustom(p)[campo.campo_key]);
+            return fieldValue === filterVal;
           });
         }
       }
@@ -323,7 +406,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     });
     
     return result;
-  }, [produtos, searchTerm, filterCategoria, filterGrupo, filterStatus, sortField, sortDirection, rangeFilters, filterCamposCustomizados]);
+  }, [produtos, searchTerm, filterCategoria, filterGrupo, filterStatus, sortField, sortDirection, customFieldFilters, filterCamposCustomizados]);
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -346,10 +429,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     setFilterCategoria("all");
     setFilterGrupo("all");
     setFilterStatus("all");
-    setRangeFilters({});
+    setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
   };
 
-  const hasActiveFilters = searchTerm || filterCategoria !== "all" || filterGrupo !== "all" || filterStatus !== "all" || hasRangeFilters;
+  const hasActiveFilters = searchTerm || filterCategoria !== "all" || filterGrupo !== "all" || filterStatus !== "all" || hasCustomFilters;
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -839,37 +922,124 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
             </Select>
           </div>
           
-          {/* Range filters for custom fields */}
+          {/* Custom field filters */}
           {filterCamposCustomizados.length > 0 && (
             <div className="border-t pt-3 mt-3">
               <span className="text-xs font-medium text-muted-foreground mb-2 block">
-                Filtros por faixa de valores
+                Filtros de campos customizados
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {filterCamposCustomizados.map(campo => (
-                  <div key={campo.id} className="bg-background rounded-md p-3 border">
-                    <Label className="text-xs font-medium mb-2 block">
-                      {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        placeholder="De"
-                        value={rangeFilters[campo.campo_key]?.min || ""}
-                        onChange={(e) => updateRangeFilter(campo.campo_key, "min", e.target.value)}
-                        className="text-sm h-8"
-                      />
-                      <span className="text-xs text-muted-foreground">até</span>
-                      <Input
-                        type="number"
-                        placeholder="Até"
-                        value={rangeFilters[campo.campo_key]?.max || ""}
-                        onChange={(e) => updateRangeFilter(campo.campo_key, "max", e.target.value)}
-                        className="text-sm h-8"
-                      />
-                    </div>
-                  </div>
-                ))}
+                {filterCamposCustomizados.map(campo => {
+                  // Range filter for numeric fields with pesquisa_faixa
+                  if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+                    return (
+                      <div key={campo.id} className="bg-background rounded-md p-3 border">
+                        <Label className="text-xs font-medium mb-2 block">
+                          {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            placeholder="De"
+                            value={customFieldFilters.range[campo.campo_key]?.min || ""}
+                            onChange={(e) => updateRangeFilter(campo.campo_key, "min", e.target.value)}
+                            className="text-sm h-8"
+                          />
+                          <span className="text-xs text-muted-foreground">até</span>
+                          <Input
+                            type="number"
+                            placeholder="Até"
+                            value={customFieldFilters.range[campo.campo_key]?.max || ""}
+                            onChange={(e) => updateRangeFilter(campo.campo_key, "max", e.target.value)}
+                            className="text-sm h-8"
+                          />
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  // Simple number filter
+                  if (campo.tipo === 'numero') {
+                    return (
+                      <div key={campo.id} className="bg-background rounded-md p-3 border">
+                        <Label className="text-xs font-medium mb-2 block">
+                          {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                        </Label>
+                        <Input
+                          type="number"
+                          placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                          value={customFieldFilters.number[campo.campo_key] || ""}
+                          onChange={(e) => updateCustomFilter('number', campo.campo_key, e.target.value)}
+                          className="text-sm h-8"
+                        />
+                      </div>
+                    );
+                  }
+                  
+                  // Text filter
+                  if (campo.tipo === 'texto') {
+                    return (
+                      <div key={campo.id} className="bg-background rounded-md p-3 border">
+                        <Label className="text-xs font-medium mb-2 block">{campo.nome}</Label>
+                        <Input
+                          type="text"
+                          placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                          value={customFieldFilters.text[campo.campo_key] || ""}
+                          onChange={(e) => updateCustomFilter('text', campo.campo_key, e.target.value)}
+                          className="text-sm h-8"
+                        />
+                      </div>
+                    );
+                  }
+                  
+                  // Selection filter
+                  if (campo.tipo === 'selecao') {
+                    const opcoes = Array.isArray(campo.opcoes) ? campo.opcoes : [];
+                    return (
+                      <div key={campo.id} className="bg-background rounded-md p-3 border">
+                        <Label className="text-xs font-medium mb-2 block">{campo.nome}</Label>
+                        <Select 
+                          value={customFieldFilters.select[campo.campo_key] || ""} 
+                          onValueChange={(val) => updateCustomFilter('select', campo.campo_key, val === "all" ? "" : val)}
+                        >
+                          <SelectTrigger className="text-sm h-8">
+                            <SelectValue placeholder={`Selecione ${campo.nome.toLowerCase()}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            {opcoes.map((opcao: string, idx: number) => (
+                              <SelectItem key={idx} value={opcao}>{opcao}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  }
+                  
+                  // Checkbox filter
+                  if (campo.tipo === 'checkbox') {
+                    return (
+                      <div key={campo.id} className="bg-background rounded-md p-3 border">
+                        <Label className="text-xs font-medium mb-2 block">{campo.nome}</Label>
+                        <Select 
+                          value={customFieldFilters.checkbox[campo.campo_key] === null ? "all" : customFieldFilters.checkbox[campo.campo_key] ? "true" : "false"} 
+                          onValueChange={(val) => updateCustomFilter('checkbox', campo.campo_key, val === "all" ? null : val === "true")}
+                        >
+                          <SelectTrigger className="text-sm h-8">
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            <SelectItem value="true">Sim</SelectItem>
+                            <SelectItem value="false">Não</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  }
+                  
+                  return null;
+                })}
               </div>
             </div>
           )}
