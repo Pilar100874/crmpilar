@@ -1025,97 +1025,98 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-hidden p-0">
+        <DialogContent className="w-[98vw] sm:w-[95vw] max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden p-0">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-6 py-4 border-b">
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4 border-b">
             <DialogHeader>
-              <DialogTitle className="text-lg font-semibold flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Package className="w-5 h-5 text-primary" />
+              <DialogTitle className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                  <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
                 {editingProduto ? "Editar Produto" : "Novo Produto"}
               </DialogTitle>
               {editingProduto && (
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   Código: <span className="font-mono">{(editingProduto as any).codigo}</span>
                 </p>
               )}
             </DialogHeader>
           </div>
 
-          <div className="overflow-y-auto max-h-[calc(90vh-140px)] px-6 py-4">
+          <div className="overflow-y-auto max-h-[calc(95vh-120px)] sm:max-h-[calc(90vh-140px)] px-3 sm:px-6 py-3 sm:py-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 h-auto bg-muted/50 p-1 rounded-lg">
+              <TabsList className="grid w-full grid-cols-4 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
                 <TabsTrigger 
                   value="basico" 
-                  className="flex items-center gap-1.5 text-xs sm:text-sm py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
                 >
-                  <Package className="w-4 h-4" />
-                  <span className="hidden sm:inline">Dados Básicos</span>
-                  <span className="sm:hidden">Básicos</span>
+                  <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden md:inline">Dados Básicos</span>
+                  <span className="md:hidden">Básicos</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="preco" 
-                  className="flex items-center gap-1.5 text-xs sm:text-sm py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
                 >
-                  <DollarSign className="w-4 h-4" />
+                  <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span>Preço</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="frete" 
-                  className="flex items-center gap-1.5 text-xs sm:text-sm py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
                 >
-                  <Truck className="w-4 h-4" />
-                  <span className="hidden sm:inline">Dados para Frete</span>
-                  <span className="sm:hidden">Frete</span>
+                  <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden md:inline">Dados Frete</span>
+                  <span className="md:hidden">Frete</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="embalagem" 
-                  className="flex items-center gap-1.5 text-xs sm:text-sm py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
                 >
-                  <Barcode className="w-4 h-4" />
-                  <span>Embalagem</span>
+                  <Barcode className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Embalagem</span>
+                  <span className="sm:hidden">EAN</span>
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="basico" className="mt-6">
-                <div className="space-y-6">
+              <TabsContent value="basico" className="mt-4 sm:mt-6">
+                <div className="space-y-4 sm:space-y-6">
                   {/* Identificação */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Identificação</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Código *</Label>
+                  <div className="space-y-3 sm:space-y-4">
+                    <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Identificação</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label className="text-xs sm:text-sm font-medium">Código *</Label>
                         <Input
                           value={formData.codigo}
                           onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
                           placeholder="Código do produto"
-                          className="h-10"
+                          className="h-9 sm:h-10 text-sm"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Nome *</Label>
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label className="text-xs sm:text-sm font-medium">Nome *</Label>
                         <Input
                           value={formData.nome}
                           onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                           placeholder="Nome do produto"
-                          className="h-10"
+                          className="h-9 sm:h-10 text-sm"
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Classificação */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Classificação</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Categoria *</Label>
+                  <div className="space-y-3 sm:space-y-4">
+                    <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Classificação</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label className="text-xs sm:text-sm font-medium">Categoria *</Label>
                         <Select
                           value={formData.categoria_id || "none"}
                           onValueChange={(value) => setFormData({ ...formData, categoria_id: value === "none" ? "" : value })}
                         >
-                          <SelectTrigger className="h-10">
+                          <SelectTrigger className="h-9 sm:h-10 text-sm">
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1128,13 +1129,13 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Grupo *</Label>
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label className="text-xs sm:text-sm font-medium">Grupo *</Label>
                         <Select
                           value={formData.grupo_id || "none"}
                           onValueChange={(value) => setFormData({ ...formData, grupo_id: value === "none" ? "" : value })}
                         >
-                          <SelectTrigger className="h-10">
+                          <SelectTrigger className="h-9 sm:h-10 text-sm">
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
                           <SelectContent>
@@ -1151,17 +1152,17 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   </div>
 
                   {/* NCM */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Classificação Fiscal</h4>
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">NCM *</Label>
+                  <div className="space-y-3 sm:space-y-4">
+                    <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Classificação Fiscal</h4>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">NCM *</Label>
                       <Popover open={ncmOpen} onOpenChange={setNcmOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
                             role="combobox"
                             aria-expanded={ncmOpen}
-                            className="w-full justify-between font-normal h-10"
+                            className="w-full justify-between font-normal h-9 sm:h-10 text-xs sm:text-sm"
                           >
                             {selectedNcmDisplay 
                               ? `${selectedNcmDisplay.codigo} - ${selectedNcmDisplay.descricao.substring(0, 30)}${selectedNcmDisplay.descricao.length > 30 ? '...' : ''}`
@@ -1239,27 +1240,28 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   )}
 
                   {/* Foto e Status */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Foto e Status</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Foto do Produto</Label>
-                        <div className="flex items-center gap-3">
+                  <div className="space-y-3 sm:space-y-4">
+                    <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Foto e Status</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="space-y-1.5 sm:space-y-2">
+                        <Label className="text-xs sm:text-sm font-medium">Foto do Produto</Label>
+                        <div className="flex items-center gap-2 sm:gap-3">
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => document.getElementById('file-upload')?.click()}
                             disabled={uploading}
+                            className="text-xs sm:text-sm"
                           >
-                            <Upload className="w-4 h-4 mr-2" />
+                            <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                             {selectedFile ? 'Trocar' : 'Selecionar'}
                           </Button>
                           {(formData.foto_url || selectedFile) && (
                             <img 
                               src={formData.foto_url} 
                               alt="Preview" 
-                              className="w-12 h-12 object-cover rounded border"
+                              className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded border"
                             />
                           )}
                         </div>
@@ -1271,12 +1273,12 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                           className="hidden"
                         />
                       </div>
-                      <div className="flex items-center gap-3 h-10 mt-7">
+                      <div className="flex items-center gap-2 sm:gap-3 sm:mt-7">
                         <Switch
                           checked={formData.ativo}
                           onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
                         />
-                        <Label className="text-sm">Produto ativo</Label>
+                        <Label className="text-xs sm:text-sm">Produto ativo</Label>
                       </div>
                     </div>
                   </div>
@@ -1545,12 +1547,12 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           </Tabs>
           </div>
 
-          <div className="border-t px-6 py-4 bg-muted/20">
-            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-              <Button variant="outline" onClick={() => setShowDialog(false)} disabled={uploading} className="w-full sm:w-auto">
+          <div className="border-t px-3 sm:px-6 py-3 sm:py-4 bg-muted/20">
+            <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sm:gap-2">
+              <Button variant="outline" onClick={() => setShowDialog(false)} disabled={uploading} className="w-full sm:w-auto h-9 sm:h-10 text-sm">
                 Cancelar
               </Button>
-              <Button onClick={handleSave} disabled={uploading} className="w-full sm:w-auto">
+              <Button onClick={handleSave} disabled={uploading} className="w-full sm:w-auto h-9 sm:h-10 text-sm">
                 {uploading ? "Salvando..." : "Salvar"}
               </Button>
             </DialogFooter>
