@@ -27,13 +27,64 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Trash2, Pencil, Plus, Image, Upload } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Trash2, Pencil, Plus, Image, Upload, Package, Truck } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
-import { createThumbnail } from "@/lib/imageUtils";
 
 interface ProdutosCRUDProps {
   estabelecimentoId: string;
 }
+
+interface FormData {
+  nome: string;
+  largura: string;
+  altura: string;
+  gramatura: string;
+  comprimento: string;
+  peso_unitario: string;
+  numero_folhas: string;
+  foto_url: string;
+  categoria_id: string;
+  grupo_id: string;
+  ativo: boolean;
+  // Campos de frete
+  embalagem_largura: string;
+  embalagem_altura: string;
+  embalagem_comprimento: string;
+  embalagem_peso: string;
+  ncm: string;
+  cubagem: string;
+  fragil: boolean;
+  empilhamento_maximo: string;
+  valor_seguro: string;
+  observacoes_frete: string;
+}
+
+const initialFormData: FormData = {
+  nome: "",
+  largura: "",
+  altura: "",
+  gramatura: "",
+  comprimento: "",
+  peso_unitario: "",
+  numero_folhas: "",
+  foto_url: "",
+  categoria_id: "",
+  grupo_id: "",
+  ativo: true,
+  // Campos de frete
+  embalagem_largura: "",
+  embalagem_altura: "",
+  embalagem_comprimento: "",
+  embalagem_peso: "",
+  ncm: "",
+  cubagem: "",
+  fragil: false,
+  empilhamento_maximo: "1",
+  valor_seguro: "",
+  observacoes_frete: "",
+};
 
 export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -42,20 +93,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
   const [editingProduto, setEditingProduto] = useState<Produto | null>(null);
-  const [formData, setFormData] = useState({
-    nome: "",
-    largura: "",
-    gramatura: "",
-    comprimento: "",
-    peso_unitario: "",
-    numero_folhas: "",
-    foto_url: "",
-    categoria_id: "",
-    grupo_id: "",
-    ativo: true,
-  });
+  const [formData, setFormData] = useState<FormData>(initialFormData);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState("basico");
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -136,6 +177,34 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     }
   };
 
+  // Calcula cubagem automaticamente
+  const calcularCubagem = (largura: string, altura: string, comprimento: string): string => {
+    const l = parseFloat(largura) || 0;
+    const a = parseFloat(altura) || 0;
+    const c = parseFloat(comprimento) || 0;
+    if (l > 0 && a > 0 && c > 0) {
+      // Converte de cm³ para m³
+      const cubagem = (l * a * c) / 1000000;
+      return cubagem.toFixed(6);
+    }
+    return "";
+  };
+
+  const handleEmbalagemChange = (field: string, value: string) => {
+    const newFormData = { ...formData, [field]: value };
+    
+    // Recalcula cubagem quando dimensões da embalagem mudam
+    if (field === 'embalagem_largura' || field === 'embalagem_altura' || field === 'embalagem_comprimento') {
+      newFormData.cubagem = calcularCubagem(
+        field === 'embalagem_largura' ? value : newFormData.embalagem_largura,
+        field === 'embalagem_altura' ? value : newFormData.embalagem_altura,
+        field === 'embalagem_comprimento' ? value : newFormData.embalagem_comprimento
+      );
+    }
+    
+    setFormData(newFormData);
+  };
+
   const handleSave = async () => {
     if (!formData.nome.trim()) {
       toast.error("Nome do produto é obrigatório");
@@ -158,6 +227,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         estabelecimento_id: estabelecimentoId,
         nome: formData.nome,
         largura: formData.largura ? parseFloat(formData.largura) : null,
+        altura: formData.altura ? parseFloat(formData.altura) : null,
         gramatura: formData.gramatura ? parseFloat(formData.gramatura) : null,
         comprimento: formData.comprimento ? parseFloat(formData.comprimento) : null,
         peso_unitario: formData.peso_unitario ? parseFloat(formData.peso_unitario) : null,
@@ -166,6 +236,17 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         categoria_id: formData.categoria_id || null,
         grupo_id: formData.grupo_id || null,
         ativo: formData.ativo,
+        // Campos de frete
+        embalagem_largura: formData.embalagem_largura ? parseFloat(formData.embalagem_largura) : null,
+        embalagem_altura: formData.embalagem_altura ? parseFloat(formData.embalagem_altura) : null,
+        embalagem_comprimento: formData.embalagem_comprimento ? parseFloat(formData.embalagem_comprimento) : null,
+        embalagem_peso: formData.embalagem_peso ? parseFloat(formData.embalagem_peso) : null,
+        ncm: formData.ncm || null,
+        cubagem: formData.cubagem ? parseFloat(formData.cubagem) : null,
+        fragil: formData.fragil,
+        empilhamento_maximo: formData.empilhamento_maximo ? parseInt(formData.empilhamento_maximo) : 1,
+        valor_seguro: formData.valor_seguro ? parseFloat(formData.valor_seguro) : null,
+        observacoes_frete: formData.observacoes_frete || null,
       };
 
       if (editingProduto) {
@@ -196,18 +277,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       setShowDialog(false);
       setEditingProduto(null);
       setSelectedFile(null);
-      setFormData({
-        nome: "",
-        largura: "",
-        gramatura: "",
-        comprimento: "",
-        peso_unitario: "",
-        numero_folhas: "",
-        foto_url: "",
-        categoria_id: "",
-        grupo_id: "",
-        ativo: true,
-      });
+      setFormData(initialFormData);
+      setActiveTab("basico");
       loadData();
     } catch (error: any) {
       console.error('Erro ao salvar produto:', error);
@@ -220,17 +291,30 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const handleEdit = (produto: Produto) => {
     setEditingProduto(produto);
     setSelectedFile(null);
+    const p = produto as any;
     setFormData({
       nome: produto.nome,
       largura: produto.largura?.toString() || "",
+      altura: p.altura?.toString() || "",
       gramatura: produto.gramatura?.toString() || "",
       comprimento: produto.comprimento?.toString() || "",
       peso_unitario: produto.peso_unitario?.toString() || "",
-      numero_folhas: (produto as any).numero_folhas?.toString() || "",
+      numero_folhas: p.numero_folhas?.toString() || "",
       foto_url: produto.foto_url || "",
       categoria_id: produto.categoria_id || "",
       grupo_id: produto.grupo_id || "",
       ativo: produto.ativo,
+      // Campos de frete
+      embalagem_largura: p.embalagem_largura?.toString() || "",
+      embalagem_altura: p.embalagem_altura?.toString() || "",
+      embalagem_comprimento: p.embalagem_comprimento?.toString() || "",
+      embalagem_peso: p.embalagem_peso?.toString() || "",
+      ncm: p.ncm || "",
+      cubagem: p.cubagem?.toString() || "",
+      fragil: p.fragil || false,
+      empilhamento_maximo: p.empilhamento_maximo?.toString() || "1",
+      valor_seguro: p.valor_seguro?.toString() || "",
+      observacoes_frete: p.observacoes_frete || "",
     });
     setShowDialog(true);
   };
@@ -253,6 +337,14 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     }
   };
 
+  const openNewDialog = () => {
+    setEditingProduto(null);
+    setSelectedFile(null);
+    setFormData(initialFormData);
+    setActiveTab("basico");
+    setShowDialog(true);
+  };
+
   if (loading) {
     return <div>Carregando produtos...</div>;
   }
@@ -261,23 +353,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Produtos</h3>
-        <Button onClick={() => {
-          setEditingProduto(null);
-          setSelectedFile(null);
-          setFormData({
-            nome: "",
-            largura: "",
-            gramatura: "",
-            comprimento: "",
-            peso_unitario: "",
-            numero_folhas: "",
-            foto_url: "",
-            categoria_id: "",
-            grupo_id: "",
-            ativo: true,
-          });
-          setShowDialog(true);
-        }}>
+        <Button onClick={openNewDialog}>
           <Plus className="w-4 h-4 mr-2" />
           Novo Produto
         </Button>
@@ -345,154 +421,316 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       </Table>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingProduto ? "Editar Produto" : "Novo Produto"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <Label>Nome *</Label>
-              <Input
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                placeholder="Nome do produto"
-              />
-            </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="basico" className="flex items-center gap-2">
+                <Package className="w-4 h-4" />
+                Dados Básicos
+              </TabsTrigger>
+              <TabsTrigger value="frete" className="flex items-center gap-2">
+                <Truck className="w-4 h-4" />
+                Dados para Frete
+              </TabsTrigger>
+            </TabsList>
 
-            <div>
-              <Label>Largura (cm)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.largura}
-                onChange={(e) => setFormData({ ...formData, largura: e.target.value })}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <Label>Gramatura (g/m²)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.gramatura}
-                onChange={(e) => setFormData({ ...formData, gramatura: e.target.value })}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <Label>Comprimento (cm)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.comprimento}
-                onChange={(e) => setFormData({ ...formData, comprimento: e.target.value })}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <Label>Peso Unitário (kg)</Label>
-              <Input
-                type="number"
-                step="0.001"
-                value={formData.peso_unitario}
-                onChange={(e) => setFormData({ ...formData, peso_unitario: e.target.value })}
-                placeholder="0.000"
-              />
-            </div>
-
-            <div>
-              <Label>Número de Folhas</Label>
-              <Input
-                type="number"
-                value={formData.numero_folhas}
-                onChange={(e) => setFormData({ ...formData, numero_folhas: e.target.value })}
-                placeholder="0"
-              />
-            </div>
-
-            <div>
-              <Label>Categoria</Label>
-              <Select
-                value={formData.categoria_id || "none"}
-                onValueChange={(value) => setFormData({ ...formData, categoria_id: value === "none" ? "" : value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhuma</SelectItem>
-                  {categorias.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Grupo</Label>
-              <Select
-                value={formData.grupo_id || "none"}
-                onValueChange={(value) => setFormData({ ...formData, grupo_id: value === "none" ? "" : value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Nenhum</SelectItem>
-                  {grupos.map((grupo) => (
-                    <SelectItem key={grupo.id} value={grupo.id}>
-                      {grupo.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="col-span-2">
-              <Label>Foto do Produto</Label>
-              <div className="flex items-center gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                  disabled={uploading}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {selectedFile ? 'Trocar foto' : 'Selecionar foto'}
-                </Button>
-                {(formData.foto_url || selectedFile) && (
-                  <img 
-                    src={formData.foto_url} 
-                    alt="Preview" 
-                    className="w-16 h-16 object-cover rounded border"
+            <TabsContent value="basico" className="mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Label>Nome *</Label>
+                  <Input
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    placeholder="Nome do produto"
                   />
-                )}
-              </div>
-              <input
-                id="file-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </div>
+                </div>
 
-            <div className="col-span-2 flex items-center gap-2">
-              <Switch
-                checked={formData.ativo}
-                onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
-              />
-              <Label>Produto ativo</Label>
-            </div>
-          </div>
+                <div>
+                  <Label>Largura (cm)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.largura}
+                    onChange={(e) => setFormData({ ...formData, largura: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <Label>Altura (cm)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.altura}
+                    onChange={(e) => setFormData({ ...formData, altura: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <Label>Comprimento (cm)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.comprimento}
+                    onChange={(e) => setFormData({ ...formData, comprimento: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <Label>Gramatura (g/m²)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.gramatura}
+                    onChange={(e) => setFormData({ ...formData, gramatura: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <Label>Peso Unitário (kg)</Label>
+                  <Input
+                    type="number"
+                    step="0.001"
+                    value={formData.peso_unitario}
+                    onChange={(e) => setFormData({ ...formData, peso_unitario: e.target.value })}
+                    placeholder="0.000"
+                  />
+                </div>
+
+                <div>
+                  <Label>Número de Folhas</Label>
+                  <Input
+                    type="number"
+                    value={formData.numero_folhas}
+                    onChange={(e) => setFormData({ ...formData, numero_folhas: e.target.value })}
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <Label>Categoria</Label>
+                  <Select
+                    value={formData.categoria_id || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, categoria_id: value === "none" ? "" : value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhuma</SelectItem>
+                      {categorias.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Grupo</Label>
+                  <Select
+                    value={formData.grupo_id || "none"}
+                    onValueChange={(value) => setFormData({ ...formData, grupo_id: value === "none" ? "" : value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      {grupos.map((grupo) => (
+                        <SelectItem key={grupo.id} value={grupo.id}>
+                          {grupo.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="col-span-2">
+                  <Label>Foto do Produto</Label>
+                  <div className="flex items-center gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('file-upload')?.click()}
+                      disabled={uploading}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {selectedFile ? 'Trocar foto' : 'Selecionar foto'}
+                    </Button>
+                    {(formData.foto_url || selectedFile) && (
+                      <img 
+                        src={formData.foto_url} 
+                        alt="Preview" 
+                        className="w-16 h-16 object-cover rounded border"
+                      />
+                    )}
+                  </div>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                </div>
+
+                <div className="col-span-2 flex items-center gap-2">
+                  <Switch
+                    checked={formData.ativo}
+                    onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
+                  />
+                  <Label>Produto ativo</Label>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="frete" className="mt-4">
+              <div className="space-y-6">
+                {/* Dimensões da Embalagem */}
+                <div>
+                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Dimensões da Embalagem</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label>Largura (cm)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.embalagem_largura}
+                        onChange={(e) => handleEmbalagemChange('embalagem_largura', e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label>Altura (cm)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.embalagem_altura}
+                        onChange={(e) => handleEmbalagemChange('embalagem_altura', e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <Label>Comprimento (cm)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.embalagem_comprimento}
+                        onChange={(e) => handleEmbalagemChange('embalagem_comprimento', e.target.value)}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Peso e Cubagem */}
+                <div>
+                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Peso e Volume</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Peso com Embalagem (kg)</Label>
+                      <Input
+                        type="number"
+                        step="0.001"
+                        value={formData.embalagem_peso}
+                        onChange={(e) => setFormData({ ...formData, embalagem_peso: e.target.value })}
+                        placeholder="0.000"
+                      />
+                    </div>
+                    <div>
+                      <Label>Cubagem (m³)</Label>
+                      <Input
+                        type="number"
+                        step="0.000001"
+                        value={formData.cubagem}
+                        onChange={(e) => setFormData({ ...formData, cubagem: e.target.value })}
+                        placeholder="Calculado automaticamente"
+                        className="bg-muted/50"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Calculado automaticamente pelas dimensões</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Informações Fiscais */}
+                <div>
+                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Informações Fiscais</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>NCM</Label>
+                      <Input
+                        value={formData.ncm}
+                        onChange={(e) => setFormData({ ...formData, ncm: e.target.value })}
+                        placeholder="0000.00.00"
+                        maxLength={10}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Código de classificação fiscal</p>
+                    </div>
+                    <div>
+                      <Label>Valor para Seguro (R$)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={formData.valor_seguro}
+                        onChange={(e) => setFormData({ ...formData, valor_seguro: e.target.value })}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Características de Transporte */}
+                <div>
+                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Características de Transporte</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3 p-3 border rounded-md">
+                      <Switch
+                        checked={formData.fragil}
+                        onCheckedChange={(checked) => setFormData({ ...formData, fragil: checked })}
+                      />
+                      <div>
+                        <Label className="cursor-pointer">Produto Frágil</Label>
+                        <p className="text-xs text-muted-foreground">Requer cuidados especiais no transporte</p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Empilhamento Máximo</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={formData.empilhamento_maximo}
+                        onChange={(e) => setFormData({ ...formData, empilhamento_maximo: e.target.value })}
+                        placeholder="1"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Quantidade máxima de caixas empilhadas</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Observações */}
+                <div>
+                  <Label>Observações para Transporte</Label>
+                  <Textarea
+                    value={formData.observacoes_frete}
+                    onChange={(e) => setFormData({ ...formData, observacoes_frete: e.target.value })}
+                    placeholder="Informações adicionais para a transportadora..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)} disabled={uploading}>

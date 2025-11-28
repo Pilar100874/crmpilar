@@ -4072,52 +4072,85 @@ export type Database = {
       }
       produtos: {
         Row: {
+          altura: number | null
           ativo: boolean | null
           categoria_id: string | null
           comprimento: number | null
           created_at: string | null
+          cubagem: number | null
+          embalagem_altura: number | null
+          embalagem_comprimento: number | null
+          embalagem_largura: number | null
+          embalagem_peso: number | null
+          empilhamento_maximo: number | null
           estabelecimento_id: string | null
           foto_url: string | null
+          fragil: boolean | null
           gramatura: number | null
           grupo_id: string | null
           id: string
           largura: number | null
+          ncm: string | null
           nome: string
           numero_folhas: number | null
+          observacoes_frete: string | null
           peso_unitario: number | null
           updated_at: string | null
+          valor_seguro: number | null
         }
         Insert: {
+          altura?: number | null
           ativo?: boolean | null
           categoria_id?: string | null
           comprimento?: number | null
           created_at?: string | null
+          cubagem?: number | null
+          embalagem_altura?: number | null
+          embalagem_comprimento?: number | null
+          embalagem_largura?: number | null
+          embalagem_peso?: number | null
+          empilhamento_maximo?: number | null
           estabelecimento_id?: string | null
           foto_url?: string | null
+          fragil?: boolean | null
           gramatura?: number | null
           grupo_id?: string | null
           id?: string
           largura?: number | null
+          ncm?: string | null
           nome: string
           numero_folhas?: number | null
+          observacoes_frete?: string | null
           peso_unitario?: number | null
           updated_at?: string | null
+          valor_seguro?: number | null
         }
         Update: {
+          altura?: number | null
           ativo?: boolean | null
           categoria_id?: string | null
           comprimento?: number | null
           created_at?: string | null
+          cubagem?: number | null
+          embalagem_altura?: number | null
+          embalagem_comprimento?: number | null
+          embalagem_largura?: number | null
+          embalagem_peso?: number | null
+          empilhamento_maximo?: number | null
           estabelecimento_id?: string | null
           foto_url?: string | null
+          fragil?: boolean | null
           gramatura?: number | null
           grupo_id?: string | null
           id?: string
           largura?: number | null
+          ncm?: string | null
           nome?: string
           numero_folhas?: number | null
+          observacoes_frete?: string | null
           peso_unitario?: number | null
           updated_at?: string | null
+          valor_seguro?: number | null
         }
         Relationships: [
           {
