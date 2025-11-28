@@ -2937,6 +2937,27 @@ export type Database = {
           },
         ]
       }
+      ncm_codigos: {
+        Row: {
+          codigo: string
+          created_at: string | null
+          descricao: string
+          id: string
+        }
+        Insert: {
+          codigo: string
+          created_at?: string | null
+          descricao: string
+          id?: string
+        }
+        Update: {
+          codigo?: string
+          created_at?: string | null
+          descricao?: string
+          id?: string
+        }
+        Relationships: []
+      }
       notificacoes_config: {
         Row: {
           campanha_concluida_enabled: boolean | null
@@ -4075,6 +4096,7 @@ export type Database = {
           altura: number | null
           ativo: boolean | null
           categoria_id: string | null
+          codigo: string | null
           comprimento: number | null
           created_at: string | null
           cubagem: number | null
@@ -4097,6 +4119,7 @@ export type Database = {
           id: string
           largura: number | null
           ncm: string | null
+          ncm_id: string | null
           nome: string
           numero_folhas: number | null
           observacoes_frete: string | null
@@ -4109,6 +4132,7 @@ export type Database = {
           altura?: number | null
           ativo?: boolean | null
           categoria_id?: string | null
+          codigo?: string | null
           comprimento?: number | null
           created_at?: string | null
           cubagem?: number | null
@@ -4131,6 +4155,7 @@ export type Database = {
           id?: string
           largura?: number | null
           ncm?: string | null
+          ncm_id?: string | null
           nome: string
           numero_folhas?: number | null
           observacoes_frete?: string | null
@@ -4143,6 +4168,7 @@ export type Database = {
           altura?: number | null
           ativo?: boolean | null
           categoria_id?: string | null
+          codigo?: string | null
           comprimento?: number | null
           created_at?: string | null
           cubagem?: number | null
@@ -4165,6 +4191,7 @@ export type Database = {
           id?: string
           largura?: number | null
           ncm?: string | null
+          ncm_id?: string | null
           nome?: string
           numero_folhas?: number | null
           observacoes_frete?: string | null
@@ -4193,6 +4220,13 @@ export type Database = {
             columns: ["grupo_id"]
             isOneToOne: false
             referencedRelation: "produto_grupos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produtos_ncm_id_fkey"
+            columns: ["ncm_id"]
+            isOneToOne: false
+            referencedRelation: "ncm_codigos"
             referencedColumns: ["id"]
           },
         ]
