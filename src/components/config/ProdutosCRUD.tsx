@@ -639,35 +639,6 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   </div>
                 </div>
 
-                {/* Peso e Cubagem */}
-                <div>
-                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Peso e Volume</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Peso com Embalagem (kg)</Label>
-                      <Input
-                        type="number"
-                        step="0.001"
-                        value={formData.embalagem_peso}
-                        onChange={(e) => setFormData({ ...formData, embalagem_peso: e.target.value })}
-                        placeholder="0.000"
-                      />
-                    </div>
-                    <div>
-                      <Label>Cubagem (m³)</Label>
-                      <Input
-                        type="number"
-                        step="0.000001"
-                        value={formData.cubagem}
-                        onChange={(e) => setFormData({ ...formData, cubagem: e.target.value })}
-                        placeholder="Calculado automaticamente"
-                        className="bg-muted/50"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">Calculado automaticamente pelas dimensões</p>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Tipo de Cálculo de Peso */}
                 <div>
                   <h4 className="font-medium mb-3 text-sm text-muted-foreground">Cálculo do Peso para Frete</h4>
@@ -684,7 +655,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                             Peso Fixo (Embalagem)
                           </Label>
                           <p className="text-xs text-muted-foreground">
-                            Usa o peso com embalagem informado acima, independente da quantidade no pedido
+                            Usa o peso com embalagem informado abaixo, independente da quantidade no pedido
                           </p>
                         </div>
                       </div>
@@ -700,6 +671,37 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                         </div>
                       </div>
                     </RadioGroup>
+                  </div>
+                </div>
+
+                {/* Peso e Cubagem */}
+                <div>
+                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Peso e Volume</h4>
+                  <div className={`grid gap-4 ${formData.peso_frete_tipo === 'fixo' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                    {formData.peso_frete_tipo === 'fixo' && (
+                      <div>
+                        <Label>Peso com Embalagem (kg)</Label>
+                        <Input
+                          type="number"
+                          step="0.001"
+                          value={formData.embalagem_peso}
+                          onChange={(e) => setFormData({ ...formData, embalagem_peso: e.target.value })}
+                          placeholder="0.000"
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <Label>Cubagem (m³)</Label>
+                      <Input
+                        type="number"
+                        step="0.000001"
+                        value={formData.cubagem}
+                        onChange={(e) => setFormData({ ...formData, cubagem: e.target.value })}
+                        placeholder="Calculado automaticamente"
+                        className="bg-muted/50"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Calculado automaticamente pelas dimensões</p>
+                    </div>
                   </div>
                 </div>
 
