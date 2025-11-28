@@ -1528,7 +1528,6 @@ export default function POSView({
                 <div className="space-y-2">
                   <FreteDetailsPanel 
                     freteResult={freteResult}
-                    onClose={() => setShowFreteInDetails(false)}
                   />
                 </div>
               ) : showRegrasInDetails && regrasAplicadas.length > 0 ? (

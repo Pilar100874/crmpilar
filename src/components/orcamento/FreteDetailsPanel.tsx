@@ -5,7 +5,6 @@ import { useState } from "react";
 
 interface FreteDetailsPanelProps {
   freteResult: FreteResult | null;
-  onClose?: () => void;
 }
 
 const formatCurrency = (value: number) => {
@@ -15,7 +14,7 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-export default function FreteDetailsPanel({ freteResult, onClose }: FreteDetailsPanelProps) {
+export default function FreteDetailsPanel({ freteResult }: FreteDetailsPanelProps) {
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
   if (!freteResult) {
