@@ -110,24 +110,37 @@ export function EmbalagemTab({
   const [printQuantity, setPrintQuantity] = useState("1");
 
   const handleEan13Change = (value: string) => {
-    // Apenas números, máximo 12 dígitos (sem o DV)
-    const cleanValue = value.replace(/\D/g, "").substring(0, 12);
-    
-    if (cleanValue.length === 12) {
-      // Calcula o dígito verificador
+    // Apenas números
+    const cleanValue = value.replace(/\D/g, "").substring(0, 13);
+    onEan13Change(cleanValue);
+
+    if (cleanValue.length === 13) {
+      const isValid = validarEan13(cleanValue);
+      setEan13Valid(isValid);
+
+      if (isValid) {
+        // Calcula EAN-14 automaticamente
+        const ean14_1_calc = calcularEan14(cleanValue, 1);
+        const ean14_2_calc = calcularEan14(cleanValue, 2);
+        onEan14_1Change(ean14_1_calc);
+        onEan14_2Change(ean14_2_calc);
+      } else {
+        onEan14_1Change("");
+        onEan14_2Change("");
+      }
+    } else if (cleanValue.length === 12) {
+      // Calcula o dígito verificador automaticamente
       const checkDigit = calcularDigitoVerificadorEan13(cleanValue);
       const fullEan13 = cleanValue + checkDigit.toString();
-      
       onEan13Change(fullEan13);
       setEan13Valid(true);
-
+      
       // Calcula EAN-14 automaticamente
       const ean14_1_calc = calcularEan14(fullEan13, 1);
       const ean14_2_calc = calcularEan14(fullEan13, 2);
       onEan14_1Change(ean14_1_calc);
       onEan14_2Change(ean14_2_calc);
     } else {
-      onEan13Change(cleanValue);
       setEan13Valid(null);
       onEan14_1Change("");
       onEan14_2Change("");
@@ -298,17 +311,20 @@ export function EmbalagemTab({
         <div className="flex-1">
           <div className="flex gap-2 items-center">
             <Input
-              value={value.length > 0 ? value.slice(0, -1) : value}
+              value={value}
               onChange={(e) => onChange?.(e.target.value)}
-              placeholder={isCalculated ? "Calculado automaticamente" : "Digite o EAN-13"}
+              placeholder={isCalculated ? "Calculado automaticamente" : "Digite 12 ou 13 dígitos"}
               readOnly={isCalculated}
               className={`font-mono flex-1 ${isCalculated ? "bg-muted/50" : ""}`}
-              maxLength={isCalculated ? 13 : 12}
+              maxLength={isCalculated ? 14 : 13}
             />
             <div className="flex flex-col items-center">
               <span className="text-[10px] text-muted-foreground mb-0.5">DV</span>
               <Input
-                value={value.length >= (isCalculated ? 14 : 13) ? value.slice(-1) : ""}
+                value={isCalculated 
+                  ? (value.length === 14 ? value.slice(-1) : "")
+                  : (value.length === 13 ? value.slice(-1) : "")
+                }
                 readOnly
                 className="w-12 text-center font-mono font-bold bg-muted/50"
                 title="Dígito Verificador"
