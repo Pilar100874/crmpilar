@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { 
   Package, 
@@ -12,11 +11,12 @@ import {
   Calculator,
   Zap,
   Settings,
-  Box
+  Box,
+  LucideIcon
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ProdutosCRUD } from '@/components/config/ProdutosCRUD';
 import { ProdutoCategoriasCRUD } from '@/components/config/ProdutoCategoriasCRUD';
 import { ProdutoGruposCRUD } from '@/components/config/ProdutoGruposCRUD';
@@ -32,7 +32,13 @@ import PedagioAPIConfigCRUD from '@/components/config/PedagioAPIConfigCRUD';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 
-const tabItems = [
+interface TabItem {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+}
+
+const tabItems: TabItem[] = [
   { id: 'produtos', label: 'Produtos', icon: Package },
   { id: 'categorias', label: 'Categorias', icon: Layers },
   { id: 'grupos', label: 'Grupos', icon: FolderOpen },
@@ -72,6 +78,9 @@ export default function VendasConfig() {
     setSearchParams({ tab: value });
   };
 
+  const currentTabItem = tabItems.find(t => t.id === currentTab) || tabItems[0];
+  const CurrentIcon = currentTabItem.icon;
+
   return (
     <div className="h-full flex flex-col">
       <div className="border-b bg-card px-3 sm:px-6 py-3 sm:py-4">
@@ -83,21 +92,47 @@ export default function VendasConfig() {
 
       <div className="flex-1 overflow-hidden">
         <Tabs value={currentTab} onValueChange={handleTabChange} className="h-full flex flex-col">
-          <div className="border-b bg-muted/30 px-2 sm:px-4">
-            <ScrollArea className="w-full">
-              <TabsList className="h-10 sm:h-12 bg-transparent gap-0.5 sm:gap-1 p-0.5 sm:p-1 inline-flex w-max min-w-full">
-                {tabItems.map((tab) => (
-                  <TabsTrigger
-                    key={tab.id}
-                    value={tab.id}
-                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm gap-1 sm:gap-2 px-2 sm:px-4 text-xs sm:text-sm min-w-fit"
-                  >
-                    <tab.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span className="hidden md:inline whitespace-nowrap">{tab.label}</span>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </ScrollArea>
+          {/* Mobile: Select dropdown */}
+          <div className="lg:hidden border-b bg-muted/30 p-3">
+            <Select value={currentTab} onValueChange={handleTabChange}>
+              <SelectTrigger className="w-full bg-background">
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    <CurrentIcon className="h-4 w-4" />
+                    <span>{currentTabItem.label}</span>
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="bg-popover">
+                {tabItems.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <SelectItem key={tab.id} value={tab.id}>
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        <span>{tab.label}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Desktop: Tab list */}
+          <div className="hidden lg:block border-b bg-muted/30 px-4 overflow-x-auto">
+            <TabsList className="h-12 bg-transparent gap-1 p-1 inline-flex w-max">
+              {tabItems.map((tab) => (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2 px-4 text-sm whitespace-nowrap"
+                >
+                  <tab.icon className="h-4 w-4 flex-shrink-0" />
+                  <span>{tab.label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
           </div>
 
           <div className="flex-1 overflow-auto p-3 sm:p-6">
