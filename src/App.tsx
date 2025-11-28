@@ -59,6 +59,8 @@ import BaseConhecimento from "./pages/BaseConhecimento";
 import QualityAssurance from "./pages/QualityAssurance";
 import EditorRegras from "./pages/EditorRegras";
 import AutomacoesVendas from "./pages/AutomacoesVendas";
+import VendasConfig from "./pages/VendasConfig";
+import MeusConjuntos from "./pages/MeusConjuntos";
 
 const queryClient = new QueryClient();
 
@@ -133,6 +135,8 @@ const App = () => (
             <Route path="/automacoes-vendas" element={<AutomacoesVendas />} />
             <Route path="/editor-regras" element={<EditorRegras />} />
             <Route path="/editor-regras/:id" element={<EditorRegras />} />
+            <Route path="/vendas-config" element={<VendasConfig />} />
+            <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
             <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
             <Route path="/perfil" element={<Perfil />} />
           </Route>
