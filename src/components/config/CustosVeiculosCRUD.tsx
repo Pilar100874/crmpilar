@@ -3,14 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/lib/toast-config";
-import { Fuel, Truck, Save, Plus, Pencil, Trash2, X, Calculator } from "lucide-react";
+import { Fuel, Truck, Save, Plus, Pencil, Trash2, X, Calculator, ChevronDown, ChevronUp, Settings2 } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { FreteSimulator } from "./FreteSimulator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { SavedFormula, createDefaultFormula } from "./FormulaBuilder";
 
 interface CustosVeiculosCRUDProps {
   estabelecimentoId: string;
@@ -40,6 +42,7 @@ interface VeiculoCusto {
   jornada_base_dia: number;
   horas_mensais: number;
   observacoes?: string;
+  formula_frete?: SavedFormula | null;
 }
 
 const TIPOS_VEICULO = [
@@ -76,6 +79,10 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
   const [isAddingVeiculo, setIsAddingVeiculo] = useState(false);
   const [deleteVeiculoId, setDeleteVeiculoId] = useState<string | null>(null);
   const [selectedVeiculoForSimulation, setSelectedVeiculoForSimulation] = useState<string>("");
+  const [combustiveisOpen, setCombustiveisOpen] = useState(true);
+  
+  // Fórmulas salvas globalmente
+  const [savedFormulas, setSavedFormulas] = useState<SavedFormula[]>(() => [createDefaultFormula()]);
 
   const emptyVeiculo: VeiculoCusto = {
     tipo_veiculo: "",
@@ -92,6 +99,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
     jornada_base_dia: 8,
     horas_mensais: 220,
     observacoes: "",
+    formula_frete: null,
   };
 
   useEffect(() => {
@@ -103,7 +111,6 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch combustíveis
       const { data: combData } = await supabase
         .from("combustiveis_precos")
         .select("*")
@@ -120,7 +127,6 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
         });
       }
 
-      // Fetch veículos
       const { data: veicData } = await supabase
         .from("veiculos_custos")
         .select("*")
@@ -128,7 +134,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
         .order("tipo_veiculo");
 
       if (veicData) {
-        setVeiculos(veicData.map(v => ({
+        const formattedVeiculos = veicData.map(v => ({
           id: v.id,
           tipo_veiculo: v.tipo_veiculo,
           tipo_combustivel: v.tipo_combustivel,
@@ -144,7 +150,23 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
           jornada_base_dia: Number((v as any).jornada_base_dia) || 8,
           horas_mensais: Number((v as any).horas_mensais) || 220,
           observacoes: v.observacoes || "",
-        })));
+          formula_frete: (v as any).formula_frete as SavedFormula | null,
+        }));
+        setVeiculos(formattedVeiculos);
+        
+        // Coletar fórmulas únicas dos veículos
+        const formulasFromVehicles = formattedVeiculos
+          .filter(v => v.formula_frete && v.formula_frete.id !== "default_frete_completo")
+          .map(v => v.formula_frete!)
+          .filter((f, i, arr) => arr.findIndex(x => x.id === f.id) === i);
+        
+        if (formulasFromVehicles.length > 0) {
+          setSavedFormulas(prev => {
+            const existingIds = prev.map(p => p.id);
+            const newFormulas = formulasFromVehicles.filter(f => !existingIds.includes(f.id));
+            return [...prev, ...newFormulas];
+          });
+        }
       }
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
@@ -182,9 +204,9 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
           setCombustiveis(prev => ({ ...prev, id: data.id }));
         }
       }
-      toast.success("Preços de combustíveis salvos com sucesso!");
+      toast.success("Preços salvos!");
     } catch (error) {
-      toast.error("Erro ao salvar preços de combustíveis");
+      toast.error("Erro ao salvar preços");
     } finally {
       setSavingCombustiveis(false);
     }
@@ -211,21 +233,22 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
         jornada_base_dia: editingVeiculo.jornada_base_dia,
         horas_mensais: editingVeiculo.horas_mensais,
         observacoes: editingVeiculo.observacoes,
+        formula_frete: editingVeiculo.formula_frete as any,
       };
 
       if (editingVeiculo.id) {
         await supabase
           .from("veiculos_custos")
-          .update(veiculoData)
+          .update(veiculoData as any)
           .eq("id", editingVeiculo.id);
-        toast.success("Veículo atualizado com sucesso!");
+        toast.success("Veículo atualizado!");
       } else {
         await supabase.from("veiculos_custos").insert({
           estabelecimento_id: estabelecimentoId,
           tipo_veiculo: editingVeiculo.tipo_veiculo,
           ...veiculoData,
-        });
-        toast.success("Veículo adicionado com sucesso!");
+        } as any);
+        toast.success("Veículo adicionado!");
       }
       setEditingVeiculo(null);
       setIsAddingVeiculo(false);
@@ -243,7 +266,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
     if (!deleteVeiculoId) return;
     try {
       await supabase.from("veiculos_custos").delete().eq("id", deleteVeiculoId);
-      toast.success("Veículo removido com sucesso!");
+      toast.success("Veículo removido!");
       setDeleteVeiculoId(null);
       fetchData();
     } catch (error) {
@@ -251,17 +274,15 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
     }
   };
 
-  const getTipoVeiculoLabel = (value: string) => {
-    return TIPOS_VEICULO.find(t => t.value === value)?.label || value;
-  };
-
-  const getTipoCombustivelLabel = (value: string) => {
-    return TIPOS_COMBUSTIVEL.find(t => t.value === value)?.label || value;
-  };
+  const getTipoVeiculoLabel = (value: string) => TIPOS_VEICULO.find(t => t.value === value)?.label || value;
+  const getTipoCombustivelLabel = (value: string) => TIPOS_COMBUSTIVEL.find(t => t.value === value)?.label || value;
 
   const availableVehicleTypes = TIPOS_VEICULO.filter(
     t => !veiculos.some(v => v.tipo_veiculo === t.value) || editingVeiculo?.tipo_veiculo === t.value
   );
+
+  const formatCurrency = (value: number) => 
+    value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   if (loading) {
     return <div className="p-4 text-center text-muted-foreground">Carregando...</div>;
@@ -269,100 +290,104 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
 
   return (
     <div className="space-y-6">
-      {/* Preços de Combustíveis */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Fuel className="h-4 w-4" />
-            Preços de Combustíveis (R$/Litro)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-1">
-              <Label className="text-xs">Diesel</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={combustiveis.preco_diesel}
-                onChange={e => setCombustiveis(prev => ({ ...prev, preco_diesel: Number(e.target.value) }))}
-                placeholder="0.00"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Etanol</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={combustiveis.preco_etanol}
-                onChange={e => setCombustiveis(prev => ({ ...prev, preco_etanol: Number(e.target.value) }))}
-                placeholder="0.00"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Gasolina</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={combustiveis.preco_gasolina}
-                onChange={e => setCombustiveis(prev => ({ ...prev, preco_gasolina: Number(e.target.value) }))}
-                placeholder="0.00"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Elétrico (R$/kWh)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={combustiveis.preco_eletrico}
-                onChange={e => setCombustiveis(prev => ({ ...prev, preco_eletrico: Number(e.target.value) }))}
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-          <Button onClick={saveCombustiveis} disabled={savingCombustiveis} className="mt-4" size="sm">
-            <Save className="h-4 w-4 mr-2" />
-            Salvar Preços
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Preços de Combustíveis - Collapsible */}
+      <Collapsible open={combustiveisOpen} onOpenChange={setCombustiveisOpen}>
+        <Card className="border-l-4 border-l-amber-500">
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                    <Fuel className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">Preços de Combustíveis</CardTitle>
+                    <CardDescription className="text-xs">Valores por litro (R$/L)</CardDescription>
+                  </div>
+                </div>
+                {combustiveisOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { key: "preco_diesel", label: "Diesel", color: "bg-yellow-500" },
+                  { key: "preco_etanol", label: "Etanol", color: "bg-green-500" },
+                  { key: "preco_gasolina", label: "Gasolina", color: "bg-red-500" },
+                  { key: "preco_eletrico", label: "Elétrico (kWh)", color: "bg-blue-500" },
+                ].map(item => (
+                  <div key={item.key} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                      <Label className="text-xs font-medium">{item.label}</Label>
+                    </div>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={combustiveis[item.key as keyof CombustiveisPrecos] || 0}
+                      onChange={e => setCombustiveis(prev => ({ ...prev, [item.key]: Number(e.target.value) }))}
+                      placeholder="0.00"
+                      className="h-10"
+                    />
+                  </div>
+                ))}
+              </div>
+              <Button onClick={saveCombustiveis} disabled={savingCombustiveis} className="mt-4" size="sm">
+                <Save className="h-4 w-4 mr-2" />
+                Salvar Preços
+              </Button>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Custos por Veículo */}
-      <Card>
+      <Card className="border-l-4 border-l-blue-500">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Truck className="h-4 w-4" />
-              Custos por Tipo de Veículo
-            </CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                <Truck className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Custos por Tipo de Veículo</CardTitle>
+                <CardDescription className="text-xs">{veiculos.length} veículo(s) cadastrado(s)</CardDescription>
+              </div>
+            </div>
             <Button
               size="sm"
-              onClick={() => {
-                setIsAddingVeiculo(true);
-                setEditingVeiculo({ ...emptyVeiculo });
-              }}
+              onClick={() => { setIsAddingVeiculo(true); setEditingVeiculo({ ...emptyVeiculo }); }}
               disabled={isAddingVeiculo || availableVehicleTypes.length === 0}
             >
               <Plus className="h-4 w-4 mr-1" />
-              Adicionar
+              Adicionar Veículo
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           {/* Form de edição/adição */}
           {(isAddingVeiculo || editingVeiculo) && (
-            <Card className="mb-4 border-primary/50">
-              <CardContent className="pt-4">
+            <Card className="border-2 border-primary/30 bg-primary/5">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Settings2 className="h-4 w-4" />
+                  {editingVeiculo?.id ? "Editar Veículo" : "Novo Veículo"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Linha 1: Tipo e Combustível */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Tipo de Veículo</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">Tipo de Veículo *</Label>
                     <Select
                       value={editingVeiculo?.tipo_veiculo || ""}
                       onValueChange={v => setEditingVeiculo(prev => prev ? { ...prev, tipo_veiculo: v } : null)}
                       disabled={!!editingVeiculo?.id}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione" />
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                       <SelectContent>
                         {availableVehicleTypes.map(t => (
@@ -371,13 +396,13 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Combustível</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">Combustível</Label>
                     <Select
                       value={editingVeiculo?.tipo_combustivel || "diesel"}
                       onValueChange={v => setEditingVeiculo(prev => prev ? { ...prev, tipo_combustivel: v } : null)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-10">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -387,118 +412,129 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Média de Consumo (km/l)</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">Consumo (km/l)</Label>
                     <Input
                       type="number"
                       step="0.1"
                       value={editingVeiculo?.consumo_medio || 0}
                       onChange={e => setEditingVeiculo(prev => prev ? { ...prev, consumo_medio: Number(e.target.value) } : null)}
+                      className="h-10"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Manutenção Mensal (R$)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editingVeiculo?.custo_manutencao_mensal || 0}
-                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, custo_manutencao_mensal: Number(e.target.value) } : null)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Funcionário Mensal (R$)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editingVeiculo?.custo_funcionario_mensal || 0}
-                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, custo_funcionario_mensal: Number(e.target.value) } : null)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Valor Ajudante (R$)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editingVeiculo?.valor_ajudante || 0}
-                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, valor_ajudante: Number(e.target.value) } : null)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Valor Refeição (R$)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editingVeiculo?.valor_refeicao || 0}
-                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, valor_refeicao: Number(e.target.value) } : null)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Extras Mensais (R$)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editingVeiculo?.extras || 0}
-                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, extras: Number(e.target.value) } : null)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Peso Máximo (kg)</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">Peso Máx. (kg)</Label>
                     <Input
                       type="number"
                       step="1"
                       value={editingVeiculo?.peso_maximo_kg || 0}
                       onChange={e => setEditingVeiculo(prev => prev ? { ...prev, peso_maximo_kg: Number(e.target.value) } : null)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Pernoite (R$/pessoa)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editingVeiculo?.pernoite || 0}
-                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, pernoite: Number(e.target.value) } : null)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Adicional H.E. (%)</Label>
-                    <Input
-                      type="number"
-                      step="1"
-                      value={editingVeiculo?.adic_hora_extra_perc ?? 50}
-                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, adic_hora_extra_perc: Number(e.target.value) } : null)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Jornada Base (h/dia)</Label>
-                    <Input
-                      type="number"
-                      step="0.5"
-                      value={editingVeiculo?.jornada_base_dia || 8}
-                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, jornada_base_dia: Number(e.target.value) } : null)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Horas Mensais</Label>
-                    <Input
-                      type="number"
-                      step="1"
-                      value={editingVeiculo?.horas_mensais || 220}
-                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, horas_mensais: Number(e.target.value) } : null)}
-                    />
-                  </div>
-                  <div className="space-y-1 col-span-2">
-                    <Label className="text-xs">Observações</Label>
-                    <Input
-                      value={editingVeiculo?.observacoes || ""}
-                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, observacoes: e.target.value } : null)}
-                      placeholder="Observações adicionais"
+                      className="h-10"
                     />
                   </div>
                 </div>
-                <div className="flex gap-2 mt-4">
+
+                <Separator />
+
+                {/* Linha 2: Custos Mensais */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block">Custos Mensais (R$)</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Manutenção</Label>
+                      <Input type="number" step="0.01" value={editingVeiculo?.custo_manutencao_mensal || 0}
+                        onChange={e => setEditingVeiculo(prev => prev ? { ...prev, custo_manutencao_mensal: Number(e.target.value) } : null)} className="h-10" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Funcionário</Label>
+                      <Input type="number" step="0.01" value={editingVeiculo?.custo_funcionario_mensal || 0}
+                        onChange={e => setEditingVeiculo(prev => prev ? { ...prev, custo_funcionario_mensal: Number(e.target.value) } : null)} className="h-10" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Extras</Label>
+                      <Input type="number" step="0.01" value={editingVeiculo?.extras || 0}
+                        onChange={e => setEditingVeiculo(prev => prev ? { ...prev, extras: Number(e.target.value) } : null)} className="h-10" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Horas/Mês</Label>
+                      <Input type="number" step="1" value={editingVeiculo?.horas_mensais || 220}
+                        onChange={e => setEditingVeiculo(prev => prev ? { ...prev, horas_mensais: Number(e.target.value) || 220 } : null)} className="h-10" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Linha 3: Custos por Dia/Viagem */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block">Custos por Dia/Viagem (R$)</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Ajudante/Dia</Label>
+                      <Input type="number" step="0.01" value={editingVeiculo?.valor_ajudante || 0}
+                        onChange={e => setEditingVeiculo(prev => prev ? { ...prev, valor_ajudante: Number(e.target.value) } : null)} className="h-10" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Refeição</Label>
+                      <Input type="number" step="0.01" value={editingVeiculo?.valor_refeicao || 0}
+                        onChange={e => setEditingVeiculo(prev => prev ? { ...prev, valor_refeicao: Number(e.target.value) } : null)} className="h-10" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Pernoite/Pessoa</Label>
+                      <Input type="number" step="0.01" value={editingVeiculo?.pernoite || 0}
+                        onChange={e => setEditingVeiculo(prev => prev ? { ...prev, pernoite: Number(e.target.value) } : null)} className="h-10" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Jornada Base (h)</Label>
+                      <Input type="number" step="0.5" value={editingVeiculo?.jornada_base_dia || 8}
+                        onChange={e => setEditingVeiculo(prev => prev ? { ...prev, jornada_base_dia: Number(e.target.value) } : null)} className="h-10" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Linha 4: Hora Extra */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Adicional H.E. (%)</Label>
+                    <Input type="number" step="1" value={editingVeiculo?.adic_hora_extra_perc ?? 50}
+                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, adic_hora_extra_perc: Number(e.target.value) } : null)} className="h-10" />
+                  </div>
+                  <div className="space-y-1.5 col-span-2 md:col-span-3">
+                    <Label className="text-xs">Observações</Label>
+                    <Input value={editingVeiculo?.observacoes || ""} 
+                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, observacoes: e.target.value } : null)} 
+                      placeholder="Observações adicionais" className="h-10" />
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Fórmula de Frete */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Fórmula de Cálculo de Frete</Label>
+                  <Select
+                    value={editingVeiculo?.formula_frete?.id || "default_frete_completo"}
+                    onValueChange={v => {
+                      const formula = savedFormulas.find(f => f.id === v) || null;
+                      setEditingVeiculo(prev => prev ? { ...prev, formula_frete: formula } : null);
+                    }}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Selecione uma fórmula" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {savedFormulas.map(f => (
+                        <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Crie novas fórmulas no simulador de frete clicando no ícone de calculadora
+                  </p>
+                </div>
+
+                <div className="flex gap-2 pt-2">
                   <Button size="sm" onClick={saveVeiculo}>
                     <Save className="h-4 w-4 mr-1" />
-                    Salvar
+                    Salvar Veículo
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => { setEditingVeiculo(null); setIsAddingVeiculo(false); }}>
                     <X className="h-4 w-4 mr-1" />
@@ -509,72 +545,91 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
             </Card>
           )}
 
-          {/* Tabela de veículos */}
+          {/* Lista de veículos em cards */}
           {veiculos.length > 0 ? (
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Veículo</TableHead>
-                    <TableHead className="text-xs">Combustível</TableHead>
-                    <TableHead className="text-xs text-right">Consumo</TableHead>
-                    <TableHead className="text-xs text-right">Manutenção</TableHead>
-                    <TableHead className="text-xs text-right">Motorista</TableHead>
-                    <TableHead className="text-xs text-right">Ajudante</TableHead>
-                    <TableHead className="text-xs text-right">Pernoite</TableHead>
-                    <TableHead className="text-xs text-right">H.E. %</TableHead>
-                    <TableHead className="text-xs w-24">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {veiculos.map(v => (
-                    <TableRow key={v.id} className={selectedVeiculoForSimulation === v.id ? "bg-primary/10" : ""}>
-                      <TableCell className="text-xs font-medium">{getTipoVeiculoLabel(v.tipo_veiculo)}</TableCell>
-                      <TableCell className="text-xs">{getTipoCombustivelLabel(v.tipo_combustivel)}</TableCell>
-                      <TableCell className="text-xs text-right">{v.consumo_medio} km/l</TableCell>
-                      <TableCell className="text-xs text-right">{v.custo_manutencao_mensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
-                      <TableCell className="text-xs text-right">{v.custo_funcionario_mensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
-                      <TableCell className="text-xs text-right">{v.valor_ajudante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
-                      <TableCell className="text-xs text-right">{v.pernoite.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
-                      <TableCell className="text-xs text-right">{v.adic_hora_extra_perc}%</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            size="icon"
-                            variant={selectedVeiculoForSimulation === v.id ? "default" : "ghost"}
-                            className="h-7 w-7"
-                            onClick={() => setSelectedVeiculoForSimulation(selectedVeiculoForSimulation === v.id ? "" : v.id!)}
-                            title="Simular Frete"
-                          >
-                            <Calculator className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-7 w-7"
-                            onClick={() => { setEditingVeiculo(v); setIsAddingVeiculo(false); }}
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-7 w-7 text-destructive"
-                            onClick={() => setDeleteVeiculoId(v.id!)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {veiculos.map(v => (
+                <Card 
+                  key={v.id} 
+                  className={`transition-all hover:shadow-md ${selectedVeiculoForSimulation === v.id ? "ring-2 ring-primary" : ""}`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h4 className="font-semibold text-sm">{getTipoVeiculoLabel(v.tipo_veiculo)}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {getTipoCombustivelLabel(v.tipo_combustivel)}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {v.consumo_medio} km/l
+                          </Badge>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          size="icon"
+                          variant={selectedVeiculoForSimulation === v.id ? "default" : "outline"}
+                          className="h-8 w-8"
+                          onClick={() => setSelectedVeiculoForSimulation(selectedVeiculoForSimulation === v.id ? "" : v.id!)}
+                          title="Simular Frete"
+                        >
+                          <Calculator className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="outline" className="h-8 w-8"
+                          onClick={() => { setEditingVeiculo(v); setIsAddingVeiculo(false); }}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="outline" className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                          onClick={() => setDeleteVeiculoId(v.id!)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="bg-muted/50 rounded p-2">
+                        <span className="text-muted-foreground block">Manutenção</span>
+                        <span className="font-medium">{formatCurrency(v.custo_manutencao_mensal)}</span>
+                      </div>
+                      <div className="bg-muted/50 rounded p-2">
+                        <span className="text-muted-foreground block">Motorista</span>
+                        <span className="font-medium">{formatCurrency(v.custo_funcionario_mensal)}</span>
+                      </div>
+                      <div className="bg-muted/50 rounded p-2">
+                        <span className="text-muted-foreground block">Extras</span>
+                        <span className="font-medium">{formatCurrency(v.extras)}</span>
+                      </div>
+                      <div className="bg-muted/50 rounded p-2">
+                        <span className="text-muted-foreground block">Ajudante</span>
+                        <span className="font-medium">{formatCurrency(v.valor_ajudante)}</span>
+                      </div>
+                      <div className="bg-muted/50 rounded p-2">
+                        <span className="text-muted-foreground block">Pernoite</span>
+                        <span className="font-medium">{formatCurrency(v.pernoite)}</span>
+                      </div>
+                      <div className="bg-muted/50 rounded p-2">
+                        <span className="text-muted-foreground block">H.E.</span>
+                        <span className="font-medium">{v.adic_hora_extra_perc}%</span>
+                      </div>
+                    </div>
+
+                    {v.formula_frete && (
+                      <div className="mt-2 pt-2 border-t">
+                        <span className="text-xs text-muted-foreground">Fórmula: </span>
+                        <Badge variant="outline" className="text-xs">{v.formula_frete.nome}</Badge>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Nenhum veículo cadastrado. Clique em "Adicionar" para começar.
-            </p>
+            <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+              <Truck className="h-10 w-10 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Nenhum veículo cadastrado</p>
+              <p className="text-xs">Clique em "Adicionar Veículo" para começar</p>
+            </div>
           )}
 
           {/* Simulador de Frete */}
@@ -614,7 +669,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
         onOpenChange={open => !open && setDeleteVeiculoId(null)}
         onConfirm={deleteVeiculo}
         title="Remover Veículo"
-        description="Tem certeza que deseja remover este veículo? Esta ação não pode ser desfeita."
+        description="Tem certeza que deseja remover este veículo?"
       />
     </div>
   );
