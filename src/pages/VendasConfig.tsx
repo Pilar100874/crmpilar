@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { 
   Package, 
@@ -12,11 +13,15 @@ import {
   Zap,
   Settings,
   Box,
-  LucideIcon
+  LucideIcon,
+  PanelLeftClose,
+  PanelLeft
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ProdutosCRUD } from '@/components/config/ProdutosCRUD';
 import { ProdutoCategoriasCRUD } from '@/components/config/ProdutoCategoriasCRUD';
 import { ProdutoGruposCRUD } from '@/components/config/ProdutoGruposCRUD';
@@ -55,6 +60,7 @@ const tabItems: TabItem[] = [
 
 export default function VendasConfig() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const currentTab = searchParams.get('tab') || 'produtos';
 
   // Get user's estabelecimento_id
@@ -111,25 +117,51 @@ export default function VendasConfig() {
           </div>
 
           {/* Desktop: Sidebar menu */}
-          <div className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:bg-muted/20 lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0">
-            {tabItems.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = currentTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left w-full ${
-                    isActive 
-                      ? 'bg-primary text-primary-foreground shadow-sm' 
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  <Icon className={`h-4 w-4 shrink-0 ${isActive ? '' : 'opacity-70'}`} />
-                  <span className="truncate">{tab.label}</span>
-                </button>
-              );
-            })}
+          <div className={`hidden lg:flex lg:flex-col lg:border-r lg:bg-muted/20 lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 transition-all duration-300 ${isMenuCollapsed ? 'lg:w-16' : 'lg:w-64'}`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
+              className="mb-2 self-end"
+            >
+              {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            </Button>
+            <TooltipProvider delayDuration={0}>
+              {tabItems.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = currentTab === tab.id;
+                
+                const menuButton = (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left w-full ${
+                      isActive 
+                        ? 'bg-primary text-primary-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    } ${isMenuCollapsed ? 'justify-center' : ''}`}
+                  >
+                    <Icon className={`h-4 w-4 shrink-0 ${isActive ? '' : 'opacity-70'}`} />
+                    {!isMenuCollapsed && <span className="truncate">{tab.label}</span>}
+                  </button>
+                );
+
+                if (isMenuCollapsed) {
+                  return (
+                    <Tooltip key={tab.id}>
+                      <TooltipTrigger asChild>
+                        {menuButton}
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        {tab.label}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                }
+
+                return menuButton;
+              })}
+            </TooltipProvider>
           </div>
 
           <div className="flex-1 overflow-auto p-3 sm:p-6">
