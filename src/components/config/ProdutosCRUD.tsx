@@ -550,133 +550,179 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const selectedNcmDisplay = ncmCodigos.find(n => n.id === formData.ncm_id);
 
   if (loading) {
-    return <div>Carregando produtos...</div>;
+    return <div className="text-sm text-muted-foreground">Carregando produtos...</div>;
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Produtos</h3>
-        <Button onClick={openNewDialog}>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h3 className="text-base sm:text-lg font-semibold">Produtos</h3>
+        <Button onClick={openNewDialog} size="sm" className="w-full sm:w-auto">
           <Plus className="w-4 h-4 mr-2" />
           Novo Produto
         </Button>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Foto</TableHead>
-            <TableHead>Código</TableHead>
-            <TableHead>Nome</TableHead>
-            <TableHead>Categoria</TableHead>
-            <TableHead>Grupo</TableHead>
-            <TableHead>NCM</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {produtos.map((produto) => (
-            <TableRow key={produto.id}>
-              <TableCell>
+      {/* Mobile: Card layout */}
+      <div className="block lg:hidden space-y-3">
+        {produtos.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground text-sm">
+            Nenhum produto cadastrado
+          </div>
+        ) : (
+          produtos.map((produto) => (
+            <div key={produto.id} className="border rounded-lg p-3 bg-card">
+              <div className="flex items-start gap-3">
                 {produto.foto_url ? (
-                  <img src={produto.foto_url} alt={produto.nome} className="w-12 h-12 object-cover rounded" />
+                  <img src={produto.foto_url} alt={produto.nome} className="w-14 h-14 object-cover rounded flex-shrink-0" />
                 ) : (
-                  <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                  <div className="w-14 h-14 bg-muted rounded flex items-center justify-center flex-shrink-0">
                     <Image className="w-5 h-5 text-muted-foreground" />
                   </div>
                 )}
-              </TableCell>
-              <TableCell className="font-mono text-sm">{(produto as any).codigo || "-"}</TableCell>
-              <TableCell className="font-medium">{produto.nome}</TableCell>
-              <TableCell>{produto.categoria?.nome || "-"}</TableCell>
-              <TableCell>{produto.grupo?.nome || "-"}</TableCell>
-              <TableCell className="font-mono text-xs">{(produto as any).ncm_ref?.codigo || (produto as any).ncm || "-"}</TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs ${produto.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
-                  {produto.ativo ? 'Ativo' : 'Inativo'}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleEdit(produto)}
-                >
-                  <Pencil className="w-4 h-4" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium text-sm truncate">{produto.nome}</p>
+                    <span className={`px-2 py-0.5 rounded-full text-xs flex-shrink-0 ${produto.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
+                      {produto.ativo ? 'Ativo' : 'Inativo'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-mono">{(produto as any).codigo || "-"}</p>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
+                    <span>{produto.categoria?.nome || "-"}</span>
+                    <span>•</span>
+                    <span>{produto.grupo?.nome || "-"}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-1 mt-2 pt-2 border-t">
+                <Button variant="ghost" size="sm" onClick={() => handleEdit(produto)}>
+                  <Pencil className="w-4 h-4 mr-1" />
+                  Editar
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(produto.id)}
-                >
-                  <Trash2 className="w-4 h-4" />
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(produto.id)} className="text-destructive">
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Excluir
                 </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-          {produtos.length === 0 && (
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop: Table layout */}
+      <div className="hidden lg:block overflow-x-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={8} className="text-center text-muted-foreground">
-                Nenhum produto cadastrado
-              </TableCell>
+              <TableHead>Foto</TableHead>
+              <TableHead>Código</TableHead>
+              <TableHead>Nome</TableHead>
+              <TableHead>Categoria</TableHead>
+              <TableHead>Grupo</TableHead>
+              <TableHead>NCM</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {produtos.map((produto) => (
+              <TableRow key={produto.id}>
+                <TableCell>
+                  {produto.foto_url ? (
+                    <img src={produto.foto_url} alt={produto.nome} className="w-12 h-12 object-cover rounded" />
+                  ) : (
+                    <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                      <Image className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell className="font-mono text-sm">{(produto as any).codigo || "-"}</TableCell>
+                <TableCell className="font-medium">{produto.nome}</TableCell>
+                <TableCell>{produto.categoria?.nome || "-"}</TableCell>
+                <TableCell>{produto.grupo?.nome || "-"}</TableCell>
+                <TableCell className="font-mono text-xs">{(produto as any).ncm_ref?.codigo || (produto as any).ncm || "-"}</TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded-full text-xs ${produto.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
+                    {produto.ativo ? 'Ativo' : 'Inativo'}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => handleEdit(produto)}>
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(produto.id)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            {produtos.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  Nenhum produto cadastrado
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">
               {editingProduto ? "Editar Produto" : "Novo Produto"}
             </DialogTitle>
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="basico" className="flex items-center gap-2">
-                <Package className="w-4 h-4" />
-                Dados Básicos
+            <TabsList className="grid w-full grid-cols-3 h-auto">
+              <TabsTrigger value="basico" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Dados Básicos</span>
+                <span className="sm:hidden">Básicos</span>
               </TabsTrigger>
-              <TabsTrigger value="frete" className="flex items-center gap-2">
-                <Truck className="w-4 h-4" />
-                Dados para Frete
+              <TabsTrigger value="frete" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Dados para Frete</span>
+                <span className="sm:hidden">Frete</span>
               </TabsTrigger>
-              <TabsTrigger value="embalagem" className="flex items-center gap-2">
-                <Barcode className="w-4 h-4" />
-                Embalagem
+              <TabsTrigger value="embalagem" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <Barcode className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Embalagem</span>
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="basico" className="mt-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label>Código *</Label>
+                  <Label className="text-xs sm:text-sm">Código *</Label>
                   <Input
                     value={formData.codigo}
                     onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
                     placeholder="Código do produto"
+                    className="text-sm"
                   />
                 </div>
 
                 <div>
-                  <Label>Nome *</Label>
+                  <Label className="text-xs sm:text-sm">Nome *</Label>
                   <Input
                     value={formData.nome}
                     onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                     placeholder="Nome do produto"
+                    className="text-sm"
                   />
                 </div>
 
                 <div>
-                  <Label>Categoria *</Label>
+                  <Label className="text-xs sm:text-sm">Categoria *</Label>
                   <Select
                     value={formData.categoria_id || "none"}
                     onValueChange={(value) => setFormData({ ...formData, categoria_id: value === "none" ? "" : value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
@@ -691,12 +737,12 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                 </div>
 
                 <div>
-                  <Label>Grupo *</Label>
+                  <Label className="text-xs sm:text-sm">Grupo *</Label>
                   <Select
                     value={formData.grupo_id || "none"}
                     onValueChange={(value) => setFormData({ ...formData, grupo_id: value === "none" ? "" : value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
@@ -710,26 +756,26 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   </Select>
                 </div>
 
-                <div className="col-span-2">
-                  <Label>NCM *</Label>
+                <div className="sm:col-span-2">
+                  <Label className="text-xs sm:text-sm">NCM *</Label>
                   <Popover open={ncmOpen} onOpenChange={setNcmOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         role="combobox"
                         aria-expanded={ncmOpen}
-                        className="w-full justify-between font-normal"
+                        className="w-full justify-between font-normal text-sm"
                       >
                         {selectedNcmDisplay 
-                          ? `${selectedNcmDisplay.codigo} - ${selectedNcmDisplay.descricao.substring(0, 50)}${selectedNcmDisplay.descricao.length > 50 ? '...' : ''}`
+                          ? `${selectedNcmDisplay.codigo} - ${selectedNcmDisplay.descricao.substring(0, 30)}${selectedNcmDisplay.descricao.length > 30 ? '...' : ''}`
                           : "Selecione o NCM..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[500px] p-0" align="start">
+                    <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[500px] p-0" align="start">
                       <Command>
                         <CommandInput 
-                          placeholder="Buscar NCM por código ou descrição..." 
+                          placeholder="Buscar NCM..." 
                           value={ncmSearch}
                           onValueChange={setNcmSearch}
                         />
@@ -771,7 +817,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
                 {/* Campos Customizados do Grupo */}
                 {camposCustomizados.length > 0 && (
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <DynamicProductFields
                       campos={camposCustomizados}
                       values={formData.campos_customizados}
@@ -787,20 +833,22 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                 )}
 
                 {camposCustomizados.length === 0 && formData.grupo_id && (
-                  <div className="col-span-2 text-sm text-muted-foreground p-4 border rounded-lg bg-muted/30">
+                  <div className="sm:col-span-2 text-xs sm:text-sm text-muted-foreground p-3 sm:p-4 border rounded-lg bg-muted/30">
                     Nenhum campo customizado configurado para este grupo. 
                     Configure os campos em "Campos Customizados por Grupo".
                   </div>
                 )}
 
-                <div className="col-span-2">
-                  <Label>Foto do Produto</Label>
-                  <div className="flex items-center gap-4">
+                <div className="sm:col-span-2">
+                  <Label className="text-xs sm:text-sm">Foto do Produto</Label>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mt-1">
                     <Button
                       type="button"
                       variant="outline"
+                      size="sm"
                       onClick={() => document.getElementById('file-upload')?.click()}
                       disabled={uploading}
+                      className="w-full sm:w-auto"
                     >
                       <Upload className="w-4 h-4 mr-2" />
                       {selectedFile ? 'Trocar foto' : 'Selecionar foto'}
@@ -822,12 +870,12 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   />
                 </div>
 
-                <div className="col-span-2 flex items-center gap-2">
+                <div className="sm:col-span-2 flex items-center gap-2">
                   <Switch
                     checked={formData.ativo}
                     onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
                   />
-                  <Label>Produto ativo</Label>
+                  <Label className="text-xs sm:text-sm">Produto ativo</Label>
                 </div>
               </div>
             </TabsContent>
@@ -836,36 +884,39 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               <div className="space-y-6">
                 {/* Dimensões da Embalagem */}
                 <div>
-                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Dimensões da Embalagem</h4>
-                  <div className="grid grid-cols-3 gap-4">
+                  <h4 className="font-medium mb-3 text-xs sm:text-sm text-muted-foreground">Dimensões da Embalagem</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                     <div>
-                      <Label>Largura (cm)</Label>
+                      <Label className="text-xs sm:text-sm">Largura (cm)</Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={formData.embalagem_largura}
                         onChange={(e) => handleEmbalagemChange('embalagem_largura', e.target.value)}
                         placeholder="0.00"
+                        className="text-sm"
                       />
                     </div>
                     <div>
-                      <Label>Altura (cm)</Label>
+                      <Label className="text-xs sm:text-sm">Altura (cm)</Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={formData.embalagem_altura}
                         onChange={(e) => handleEmbalagemChange('embalagem_altura', e.target.value)}
                         placeholder="0.00"
+                        className="text-sm"
                       />
                     </div>
                     <div>
-                      <Label>Comprimento (cm)</Label>
+                      <Label className="text-xs sm:text-sm">Comprimento (cm)</Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={formData.embalagem_comprimento}
                         onChange={(e) => handleEmbalagemChange('embalagem_comprimento', e.target.value)}
                         placeholder="0.00"
+                        className="text-sm"
                       />
                     </div>
                   </div>
@@ -873,8 +924,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
                 {/* Tipo de Cálculo de Peso */}
                 <div>
-                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Cálculo do Peso para Frete</h4>
-                  <div className="p-4 border rounded-md bg-muted/30">
+                  <h4 className="font-medium mb-3 text-xs sm:text-sm text-muted-foreground">Cálculo do Peso para Frete</h4>
+                  <div className="p-3 sm:p-4 border rounded-md bg-muted/30">
                     <RadioGroup
                       value={formData.peso_frete_tipo}
                       onValueChange={(value) => setFormData({ ...formData, peso_frete_tipo: value })}
@@ -883,22 +934,22 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                       <div className="flex items-start gap-3">
                         <RadioGroupItem value="fixo" id="peso_fixo" className="mt-1" />
                         <div>
-                          <Label htmlFor="peso_fixo" className="cursor-pointer font-medium">
+                          <Label htmlFor="peso_fixo" className="cursor-pointer font-medium text-xs sm:text-sm">
                             Peso Fixo (Embalagem)
                           </Label>
                           <p className="text-xs text-muted-foreground">
-                            Usa o peso com embalagem informado abaixo, independente da quantidade no pedido
+                            Usa o peso com embalagem informado abaixo
                           </p>
                         </div>
                       </div>
                       <div className="flex items-start gap-3">
                         <RadioGroupItem value="calculado" id="peso_calculado" className="mt-1" />
                         <div>
-                          <Label htmlFor="peso_calculado" className="cursor-pointer font-medium">
-                            Peso Calculado (Quantidade × Peso Unitário)
+                          <Label htmlFor="peso_calculado" className="cursor-pointer font-medium text-xs sm:text-sm">
+                            Peso Calculado (Qtd × Peso)
                           </Label>
                           <p className="text-xs text-muted-foreground">
-                            Calcula o peso total multiplicando a quantidade do item pelo peso unitário do produto
+                            Calcula o peso total multiplicando quantidade pelo peso unitário
                           </p>
                         </div>
                       </div>
@@ -908,29 +959,30 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
                 {/* Peso e Cubagem */}
                 <div>
-                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Peso e Volume</h4>
-                  <div className={`grid gap-4 ${formData.peso_frete_tipo === 'fixo' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                  <h4 className="font-medium mb-3 text-xs sm:text-sm text-muted-foreground">Peso e Volume</h4>
+                  <div className={`grid gap-3 sm:gap-4 ${formData.peso_frete_tipo === 'fixo' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                     {formData.peso_frete_tipo === 'fixo' && (
                       <div>
-                        <Label>Peso com Embalagem (kg)</Label>
+                        <Label className="text-xs sm:text-sm">Peso com Embalagem (kg)</Label>
                         <Input
                           type="number"
                           step="0.001"
                           value={formData.embalagem_peso}
                           onChange={(e) => setFormData({ ...formData, embalagem_peso: e.target.value })}
                           placeholder="0.000"
+                          className="text-sm"
                         />
                       </div>
                     )}
                     <div>
-                      <Label>Cubagem (m³)</Label>
+                      <Label className="text-xs sm:text-sm">Cubagem (m³)</Label>
                       <Input
                         type="number"
                         step="0.000001"
                         value={formData.cubagem}
                         onChange={(e) => setFormData({ ...formData, cubagem: e.target.value })}
                         placeholder="Calculado automaticamente"
-                        className="bg-muted/50"
+                        className="bg-muted/50 text-sm"
                       />
                       <p className="text-xs text-muted-foreground mt-1">Calculado automaticamente pelas dimensões</p>
                     </div>
@@ -939,26 +991,28 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
                 {/* Informações Fiscais */}
                 <div>
-                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Informações Adicionais</h4>
-                  <div className="grid grid-cols-2 gap-4">
+                  <h4 className="font-medium mb-3 text-xs sm:text-sm text-muted-foreground">Informações Adicionais</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <Label>Valor para Seguro (R$)</Label>
+                      <Label className="text-xs sm:text-sm">Valor para Seguro (R$)</Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={formData.valor_seguro}
                         onChange={(e) => setFormData({ ...formData, valor_seguro: e.target.value })}
                         placeholder="0.00"
+                        className="text-sm"
                       />
                     </div>
                     <div>
-                      <Label>Empilhamento Máximo</Label>
+                      <Label className="text-xs sm:text-sm">Empilhamento Máximo</Label>
                       <Input
                         type="number"
                         min="1"
                         value={formData.empilhamento_maximo}
                         onChange={(e) => setFormData({ ...formData, empilhamento_maximo: e.target.value })}
                         placeholder="1"
+                        className="text-sm"
                       />
                       <p className="text-xs text-muted-foreground mt-1">Quantidade máxima de caixas empilhadas</p>
                     </div>
@@ -967,14 +1021,14 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
                 {/* Características de Transporte */}
                 <div>
-                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Características de Transporte</h4>
+                  <h4 className="font-medium mb-3 text-xs sm:text-sm text-muted-foreground">Características de Transporte</h4>
                   <div className="flex items-center gap-3 p-3 border rounded-md">
                     <Switch
                       checked={formData.fragil}
                       onCheckedChange={(checked) => setFormData({ ...formData, fragil: checked })}
                     />
                     <div>
-                      <Label className="cursor-pointer">Produto Frágil</Label>
+                      <Label className="cursor-pointer text-xs sm:text-sm">Produto Frágil</Label>
                       <p className="text-xs text-muted-foreground">Requer cuidados especiais no transporte</p>
                     </div>
                   </div>
@@ -982,12 +1036,13 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
                 {/* Observações */}
                 <div>
-                  <Label>Observações para Transporte</Label>
+                  <Label className="text-xs sm:text-sm">Observações para Transporte</Label>
                   <Textarea
                     value={formData.observacoes_frete}
                     onChange={(e) => setFormData({ ...formData, observacoes_frete: e.target.value })}
                     placeholder="Informações adicionais para a transportadora..."
                     rows={3}
+                    className="text-sm"
                   />
                 </div>
               </div>
@@ -1012,11 +1067,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
             </TabsContent>
           </Tabs>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDialog(false)} disabled={uploading}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowDialog(false)} disabled={uploading} size="sm" className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={uploading}>
+            <Button onClick={handleSave} disabled={uploading} size="sm" className="w-full sm:w-auto">
               {uploading ? "Salvando..." : "Salvar"}
             </Button>
           </DialogFooter>
