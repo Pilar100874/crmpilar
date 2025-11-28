@@ -6,6 +6,7 @@ import { aplicarRegrasAutomacao } from "@/services/automacaoFlowEngine";
 import { usePedagioCalculation } from "@/hooks/usePedagioCalculation";
 import { useRouteCalculation } from "@/hooks/useRouteCalculation";
 import { useRouteAddresses } from "@/hooks/useRouteAddresses";
+import { calculateFreteCost, VeiculoConfig, ViagemInput, FreteResult } from "@/hooks/useFreteCalculation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -64,6 +65,7 @@ import { cn } from "@/lib/utils";
 import ImageItemExtractor from "./ImageItemExtractor";
 import { ConjuntoSelectorDialog } from "./ConjuntoSelectorDialog";
 import { PedagioDetailsDialog } from "./PedagioDetailsDialog";
+import FreteDetailsPanel from "./FreteDetailsPanel";
 import {
   Dialog,
   DialogContent,
@@ -147,6 +149,10 @@ export default function POSView({
   const [pedagioDialogDefaultTab, setPedagioDialogDefaultTab] = useState("map");
   const [freteIdaEVolta, setFreteIdaEVolta] = useState(true);
   const [showRegrasInDetails, setShowRegrasInDetails] = useState(false);
+  const [showFreteInDetails, setShowFreteInDetails] = useState(false);
+  const [freteResult, setFreteResult] = useState<FreteResult | null>(null);
+  const [numAjudantes, setNumAjudantes] = useState(0);
+  const [veiculoConfig, setVeiculoConfig] = useState<VeiculoConfig | null>(null);
 
   // Hook para buscar endereços automaticamente quando empresa muda
   const routeAddresses = useRouteAddresses(selectedEmpresa || null);
@@ -167,6 +173,89 @@ export default function POSView({
   useEffect(() => {
     pedagioResult.reset();
   }, [selectedEmpresa]);
+
+  // Carregar configuração de veículo para cálculo de frete
+  useEffect(() => {
+    const loadVeiculoConfig = async () => {
+      try {
+        // Buscar primeiro veículo configurado para o estabelecimento
+        const { data: veiculoCusto, error } = await supabase
+          .from('veiculos_custos')
+          .select('*')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .limit(1)
+          .single();
+
+        if (error || !veiculoCusto) {
+          console.log('Nenhum veículo configurado para cálculo de frete');
+          return;
+        }
+
+        // Buscar preço do combustível
+        const { data: precosCombustivel } = await supabase
+          .from('combustiveis_precos')
+          .select('*')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .single();
+
+        // Determinar preço do combustível baseado no tipo
+        let valorCombustivel = 6.0; // Valor padrão
+        if (precosCombustivel) {
+          switch (veiculoCusto.tipo_combustivel) {
+            case 'diesel':
+              valorCombustivel = precosCombustivel.preco_diesel || 6.0;
+              break;
+            case 'gasolina':
+              valorCombustivel = precosCombustivel.preco_gasolina || 5.5;
+              break;
+            case 'etanol':
+              valorCombustivel = precosCombustivel.preco_etanol || 4.0;
+              break;
+            case 'eletrico':
+              valorCombustivel = precosCombustivel.preco_eletrico || 0.5;
+              break;
+          }
+        }
+
+        setVeiculoConfig({
+          manutencaoMensal: veiculoCusto.custo_manutencao_mensal || 0,
+          extrasMensais: veiculoCusto.extras || 0,
+          salarioMotorista: veiculoCusto.custo_funcionario_mensal || 3000,
+          valorAjudanteDia: veiculoCusto.valor_ajudante || 150,
+          valorRefeicao: veiculoCusto.valor_refeicao || 30,
+          valorCombustivel,
+          mediaConsumo: veiculoCusto.consumo_estrada || 10,
+          pernoite: veiculoCusto.pernoite || 100,
+          adicHoraExtraPerc: veiculoCusto.adic_hora_extra_perc || 50,
+          jornadaBaseDia: veiculoCusto.jornada_base_dia || 8,
+          horasMensais: veiculoCusto.horas_mensais || 220,
+        });
+      } catch (error) {
+        console.error('Erro ao carregar config de veículo:', error);
+      }
+    };
+
+    loadVeiculoConfig();
+  }, [estabelecimentoId]);
+
+  // Calcular frete quando temos rota e veículo configurado
+  useEffect(() => {
+    if (!veiculoConfig || !autoRouteInfo) {
+      setFreteResult(null);
+      return;
+    }
+
+    const viagem: ViagemInput = {
+      tempoViagem: autoRouteInfo.duration / 60, // Converter minutos para horas
+      kmViagem: autoRouteInfo.distance / (freteIdaEVolta ? 2 : 1), // Km só ida
+      consideraIdaVolta: freteIdaEVolta,
+      numAjudantes: numAjudantes,
+      pedagioTotal: pedagioResult.calculated ? pedagioResult.total : 0,
+    };
+
+    const result = calculateFreteCost(veiculoConfig, viagem);
+    setFreteResult(result);
+  }, [veiculoConfig, autoRouteInfo, freteIdaEVolta, numAjudantes, pedagioResult.total, pedagioResult.calculated]);
 
   useEffect(() => {
     loadProdutos();
@@ -1359,7 +1448,14 @@ export default function POSView({
 
           <TabsContent value="details" className="flex-1 m-0">
             <ScrollArea className="h-[calc(100vh-400px)] p-2">
-              {showRegrasInDetails && regrasAplicadas.length > 0 ? (
+              {showFreteInDetails && freteResult ? (
+                <div className="space-y-2">
+                  <FreteDetailsPanel 
+                    freteResult={freteResult}
+                    onClose={() => setShowFreteInDetails(false)}
+                  />
+                </div>
+              ) : showRegrasInDetails && regrasAplicadas.length > 0 ? (
                 <div className="space-y-2">
                   {/* Header das Regras */}
                   <div className="bg-green-50 dark:bg-green-950/30 rounded p-2.5 border border-green-200 dark:border-green-800">
@@ -1956,6 +2052,48 @@ export default function POSView({
                   </div>
                 )}
               </div>
+              
+              {/* Valor de Frete */}
+              {freteResult && (
+                <>
+                  <div className="h-8 w-px bg-border" />
+                  <div>
+                    <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
+                      <DollarSign className="w-3 h-3" />
+                      <span>Custo Frete</span>
+                      {/* Campo de ajudantes */}
+                      <label className="flex items-center gap-1 ml-2">
+                        <span className="text-[10px]">Ajudantes:</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="10"
+                          value={numAjudantes}
+                          onChange={(e) => setNumAjudantes(parseInt(e.target.value) || 0)}
+                          className="w-12 h-5 text-[10px] p-1"
+                        />
+                      </label>
+                    </div>
+                    <div 
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => {
+                        setSelectedProduto(null);
+                        setShowRegrasInDetails(false);
+                        setShowFreteInDetails(true);
+                        setActiveTab("details");
+                      }}
+                      title="Clique para ver detalhes da fórmula"
+                    >
+                      <span className="font-semibold text-lg text-primary">
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL'
+                        }).format(freteResult.custoTotal)}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>

@@ -115,6 +115,14 @@ export function FreteSimulator({ veiculoConfig, valorCombustivel }: FreteSimulat
       fatorExtra: result.detalhes.fatorExtra,
       numFuncionarios: result.detalhes.numFuncionarios,
       refeicoesPorPessoa: result.detalhes.refeicoesPorPessoa,
+      // Custos individuais para a fórmula
+      custoCombustivel: result.custoCombustivel,
+      custoFixosViagem: result.custoFixosViagem,
+      custoHorasNormais: result.custoHorasNormais,
+      custoHorasExtras: result.custoHorasExtras,
+      custoAjudantes: result.custoAjudantes,
+      custoPernoite: result.custoPernoite,
+      custoRefeicao: result.custoRefeicao,
     };
   }, [config, viagem, result]);
 

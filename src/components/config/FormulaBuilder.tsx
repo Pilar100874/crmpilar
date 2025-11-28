@@ -59,6 +59,14 @@ const VARIAVEIS_DISPONIVEIS = [
   { id: "fatorExtra", nome: "Fator H.E.", grupo: "Calculado", descricao: "1 + (adicHoraExtraPerc / 100)" },
   { id: "numFuncionarios", nome: "Nº Funcionários", grupo: "Calculado", descricao: "1 + numAjudantes" },
   { id: "refeicoesPorPessoa", nome: "Refeições/Pessoa", grupo: "Calculado", descricao: "ceil(tempoViagem / 8)" },
+  // Custos individuais calculados
+  { id: "custoCombustivel", nome: "Custo Combustível", grupo: "Custos", descricao: "(kmTotal / mediaConsumo) × valorCombustivel" },
+  { id: "custoFixosViagem", nome: "Custo Fixos Viagem", grupo: "Custos", descricao: "tempoViagem × custoFixoHora" },
+  { id: "custoHorasNormais", nome: "Custo Horas Normais", grupo: "Custos", descricao: "horasNormais × custoHoraMotorista" },
+  { id: "custoHorasExtras", nome: "Custo Horas Extras", grupo: "Custos", descricao: "horasExtras × custoHoraMotorista × fatorExtra" },
+  { id: "custoAjudantes", nome: "Custo Ajudantes", grupo: "Custos", descricao: "valorAjudanteDia × numAjudantes" },
+  { id: "custoPernoite", nome: "Custo Pernoite", grupo: "Custos", descricao: "pernoite × numFuncionarios (se tempoViagem > 12h)" },
+  { id: "custoRefeicao", nome: "Custo Refeição", grupo: "Custos", descricao: "numFuncionarios × refeicoesPorPessoa × valorRefeicao" },
 ];
 
 // Operadores disponíveis
@@ -105,6 +113,13 @@ const FORMULAS_PREDEFINIDAS = [
   },
 ];
 
+// Fórmula padrão completa de custo de frete
+const FORMULA_PADRAO_FRETE = [
+  "custoCombustivel", "+", "custoFixosViagem", "+", "custoHorasNormais", "+", 
+  "custoHorasExtras", "+", "custoAjudantes", "+", "custoPernoite", "+", 
+  "custoRefeicao", "+", "pedagioTotal"
+];
+
 interface FormulaToken {
   id: string;
   tipo: "variavel" | "operador" | "parentese" | "numero";
@@ -116,12 +131,49 @@ interface FormulaBuilderProps {
   formula?: FormulaToken[];
   onChange?: (formula: FormulaToken[]) => void;
   valoresSimulacao?: Record<string, number>;
+  showDefaultFormula?: boolean;
 }
 
-export function FormulaBuilder({ formula: initialFormula, onChange, valoresSimulacao }: FormulaBuilderProps) {
-  const [formula, setFormula] = useState<FormulaToken[]>(initialFormula || []);
+// Função auxiliar para converter array de strings em FormulaToken[]
+export function stringArrayToTokens(formulaArray: string[]): FormulaToken[] {
+  return formulaArray.map((item, index) => {
+    const variavel = VARIAVEIS_DISPONIVEIS.find(v => v.id === item);
+    const operador = OPERADORES.find(o => o.id === item);
+    
+    if (variavel) {
+      return {
+        id: `${variavel.id}_${index}`,
+        tipo: "variavel" as const,
+        valor: variavel.id,
+        display: variavel.nome
+      };
+    } else if (operador) {
+      return {
+        id: `${operador.id}_${index}`,
+        tipo: operador.tipo as "operador" | "parentese",
+        valor: operador.id,
+        display: operador.nome
+      };
+    } else {
+      return {
+        id: `num_${index}`,
+        tipo: "numero" as const,
+        valor: item,
+        display: item
+      };
+    }
+  });
+}
+
+// Exportar variáveis e fórmula padrão
+export { VARIAVEIS_DISPONIVEIS, FORMULA_PADRAO_FRETE };
+
+export function FormulaBuilder({ formula: initialFormula, onChange, valoresSimulacao, showDefaultFormula = true }: FormulaBuilderProps) {
+  // Se não há fórmula inicial e showDefaultFormula é true, usar a fórmula padrão
+  const defaultFormula = showDefaultFormula ? stringArrayToTokens(FORMULA_PADRAO_FRETE) : [];
+  const [formula, setFormula] = useState<FormulaToken[]>(initialFormula || defaultFormula);
   const [numeroInput, setNumeroInput] = useState("");
-  const [grupoExpandido, setGrupoExpandido] = useState<string>("Veículo");
+  const [grupoExpandido, setGrupoExpandido] = useState<string>("Custos");
 
   // Agrupar variáveis
   const variaveisPorGrupo = useMemo(() => {
