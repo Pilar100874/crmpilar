@@ -174,22 +174,6 @@ export default function FreteDetailsPanel({ freteResult, onClose }: FreteDetails
         ))}
       </div>
 
-      {/* Fórmula Total */}
-      <div className="bg-muted/50 rounded p-2.5 border border-border/50">
-        <h4 className="text-xs font-medium text-foreground mb-1.5">Fórmula Total</h4>
-        <p className="text-[10px] font-mono text-primary">
-          {FORMULAS_FRETE.total.descricao}
-        </p>
-      </div>
-
-      {onClose && (
-        <button
-          onClick={onClose}
-          className="w-full text-xs text-muted-foreground hover:text-foreground py-2"
-        >
-          Fechar
-        </button>
-      )}
     </div>
   );
 }

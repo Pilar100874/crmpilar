@@ -1573,17 +1573,6 @@ export default function POSView({
                       </div>
                     </div>
                   ))}
-                  
-                  {/* Botão para voltar */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setShowRegrasInDetails(false)}
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Fechar Regras
-                  </Button>
                 </div>
               ) : selectedProduto ? (
                 <div className="space-y-2">
@@ -1665,17 +1654,6 @@ export default function POSView({
                       {selectedProduto.ativo ? "Ativo" : "Inativo"}
                     </Badge>
                   </div>
-                  
-                  {/* Botão para voltar */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setSelectedProduto(null)}
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Fechar Detalhes
-                  </Button>
                 </div>
               ) : (
                 <div className="space-y-2">
