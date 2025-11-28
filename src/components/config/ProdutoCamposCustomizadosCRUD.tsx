@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Trash2, Pencil, Plus, GripVertical, Settings } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { ProdutoGrupo } from "@/types/orcamento";
 
 interface ProdutoCamposCustomizadosCRUDProps {
@@ -92,6 +93,9 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
   const [showDialog, setShowDialog] = useState(false);
   const [editingCampo, setEditingCampo] = useState<CampoCustomizado | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [campoToDelete, setCampoToDelete] = useState<CampoCustomizado | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -273,21 +277,31 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
     setShowDialog(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Deseja realmente excluir este campo?")) return;
+  const openDeleteDialog = (campo: CampoCustomizado) => {
+    setCampoToDelete(campo);
+    setDeleteDialogOpen(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!campoToDelete) return;
+
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from('produto_campos_customizados')
         .delete()
-        .eq('id', id);
+        .eq('id', campoToDelete.id);
 
       if (error) throw error;
       toast.success("Campo excluído com sucesso");
       loadCampos();
+      setDeleteDialogOpen(false);
+      setCampoToDelete(null);
     } catch (error: any) {
       console.error('Erro ao excluir campo:', error);
       toast.error("Erro ao excluir campo");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -418,7 +432,7 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
                   <Button variant="ghost" size="icon" onClick={() => handleEdit(campo)}>
                     <Pencil className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(campo.id)}>
+                  <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(campo)}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </TableCell>
@@ -551,6 +565,14 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        itemName={campoToDelete?.nome}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }
