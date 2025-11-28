@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,8 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Trash2, Pencil, Plus, Image, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Trash2, Pencil, Plus, Image, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
 import { DynamicProductFields } from "./DynamicProductFields";
@@ -170,6 +171,105 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
   const [ncmOpen, setNcmOpen] = useState(false);
   const [ncmSearch, setNcmSearch] = useState("");
   const [camposCustomizados, setCamposCustomizados] = useState<CampoCustomizado[]>([]);
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategoria, setFilterCategoria] = useState<string>("all");
+  const [filterGrupo, setFilterGrupo] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Sort states
+  const [sortField, setSortField] = useState<string>("nome");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Filtered and sorted products
+  const filteredAndSortedProdutos = useMemo(() => {
+    let result = [...produtos];
+    
+    // Apply filters
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(p => 
+        p.nome.toLowerCase().includes(term) ||
+        (p as any).codigo?.toLowerCase().includes(term) ||
+        (p as any).ncm?.toLowerCase().includes(term)
+      );
+    }
+    
+    if (filterCategoria !== "all") {
+      result = result.filter(p => p.categoria_id === filterCategoria);
+    }
+    
+    if (filterGrupo !== "all") {
+      result = result.filter(p => p.grupo_id === filterGrupo);
+    }
+    
+    if (filterStatus !== "all") {
+      result = result.filter(p => filterStatus === "ativo" ? p.ativo : !p.ativo);
+    }
+    
+    // Apply sorting
+    result.sort((a, b) => {
+      let aVal: any, bVal: any;
+      
+      switch (sortField) {
+        case "codigo":
+          aVal = (a as any).codigo || "";
+          bVal = (b as any).codigo || "";
+          break;
+        case "nome":
+          aVal = a.nome;
+          bVal = b.nome;
+          break;
+        case "categoria":
+          aVal = a.categoria?.nome || "";
+          bVal = b.categoria?.nome || "";
+          break;
+        case "grupo":
+          aVal = a.grupo?.nome || "";
+          bVal = b.grupo?.nome || "";
+          break;
+        default:
+          aVal = a.nome;
+          bVal = b.nome;
+      }
+      
+      if (typeof aVal === "string") {
+        const comparison = aVal.localeCompare(bVal, 'pt-BR', { sensitivity: 'base' });
+        return sortDirection === "asc" ? comparison : -comparison;
+      }
+      
+      return sortDirection === "asc" ? (aVal > bVal ? 1 : -1) : (aVal < bVal ? 1 : -1);
+    });
+    
+    return result;
+  }, [produtos, searchTerm, filterCategoria, filterGrupo, filterStatus, sortField, sortDirection]);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-3.5 h-3.5 ml-1 opacity-50" />;
+    return sortDirection === "asc" 
+      ? <ArrowUp className="w-3.5 h-3.5 ml-1" /> 
+      : <ArrowDown className="w-3.5 h-3.5 ml-1" />;
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setFilterCategoria("all");
+    setFilterGrupo("all");
+    setFilterStatus("all");
+  };
+
+  const hasActiveFilters = searchTerm || filterCategoria !== "all" || filterGrupo !== "all" || filterStatus !== "all";
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -575,22 +675,100 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-        <h3 className="text-base sm:text-lg font-semibold">Produtos</h3>
-        <Button onClick={openNewDialog} size="sm" className="w-full sm:w-auto">
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Produto
-        </Button>
+        <div className="flex items-center gap-2">
+          <h3 className="text-base sm:text-lg font-semibold">Produtos</h3>
+          {hasActiveFilters && (
+            <Badge variant="secondary" className="text-xs">
+              {filteredAndSortedProdutos.length} de {produtos.length}
+            </Badge>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowFilters(!showFilters)}
+            className={cn(hasActiveFilters && "border-primary text-primary")}
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filtros
+            {hasActiveFilters && <span className="ml-1 text-xs">•</span>}
+          </Button>
+          <Button onClick={openNewDialog} size="sm" className="w-full sm:w-auto">
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Produto
+          </Button>
+        </div>
       </div>
+
+      {/* Filters */}
+      {showFilters && (
+        <div className="border rounded-lg p-4 bg-muted/30 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Filtros</span>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 text-xs">
+                <X className="w-3 h-3 mr-1" />
+                Limpar filtros
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, código ou NCM..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 text-sm"
+              />
+            </div>
+            <Select value={filterCategoria} onValueChange={setFilterCategoria}>
+              <SelectTrigger className="text-sm">
+                <SelectValue placeholder="Categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas categorias</SelectItem>
+                {categorias.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>{cat.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterGrupo} onValueChange={setFilterGrupo}>
+              <SelectTrigger className="text-sm">
+                <SelectValue placeholder="Grupo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos grupos</SelectItem>
+                {grupos.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>{g.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="text-sm">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos status</SelectItem>
+                <SelectItem value="ativo">Ativo</SelectItem>
+                <SelectItem value="inativo">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
 
       {/* Mobile: Card layout */}
       <div className="block lg:hidden space-y-3">
-        {produtos.length === 0 ? (
+        {filteredAndSortedProdutos.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground text-sm">
-            Nenhum produto cadastrado
+            {hasActiveFilters ? "Nenhum produto encontrado com os filtros aplicados" : "Nenhum produto cadastrado"}
           </div>
         ) : (
-          produtos.map((produto) => (
+          filteredAndSortedProdutos.map((produto) => (
             <div key={produto.id} className="border rounded-lg p-3 bg-card">
               <div className="flex items-start gap-3">
                 {produto.foto_url ? (
@@ -631,56 +809,99 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       </div>
 
       {/* Desktop: Table layout */}
-      <div className="hidden lg:block overflow-x-auto">
+      <div className="hidden lg:block overflow-x-auto border rounded-lg">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Foto</TableHead>
-              <TableHead>Código</TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Grupo</TableHead>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-16">Foto</TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => handleSort("codigo")}
+              >
+                <div className="flex items-center">
+                  Código
+                  <SortIcon field="codigo" />
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => handleSort("nome")}
+              >
+                <div className="flex items-center">
+                  Nome
+                  <SortIcon field="nome" />
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => handleSort("categoria")}
+              >
+                <div className="flex items-center">
+                  Categoria
+                  <SortIcon field="categoria" />
+                </div>
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/80 transition-colors"
+                onClick={() => handleSort("grupo")}
+              >
+                <div className="flex items-center">
+                  Grupo
+                  <SortIcon field="grupo" />
+                </div>
+              </TableHead>
               <TableHead>NCM</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {produtos.map((produto) => (
-              <TableRow key={produto.id}>
+            {filteredAndSortedProdutos.map((produto) => (
+              <TableRow key={produto.id} className="hover:bg-muted/30">
                 <TableCell>
                   {produto.foto_url ? (
-                    <img src={produto.foto_url} alt={produto.nome} className="w-12 h-12 object-cover rounded" />
+                    <img src={produto.foto_url} alt={produto.nome} className="w-10 h-10 object-cover rounded" />
                   ) : (
-                    <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
-                      <Image className="w-5 h-5 text-muted-foreground" />
+                    <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
+                      <Image className="w-4 h-4 text-muted-foreground" />
                     </div>
                   )}
                 </TableCell>
                 <TableCell className="font-mono text-sm">{(produto as any).codigo || "-"}</TableCell>
                 <TableCell className="font-medium">{produto.nome}</TableCell>
-                <TableCell>{produto.categoria?.nome || "-"}</TableCell>
-                <TableCell>{produto.grupo?.nome || "-"}</TableCell>
+                <TableCell>
+                  {produto.categoria?.nome && (
+                    <Badge variant="outline" className="font-normal">{produto.categoria.nome}</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {produto.grupo?.nome && (
+                    <Badge variant="secondary" className="font-normal">{produto.grupo.nome}</Badge>
+                  )}
+                </TableCell>
                 <TableCell className="font-mono text-xs">{(produto as any).ncm_ref?.codigo || (produto as any).ncm || "-"}</TableCell>
                 <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-xs ${produto.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
+                  <Badge variant={produto.ativo ? "default" : "secondary"} className={cn(
+                    "font-normal",
+                    produto.ativo ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400" : ""
+                  )}>
                     {produto.ativo ? 'Ativo' : 'Inativo'}
-                  </span>
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(produto)}>
+                  <Button variant="ghost" size="icon" onClick={() => handleEdit(produto)} className="h-8 w-8">
                     <Pencil className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(produto.id)}>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(produto.id)} className="h-8 w-8 text-destructive hover:text-destructive">
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </TableCell>
               </TableRow>
             ))}
-            {produtos.length === 0 && (
+            {filteredAndSortedProdutos.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
-                  Nenhum produto cadastrado
+                <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  {hasActiveFilters ? "Nenhum produto encontrado com os filtros aplicados" : "Nenhum produto cadastrado"}
                 </TableCell>
               </TableRow>
             )}
@@ -689,220 +910,263 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle className="text-base sm:text-lg">
-              {editingProduto ? "Editar Produto" : "Novo Produto"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-auto">
-              <TabsTrigger value="basico" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Dados Básicos</span>
-                <span className="sm:hidden">Básicos</span>
-              </TabsTrigger>
-              <TabsTrigger value="preco" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>Preço</span>
-              </TabsTrigger>
-              <TabsTrigger value="frete" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Dados para Frete</span>
-                <span className="sm:hidden">Frete</span>
-              </TabsTrigger>
-              <TabsTrigger value="embalagem" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
-                <Barcode className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>Embalagem</span>
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="basico" className="mt-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <Label className="text-xs sm:text-sm">Código *</Label>
-                  <Input
-                    value={formData.codigo}
-                    onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
-                    placeholder="Código do produto"
-                    className="text-sm"
-                  />
+        <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-hidden p-0">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-6 py-4 border-b">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold flex items-center gap-2">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Package className="w-5 h-5 text-primary" />
                 </div>
+                {editingProduto ? "Editar Produto" : "Novo Produto"}
+              </DialogTitle>
+              {editingProduto && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Código: <span className="font-mono">{(editingProduto as any).codigo}</span>
+                </p>
+              )}
+            </DialogHeader>
+          </div>
 
-                <div>
-                  <Label className="text-xs sm:text-sm">Nome *</Label>
-                  <Input
-                    value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                    placeholder="Nome do produto"
-                    className="text-sm"
-                  />
-                </div>
+          <div className="overflow-y-auto max-h-[calc(90vh-140px)] px-6 py-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 h-auto bg-muted/50 p-1 rounded-lg">
+                <TabsTrigger 
+                  value="basico" 
+                  className="flex items-center gap-1.5 text-xs sm:text-sm py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                >
+                  <Package className="w-4 h-4" />
+                  <span className="hidden sm:inline">Dados Básicos</span>
+                  <span className="sm:hidden">Básicos</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="preco" 
+                  className="flex items-center gap-1.5 text-xs sm:text-sm py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                >
+                  <DollarSign className="w-4 h-4" />
+                  <span>Preço</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="frete" 
+                  className="flex items-center gap-1.5 text-xs sm:text-sm py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                >
+                  <Truck className="w-4 h-4" />
+                  <span className="hidden sm:inline">Dados para Frete</span>
+                  <span className="sm:hidden">Frete</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="embalagem" 
+                  className="flex items-center gap-1.5 text-xs sm:text-sm py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                >
+                  <Barcode className="w-4 h-4" />
+                  <span>Embalagem</span>
+                </TabsTrigger>
+              </TabsList>
 
-                <div>
-                  <Label className="text-xs sm:text-sm">Categoria *</Label>
-                  <Select
-                    value={formData.categoria_id || "none"}
-                    onValueChange={(value) => setFormData({ ...formData, categoria_id: value === "none" ? "" : value })}
-                  >
-                    <SelectTrigger className="text-sm">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Selecione...</SelectItem>
-                      {categorias.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label className="text-xs sm:text-sm">Grupo *</Label>
-                  <Select
-                    value={formData.grupo_id || "none"}
-                    onValueChange={(value) => setFormData({ ...formData, grupo_id: value === "none" ? "" : value })}
-                  >
-                    <SelectTrigger className="text-sm">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Selecione...</SelectItem>
-                      {grupos.map((grupo) => (
-                        <SelectItem key={grupo.id} value={grupo.id}>
-                          {grupo.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <Label className="text-xs sm:text-sm">NCM *</Label>
-                  <Popover open={ncmOpen} onOpenChange={setNcmOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={ncmOpen}
-                        className="w-full justify-between font-normal text-sm"
-                      >
-                        {selectedNcmDisplay 
-                          ? `${selectedNcmDisplay.codigo} - ${selectedNcmDisplay.descricao.substring(0, 30)}${selectedNcmDisplay.descricao.length > 30 ? '...' : ''}`
-                          : "Selecione o NCM..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[500px] p-0" align="start">
-                      <Command>
-                        <CommandInput 
-                          placeholder="Buscar NCM..." 
-                          value={ncmSearch}
-                          onValueChange={setNcmSearch}
+              <TabsContent value="basico" className="mt-6">
+                <div className="space-y-6">
+                  {/* Identificação */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Identificação</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Código *</Label>
+                        <Input
+                          value={formData.codigo}
+                          onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
+                          placeholder="Código do produto"
+                          className="h-10"
                         />
-                        <CommandList>
-                          <CommandEmpty>
-                            {ncmCodigos.length === 0 
-                              ? "Nenhum NCM cadastrado. Configure os códigos NCM em 'Códigos NCM'."
-                              : "Nenhum NCM encontrado."}
-                          </CommandEmpty>
-                          <CommandGroup className="max-h-[300px] overflow-y-auto">
-                            {filteredNcm.slice(0, 50).map((ncm) => (
-                              <CommandItem
-                                key={ncm.id}
-                                value={ncm.id}
-                                onSelect={() => {
-                                  setFormData({ ...formData, ncm_id: ncm.id, ncm: ncm.codigo });
-                                  setNcmOpen(false);
-                                  setNcmSearch("");
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    formData.ncm_id === ncm.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                <div className="flex flex-col">
-                                  <span className="font-mono font-medium">{ncm.codigo}</span>
-                                  <span className="text-xs text-muted-foreground">{ncm.descricao}</span>
-                                </div>
-                              </CommandItem>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Nome *</Label>
+                        <Input
+                          value={formData.nome}
+                          onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                          placeholder="Nome do produto"
+                          className="h-10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Classificação */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Classificação</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Categoria *</Label>
+                        <Select
+                          value={formData.categoria_id || "none"}
+                          onValueChange={(value) => setFormData({ ...formData, categoria_id: value === "none" ? "" : value })}
+                        >
+                          <SelectTrigger className="h-10">
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Selecione...</SelectItem>
+                            {categorias.map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.nome}
+                              </SelectItem>
                             ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Campos Customizados do Grupo */}
-                {camposCustomizados.length > 0 && (
-                  <div className="sm:col-span-2">
-                    <DynamicProductFields
-                      campos={camposCustomizados}
-                      values={formData.campos_customizados}
-                      onChange={(key, value) => setFormData({
-                        ...formData,
-                        campos_customizados: {
-                          ...formData.campos_customizados,
-                          [key]: value,
-                        },
-                      })}
-                    />
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Grupo *</Label>
+                        <Select
+                          value={formData.grupo_id || "none"}
+                          onValueChange={(value) => setFormData({ ...formData, grupo_id: value === "none" ? "" : value })}
+                        >
+                          <SelectTrigger className="h-10">
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Selecione...</SelectItem>
+                            {grupos.map((grupo) => (
+                              <SelectItem key={grupo.id} value={grupo.id}>
+                                {grupo.nome}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
-                )}
 
-                {camposCustomizados.length === 0 && formData.grupo_id && (
-                  <div className="sm:col-span-2 text-xs sm:text-sm text-muted-foreground p-3 sm:p-4 border rounded-lg bg-muted/30">
-                    Nenhum campo customizado configurado para este grupo. 
-                    Configure os campos em "Campos Customizados por Grupo".
+                  {/* NCM */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Classificação Fiscal</h4>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">NCM *</Label>
+                      <Popover open={ncmOpen} onOpenChange={setNcmOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={ncmOpen}
+                            className="w-full justify-between font-normal h-10"
+                          >
+                            {selectedNcmDisplay 
+                              ? `${selectedNcmDisplay.codigo} - ${selectedNcmDisplay.descricao.substring(0, 30)}${selectedNcmDisplay.descricao.length > 30 ? '...' : ''}`
+                              : "Selecione o NCM..."}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[500px] p-0" align="start">
+                          <Command>
+                            <CommandInput 
+                              placeholder="Buscar NCM..." 
+                              value={ncmSearch}
+                              onValueChange={setNcmSearch}
+                            />
+                            <CommandList>
+                              <CommandEmpty>
+                                {ncmCodigos.length === 0 
+                                  ? "Nenhum NCM cadastrado. Configure os códigos NCM em 'Códigos NCM'."
+                                  : "Nenhum NCM encontrado."}
+                              </CommandEmpty>
+                              <CommandGroup className="max-h-[300px] overflow-y-auto">
+                                {filteredNcm.slice(0, 50).map((ncm) => (
+                                  <CommandItem
+                                    key={ncm.id}
+                                    value={ncm.id}
+                                    onSelect={() => {
+                                      setFormData({ ...formData, ncm_id: ncm.id, ncm: ncm.codigo });
+                                      setNcmOpen(false);
+                                      setNcmSearch("");
+                                    }}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        formData.ncm_id === ncm.id ? "opacity-100" : "opacity-0"
+                                      )}
+                                    />
+                                    <div className="flex flex-col">
+                                      <span className="font-mono font-medium">{ncm.codigo}</span>
+                                      <span className="text-xs text-muted-foreground">{ncm.descricao}</span>
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
                   </div>
-                )}
 
-                <div className="sm:col-span-2">
-                  <Label className="text-xs sm:text-sm">Foto do Produto</Label>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mt-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => document.getElementById('file-upload')?.click()}
-                      disabled={uploading}
-                      className="w-full sm:w-auto"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      {selectedFile ? 'Trocar foto' : 'Selecionar foto'}
-                    </Button>
-                    {(formData.foto_url || selectedFile) && (
-                      <img 
-                        src={formData.foto_url} 
-                        alt="Preview" 
-                        className="w-16 h-16 object-cover rounded border"
+                  {/* Campos Customizados do Grupo */}
+                  {camposCustomizados.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Campos do Grupo</h4>
+                      <DynamicProductFields
+                        campos={camposCustomizados}
+                        values={formData.campos_customizados}
+                        onChange={(key, value) => setFormData({
+                          ...formData,
+                          campos_customizados: {
+                            ...formData.campos_customizados,
+                            [key]: value,
+                          },
+                        })}
                       />
-                    )}
-                  </div>
-                  <input
-                    id="file-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                </div>
+                    </div>
+                  )}
 
-                <div className="sm:col-span-2 flex items-center gap-2">
-                  <Switch
-                    checked={formData.ativo}
-                    onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
-                  />
-                  <Label className="text-xs sm:text-sm">Produto ativo</Label>
+                  {camposCustomizados.length === 0 && formData.grupo_id && (
+                    <div className="text-sm text-muted-foreground p-4 border rounded-lg bg-muted/30">
+                      Nenhum campo customizado configurado para este grupo. 
+                      Configure os campos em "Campos Customizados por Grupo".
+                    </div>
+                  )}
+
+                  {/* Foto e Status */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-muted-foreground border-b pb-2">Foto e Status</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Foto do Produto</Label>
+                        <div className="flex items-center gap-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById('file-upload')?.click()}
+                            disabled={uploading}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {selectedFile ? 'Trocar' : 'Selecionar'}
+                          </Button>
+                          {(formData.foto_url || selectedFile) && (
+                            <img 
+                              src={formData.foto_url} 
+                              alt="Preview" 
+                              className="w-12 h-12 object-cover rounded border"
+                            />
+                          )}
+                        </div>
+                        <input
+                          id="file-upload"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                        />
+                      </div>
+                      <div className="flex items-center gap-3 h-10 mt-7">
+                        <Switch
+                          checked={formData.ativo}
+                          onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
+                        />
+                        <Label className="text-sm">Produto ativo</Label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </TabsContent>
+              </TabsContent>
 
             <TabsContent value="preco" className="mt-4">
               <div className="space-y-4">
@@ -1164,15 +1428,18 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               />
             </TabsContent>
           </Tabs>
+          </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setShowDialog(false)} disabled={uploading} size="sm" className="w-full sm:w-auto">
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} disabled={uploading} size="sm" className="w-full sm:w-auto">
-              {uploading ? "Salvando..." : "Salvar"}
-            </Button>
-          </DialogFooter>
+          <div className="border-t px-6 py-4 bg-muted/20">
+            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setShowDialog(false)} disabled={uploading} className="w-full sm:w-auto">
+                Cancelar
+              </Button>
+              <Button onClick={handleSave} disabled={uploading} className="w-full sm:w-auto">
+                {uploading ? "Salvando..." : "Salvar"}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
