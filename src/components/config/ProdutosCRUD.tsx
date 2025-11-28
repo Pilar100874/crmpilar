@@ -30,8 +30,9 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Trash2, Pencil, Plus, Image, Upload, Package, Truck } from "lucide-react";
+import { Trash2, Pencil, Plus, Image, Upload, Package, Truck, Barcode } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
+import { EmbalagemTab } from "./EmbalagemTab";
 
 interface ProdutosCRUDProps {
   estabelecimentoId: string;
@@ -61,6 +62,13 @@ interface FormData {
   valor_seguro: string;
   observacoes_frete: string;
   peso_frete_tipo: string;
+  // Campos de EAN/Embalagem
+  ean_13: string;
+  ean_14_1: string;
+  ean_14_2: string;
+  embalagem_img_ean13: string;
+  embalagem_img_ean14_1: string;
+  embalagem_img_ean14_2: string;
 }
 
 const initialFormData: FormData = {
@@ -87,6 +95,13 @@ const initialFormData: FormData = {
   valor_seguro: "",
   observacoes_frete: "",
   peso_frete_tipo: "fixo",
+  // Campos de EAN/Embalagem
+  ean_13: "",
+  ean_14_1: "",
+  ean_14_2: "",
+  embalagem_img_ean13: "",
+  embalagem_img_ean14_1: "",
+  embalagem_img_ean14_2: "",
 };
 
 export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
@@ -251,6 +266,13 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         valor_seguro: formData.valor_seguro ? parseFloat(formData.valor_seguro) : null,
         observacoes_frete: formData.observacoes_frete || null,
         peso_frete_tipo: formData.peso_frete_tipo || "fixo",
+        // Campos de EAN/Embalagem
+        ean_13: formData.ean_13 || null,
+        ean_14_1: formData.ean_14_1 || null,
+        ean_14_2: formData.ean_14_2 || null,
+        embalagem_img_ean13: formData.embalagem_img_ean13 || null,
+        embalagem_img_ean14_1: formData.embalagem_img_ean14_1 || null,
+        embalagem_img_ean14_2: formData.embalagem_img_ean14_2 || null,
       };
 
       if (editingProduto) {
@@ -320,6 +342,13 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       valor_seguro: p.valor_seguro?.toString() || "",
       observacoes_frete: p.observacoes_frete || "",
       peso_frete_tipo: p.peso_frete_tipo || "fixo",
+      // Campos de EAN/Embalagem
+      ean_13: p.ean_13 || "",
+      ean_14_1: p.ean_14_1 || "",
+      ean_14_2: p.ean_14_2 || "",
+      embalagem_img_ean13: p.embalagem_img_ean13 || "",
+      embalagem_img_ean14_1: p.embalagem_img_ean14_1 || "",
+      embalagem_img_ean14_2: p.embalagem_img_ean14_2 || "",
     });
     setShowDialog(true);
   };
@@ -434,7 +463,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="basico" className="flex items-center gap-2">
                 <Package className="w-4 h-4" />
                 Dados Básicos
@@ -442,6 +471,10 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               <TabsTrigger value="frete" className="flex items-center gap-2">
                 <Truck className="w-4 h-4" />
                 Dados para Frete
+              </TabsTrigger>
+              <TabsTrigger value="embalagem" className="flex items-center gap-2">
+                <Barcode className="w-4 h-4" />
+                Embalagem
               </TabsTrigger>
             </TabsList>
 
@@ -760,6 +793,24 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   />
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="embalagem" className="mt-4">
+              <EmbalagemTab
+                ean13={formData.ean_13}
+                ean14_1={formData.ean_14_1}
+                ean14_2={formData.ean_14_2}
+                imgEan13={formData.embalagem_img_ean13}
+                imgEan14_1={formData.embalagem_img_ean14_1}
+                imgEan14_2={formData.embalagem_img_ean14_2}
+                estabelecimentoId={estabelecimentoId}
+                onEan13Change={(value) => setFormData({ ...formData, ean_13: value })}
+                onEan14_1Change={(value) => setFormData({ ...formData, ean_14_1: value })}
+                onEan14_2Change={(value) => setFormData({ ...formData, ean_14_2: value })}
+                onImgEan13Change={(url) => setFormData({ ...formData, embalagem_img_ean13: url })}
+                onImgEan14_1Change={(url) => setFormData({ ...formData, embalagem_img_ean14_1: url })}
+                onImgEan14_2Change={(url) => setFormData({ ...formData, embalagem_img_ean14_2: url })}
+              />
             </TabsContent>
           </Tabs>
 

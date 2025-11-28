@@ -4078,8 +4078,14 @@ export type Database = {
           comprimento: number | null
           created_at: string | null
           cubagem: number | null
+          ean_13: string | null
+          ean_14_1: string | null
+          ean_14_2: string | null
           embalagem_altura: number | null
           embalagem_comprimento: number | null
+          embalagem_img_ean13: string | null
+          embalagem_img_ean14_1: string | null
+          embalagem_img_ean14_2: string | null
           embalagem_largura: number | null
           embalagem_peso: number | null
           empilhamento_maximo: number | null
@@ -4106,8 +4112,14 @@ export type Database = {
           comprimento?: number | null
           created_at?: string | null
           cubagem?: number | null
+          ean_13?: string | null
+          ean_14_1?: string | null
+          ean_14_2?: string | null
           embalagem_altura?: number | null
           embalagem_comprimento?: number | null
+          embalagem_img_ean13?: string | null
+          embalagem_img_ean14_1?: string | null
+          embalagem_img_ean14_2?: string | null
           embalagem_largura?: number | null
           embalagem_peso?: number | null
           empilhamento_maximo?: number | null
@@ -4134,8 +4146,14 @@ export type Database = {
           comprimento?: number | null
           created_at?: string | null
           cubagem?: number | null
+          ean_13?: string | null
+          ean_14_1?: string | null
+          ean_14_2?: string | null
           embalagem_altura?: number | null
           embalagem_comprimento?: number | null
+          embalagem_img_ean13?: string | null
+          embalagem_img_ean14_1?: string | null
+          embalagem_img_ean14_2?: string | null
           embalagem_largura?: number | null
           embalagem_peso?: number | null
           empilhamento_maximo?: number | null
