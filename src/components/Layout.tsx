@@ -104,8 +104,17 @@ const menuItems: MenuItem[] = [
     ]
   },
   { id: "Campanhas", title: "Calendário", url: "/calendario", icon: Megaphone },
-  { id: "Orçamentos", title: "Orçamentos", url: "/orcamentos", icon: FileBarChart },
   { 
+    id: "Vendas",
+    title: "Vendas", 
+    icon: FileBarChart,
+    subItems: [
+      { id: "Orçamento", title: "Orçamento", url: "/orcamentos", icon: FileBarChart },
+      { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: Settings },
+      { id: "Importação Produtos Sub", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: Upload },
+    ]
+  },
+  {
     id: "Conteúdos",
     title: "Listas", 
     icon: FileText,
@@ -148,8 +157,7 @@ const menuItems: MenuItem[] = [
     ]
   },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: FileText },
-  { id: "Importação Produtos", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: Upload },
-  { 
+  {
     id: "Telefonia",
     title: "Telefonia",
     icon: Phone,
