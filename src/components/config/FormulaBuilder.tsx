@@ -199,8 +199,10 @@ function SortableToken({ token, index, isSelected, onClick, onRemove }: Sortable
       className={`group relative flex items-center ${isDragging ? "z-50" : ""}`}
     >
       <div
+        {...attributes}
+        {...listeners}
         className={`
-          flex items-center gap-1 rounded-lg border-2 transition-all cursor-pointer
+          flex items-center gap-1 rounded-lg border-2 transition-all cursor-grab active:cursor-grabbing
           ${isSelected ? "ring-2 ring-primary ring-offset-2 border-primary" : "border-transparent"}
           ${isDragging ? "shadow-lg scale-105" : "hover:shadow-md"}
           ${isVariable ? "bg-gradient-to-r from-primary/90 to-primary text-primary-foreground px-3 py-2" : ""}
@@ -210,14 +212,10 @@ function SortableToken({ token, index, isSelected, onClick, onRemove }: Sortable
         `}
         onClick={onClick}
       >
-        {/* Drag Handle */}
-        <div
-          {...attributes}
-          {...listeners}
-          className={`cursor-grab active:cursor-grabbing ${isOperator || isParenthesis ? "hidden" : ""}`}
-        >
+        {/* Drag Handle - shown for variables and numbers */}
+        {(isVariable || isNumber) && (
           <GripVertical className="h-3.5 w-3.5 text-current opacity-50 hover:opacity-100" />
-        </div>
+        )}
         
         <span className={`font-medium ${isVariable || isNumber ? "text-sm" : ""}`}>
           {token.display}
@@ -252,7 +250,9 @@ function TokenPreview({ token }: { token: FormulaToken }) {
         ${isParenthesis ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white w-10 h-11 justify-center text-xl font-bold" : ""}
       `}
     >
-      <Move className={`h-3.5 w-3.5 opacity-50 ${isOperator || isParenthesis ? "hidden" : ""}`} />
+      {(isVariable || isNumber) && (
+        <Move className="h-3.5 w-3.5 opacity-50" />
+      )}
       <span className={`font-medium ${isVariable || isNumber ? "text-sm" : ""}`}>
         {token.display}
       </span>
