@@ -1155,6 +1155,7 @@ export default function POSView({
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowRegrasInDetails(false);
+                          setShowFreteInDetails(false);
                           setSelectedProduto(produto);
                           setActiveTab("details");
                         }}
@@ -1254,6 +1255,7 @@ export default function POSView({
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowRegrasInDetails(false);
+                            setShowFreteInDetails(false);
                             setSelectedProduto(produto);
                             setActiveTab("details");
                           }}
@@ -1368,7 +1370,16 @@ export default function POSView({
                   {cartArray.map(({ produto, quantity, preco }) => (
                     <div key={produto.id} className="bg-muted/50 rounded p-2 border border-border/50">
                       <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 bg-muted rounded flex items-center justify-center flex-shrink-0">
+                        <div 
+                          className="w-10 h-10 bg-muted rounded flex items-center justify-center flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+                          onClick={() => {
+                            setShowRegrasInDetails(false);
+                            setShowFreteInDetails(false);
+                            setSelectedProduto(produto);
+                            setActiveTab("details");
+                          }}
+                          title="Ver detalhes do produto"
+                        >
                           {produto.foto_url ? (
                             <img src={produto.foto_url} alt="" className="w-full h-full object-cover rounded" />
                           ) : (
@@ -1385,6 +1396,21 @@ export default function POSView({
                             }).format(preco)}
                           </p>
                         </div>
+
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                          onClick={() => {
+                            setShowRegrasInDetails(false);
+                            setShowFreteInDetails(false);
+                            setSelectedProduto(produto);
+                            setActiveTab("details");
+                          }}
+                          title="Ver detalhes"
+                        >
+                          <Eye className="w-3 h-3" />
+                        </Button>
 
                         <Button
                           size="icon"
@@ -1448,6 +1474,56 @@ export default function POSView({
 
           <TabsContent value="details" className="flex-1 m-0">
             <ScrollArea className="h-[calc(100vh-400px)] p-2">
+              {/* Navegação rápida quando há conteúdo selecionado */}
+              {(showFreteInDetails || showRegrasInDetails || selectedProduto) && (
+                <div className="flex gap-1 mb-2 p-1 bg-muted/30 rounded-lg">
+                  <Button
+                    variant={showFreteInDetails ? "default" : "ghost"}
+                    size="sm"
+                    className="h-6 text-[10px] px-2 flex-1"
+                    onClick={() => {
+                      if (freteResult) {
+                        setSelectedProduto(null);
+                        setShowRegrasInDetails(false);
+                        setShowFreteInDetails(true);
+                      }
+                    }}
+                    disabled={!freteResult}
+                  >
+                    <Truck className="w-3 h-3 mr-1" />
+                    Frete
+                  </Button>
+                  <Button
+                    variant={showRegrasInDetails ? "default" : "ghost"}
+                    size="sm"
+                    className="h-6 text-[10px] px-2 flex-1"
+                    onClick={() => {
+                      if (regrasAplicadas.length > 0) {
+                        setSelectedProduto(null);
+                        setShowFreteInDetails(false);
+                        setShowRegrasInDetails(true);
+                      }
+                    }}
+                    disabled={regrasAplicadas.length === 0}
+                  >
+                    <Tag className="w-3 h-3 mr-1" />
+                    Regras {regrasAplicadas.length > 0 && `(${regrasAplicadas.length})`}
+                  </Button>
+                  <Button
+                    variant={selectedProduto ? "default" : "ghost"}
+                    size="sm"
+                    className="h-6 text-[10px] px-2 flex-1"
+                    onClick={() => {
+                      // Mantém o produto selecionado ou não faz nada
+                    }}
+                    disabled={!selectedProduto}
+                  >
+                    <Package className="w-3 h-3 mr-1" />
+                    Produto
+                  </Button>
+                </div>
+              )}
+
               {showFreteInDetails && freteResult ? (
                 <div className="space-y-2">
                   <FreteDetailsPanel 
@@ -1463,6 +1539,9 @@ export default function POSView({
                       <Tag className="w-3.5 h-3.5" />
                       Regras Aplicadas ({regrasAplicadas.length})
                     </h4>
+                    <p className="text-[10px] text-green-600 dark:text-green-400">
+                      Economia total: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(getTotal() - valorComRegras)}
+                    </p>
                   </div>
                   
                   {/* Lista de Regras - Expandível */}
@@ -1880,6 +1959,7 @@ export default function POSView({
                       className="w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors"
                       onClick={() => {
                         setSelectedProduto(null);
+                        setShowFreteInDetails(false);
                         setShowRegrasInDetails(true);
                         setActiveTab("details");
                       }}
