@@ -91,7 +91,7 @@ export default function VendasConfig() {
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <Tabs value={currentTab} onValueChange={handleTabChange} className="h-full flex flex-col">
+        <Tabs value={currentTab} onValueChange={handleTabChange} className="h-full flex flex-col lg:flex-row">
           {/* Mobile: Select dropdown */}
           <div className="lg:hidden border-b bg-muted/30 p-3">
             <Select value={currentTab} onValueChange={handleTabChange}>
@@ -119,20 +119,26 @@ export default function VendasConfig() {
             </Select>
           </div>
 
-          {/* Desktop: Tab list with wrap */}
-          <div className="hidden lg:block border-b bg-muted/30 px-4 py-2">
-            <TabsList className="h-auto bg-transparent gap-1 p-1 flex flex-wrap">
-              {tabItems.map((tab) => (
-                <TabsTrigger
+          {/* Desktop: Sidebar menu */}
+          <div className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:bg-muted/20 lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0">
+            {tabItems.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = currentTab === tab.id;
+              return (
+                <button
                   key={tab.id}
-                  value={tab.id}
-                  className="data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2 px-3 py-2 text-sm whitespace-nowrap"
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left w-full ${
+                    isActive 
+                      ? 'bg-primary text-primary-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
                 >
-                  <tab.icon className="h-4 w-4 flex-shrink-0" />
-                  <span>{tab.label}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
+                  <Icon className={`h-4 w-4 shrink-0 ${isActive ? '' : 'opacity-70'}`} />
+                  <span className="truncate">{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           <div className="flex-1 overflow-auto p-3 sm:p-6">
