@@ -4036,6 +4036,7 @@ export type Database = {
           obrigatorio: boolean | null
           opcoes: Json | null
           ordem: number | null
+          pesquisa_faixa: boolean | null
           placeholder: string | null
           tipo: string
           unidade: string | null
@@ -4052,6 +4053,7 @@ export type Database = {
           obrigatorio?: boolean | null
           opcoes?: Json | null
           ordem?: number | null
+          pesquisa_faixa?: boolean | null
           placeholder?: string | null
           tipo: string
           unidade?: string | null
@@ -4068,6 +4070,7 @@ export type Database = {
           obrigatorio?: boolean | null
           opcoes?: Json | null
           ordem?: number | null
+          pesquisa_faixa?: boolean | null
           placeholder?: string | null
           tipo?: string
           unidade?: string | null

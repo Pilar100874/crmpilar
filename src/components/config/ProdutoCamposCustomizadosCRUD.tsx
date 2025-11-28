@@ -48,6 +48,7 @@ interface CampoCustomizado {
   ativo: boolean;
   placeholder: string | null;
   unidade: string | null;
+  pesquisa_faixa: boolean;
 }
 
 interface FormData {
@@ -61,6 +62,7 @@ interface FormData {
   ativo: boolean;
   placeholder: string;
   unidade: string;
+  pesquisa_faixa: boolean;
 }
 
 const tiposCampo = [
@@ -83,6 +85,7 @@ const initialFormData: FormData = {
   ativo: true,
   placeholder: "",
   unidade: "",
+  pesquisa_faixa: false,
 };
 
 export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamposCustomizadosCRUDProps) {
@@ -273,6 +276,7 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
       ativo: campo.ativo,
       placeholder: campo.placeholder || '',
       unidade: campo.unidade || '',
+      pesquisa_faixa: campo.pesquisa_faixa || false,
     });
     setShowDialog(true);
   };
@@ -326,6 +330,7 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
         ativo: formData.ativo,
         placeholder: formData.placeholder || null,
         unidade: formData.unidade || null,
+        pesquisa_faixa: formData.tipo === 'numero' ? formData.pesquisa_faixa : false,
       };
 
       if (editingCampo) {
@@ -413,6 +418,7 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
                         <span>{tiposCampo.find(t => t.value === campo.tipo)?.label || campo.tipo}</span>
                         {campo.unidade && <span>• {campo.unidade}</span>}
                         {campo.obrigatorio && <span className="text-orange-600">• Obrigatório</span>}
+                        {campo.pesquisa_faixa && <span className="text-blue-600">• Pesquisa por faixa</span>}
                       </div>
                     </div>
                   </div>
@@ -440,6 +446,7 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
                   <TableHead>Tipo</TableHead>
                   <TableHead>Unidade</TableHead>
                   <TableHead>Obrigatório</TableHead>
+                  <TableHead>Pesq. Faixa</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
@@ -462,6 +469,15 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
                       )}
                     </TableCell>
                     <TableCell>
+                      {campo.tipo === 'numero' && campo.pesquisa_faixa ? (
+                        <span className="text-blue-600 dark:text-blue-400">Sim</span>
+                      ) : campo.tipo === 'numero' ? (
+                        <span className="text-muted-foreground">Não</span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${campo.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
                         {campo.ativo ? 'Ativo' : 'Inativo'}
                       </span>
@@ -478,7 +494,7 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
                 ))}
                 {campos.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground">
                       Nenhum campo customizado para este grupo
                     </TableCell>
                   </TableRow>
@@ -599,6 +615,23 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
                 </div>
               </div>
             </div>
+
+            {formData.tipo === 'numero' && (
+              <div className="border rounded-lg p-3 bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={formData.pesquisa_faixa}
+                    onCheckedChange={(checked) => setFormData({ ...formData, pesquisa_faixa: checked })}
+                  />
+                  <div>
+                    <Label className="text-xs sm:text-sm">Pesquisa por faixa de valores</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Permite filtrar produtos usando intervalo (de X até Y)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
