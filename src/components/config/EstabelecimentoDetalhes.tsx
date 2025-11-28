@@ -15,6 +15,7 @@ import { SegurancaCRUD } from "./SegurancaCRUD";
 import { ProdutosCRUD } from "./ProdutosCRUD";
 import { ProdutoCategoriasCRUD } from "./ProdutoCategoriasCRUD";
 import { ProdutoGruposCRUD } from "./ProdutoGruposCRUD";
+import { ProdutoCamposCustomizadosCRUD } from "./ProdutoCamposCustomizadosCRUD";
 import { CondicoesPagamentoCRUD } from "./CondicoesPagamentoCRUD";
 import { TabelasPrecoCRUD } from "./TabelasPrecoCRUD";
 import { TiposPagamentoCRUD } from "./TiposPagamentoCRUD";
@@ -2276,6 +2277,18 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
                   <ProdutoGruposCRUD estabelecimentoId={estabelecimentoId} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="produto-campos-customizados" className="border rounded-md">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-primary" />
+                    <span className="font-medium">Campos Customizados por Grupo</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <ProdutoCamposCustomizadosCRUD estabelecimentoId={estabelecimentoId} />
                 </AccordionContent>
               </AccordionItem>
 

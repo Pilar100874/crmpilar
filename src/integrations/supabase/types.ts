@@ -4024,6 +4024,72 @@ export type Database = {
           },
         ]
       }
+      produto_campos_customizados: {
+        Row: {
+          ativo: boolean | null
+          campo_key: string
+          created_at: string | null
+          estabelecimento_id: string
+          grupo_id: string
+          id: string
+          nome: string
+          obrigatorio: boolean | null
+          opcoes: Json | null
+          ordem: number | null
+          placeholder: string | null
+          tipo: string
+          unidade: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          campo_key: string
+          created_at?: string | null
+          estabelecimento_id: string
+          grupo_id: string
+          id?: string
+          nome: string
+          obrigatorio?: boolean | null
+          opcoes?: Json | null
+          ordem?: number | null
+          placeholder?: string | null
+          tipo: string
+          unidade?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          campo_key?: string
+          created_at?: string | null
+          estabelecimento_id?: string
+          grupo_id?: string
+          id?: string
+          nome?: string
+          obrigatorio?: boolean | null
+          opcoes?: Json | null
+          ordem?: number | null
+          placeholder?: string | null
+          tipo?: string
+          unidade?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produto_campos_customizados_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produto_campos_customizados_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "produto_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produto_categorias: {
         Row: {
           created_at: string | null
@@ -4095,6 +4161,7 @@ export type Database = {
         Row: {
           altura: number | null
           ativo: boolean | null
+          campos_customizados: Json | null
           categoria_id: string | null
           codigo: string | null
           comprimento: number | null
@@ -4131,6 +4198,7 @@ export type Database = {
         Insert: {
           altura?: number | null
           ativo?: boolean | null
+          campos_customizados?: Json | null
           categoria_id?: string | null
           codigo?: string | null
           comprimento?: number | null
@@ -4167,6 +4235,7 @@ export type Database = {
         Update: {
           altura?: number | null
           ativo?: boolean | null
+          campos_customizados?: Json | null
           categoria_id?: string | null
           codigo?: string | null
           comprimento?: number | null
