@@ -183,14 +183,14 @@ export function CondicoesPagamentoCRUD({ estabelecimentoId }: CondicoesPagamento
   };
 
   if (loading) {
-    return <div>Carregando condições...</div>;
+    return <div className="text-sm text-muted-foreground">Carregando condições...</div>;
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Condições de Pagamento</h3>
-        <Button onClick={() => {
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h3 className="text-base sm:text-lg font-semibold">Condições de Pagamento</h3>
+        <Button size="sm" className="w-full sm:w-auto" onClick={() => {
           setEditingCondicao(null);
           setFormData({
             nome: "",
@@ -207,101 +207,130 @@ export function CondicoesPagamentoCRUD({ estabelecimentoId }: CondicoesPagamento
         </Button>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Descrição</TableHead>
-            <TableHead>Tipo Pagamento</TableHead>
-            <TableHead>Valor Mín.</TableHead>
-            <TableHead>Valor Máx.</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {condicoes.map((condicao) => (
-            <TableRow key={condicao.id}>
-              <TableCell className="font-medium">{condicao.nome}</TableCell>
-              <TableCell>{condicao.descricao || "-"}</TableCell>
-              <TableCell>{condicao.tipo_pagamento?.nome || "-"}</TableCell>
-              <TableCell>
-                {new Intl.NumberFormat('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL'
-                }).format(condicao.valor_minimo)}
-              </TableCell>
-              <TableCell>
-                {condicao.valor_maximo || "-"}
-              </TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs ${condicao.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                  {condicao.ativo ? 'Ativo' : 'Inativo'}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleEdit(condicao)}
-                >
-                  <Pencil className="w-4 h-4" />
+      {/* Mobile: Card layout */}
+      <div className="block lg:hidden space-y-3">
+        {condicoes.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground text-sm">
+            Nenhuma condição cadastrada
+          </div>
+        ) : (
+          condicoes.map((condicao) => (
+            <div key={condicao.id} className="border rounded-lg p-3 bg-card">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-sm truncate">{condicao.nome}</p>
+                    <span className={`px-2 py-0.5 rounded-full text-xs flex-shrink-0 ${condicao.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
+                      {condicao.ativo ? 'Ativo' : 'Inativo'}
+                    </span>
+                  </div>
+                  {condicao.descricao && <p className="text-xs text-muted-foreground mt-1">{condicao.descricao}</p>}
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
+                    <span>Tipo: {condicao.tipo_pagamento?.nome || "-"}</span>
+                    <span>Mín: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(condicao.valor_minimo)}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-1 mt-2 pt-2 border-t">
+                <Button variant="ghost" size="sm" onClick={() => handleEdit(condicao)}>
+                  <Pencil className="w-4 h-4 mr-1" /> Editar
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(condicao.id)}
-                >
-                  <Trash2 className="w-4 h-4" />
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(condicao.id)} className="text-destructive">
+                  <Trash2 className="w-4 h-4 mr-1" /> Excluir
                 </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-          {condicoes.length === 0 && (
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop: Table layout */}
+      <div className="hidden lg:block overflow-x-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground">
-                Nenhuma condição cadastrada
-              </TableCell>
+              <TableHead>Nome</TableHead>
+              <TableHead>Descrição</TableHead>
+              <TableHead>Tipo Pagamento</TableHead>
+              <TableHead>Valor Mín.</TableHead>
+              <TableHead>Valor Máx.</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {condicoes.map((condicao) => (
+              <TableRow key={condicao.id}>
+                <TableCell className="font-medium">{condicao.nome}</TableCell>
+                <TableCell>{condicao.descricao || "-"}</TableCell>
+                <TableCell>{condicao.tipo_pagamento?.nome || "-"}</TableCell>
+                <TableCell>
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(condicao.valor_minimo)}
+                </TableCell>
+                <TableCell>{condicao.valor_maximo || "-"}</TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded-full text-xs ${condicao.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
+                    {condicao.ativo ? 'Ativo' : 'Inativo'}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="icon" onClick={() => handleEdit(condicao)}>
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(condicao.id)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            {condicoes.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  Nenhuma condição cadastrada
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-lg p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">
               {editingCondicao ? "Editar Condição" : "Nova Condição"}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div>
-              <Label>Nome *</Label>
+              <Label className="text-xs sm:text-sm">Nome *</Label>
               <Input
                 value={formData.nome}
                 onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                 placeholder="Ex: À vista, 30 dias, etc."
+                className="text-sm"
               />
             </div>
 
             <div>
-              <Label>Descrição</Label>
+              <Label className="text-xs sm:text-sm">Descrição</Label>
               <Textarea
                 value={formData.descricao}
                 onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
                 placeholder="Descreva a condição de pagamento"
-                rows={3}
+                rows={2}
+                className="text-sm"
               />
             </div>
 
             <div>
-              <Label>Tipo de Pagamento</Label>
+              <Label className="text-xs sm:text-sm">Tipo de Pagamento</Label>
               <Select
                 value={formData.tipo_pagamento_id}
                 onValueChange={(value) => setFormData({ ...formData, tipo_pagamento_id: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="text-sm">
                   <SelectValue placeholder="Selecione um tipo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -314,26 +343,27 @@ export function CondicoesPagamentoCRUD({ estabelecimentoId }: CondicoesPagamento
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <Label>Valor Mínimo (R$)</Label>
+                <Label className="text-xs sm:text-sm">Valor Mínimo (R$)</Label>
                 <Input
                   type="number"
                   step="0.01"
                   value={formData.valor_minimo}
                   onChange={(e) => setFormData({ ...formData, valor_minimo: e.target.value })}
                   placeholder="0.00"
+                  className="text-sm"
                 />
               </div>
-
               <div>
-                <Label>Valor Máximo (R$)</Label>
+                <Label className="text-xs sm:text-sm">Valor Máximo (R$)</Label>
                 <Input
                   type="number"
                   step="0.01"
                   value={formData.valor_maximo}
                   onChange={(e) => setFormData({ ...formData, valor_maximo: e.target.value })}
                   placeholder="Sem limite"
+                  className="text-sm"
                 />
               </div>
             </div>
@@ -343,15 +373,15 @@ export function CondicoesPagamentoCRUD({ estabelecimentoId }: CondicoesPagamento
                 checked={formData.ativo}
                 onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
               />
-              <Label>Condição ativa</Label>
+              <Label className="text-xs sm:text-sm">Condição ativa</Label>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDialog(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowDialog(false)} size="sm" className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} size="sm" className="w-full sm:w-auto">
               Salvar
             </Button>
           </DialogFooter>

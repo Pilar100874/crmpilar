@@ -354,138 +354,180 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
   };
 
   if (loading) {
-    return <div>Carregando...</div>;
+    return <div className="text-sm text-muted-foreground">Carregando...</div>;
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            Campos Customizados por Grupo
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+            Campos Customizados
           </h3>
-          <Select value={selectedGrupo} onValueChange={setSelectedGrupo}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Selecione o grupo" />
-            </SelectTrigger>
-            <SelectContent>
-              {grupos.map((grupo) => (
-                <SelectItem key={grupo.id} value={grupo.id}>
-                  {grupo.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Button onClick={openNewDialog} disabled={!selectedGrupo} size="sm" className="w-full sm:w-auto">
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Campo
+          </Button>
         </div>
-        <Button onClick={openNewDialog} disabled={!selectedGrupo}>
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Campo
-        </Button>
+        <Select value={selectedGrupo} onValueChange={setSelectedGrupo}>
+          <SelectTrigger className="w-full sm:w-[200px] text-sm">
+            <SelectValue placeholder="Selecione o grupo" />
+          </SelectTrigger>
+          <SelectContent>
+            {grupos.map((grupo) => (
+              <SelectItem key={grupo.id} value={grupo.id}>
+                {grupo.nome}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {!selectedGrupo ? (
-        <div className="text-center text-muted-foreground py-8">
+        <div className="text-center text-muted-foreground py-8 text-sm">
           Selecione um grupo para gerenciar seus campos customizados
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10">#</TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead>Chave</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Unidade</TableHead>
-              <TableHead>Obrigatório</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {campos.map((campo, index) => (
-              <TableRow key={campo.id}>
-                <TableCell className="text-muted-foreground">{index + 1}</TableCell>
-                <TableCell className="font-medium">{campo.nome}</TableCell>
-                <TableCell className="font-mono text-xs">{campo.campo_key}</TableCell>
-                <TableCell>
-                  {tiposCampo.find(t => t.value === campo.tipo)?.label || campo.tipo}
-                </TableCell>
-                <TableCell>{campo.unidade || "-"}</TableCell>
-                <TableCell>
-                  {campo.obrigatorio ? (
-                    <span className="text-orange-600 dark:text-orange-400">Sim</span>
-                  ) : (
-                    <span className="text-muted-foreground">Não</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    campo.ativo 
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
-                  }`}>
-                    {campo.ativo ? 'Ativo' : 'Inativo'}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => handleEdit(campo)}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(campo)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-            {campos.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
-                  Nenhum campo customizado para este grupo
-                </TableCell>
-              </TableRow>
+        <>
+          {/* Mobile: Card layout */}
+          <div className="block lg:hidden space-y-3">
+            {campos.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                Nenhum campo customizado para este grupo
+              </div>
+            ) : (
+              campos.map((campo, index) => (
+                <div key={campo.id} className="border rounded-lg p-3 bg-card">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">#{index + 1}</span>
+                        <p className="font-medium text-sm truncate">{campo.nome}</p>
+                        <span className={`px-2 py-0.5 rounded-full text-xs flex-shrink-0 ${campo.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
+                          {campo.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground font-mono mt-1">{campo.campo_key}</p>
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
+                        <span>{tiposCampo.find(t => t.value === campo.tipo)?.label || campo.tipo}</span>
+                        {campo.unidade && <span>• {campo.unidade}</span>}
+                        {campo.obrigatorio && <span className="text-orange-600">• Obrigatório</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-1 mt-2 pt-2 border-t">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(campo)}>
+                      <Pencil className="w-4 h-4 mr-1" /> Editar
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => openDeleteDialog(campo)} className="text-destructive">
+                      <Trash2 className="w-4 h-4 mr-1" /> Excluir
+                    </Button>
+                  </div>
+                </div>
+              ))
             )}
-          </TableBody>
-        </Table>
+          </div>
+
+          {/* Desktop: Table layout */}
+          <div className="hidden lg:block overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">#</TableHead>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Chave</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Unidade</TableHead>
+                  <TableHead>Obrigatório</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {campos.map((campo, index) => (
+                  <TableRow key={campo.id}>
+                    <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                    <TableCell className="font-medium">{campo.nome}</TableCell>
+                    <TableCell className="font-mono text-xs">{campo.campo_key}</TableCell>
+                    <TableCell>
+                      {tiposCampo.find(t => t.value === campo.tipo)?.label || campo.tipo}
+                    </TableCell>
+                    <TableCell>{campo.unidade || "-"}</TableCell>
+                    <TableCell>
+                      {campo.obrigatorio ? (
+                        <span className="text-orange-600 dark:text-orange-400">Sim</span>
+                      ) : (
+                        <span className="text-muted-foreground">Não</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs ${campo.ativo ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'}`}>
+                        {campo.ativo ? 'Ativo' : 'Inativo'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(campo)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => openDeleteDialog(campo)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {campos.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                      Nenhum campo customizado para este grupo
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-lg p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">
               {editingCampo ? "Editar Campo" : "Novo Campo"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-3 sm:gap-4 py-2 sm:py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <Label>Nome do Campo *</Label>
+                <Label className="text-xs sm:text-sm">Nome do Campo *</Label>
                 <Input
                   value={formData.nome}
                   onChange={(e) => handleNomeChange(e.target.value)}
                   placeholder="Ex: Largura, Gramatura"
+                  className="text-sm"
                 />
               </div>
               <div>
-                <Label>Chave (identificador) *</Label>
+                <Label className="text-xs sm:text-sm">Chave (identificador) *</Label>
                 <Input
                   value={formData.campo_key}
                   onChange={(e) => setFormData({ ...formData, campo_key: e.target.value })}
                   placeholder="Ex: largura, gramatura"
                   disabled={!!editingCampo}
+                  className="text-sm"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <Label>Tipo de Campo *</Label>
+                <Label className="text-xs sm:text-sm">Tipo de Campo *</Label>
                 <Select
                   value={formData.tipo}
                   onValueChange={(value) => setFormData({ ...formData, tipo: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -498,68 +540,72 @@ export function ProdutoCamposCustomizadosCRUD({ estabelecimentoId }: ProdutoCamp
                 </Select>
               </div>
               <div>
-                <Label>Unidade</Label>
+                <Label className="text-xs sm:text-sm">Unidade</Label>
                 <Input
                   value={formData.unidade}
                   onChange={(e) => setFormData({ ...formData, unidade: e.target.value })}
                   placeholder="Ex: cm, kg, mm"
+                  className="text-sm"
                 />
               </div>
             </div>
 
             {formData.tipo === 'selecao' && (
               <div>
-                <Label>Opções (separadas por vírgula)</Label>
+                <Label className="text-xs sm:text-sm">Opções (separadas por vírgula)</Label>
                 <Input
                   value={formData.opcoes}
                   onChange={(e) => setFormData({ ...formData, opcoes: e.target.value })}
                   placeholder="Ex: Opção 1, Opção 2, Opção 3"
+                  className="text-sm"
                 />
               </div>
             )}
 
             <div>
-              <Label>Placeholder</Label>
+              <Label className="text-xs sm:text-sm">Placeholder</Label>
               <Input
                 value={formData.placeholder}
                 onChange={(e) => setFormData({ ...formData, placeholder: e.target.value })}
                 placeholder="Texto de ajuda no campo"
+                className="text-sm"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <Label>Ordem</Label>
+                <Label className="text-xs sm:text-sm">Ordem</Label>
                 <Input
                   type="number"
                   value={formData.ordem}
                   onChange={(e) => setFormData({ ...formData, ordem: parseInt(e.target.value) || 0 })}
+                  className="text-sm"
                 />
               </div>
-              <div className="flex items-center gap-4 pt-6">
+              <div className="flex flex-wrap items-center gap-4 sm:pt-6">
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={formData.obrigatorio}
                     onCheckedChange={(checked) => setFormData({ ...formData, obrigatorio: checked })}
                   />
-                  <Label>Obrigatório</Label>
+                  <Label className="text-xs sm:text-sm">Obrigatório</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={formData.ativo}
                     onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
                   />
-                  <Label>Ativo</Label>
+                  <Label className="text-xs sm:text-sm">Ativo</Label>
                 </div>
               </div>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDialog(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowDialog(false)} size="sm" className="w-full sm:w-auto">
               Cancelar
             </Button>
-            <Button onClick={handleSubmit}>
+            <Button onClick={handleSubmit} size="sm" className="w-full sm:w-auto">
               {editingCampo ? "Atualizar" : "Criar"}
             </Button>
           </DialogFooter>
