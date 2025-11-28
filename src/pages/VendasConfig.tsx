@@ -119,14 +119,14 @@ export default function VendasConfig() {
             </Select>
           </div>
 
-          {/* Desktop: Tab list */}
-          <div className="hidden lg:block border-b bg-muted/30 px-4 overflow-x-auto">
-            <TabsList className="h-12 bg-transparent gap-1 p-1 inline-flex w-max">
+          {/* Desktop: Tab list with wrap */}
+          <div className="hidden lg:block border-b bg-muted/30 px-4 py-2">
+            <TabsList className="h-auto bg-transparent gap-1 p-1 flex flex-wrap">
               {tabItems.map((tab) => (
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className="data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2 px-4 text-sm whitespace-nowrap"
+                  className="data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2 px-3 py-2 text-sm whitespace-nowrap"
                 >
                   <tab.icon className="h-4 w-4 flex-shrink-0" />
                   <span>{tab.label}</span>
