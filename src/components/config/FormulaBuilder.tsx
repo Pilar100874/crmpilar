@@ -14,7 +14,8 @@ import {
   Variable,
   Hash,
   ChevronRight,
-  Check
+  Check,
+  GripVertical
 } from "lucide-react";
 import {
   Tooltip,
@@ -41,7 +42,6 @@ import { toast } from "@/lib/toast-config";
 
 // Variáveis disponíveis para a fórmula
 const VARIAVEIS_DISPONIVEIS = [
-  // Configuração do veículo
   { id: "manutencaoMensal", nome: "Manutenção Mensal", grupo: "Veículo", descricao: "Custo mensal de manutenção, pneus, óleo (R$)" },
   { id: "extrasMensais", nome: "Extras Mensais", grupo: "Veículo", descricao: "Seguro, depreciação, licenciamento (R$)" },
   { id: "salarioMotorista", nome: "Salário Motorista", grupo: "Veículo", descricao: "Salário mensal com encargos (R$)" },
@@ -53,13 +53,11 @@ const VARIAVEIS_DISPONIVEIS = [
   { id: "adicHoraExtraPerc", nome: "Adic. Hora Extra %", grupo: "Veículo", descricao: "Percentual adicional hora extra" },
   { id: "jornadaBaseDia", nome: "Jornada Base/Dia", grupo: "Veículo", descricao: "Jornada normal antes de hora extra (h)" },
   { id: "horasMensais", nome: "Horas Mensais", grupo: "Veículo", descricao: "Quantidade de horas mensais (padrão 220)" },
-  // Variáveis da viagem
   { id: "tempoViagem", nome: "Tempo Viagem", grupo: "Viagem", descricao: "Tempo total da viagem (horas)" },
   { id: "kmViagem", nome: "Km Viagem", grupo: "Viagem", descricao: "Distância da viagem só ida (km)" },
   { id: "numAjudantes", nome: "Nº Ajudantes", grupo: "Viagem", descricao: "Quantidade de ajudantes" },
   { id: "pedagioTotal", nome: "Pedágio Total", grupo: "Viagem", descricao: "Valor total de pedágios (R$)" },
   { id: "idaVolta", nome: "Ida/Volta", grupo: "Viagem", descricao: "Multiplicador: 2 se ida+volta, 1 se só ida" },
-  // Variáveis calculadas
   { id: "kmTotal", nome: "Km Total", grupo: "Calculado", descricao: "kmViagem × idaVolta" },
   { id: "custoFixoHora", nome: "Custo Fixo/Hora", grupo: "Calculado", descricao: "(manutenção + extras) / horasMensais" },
   { id: "custoHoraMotorista", nome: "Custo Hora Motorista", grupo: "Calculado", descricao: "salário / horasMensais" },
@@ -68,7 +66,6 @@ const VARIAVEIS_DISPONIVEIS = [
   { id: "fatorExtra", nome: "Fator H.E.", grupo: "Calculado", descricao: "1 + (adicHoraExtraPerc / 100)" },
   { id: "numFuncionarios", nome: "Nº Funcionários", grupo: "Calculado", descricao: "1 + numAjudantes" },
   { id: "refeicoesPorPessoa", nome: "Refeições/Pessoa", grupo: "Calculado", descricao: "ceil(tempoViagem / 8)" },
-  // Custos individuais calculados
   { id: "custoCombustivel", nome: "Custo Combustível", grupo: "Custos", descricao: "(kmTotal / mediaConsumo) × valorCombustivel" },
   { id: "custoFixosViagem", nome: "Custo Fixos Viagem", grupo: "Custos", descricao: "tempoViagem × custoFixoHora" },
   { id: "custoHorasNormais", nome: "Custo Horas Normais", grupo: "Custos", descricao: "horasNormais × custoHoraMotorista" },
@@ -78,7 +75,6 @@ const VARIAVEIS_DISPONIVEIS = [
   { id: "custoRefeicao", nome: "Custo Refeição", grupo: "Custos", descricao: "numFuncionarios × refeicoesPorPessoa × valorRefeicao" },
 ];
 
-// Operadores disponíveis
 const OPERADORES = [
   { id: "+", nome: "+", tipo: "operador", descricao: "Soma" },
   { id: "-", nome: "−", tipo: "operador", descricao: "Subtração" },
@@ -88,7 +84,6 @@ const OPERADORES = [
   { id: ")", nome: ")", tipo: "parentese", descricao: "Fecha parêntese" },
 ];
 
-// Fórmula padrão completa de custo de frete
 const FORMULA_PADRAO_FRETE = [
   "custoCombustivel", "+", "custoFixosViagem", "+", "custoHorasNormais", "+", 
   "custoHorasExtras", "+", "custoAjudantes", "+", "custoPernoite", "+", 
@@ -121,38 +116,21 @@ interface FormulaBuilderProps {
   selectedFormulaId?: string;
 }
 
-// Função auxiliar para converter array de strings em FormulaToken[]
 export function stringArrayToTokens(formulaArray: string[]): FormulaToken[] {
   return formulaArray.map((item, index) => {
     const variavel = VARIAVEIS_DISPONIVEIS.find(v => v.id === item);
     const operador = OPERADORES.find(o => o.id === item);
     
     if (variavel) {
-      return {
-        id: `${variavel.id}_${index}`,
-        tipo: "variavel" as const,
-        valor: variavel.id,
-        display: variavel.nome
-      };
+      return { id: `${variavel.id}_${index}`, tipo: "variavel" as const, valor: variavel.id, display: variavel.nome };
     } else if (operador) {
-      return {
-        id: `${operador.id}_${index}`,
-        tipo: operador.tipo as "operador" | "parentese",
-        valor: operador.id,
-        display: operador.nome
-      };
+      return { id: `${operador.id}_${index}`, tipo: operador.tipo as "operador" | "parentese", valor: operador.id, display: operador.nome };
     } else {
-      return {
-        id: `num_${index}`,
-        tipo: "numero" as const,
-        valor: item,
-        display: item
-      };
+      return { id: `num_${index}`, tipo: "numero" as const, valor: item, display: item };
     }
   });
 }
 
-// Criar fórmula padrão como SavedFormula
 export function createDefaultFormula(): SavedFormula {
   return {
     id: "default_frete_completo",
@@ -162,7 +140,6 @@ export function createDefaultFormula(): SavedFormula {
   };
 }
 
-// Exportar variáveis e fórmula padrão
 export { VARIAVEIS_DISPONIVEIS, FORMULA_PADRAO_FRETE };
 
 export function FormulaBuilder({ 
@@ -182,8 +159,8 @@ export function FormulaBuilder({
   const [grupoExpandido, setGrupoExpandido] = useState<string>("Custos");
   const [newFormulaName, setNewFormulaName] = useState("");
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState<number | null>(null); // Position to insert new tokens
 
-  // Agrupar variáveis
   const variaveisPorGrupo = useMemo(() => {
     const grupos: Record<string, typeof VARIAVEIS_DISPONIVEIS> = {};
     VARIAVEIS_DISPONIVEIS.forEach(v => {
@@ -193,14 +170,26 @@ export function FormulaBuilder({
     return grupos;
   }, []);
 
-  const addToken = (token: FormulaToken) => {
-    const newFormula = [...formula, token];
+  const insertToken = (token: FormulaToken) => {
+    let newFormula: FormulaToken[];
+    if (cursorPosition !== null && cursorPosition < formula.length) {
+      // Insert at cursor position
+      newFormula = [
+        ...formula.slice(0, cursorPosition),
+        token,
+        ...formula.slice(cursorPosition)
+      ];
+      setCursorPosition(cursorPosition + 1);
+    } else {
+      // Append to end
+      newFormula = [...formula, token];
+    }
     setFormula(newFormula);
     onChange?.(newFormula);
   };
 
   const addVariavel = (variavel: typeof VARIAVEIS_DISPONIVEIS[0]) => {
-    addToken({
+    insertToken({
       id: `${variavel.id}_${Date.now()}`,
       tipo: "variavel",
       valor: variavel.id,
@@ -209,7 +198,7 @@ export function FormulaBuilder({
   };
 
   const addOperador = (op: typeof OPERADORES[0]) => {
-    addToken({
+    insertToken({
       id: `${op.id}_${Date.now()}`,
       tipo: op.tipo as "operador" | "parentese",
       valor: op.id,
@@ -222,7 +211,7 @@ export function FormulaBuilder({
       toast.error("Digite um número válido");
       return;
     }
-    addToken({
+    insertToken({
       id: `num_${Date.now()}`,
       tipo: "numero",
       valor: numeroInput,
@@ -235,11 +224,15 @@ export function FormulaBuilder({
     const newFormula = formula.filter((_, i) => i !== index);
     setFormula(newFormula);
     onChange?.(newFormula);
+    if (cursorPosition !== null && cursorPosition > index) {
+      setCursorPosition(cursorPosition - 1);
+    }
   };
 
   const clearFormula = () => {
     setFormula([]);
     onChange?.([]);
+    setCursorPosition(null);
   };
 
   const handleSaveFormula = () => {
@@ -262,7 +255,7 @@ export function FormulaBuilder({
     onSaveFormula?.(newFormula);
     setNewFormulaName("");
     setShowSaveDialog(false);
-    toast.success("Fórmula salva com sucesso!");
+    toast.success("Fórmula salva!");
   };
 
   const handleSelectFormula = (formulaId: string) => {
@@ -271,25 +264,31 @@ export function FormulaBuilder({
       setFormula(selected.tokens);
       onChange?.(selected.tokens);
       onSelectFormula?.(selected);
+      setCursorPosition(null);
     }
   };
 
-  // Calcular resultado da simulação
+  const handleTokenClick = (index: number) => {
+    // Toggle cursor position: if clicking same position, deselect
+    if (cursorPosition === index) {
+      setCursorPosition(null);
+    } else {
+      setCursorPosition(index);
+    }
+  };
+
   const resultadoSimulacao = useMemo(() => {
     if (!valoresSimulacao || formula.length === 0) return null;
-
     try {
       let expressao = formula.map(token => {
         if (token.tipo === "variavel") {
-          const valor = valoresSimulacao[token.valor];
-          return valor !== undefined ? valor : 0;
+          return valoresSimulacao[token.valor] ?? 0;
         } else if (token.tipo === "numero") {
           return Number(token.valor);
         } else {
           return token.valor;
         }
       }).join(" ");
-
       const resultado = Function(`"use strict"; return (${expressao})`)();
       return typeof resultado === "number" && !isNaN(resultado) ? resultado : null;
     } catch {
@@ -297,36 +296,41 @@ export function FormulaBuilder({
     }
   }, [formula, valoresSimulacao]);
 
-  // Renderizar token com espaçamento visual adequado
   const renderToken = (token: FormulaToken, index: number) => {
     const isOperator = token.tipo === "operador";
     const isParenthesis = token.tipo === "parentese";
     const isVariable = token.tipo === "variavel";
     const isNumber = token.tipo === "numero";
+    const isSelected = cursorPosition === index;
 
     return (
-      <TooltipProvider key={`${token.id}_${index}`}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => removeToken(index)}
-              className={`
-                cursor-pointer transition-all text-sm font-medium rounded-md inline-flex items-center justify-center
-                hover:ring-2 hover:ring-destructive hover:ring-offset-1
-                ${isVariable ? "bg-primary text-primary-foreground px-3 py-2" : ""}
-                ${isNumber ? "bg-secondary text-secondary-foreground px-3 py-2" : ""}
-                ${isOperator ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 w-12 h-12 text-2xl font-bold mx-1" : ""}
-                ${isParenthesis ? "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 w-10 h-12 text-2xl font-bold" : ""}
-              `}
-            >
-              {token.display}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Clique para remover</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <div key={`${token.id}_${index}`} className="flex items-center gap-0.5">
+        {/* Cursor indicator before token */}
+        {cursorPosition === index && (
+          <div className="w-0.5 h-10 bg-primary animate-pulse rounded-full" />
+        )}
+        <div className="group relative">
+          <button
+            onClick={() => handleTokenClick(index)}
+            className={`
+              transition-all text-sm font-medium rounded-md inline-flex items-center justify-center
+              ${isSelected ? "ring-2 ring-primary ring-offset-2" : ""}
+              ${isVariable ? "bg-primary text-primary-foreground px-3 py-2 hover:bg-primary/90" : ""}
+              ${isNumber ? "bg-secondary text-secondary-foreground px-3 py-2 hover:bg-secondary/90" : ""}
+              ${isOperator ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 w-10 h-10 text-xl font-bold hover:bg-blue-200 dark:hover:bg-blue-800" : ""}
+              ${isParenthesis ? "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 w-8 h-10 text-xl font-bold hover:bg-amber-200 dark:hover:bg-amber-800" : ""}
+            `}
+          >
+            {token.display}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); removeToken(index); }}
+            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs"
+          >
+            ×
+          </button>
+        </div>
+      </div>
     );
   };
 
@@ -339,13 +343,12 @@ export function FormulaBuilder({
             Editor de Fórmula
           </CardTitle>
           
-          {/* Seletor de Fórmulas Salvas */}
           {savedFormulas.length > 0 && (
             <div className="flex items-center gap-2">
               <Label className="text-xs text-muted-foreground">Usar fórmula:</Label>
               <Select value={selectedFormulaId || ""} onValueChange={handleSelectFormula}>
-                <SelectTrigger className="w-[220px] h-9">
-                  <SelectValue placeholder="Selecione uma fórmula" />
+                <SelectTrigger className="w-[200px] h-9">
+                  <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
                   {savedFormulas.map(f => (
@@ -362,11 +365,8 @@ export function FormulaBuilder({
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  className="h-9 w-9 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => {
-                    onDeleteFormula(selectedFormulaId);
-                    clearFormula();
-                  }}
+                  className="h-9 w-9 p-0 text-destructive hover:bg-destructive/10"
+                  onClick={() => { onDeleteFormula(selectedFormulaId); clearFormula(); }}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -376,25 +376,44 @@ export function FormulaBuilder({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Área da Fórmula */}
+        {/* Formula Area */}
         <div>
-          <Label className="text-xs text-muted-foreground mb-2 block">Fórmula Atual</Label>
-          <div className="min-h-[100px] p-4 rounded-lg border-2 border-dashed border-muted bg-muted/5 flex flex-wrap gap-2 items-center content-start">
+          <div className="flex items-center justify-between mb-2">
+            <Label className="text-xs text-muted-foreground">Fórmula Atual</Label>
+            {cursorPosition !== null && (
+              <Badge variant="outline" className="text-xs">
+                Inserindo na posição {cursorPosition + 1}
+              </Badge>
+            )}
+          </div>
+          <div 
+            className="min-h-[80px] p-4 rounded-lg border-2 border-dashed border-muted bg-muted/5 flex flex-wrap gap-2 items-center content-start cursor-text"
+            onClick={() => setCursorPosition(formula.length)}
+          >
             {formula.length === 0 ? (
               <span className="text-sm text-muted-foreground">
                 Clique nas variáveis e operadores abaixo para montar sua fórmula
               </span>
             ) : (
-              formula.map((token, index) => renderToken(token, index))
+              <>
+                {formula.map((token, index) => renderToken(token, index))}
+                {/* Cursor at end */}
+                {cursorPosition === formula.length && (
+                  <div className="w-0.5 h-10 bg-primary animate-pulse rounded-full" />
+                )}
+              </>
             )}
           </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            💡 Clique em um token para posicionar o cursor e inserir novos elementos nessa posição
+          </p>
         </div>
 
-        {/* Resultado da Simulação */}
+        {/* Result */}
         {resultadoSimulacao !== null && (
           <div className="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">Resultado Calculado:</span>
+              <span className="text-sm font-medium text-green-700 dark:text-green-400">Resultado:</span>
               <span className="text-xl font-bold text-green-700 dark:text-green-400">
                 {resultadoSimulacao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </span>
@@ -402,18 +421,23 @@ export function FormulaBuilder({
           </div>
         )}
 
-        {/* Botões de Ação */}
+        {/* Actions */}
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" variant="outline" onClick={clearFormula} disabled={formula.length === 0}>
             <RotateCcw className="h-4 w-4 mr-1" />
             Limpar
           </Button>
+          {cursorPosition !== null && (
+            <Button size="sm" variant="outline" onClick={() => setCursorPosition(null)}>
+              Ir para o final
+            </Button>
+          )}
           
           <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
             <DialogTrigger asChild>
               <Button size="sm" variant="default" disabled={formula.length === 0}>
                 <Save className="h-4 w-4 mr-1" />
-                Salvar como Nova Fórmula
+                Salvar Fórmula
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -427,22 +451,19 @@ export function FormulaBuilder({
                     id="formula-name"
                     value={newFormulaName}
                     onChange={(e) => setNewFormulaName(e.target.value)}
-                    placeholder="Ex: Frete Simples, Só Combustível..."
+                    placeholder="Ex: Frete Simples..."
                   />
                 </div>
-                <div className="p-3 rounded-lg bg-muted/50">
-                  <Label className="text-xs text-muted-foreground">Prévia da fórmula:</Label>
+                <div className="p-3 rounded-lg bg-muted/50 max-h-32 overflow-auto">
+                  <Label className="text-xs text-muted-foreground">Prévia:</Label>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {formula.map((t, i) => (
-                      <span 
-                        key={i} 
-                        className={`text-xs px-2 py-1 rounded ${
-                          t.tipo === "variavel" ? "bg-primary/20 text-primary" :
-                          t.tipo === "operador" ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold px-3" :
-                          t.tipo === "parentese" ? "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 font-bold" :
-                          "bg-secondary text-secondary-foreground"
-                        }`}
-                      >
+                      <span key={i} className={`text-xs px-2 py-1 rounded ${
+                        t.tipo === "variavel" ? "bg-primary/20 text-primary" :
+                        t.tipo === "operador" ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-bold" :
+                        t.tipo === "parentese" ? "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300" :
+                        "bg-secondary text-secondary-foreground"
+                      }`}>
                         {t.display}
                       </span>
                     ))}
@@ -450,13 +471,8 @@ export function FormulaBuilder({
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleSaveFormula}>
-                  <Save className="h-4 w-4 mr-1" />
-                  Salvar
-                </Button>
+                <Button variant="outline" onClick={() => setShowSaveDialog(false)}>Cancelar</Button>
+                <Button onClick={handleSaveFormula}><Save className="h-4 w-4 mr-1" />Salvar</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -464,20 +480,15 @@ export function FormulaBuilder({
 
         <Separator />
 
-        {/* Operadores */}
+        {/* Operators */}
         <div>
-          <Label className="text-xs text-muted-foreground mb-3 block">Operadores Matemáticos</Label>
-          <div className="flex gap-3 flex-wrap items-center">
+          <Label className="text-xs text-muted-foreground mb-3 block">Operadores</Label>
+          <div className="flex gap-2 flex-wrap items-center">
             {OPERADORES.map(op => (
               <TooltipProvider key={op.id}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-14 h-14 text-2xl font-bold hover:bg-blue-50 dark:hover:bg-blue-950"
-                      onClick={() => addOperador(op)}
-                    >
+                    <Button size="lg" variant="outline" className="w-12 h-12 text-xl font-bold" onClick={() => addOperador(op)}>
                       {op.nome}
                     </Button>
                   </TooltipTrigger>
@@ -485,19 +496,19 @@ export function FormulaBuilder({
                 </Tooltip>
               </TooltipProvider>
             ))}
-            <div className="flex gap-2 items-center ml-4 pl-4 border-l">
+            <div className="flex gap-2 items-center ml-2 pl-2 border-l">
               <Input
                 type="number"
                 step="any"
                 value={numeroInput}
                 onChange={e => setNumeroInput(e.target.value)}
                 placeholder="Número"
-                className="w-28 h-14 text-lg"
+                className="w-24 h-12"
                 onKeyDown={e => e.key === "Enter" && addNumero()}
               />
-              <Button variant="secondary" onClick={addNumero} className="h-14 px-4">
-                <Hash className="h-5 w-5 mr-1" />
-                Adicionar
+              <Button variant="secondary" onClick={addNumero} className="h-12">
+                <Hash className="h-4 w-4 mr-1" />
+                Add
               </Button>
             </div>
           </div>
@@ -505,14 +516,14 @@ export function FormulaBuilder({
 
         <Separator />
 
-        {/* Variáveis por Grupo */}
+        {/* Variables */}
         <div>
-          <Label className="text-xs text-muted-foreground mb-3 block">Variáveis Disponíveis</Label>
+          <Label className="text-xs text-muted-foreground mb-3 block">Variáveis</Label>
           <div className="space-y-2">
             {Object.entries(variaveisPorGrupo).map(([grupo, vars]) => (
               <div key={grupo} className="border rounded-lg overflow-hidden">
                 <button
-                  className="w-full px-4 py-3 bg-muted/50 hover:bg-muted flex items-center justify-between text-sm font-medium transition-colors"
+                  className="w-full px-4 py-2 bg-muted/50 hover:bg-muted flex items-center justify-between text-sm font-medium"
                   onClick={() => setGrupoExpandido(grupoExpandido === grupo ? "" : grupo)}
                 >
                   <span className="flex items-center gap-2">
@@ -523,17 +534,12 @@ export function FormulaBuilder({
                   <ChevronRight className={`h-4 w-4 transition-transform ${grupoExpandido === grupo ? "rotate-90" : ""}`} />
                 </button>
                 {grupoExpandido === grupo && (
-                  <div className="p-4 flex flex-wrap gap-2 bg-background">
+                  <div className="p-3 flex flex-wrap gap-2 bg-background">
                     {vars.map(v => (
                       <TooltipProvider key={v.id}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="h-auto py-2 px-3 text-xs"
-                              onClick={() => addVariavel(v)}
-                            >
+                            <Button size="sm" variant="secondary" className="h-auto py-1.5 px-2 text-xs" onClick={() => addVariavel(v)}>
                               <Plus className="h-3 w-3 mr-1" />
                               {v.nome}
                             </Button>

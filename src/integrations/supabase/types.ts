@@ -6241,6 +6241,7 @@ export type Database = {
           custo_manutencao_mensal: number | null
           estabelecimento_id: string
           extras: number | null
+          formula_frete: Json | null
           horas_mensais: number | null
           id: string
           jornada_base_dia: number | null
@@ -6262,6 +6263,7 @@ export type Database = {
           custo_manutencao_mensal?: number | null
           estabelecimento_id: string
           extras?: number | null
+          formula_frete?: Json | null
           horas_mensais?: number | null
           id?: string
           jornada_base_dia?: number | null
@@ -6283,6 +6285,7 @@ export type Database = {
           custo_manutencao_mensal?: number | null
           estabelecimento_id?: string
           extras?: number | null
+          formula_frete?: Json | null
           horas_mensais?: number | null
           id?: string
           jornada_base_dia?: number | null
