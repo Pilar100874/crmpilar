@@ -33,17 +33,54 @@ serve(async (req) => {
       throw new Error("No NCM data received from API");
     }
 
-    // Filter only 8-digit NCM codes (product level)
-    const ncmCodes = ncmData.Nomenclaturas
-      .filter((item: any) => item.Codigo && item.Codigo.length === 8)
-      .map((item: any) => ({
-        codigo: item.Codigo,
-        descricao: item.Descricao || item.Codigo,
-      }));
+    // Log sample to understand format
+    if (ncmData.Nomenclaturas.length > 0) {
+      console.log("Sample NCM entry:", JSON.stringify(ncmData.Nomenclaturas[0]));
+    }
 
-    console.log(`Filtered ${ncmCodes.length} 8-digit NCM codes`);
+    // Filter NCM codes - accept codes in format XXXX.XX.XX (10 chars with dots) 
+    // or 8 digit codes without dots
+    const ncmCodes = ncmData.Nomenclaturas
+      .filter((item: any) => {
+        if (!item.Codigo) return false;
+        const codigo = item.Codigo.toString().trim();
+        // Accept format like "4801.00.00" (10 chars) or "48010000" (8 chars)
+        const codeWithoutDots = codigo.replace(/\./g, "");
+        return codeWithoutDots.length === 8;
+      })
+      .map((item: any) => {
+        const codigo = item.Codigo.toString().trim();
+        // Format as XXXX.XX.XX if not already formatted
+        let formattedCodigo = codigo;
+        if (!codigo.includes(".")) {
+          formattedCodigo = `${codigo.slice(0, 4)}.${codigo.slice(4, 6)}.${codigo.slice(6, 8)}`;
+        }
+        return {
+          codigo: formattedCodigo,
+          descricao: item.Descricao || codigo,
+        };
+      });
+
+    console.log(`Filtered ${ncmCodes.length} NCM codes (8-digit level)`);
+
+    if (ncmCodes.length === 0) {
+      // If still no codes, accept all codes as fallback
+      console.log("No 8-digit codes found, importing all available codes...");
+      const allCodes = ncmData.Nomenclaturas
+        .filter((item: any) => item.Codigo && item.Descricao)
+        .map((item: any) => ({
+          codigo: item.Codigo.toString().trim(),
+          descricao: item.Descricao,
+        }));
+      
+      if (allCodes.length > 0) {
+        ncmCodes.push(...allCodes);
+        console.log(`Using all ${allCodes.length} codes as fallback`);
+      }
+    }
 
     // Clear existing NCM codes
+    console.log("Clearing existing NCM codes...");
     const { error: deleteError } = await supabase
       .from("ncm_codigos")
       .delete()
@@ -60,6 +97,7 @@ serve(async (req) => {
 
     for (let i = 0; i < ncmCodes.length; i += batchSize) {
       const batch = ncmCodes.slice(i, i + batchSize);
+      console.log(`Inserting batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(ncmCodes.length / batchSize)} (${batch.length} items)`);
       
       const { error: insertError } = await supabase
         .from("ncm_codigos")
