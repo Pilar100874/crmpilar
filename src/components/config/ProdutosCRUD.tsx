@@ -501,17 +501,6 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                 </div>
 
                 <div>
-                  <Label>Peso Unitário (kg)</Label>
-                  <Input
-                    type="number"
-                    step="0.001"
-                    value={formData.peso_unitario}
-                    onChange={(e) => setFormData({ ...formData, peso_unitario: e.target.value })}
-                    placeholder="0.000"
-                  />
-                </div>
-
-                <div>
                   <Label>Número de Folhas</Label>
                   <Input
                     type="number"
