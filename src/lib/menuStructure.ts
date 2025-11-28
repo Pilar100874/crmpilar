@@ -45,24 +45,14 @@ export const menuStructure: MenuCategory[] = [
     ]
   },
   { id: "Campanhas", title: "Calendário", url: "/calendario", icon: LucideIcons.Megaphone },
-  { id: "Orçamentos", title: "Orçamentos", url: "/orcamentos", icon: LucideIcons.FileBarChart },
   { 
     id: "Vendas",
     title: "Vendas", 
     icon: LucideIcons.ShoppingCart,
     subItems: [
-      { id: "Config Vendas", title: "Configurações de Vendas", url: "/vendas-config", icon: LucideIcons.Settings },
-      { id: "Config Produtos", title: "Produtos", url: "/vendas-config?tab=produtos", icon: LucideIcons.Package },
-      { id: "Config Categorias", title: "Categorias", url: "/vendas-config?tab=categorias", icon: LucideIcons.Layers },
-      { id: "Config Grupos", title: "Grupos", url: "/vendas-config?tab=grupos", icon: LucideIcons.FolderOpen },
-      { id: "Config NCM", title: "NCM", url: "/vendas-config?tab=ncm", icon: LucideIcons.FileCode },
-      { id: "Config Tabelas Preco", title: "Tabelas de Preço", url: "/vendas-config?tab=tabelas-preco", icon: LucideIcons.DollarSign },
-      { id: "Config Pagamento", title: "Pagamentos", url: "/vendas-config?tab=tipos-pagamento", icon: LucideIcons.CreditCard },
-      { id: "Config Custos Veiculo", title: "Custos de Veículos", url: "/vendas-config?tab=custos-veiculo", icon: LucideIcons.Truck },
-      { id: "Config Pedagio", title: "API de Pedágio", url: "/vendas-config?tab=pedagio", icon: LucideIcons.Calculator },
-      { id: "Config Automacao", title: "Regras de Automação", url: "/vendas-config?tab=automacao", icon: LucideIcons.Zap },
-      { id: "Meus Conjuntos Vendas", title: "Meus Conjuntos de Itens", url: "/meus-conjuntos", icon: LucideIcons.Package },
-      { id: "Editor Regras Vendas", title: "Editor de Regras", url: "/editor-regras", icon: LucideIcons.Workflow },
+      { id: "Orçamento", title: "Orçamento", url: "/orcamentos", icon: LucideIcons.FileBarChart },
+      { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: LucideIcons.Settings },
+      { id: "Importação Produtos Sub", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: LucideIcons.Upload },
     ]
   },
   { 
@@ -108,7 +98,6 @@ export const menuStructure: MenuCategory[] = [
     ]
   },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: LucideIcons.FileText },
-  { id: "Importação Produtos", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: LucideIcons.Upload },
   {
     id: "Telefonia",
     title: "Telefonia", 
