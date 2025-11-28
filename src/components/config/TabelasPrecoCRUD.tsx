@@ -186,7 +186,7 @@ export function TabelasPrecoCRUD({ estabelecimentoId }: TabelasPrecoCRUDProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-        <h3 className="text-base sm:text-lg font-semibold">Tabelas de Preço</h3>
+        <h3 className="text-base sm:text-lg font-semibold">Tabela de Preço por Categoria</h3>
         <Button size="sm" className="w-full sm:w-auto" onClick={() => {
           setEditingTabela(null);
           setFormData({

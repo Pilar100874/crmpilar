@@ -43,7 +43,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Trash2, Pencil, Plus, Image, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search } from "lucide-react";
+import { Trash2, Pencil, Plus, Image, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
 import { DynamicProductFields } from "./DynamicProductFields";
@@ -106,6 +106,11 @@ interface FormData {
   embalagem_img_ean14_2: string;
   // Campos customizados
   campos_customizados: Record<string, any>;
+  // Campos de preço do produto
+  tipo_preco: string;
+  preco_minimo: string;
+  preco_tabela: string;
+  preco_ativo: boolean;
 }
 
 const initialFormData: FormData = {
@@ -143,6 +148,11 @@ const initialFormData: FormData = {
   embalagem_img_ean14_2: "",
   // Campos customizados
   campos_customizados: {},
+  // Campos de preço do produto
+  tipo_preco: "categoria",
+  preco_minimo: "",
+  preco_tabela: "",
+  preco_ativo: true,
 };
 
 export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
@@ -419,6 +429,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         embalagem_img_ean14_2: formData.embalagem_img_ean14_2 || null,
         // Campos customizados do grupo
         campos_customizados: formData.campos_customizados || {},
+        // Campos de preço do produto
+        tipo_preco: formData.tipo_preco || "categoria",
+        preco_minimo: formData.preco_minimo ? parseFloat(formData.preco_minimo) : null,
+        preco_tabela: formData.preco_tabela ? parseFloat(formData.preco_tabela) : null,
+        preco_ativo: formData.preco_ativo,
       };
 
       if (editingProduto) {
@@ -511,6 +526,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       embalagem_img_ean14_2: p.embalagem_img_ean14_2 || "",
       // Campos customizados
       campos_customizados: p.campos_customizados || {},
+      // Campos de preço do produto
+      tipo_preco: p.tipo_preco || "categoria",
+      preco_minimo: p.preco_minimo?.toString() || "",
+      preco_tabela: p.preco_tabela?.toString() || "",
+      preco_ativo: p.preco_ativo ?? true,
     });
     setShowDialog(true);
   };
@@ -677,11 +697,15 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           </DialogHeader>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsList className="grid w-full grid-cols-4 h-auto">
               <TabsTrigger value="basico" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
                 <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Dados Básicos</span>
                 <span className="sm:hidden">Básicos</span>
+              </TabsTrigger>
+              <TabsTrigger value="preco" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
+                <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Preço</span>
               </TabsTrigger>
               <TabsTrigger value="frete" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2">
                 <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -877,6 +901,80 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   />
                   <Label className="text-xs sm:text-sm">Produto ativo</Label>
                 </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="preco" className="mt-4">
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-xs sm:text-sm font-medium mb-3 block">Tipo de Precificação</Label>
+                  <RadioGroup
+                    value={formData.tipo_preco}
+                    onValueChange={(value) => setFormData({ ...formData, tipo_preco: value })}
+                    className="flex flex-col sm:flex-row gap-3"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="categoria" id="preco-categoria" />
+                      <Label htmlFor="preco-categoria" className="text-xs sm:text-sm cursor-pointer">
+                        Usar preço da categoria
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="produto" id="preco-produto" />
+                      <Label htmlFor="preco-produto" className="text-xs sm:text-sm cursor-pointer">
+                        Usar preço próprio do produto
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {formData.tipo_preco === "produto" && (
+                  <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                    <h4 className="font-medium text-xs sm:text-sm text-muted-foreground">Configuração de Preço do Produto</h4>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div>
+                        <Label className="text-xs sm:text-sm">Preço Mínimo (R$)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.preco_minimo}
+                          onChange={(e) => setFormData({ ...formData, preco_minimo: e.target.value })}
+                          placeholder="0.00"
+                          className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs sm:text-sm">Preço de Tabela (R$)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.preco_tabela}
+                          onChange={(e) => setFormData({ ...formData, preco_tabela: e.target.value })}
+                          placeholder="0.00"
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2">
+                      <Switch
+                        checked={formData.preco_ativo}
+                        onCheckedChange={(checked) => setFormData({ ...formData, preco_ativo: checked })}
+                      />
+                      <Label className="text-xs sm:text-sm">Preço ativo</Label>
+                    </div>
+                  </div>
+                )}
+
+                {formData.tipo_preco === "categoria" && (
+                  <div className="border rounded-lg p-4 bg-muted/30">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      O preço deste produto será definido pela tabela de preço da categoria selecionada.
+                      Configure os preços por categoria em "Preço por Categoria" no menu de configurações de vendas.
+                    </p>
+                  </div>
+                )}
               </div>
             </TabsContent>
 
