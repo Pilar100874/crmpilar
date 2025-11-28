@@ -6233,6 +6233,7 @@ export type Database = {
       }
       veiculos_custos: {
         Row: {
+          adic_hora_extra_perc: number | null
           consumo_cidade: number | null
           consumo_estrada: number | null
           created_at: string
@@ -6240,8 +6241,11 @@ export type Database = {
           custo_manutencao_mensal: number | null
           estabelecimento_id: string
           extras: number | null
+          horas_mensais: number | null
           id: string
+          jornada_base_dia: number | null
           observacoes: string | null
+          pernoite: number | null
           peso_maximo_kg: number | null
           tipo_combustivel: string
           tipo_veiculo: string
@@ -6250,6 +6254,7 @@ export type Database = {
           valor_refeicao: number | null
         }
         Insert: {
+          adic_hora_extra_perc?: number | null
           consumo_cidade?: number | null
           consumo_estrada?: number | null
           created_at?: string
@@ -6257,8 +6262,11 @@ export type Database = {
           custo_manutencao_mensal?: number | null
           estabelecimento_id: string
           extras?: number | null
+          horas_mensais?: number | null
           id?: string
+          jornada_base_dia?: number | null
           observacoes?: string | null
+          pernoite?: number | null
           peso_maximo_kg?: number | null
           tipo_combustivel?: string
           tipo_veiculo: string
@@ -6267,6 +6275,7 @@ export type Database = {
           valor_refeicao?: number | null
         }
         Update: {
+          adic_hora_extra_perc?: number | null
           consumo_cidade?: number | null
           consumo_estrada?: number | null
           created_at?: string
@@ -6274,8 +6283,11 @@ export type Database = {
           custo_manutencao_mensal?: number | null
           estabelecimento_id?: string
           extras?: number | null
+          horas_mensais?: number | null
           id?: string
+          jornada_base_dia?: number | null
           observacoes?: string | null
+          pernoite?: number | null
           peso_maximo_kg?: number | null
           tipo_combustivel?: string
           tipo_veiculo?: string

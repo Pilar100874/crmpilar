@@ -7,8 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/lib/toast-config";
-import { Fuel, Truck, Save, Plus, Pencil, Trash2, X } from "lucide-react";
+import { Fuel, Truck, Save, Plus, Pencil, Trash2, X, Calculator } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { FreteSimulator } from "./FreteSimulator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CustosVeiculosCRUDProps {
   estabelecimentoId: string;
@@ -33,6 +35,10 @@ interface VeiculoCusto {
   valor_refeicao: number;
   extras: number;
   peso_maximo_kg: number;
+  pernoite: number;
+  adic_hora_extra_perc: number;
+  jornada_base_dia: number;
+  horas_mensais: number;
   observacoes?: string;
 }
 
@@ -69,6 +75,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
   const [editingVeiculo, setEditingVeiculo] = useState<VeiculoCusto | null>(null);
   const [isAddingVeiculo, setIsAddingVeiculo] = useState(false);
   const [deleteVeiculoId, setDeleteVeiculoId] = useState<string | null>(null);
+  const [selectedVeiculoForSimulation, setSelectedVeiculoForSimulation] = useState<string>("");
 
   const emptyVeiculo: VeiculoCusto = {
     tipo_veiculo: "",
@@ -80,6 +87,10 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
     valor_refeicao: 0,
     extras: 0,
     peso_maximo_kg: 0,
+    pernoite: 0,
+    adic_hora_extra_perc: 50,
+    jornada_base_dia: 8,
+    horas_mensais: 220,
     observacoes: "",
   };
 
@@ -128,6 +139,10 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
           valor_refeicao: Number(v.valor_refeicao) || 0,
           extras: Number(v.extras) || 0,
           peso_maximo_kg: Number(v.peso_maximo_kg) || 0,
+          pernoite: Number((v as any).pernoite) || 0,
+          adic_hora_extra_perc: Number((v as any).adic_hora_extra_perc) ?? 50,
+          jornada_base_dia: Number((v as any).jornada_base_dia) || 8,
+          horas_mensais: Number((v as any).horas_mensais) || 220,
           observacoes: v.observacoes || "",
         })));
       }
@@ -182,35 +197,33 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
     }
 
     try {
+      const veiculoData = {
+        tipo_combustivel: editingVeiculo.tipo_combustivel,
+        consumo_cidade: editingVeiculo.consumo_medio,
+        custo_manutencao_mensal: editingVeiculo.custo_manutencao_mensal,
+        custo_funcionario_mensal: editingVeiculo.custo_funcionario_mensal,
+        valor_ajudante: editingVeiculo.valor_ajudante,
+        valor_refeicao: editingVeiculo.valor_refeicao,
+        extras: editingVeiculo.extras,
+        peso_maximo_kg: editingVeiculo.peso_maximo_kg,
+        pernoite: editingVeiculo.pernoite,
+        adic_hora_extra_perc: editingVeiculo.adic_hora_extra_perc,
+        jornada_base_dia: editingVeiculo.jornada_base_dia,
+        horas_mensais: editingVeiculo.horas_mensais,
+        observacoes: editingVeiculo.observacoes,
+      };
+
       if (editingVeiculo.id) {
         await supabase
           .from("veiculos_custos")
-          .update({
-            tipo_combustivel: editingVeiculo.tipo_combustivel,
-            consumo_cidade: editingVeiculo.consumo_medio,
-            custo_manutencao_mensal: editingVeiculo.custo_manutencao_mensal,
-            custo_funcionario_mensal: editingVeiculo.custo_funcionario_mensal,
-            valor_ajudante: editingVeiculo.valor_ajudante,
-            valor_refeicao: editingVeiculo.valor_refeicao,
-            extras: editingVeiculo.extras,
-            peso_maximo_kg: editingVeiculo.peso_maximo_kg,
-            observacoes: editingVeiculo.observacoes,
-          })
+          .update(veiculoData)
           .eq("id", editingVeiculo.id);
         toast.success("Veículo atualizado com sucesso!");
       } else {
         await supabase.from("veiculos_custos").insert({
           estabelecimento_id: estabelecimentoId,
           tipo_veiculo: editingVeiculo.tipo_veiculo,
-          tipo_combustivel: editingVeiculo.tipo_combustivel,
-          consumo_cidade: editingVeiculo.consumo_medio,
-          custo_manutencao_mensal: editingVeiculo.custo_manutencao_mensal,
-          custo_funcionario_mensal: editingVeiculo.custo_funcionario_mensal,
-          valor_ajudante: editingVeiculo.valor_ajudante,
-          valor_refeicao: editingVeiculo.valor_refeicao,
-          extras: editingVeiculo.extras,
-          peso_maximo_kg: editingVeiculo.peso_maximo_kg,
-          observacoes: editingVeiculo.observacoes,
+          ...veiculoData,
         });
         toast.success("Veículo adicionado com sucesso!");
       }
@@ -420,7 +433,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Extras (R$)</Label>
+                    <Label className="text-xs">Extras Mensais (R$)</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -435,6 +448,42 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
                       step="1"
                       value={editingVeiculo?.peso_maximo_kg || 0}
                       onChange={e => setEditingVeiculo(prev => prev ? { ...prev, peso_maximo_kg: Number(e.target.value) } : null)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Pernoite (R$/pessoa)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={editingVeiculo?.pernoite || 0}
+                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, pernoite: Number(e.target.value) } : null)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Adicional H.E. (%)</Label>
+                    <Input
+                      type="number"
+                      step="1"
+                      value={editingVeiculo?.adic_hora_extra_perc ?? 50}
+                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, adic_hora_extra_perc: Number(e.target.value) } : null)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Jornada Base (h/dia)</Label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={editingVeiculo?.jornada_base_dia || 8}
+                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, jornada_base_dia: Number(e.target.value) } : null)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Horas Mensais</Label>
+                    <Input
+                      type="number"
+                      step="1"
+                      value={editingVeiculo?.horas_mensais || 220}
+                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, horas_mensais: Number(e.target.value) } : null)}
                     />
                   </div>
                   <div className="space-y-1 col-span-2">
@@ -468,30 +517,37 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
                   <TableRow>
                     <TableHead className="text-xs">Veículo</TableHead>
                     <TableHead className="text-xs">Combustível</TableHead>
-                    <TableHead className="text-xs text-right">Média</TableHead>
-                    <TableHead className="text-xs text-right">Peso Máx.</TableHead>
+                    <TableHead className="text-xs text-right">Consumo</TableHead>
                     <TableHead className="text-xs text-right">Manutenção</TableHead>
-                    <TableHead className="text-xs text-right">Funcionário</TableHead>
+                    <TableHead className="text-xs text-right">Motorista</TableHead>
                     <TableHead className="text-xs text-right">Ajudante</TableHead>
-                    <TableHead className="text-xs text-right">Refeição</TableHead>
-                    <TableHead className="text-xs text-right">Extras</TableHead>
-                    <TableHead className="text-xs w-20">Ações</TableHead>
+                    <TableHead className="text-xs text-right">Pernoite</TableHead>
+                    <TableHead className="text-xs text-right">H.E. %</TableHead>
+                    <TableHead className="text-xs w-24">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {veiculos.map(v => (
-                    <TableRow key={v.id}>
+                    <TableRow key={v.id} className={selectedVeiculoForSimulation === v.id ? "bg-primary/10" : ""}>
                       <TableCell className="text-xs font-medium">{getTipoVeiculoLabel(v.tipo_veiculo)}</TableCell>
                       <TableCell className="text-xs">{getTipoCombustivelLabel(v.tipo_combustivel)}</TableCell>
                       <TableCell className="text-xs text-right">{v.consumo_medio} km/l</TableCell>
-                      <TableCell className="text-xs text-right">{v.peso_maximo_kg.toLocaleString()} kg</TableCell>
                       <TableCell className="text-xs text-right">{v.custo_manutencao_mensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
                       <TableCell className="text-xs text-right">{v.custo_funcionario_mensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
                       <TableCell className="text-xs text-right">{v.valor_ajudante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
-                      <TableCell className="text-xs text-right">{v.valor_refeicao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
-                      <TableCell className="text-xs text-right">{v.extras.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                      <TableCell className="text-xs text-right">{v.pernoite.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                      <TableCell className="text-xs text-right">{v.adic_hora_extra_perc}%</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
+                          <Button
+                            size="icon"
+                            variant={selectedVeiculoForSimulation === v.id ? "default" : "ghost"}
+                            className="h-7 w-7"
+                            onClick={() => setSelectedVeiculoForSimulation(selectedVeiculoForSimulation === v.id ? "" : v.id!)}
+                            title="Simular Frete"
+                          >
+                            <Calculator className="h-3 w-3" />
+                          </Button>
                           <Button
                             size="icon"
                             variant="ghost"
@@ -520,6 +576,36 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
               Nenhum veículo cadastrado. Clique em "Adicionar" para começar.
             </p>
           )}
+
+          {/* Simulador de Frete */}
+          {selectedVeiculoForSimulation && (() => {
+            const veiculo = veiculos.find(v => v.id === selectedVeiculoForSimulation);
+            if (!veiculo) return null;
+            
+            const valorCombustivel = 
+              veiculo.tipo_combustivel === 'diesel' ? combustiveis.preco_diesel :
+              veiculo.tipo_combustivel === 'etanol' ? combustiveis.preco_etanol :
+              veiculo.tipo_combustivel === 'gasolina' ? combustiveis.preco_gasolina :
+              combustiveis.preco_eletrico;
+
+            return (
+              <FreteSimulator 
+                veiculoConfig={{
+                  manutencaoMensal: veiculo.custo_manutencao_mensal,
+                  extrasMensais: veiculo.extras,
+                  salarioMotorista: veiculo.custo_funcionario_mensal,
+                  valorAjudanteDia: veiculo.valor_ajudante,
+                  valorRefeicao: veiculo.valor_refeicao,
+                  mediaConsumo: veiculo.consumo_medio,
+                  pernoite: veiculo.pernoite,
+                  adicHoraExtraPerc: veiculo.adic_hora_extra_perc,
+                  jornadaBaseDia: veiculo.jornada_base_dia,
+                  horasMensais: veiculo.horas_mensais,
+                }}
+                valorCombustivel={valorCombustivel}
+              />
+            );
+          })()}
         </CardContent>
       </Card>
 
