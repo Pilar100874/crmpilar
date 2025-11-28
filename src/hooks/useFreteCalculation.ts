@@ -177,3 +177,74 @@ export const FORMULAS_FRETE = {
     descricao: "Combustível + Fixos + Horas + Ajudantes + Pernoite + Refeição + Pedágio"
   }
 };
+
+// Função para calcular todos os valores intermediários para o FormulaBuilder
+export function calculateFormulaValues(
+  config: VeiculoConfig,
+  viagem: ViagemInput
+): Record<string, number> {
+  // Valores da viagem
+  const idaVolta = viagem.consideraIdaVolta ? 2 : 1;
+  const kmTotal = viagem.kmViagem * idaVolta;
+  
+  // Valores calculados do veículo
+  const custoFixoMensal = config.manutencaoMensal + config.extrasMensais;
+  const custoFixoHora = custoFixoMensal / config.horasMensais;
+  const custoHoraMotorista = config.salarioMotorista / config.horasMensais;
+  
+  // Horas
+  const horasNormais = Math.min(viagem.tempoViagem, config.jornadaBaseDia);
+  const horasExtras = Math.max(0, viagem.tempoViagem - config.jornadaBaseDia);
+  const fatorExtra = 1 + (config.adicHoraExtraPerc / 100);
+  
+  // Funcionários
+  const numFuncionarios = 1 + viagem.numAjudantes;
+  const refeicoesPorPessoa = Math.ceil(viagem.tempoViagem / 8);
+  
+  // Custos individuais
+  const custoCombustivel = (kmTotal / config.mediaConsumo) * config.valorCombustivel;
+  const custoFixosViagem = viagem.tempoViagem * custoFixoHora;
+  const custoHorasNormais = horasNormais * custoHoraMotorista;
+  const custoHorasExtras = horasExtras * custoHoraMotorista * fatorExtra;
+  const custoAjudantes = config.valorAjudanteDia * viagem.numAjudantes;
+  const custoPernoite = viagem.tempoViagem > 12 ? config.pernoite * numFuncionarios : 0;
+  const custoRefeicao = numFuncionarios * refeicoesPorPessoa * config.valorRefeicao;
+  
+  return {
+    // Configuração do veículo
+    manutencaoMensal: config.manutencaoMensal,
+    extrasMensais: config.extrasMensais,
+    salarioMotorista: config.salarioMotorista,
+    valorAjudanteDia: config.valorAjudanteDia,
+    valorRefeicao: config.valorRefeicao,
+    valorCombustivel: config.valorCombustivel,
+    mediaConsumo: config.mediaConsumo,
+    pernoite: config.pernoite,
+    adicHoraExtraPerc: config.adicHoraExtraPerc,
+    jornadaBaseDia: config.jornadaBaseDia,
+    horasMensais: config.horasMensais,
+    // Variáveis da viagem
+    tempoViagem: viagem.tempoViagem,
+    kmViagem: viagem.kmViagem,
+    numAjudantes: viagem.numAjudantes,
+    pedagioTotal: viagem.pedagioTotal,
+    idaVolta,
+    // Variáveis calculadas
+    kmTotal,
+    custoFixoHora,
+    custoHoraMotorista,
+    horasNormais,
+    horasExtras,
+    fatorExtra,
+    numFuncionarios,
+    refeicoesPorPessoa,
+    // Custos individuais
+    custoCombustivel,
+    custoFixosViagem,
+    custoHorasNormais,
+    custoHorasExtras,
+    custoAjudantes,
+    custoPernoite,
+    custoRefeicao,
+  };
+}
