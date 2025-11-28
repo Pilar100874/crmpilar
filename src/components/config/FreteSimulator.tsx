@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calculator, Truck, Clock, Users, Fuel, Hotel, Utensils, Route, DollarSign, Info, Wrench } from "lucide-react";
 import { calculateFreteCost, VeiculoConfig, ViagemInput, FreteResult, FORMULAS_FRETE } from "@/hooks/useFreteCalculation";
-import { FormulaBuilder } from "./FormulaBuilder";
+import { FormulaBuilder, SavedFormula, createDefaultFormula } from "./FormulaBuilder";
 import {
   Tooltip,
   TooltipContent,
@@ -44,6 +44,24 @@ export function FreteSimulator({ veiculoConfig, valorCombustivel }: FreteSimulat
     numAjudantes: 0,
     pedagioTotal: 0,
   });
+
+  // Gerenciamento de fórmulas salvas
+  const [savedFormulas, setSavedFormulas] = useState<SavedFormula[]>(() => [createDefaultFormula()]);
+  const [selectedFormulaId, setSelectedFormulaId] = useState<string>("default_frete_completo");
+
+  const handleSaveFormula = (formula: SavedFormula) => {
+    setSavedFormulas(prev => [...prev, formula]);
+    setSelectedFormulaId(formula.id);
+  };
+
+  const handleDeleteFormula = (id: string) => {
+    setSavedFormulas(prev => prev.filter(f => f.id !== id));
+    setSelectedFormulaId("default_frete_completo");
+  };
+
+  const handleSelectFormula = (formula: SavedFormula) => {
+    setSelectedFormulaId(formula.id);
+  };
 
   useEffect(() => {
     setConfig(prev => ({
@@ -451,7 +469,14 @@ export function FreteSimulator({ veiculoConfig, valorCombustivel }: FreteSimulat
           </TabsContent>
 
           <TabsContent value="formula">
-            <FormulaBuilder valoresSimulacao={valoresSimulacao} />
+            <FormulaBuilder 
+              valoresSimulacao={valoresSimulacao}
+              savedFormulas={savedFormulas}
+              selectedFormulaId={selectedFormulaId}
+              onSaveFormula={handleSaveFormula}
+              onDeleteFormula={handleDeleteFormula}
+              onSelectFormula={handleSelectFormula}
+            />
           </TabsContent>
         </Tabs>
       </CardContent>
