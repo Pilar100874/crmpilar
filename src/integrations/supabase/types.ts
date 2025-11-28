@@ -4094,6 +4094,7 @@ export type Database = {
           nome: string
           numero_folhas: number | null
           observacoes_frete: string | null
+          peso_frete_tipo: string | null
           peso_unitario: number | null
           updated_at: string | null
           valor_seguro: number | null
@@ -4121,6 +4122,7 @@ export type Database = {
           nome: string
           numero_folhas?: number | null
           observacoes_frete?: string | null
+          peso_frete_tipo?: string | null
           peso_unitario?: number | null
           updated_at?: string | null
           valor_seguro?: number | null
@@ -4148,6 +4150,7 @@ export type Database = {
           nome?: string
           numero_folhas?: number | null
           observacoes_frete?: string | null
+          peso_frete_tipo?: string | null
           peso_unitario?: number | null
           updated_at?: string | null
           valor_seguro?: number | null

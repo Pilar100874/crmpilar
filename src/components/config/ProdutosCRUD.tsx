@@ -29,6 +29,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Trash2, Pencil, Plus, Image, Upload, Package, Truck } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 
@@ -59,6 +60,7 @@ interface FormData {
   empilhamento_maximo: string;
   valor_seguro: string;
   observacoes_frete: string;
+  peso_frete_tipo: string;
 }
 
 const initialFormData: FormData = {
@@ -84,6 +86,7 @@ const initialFormData: FormData = {
   empilhamento_maximo: "1",
   valor_seguro: "",
   observacoes_frete: "",
+  peso_frete_tipo: "fixo",
 };
 
 export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
@@ -247,6 +250,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         empilhamento_maximo: formData.empilhamento_maximo ? parseInt(formData.empilhamento_maximo) : 1,
         valor_seguro: formData.valor_seguro ? parseFloat(formData.valor_seguro) : null,
         observacoes_frete: formData.observacoes_frete || null,
+        peso_frete_tipo: formData.peso_frete_tipo || "fixo",
       };
 
       if (editingProduto) {
@@ -315,6 +319,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       empilhamento_maximo: p.empilhamento_maximo?.toString() || "1",
       valor_seguro: p.valor_seguro?.toString() || "",
       observacoes_frete: p.observacoes_frete || "",
+      peso_frete_tipo: p.peso_frete_tipo || "fixo",
     });
     setShowDialog(true);
   };
@@ -660,6 +665,41 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                       />
                       <p className="text-xs text-muted-foreground mt-1">Calculado automaticamente pelas dimensões</p>
                     </div>
+                  </div>
+                </div>
+
+                {/* Tipo de Cálculo de Peso */}
+                <div>
+                  <h4 className="font-medium mb-3 text-sm text-muted-foreground">Cálculo do Peso para Frete</h4>
+                  <div className="p-4 border rounded-md bg-muted/30">
+                    <RadioGroup
+                      value={formData.peso_frete_tipo}
+                      onValueChange={(value) => setFormData({ ...formData, peso_frete_tipo: value })}
+                      className="space-y-3"
+                    >
+                      <div className="flex items-start gap-3">
+                        <RadioGroupItem value="fixo" id="peso_fixo" className="mt-1" />
+                        <div>
+                          <Label htmlFor="peso_fixo" className="cursor-pointer font-medium">
+                            Peso Fixo (Embalagem)
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Usa o peso com embalagem informado acima, independente da quantidade no pedido
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <RadioGroupItem value="calculado" id="peso_calculado" className="mt-1" />
+                        <div>
+                          <Label htmlFor="peso_calculado" className="cursor-pointer font-medium">
+                            Peso Calculado (Quantidade × Peso Unitário)
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Calcula o peso total multiplicando a quantidade do item pelo peso unitário do produto
+                          </p>
+                        </div>
+                      </div>
+                    </RadioGroup>
                   </div>
                 </div>
 
