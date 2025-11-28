@@ -153,7 +153,6 @@ export default function POSView({
   const [freteResult, setFreteResult] = useState<FreteResult | null>(null);
   const [numAjudantes, setNumAjudantes] = useState(0);
   const [veiculoConfig, setVeiculoConfig] = useState<VeiculoConfig | null>(null);
-  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
 
   // Hook para buscar endereços automaticamente quando empresa muda
   const routeAddresses = useRouteAddresses(selectedEmpresa || null);
