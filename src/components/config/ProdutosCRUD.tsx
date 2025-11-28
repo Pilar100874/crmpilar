@@ -804,12 +804,12 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                 imgEan14_1={formData.embalagem_img_ean14_1}
                 imgEan14_2={formData.embalagem_img_ean14_2}
                 estabelecimentoId={estabelecimentoId}
-                onEan13Change={(value) => setFormData({ ...formData, ean_13: value })}
-                onEan14_1Change={(value) => setFormData({ ...formData, ean_14_1: value })}
-                onEan14_2Change={(value) => setFormData({ ...formData, ean_14_2: value })}
-                onImgEan13Change={(url) => setFormData({ ...formData, embalagem_img_ean13: url })}
-                onImgEan14_1Change={(url) => setFormData({ ...formData, embalagem_img_ean14_1: url })}
-                onImgEan14_2Change={(url) => setFormData({ ...formData, embalagem_img_ean14_2: url })}
+                onEan13Change={(value) => setFormData(prev => ({ ...prev, ean_13: value }))}
+                onEan14_1Change={(value) => setFormData(prev => ({ ...prev, ean_14_1: value }))}
+                onEan14_2Change={(value) => setFormData(prev => ({ ...prev, ean_14_2: value }))}
+                onImgEan13Change={(url) => setFormData(prev => ({ ...prev, embalagem_img_ean13: url }))}
+                onImgEan14_1Change={(url) => setFormData(prev => ({ ...prev, embalagem_img_ean14_1: url }))}
+                onImgEan14_2Change={(url) => setFormData(prev => ({ ...prev, embalagem_img_ean14_2: url }))}
               />
             </TabsContent>
           </Tabs>
