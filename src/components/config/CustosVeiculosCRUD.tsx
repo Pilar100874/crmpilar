@@ -26,8 +26,7 @@ interface VeiculoCusto {
   id?: string;
   tipo_veiculo: string;
   tipo_combustivel: string;
-  consumo_cidade: number;
-  consumo_estrada: number;
+  consumo_medio: number;
   custo_manutencao_mensal: number;
   custo_funcionario_mensal: number;
   valor_ajudante: number;
@@ -74,8 +73,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
   const emptyVeiculo: VeiculoCusto = {
     tipo_veiculo: "",
     tipo_combustivel: "diesel",
-    consumo_cidade: 0,
-    consumo_estrada: 0,
+    consumo_medio: 0,
     custo_manutencao_mensal: 0,
     custo_funcionario_mensal: 0,
     valor_ajudante: 0,
@@ -123,8 +121,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
           id: v.id,
           tipo_veiculo: v.tipo_veiculo,
           tipo_combustivel: v.tipo_combustivel,
-          consumo_cidade: Number(v.consumo_cidade) || 0,
-          consumo_estrada: Number(v.consumo_estrada) || 0,
+          consumo_medio: Number(v.consumo_cidade) || 0,
           custo_manutencao_mensal: Number(v.custo_manutencao_mensal) || 0,
           custo_funcionario_mensal: Number(v.custo_funcionario_mensal) || 0,
           valor_ajudante: Number(v.valor_ajudante) || 0,
@@ -190,8 +187,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
           .from("veiculos_custos")
           .update({
             tipo_combustivel: editingVeiculo.tipo_combustivel,
-            consumo_cidade: editingVeiculo.consumo_cidade,
-            consumo_estrada: editingVeiculo.consumo_estrada,
+            consumo_cidade: editingVeiculo.consumo_medio,
             custo_manutencao_mensal: editingVeiculo.custo_manutencao_mensal,
             custo_funcionario_mensal: editingVeiculo.custo_funcionario_mensal,
             valor_ajudante: editingVeiculo.valor_ajudante,
@@ -207,8 +203,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
           estabelecimento_id: estabelecimentoId,
           tipo_veiculo: editingVeiculo.tipo_veiculo,
           tipo_combustivel: editingVeiculo.tipo_combustivel,
-          consumo_cidade: editingVeiculo.consumo_cidade,
-          consumo_estrada: editingVeiculo.consumo_estrada,
+          consumo_cidade: editingVeiculo.consumo_medio,
           custo_manutencao_mensal: editingVeiculo.custo_manutencao_mensal,
           custo_funcionario_mensal: editingVeiculo.custo_funcionario_mensal,
           valor_ajudante: editingVeiculo.valor_ajudante,
@@ -380,21 +375,12 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Consumo Cidade (km/l)</Label>
+                    <Label className="text-xs">Média de Consumo (km/l)</Label>
                     <Input
                       type="number"
                       step="0.1"
-                      value={editingVeiculo?.consumo_cidade || 0}
-                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, consumo_cidade: Number(e.target.value) } : null)}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Consumo Estrada (km/l)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={editingVeiculo?.consumo_estrada || 0}
-                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, consumo_estrada: Number(e.target.value) } : null)}
+                      value={editingVeiculo?.consumo_medio || 0}
+                      onChange={e => setEditingVeiculo(prev => prev ? { ...prev, consumo_medio: Number(e.target.value) } : null)}
                     />
                   </div>
                   <div className="space-y-1">
@@ -482,8 +468,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
                   <TableRow>
                     <TableHead className="text-xs">Veículo</TableHead>
                     <TableHead className="text-xs">Combustível</TableHead>
-                    <TableHead className="text-xs text-right">Cidade</TableHead>
-                    <TableHead className="text-xs text-right">Estrada</TableHead>
+                    <TableHead className="text-xs text-right">Média</TableHead>
                     <TableHead className="text-xs text-right">Peso Máx.</TableHead>
                     <TableHead className="text-xs text-right">Manutenção</TableHead>
                     <TableHead className="text-xs text-right">Funcionário</TableHead>
@@ -498,8 +483,7 @@ export function CustosVeiculosCRUD({ estabelecimentoId }: CustosVeiculosCRUDProp
                     <TableRow key={v.id}>
                       <TableCell className="text-xs font-medium">{getTipoVeiculoLabel(v.tipo_veiculo)}</TableCell>
                       <TableCell className="text-xs">{getTipoCombustivelLabel(v.tipo_combustivel)}</TableCell>
-                      <TableCell className="text-xs text-right">{v.consumo_cidade} km/l</TableCell>
-                      <TableCell className="text-xs text-right">{v.consumo_estrada} km/l</TableCell>
+                      <TableCell className="text-xs text-right">{v.consumo_medio} km/l</TableCell>
                       <TableCell className="text-xs text-right">{v.peso_maximo_kg.toLocaleString()} kg</TableCell>
                       <TableCell className="text-xs text-right">{v.custo_manutencao_mensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
                       <TableCell className="text-xs text-right">{v.custo_funcionario_mensal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
