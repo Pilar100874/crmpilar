@@ -50,7 +50,7 @@ const tabItems: TabItem[] = [
   { id: 'campos', label: 'Campos Customizados', icon: Settings },
   { id: 'unidades', label: 'Unidades', icon: Box },
   { id: 'ncm', label: 'NCM', icon: FileCode },
-  { id: 'tabelas-preco', label: 'Tabelas de Preço', icon: DollarSign },
+  { id: 'tabelas-preco', label: 'Preço por Categoria', icon: DollarSign },
   { id: 'tipos-pagamento', label: 'Tipos de Pagamento', icon: CreditCard },
   { id: 'condicoes', label: 'Condições de Pagamento', icon: Wallet },
   { id: 'custos-veiculo', label: 'Custos de Veículos', icon: Truck },
@@ -272,10 +272,10 @@ export default function VendasConfig() {
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Tabelas de Preço
+                    Tabela de Preço por Categoria
                   </CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
-                    Configure diferentes tabelas de preço
+                    Configure preços por categoria de produto
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">

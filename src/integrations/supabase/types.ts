@@ -4192,6 +4192,10 @@ export type Database = {
           observacoes_frete: string | null
           peso_frete_tipo: string | null
           peso_unitario: number | null
+          preco_ativo: boolean | null
+          preco_minimo: number | null
+          preco_tabela: number | null
+          tipo_preco: string | null
           updated_at: string | null
           valor_seguro: number | null
         }
@@ -4229,6 +4233,10 @@ export type Database = {
           observacoes_frete?: string | null
           peso_frete_tipo?: string | null
           peso_unitario?: number | null
+          preco_ativo?: boolean | null
+          preco_minimo?: number | null
+          preco_tabela?: number | null
+          tipo_preco?: string | null
           updated_at?: string | null
           valor_seguro?: number | null
         }
@@ -4266,6 +4274,10 @@ export type Database = {
           observacoes_frete?: string | null
           peso_frete_tipo?: string | null
           peso_unitario?: number | null
+          preco_ativo?: boolean | null
+          preco_minimo?: number | null
+          preco_tabela?: number | null
+          tipo_preco?: string | null
           updated_at?: string | null
           valor_seguro?: number | null
         }
