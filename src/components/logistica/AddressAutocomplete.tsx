@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/integrations/supabase/client';
 
 interface AddressSuggestion {
   id: string;
@@ -39,7 +38,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
 
-  // Search addresses using OpenRouteService via edge function
+  // Search addresses using Nominatim (OpenStreetMap) - melhor cobertura para Brasil
   const searchAddresses = async (query: string) => {
     if (query.length < 3) {
       setSuggestions([]);
@@ -49,23 +48,29 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
     setLoading(true);
     try {
-      const response = await supabase.functions.invoke('openrouteservice-proxy', {
-        body: {
-          action: 'geocode',
-          text: query + ', Brasil'
+      // Usa Nominatim API diretamente - cobertura completa do Brasil
+      const searchQuery = encodeURIComponent(query);
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&countrycodes=br&limit=8&addressdetails=1`,
+        {
+          headers: {
+            'Accept-Language': 'pt-BR',
+            'User-Agent': 'LogisticaApp/1.0'
+          }
         }
-      });
+      );
 
-      if (response.error) throw response.error;
+      if (!response.ok) throw new Error('Erro na busca');
 
-      const data = response.data;
-      if (data.features && data.features.length > 0) {
-        const suggestions: AddressSuggestion[] = data.features.map((feature: any) => ({
-          id: feature.properties.id || `${feature.geometry.coordinates[0]}-${feature.geometry.coordinates[1]}`,
-          display_name: feature.properties.label,
-          lat: feature.geometry.coordinates[1],
-          lon: feature.geometry.coordinates[0],
-          label: feature.properties.label
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const suggestions: AddressSuggestion[] = data.map((item: any) => ({
+          id: item.place_id?.toString() || `${item.lon}-${item.lat}`,
+          display_name: item.display_name,
+          lat: parseFloat(item.lat),
+          lon: parseFloat(item.lon),
+          label: item.display_name
         }));
         setSuggestions(suggestions);
         setIsOpen(suggestions.length > 0);
@@ -91,7 +96,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
     debounceRef.current = setTimeout(() => {
       searchAddresses(value);
-    }, 300);
+    }, 400); // Aumentado para respeitar rate limit do Nominatim
 
     return () => {
       if (debounceRef.current) {
@@ -145,9 +150,10 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const formatAddress = (suggestion: AddressSuggestion): { main: string; secondary: string } => {
     const parts = suggestion.display_name.split(', ');
     if (parts.length > 2) {
+      // Pega as primeiras 2-3 partes como principal
       return {
         main: parts.slice(0, 2).join(', '),
-        secondary: parts.slice(2, 4).join(', '),
+        secondary: parts.slice(2, 5).join(', '),
       };
     }
     return {
