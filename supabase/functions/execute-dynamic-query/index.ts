@@ -62,22 +62,54 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const pathParts = url.pathname.split('/').filter(Boolean);
-    const endpointPath = pathParts[pathParts.length - 1];
-
-    console.log('Received request for endpoint:', endpointPath);
+    let endpointPath = pathParts[pathParts.length - 1];
+    let endpointId: string | null = null;
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Check if endpoint_id or endpoint_path is passed in body (for POST requests)
+    let bodyParams: Record<string, any> = {};
+    if (req.method === 'POST') {
+      try {
+        bodyParams = await req.json();
+        if (bodyParams.endpoint_id) {
+          endpointId = bodyParams.endpoint_id;
+        }
+        if (bodyParams.endpoint_path) {
+          endpointPath = bodyParams.endpoint_path;
+        }
+      } catch (e) {
+        // Body might not be JSON, ignore
+      }
+    }
+
+    console.log('Received request - endpointPath:', endpointPath, 'endpointId:', endpointId);
+
     // Get API endpoint configuration with connection data
-    const { data: apiConfig, error: configError } = await supabase
+    let query = supabase
       .from('api_endpoints')
       .select('*, connection:database_connections(*)')
-      .eq('endpoint_path', endpointPath)
-      .eq('active', true)
-      .single();
+      .eq('active', true);
+
+    // Search by ID or by path
+    if (endpointId) {
+      query = query.eq('id', endpointId);
+    } else if (endpointPath && endpointPath !== 'execute-dynamic-query') {
+      query = query.eq('endpoint_path', endpointPath);
+    } else {
+      return new Response(
+        JSON.stringify({ error: 'endpoint_id ou endpoint_path é obrigatório' }),
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    const { data: apiConfig, error: configError } = await query.single();
 
     if (configError || !apiConfig) {
       console.error('Endpoint not found:', configError);
@@ -90,24 +122,15 @@ serve(async (req) => {
       );
     }
 
-    // Validate HTTP method
-    if (req.method !== apiConfig.http_method) {
-      return new Response(
-        JSON.stringify({ error: `Method ${req.method} not allowed. Use ${apiConfig.http_method}` }),
-        { 
-          status: 405,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Get query parameters
+    // Get query parameters - use bodyParams that we already parsed, excluding our control params
     let params: Record<string, any> = {};
     if (req.method === 'GET') {
       params = Object.fromEntries(url.searchParams.entries());
       console.log('📥 Parâmetros recebidos (GET):', params);
     } else if (req.method === 'POST') {
-      params = await req.json();
+      // Remove our control parameters from the params
+      const { endpoint_id, endpoint_path, ...queryParams } = bodyParams;
+      params = queryParams;
       console.log('📥 Parâmetros recebidos (POST):', JSON.stringify(params, null, 2));
       console.log('📝 Quantidade de parâmetros:', Object.keys(params).length);
       console.log('📋 Tipos dos parâmetros:', Object.entries(params).map(([k, v]) => `${k}: ${typeof v}`).join(", "));
