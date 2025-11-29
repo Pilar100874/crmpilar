@@ -37,45 +37,56 @@ function parseOsmAndFormat(url: URL): PosicaoPayload | null {
   };
 }
 
+async function findVeiculoId(supabase: any, deviceId: string): Promise<string | null> {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  
+  // If it's a UUID, try direct lookup
+  if (uuidRegex.test(deviceId)) {
+    const { data: veiculo } = await supabase
+      .from('veiculos')
+      .select('id')
+      .eq('id', deviceId)
+      .eq('ativo', true)
+      .single();
+    
+    if (veiculo) return veiculo.id;
+  }
+  
+  // Try by traccar_device_id
+  const { data: veiculoByDevice } = await supabase
+    .from('veiculos')
+    .select('id')
+    .eq('traccar_device_id', deviceId)
+    .eq('ativo', true)
+    .single();
+  
+  if (veiculoByDevice) return veiculoByDevice.id;
+  
+  // Try by placa (uppercase)
+  const { data: veiculoByPlaca } = await supabase
+    .from('veiculos')
+    .select('id')
+    .eq('placa', deviceId.toUpperCase())
+    .eq('ativo', true)
+    .single();
+  
+  if (veiculoByPlaca) return veiculoByPlaca.id;
+  
+  return null;
+}
+
 async function savePosition(supabase: any, payload: PosicaoPayload) {
   // Validate coordinates range
   if (payload.lat < -90 || payload.lat > 90 || payload.lng < -180 || payload.lng > 180) {
     return { error: 'Invalid coordinates', status: 400 };
   }
 
-  // Try to find vehicle by ID (UUID) or by placa
-  let veiculoId = payload.veiculoId;
+  // Find vehicle by device ID, placa, or UUID
+  const veiculoId = await findVeiculoId(supabase, payload.veiculoId);
   
-  // Check if it's a UUID format
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  
-  if (!uuidRegex.test(veiculoId)) {
-    // Not a UUID, try to find by placa
-    const { data: veiculoByPlaca, error: placaError } = await supabase
-      .from('veiculos')
-      .select('id, ativo')
-      .eq('placa', veiculoId.toUpperCase())
-      .eq('ativo', true)
-      .single();
-    
-    if (placaError || !veiculoByPlaca) {
-      console.error('Vehicle not found by placa:', veiculoId);
-      return { error: 'Vehicle not found', status: 404 };
-    }
-    
-    veiculoId = veiculoByPlaca.id;
-  } else {
-    // It's a UUID, verify it exists
-    const { data: veiculo, error: veiculoError } = await supabase
-      .from('veiculos')
-      .select('id, ativo')
-      .eq('id', veiculoId)
-      .single();
-
-    if (veiculoError || !veiculo) {
-      console.error('Vehicle not found:', veiculoId);
-      return { error: 'Vehicle not found', status: 404 };
-    }
+  if (!veiculoId) {
+    console.error('Vehicle not found for identifier:', payload.veiculoId);
+    return { error: 'Vehicle not found', status: 404 };
   }
 
   // Insert position
@@ -97,7 +108,7 @@ async function savePosition(supabase: any, payload: PosicaoPayload) {
     return { error: 'Failed to save position', status: 500 };
   }
 
-  console.log('Position saved successfully:', posicao.id);
+  console.log('Position saved successfully:', posicao.id, 'for vehicle:', veiculoId);
   return { data: posicao, status: 200 };
 }
 
