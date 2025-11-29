@@ -76,3 +76,9 @@ verify_jwt = true
 [functions.analisar-sentimento]
 verify_jwt = false
 
+[functions.rastreamento-posicao]
+verify_jwt = false
+
+[functions.openrouteservice-proxy]
+verify_jwt = true
+

@@ -61,6 +61,12 @@ export const MENU_CONFIG = [
   { id: "Automação de Vendas", label: "Regras para o Orçamento" },
   { id: "Editor de Regras", label: "Editor de Regras" },
   { id: "Base de Conhecimento", label: "Base de Conhecimento" },
+  { id: "Logística", label: "Logística" },
+  { id: "Logística Dashboard", label: "Dashboard Logística" },
+  { id: "Logística Veículos", label: "Veículos" },
+  { id: "Logística Histórico", label: "Histórico" },
+  { id: "Logística Roteirização", label: "Roteirização" },
+  { id: "Logística Rotas", label: "Rotas Salvas" },
 ] as const;
 
 // Lista apenas dos IDs dos menus (para compatibilidade com código existente)
