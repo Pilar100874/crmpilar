@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { format, startOfDay, endOfDay, differenceInMinutes } from 'date-fns';
+import { format, startOfDay, endOfDay, differenceInMinutes, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowLeft, Calendar, Car, Route, Clock, Gauge, Activity, MapPin, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
+import { DateRange } from 'react-day-picker';
 
 const ROUTE_COLORS = [
   '#3b82f6', // blue
@@ -40,7 +41,10 @@ const LogisticaHistorico: React.FC = () => {
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [selectedVeiculoIds, setSelectedVeiculoIds] = useState<string[]>(paramVeiculoId ? [paramVeiculoId] : []);
   const [veiculosHistorico, setVeiculosHistorico] = useState<VeiculoHistorico[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date()
+  });
   const [loading, setLoading] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
 
@@ -63,18 +67,20 @@ const LogisticaHistorico: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedVeiculoIds.length > 0 && selectedDate && veiculos.length > 0) {
+    if (selectedVeiculoIds.length > 0 && dateRange?.from && veiculos.length > 0) {
       fetchAllPosicoes();
     } else if (selectedVeiculoIds.length === 0) {
       setVeiculosHistorico([]);
     }
-  }, [selectedVeiculoIds, selectedDate, veiculos]);
+  }, [selectedVeiculoIds, dateRange, veiculos]);
 
   const fetchAllPosicoes = async () => {
+    if (!dateRange?.from) return;
+    
     setLoading(true);
     try {
-      const start = startOfDay(selectedDate);
-      const end = endOfDay(selectedDate);
+      const start = startOfDay(dateRange.from);
+      const end = endOfDay(dateRange.to || dateRange.from);
 
       const results: VeiculoHistorico[] = [];
 
@@ -278,25 +284,80 @@ const LogisticaHistorico: React.FC = () => {
               </PopoverContent>
             </Popover>
 
-          {/* Date Picker */}
+          {/* Date Range Picker */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="gap-2 text-sm">
+              <Button variant="outline" className="gap-2 text-sm min-w-[180px] sm:min-w-[240px]">
                 <Calendar className="h-4 w-4" />
-                <span className="hidden sm:inline">{format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}</span>
-                <span className="sm:hidden">{format(selectedDate, "dd/MM", { locale: ptBR })}</span>
+                <span className="truncate">
+                  {dateRange?.from ? (
+                    dateRange.to && dateRange.from.getTime() !== dateRange.to.getTime() ? (
+                      <>
+                        <span className="hidden sm:inline">
+                          {format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })} - {format(dateRange.to, "dd/MM/yyyy", { locale: ptBR })}
+                        </span>
+                        <span className="sm:hidden">
+                          {format(dateRange.from, "dd/MM", { locale: ptBR })} - {format(dateRange.to, "dd/MM", { locale: ptBR })}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="hidden sm:inline">{format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })}</span>
+                        <span className="sm:hidden">{format(dateRange.from, "dd/MM", { locale: ptBR })}</span>
+                      </>
+                    )
+                  ) : (
+                    "Selecionar período"
+                  )}
+                </span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 bg-popover z-[1000]" align="end">
-                <CalendarComponent
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  locale={ptBR}
-                  disabled={(date) => date > new Date()}
-                />
-              </PopoverContent>
-            </Popover>
+              <div className="p-2 border-b flex flex-wrap gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => setDateRange({ from: new Date(), to: new Date() })}
+                >
+                  Hoje
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => setDateRange({ from: subDays(new Date(), 1), to: subDays(new Date(), 1) })}
+                >
+                  Ontem
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => setDateRange({ from: subDays(new Date(), 7), to: new Date() })}
+                >
+                  Últimos 7 dias
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => setDateRange({ from: subDays(new Date(), 30), to: new Date() })}
+                >
+                  Últimos 30 dias
+                </Button>
+              </div>
+              <CalendarComponent
+                mode="range"
+                selected={dateRange}
+                onSelect={setDateRange}
+                locale={ptBR}
+                disabled={(date) => date > new Date()}
+                numberOfMonths={1}
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
           </div>
         </div>
 
