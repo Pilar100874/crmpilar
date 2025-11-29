@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2, Building2, MapPinned } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -9,7 +9,7 @@ interface AddressSuggestion {
   lat: number;
   lon: number;
   label: string;
-  type?: string;
+  type: 'cep' | 'city' | 'address';
 }
 
 interface AddressAutocompleteProps {
@@ -22,7 +22,93 @@ interface AddressAutocompleteProps {
   hasCoordinates?: boolean;
 }
 
-// Busca por CEP usando ViaCEP + Nominatim para coordenadas
+// Cache de coordenadas de cidades do IBGE
+const cityCoordinatesCache: Record<string, { lat: number; lon: number }> = {};
+
+// Busca cidades brasileiras via IBGE (100% gratuito e completo)
+async function searchCitiesIBGE(query: string): Promise<AddressSuggestion[]> {
+  if (query.length < 2) return [];
+  
+  try {
+    // Busca todas as cidades e filtra localmente (API IBGE não tem filtro por nome)
+    const response = await fetch(
+      'https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome'
+    );
+    
+    if (!response.ok) return [];
+    
+    const cities = await response.json();
+    const queryLower = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    
+    // Filtra cidades que contêm o texto buscado
+    const filtered = cities
+      .filter((city: any) => {
+        const cityName = city.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const stateName = city.microrregiao?.mesorregiao?.UF?.nome?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
+        const stateSigla = city.microrregiao?.mesorregiao?.UF?.sigla?.toLowerCase() || '';
+        
+        return cityName.includes(queryLower) || 
+               `${cityName} ${stateSigla}`.includes(queryLower) ||
+               `${cityName} ${stateName}`.includes(queryLower);
+      })
+      .slice(0, 6);
+    
+    // Busca coordenadas para cada cidade encontrada
+    const results: AddressSuggestion[] = [];
+    
+    for (const city of filtered) {
+      const stateSigla = city.microrregiao?.mesorregiao?.UF?.sigla || '';
+      const displayName = `${city.nome}, ${stateSigla}, Brasil`;
+      const cacheKey = `${city.id}`;
+      
+      let coords = cityCoordinatesCache[cacheKey];
+      
+      if (!coords) {
+        // Busca coordenadas via Nominatim
+        try {
+          const geoResponse = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(displayName)}&limit=1`,
+            { headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'LogisticaApp/1.0' } }
+          );
+          const geoData = await geoResponse.json();
+          
+          if (geoData && geoData.length > 0) {
+            coords = {
+              lat: parseFloat(geoData[0].lat),
+              lon: parseFloat(geoData[0].lon)
+            };
+            cityCoordinatesCache[cacheKey] = coords;
+          }
+        } catch (e) {
+          console.error('Geo error:', e);
+        }
+      }
+      
+      if (coords) {
+        results.push({
+          id: `city-${city.id}`,
+          display_name: displayName,
+          lat: coords.lat,
+          lon: coords.lon,
+          label: displayName,
+          type: 'city'
+        });
+      }
+      
+      // Pequeno delay para não sobrecarregar Nominatim
+      if (filtered.indexOf(city) < filtered.length - 1) {
+        await new Promise(r => setTimeout(r, 100));
+      }
+    }
+    
+    return results;
+  } catch (error) {
+    console.error('IBGE search error:', error);
+    return [];
+  }
+}
+
+// Busca por CEP usando ViaCEP + coordenadas
 async function searchByCEP(cep: string): Promise<AddressSuggestion[]> {
   const cleanCep = cep.replace(/\D/g, '');
   if (cleanCep.length < 5) return [];
@@ -33,22 +119,28 @@ async function searchByCEP(cep: string): Promise<AddressSuggestion[]> {
     
     if (data.erro) return [];
     
-    const fullAddress = `${data.logradouro ? data.logradouro + ', ' : ''}${data.bairro ? data.bairro + ', ' : ''}${data.localidade}, ${data.uf}`;
+    const fullAddress = `${data.logradouro ? data.logradouro + ', ' : ''}${data.bairro ? data.bairro + ', ' : ''}${data.localidade}, ${data.uf}, Brasil`;
     
-    // Busca coordenadas via Nominatim
+    // Busca coordenadas
     const geoResponse = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&countrycodes=br&limit=1`,
-      { headers: { 'Accept-Language': 'pt-BR' } }
+      { headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'LogisticaApp/1.0' } }
     );
     const geoData = await geoResponse.json();
     
     if (geoData && geoData.length > 0) {
+      const displayParts = [];
+      if (data.logradouro) displayParts.push(data.logradouro);
+      if (data.bairro) displayParts.push(data.bairro);
+      displayParts.push(`${data.localidade} - ${data.uf}`);
+      displayParts.push(data.cep);
+      
       return [{
         id: `cep-${cleanCep}`,
-        display_name: `${data.logradouro || ''}, ${data.bairro || ''}, ${data.localidade} - ${data.uf}, ${data.cep}`,
+        display_name: displayParts.join(', '),
         lat: parseFloat(geoData[0].lat),
         lon: parseFloat(geoData[0].lon),
-        label: `${data.logradouro || ''}, ${data.bairro || ''}, ${data.localidade} - ${data.uf}`,
+        label: displayParts.join(', '),
         type: 'cep'
       }];
     }
@@ -60,55 +152,14 @@ async function searchByCEP(cep: string): Promise<AddressSuggestion[]> {
   }
 }
 
-// Busca usando Photon (autocomplete melhor para Brasil)
-async function searchPhoton(query: string): Promise<AddressSuggestion[]> {
-  try {
-    const response = await fetch(
-      `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=6&lang=pt&lat=-14.235&lon=-51.925&location_bias_scale=0.1`,
-      { headers: { 'Accept': 'application/json' } }
-    );
-    
-    if (!response.ok) return [];
-    
-    const data = await response.json();
-    
-    if (data.features && data.features.length > 0) {
-      return data.features
-        .filter((f: any) => f.properties?.country === 'Brazil' || f.properties?.country === 'Brasil')
-        .map((feature: any) => {
-          const props = feature.properties;
-          const parts: string[] = [];
-          
-          if (props.name) parts.push(props.name);
-          if (props.street && props.street !== props.name) parts.push(props.street);
-          if (props.district) parts.push(props.district);
-          if (props.city) parts.push(props.city);
-          if (props.state) parts.push(props.state);
-          
-          const displayName = parts.join(', ') || props.name || 'Local desconhecido';
-          
-          return {
-            id: `photon-${feature.geometry.coordinates[0]}-${feature.geometry.coordinates[1]}`,
-            display_name: displayName,
-            lat: feature.geometry.coordinates[1],
-            lon: feature.geometry.coordinates[0],
-            label: displayName,
-            type: props.type || 'place'
-          };
-        });
-    }
-    return [];
-  } catch (error) {
-    console.error('Photon search error:', error);
-    return [];
-  }
-}
-
-// Busca usando Nominatim como fallback
+// Busca endereços via Nominatim
 async function searchNominatim(query: string): Promise<AddressSuggestion[]> {
   try {
+    // Adiciona "Brasil" para melhorar resultados
+    const searchQuery = query.toLowerCase().includes('brasil') ? query : `${query}, Brasil`;
+    
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=5&addressdetails=1`,
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=br&limit=5&addressdetails=1`,
       { headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'LogisticaApp/1.0' } }
     );
     
@@ -117,14 +168,27 @@ async function searchNominatim(query: string): Promise<AddressSuggestion[]> {
     const data = await response.json();
     
     if (data && data.length > 0) {
-      return data.map((item: any) => ({
-        id: `nom-${item.place_id}`,
-        display_name: item.display_name,
-        lat: parseFloat(item.lat),
-        lon: parseFloat(item.lon),
-        label: item.display_name,
-        type: item.type
-      }));
+      return data.map((item: any) => {
+        // Formata o endereço de forma mais limpa
+        const address = item.address || {};
+        const parts = [];
+        
+        if (address.road) parts.push(address.road);
+        if (address.suburb || address.neighbourhood) parts.push(address.suburb || address.neighbourhood);
+        if (address.city || address.town || address.village) parts.push(address.city || address.town || address.village);
+        if (address.state) parts.push(address.state);
+        
+        const displayName = parts.length > 0 ? parts.join(', ') : item.display_name;
+        
+        return {
+          id: `nom-${item.place_id}`,
+          display_name: displayName,
+          lat: parseFloat(item.lat),
+          lon: parseFloat(item.lon),
+          label: displayName,
+          type: 'address' as const
+        };
+      });
     }
     return [];
   } catch (error) {
@@ -137,7 +201,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   value,
   onChange,
   onSelect,
-  placeholder = 'Digite um endereço ou CEP...',
+  placeholder = 'Digite cidade, endereço ou CEP...',
   className,
   hasError,
   hasCoordinates,
@@ -160,37 +224,38 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     setLoading(true);
     
     try {
-      const isCepSearch = /^\d{5}/.test(query.replace(/\D/g, ''));
       let results: AddressSuggestion[] = [];
+      const isCepSearch = /^\d{5}/.test(query.replace(/\D/g, ''));
       
-      // Se parece CEP, busca por CEP primeiro
+      // Busca em paralelo para ser mais rápido
+      const promises: Promise<AddressSuggestion[]>[] = [];
+      
       if (isCepSearch) {
-        results = await searchByCEP(query);
+        promises.push(searchByCEP(query));
       }
       
-      // Busca via Photon (melhor autocomplete)
-      if (results.length < 4) {
-        const photonResults = await searchPhoton(query);
-        results = [...results, ...photonResults];
-      }
+      // Sempre busca no Nominatim
+      promises.push(searchNominatim(query));
       
-      // Se ainda não tem resultados suficientes, tenta Nominatim
-      if (results.length < 3) {
-        const nominatimResults = await searchNominatim(query);
-        // Remove duplicatas baseado em coordenadas próximas
-        const filteredNominatim = nominatimResults.filter(nr => 
-          !results.some(r => 
-            Math.abs(r.lat - nr.lat) < 0.001 && Math.abs(r.lon - nr.lon) < 0.001
-          )
+      const allResults = await Promise.all(promises);
+      results = allResults.flat();
+      
+      // Remove duplicatas baseado em coordenadas próximas
+      const uniqueResults: AddressSuggestion[] = [];
+      for (const result of results) {
+        const isDuplicate = uniqueResults.some(r => 
+          Math.abs(r.lat - result.lat) < 0.001 && Math.abs(r.lon - result.lon) < 0.001
         );
-        results = [...results, ...filteredNominatim];
+        if (!isDuplicate) {
+          uniqueResults.push(result);
+        }
       }
       
       // Limita a 8 resultados
-      results = results.slice(0, 8);
+      const finalResults = uniqueResults.slice(0, 8);
       
-      setSuggestions(results);
-      setIsOpen(results.length > 0);
+      setSuggestions(finalResults);
+      setIsOpen(finalResults.length > 0);
       setSelectedIndex(-1);
     } catch (error) {
       console.error('Address search error:', error);
@@ -208,7 +273,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
     debounceRef.current = setTimeout(() => {
       searchAddresses(value);
-    }, 350);
+    }, 400);
 
     return () => {
       if (debounceRef.current) {
@@ -263,7 +328,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     if (parts.length > 2) {
       return {
         main: parts.slice(0, 2).join(', '),
-        secondary: parts.slice(2, 5).join(', '),
+        secondary: parts.slice(2, 4).join(', '),
       };
     }
     return {
@@ -272,11 +337,15 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     };
   };
 
-  const getTypeIcon = (type?: string) => {
-    if (type === 'cep') return '📮';
-    if (type === 'city' || type === 'town') return '🏙️';
-    if (type === 'street' || type === 'road') return '🛣️';
-    return null;
+  const getTypeIcon = (type: AddressSuggestion['type']) => {
+    switch (type) {
+      case 'cep':
+        return <MapPinned className="h-4 w-4 text-green-500" />;
+      case 'city':
+        return <Building2 className="h-4 w-4 text-blue-500" />;
+      default:
+        return <MapPin className="h-4 w-4 text-muted-foreground" />;
+    }
   };
 
   return (
@@ -306,7 +375,6 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-auto">
           {suggestions.map((suggestion, index) => {
             const { main, secondary } = formatAddress(suggestion);
-            const typeIcon = getTypeIcon(suggestion.type);
             return (
               <div
                 key={suggestion.id}
@@ -317,11 +385,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
                 )}
               >
                 <div className="flex items-center justify-center w-5 h-5 mt-0.5">
-                  {typeIcon ? (
-                    <span className="text-sm">{typeIcon}</span>
-                  ) : (
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                  )}
+                  {getTypeIcon(suggestion.type)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{main}</p>
