@@ -561,18 +561,25 @@ export default function Layout({ children }: LayoutProps) {
               <>
                 {menuLocked ? (
                   <div className="relative w-full flex justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setOpenSubmenuId(openSubmenuId === "Atalhos" ? null : "Atalhos")}
-                      className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
-                        openSubmenuId === "Atalhos" || location.pathname === "/gerenciar-atalhos" || atalhos.some(a => a.path === location.pathname)
-                          ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                      }`}
-                      title="Atalhos"
-                    >
-                      <Star className="w-6 h-6" />
-                    </button>
+                    {(() => {
+                      const isAtalhosActive = location.pathname === "/gerenciar-atalhos" || atalhos.some(a => a.path === location.pathname);
+                      const isAtalhosOpen = openSubmenuId === "Atalhos";
+                      const shouldHighlightAtalhos = openSubmenuId ? isAtalhosOpen : isAtalhosActive;
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => setOpenSubmenuId(isAtalhosOpen ? null : "Atalhos")}
+                          className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
+                            shouldHighlightAtalhos
+                              ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                          }`}
+                          title="Atalhos"
+                        >
+                          <Star className="w-6 h-6" />
+                        </button>
+                      );
+                    })()}
                     
                     {openSubmenuId === "Atalhos" && (
                       <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 top-0 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-50 overflow-y-auto">
@@ -635,20 +642,27 @@ export default function Layout({ children }: LayoutProps) {
                   </div>
                 ) : (
                   <div className="relative w-full">
-                    <button
-                      type="button"
-                      onClick={() => setOpenSubmenuId(openSubmenuId === "Atalhos" ? null : "Atalhos")}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-                        openSubmenuId === "Atalhos" || location.pathname === "/gerenciar-atalhos" || atalhos.some(a => a.path === location.pathname)
-                          ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-                      }`}
-                      title="Atalhos"
-                    >
-                      <Star className="w-5 h-5 flex-shrink-0" />
-                      <span className="text-sm font-medium flex-1 text-left">Atalhos</span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${openSubmenuId === "Atalhos" ? 'rotate-180' : ''}`} />
-                    </button>
+                    {(() => {
+                      const isAtalhosActive = location.pathname === "/gerenciar-atalhos" || atalhos.some(a => a.path === location.pathname);
+                      const isAtalhosOpen = openSubmenuId === "Atalhos";
+                      const shouldHighlightAtalhos = openSubmenuId ? isAtalhosOpen : isAtalhosActive;
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => setOpenSubmenuId(isAtalhosOpen ? null : "Atalhos")}
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                            shouldHighlightAtalhos
+                              ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                          }`}
+                          title="Atalhos"
+                        >
+                          <Star className="w-5 h-5 flex-shrink-0" />
+                          <span className="text-sm font-medium flex-1 text-left">Atalhos</span>
+                          <ChevronDown className={`w-4 h-4 transition-transform ${isAtalhosOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                      );
+                    })()}
                     
                     {openSubmenuId === "Atalhos" && (
                       <div className="mt-1 ml-8 space-y-1">
@@ -710,8 +724,10 @@ export default function Layout({ children }: LayoutProps) {
                   const isMenuOpen = openSubmenuId === item.id;
                   // Verifica se algum atalho está ativo para o mesmo path
                   const isPathInAtalhos = atalhos.some(a => item.subItems?.some(sub => sub.url === a.path && location.pathname === a.path));
-                  // Destaca se: submenu está aberto OU se tem subitem ativo (e não está em atalhos)
-                  const shouldHighlight = isMenuOpen || (isSubItemActive && !isPathInAtalhos);
+                  // Se algum submenu está aberto, só destaca o aberto; senão, destaca pela rota ativa
+                  const shouldHighlight = openSubmenuId 
+                    ? isMenuOpen 
+                    : (isSubItemActive && !isPathInAtalhos);
                   
                   // Estilo travado (ícones apenas)
                   if (menuLocked) {
