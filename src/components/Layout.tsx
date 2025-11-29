@@ -562,15 +562,13 @@ export default function Layout({ children }: LayoutProps) {
                 {menuLocked ? (
                   <div className="relative w-full flex justify-center">
                     {(() => {
-                      const isAtalhosActive = location.pathname === "/gerenciar-atalhos" || atalhos.some(a => a.path === location.pathname);
                       const isAtalhosOpen = openSubmenuId === "Atalhos";
-                      const shouldHighlightAtalhos = openSubmenuId ? isAtalhosOpen : isAtalhosActive;
                       return (
                         <button
                           type="button"
                           onClick={() => setOpenSubmenuId(isAtalhosOpen ? null : "Atalhos")}
                           className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
-                            shouldHighlightAtalhos
+                            isAtalhosOpen
                               ? "bg-sidebar-primary text-sidebar-primary-foreground"
                               : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                           }`}
@@ -643,15 +641,13 @@ export default function Layout({ children }: LayoutProps) {
                 ) : (
                   <div className="relative w-full">
                     {(() => {
-                      const isAtalhosActive = location.pathname === "/gerenciar-atalhos" || atalhos.some(a => a.path === location.pathname);
                       const isAtalhosOpen = openSubmenuId === "Atalhos";
-                      const shouldHighlightAtalhos = openSubmenuId ? isAtalhosOpen : isAtalhosActive;
                       return (
                         <button
                           type="button"
                           onClick={() => setOpenSubmenuId(isAtalhosOpen ? null : "Atalhos")}
                           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-                            shouldHighlightAtalhos
+                            isAtalhosOpen
                               ? "bg-sidebar-primary text-sidebar-primary-foreground"
                               : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
                           }`}
@@ -720,14 +716,9 @@ export default function Layout({ children }: LayoutProps) {
                
               {visibleMenus.map((item) => {
                 if (item.subItems && item.subItems.length > 0) {
-                  const isSubItemActive = item.subItems.some(sub => location.pathname === sub.url);
                   const isMenuOpen = openSubmenuId === item.id;
-                  // Verifica se algum atalho está ativo para o mesmo path
-                  const isPathInAtalhos = atalhos.some(a => item.subItems?.some(sub => sub.url === a.path && location.pathname === a.path));
-                  // Se algum submenu está aberto, só destaca o aberto; senão, destaca pela rota ativa
-                  const shouldHighlight = openSubmenuId 
-                    ? isMenuOpen 
-                    : (isSubItemActive && !isPathInAtalhos);
+                  // Destaca apenas se o submenu está aberto
+                  const shouldHighlight = isMenuOpen;
                   
                   // Estilo travado (ícones apenas)
                   if (menuLocked) {
