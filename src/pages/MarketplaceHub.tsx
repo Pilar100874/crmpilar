@@ -42,6 +42,15 @@ const statusConfig: Record<string, { label: string; color: string; icon: any; le
   'sincronizando': { label: 'Sincronizando', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', icon: RefreshCw, ledColor: 'bg-yellow-500 animate-pulse', ledShadow: 'shadow-[0_0_8px_2px_rgba(234,179,8,0.6)]' },
 };
 
+// Redirect URIs fixos para cada marketplace (não editáveis)
+const MARKETPLACE_REDIRECT_URIS = {
+  mercado_livre: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mercadolivre-auth-callback',
+  amazon: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/amazon-auth-callback',
+  shopee: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/shopee-auth-callback',
+  magalu: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/magalu-auth-callback',
+  google_merchant: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/google-shopping-auth-callback',
+};
+
 export default function MarketplaceHub() {
   const queryClient = useQueryClient();
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
@@ -55,26 +64,21 @@ export default function MarketplaceHub() {
     // Mercado Livre
     ml_client_id: '',
     ml_client_secret: '',
-    ml_redirect_uri: '',
     // Amazon
     amazon_client_id: '',
     amazon_client_secret: '',
     amazon_refresh_token: '',
-    amazon_redirect_uri: '',
     // Shopee
     shopee_partner_id: '',
     shopee_partner_key: '',
     shopee_shop_id: '',
-    shopee_redirect_uri: '',
     // Magazine Luiza
     magalu_client_id: '',
     magalu_client_secret: '',
-    magalu_redirect_uri: '',
     // Google Shopping
     google_client_id: '',
     google_client_secret: '',
     google_merchant_id: '',
-    google_redirect_uri: '',
   });
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [mlConfigConta, setMlConfigConta] = useState<any>(null);
@@ -159,41 +163,41 @@ export default function MarketplaceHub() {
     mutationFn: async (data: typeof newConta) => {
       if (!estabelecimentoId) throw new Error('Estabelecimento não encontrado');
       
-      // Monta configuracoes baseado no marketplace
+      // Monta configuracoes baseado no marketplace (redirect_uri é fixo)
       let configuracoes: Record<string, any> | null = null;
       
       if (isMercadoLivre) {
         configuracoes = {
           ml_client_id: data.ml_client_id,
           ml_client_secret: data.ml_client_secret,
-          ml_redirect_uri: data.ml_redirect_uri,
+          ml_redirect_uri: MARKETPLACE_REDIRECT_URIS.mercado_livre,
         };
       } else if (isAmazon) {
         configuracoes = {
           amazon_client_id: data.amazon_client_id,
           amazon_client_secret: data.amazon_client_secret,
           amazon_refresh_token: data.amazon_refresh_token,
-          amazon_redirect_uri: data.amazon_redirect_uri,
+          amazon_redirect_uri: MARKETPLACE_REDIRECT_URIS.amazon,
         };
       } else if (isShopee) {
         configuracoes = {
           shopee_partner_id: data.shopee_partner_id,
           shopee_partner_key: data.shopee_partner_key,
           shopee_shop_id: data.shopee_shop_id,
-          shopee_redirect_uri: data.shopee_redirect_uri,
+          shopee_redirect_uri: MARKETPLACE_REDIRECT_URIS.shopee,
         };
       } else if (isMagalu) {
         configuracoes = {
           magalu_client_id: data.magalu_client_id,
           magalu_client_secret: data.magalu_client_secret,
-          magalu_redirect_uri: data.magalu_redirect_uri,
+          magalu_redirect_uri: MARKETPLACE_REDIRECT_URIS.magalu,
         };
       } else if (isGoogleMerchant) {
         configuracoes = {
           google_client_id: data.google_client_id,
           google_client_secret: data.google_client_secret,
           google_merchant_id: data.google_merchant_id,
-          google_redirect_uri: data.google_redirect_uri,
+          google_redirect_uri: MARKETPLACE_REDIRECT_URIS.google_merchant,
         };
       }
 
@@ -218,22 +222,17 @@ export default function MarketplaceHub() {
         ambiente: 'sandbox',
         ml_client_id: '',
         ml_client_secret: '',
-        ml_redirect_uri: '',
         amazon_client_id: '',
         amazon_client_secret: '',
         amazon_refresh_token: '',
-        amazon_redirect_uri: '',
         shopee_partner_id: '',
         shopee_partner_key: '',
         shopee_shop_id: '',
-        shopee_redirect_uri: '',
         magalu_client_id: '',
         magalu_client_secret: '',
-        magalu_redirect_uri: '',
         google_client_id: '',
         google_client_secret: '',
         google_merchant_id: '',
-        google_redirect_uri: '',
       });
       setShowMlSecret(false);
       toast.success('Conta adicionada com sucesso');
@@ -404,14 +403,14 @@ export default function MarketplaceHub() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Redirect URI *</Label>
+                      <Label>Redirect URI (automático)</Label>
                       <Input 
-                        value={newConta.ml_redirect_uri} 
-                        onChange={(e) => setNewConta(p => ({ ...p, ml_redirect_uri: e.target.value }))}
-                        placeholder="https://seusite.com/callback/mercadolivre"
+                        value={MARKETPLACE_REDIRECT_URIS.mercado_livre}
+                        disabled
+                        className="bg-muted text-muted-foreground cursor-not-allowed"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Use exatamente a mesma URL cadastrada no app do Mercado Livre
+                        Cadastre esta URL no app do Mercado Livre
                       </p>
                     </div>
                   </>
@@ -453,14 +452,14 @@ export default function MarketplaceHub() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Redirect URI *</Label>
+                      <Label>Redirect URI (automático)</Label>
                       <Input 
-                        value={newConta.amazon_redirect_uri} 
-                        onChange={(e) => setNewConta(p => ({ ...p, amazon_redirect_uri: e.target.value }))}
-                        placeholder="https://seusite.com/callback/amazon"
+                        value={MARKETPLACE_REDIRECT_URIS.amazon}
+                        disabled
+                        className="bg-muted text-muted-foreground cursor-not-allowed"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Use exatamente a mesma URL cadastrada no app da Amazon
+                        Cadastre esta URL no app da Amazon
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -510,14 +509,14 @@ export default function MarketplaceHub() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Redirect URI *</Label>
+                      <Label>Redirect URI (automático)</Label>
                       <Input 
-                        value={newConta.shopee_redirect_uri} 
-                        onChange={(e) => setNewConta(p => ({ ...p, shopee_redirect_uri: e.target.value }))}
-                        placeholder="https://seusite.com/callback/shopee"
+                        value={MARKETPLACE_REDIRECT_URIS.shopee}
+                        disabled
+                        className="bg-muted text-muted-foreground cursor-not-allowed"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Use exatamente a mesma URL cadastrada no app da Shopee
+                        Cadastre esta URL no app da Shopee
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -567,14 +566,14 @@ export default function MarketplaceHub() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Redirect URI *</Label>
+                      <Label>Redirect URI (automático)</Label>
                       <Input 
-                        value={newConta.magalu_redirect_uri} 
-                        onChange={(e) => setNewConta(p => ({ ...p, magalu_redirect_uri: e.target.value }))}
-                        placeholder="https://seusite.com/callback/magalu"
+                        value={MARKETPLACE_REDIRECT_URIS.magalu}
+                        disabled
+                        className="bg-muted text-muted-foreground cursor-not-allowed"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Use exatamente a mesma URL cadastrada no portal Magalu
+                        Cadastre esta URL no portal Magalu
                       </p>
                     </div>
                   </>
@@ -617,14 +616,14 @@ export default function MarketplaceHub() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Redirect URI *</Label>
+                      <Label>Redirect URI (automático)</Label>
                       <Input 
-                        value={newConta.google_redirect_uri} 
-                        onChange={(e) => setNewConta(p => ({ ...p, google_redirect_uri: e.target.value }))}
-                        placeholder="https://seusite.com/callback/google"
+                        value={MARKETPLACE_REDIRECT_URIS.google_merchant}
+                        disabled
+                        className="bg-muted text-muted-foreground cursor-not-allowed"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Use exatamente a mesma URL cadastrada no Google Cloud Console
+                        Cadastre esta URL no Google Cloud Console
                       </p>
                     </div>
                     <div className="space-y-2">
@@ -647,11 +646,11 @@ export default function MarketplaceHub() {
                     !newConta.marketplace_id || 
                     !newConta.nome_loja || 
                     addContaMutation.isPending ||
-                    (isMercadoLivre && (!newConta.ml_client_id || !newConta.ml_client_secret || !newConta.ml_redirect_uri)) ||
-                    (isAmazon && (!newConta.amazon_client_id || !newConta.amazon_client_secret || !newConta.amazon_redirect_uri)) ||
-                    (isShopee && (!newConta.shopee_partner_id || !newConta.shopee_partner_key || !newConta.shopee_redirect_uri)) ||
-                    (isMagalu && (!newConta.magalu_client_id || !newConta.magalu_client_secret || !newConta.magalu_redirect_uri)) ||
-                    (isGoogleMerchant && (!newConta.google_client_id || !newConta.google_client_secret || !newConta.google_redirect_uri))
+                    (isMercadoLivre && (!newConta.ml_client_id || !newConta.ml_client_secret)) ||
+                    (isAmazon && (!newConta.amazon_client_id || !newConta.amazon_client_secret)) ||
+                    (isShopee && (!newConta.shopee_partner_id || !newConta.shopee_partner_key)) ||
+                    (isMagalu && (!newConta.magalu_client_id || !newConta.magalu_client_secret)) ||
+                    (isGoogleMerchant && (!newConta.google_client_id || !newConta.google_client_secret))
                   }
                 >
                   {addContaMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
