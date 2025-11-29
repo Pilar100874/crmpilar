@@ -181,6 +181,16 @@ const menuItems: MenuItem[] = [
       { id: "Logística Config", title: "Configuração", url: "/logistica/config", icon: LucideIcons.Settings },
     ]
   },
+  {
+    id: "Marketplaces",
+    title: "Marketplaces",
+    icon: LucideIcons.Store,
+    subItems: [
+      { id: "Marketplace Hub", title: "Hub de Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
+      { id: "Marketplace Produtos", title: "Produtos x Canais", url: "/marketplaces/produtos", icon: LucideIcons.Package },
+      { id: "Marketplace Pedidos", title: "Pedidos", url: "/marketplaces/pedidos", icon: LucideIcons.ShoppingCart },
+    ]
+  },
   { id: "Trocar Usuário", title: "Trocar Usuário", url: "/perfil", icon: UserIcon },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
