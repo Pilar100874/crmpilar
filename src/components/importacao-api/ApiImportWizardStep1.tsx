@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Globe, Database, Loader2, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -37,8 +38,10 @@ export function ApiImportWizardStep1({
   const [apis, setApis] = useState<ApiEndpoint[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(false);
+  const [fetchProgress, setFetchProgress] = useState(0);
   const [useCustomUrl, setUseCustomUrl] = useState(false);
   const [localCustomUrl, setLocalCustomUrl] = useState(customUrl);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadApis();
@@ -87,8 +90,36 @@ export function ApiImportWizardStep1({
     onApiSelect("", url);
   };
 
+  const startProgressSimulation = () => {
+    setFetchProgress(0);
+    progressIntervalRef.current = setInterval(() => {
+      setFetchProgress(prev => {
+        if (prev >= 90) {
+          return prev;
+        }
+        // Slower progress as it gets higher
+        const increment = prev < 30 ? 8 : prev < 60 ? 5 : prev < 80 ? 3 : 1;
+        return Math.min(prev + increment, 90);
+      });
+    }, 150);
+  };
+
+  const stopProgressSimulation = (success: boolean) => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    if (success) {
+      setFetchProgress(100);
+      setTimeout(() => setFetchProgress(0), 500);
+    } else {
+      setFetchProgress(0);
+    }
+  };
+
   const fetchApiData = async () => {
     setFetchingData(true);
+    startProgressSimulation();
     try {
       let result: any;
       
@@ -121,6 +152,7 @@ export function ApiImportWizardStep1({
       }
 
       if (!result) {
+        stopProgressSimulation(false);
         toast.error("Não foi possível obter dados da API");
         return;
       }
@@ -146,6 +178,7 @@ export function ApiImportWizardStep1({
       }
 
       if (data.length === 0) {
+        stopProgressSimulation(false);
         toast.warning("Nenhum dado encontrado na API");
         return;
       }
@@ -153,10 +186,12 @@ export function ApiImportWizardStep1({
       // Extrair headers (chaves) do primeiro objeto
       const headers = Object.keys(data[0]);
       
+      stopProgressSimulation(true);
       onDataFetch(data, headers);
       toast.success(`${data.length} registros carregados da API`);
     } catch (error: any) {
       console.error("Erro ao buscar dados da API:", error);
+      stopProgressSimulation(false);
       toast.error(`Erro ao buscar dados: ${error.message}`);
     } finally {
       setFetchingData(false);
@@ -233,6 +268,16 @@ export function ApiImportWizardStep1({
             </>
           )}
         </Button>
+
+        {fetchingData && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Carregando dados...</span>
+              <span className="font-medium text-primary">{Math.round(fetchProgress)}%</span>
+            </div>
+            <Progress value={fetchProgress} className="h-2" />
+          </div>
+        )}
       </Card>
 
       {apiData.length > 0 && (
