@@ -4680,6 +4680,8 @@ export type Database = {
           estabelecimento_id: string | null
           estoque: number | null
           foto_url: string | null
+          foto_url_2: string | null
+          foto_url_3: string | null
           fragil: boolean | null
           garantia: string | null
           gramatura: number | null
@@ -4727,6 +4729,8 @@ export type Database = {
           estabelecimento_id?: string | null
           estoque?: number | null
           foto_url?: string | null
+          foto_url_2?: string | null
+          foto_url_3?: string | null
           fragil?: boolean | null
           garantia?: string | null
           gramatura?: number | null
@@ -4774,6 +4778,8 @@ export type Database = {
           estabelecimento_id?: string | null
           estoque?: number | null
           foto_url?: string | null
+          foto_url_2?: string | null
+          foto_url_3?: string | null
           fragil?: boolean | null
           garantia?: string | null
           gramatura?: number | null

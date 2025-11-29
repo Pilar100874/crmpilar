@@ -133,6 +133,8 @@ interface FormData {
   garantia: string;
   origem: string;
   condicao: string;
+  foto_url_2: string;
+  foto_url_3: string;
 }
 
 const initialFormData: FormData = {
@@ -182,6 +184,8 @@ const initialFormData: FormData = {
   garantia: "",
   origem: "nacional",
   condicao: "novo",
+  foto_url_2: "",
+  foto_url_3: "",
 };
 
 export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
@@ -718,6 +722,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         garantia: formData.garantia || null,
         origem: formData.origem || "nacional",
         condicao: formData.condicao || "novo",
+        foto_url_2: formData.foto_url_2 || null,
+        foto_url_3: formData.foto_url_3 || null,
       };
 
       if (editingProduto) {
@@ -822,6 +828,8 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       garantia: p.garantia || "",
       origem: p.origem || "nacional",
       condicao: p.condicao || "novo",
+      foto_url_2: p.foto_url_2 || "",
+      foto_url_3: p.foto_url_3 || "",
     });
     setShowDialog(true);
   };
@@ -1836,6 +1844,43 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                         placeholder="Ex: 12 meses, 1 ano..."
                         className="h-9 sm:h-10 text-sm"
                       />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fotos Adicionais */}
+                <div className="space-y-3 sm:space-y-4">
+                  <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Fotos Adicionais</h4>
+                  <p className="text-xs text-muted-foreground">Adicione fotos extras do produto para exibição nos marketplaces (a foto principal está na aba Básicos)</p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Foto 2</Label>
+                      <Input
+                        value={formData.foto_url_2}
+                        onChange={(e) => setFormData({ ...formData, foto_url_2: e.target.value })}
+                        placeholder="URL da segunda foto"
+                        className="h-9 sm:h-10 text-sm"
+                      />
+                      {formData.foto_url_2 && (
+                        <div className="mt-2 border rounded-md overflow-hidden w-20 h-20">
+                          <img src={formData.foto_url_2} alt="Foto 2" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Foto 3</Label>
+                      <Input
+                        value={formData.foto_url_3}
+                        onChange={(e) => setFormData({ ...formData, foto_url_3: e.target.value })}
+                        placeholder="URL da terceira foto"
+                        className="h-9 sm:h-10 text-sm"
+                      />
+                      {formData.foto_url_3 && (
+                        <div className="mt-2 border rounded-md overflow-hidden w-20 h-20">
+                          <img src={formData.foto_url_3} alt="Foto 3" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
