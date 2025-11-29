@@ -308,7 +308,7 @@ export default function MarketplaceHub() {
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um marketplace" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
                       {marketplaces?.map(m => (
                         <SelectItem key={m.id} value={m.id}>{m.nome_display}</SelectItem>
                       ))}
