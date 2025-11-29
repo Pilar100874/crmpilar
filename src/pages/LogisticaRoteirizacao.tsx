@@ -286,16 +286,23 @@ const LogisticaRoteirizacao: React.FC = () => {
       
       console.log('Salvando rota:', rotaData);
 
-      const { error: insertError } = await supabase
+      const { data: insertedData, error: insertError } = await supabase
         .from('rotas_salvas')
-        .insert(rotaData);
+        .insert(rotaData)
+        .select('id')
+        .single();
 
       if (insertError) {
         console.error('Insert error:', insertError);
         throw new Error(insertError.message || 'Erro ao inserir rota');
       }
 
-      console.log('Rota salva com sucesso!');
+      if (!insertedData?.id) {
+        console.error('Insert returned no data - possible RLS rejection');
+        throw new Error('Não foi possível salvar a rota. Verifique suas permissões.');
+      }
+
+      console.log('Rota salva com sucesso! ID:', insertedData.id);
       toast.success('Rota salva com sucesso!');
       setSaveDialogOpen(false);
       setRouteName('');
