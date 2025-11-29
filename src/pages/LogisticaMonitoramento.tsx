@@ -222,174 +222,205 @@ const LogisticaMonitoramento: React.FC = () => {
     }
   };
 
+  // Fullscreen map rendering
+  if (mapFullscreen) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-background">
+        {/* Map fills entire screen */}
+        <div className="absolute inset-0">
+          {loading ? (
+            <div className="h-full w-full flex items-center justify-center bg-muted/50">
+              <div className="text-muted-foreground">Carregando...</div>
+            </div>
+          ) : veiculosComPosicao.length === 0 ? (
+            <div className="h-full w-full flex items-center justify-center bg-muted/50">
+              <div className="text-center">
+                <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">Nenhum veículo com posição</p>
+              </div>
+            </div>
+          ) : (
+            <LazyLogisticaMap
+              veiculos={veiculosComPosicao}
+              onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
+              className="absolute inset-0"
+              fitBounds
+            />
+          )}
+          
+          {/* Exit fullscreen button */}
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute left-[10px] top-[82px] z-[10000] h-[30px] w-[30px] bg-background border-2 border-[rgba(0,0,0,0.2)] shadow-none hover:bg-accent rounded-sm"
+            onClick={() => setMapFullscreen(false)}
+            title="Sair do modo expandido"
+          >
+            <Minimize2 className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Hidden audio element for alerts */}
+        <audio ref={audioRef} src="/notification.mp3" preload="auto" />
+      </div>
+    );
+  }
+
   return (
-    <div className={cn(
-      "flex flex-col",
-      mapFullscreen ? "h-screen fixed inset-0 z-50" : "h-[calc(100vh-64px)]"
-    )}>
+    <div className="h-[calc(100vh-64px)] flex flex-col">
       {/* Hidden audio element for alerts */}
       <audio ref={audioRef} src="/notification.mp3" preload="auto" />
 
-      {/* Header - hidden in fullscreen */}
-      {!mapFullscreen && (
-        <div className="p-3 sm:p-4 border-b bg-background flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')} className="h-8 w-8">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <div>
-                <h1 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                  <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
-                  Monitoramento em Tempo Real
-                </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Última atualização: {format(lastUpdate, "HH:mm:ss", { locale: ptBR })}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-              {/* Auto Refresh Toggle */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-2">
-                      <RefreshCw className={cn("h-4 w-4", autoRefresh && "animate-spin")} />
-                      <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>Auto-atualização</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              {/* Alerts Toggle */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-2">
-                      {alertsEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-                      <Switch checked={alertsEnabled} onCheckedChange={setAlertsEnabled} />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>Alertas</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              {/* Sound Toggle */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-2">
-                      <Volume2 className={cn("h-4 w-4", !soundEnabled && "opacity-50")} />
-                      <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>Som de alerta</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-
-              <Button variant="outline" size="sm" onClick={fetchVeiculos}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Atualizar
-              </Button>
+      {/* Header */}
+      <div className="p-3 sm:p-4 border-b bg-background flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')} className="h-8 w-8">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                Monitoramento em Tempo Real
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Última atualização: {format(lastUpdate, "HH:mm:ss", { locale: ptBR })}
+              </p>
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <Card className="p-2 sm:p-3">
-              <div className="flex items-center gap-2">
-                <Car className="h-4 w-4 text-primary" />
-                <span className="text-xs sm:text-sm text-muted-foreground">Total</span>
-              </div>
-              <p className="text-lg sm:text-xl font-bold">{stats.total}</p>
-            </Card>
-            <Card className="p-2 sm:p-3 border-l-2 border-l-green-500">
-              <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 text-green-500" />
-                <span className="text-xs sm:text-sm text-muted-foreground">Movendo</span>
-              </div>
-              <p className="text-lg sm:text-xl font-bold text-green-600">{stats.movendo}</p>
-            </Card>
-            <Card className="p-2 sm:p-3 border-l-2 border-l-amber-500">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-amber-500" />
-                <span className="text-xs sm:text-sm text-muted-foreground">Parado</span>
-              </div>
-              <p className="text-lg sm:text-xl font-bold text-amber-600">{stats.parado}</p>
-            </Card>
-            <Card className="p-2 sm:p-3 border-l-2 border-l-gray-400">
-              <div className="flex items-center gap-2">
-                <WifiOff className="h-4 w-4 text-gray-400" />
-                <span className="text-xs sm:text-sm text-muted-foreground">Offline</span>
-              </div>
-              <p className="text-lg sm:text-xl font-bold text-gray-500">{stats.offline}</p>
-            </Card>
+          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+            {/* Auto Refresh Toggle */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className={cn("h-4 w-4", autoRefresh && "animate-spin")} />
+                    <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>Auto-atualização</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {/* Alerts Toggle */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-2">
+                    {alertsEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                    <Switch checked={alertsEnabled} onCheckedChange={setAlertsEnabled} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>Alertas</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {/* Sound Toggle */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-2">
+                    <Volume2 className={cn("h-4 w-4", !soundEnabled && "opacity-50")} />
+                    <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>Som de alerta</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <Button variant="outline" size="sm" onClick={fetchVeiculos}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Atualizar
+            </Button>
           </div>
         </div>
-      )}
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <Card className="p-2 sm:p-3">
+            <div className="flex items-center gap-2">
+              <Car className="h-4 w-4 text-primary" />
+              <span className="text-xs sm:text-sm text-muted-foreground">Total</span>
+            </div>
+            <p className="text-lg sm:text-xl font-bold">{stats.total}</p>
+          </Card>
+          <Card className="p-2 sm:p-3 border-l-2 border-l-green-500">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-green-500" />
+              <span className="text-xs sm:text-sm text-muted-foreground">Movendo</span>
+            </div>
+            <p className="text-lg sm:text-xl font-bold text-green-600">{stats.movendo}</p>
+          </Card>
+          <Card className="p-2 sm:p-3 border-l-2 border-l-amber-500">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-amber-500" />
+              <span className="text-xs sm:text-sm text-muted-foreground">Parado</span>
+            </div>
+            <p className="text-lg sm:text-xl font-bold text-amber-600">{stats.parado}</p>
+          </Card>
+          <Card className="p-2 sm:p-3 border-l-2 border-l-gray-400">
+            <div className="flex items-center gap-2">
+              <WifiOff className="h-4 w-4 text-gray-400" />
+              <span className="text-xs sm:text-sm text-muted-foreground">Offline</span>
+            </div>
+            <p className="text-lg sm:text-xl font-bold text-gray-500">{stats.offline}</p>
+          </Card>
+        </div>
+      </div>
 
       {/* Content */}
-      <div className={cn(
-        "flex-1 flex overflow-hidden",
-        mapFullscreen ? "absolute inset-0" : "flex-col md:flex-row"
-      )}>
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Vehicle List */}
-        {!mapFullscreen && (
-          <div className="w-full md:w-64 lg:w-72 flex-shrink-0 border-b md:border-b-0 md:border-r bg-background overflow-hidden flex flex-col max-h-[30vh] md:max-h-none">
-            <div className="p-2 sm:p-3 border-b flex items-center justify-between">
-              <h3 className="font-medium text-sm flex items-center gap-2">
-                <Car className="h-4 w-4" />
-                Veículos
-              </h3>
-            </div>
-            <ScrollArea className="flex-1">
-              <div className="p-2 space-y-1">
-                {veiculos.map(v => {
-                  const config = statusConfig[v.status];
-                  const isSelected = selectedVeiculoId === v.id;
-                  
-                  return (
-                    <div
-                      key={v.id}
-                      onClick={() => setSelectedVeiculoId(isSelected ? null : v.id)}
-                      className={cn(
-                        "p-2 rounded-lg cursor-pointer transition-all",
-                        isSelected 
-                          ? "bg-primary/10 border-2 border-primary" 
-                          : `bg-card hover:bg-accent border ${config.borderColor} border-l-4`
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {v.status !== 'offline' ? (
-                            <Wifi className="h-3 w-3 text-green-500" />
-                          ) : (
-                            <WifiOff className="h-3 w-3 text-destructive" />
-                          )}
-                          <span className="font-medium text-sm">{v.placa}</span>
-                        </div>
-                        <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
-                          {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
-                        </Badge>
-                      </div>
-                      {v.motorista && (
-                        <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </ScrollArea>
+        <div className="w-full md:w-64 lg:w-72 flex-shrink-0 border-b md:border-b-0 md:border-r bg-background overflow-hidden flex flex-col max-h-[30vh] md:max-h-none">
+          <div className="p-2 sm:p-3 border-b flex items-center justify-between">
+            <h3 className="font-medium text-sm flex items-center gap-2">
+              <Car className="h-4 w-4" />
+              Veículos
+            </h3>
           </div>
-        )}
+          <ScrollArea className="flex-1">
+            <div className="p-2 space-y-1">
+              {veiculos.map(v => {
+                const config = statusConfig[v.status];
+                const isSelected = selectedVeiculoId === v.id;
+                
+                return (
+                  <div
+                    key={v.id}
+                    onClick={() => setSelectedVeiculoId(isSelected ? null : v.id)}
+                    className={cn(
+                      "p-2 rounded-lg cursor-pointer transition-all",
+                      isSelected 
+                        ? "bg-primary/10 border-2 border-primary" 
+                        : `bg-card hover:bg-accent border ${config.borderColor} border-l-4`
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {v.status !== 'offline' ? (
+                          <Wifi className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <WifiOff className="h-3 w-3 text-destructive" />
+                        )}
+                        <span className="font-medium text-sm">{v.placa}</span>
+                      </div>
+                      <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
+                        {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
+                      </Badge>
+                    </div>
+                    {v.motorista && (
+                      <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </div>
 
         {/* Map */}
-        <div className={cn(
-          "relative",
-          mapFullscreen ? "w-full h-full" : "flex-1"
-        )}>
+        <div className="flex-1 relative">
           {loading ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
               <div className="text-muted-foreground">Carregando...</div>
@@ -415,63 +446,57 @@ const LogisticaMonitoramento: React.FC = () => {
             variant="outline"
             size="icon"
             className="absolute left-[10px] top-[82px] z-[400] h-[30px] w-[30px] bg-background border-2 border-[rgba(0,0,0,0.2)] shadow-none hover:bg-accent rounded-sm"
-            onClick={() => setMapFullscreen(!mapFullscreen)}
-            title={mapFullscreen ? "Sair do modo expandido" : "Expandir mapa"}
+            onClick={() => setMapFullscreen(true)}
+            title="Expandir mapa"
           >
-            {mapFullscreen ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
+            <Maximize2 className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Alerts Panel */}
-        {!mapFullscreen && (
-          <div className="w-full md:w-64 lg:w-72 flex-shrink-0 border-t md:border-t-0 md:border-l bg-background overflow-hidden flex flex-col max-h-[25vh] md:max-h-none">
-            <div 
-              className="p-2 sm:p-3 border-b flex items-center justify-between cursor-pointer"
-              onClick={() => setShowAlerts(!showAlerts)}
-            >
-              <h3 className="font-medium text-sm flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4" />
-                Alertas
-                {alerts.length > 0 && (
-                  <Badge variant="destructive" className="text-[10px]">{alerts.length}</Badge>
-                )}
-              </h3>
-              {showAlerts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </div>
-            {showAlerts && (
-              <ScrollArea className="flex-1">
-                <div className="p-2 space-y-2">
-                  {alerts.length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-4">
-                      Nenhum alerta
-                    </p>
-                  ) : (
-                    alerts.map((alert, index) => (
-                      <div 
-                        key={`${alert.veiculoId}-${alert.type}-${index}`}
-                        className="p-2 rounded-lg bg-card border text-xs cursor-pointer hover:bg-accent"
-                        onClick={() => setSelectedVeiculoId(alert.veiculoId)}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          {getAlertIcon(alert.type)}
-                          <span className="font-medium">{alert.placa}</span>
-                        </div>
-                        <p className="text-muted-foreground">{alert.message}</p>
-                        <p className="text-[10px] text-muted-foreground mt-1">
-                          {format(alert.timestamp, "HH:mm:ss", { locale: ptBR })}
-                        </p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
-            )}
+        <div className="w-full md:w-64 lg:w-72 flex-shrink-0 border-t md:border-t-0 md:border-l bg-background overflow-hidden flex flex-col max-h-[25vh] md:max-h-none">
+          <div 
+            className="p-2 sm:p-3 border-b flex items-center justify-between cursor-pointer"
+            onClick={() => setShowAlerts(!showAlerts)}
+          >
+            <h3 className="font-medium text-sm flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Alertas
+              {alerts.length > 0 && (
+                <Badge variant="destructive" className="text-[10px]">{alerts.length}</Badge>
+              )}
+            </h3>
+            {showAlerts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </div>
-        )}
+          {showAlerts && (
+            <ScrollArea className="flex-1">
+              <div className="p-2 space-y-2">
+                {alerts.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">
+                    Nenhum alerta
+                  </p>
+                ) : (
+                  alerts.map((alert, index) => (
+                    <div 
+                      key={`${alert.veiculoId}-${alert.type}-${index}`}
+                      className="p-2 rounded-lg bg-card border text-xs cursor-pointer hover:bg-accent"
+                      onClick={() => setSelectedVeiculoId(alert.veiculoId)}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        {getAlertIcon(alert.type)}
+                        <span className="font-medium">{alert.placa}</span>
+                      </div>
+                      <p className="text-muted-foreground">{alert.message}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {format(alert.timestamp, "HH:mm:ss", { locale: ptBR })}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          )}
+        </div>
       </div>
     </div>
   );
