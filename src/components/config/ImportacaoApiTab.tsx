@@ -376,6 +376,11 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
             selectedFields={selectedFields}
             onSelectFields={setSelectedFields}
             data={apiData}
+            onExcelImport={(excelData, excelHeaders) => {
+              setApiData(excelData);
+              setApiHeaders(excelHeaders);
+              setSelectedFields([]);
+            }}
           />
         );
       case 3:
@@ -434,16 +439,16 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
     return (
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
             <div className="rounded-lg bg-primary/10 p-2">
               <Globe className="h-5 w-5 text-primary" />
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-semibold">
-                {editingId ? "Editar Importação via API" : "Nova Importação via API"}
+                {editingId ? "Editar Importação de Produtos" : "Nova Importação de Produtos"}
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                Importe produtos a partir de uma API externa
+                Importe produtos a partir de uma API externa ou planilha Excel
               </p>
             </div>
           </div>

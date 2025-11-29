@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Package, Truck, DollarSign, Barcode } from "lucide-react";
+import { ArrowRight, Package, Truck, DollarSign, Barcode, ShoppingCart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,6 +81,15 @@ const PACKAGING_FIELDS = [
   { value: "embalagem_altura", label: "Altura da Embalagem (cm)", required: true },
   { value: "embalagem_largura", label: "Largura da Embalagem (cm)", required: true },
   { value: "embalagem_comprimento", label: "Comprimento da Embalagem (cm)", required: true },
+];
+
+const MARKETPLACE_FIELDS: FieldDefinition[] = [
+  { value: "descricao", label: "Descrição", required: false },
+  { value: "marca", label: "Marca", required: false },
+  { value: "estoque", label: "Estoque", required: false },
+  { value: "garantia", label: "Garantia", required: false },
+  { value: "origem", label: "Origem", required: false, fixedOptions: ["Nacional", "Importado"] },
+  { value: "condicao", label: "Condição", required: false, fixedOptions: ["Novo", "Usado", "Recondicionado"] },
 ];
 
 const PRICE_TYPE_OPTIONS = [
@@ -474,7 +483,7 @@ export function ApiImportWizardStep5({
 
   const priceFieldsCount = tipoPreco === "produto" ? PRICE_FIELDS_PRODUTO.length : PRICE_FIELDS_CATEGORIA.length;
   const filteredCustomFields = customFields.filter(c => !STANDARD_FIELD_KEYS.includes(c.campo_key));
-  const totalFields = STANDARD_FIELDS.length + FREIGHT_FIELDS.length + PACKAGING_FIELDS.length + priceFieldsCount + 1 + filteredCustomFields.length;
+  const totalFields = STANDARD_FIELDS.length + FREIGHT_FIELDS.length + PACKAGING_FIELDS.length + MARKETPLACE_FIELDS.length + priceFieldsCount + 1 + filteredCustomFields.length;
 
   return (
     <div className="space-y-4">
@@ -492,7 +501,7 @@ export function ApiImportWizardStep5({
       </div>
 
       <Tabs defaultValue="standard" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="standard" className="flex items-center gap-1 text-xs">
             <Package className="h-3 w-3" />
             <span className="hidden sm:inline">Padrão</span>
@@ -510,6 +519,12 @@ export function ApiImportWizardStep5({
             <span className="hidden sm:inline">Embalagem</span>
             <span className="sm:hidden">Emb</span>
             ({PACKAGING_FIELDS.length})
+          </TabsTrigger>
+          <TabsTrigger value="marketplace" className="flex items-center gap-1 text-xs">
+            <ShoppingCart className="h-3 w-3" />
+            <span className="hidden sm:inline">Marketplace</span>
+            <span className="sm:hidden">Mkt</span>
+            ({MARKETPLACE_FIELDS.length})
           </TabsTrigger>
           <TabsTrigger value="price" className="flex items-center gap-1 text-xs">
             <DollarSign className="h-3 w-3" />
@@ -552,6 +567,19 @@ export function ApiImportWizardStep5({
               <div className="bg-muted/50 rounded-lg p-3">
                 <p className="text-sm text-muted-foreground">
                   💡 <strong>EAN-14:</strong> Calculado automaticamente a partir do EAN-13
+                </p>
+              </div>
+            </div>
+          </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="marketplace" className="mt-4">
+          <ScrollArea className="h-[400px] pr-4">
+            <div className="space-y-3">
+              {MARKETPLACE_FIELDS.map((field) => renderFieldMapping(field))}
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-sm text-muted-foreground">
+                  💡 <strong>Marketplace:</strong> Campos utilizados para integração com marketplaces (Mercado Livre, Shopee, Amazon, etc.)
                 </p>
               </div>
             </div>
