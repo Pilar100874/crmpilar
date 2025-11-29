@@ -598,7 +598,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           .maybeSingle();
 
         if (existingByCodigo && existingByCodigo.id !== editingProduto?.id) {
-          toast.error("Já existe um produto com este código");
+          toast.error("Já existe um produto com este SKU");
           return false;
         }
       }
@@ -618,7 +618,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
     }
 
     if (!formData.codigo.trim()) {
-      toast.error("Código do produto é obrigatório");
+      toast.error("SKU do produto é obrigatório");
       return;
     }
 
@@ -710,7 +710,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           if (error.message.includes('idx_produtos_nome_estabelecimento')) {
             toast.error("Já existe um produto com este nome");
           } else if (error.message.includes('idx_produtos_codigo_estabelecimento')) {
-            toast.error("Já existe um produto com este código");
+            toast.error("Já existe um produto com este SKU");
           } else {
             toast.error(`Erro: ${error.message}`);
           }
@@ -727,7 +727,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           if (error.message.includes('idx_produtos_nome_estabelecimento')) {
             toast.error("Já existe um produto com este nome");
           } else if (error.message.includes('idx_produtos_codigo_estabelecimento')) {
-            toast.error("Já existe um produto com este código");
+            toast.error("Já existe um produto com este SKU");
           } else {
             toast.error(`Erro: ${error.message}`);
           }
@@ -882,7 +882,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nome, código ou NCM..."
+                placeholder="Buscar por nome, SKU ou NCM..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 text-sm"
@@ -1104,7 +1104,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                 onClick={() => handleSort("codigo")}
               >
                 <div className="flex items-center">
-                  Código
+                  SKU
                   <SortIcon field="codigo" />
                 </div>
               </TableHead>
@@ -1207,7 +1207,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
               </DialogTitle>
               {editingProduto && (
                 <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                  Código: <span className="font-mono">{(editingProduto as any).codigo}</span>
+                  SKU: <span className="font-mono">{(editingProduto as any).codigo}</span>
                 </p>
               )}
             </DialogHeader>
@@ -1256,11 +1256,11 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Identificação</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-1.5 sm:space-y-2">
-                        <Label className="text-xs sm:text-sm font-medium">Código *</Label>
+                        <Label className="text-xs sm:text-sm font-medium">SKU *</Label>
                         <Input
                           value={formData.codigo}
                           onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
-                          placeholder="Código do produto"
+                          placeholder="SKU do produto"
                           className="h-9 sm:h-10 text-sm"
                         />
                       </div>
