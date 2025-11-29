@@ -1808,13 +1808,13 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     <div className="space-y-1.5 sm:space-y-2">
                       <Label className="text-xs sm:text-sm font-medium">Condição</Label>
                       <Select
-                        value={formData.condicao}
-                        onValueChange={(value) => setFormData({ ...formData, condicao: value })}
+                        value={formData.condicao || "novo"}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, condicao: value }))}
                       >
                         <SelectTrigger className="h-9 sm:h-10 text-sm">
-                          <SelectValue placeholder="Selecione" />
+                          <SelectValue placeholder="Selecione a condição" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
                           <SelectItem value="novo">Novo</SelectItem>
                           <SelectItem value="usado">Usado</SelectItem>
                           <SelectItem value="recondicionado">Recondicionado</SelectItem>
@@ -1824,13 +1824,13 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                     <div className="space-y-1.5 sm:space-y-2">
                       <Label className="text-xs sm:text-sm font-medium">Origem</Label>
                       <Select
-                        value={formData.origem}
-                        onValueChange={(value) => setFormData({ ...formData, origem: value })}
+                        value={formData.origem || "nacional"}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, origem: value }))}
                       >
                         <SelectTrigger className="h-9 sm:h-10 text-sm">
-                          <SelectValue placeholder="Selecione" />
+                          <SelectValue placeholder="Selecione a origem" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
                           <SelectItem value="nacional">Nacional</SelectItem>
                           <SelectItem value="importado">Importado</SelectItem>
                         </SelectContent>
