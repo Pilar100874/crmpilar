@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { VeiculoComStatus } from '@/types/logistica';
@@ -39,31 +38,6 @@ interface LogisticaMapInternalProps {
   fitBounds?: boolean;
 }
 
-const FitBoundsToData: React.FC<{ veiculos: VeiculoComStatus[]; routes: RouteData[] }> = ({ veiculos, routes }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    const allPoints: [number, number][] = [];
-    
-    veiculos.filter(v => v.ultima_posicao).forEach(v => {
-      allPoints.push([v.ultima_posicao!.lat, v.ultima_posicao!.lng]);
-    });
-    
-    routes.forEach(route => {
-      route.coordinates.forEach(coord => {
-        allPoints.push([coord.lat, coord.lng]);
-      });
-    });
-    
-    if (allPoints.length > 0) {
-      const bounds = L.latLngBounds(allPoints);
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [veiculos, routes, map]);
-  
-  return null;
-};
-
 const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   veiculos = [],
   routes = [],
@@ -73,56 +47,116 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   className = 'h-full w-full',
   fitBounds = true,
 }) => {
-  const veiculosComPosicao = useMemo(() => 
-    veiculos.filter(v => v.ultima_posicao), 
-    [veiculos]
-  );
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const routeLayersRef = useRef<L.Polyline[]>([]);
+
+  // Initialize map
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+
+    mapRef.current = L.map(mapContainerRef.current).setView(center, zoom);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(mapRef.current);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update markers when veiculos change
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+    const currentMarkers = markersRef.current;
+    const veiculosComPosicao = veiculos.filter(v => v.ultima_posicao);
+
+    // Remove markers that no longer exist
+    const currentIds = new Set(veiculosComPosicao.map(v => v.id));
+    currentMarkers.forEach((marker, id) => {
+      if (!currentIds.has(id)) {
+        marker.remove();
+        currentMarkers.delete(id);
+      }
+    });
+
+    // Add or update markers
+    veiculosComPosicao.forEach(veiculo => {
+      const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
+      const existingMarker = currentMarkers.get(veiculo.id);
+
+      if (existingMarker) {
+        existingMarker.setLatLng(pos);
+        existingMarker.setIcon(createVeiculoIcon(veiculo.status));
+      } else {
+        const marker = L.marker(pos, { icon: createVeiculoIcon(veiculo.status) })
+          .addTo(map)
+          .bindPopup(`
+            <div class="text-sm">
+              <p class="font-bold">${veiculo.placa}</p>
+              <p>${veiculo.descricao || 'Sem descrição'}</p>
+              <p>Velocidade: ${veiculo.ultima_posicao?.velocidade || 0} km/h</p>
+            </div>
+          `);
+
+        marker.on('click', () => {
+          onVeiculoClick?.(veiculo);
+        });
+
+        currentMarkers.set(veiculo.id, marker);
+      }
+    });
+
+    // Fit bounds if enabled
+    if (fitBounds && veiculosComPosicao.length > 0) {
+      const allPoints: L.LatLngExpression[] = veiculosComPosicao.map(v => 
+        [v.ultima_posicao!.lat, v.ultima_posicao!.lng] as L.LatLngExpression
+      );
+      
+      routes.forEach(route => {
+        route.coordinates.forEach(coord => {
+          allPoints.push([coord.lat, coord.lng]);
+        });
+      });
+
+      if (allPoints.length > 0) {
+        const bounds = L.latLngBounds(allPoints);
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+  }, [veiculos, fitBounds, onVeiculoClick]);
+
+  // Update routes
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+
+    // Remove existing route layers
+    routeLayersRef.current.forEach(layer => layer.remove());
+    routeLayersRef.current = [];
+
+    // Add new routes
+    routes.forEach(route => {
+      const positions: L.LatLngExpression[] = route.coordinates.map(c => [c.lat, c.lng]);
+      const polyline = L.polyline(positions, {
+        color: route.color || '#3b82f6',
+        weight: 4,
+        opacity: 0.8
+      }).addTo(map);
+      routeLayersRef.current.push(polyline);
+    });
+  }, [routes]);
 
   return (
-    <MapContainer
-      center={center}
-      zoom={zoom}
-      className={className}
-      scrollWheelZoom={true}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      
-      {fitBounds && (veiculosComPosicao.length > 0 || routes.length > 0) && (
-        <FitBoundsToData veiculos={veiculosComPosicao} routes={routes} />
-      )}
-      
-      {routes.map((route, index) => (
-        <Polyline
-          key={`route-${index}`}
-          positions={route.coordinates.map(c => [c.lat, c.lng] as [number, number])}
-          color={route.color || '#3b82f6'}
-          weight={4}
-          opacity={0.8}
-        />
-      ))}
-      
-      {veiculosComPosicao.map((veiculo) => (
-        <Marker
-          key={veiculo.id}
-          position={[veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng]}
-          icon={createVeiculoIcon(veiculo.status)}
-          eventHandlers={{
-            click: () => onVeiculoClick?.(veiculo),
-          }}
-        >
-          <Popup>
-            <div className="text-sm">
-              <p className="font-bold">{veiculo.placa}</p>
-              <p>{veiculo.descricao || 'Sem descrição'}</p>
-              <p>Velocidade: {veiculo.ultima_posicao?.velocidade || 0} km/h</p>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+    <div ref={mapContainerRef} className={className} />
   );
 };
 
