@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, startOfDay, endOfDay, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowLeft, Calendar, Car, Route, Clock, Gauge, Activity, MapPin } from 'lucide-react';
+import { ArrowLeft, Calendar, Car, Route, Clock, Gauge, Activity, MapPin, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
@@ -11,19 +11,38 @@ import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
+
+const ROUTE_COLORS = [
+  '#3b82f6', // blue
+  '#ef4444', // red
+  '#22c55e', // green
+  '#f59e0b', // amber
+  '#8b5cf6', // violet
+  '#ec4899', // pink
+  '#06b6d4', // cyan
+  '#f97316', // orange
+];
+
+interface VeiculoHistorico {
+  veiculo: Veiculo;
+  posicoes: VeiculoPosicao[];
+  estatisticas: HistoricoEstatisticas | null;
+  color: string;
+}
 
 const LogisticaHistorico: React.FC = () => {
   const { veiculoId: paramVeiculoId } = useParams<{ veiculoId: string }>();
   const navigate = useNavigate();
   
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
-  const [selectedVeiculoId, setSelectedVeiculoId] = useState<string | null>(paramVeiculoId || null);
-  const [veiculo, setVeiculo] = useState<Veiculo | null>(null);
-  const [posicoes, setPosicoes] = useState<VeiculoPosicao[]>([]);
+  const [selectedVeiculoIds, setSelectedVeiculoIds] = useState<string[]>(paramVeiculoId ? [paramVeiculoId] : []);
+  const [veiculosHistorico, setVeiculosHistorico] = useState<VeiculoHistorico[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [loading, setLoading] = useState(true);
-  const [estatisticas, setEstatisticas] = useState<HistoricoEstatisticas | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [selectorOpen, setSelectorOpen] = useState(false);
 
   // Fetch all vehicles for the selector
   useEffect(() => {
@@ -47,57 +66,49 @@ const LogisticaHistorico: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedVeiculoId) {
-      fetchVeiculo();
+    if (selectedVeiculoIds.length > 0 && selectedDate) {
+      fetchAllPosicoes();
     } else {
-      setVeiculo(null);
-      setPosicoes([]);
-      setEstatisticas(null);
-      setLoading(false);
+      setVeiculosHistorico([]);
     }
-  }, [selectedVeiculoId]);
+  }, [selectedVeiculoIds, selectedDate]);
 
-  useEffect(() => {
-    if (selectedVeiculoId && selectedDate) {
-      fetchPosicoes();
-    }
-  }, [selectedVeiculoId, selectedDate]);
-
-  const fetchVeiculo = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('veiculos')
-        .select('*')
-        .eq('id', selectedVeiculoId)
-        .single();
-
-      if (error) throw error;
-      setVeiculo(data as Veiculo);
-    } catch (error) {
-      console.error('Error fetching vehicle:', error);
-      toast.error('Erro ao carregar veículo');
-    }
-  };
-
-  const fetchPosicoes = async () => {
+  const fetchAllPosicoes = async () => {
     setLoading(true);
     try {
       const start = startOfDay(selectedDate);
       const end = endOfDay(selectedDate);
 
-      const { data, error } = await supabase
-        .from('veiculo_posicoes')
-        .select('*')
-        .eq('veiculo_id', selectedVeiculoId)
-        .gte('data_hora', start.toISOString())
-        .lte('data_hora', end.toISOString())
-        .order('data_hora', { ascending: true });
+      const results: VeiculoHistorico[] = [];
 
-      if (error) throw error;
+      for (let i = 0; i < selectedVeiculoIds.length; i++) {
+        const veiculoId = selectedVeiculoIds[i];
+        const veiculo = veiculos.find(v => v.id === veiculoId);
+        
+        if (!veiculo) continue;
 
-      const posicoesData = (data || []) as VeiculoPosicao[];
-      setPosicoes(posicoesData);
-      calculateEstatisticas(posicoesData);
+        const { data, error } = await supabase
+          .from('veiculo_posicoes')
+          .select('*')
+          .eq('veiculo_id', veiculoId)
+          .gte('data_hora', start.toISOString())
+          .lte('data_hora', end.toISOString())
+          .order('data_hora', { ascending: true });
+
+        if (error) throw error;
+
+        const posicoes = (data || []) as VeiculoPosicao[];
+        const estatisticas = calculateEstatisticas(posicoes);
+
+        results.push({
+          veiculo,
+          posicoes,
+          estatisticas,
+          color: ROUTE_COLORS[i % ROUTE_COLORS.length]
+        });
+      }
+
+      setVeiculosHistorico(results);
     } catch (error) {
       console.error('Error fetching positions:', error);
       toast.error('Erro ao carregar histórico');
@@ -106,10 +117,9 @@ const LogisticaHistorico: React.FC = () => {
     }
   };
 
-  const calculateEstatisticas = (posicoes: VeiculoPosicao[]) => {
+  const calculateEstatisticas = (posicoes: VeiculoPosicao[]): HistoricoEstatisticas | null => {
     if (posicoes.length === 0) {
-      setEstatisticas(null);
-      return;
+      return null;
     }
 
     let distanciaTotal = 0;
@@ -154,17 +164,15 @@ const LogisticaHistorico: React.FC = () => {
       }
     }
 
-    setEstatisticas({
+    return {
       distancia_total_km: Math.round(distanciaTotal * 10) / 10,
       velocidade_maxima: Math.round(velocidadeMaxima),
       velocidade_media: Math.round(somaVelocidades / posicoes.length),
       tempo_movimento_minutos: tempoMovimento,
       tempo_parado_minutos: tempoParado,
       pontos_total: posicoes.length
-    });
+    };
   };
-
-  const routeCoordinates = posicoes.map(p => ({ lat: p.lat, lng: p.lng }));
 
   const formatMinutes = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
@@ -175,83 +183,164 @@ const LogisticaHistorico: React.FC = () => {
     return `${mins} min`;
   };
 
-  const handleVeiculoChange = (value: string) => {
-    setSelectedVeiculoId(value);
-    // Update URL without full navigation
-    navigate(`/logistica/historico/${value}`, { replace: true });
+  const toggleVeiculo = (veiculoId: string) => {
+    setSelectedVeiculoIds(prev => {
+      if (prev.includes(veiculoId)) {
+        return prev.filter(id => id !== veiculoId);
+      }
+      return [...prev, veiculoId];
+    });
   };
+
+  const removeVeiculo = (veiculoId: string) => {
+    setSelectedVeiculoIds(prev => prev.filter(id => id !== veiculoId));
+  };
+
+  const routes = veiculosHistorico.map(vh => ({
+    coordinates: vh.posicoes.map(p => ({ lat: p.lat, lng: p.lng })),
+    color: vh.color,
+    distance: vh.estatisticas?.distancia_total_km ? vh.estatisticas.distancia_total_km * 1000 : undefined
+  })).filter(r => r.coordinates.length > 0);
+
+  const selectedVeiculosInfo = selectedVeiculoIds.map((id, index) => {
+    const v = veiculos.find(v => v.id === id);
+    return v ? { ...v, color: ROUTE_COLORS[index % ROUTE_COLORS.length] } : null;
+  }).filter(Boolean) as (Veiculo & { color: string })[];
 
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b bg-background flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-semibold flex items-center gap-2">
-              <Car className="h-5 w-5" />
-              Histórico do Veículo
-            </h1>
-            {veiculo?.motorista && (
-              <p className="text-sm text-muted-foreground">Motorista: {veiculo.motorista}</p>
-            )}
+      <div className="p-4 border-b bg-background flex flex-col gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-xl font-semibold flex items-center gap-2">
+                <Car className="h-5 w-5" />
+                Histórico de Veículos
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {selectedVeiculoIds.length === 0 
+                  ? 'Selecione veículos para visualizar' 
+                  : `${selectedVeiculoIds.length} veículo(s) selecionado(s)`}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Multi Vehicle Selector */}
+            <Popover open={selectorOpen} onOpenChange={setSelectorOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2 min-w-[200px] justify-start">
+                  <Car className="h-4 w-4" />
+                  {selectedVeiculoIds.length === 0 
+                    ? 'Selecionar veículos' 
+                    : `${selectedVeiculoIds.length} selecionado(s)`}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0 bg-popover" align="end">
+                <Command>
+                  <CommandInput placeholder="Buscar veículo..." />
+                  <CommandList>
+                    <CommandEmpty>Nenhum veículo encontrado.</CommandEmpty>
+                    <CommandGroup>
+                      {veiculos.map((v) => {
+                        const isSelected = selectedVeiculoIds.includes(v.id);
+                        const index = selectedVeiculoIds.indexOf(v.id);
+                        return (
+                          <CommandItem
+                            key={v.id}
+                            onSelect={() => toggleVeiculo(v.id)}
+                            className="cursor-pointer"
+                          >
+                            <div className={cn(
+                              "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                              isSelected ? "bg-primary text-primary-foreground" : "opacity-50"
+                            )}>
+                              {isSelected && <Check className="h-3 w-3" />}
+                            </div>
+                            {isSelected && (
+                              <div 
+                                className="w-3 h-3 rounded-full mr-2 flex-shrink-0" 
+                                style={{ backgroundColor: ROUTE_COLORS[index % ROUTE_COLORS.length] }}
+                              />
+                            )}
+                            <span className="flex-1 truncate">
+                              {v.placa} {v.descricao ? `- ${v.descricao}` : ''}
+                            </span>
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            {/* Date Picker */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-popover" align="end">
+                <CalendarComponent
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  locale={ptBR}
+                  disabled={(date) => date > new Date()}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Vehicle Selector */}
-          <Select value={selectedVeiculoId || ''} onValueChange={handleVeiculoChange}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Selecione um veículo" />
-            </SelectTrigger>
-            <SelectContent>
-              {veiculos.map((v) => (
-                <SelectItem key={v.id} value={v.id}>
-                  {v.placa} {v.descricao ? `- ${v.descricao}` : ''}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Date Picker */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Calendar className="h-4 w-4" />
-                {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <CalendarComponent
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                locale={ptBR}
-                disabled={(date) => date > new Date()}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        {/* Selected vehicles badges */}
+        {selectedVeiculosInfo.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {selectedVeiculosInfo.map((v) => (
+              <Badge 
+                key={v.id} 
+                variant="secondary" 
+                className="gap-1 pr-1"
+                style={{ borderLeftColor: v.color, borderLeftWidth: 3 }}
+              >
+                <span>{v.placa}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-4 w-4 hover:bg-transparent"
+                  onClick={() => removeVeiculo(v.id)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Content */}
       <div className="flex-1 flex">
         {/* Map */}
         <div className="flex-1 relative">
-          {!selectedVeiculoId ? (
+          {selectedVeiculoIds.length === 0 ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
               <div className="text-center">
                 <Car className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground">Selecione um veículo para ver o histórico</p>
+                <p className="text-muted-foreground">Selecione veículos para ver o histórico</p>
               </div>
             </div>
           ) : loading ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
               <div className="text-muted-foreground">Carregando histórico...</div>
             </div>
-          ) : posicoes.length === 0 ? (
+          ) : routes.length === 0 ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
               <div className="text-center">
                 <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
@@ -260,12 +349,9 @@ const LogisticaHistorico: React.FC = () => {
             </div>
           ) : (
             <LazyLogisticaMap
-              routes={[{
-                coordinates: routeCoordinates,
-                color: '#3b82f6',
-                distance: estatisticas?.distancia_total_km ? estatisticas.distancia_total_km * 1000 : undefined
-              }]}
+              routes={routes}
               className="h-full w-full"
+              fitBounds
             />
           )}
         </div>
@@ -277,78 +363,117 @@ const LogisticaHistorico: React.FC = () => {
             Estatísticas do Dia
           </h2>
 
-          {!selectedVeiculoId ? (
+          {selectedVeiculoIds.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              Selecione um veículo para ver as estatísticas.
+              Selecione veículos para ver as estatísticas.
             </p>
-          ) : !estatisticas ? (
+          ) : veiculosHistorico.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              Selecione uma data com registros para ver as estatísticas.
+              Carregando...
             </p>
           ) : (
-            <div className="space-y-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Route className="h-4 w-4" />
-                    Distância Percorrida
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold">{estatisticas.distancia_total_km} km</p>
-                </CardContent>
-              </Card>
+            <div className="space-y-6">
+              {veiculosHistorico.map((vh) => (
+                <div key={vh.veiculo.id} className="space-y-3">
+                  <div 
+                    className="flex items-center gap-2 pb-2 border-b"
+                    style={{ borderBottomColor: vh.color }}
+                  >
+                    <div 
+                      className="w-3 h-3 rounded-full flex-shrink-0" 
+                      style={{ backgroundColor: vh.color }}
+                    />
+                    <span className="font-medium">{vh.veiculo.placa}</span>
+                    {vh.veiculo.descricao && (
+                      <span className="text-sm text-muted-foreground truncate">
+                        {vh.veiculo.descricao}
+                      </span>
+                    )}
+                  </div>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Gauge className="h-4 w-4" />
-                    Velocidade Máxima
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold">{estatisticas.velocidade_maxima} km/h</p>
-                  <p className="text-sm text-muted-foreground">
-                    Média: {estatisticas.velocidade_media} km/h
-                  </p>
-                </CardContent>
-              </Card>
+                  {!vh.estatisticas ? (
+                    <p className="text-muted-foreground text-sm">
+                      Nenhum registro para esta data
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      <Card className="col-span-2">
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <Route className="h-3 w-3" />
+                            Distância
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-lg font-bold">{vh.estatisticas.distancia_total_km} km</p>
+                        </CardContent>
+                      </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Tempo em Movimento
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold">{formatMinutes(estatisticas.tempo_movimento_minutos)}</p>
-                </CardContent>
-              </Card>
+                      <Card>
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <Gauge className="h-3 w-3" />
+                            Vel. Máx
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-lg font-bold">{vh.estatisticas.velocidade_maxima}</p>
+                          <p className="text-xs text-muted-foreground">km/h</p>
+                        </CardContent>
+                      </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    Tempo Parado
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold">{formatMinutes(estatisticas.tempo_parado_minutos)}</p>
-                </CardContent>
-              </Card>
+                      <Card>
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <Gauge className="h-3 w-3" />
+                            Vel. Média
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-lg font-bold">{vh.estatisticas.velocidade_media}</p>
+                          <p className="text-xs text-muted-foreground">km/h</p>
+                        </CardContent>
+                      </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    Pontos Registrados
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold">{estatisticas.pontos_total}</p>
-                </CardContent>
-              </Card>
+                      <Card>
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            Movimento
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-sm font-bold">{formatMinutes(vh.estatisticas.tempo_movimento_minutos)}</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            Parado
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-sm font-bold">{formatMinutes(vh.estatisticas.tempo_parado_minutos)}</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="col-span-2">
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            Pontos Registrados
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-lg font-bold">{vh.estatisticas.pontos_total}</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
