@@ -1071,6 +1071,69 @@ export type Database = {
           },
         ]
       }
+      contas_marketplace: {
+        Row: {
+          access_token: string | null
+          ambiente: string | null
+          configuracoes: Json | null
+          created_at: string | null
+          data_expiracao_token: string | null
+          estabelecimento_id: string
+          id: string
+          marketplace_id: string
+          nome_loja: string
+          refresh_token: string | null
+          seller_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          ambiente?: string | null
+          configuracoes?: Json | null
+          created_at?: string | null
+          data_expiracao_token?: string | null
+          estabelecimento_id: string
+          id?: string
+          marketplace_id: string
+          nome_loja: string
+          refresh_token?: string | null
+          seller_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          ambiente?: string | null
+          configuracoes?: Json | null
+          created_at?: string | null
+          data_expiracao_token?: string | null
+          estabelecimento_id?: string
+          id?: string
+          marketplace_id?: string
+          nome_loja?: string
+          refresh_token?: string | null
+          seller_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contas_marketplace_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_marketplace_marketplace_id_fkey"
+            columns: ["marketplace_id"]
+            isOneToOne: false
+            referencedRelation: "marketplaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contents: {
         Row: {
           blob_ref: string | null
@@ -2825,6 +2888,167 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_logs: {
+        Row: {
+          conta_marketplace_id: string | null
+          created_at: string | null
+          detalhes: Json | null
+          estabelecimento_id: string
+          id: string
+          marketplace_id: string | null
+          mensagem: string
+          sucesso: boolean | null
+          tipo: string
+        }
+        Insert: {
+          conta_marketplace_id?: string | null
+          created_at?: string | null
+          detalhes?: Json | null
+          estabelecimento_id: string
+          id?: string
+          marketplace_id?: string | null
+          mensagem: string
+          sucesso?: boolean | null
+          tipo: string
+        }
+        Update: {
+          conta_marketplace_id?: string | null
+          created_at?: string | null
+          detalhes?: Json | null
+          estabelecimento_id?: string
+          id?: string
+          marketplace_id?: string | null
+          mensagem?: string
+          sucesso?: boolean | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_logs_conta_marketplace_id_fkey"
+            columns: ["conta_marketplace_id"]
+            isOneToOne: false
+            referencedRelation: "contas_marketplace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_logs_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_logs_marketplace_id_fkey"
+            columns: ["marketplace_id"]
+            isOneToOne: false
+            referencedRelation: "marketplaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_produtos: {
+        Row: {
+          conta_marketplace_id: string
+          created_at: string | null
+          dados_extras: Json | null
+          id: string
+          marketplace_id: string
+          mensagem_erro: string | null
+          produto_id: string
+          sku_marketplace: string | null
+          status: string | null
+          titulo_marketplace: string | null
+          ultimo_sync: string | null
+          updated_at: string | null
+          url_anuncio: string | null
+        }
+        Insert: {
+          conta_marketplace_id: string
+          created_at?: string | null
+          dados_extras?: Json | null
+          id?: string
+          marketplace_id: string
+          mensagem_erro?: string | null
+          produto_id: string
+          sku_marketplace?: string | null
+          status?: string | null
+          titulo_marketplace?: string | null
+          ultimo_sync?: string | null
+          updated_at?: string | null
+          url_anuncio?: string | null
+        }
+        Update: {
+          conta_marketplace_id?: string
+          created_at?: string | null
+          dados_extras?: Json | null
+          id?: string
+          marketplace_id?: string
+          mensagem_erro?: string | null
+          produto_id?: string
+          sku_marketplace?: string | null
+          status?: string | null
+          titulo_marketplace?: string | null
+          ultimo_sync?: string | null
+          updated_at?: string | null
+          url_anuncio?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_produtos_conta_marketplace_id_fkey"
+            columns: ["conta_marketplace_id"]
+            isOneToOne: false
+            referencedRelation: "contas_marketplace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_produtos_marketplace_id_fkey"
+            columns: ["marketplace_id"]
+            isOneToOne: false
+            referencedRelation: "marketplaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_produtos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplaces: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          icone: string | null
+          id: string
+          nome: string
+          nome_display: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          nome_display: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          nome_display?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachments: string[] | null
@@ -3803,6 +4027,137 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedidos_marketplace: {
+        Row: {
+          conta_marketplace_id: string
+          created_at: string | null
+          dados_brutos_json: Json | null
+          data_pedido: string
+          endereco_entrega: Json | null
+          estabelecimento_id: string
+          id: string
+          id_pedido_marketplace: string
+          marketplace_id: string
+          moeda: string | null
+          nome_cliente: string | null
+          status: string | null
+          updated_at: string | null
+          valor_total: number
+        }
+        Insert: {
+          conta_marketplace_id: string
+          created_at?: string | null
+          dados_brutos_json?: Json | null
+          data_pedido: string
+          endereco_entrega?: Json | null
+          estabelecimento_id: string
+          id?: string
+          id_pedido_marketplace: string
+          marketplace_id: string
+          moeda?: string | null
+          nome_cliente?: string | null
+          status?: string | null
+          updated_at?: string | null
+          valor_total: number
+        }
+        Update: {
+          conta_marketplace_id?: string
+          created_at?: string | null
+          dados_brutos_json?: Json | null
+          data_pedido?: string
+          endereco_entrega?: Json | null
+          estabelecimento_id?: string
+          id?: string
+          id_pedido_marketplace?: string
+          marketplace_id?: string
+          moeda?: string | null
+          nome_cliente?: string | null
+          status?: string | null
+          updated_at?: string | null
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_marketplace_conta_marketplace_id_fkey"
+            columns: ["conta_marketplace_id"]
+            isOneToOne: false
+            referencedRelation: "contas_marketplace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_marketplace_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_marketplace_marketplace_id_fkey"
+            columns: ["marketplace_id"]
+            isOneToOne: false
+            referencedRelation: "marketplaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pedidos_marketplace_itens: {
+        Row: {
+          created_at: string | null
+          id: string
+          marketplace_produto_id: string | null
+          nome: string
+          pedido_marketplace_id: string
+          preco_unitario: number
+          produto_id: string | null
+          quantidade: number
+          sku: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          marketplace_produto_id?: string | null
+          nome: string
+          pedido_marketplace_id: string
+          preco_unitario: number
+          produto_id?: string | null
+          quantidade?: number
+          sku?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          marketplace_produto_id?: string | null
+          nome?: string
+          pedido_marketplace_id?: string
+          preco_unitario?: number
+          produto_id?: string | null
+          quantidade?: number
+          sku?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_marketplace_itens_marketplace_produto_id_fkey"
+            columns: ["marketplace_produto_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_produtos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_marketplace_itens_pedido_marketplace_id_fkey"
+            columns: ["pedido_marketplace_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos_marketplace"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedidos_marketplace_itens_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
             referencedColumns: ["id"]
           },
         ]

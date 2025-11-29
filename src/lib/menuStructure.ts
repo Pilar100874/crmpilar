@@ -97,7 +97,17 @@ export const menuStructure: MenuCategory[] = [
       { id: "Campanhas Marketing", title: "Campanhas", url: "/marketing/campanhas", icon: LucideIcons.Megaphone },
     ]
   },
-  { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: LucideIcons.FileText },
+{ id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: LucideIcons.FileText },
+  {
+    id: "Marketplaces",
+    title: "Marketplaces", 
+    icon: LucideIcons.Store,
+    subItems: [
+      { id: "Marketplace Hub", title: "Hub de Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
+      { id: "Marketplace Produtos", title: "Produtos x Canais", url: "/marketplaces/produtos", icon: LucideIcons.Package },
+      { id: "Marketplace Pedidos", title: "Pedidos", url: "/marketplaces/pedidos", icon: LucideIcons.ShoppingCart },
+    ]
+  },
   {
     id: "Telefonia",
     title: "Telefonia", 
