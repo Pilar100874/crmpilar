@@ -183,7 +183,7 @@ const LogisticaDashboard: React.FC = () => {
 
       {/* Desktop Left Sidebar */}
       <div className={cn(
-        "hidden md:flex flex-shrink-0 border-r transition-all duration-300 relative",
+        "hidden md:flex flex-shrink-0 border-r transition-all duration-300",
         sidebarCollapsed ? "w-0 overflow-hidden" : "w-72 lg:w-80"
       )}>
         <VeiculosList
@@ -195,36 +195,33 @@ const LogisticaDashboard: React.FC = () => {
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
         />
-        {/* Collapse toggle button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-6 w-6 rounded-full bg-background border shadow-md hover:bg-accent"
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        >
-          {sidebarCollapsed ? (
-            <PanelLeft className="h-3 w-3" />
-          ) : (
-            <PanelLeftClose className="h-3 w-3" />
-          )}
-        </Button>
       </div>
       
-      {/* Expand button when collapsed */}
-      {sidebarCollapsed && (
-        <Button
-          variant="secondary"
-          size="sm"
-          className="hidden md:flex absolute left-2 top-2 z-20 shadow-lg"
-          onClick={() => setSidebarCollapsed(false)}
-        >
-          <PanelLeft className="h-4 w-4 mr-2" />
-          Veículos ({veiculos.length})
-        </Button>
-      )}
+      {/* Collapse/Expand toggle button - always visible on desktop */}
+      <Button
+        variant="secondary"
+        size="sm"
+        className={cn(
+          "hidden md:flex absolute top-2 z-10 shadow-lg transition-all duration-300",
+          sidebarCollapsed ? "left-2" : "left-[calc(theme(spacing.72)-0.5rem)] lg:left-[calc(theme(spacing.80)-0.5rem)]"
+        )}
+        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+      >
+        {sidebarCollapsed ? (
+          <>
+            <PanelLeft className="h-4 w-4 mr-2" />
+            Veículos ({veiculos.length})
+          </>
+        ) : (
+          <PanelLeftClose className="h-4 w-4" />
+        )}
+      </Button>
 
       {/* Map Container */}
-      <div className="flex-1 relative min-h-[300px]">
+      <div className={cn(
+        "flex-1 relative min-h-[300px] transition-all duration-300",
+        sidebarCollapsed && "w-full"
+      )}>
         {loading ? (
           <div className="h-full flex items-center justify-center bg-muted/50">
             <div className="text-muted-foreground">Carregando...</div>
