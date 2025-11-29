@@ -433,16 +433,16 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
   if (mode === "wizard") {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="rounded-lg bg-primary/10 p-2">
               <Globe className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-base sm:text-lg font-semibold">
                 {editingId ? "Editar Importação via API" : "Nova Importação via API"}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Importe produtos a partir de uma API externa
               </p>
             </div>
@@ -450,21 +450,22 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
         </div>
 
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 px-3 sm:px-6">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base">Etapa {currentStep + 1} de {totalSteps}</CardTitle>
-                <p className="text-sm text-muted-foreground">{stepLabels[currentStep]}</p>
+                <CardTitle className="text-sm sm:text-base">Etapa {currentStep + 1} de {totalSteps}</CardTitle>
+                <p className="text-xs sm:text-sm text-muted-foreground">{stepLabels[currentStep]}</p>
               </div>
-              <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="mt-2" />
             
-            <div className="flex justify-between mt-3 overflow-x-auto gap-1">
+            {/* Step indicators - horizontal scroll on mobile */}
+            <div className="flex justify-between mt-3 overflow-x-auto gap-1 pb-2 -mx-1 px-1">
               {stepLabels.map((label, index) => (
                 <div
                   key={index}
-                  className={`flex flex-col items-center min-w-[60px] ${
+                  className={`flex flex-col items-center min-w-[40px] sm:min-w-[60px] flex-shrink-0 ${
                     index === currentStep
                       ? "text-primary"
                       : index < currentStep
@@ -473,7 +474,7 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
                   }`}
                 >
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                    className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-medium ${
                       index === currentStep
                         ? "bg-primary text-primary-foreground"
                         : index < currentStep
@@ -483,23 +484,24 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
                   >
                     {index < currentStep ? <CheckCircle2 className="h-3 w-3" /> : index + 1}
                   </div>
-                  <span className="text-[10px] mt-1 text-center hidden md:block">{label}</span>
+                  <span className="text-[8px] sm:text-[10px] mt-1 text-center hidden sm:block">{label}</span>
                 </div>
               ))}
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="min-h-[350px]">
+          <CardContent className="space-y-4 px-3 sm:px-6">
+            <div className="min-h-[300px] sm:min-h-[350px]">
               {renderStep()}
             </div>
 
-            <div className="flex justify-between pt-4 border-t">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-4 border-t">
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   onClick={handleBack}
                   disabled={currentStep === 0}
                   size="sm"
+                  className="flex-1 sm:flex-none"
                 >
                   <ArrowLeft className="h-4 w-4 mr-1" />
                   Voltar
@@ -511,6 +513,7 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
                     setMode("list");
                   }}
                   size="sm"
+                  className="flex-1 sm:flex-none"
                 >
                   Cancelar
                 </Button>
@@ -521,6 +524,7 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
                   onClick={handleNext}
                   disabled={!canProceed() || loading}
                   size="sm"
+                  className="w-full sm:w-auto"
                 >
                   Próxima
                   <ArrowRight className="h-4 w-4 ml-1" />
@@ -530,6 +534,7 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
                   onClick={handleFinish}
                   disabled={!canProceed() || loading}
                   size="sm"
+                  className="w-full sm:w-auto"
                 >
                   <CheckCircle2 className="h-4 w-4 mr-1" />
                   {loading ? "Salvando..." : "Concluir"}
@@ -544,11 +549,11 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Configure importações de produtos a partir de APIs externas
         </p>
-        <Button onClick={handleNewImport} size="sm">
+        <Button onClick={handleNewImport} size="sm" className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-1" />
           Nova Importação
         </Button>
@@ -573,29 +578,79 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {relatorios.map((relatorio) => (
-                <TableRow key={relatorio.id}>
-                  <TableCell className="font-medium">{relatorio.nome}</TableCell>
-                  <TableCell>
-                    {format(new Date(relatorio.data_criacao), "dd/MM/yyyy", { locale: ptBR })}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={relatorio.ativo ? "default" : "secondary"}>
+        <Card className="overflow-hidden">
+          {/* Desktop Table */}
+          <div className="hidden sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {relatorios.map((relatorio) => (
+                  <TableRow key={relatorio.id}>
+                    <TableCell className="font-medium">{relatorio.nome}</TableCell>
+                    <TableCell>
+                      {format(new Date(relatorio.data_criacao), "dd/MM/yyyy", { locale: ptBR })}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={relatorio.ativo ? "default" : "secondary"}>
+                        {relatorio.ativo ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(relatorio.id)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleToggleAtivo(relatorio.id, relatorio.ativo)}>
+                            {relatorio.ativo ? "Desativar" : "Ativar"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => {
+                              setRelatorioToDelete(relatorio.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Card List */}
+          <div className="sm:hidden divide-y">
+            {relatorios.map((relatorio) => (
+              <div key={relatorio.id} className="p-4 space-y-2">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{relatorio.nome}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(relatorio.data_criacao), "dd/MM/yyyy", { locale: ptBR })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={relatorio.ativo ? "default" : "secondary"} className="text-xs">
                       {relatorio.ativo ? "Ativo" : "Inativo"}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -622,11 +677,11 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </Card>
       )}
 

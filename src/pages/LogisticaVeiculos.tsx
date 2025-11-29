@@ -43,13 +43,13 @@ const LogisticaVeiculos: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Car className="h-6 w-6" />
+    <div className="p-4 sm:p-6">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <Car className="h-5 w-5 sm:h-6 sm:w-6" />
           Cadastro de Veículos
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Gerencie os veículos da sua frota
         </p>
       </div>

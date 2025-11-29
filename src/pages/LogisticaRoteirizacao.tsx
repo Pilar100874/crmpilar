@@ -269,27 +269,27 @@ const LogisticaRoteirizacao: React.FC = () => {
     .map(w => ({ lat: w.lat!, lng: w.lng! }));
 
   return (
-    <div className="h-[calc(100vh-64px)] flex">
-      {/* Sidebar */}
-      <div className="w-96 flex-shrink-0 border-r bg-background flex flex-col">
-        <div className="p-4 border-b">
-          <h2 className="font-semibold text-lg flex items-center gap-2">
-            <Route className="h-5 w-5" />
+    <div className="h-[calc(100vh-64px)] flex flex-col md:flex-row">
+      {/* Sidebar - becomes bottom sheet on mobile */}
+      <div className="w-full md:w-80 lg:w-96 flex-shrink-0 border-b md:border-b-0 md:border-r bg-background flex flex-col max-h-[50vh] md:max-h-none">
+        <div className="p-3 sm:p-4 border-b">
+          <h2 className="font-semibold text-base sm:text-lg flex items-center gap-2">
+            <Route className="h-4 w-4 sm:h-5 sm:w-5" />
             Roteirização
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Adicione endereços para calcular a rota
           </p>
         </div>
 
-        <ScrollArea className="flex-1 p-4">
+        <ScrollArea className="flex-1 p-3 sm:p-4">
           <div className="space-y-3">
             {waypoints.map((waypoint, index) => (
               <div key={waypoint.id} className="flex items-start gap-2">
-                <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold mt-2">
+                <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary text-primary-foreground text-[10px] sm:text-xs font-bold mt-2">
                   {index + 1}
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <AddressAutocomplete
                     value={waypoint.endereco}
                     onChange={(value) => updateWaypoint(waypoint.id, value)}
@@ -299,10 +299,10 @@ const LogisticaRoteirizacao: React.FC = () => {
                     hasCoordinates={!!(waypoint.lat && waypoint.lng)}
                   />
                   {waypoint.error && (
-                    <p className="text-xs text-destructive mt-1">{waypoint.error}</p>
+                    <p className="text-[10px] sm:text-xs text-destructive mt-1">{waypoint.error}</p>
                   )}
                   {waypoint.lat && waypoint.lng && (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                       {waypoint.lat.toFixed(4)}, {waypoint.lng.toFixed(4)}
                     </p>
                   )}
@@ -312,7 +312,7 @@ const LogisticaRoteirizacao: React.FC = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => removeWaypoint(waypoint.id)}
-                    className="mt-1"
+                    className="mt-1 h-8 w-8"
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -325,6 +325,7 @@ const LogisticaRoteirizacao: React.FC = () => {
             variant="outline"
             className="w-full mt-4"
             onClick={addWaypoint}
+            size="sm"
           >
             <Plus className="h-4 w-4 mr-2" />
             Adicionar Parada
@@ -333,21 +334,21 @@ const LogisticaRoteirizacao: React.FC = () => {
 
         {/* Route Info */}
         {route && (
-          <div className="p-4 border-t bg-muted/50">
-            <h3 className="font-medium mb-3">Resumo da Rota</h3>
-            <div className="grid grid-cols-2 gap-4">
+          <div className="p-3 sm:p-4 border-t bg-muted/50">
+            <h3 className="font-medium mb-2 sm:mb-3 text-sm">Resumo da Rota</h3>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div className="flex items-center gap-2">
                 <Navigation className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Distância</p>
-                  <p className="font-semibold">{formatDistance(route.distance)}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Distância</p>
+                  <p className="font-semibold text-sm">{formatDistance(route.distance)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Tempo</p>
-                  <p className="font-semibold">{formatDuration(route.duration)}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Tempo</p>
+                  <p className="font-semibold text-sm">{formatDuration(route.duration)}</p>
                 </div>
               </div>
             </div>
@@ -355,11 +356,12 @@ const LogisticaRoteirizacao: React.FC = () => {
         )}
 
         {/* Actions */}
-        <div className="p-4 border-t space-y-2">
+        <div className="p-3 sm:p-4 border-t space-y-2">
           <Button 
             className="w-full" 
             onClick={calculateRoute}
             disabled={calculating}
+            size="sm"
           >
             {calculating ? (
               <>
@@ -379,6 +381,7 @@ const LogisticaRoteirizacao: React.FC = () => {
               variant="outline" 
               className="w-full"
               onClick={() => setSaveDialogOpen(true)}
+              size="sm"
             >
               <Save className="h-4 w-4 mr-2" />
               Salvar Rota
@@ -388,7 +391,7 @@ const LogisticaRoteirizacao: React.FC = () => {
       </div>
 
       {/* Map */}
-      <div className="flex-1">
+      <div className="flex-1 min-h-[250px]">
         <LazyLogisticaMap
           routes={route ? [{
             coordinates: route.coordinates,

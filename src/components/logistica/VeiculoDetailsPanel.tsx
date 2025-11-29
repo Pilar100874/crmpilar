@@ -27,28 +27,28 @@ export const VeiculoDetailsPanel: React.FC<VeiculoDetailsPanelProps> = ({
   const config = statusConfig[veiculo.status];
 
   return (
-    <div className="h-full flex flex-col bg-background border-l">
-      <div className="p-4 border-b flex items-center justify-between">
-        <h2 className="font-semibold text-lg flex items-center gap-2">
-          <Car className="h-5 w-5" />
+    <div className="h-full flex flex-col bg-background">
+      <div className="p-3 sm:p-4 border-b flex items-center justify-between">
+        <h2 className="font-semibold text-base sm:text-lg flex items-center gap-2">
+          <Car className="h-4 w-4 sm:h-5 sm:w-5" />
           Detalhes do Veículo
         </h2>
-        <Button variant="ghost" size="icon" onClick={onClose}>
+        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
           <X className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="flex-1 overflow-auto p-4 space-y-6">
+      <div className="flex-1 overflow-auto p-3 sm:p-4 space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="text-center">
-          <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${config.bgColor} mb-3`}>
-            <Car className={`h-8 w-8 ${config.textColor}`} />
+          <div className={`inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full ${config.bgColor} mb-2 sm:mb-3`}>
+            <Car className={`h-6 w-6 sm:h-8 sm:w-8 ${config.textColor}`} />
           </div>
-          <h3 className="text-2xl font-bold">{veiculo.placa}</h3>
+          <h3 className="text-xl sm:text-2xl font-bold">{veiculo.placa}</h3>
           {veiculo.descricao && (
-            <p className="text-muted-foreground">{veiculo.descricao}</p>
+            <p className="text-sm text-muted-foreground">{veiculo.descricao}</p>
           )}
-          <Badge className={`mt-2 ${config.bgColor} ${config.textColor} border-0`}>
+          <Badge className={`mt-2 ${config.bgColor} ${config.textColor} border-0 text-xs`}>
             <div className={`w-2 h-2 rounded-full ${config.color} mr-2`} />
             {config.label}
           </Badge>
@@ -57,77 +57,77 @@ export const VeiculoDetailsPanel: React.FC<VeiculoDetailsPanelProps> = ({
         <Separator />
 
         {/* Info */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {veiculo.motorista && (
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <User className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                <User className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Motorista</p>
-                <p className="font-medium">{veiculo.motorista}</p>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Motorista</p>
+                <p className="font-medium text-sm truncate">{veiculo.motorista}</p>
               </div>
             </div>
           )}
 
           {veiculo.tipo_veiculo && (
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                <Car className="h-5 w-5 text-muted-foreground" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                <Car className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Tipo</p>
-                <p className="font-medium">{veiculo.tipo_veiculo}</p>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground">Tipo</p>
+                <p className="font-medium text-sm">{veiculo.tipo_veiculo}</p>
               </div>
             </div>
           )}
 
           {veiculo.ultima_posicao && (
             <>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <MapPin className="h-5 w-5 text-muted-foreground" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Localização</p>
-                  <p className="font-medium font-mono text-sm">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Localização</p>
+                  <p className="font-medium font-mono text-xs sm:text-sm truncate">
                     {veiculo.ultima_posicao.lat.toFixed(6)}, {veiculo.ultima_posicao.lng.toFixed(6)}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <Gauge className="h-5 w-5 text-muted-foreground" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                  <Gauge className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Velocidade</p>
-                  <p className="font-medium">{Math.round(veiculo.ultima_posicao.velocidade)} km/h</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Velocidade</p>
+                  <p className="font-medium text-sm">{Math.round(veiculo.ultima_posicao.velocidade)} km/h</p>
                 </div>
               </div>
 
               {veiculo.ultima_posicao.direcao !== undefined && (
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                    <Navigation className="h-5 w-5 text-muted-foreground" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                    <Navigation className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Direção</p>
-                    <p className="font-medium">{Math.round(veiculo.ultima_posicao.direcao)}°</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Direção</p>
+                    <p className="font-medium text-sm">{Math.round(veiculo.ultima_posicao.direcao)}°</p>
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-muted-foreground" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Última Atualização</p>
-                  <p className="font-medium">
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground">Última Atualização</p>
+                  <p className="font-medium text-sm">
                     {format(new Date(veiculo.ultima_posicao.data_hora), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(veiculo.ultima_posicao.data_hora), {
                       addSuffix: true,
                       locale: ptBR
@@ -145,15 +145,16 @@ export const VeiculoDetailsPanel: React.FC<VeiculoDetailsPanelProps> = ({
         <div className="space-y-2">
           <Button 
             variant="outline" 
-            className="w-full justify-start"
+            className="w-full justify-start text-sm"
             onClick={() => navigate(`/logistica/historico/${veiculo.id}`)}
+            size="sm"
           >
             <History className="h-4 w-4 mr-2" />
             Ver Histórico
           </Button>
           <Button 
             variant="outline" 
-            className="w-full justify-start"
+            className="w-full justify-start text-sm"
             onClick={() => {
               if (veiculo.ultima_posicao) {
                 window.open(
@@ -163,6 +164,7 @@ export const VeiculoDetailsPanel: React.FC<VeiculoDetailsPanelProps> = ({
               }
             }}
             disabled={!veiculo.ultima_posicao}
+            size="sm"
           >
             <Route className="h-4 w-4 mr-2" />
             Abrir no Google Maps
