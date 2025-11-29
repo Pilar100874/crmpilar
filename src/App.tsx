@@ -61,6 +61,11 @@ import EditorRegras from "./pages/EditorRegras";
 import AutomacoesVendas from "./pages/AutomacoesVendas";
 import VendasConfig from "./pages/VendasConfig";
 import MeusConjuntos from "./pages/MeusConjuntos";
+import LogisticaDashboard from "./pages/LogisticaDashboard";
+import LogisticaVeiculos from "./pages/LogisticaVeiculos";
+import LogisticaHistorico from "./pages/LogisticaHistorico";
+import LogisticaRoteirizacao from "./pages/LogisticaRoteirizacao";
+import LogisticaRotas from "./pages/LogisticaRotas";
 
 const queryClient = new QueryClient();
 
@@ -139,6 +144,11 @@ const App = () => (
             <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
             <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
             <Route path="/perfil" element={<Perfil />} />
+            <Route path="/logistica" element={<LogisticaDashboard />} />
+            <Route path="/logistica/veiculos" element={<LogisticaVeiculos />} />
+            <Route path="/logistica/historico" element={<LogisticaHistorico />} />
+            <Route path="/logistica/roteirizacao" element={<LogisticaRoteirizacao />} />
+            <Route path="/logistica/rotas" element={<LogisticaRotas />} />
           </Route>
           {/* Public routes (no layout) */}
           <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
