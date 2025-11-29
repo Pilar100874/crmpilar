@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Store, ShoppingBag, Package, Box, Search, Plus, RefreshCw, 
   Link2, RotateCcw, ShoppingCart, Settings, History, Eye, EyeOff,
-  CheckCircle2, XCircle, AlertCircle, Clock, Loader2, Key
+  CheckCircle2, XCircle, AlertCircle, Clock, Loader2, Key, HelpCircle
 } from "lucide-react";
 import { getMarketplaceService } from "@/services/marketplaces";
 import { format } from "date-fns";
@@ -55,6 +55,7 @@ export default function MarketplaceHub() {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [mlConfigConta, setMlConfigConta] = useState<any>(null);
   const [showMlSecret, setShowMlSecret] = useState(false);
+  const [showMlHelp, setShowMlHelp] = useState(false);
 
   useEffect(() => {
     const cached = localStorage.getItem('estabelecimentoId');
@@ -365,14 +366,26 @@ export default function MarketplaceHub() {
               return (
                 <Card key={marketplace.id} className="overflow-hidden">
                   <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/20">
-                        <Icon className="h-6 w-6 text-primary" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-primary/20">
+                          <Icon className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{marketplace.nome_display}</CardTitle>
+                          <CardDescription className="text-xs">{marketplace.descricao}</CardDescription>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-lg">{marketplace.nome_display}</CardTitle>
-                        <CardDescription className="text-xs">{marketplace.descricao}</CardDescription>
-                      </div>
+                      {marketplace.nome === 'mercado_livre' && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8"
+                          onClick={() => setShowMlHelp(true)}
+                        >
+                          <HelpCircle className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 space-y-3">
@@ -642,6 +655,122 @@ export default function MarketplaceHub() {
             queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
           }}
         />
+
+        {/* Dialog de Ajuda do Mercado Livre */}
+        <Dialog open={showMlHelp} onOpenChange={setShowMlHelp}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                Como configurar o Mercado Livre
+              </DialogTitle>
+              <DialogDescription>
+                Siga o passo a passo para integrar sua conta
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-4 pr-4">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">1</div>
+                  <div>
+                    <p className="font-medium text-sm">Acesse o DevCenter do Mercado Livre</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vá para{" "}
+                      <a href="https://developers.mercadolivre.com.br/devcenter" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        developers.mercadolivre.com.br/devcenter
+                      </a>
+                      {" "}e faça login com sua conta.
+                    </p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">2</div>
+                  <div>
+                    <p className="font-medium text-sm">Crie uma nova aplicação</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Clique em &quot;Criar nova aplicação&quot; e preencha os dados solicitados (nome, descrição, etc).
+                    </p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">3</div>
+                  <div>
+                    <p className="font-medium text-sm">Configure a Redirect URI</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Na configuração da aplicação, adicione a seguinte URL como Redirect URI:
+                    </p>
+                    <code className="text-xs bg-muted px-2 py-1 rounded block mt-2 break-all select-all">
+                      https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mercadolivre-auth-callback
+                    </code>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">4</div>
+                  <div>
+                    <p className="font-medium text-sm">Copie as credenciais</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Após criar a aplicação, copie o <strong>Client ID</strong> e <strong>Client Secret</strong> gerados.
+                    </p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">5</div>
+                  <div>
+                    <p className="font-medium text-sm">Adicione uma conta aqui</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Clique em &quot;Adicionar Conta&quot;, preencha os campos com as credenciais copiadas e salve.
+                    </p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">6</div>
+                  <div>
+                    <p className="font-medium text-sm">Conecte a conta</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Após adicionar, clique no botão &quot;Conectar&quot;. Uma janela abrirá para você autorizar o acesso. Após autorizar, a conta ficará conectada.
+                    </p>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Pronto!</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Agora você pode sincronizar produtos, pedidos e estoque usando os botões disponíveis.
+                    </p>
+                  </div>
+                </div>
+
+                <Alert className="mt-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-xs">
+                    <strong>Dica:</strong> Use o ambiente &quot;Sandbox&quot; para testes antes de conectar em produção.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
