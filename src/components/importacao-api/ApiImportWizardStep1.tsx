@@ -6,11 +6,33 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Globe, Database, Loader2, CheckCircle2, RefreshCw, FileSpreadsheet, Upload, X, FileUp } from "lucide-react";
+import { Globe, Database, Loader2, CheckCircle2, RefreshCw, FileSpreadsheet, Upload, X, FileUp, Download } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import * as XLSX from "xlsx";
+
+// Template columns for Excel import
+const EXCEL_TEMPLATE_COLUMNS = [
+  { header: "SKU", example: "PROD001", description: "Código único do produto" },
+  { header: "Nome", example: "Produto Exemplo", description: "Nome do produto" },
+  { header: "Descrição", example: "Descrição detalhada do produto", description: "Descrição para marketplace" },
+  { header: "Preço", example: "99.90", description: "Preço de venda" },
+  { header: "Preço Custo", example: "50.00", description: "Preço de custo" },
+  { header: "Estoque", example: "100", description: "Quantidade em estoque" },
+  { header: "Unidade", example: "UN", description: "Unidade de medida" },
+  { header: "Marca", example: "Marca X", description: "Marca do produto" },
+  { header: "Categoria", example: "Eletrônicos", description: "Categoria do produto" },
+  { header: "NCM", example: "85171231", description: "Código NCM" },
+  { header: "EAN", example: "7891234567890", description: "Código de barras EAN-13" },
+  { header: "Peso (kg)", example: "0.5", description: "Peso em quilogramas" },
+  { header: "Largura (cm)", example: "10", description: "Largura em centímetros" },
+  { header: "Altura (cm)", example: "5", description: "Altura em centímetros" },
+  { header: "Profundidade (cm)", example: "15", description: "Profundidade em centímetros" },
+  { header: "Garantia", example: "12 meses", description: "Período de garantia" },
+  { header: "Origem", example: "nacional", description: "nacional ou importado" },
+  { header: "Condição", example: "novo", description: "novo, usado ou recondicionado" },
+];
 
 interface ApiEndpoint {
   id: string;
@@ -197,6 +219,37 @@ export function ApiImportWizardStep1({
     } finally {
       setFetchingData(false);
     }
+  };
+
+  // Download Excel template
+  const downloadExcelTemplate = () => {
+    // Create workbook with two sheets: template and instructions
+    const wb = XLSX.utils.book_new();
+    
+    // Sheet 1: Template with headers and example row
+    const templateData = [
+      EXCEL_TEMPLATE_COLUMNS.map(col => col.header),
+      EXCEL_TEMPLATE_COLUMNS.map(col => col.example),
+    ];
+    const wsTemplate = XLSX.utils.aoa_to_sheet(templateData);
+    
+    // Set column widths
+    wsTemplate['!cols'] = EXCEL_TEMPLATE_COLUMNS.map(() => ({ wch: 18 }));
+    
+    XLSX.utils.book_append_sheet(wb, wsTemplate, 'Produtos');
+    
+    // Sheet 2: Instructions
+    const instructionsData = [
+      ['Campo', 'Descrição', 'Exemplo'],
+      ...EXCEL_TEMPLATE_COLUMNS.map(col => [col.header, col.description, col.example])
+    ];
+    const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
+    wsInstructions['!cols'] = [{ wch: 20 }, { wch: 40 }, { wch: 25 }];
+    XLSX.utils.book_append_sheet(wb, wsInstructions, 'Instruções');
+    
+    // Download
+    XLSX.writeFile(wb, 'modelo_importacao_produtos.xlsx');
+    toast.success('Modelo de importação baixado com sucesso!');
   };
 
   // Excel handling
@@ -419,6 +472,27 @@ export function ApiImportWizardStep1({
       {/* Excel Upload */}
       {dataSource === 'excel' && (
         <Card className="p-6 space-y-4">
+          {/* Download Template Section */}
+          <div className="bg-muted/50 rounded-lg p-4 border border-dashed">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <Download className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Modelo de Importação</p>
+                  <p className="text-xs text-muted-foreground">
+                    Baixe o modelo Excel com todos os campos disponíveis
+                  </p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={downloadExcelTemplate}>
+                <Download className="h-4 w-4 mr-2" />
+                Baixar Modelo
+              </Button>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label>Arquivo Excel</Label>
             
