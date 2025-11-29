@@ -147,6 +147,7 @@ const App = () => (
             <Route path="/logistica" element={<LogisticaDashboard />} />
             <Route path="/logistica/veiculos" element={<LogisticaVeiculos />} />
             <Route path="/logistica/historico" element={<LogisticaHistorico />} />
+            <Route path="/logistica/historico/:veiculoId" element={<LogisticaHistorico />} />
             <Route path="/logistica/roteirizacao" element={<LogisticaRoteirizacao />} />
             <Route path="/logistica/rotas" element={<LogisticaRotas />} />
           </Route>
