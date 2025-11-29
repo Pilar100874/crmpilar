@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Settings, Copy, Check, RefreshCw, Link2 } from 'lucide-react';
+import { ArrowLeft, Settings, Copy, Check, Key, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -7,17 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 
 const LogisticaConfig: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [config, setConfig] = useState<{ id: string; token_rastreamento: string } | null>(null);
-  const [copied, setCopied] = useState<'token' | 'url' | null>(null);
-
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ioxugupvxlcdweldocmq.supabase.co';
-  const trackingUrl = `${supabaseUrl}/functions/v1/rastreamento-posicao`;
+  const [copied, setCopied] = useState(false);
+  const [showKey, setShowKey] = useState(false);
+  const [apiKey, setApiKey] = useState('');
 
   useEffect(() => {
     loadConfig();
@@ -42,6 +40,7 @@ const LogisticaConfig: React.FC = () => {
 
       if (data) {
         setConfig(data);
+        setApiKey(data.token_rastreamento || '');
       } else {
         // Create config if it doesn't exist
         const { data: newConfig, error: createError } = await supabase
@@ -52,6 +51,7 @@ const LogisticaConfig: React.FC = () => {
 
         if (createError) throw createError;
         setConfig(newConfig);
+        setApiKey(newConfig.token_rastreamento || '');
       }
     } catch (error) {
       console.error('Error loading config:', error);
@@ -61,41 +61,36 @@ const LogisticaConfig: React.FC = () => {
     }
   };
 
-  const regenerateToken = async () => {
+  const saveApiKey = async () => {
     if (!config) return;
     
     setSaving(true);
     try {
       const estabelecimentoId = localStorage.getItem('estabelecimento_id');
-      
-      // Generate new token
-      const newToken = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
 
       const { error } = await supabase
         .from('logistica_config')
-        .update({ token_rastreamento: newToken })
+        .update({ token_rastreamento: apiKey })
         .eq('estabelecimento_id', estabelecimentoId);
 
       if (error) throw error;
 
-      setConfig({ ...config, token_rastreamento: newToken });
-      toast.success('Token regenerado com sucesso');
+      setConfig({ ...config, token_rastreamento: apiKey });
+      toast.success('Chave da API salva com sucesso');
     } catch (error) {
-      console.error('Error regenerating token:', error);
-      toast.error('Erro ao regenerar token');
+      console.error('Error saving API key:', error);
+      toast.error('Erro ao salvar chave da API');
     } finally {
       setSaving(false);
     }
   };
 
-  const copyToClipboard = async (text: string, type: 'token' | 'url') => {
+  const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(type);
+      setCopied(true);
       toast.success('Copiado para a área de transferência');
-      setTimeout(() => setCopied(null), 2000);
+      setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast.error('Erro ao copiar');
     }
@@ -119,10 +114,10 @@ const LogisticaConfig: React.FC = () => {
         <div>
           <h1 className="text-xl font-semibold flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Configuração de Rastreamento
+            Configuração de Logística
           </h1>
           <p className="text-sm text-muted-foreground">
-            Configure a integração com aplicativos de rastreamento
+            Configure as integrações e APIs do módulo de logística
           </p>
         </div>
       </div>
@@ -130,122 +125,76 @@ const LogisticaConfig: React.FC = () => {
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-2xl mx-auto space-y-6">
-          {/* Token Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Token de Autenticação</CardTitle>
-              <CardDescription>
-                Use este token para autenticar as requisições dos rastreadores
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Token</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={config?.token_rastreamento || ''}
-                    readOnly
-                    className="font-mono text-sm"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => config && copyToClipboard(config.token_rastreamento, 'token')}
-                  >
-                    {copied === 'token' ? (
-                      <Check className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={regenerateToken}
-                    disabled={saving}
-                  >
-                    <RefreshCw className={`h-4 w-4 ${saving ? 'animate-spin' : ''}`} />
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Clique no ícone de atualização para gerar um novo token. Atenção: isso invalidará o token anterior.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* URL Card */}
+          {/* Heigit API Key Card */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Link2 className="h-5 w-5" />
-                URL do Endpoint
+                <Key className="h-5 w-5" />
+                Chave da API Heigit (OpenRouteService)
               </CardTitle>
               <CardDescription>
-                Configure esta URL no seu aplicativo de rastreamento
+                Insira sua chave de API do Heigit/OpenRouteService para utilizar os serviços de roteirização
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>URL para Rastreadores</Label>
+                <Label>API Key</Label>
                 <div className="flex gap-2">
-                  <Input
-                    value={trackingUrl}
-                    readOnly
-                    className="font-mono text-sm"
-                  />
+                  <div className="relative flex-1">
+                    <Input
+                      type={showKey ? 'text' : 'password'}
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder="Insira sua chave da API Heigit"
+                      className="font-mono text-sm pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full"
+                      onClick={() => setShowKey(!showKey)}
+                    >
+                      {showKey ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => copyToClipboard(trackingUrl, 'url')}
+                    onClick={() => apiKey && copyToClipboard(apiKey)}
+                    disabled={!apiKey}
                   >
-                    {copied === 'url' ? (
+                    {copied ? (
                       <Check className="h-4 w-4 text-green-500" />
                     ) : (
                       <Copy className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Obtenha sua chave gratuita em{' '}
+                  <a 
+                    href="https://openrouteservice.org/dev/#/signup" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    openrouteservice.org
+                  </a>
+                </p>
               </div>
 
-              <Separator />
-
-              <div className="space-y-3">
-                <Label>Configuração do Traccar Client</Label>
-                <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
-                  <p className="font-medium">No aplicativo Traccar Client:</p>
-                  <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                    <li>Abra as Configurações</li>
-                    <li>Em "URL do Servidor", cole: <code className="bg-background px-1 rounded">{trackingUrl}</code></li>
-                    <li>Em "Identificador do Dispositivo", adicione o token: <code className="bg-background px-1 rounded">{config?.token_rastreamento?.substring(0, 8)}...</code></li>
-                    <li>Ative o rastreamento</li>
-                  </ol>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <Label>Formato da Requisição (Avançado)</Label>
-                <div className="bg-muted p-4 rounded-lg space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    Para integração personalizada, envie um POST com o seguinte formato:
-                  </p>
-                  <pre className="bg-background p-3 rounded text-xs overflow-x-auto">
-{`POST ${trackingUrl}
-Content-Type: application/json
-
-{
-  "veiculoId": "uuid-do-veiculo",
-  "lat": -23.5505,
-  "lng": -46.6333,
-  "velocidade": 60,
-  "direcao": 180,
-  "token": "${config?.token_rastreamento?.substring(0, 8)}..."
-}`}
-                  </pre>
-                </div>
-              </div>
+              <Button 
+                onClick={saveApiKey} 
+                disabled={saving || !apiKey}
+                className="w-full"
+              >
+                {saving ? 'Salvando...' : 'Salvar Chave da API'}
+              </Button>
             </CardContent>
           </Card>
         </div>
