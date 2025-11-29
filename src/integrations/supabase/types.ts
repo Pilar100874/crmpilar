@@ -2720,6 +2720,7 @@ export type Database = {
         Row: {
           created_at: string
           estabelecimento_id: string
+          heigit_api_key: string | null
           id: string
           token_rastreamento: string
           updated_at: string
@@ -2727,6 +2728,7 @@ export type Database = {
         Insert: {
           created_at?: string
           estabelecimento_id: string
+          heigit_api_key?: string | null
           id?: string
           token_rastreamento?: string
           updated_at?: string
@@ -2734,6 +2736,7 @@ export type Database = {
         Update: {
           created_at?: string
           estabelecimento_id?: string
+          heigit_api_key?: string | null
           id?: string
           token_rastreamento?: string
           updated_at?: string
