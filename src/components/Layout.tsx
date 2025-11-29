@@ -176,6 +176,7 @@ const menuItems: MenuItem[] = [
       { id: "Logística Histórico", title: "Histórico", url: "/logistica/historico", icon: Clock },
       { id: "Logística Roteirização", title: "Roteirização", url: "/logistica/roteirizacao", icon: LucideIcons.Route },
       { id: "Logística Rotas", title: "Rotas Salvas", url: "/logistica/rotas", icon: LucideIcons.Navigation },
+      { id: "Logística Config", title: "Configuração", url: "/logistica/config", icon: LucideIcons.Settings },
     ]
   },
   { id: "Trocar Usuário", title: "Trocar Usuário", url: "/perfil", icon: UserIcon },

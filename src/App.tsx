@@ -66,6 +66,7 @@ import LogisticaVeiculos from "./pages/LogisticaVeiculos";
 import LogisticaHistorico from "./pages/LogisticaHistorico";
 import LogisticaRoteirizacao from "./pages/LogisticaRoteirizacao";
 import LogisticaRotas from "./pages/LogisticaRotas";
+import LogisticaConfig from "./pages/LogisticaConfig";
 
 const queryClient = new QueryClient();
 
@@ -150,6 +151,7 @@ const App = () => (
             <Route path="/logistica/historico/:veiculoId" element={<LogisticaHistorico />} />
             <Route path="/logistica/roteirizacao" element={<LogisticaRoteirizacao />} />
             <Route path="/logistica/rotas" element={<LogisticaRotas />} />
+            <Route path="/logistica/config" element={<LogisticaConfig />} />
           </Route>
           {/* Public routes (no layout) */}
           <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
