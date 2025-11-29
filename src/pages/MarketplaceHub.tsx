@@ -15,11 +15,12 @@ import { Separator } from "@/components/ui/separator";
 import { 
   Store, ShoppingBag, Package, Box, Search, Plus, RefreshCw, 
   Link2, RotateCcw, ShoppingCart, Settings, History, Eye,
-  CheckCircle2, XCircle, AlertCircle, Clock, Loader2
+  CheckCircle2, XCircle, AlertCircle, Clock, Loader2, Key
 } from "lucide-react";
 import { getMarketplaceService } from "@/services/marketplaces";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { MercadoLivreConfigDialog } from "@/components/marketplaces/MercadoLivreConfigDialog";
 
 const marketplaceIcons: Record<string, any> = {
   'shopping-bag': ShoppingBag,
@@ -43,6 +44,7 @@ export default function MarketplaceHub() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newConta, setNewConta] = useState({ marketplace_id: '', nome_loja: '', seller_id: '', ambiente: 'sandbox' });
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [mlConfigConta, setMlConfigConta] = useState<any>(null);
 
   useEffect(() => {
     const cached = localStorage.getItem('estabelecimentoId');
@@ -315,6 +317,18 @@ export default function MarketplaceHub() {
                             </div>
                             
                             <div className="flex flex-wrap gap-1">
+                              {/* Botão Config para Mercado Livre */}
+                              {marketplace.nome === 'mercado_livre' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-xs h-7"
+                                  onClick={() => setMlConfigConta(conta)}
+                                >
+                                  <Key className="h-3 w-3 mr-1" />
+                                  Config
+                                </Button>
+                              )}
                               {conta.status !== 'conectado' ? (
                                 <Button 
                                   size="sm" 
@@ -505,6 +519,22 @@ export default function MarketplaceHub() {
             )}
           </SheetContent>
         </Sheet>
+
+        {/* Dialog de Configuração do Mercado Livre */}
+        <MercadoLivreConfigDialog
+          open={!!mlConfigConta}
+          onOpenChange={(open) => !open && setMlConfigConta(null)}
+          contaId={mlConfigConta?.id || ''}
+          contaNome={mlConfigConta?.nome_loja || ''}
+          currentConfig={mlConfigConta?.configuracoes ? {
+            client_id: (mlConfigConta.configuracoes as any)?.ml_client_id,
+            client_secret: (mlConfigConta.configuracoes as any)?.ml_client_secret,
+            redirect_uri: (mlConfigConta.configuracoes as any)?.ml_redirect_uri,
+          } : undefined}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
+          }}
+        />
       </div>
     </div>
   );
