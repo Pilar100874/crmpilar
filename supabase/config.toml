@@ -1,5 +1,8 @@
 project_id = "ioxugupvxlcdweldocmq"
 
+[functions.api-produtos]
+verify_jwt = false
+
 [functions.execute-dynamic-query]
 verify_jwt = false
 
