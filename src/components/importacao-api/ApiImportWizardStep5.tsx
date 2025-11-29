@@ -16,6 +16,13 @@ interface FieldMappingConfig {
   format?: string;
 }
 
+interface FieldDefinition {
+  value: string;
+  label: string;
+  required: boolean;
+  fixedOptions?: string[];
+}
+
 interface CampoCustomizado {
   id: string;
   nome: string;
@@ -34,43 +41,51 @@ interface Props {
 }
 
 const STANDARD_FIELDS = [
-  { value: "codigo", label: "Código", required: false },
+  { value: "codigo", label: "Código (não duplicado)", required: true },
   { value: "nome", label: "Nome", required: true },
-  { value: "ncm", label: "NCM", required: false },
-  { value: "gramatura", label: "Gramatura", required: false },
-  { value: "numero_folhas", label: "Número de Folhas", required: false },
-  { value: "foto_url", label: "URL da Foto", required: false },
-  { value: "ativo", label: "Ativo", required: false },
+  { value: "ncm", label: "NCM (validado)", required: true },
+  { value: "gramatura", label: "Gramatura", required: true },
+  { value: "numero_folhas", label: "Número de Folhas", required: true },
+  { value: "foto_url", label: "URL da Foto (use {codigo} como variável)", required: true },
+  { value: "ativo", label: "Ativo", required: true, fixedOptions: ["Ativo", "Inativo"] },
 ];
 
 const FREIGHT_FIELDS = [
-  { value: "peso_unitario", label: "Peso Unitário (kg)", required: false },
-  { value: "peso_frete_tipo", label: "Tipo de Cálculo de Peso", required: false },
-  { value: "altura", label: "Altura (cm)", required: false },
-  { value: "largura", label: "Largura (cm)", required: false },
-  { value: "comprimento", label: "Comprimento (cm)", required: false },
-  { value: "cubagem", label: "Cubagem (m³)", required: false },
-  { value: "fragil", label: "Frágil", required: false },
-  { value: "empilhamento_maximo", label: "Empilhamento Máximo", required: false },
-  { value: "observacoes_frete", label: "Observações do Frete", required: false },
-  { value: "valor_seguro", label: "Valor do Seguro (R$)", required: false },
+  { value: "peso_unitario", label: "Peso Unitário (kg)", required: true },
+  { value: "peso_frete_tipo", label: "Tipo de Cálculo de Peso", required: true, fixedOptions: ["Peso Fixo (Embalagem)", "Peso Calculado (Quantidade × Peso Unitário)"] },
+  { value: "altura", label: "Altura (cm)", required: true },
+  { value: "largura", label: "Largura (cm)", required: true },
+  { value: "comprimento", label: "Comprimento (cm)", required: true },
+  // cubagem é calculado automaticamente (altura * largura * comprimento / 1000000)
+  { value: "fragil", label: "Frágil", required: true, fixedOptions: ["Sim", "Não"] },
+  { value: "empilhamento_maximo", label: "Empilhamento Máximo", required: true },
+  { value: "observacoes_frete", label: "Observações do Frete", required: true },
+  { value: "valor_seguro", label: "Valor do Seguro (R$)", required: true },
 ];
 
 const PACKAGING_FIELDS = [
-  { value: "ean_13", label: "EAN-13", required: false },
-  { value: "ean_14_1", label: "EAN-14 (Caixa Mestre)", required: false },
-  { value: "ean_14_2", label: "EAN-14 (Caixa Mestre 2)", required: false },
-  { value: "embalagem_peso", label: "Peso da Embalagem (kg)", required: false },
-  { value: "embalagem_altura", label: "Altura da Embalagem (cm)", required: false },
-  { value: "embalagem_largura", label: "Largura da Embalagem (cm)", required: false },
-  { value: "embalagem_comprimento", label: "Comprimento da Embalagem (cm)", required: false },
+  { value: "ean_13", label: "EAN-13 (EAN-14 calculado automaticamente)", required: true },
+  // ean_14_1 e ean_14_2 são calculados automaticamente a partir do EAN-13
+  { value: "embalagem_peso", label: "Peso da Embalagem (kg)", required: true },
+  { value: "embalagem_altura", label: "Altura da Embalagem (cm)", required: true },
+  { value: "embalagem_largura", label: "Largura da Embalagem (cm)", required: true },
+  { value: "embalagem_comprimento", label: "Comprimento da Embalagem (cm)", required: true },
 ];
 
-const PRICE_FIELDS = [
-  { value: "preco_tabela", label: "Preço de Tabela (R$)", required: false },
-  { value: "preco_minimo", label: "Preço Mínimo (R$)", required: false },
-  { value: "tipo_preco", label: "Tipo de Preço", required: false },
-  { value: "preco_ativo", label: "Preço Ativo", required: false },
+const PRICE_TYPE_OPTIONS = [
+  { value: "produto", label: "Preço no Produto" },
+  { value: "categoria", label: "Preço por Categoria" },
+];
+
+const PRICE_FIELDS_PRODUTO = [
+  { value: "preco_tabela", label: "Preço de Tabela (R$)", required: true },
+  { value: "preco_minimo", label: "Preço Mínimo (R$)", required: true },
+];
+
+const PRICE_FIELDS_CATEGORIA = [
+  { value: "categoria_preco", label: "Categoria de Preço", required: true },
+  { value: "preco_tabela_categoria", label: "Preço de Tabela (R$)", required: true },
+  { value: "preco_minimo_categoria", label: "Preço Mínimo (R$)", required: true },
 ];
 
 const FORMAT_OPTIONS = [
@@ -82,14 +97,15 @@ const FORMAT_OPTIONS = [
   { value: "decimal", label: "Decimal (0.00)" },
 ];
 
-export function ApiImportWizardStep5({ 
-  selectedFields, 
-  selectedGrupoId, 
+export function ApiImportWizardStep5({
+  selectedFields,
+  selectedGrupoId,
   fieldMapping, 
   onMappingChange 
 }: Props) {
   const [customFields, setCustomFields] = useState<CampoCustomizado[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tipoPreco, setTipoPreco] = useState<string>(fieldMapping["tipo_preco"]?.value || "produto");
 
   useEffect(() => {
     if (selectedGrupoId) {
@@ -158,7 +174,127 @@ export function ApiImportWizardStep5({
     });
   };
 
-  const renderFieldMapping = (
+  const handleTipoPrecoChange = (value: string) => {
+    setTipoPreco(value);
+    updateMapping("tipo_preco", { type: "fixed", value, format: "none" });
+  };
+
+  const renderFieldMapping = (field: FieldDefinition) => {
+    const { value: fieldKey, label: fieldLabel, required, fixedOptions } = field;
+    const config = fieldMapping[fieldKey];
+    const hasFixedOptions = fixedOptions && fixedOptions.length > 0;
+    const mappingType = hasFixedOptions ? "fixed" : (config?.type || "field");
+
+    return (
+      <Card key={fieldKey} className="p-4">
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <Label className="flex items-center gap-2">
+                {fieldLabel}
+                {required && (
+                  <Badge variant="destructive" className="text-xs">
+                    Obrigatório
+                  </Badge>
+                )}
+              </Label>
+            </div>
+
+            <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+
+            {!hasFixedOptions && (
+              <div className="flex-1">
+                <RadioGroup
+                  value={mappingType}
+                  onValueChange={(value) => updateMappingType(fieldKey, value as "field" | "fixed")}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="field" id={`${fieldKey}-field`} />
+                    <Label htmlFor={`${fieldKey}-field`} className="font-normal cursor-pointer text-sm">
+                      Mapear
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="fixed" id={`${fieldKey}-fixed`} />
+                    <Label htmlFor={`${fieldKey}-fixed`} className="font-normal cursor-pointer text-sm">
+                      Fixo
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            {hasFixedOptions ? (
+              <Select
+                value={config?.value || ""}
+                onValueChange={(value) => updateMapping(fieldKey, { type: "fixed", value, format: "none" })}
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Selecione uma opção..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {fixedOptions.map(option => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : mappingType === "field" ? (
+              <Select
+                value={config?.value || "none"}
+                onValueChange={(value) => updateMappingValue(fieldKey, value)}
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Selecione um campo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    <span className="text-muted-foreground">(Não mapear)</span>
+                  </SelectItem>
+                  {selectedFields.map(f => (
+                    <SelectItem key={f} value={f}>
+                      {f}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                placeholder="Digite o valor fixo..."
+                value={config?.value || ""}
+                onChange={(e) => updateMappingValue(fieldKey, e.target.value)}
+                className="flex-1"
+              />
+            )}
+
+            {!hasFixedOptions && (
+              <Select
+                value={config?.format || "none"}
+                onValueChange={(value) => updateMappingFormat(fieldKey, value)}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Formatação..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {FORMAT_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </div>
+      </Card>
+    );
+  };
+
+  const renderCustomFieldMapping = (
     fieldKey: string,
     fieldLabel: string,
     required: boolean = false,
@@ -219,9 +355,9 @@ export function ApiImportWizardStep5({
                   <SelectItem value="none">
                     <span className="text-muted-foreground">(Não mapear)</span>
                   </SelectItem>
-                  {selectedFields.map(field => (
-                    <SelectItem key={field} value={field}>
-                      {field}
+                  {selectedFields.map(f => (
+                    <SelectItem key={f} value={f}>
+                      {f}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -276,7 +412,8 @@ export function ApiImportWizardStep5({
     return Object.keys(fieldMapping).filter(k => fieldMapping[k]?.value && fieldMapping[k]?.value !== "none").length;
   };
 
-  const totalFields = STANDARD_FIELDS.length + FREIGHT_FIELDS.length + PACKAGING_FIELDS.length + PRICE_FIELDS.length + customFields.length;
+  const priceFieldsCount = tipoPreco === "produto" ? PRICE_FIELDS_PRODUTO.length : PRICE_FIELDS_CATEGORIA.length;
+  const totalFields = STANDARD_FIELDS.length + FREIGHT_FIELDS.length + PACKAGING_FIELDS.length + priceFieldsCount + 1 + customFields.length;
 
   return (
     <div className="space-y-4">
@@ -317,7 +454,7 @@ export function ApiImportWizardStep5({
             <DollarSign className="h-3 w-3" />
             <span className="hidden sm:inline">Preço</span>
             <span className="sm:hidden">Pre</span>
-            ({PRICE_FIELDS.length})
+            ({priceFieldsCount + 1})
           </TabsTrigger>
           <TabsTrigger value="custom" className="text-xs">
             <span className="hidden sm:inline">Custom</span>
@@ -329,9 +466,7 @@ export function ApiImportWizardStep5({
         <TabsContent value="standard" className="mt-4">
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-3">
-              {STANDARD_FIELDS.map((field) => 
-                renderFieldMapping(field.value, field.label, field.required)
-              )}
+              {STANDARD_FIELDS.map((field) => renderFieldMapping(field))}
             </div>
           </ScrollArea>
         </TabsContent>
@@ -339,9 +474,12 @@ export function ApiImportWizardStep5({
         <TabsContent value="freight" className="mt-4">
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-3">
-              {FREIGHT_FIELDS.map((field) => 
-                renderFieldMapping(field.value, field.label, field.required)
-              )}
+              {FREIGHT_FIELDS.map((field) => renderFieldMapping(field))}
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-sm text-muted-foreground">
+                  💡 <strong>Cubagem:</strong> Calculada automaticamente (altura × largura × comprimento ÷ 1.000.000)
+                </p>
+              </div>
             </div>
           </ScrollArea>
         </TabsContent>
@@ -349,9 +487,12 @@ export function ApiImportWizardStep5({
         <TabsContent value="packaging" className="mt-4">
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-3">
-              {PACKAGING_FIELDS.map((field) => 
-                renderFieldMapping(field.value, field.label, field.required)
-              )}
+              {PACKAGING_FIELDS.map((field) => renderFieldMapping(field))}
+              <div className="bg-muted/50 rounded-lg p-3">
+                <p className="text-sm text-muted-foreground">
+                  💡 <strong>EAN-14:</strong> Calculado automaticamente a partir do EAN-13
+                </p>
+              </div>
             </div>
           </ScrollArea>
         </TabsContent>
@@ -359,8 +500,45 @@ export function ApiImportWizardStep5({
         <TabsContent value="price" className="mt-4">
           <ScrollArea className="h-[400px] pr-4">
             <div className="space-y-3">
-              {PRICE_FIELDS.map((field) => 
-                renderFieldMapping(field.value, field.label, field.required)
+              <Card className="p-4">
+                <div className="space-y-4">
+                  <Label className="flex items-center gap-2">
+                    Tipo de Preço
+                    <Badge variant="destructive" className="text-xs">Obrigatório</Badge>
+                  </Label>
+                  <Select value={tipoPreco} onValueChange={handleTipoPrecoChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo de preço..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PRICE_TYPE_OPTIONS.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </Card>
+
+              {tipoPreco === "produto" ? (
+                <>
+                  {PRICE_FIELDS_PRODUTO.map((field) => renderFieldMapping(field))}
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-sm text-muted-foreground">
+                      💡 Os preços serão salvos diretamente no cadastro do produto.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {PRICE_FIELDS_CATEGORIA.map((field) => renderFieldMapping(field))}
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-sm text-muted-foreground">
+                      💡 A categoria será criada na tabela de preços por categoria e os valores serão vinculados a ela.
+                    </p>
+                  </div>
+                </>
               )}
             </div>
           </ScrollArea>
@@ -378,11 +556,11 @@ export function ApiImportWizardStep5({
               </div>
             ) : (
               <div className="space-y-3">
-                {customFields.map((campo) => 
-                  renderFieldMapping(
+                {customFields.map((campo) =>
+                  renderCustomFieldMapping(
                     `custom_${campo.campo_key}`,
                     `${campo.nome}${campo.unidade ? ` (${campo.unidade})` : ""}`,
-                    campo.obrigatorio,
+                    true,
                     campo.tipo === "selecao" && campo.opcoes ? campo.opcoes : undefined
                   )
                 )}
