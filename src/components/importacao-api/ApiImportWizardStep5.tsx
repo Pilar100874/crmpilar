@@ -88,8 +88,10 @@ const MARKETPLACE_FIELDS: FieldDefinition[] = [
   { value: "marca", label: "Marca", required: false },
   { value: "estoque", label: "Estoque", required: false },
   { value: "garantia", label: "Garantia", required: false },
-  { value: "origem", label: "Origem", required: false, fixedOptions: ["Nacional", "Importado"] },
-  { value: "condicao", label: "Condição", required: false, fixedOptions: ["Novo", "Usado", "Recondicionado"] },
+  { value: "origem", label: "Origem", required: false, fixedOptions: ["nacional", "importado"] },
+  { value: "condicao", label: "Condição", required: false, fixedOptions: ["novo", "usado", "recondicionado"] },
+  { value: "foto_url_2", label: "Foto 2 (URL)", required: false, hint: "Ex: https://site.com/imagens/{codigo}_2.jpg" },
+  { value: "foto_url_3", label: "Foto 3 (URL)", required: false, hint: "Ex: https://site.com/imagens/{codigo}_3.jpg" },
 ];
 
 const PRICE_TYPE_OPTIONS = [
