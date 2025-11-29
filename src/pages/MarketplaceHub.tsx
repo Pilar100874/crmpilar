@@ -12,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Store, ShoppingBag, Package, Box, Search, Plus, RefreshCw, 
-  Link2, RotateCcw, ShoppingCart, Settings, History, Eye,
+  Link2, RotateCcw, ShoppingCart, Settings, History, Eye, EyeOff,
   CheckCircle2, XCircle, AlertCircle, Clock, Loader2, Key
 } from "lucide-react";
 import { getMarketplaceService } from "@/services/marketplaces";
@@ -42,9 +43,18 @@ export default function MarketplaceHub() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [selectedConta, setSelectedConta] = useState<any>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [newConta, setNewConta] = useState({ marketplace_id: '', nome_loja: '', seller_id: '', ambiente: 'sandbox' });
+  const [newConta, setNewConta] = useState({ 
+    marketplace_id: '', 
+    nome_loja: '', 
+    seller_id: '', 
+    ambiente: 'sandbox',
+    ml_client_id: '',
+    ml_client_secret: '',
+    ml_redirect_uri: '',
+  });
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [mlConfigConta, setMlConfigConta] = useState<any>(null);
+  const [showMlSecret, setShowMlSecret] = useState(false);
 
   useEffect(() => {
     const cached = localStorage.getItem('estabelecimentoId');
@@ -104,9 +114,21 @@ export default function MarketplaceHub() {
     enabled: !!selectedConta?.id,
   });
 
+  // Verifica se marketplace selecionado é Mercado Livre
+  const selectedMarketplace = marketplaces?.find(m => m.id === newConta.marketplace_id);
+  const isMercadoLivre = selectedMarketplace?.nome === 'mercado_livre';
+
   const addContaMutation = useMutation({
     mutationFn: async (data: typeof newConta) => {
       if (!estabelecimentoId) throw new Error('Estabelecimento não encontrado');
+      
+      // Monta configuracoes se for Mercado Livre
+      const configuracoes = isMercadoLivre ? {
+        ml_client_id: data.ml_client_id,
+        ml_client_secret: data.ml_client_secret,
+        ml_redirect_uri: data.ml_redirect_uri,
+      } : null;
+
       const { error } = await supabase.from('contas_marketplace').insert({
         estabelecimento_id: estabelecimentoId,
         marketplace_id: data.marketplace_id,
@@ -114,13 +136,23 @@ export default function MarketplaceHub() {
         seller_id: data.seller_id,
         ambiente: data.ambiente,
         status: 'nao_conectado',
+        configuracoes,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
       setShowAddDialog(false);
-      setNewConta({ marketplace_id: '', nome_loja: '', seller_id: '', ambiente: 'sandbox' });
+      setNewConta({ 
+        marketplace_id: '', 
+        nome_loja: '', 
+        seller_id: '', 
+        ambiente: 'sandbox',
+        ml_client_id: '',
+        ml_client_secret: '',
+        ml_redirect_uri: '',
+      });
+      setShowMlSecret(false);
       toast.success('Conta adicionada com sucesso');
     },
     onError: (error: any) => {
@@ -239,12 +271,78 @@ export default function MarketplaceHub() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Campos específicos do Mercado Livre */}
+                {isMercadoLivre && (
+                  <>
+                    <Separator />
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Obtenha essas credenciais no{" "}
+                        <a
+                          href="https://developers.mercadolivre.com.br/devcenter"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline"
+                        >
+                          DevCenter do Mercado Livre
+                        </a>
+                      </AlertDescription>
+                    </Alert>
+                    <div className="space-y-2">
+                      <Label>Client ID (App ID) *</Label>
+                      <Input 
+                        value={newConta.ml_client_id} 
+                        onChange={(e) => setNewConta(p => ({ ...p, ml_client_id: e.target.value }))}
+                        placeholder="Ex: 1234567890123456"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Client Secret *</Label>
+                      <div className="relative">
+                        <Input 
+                          type={showMlSecret ? "text" : "password"}
+                          value={newConta.ml_client_secret} 
+                          onChange={(e) => setNewConta(p => ({ ...p, ml_client_secret: e.target.value }))}
+                          placeholder="••••••••••••••••"
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3"
+                          onClick={() => setShowMlSecret(!showMlSecret)}
+                        >
+                          {showMlSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Redirect URI *</Label>
+                      <Input 
+                        value={newConta.ml_redirect_uri} 
+                        onChange={(e) => setNewConta(p => ({ ...p, ml_redirect_uri: e.target.value }))}
+                        placeholder="https://seusite.com/callback/mercadolivre"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Use exatamente a mesma URL cadastrada no app do Mercado Livre
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancelar</Button>
                 <Button 
                   onClick={() => addContaMutation.mutate(newConta)}
-                  disabled={!newConta.marketplace_id || !newConta.nome_loja || addContaMutation.isPending}
+                  disabled={
+                    !newConta.marketplace_id || 
+                    !newConta.nome_loja || 
+                    addContaMutation.isPending ||
+                    (isMercadoLivre && (!newConta.ml_client_id || !newConta.ml_client_secret || !newConta.ml_redirect_uri))
+                  }
                 >
                   {addContaMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Adicionar
