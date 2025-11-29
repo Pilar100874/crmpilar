@@ -6,7 +6,7 @@ import { VeiculosList } from '@/components/logistica/VeiculosList';
 import { VeiculoDetailsPanel } from '@/components/logistica/VeiculoDetailsPanel';
 import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
-import { MapPin } from 'lucide-react';
+import { LogisticaMap } from '@/components/logistica/LogisticaMap';
 
 const LogisticaDashboard: React.FC = () => {
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
@@ -141,13 +141,11 @@ const LogisticaDashboard: React.FC = () => {
             <div className="text-muted-foreground">Carregando...</div>
           </div>
         ) : (
-          <div className="h-full flex items-center justify-center bg-muted/50">
-            <div className="text-center">
-              <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-              <p className="text-muted-foreground">Mapa em desenvolvimento</p>
-              <p className="text-sm text-muted-foreground mt-1">{veiculos.length} veículos carregados</p>
-            </div>
-          </div>
+          <LogisticaMap
+            veiculos={veiculos}
+            onVeiculoClick={setSelectedVeiculo}
+            className="h-full w-full"
+          />
         )}
       </div>
 
