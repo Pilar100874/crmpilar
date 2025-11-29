@@ -461,7 +461,7 @@ export default function ImportacaoProdutosLista() {
           {/* Card de Criação - API */}
           <Card 
             className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-green-500/30 h-full flex flex-col"
-            onClick={() => navigate("/importacao-produtos/api/novo")}
+            onClick={() => navigate("/vendas-config?tab=importacao-api")}
           >
             <CardHeader className="flex-1 p-4">
               <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center mb-4">
