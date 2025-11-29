@@ -21,6 +21,13 @@ interface FieldDefinition {
   label: string;
   required: boolean;
   fixedOptions?: string[];
+  isNcmField?: boolean;
+}
+
+interface NcmCodigo {
+  id: string;
+  codigo: string;
+  descricao: string;
 }
 
 interface CampoCustomizado {
@@ -40,10 +47,10 @@ interface Props {
   onMappingChange: (mapping: Record<string, FieldMappingConfig>) => void;
 }
 
-const STANDARD_FIELDS = [
+const STANDARD_FIELDS: FieldDefinition[] = [
   { value: "codigo", label: "Código (não duplicado)", required: true },
   { value: "nome", label: "Nome", required: true },
-  { value: "ncm", label: "NCM (validado)", required: true },
+  { value: "ncm", label: "NCM (validado)", required: true, isNcmField: true } as FieldDefinition & { isNcmField?: boolean },
   { value: "gramatura", label: "Gramatura", required: true },
   { value: "numero_folhas", label: "Número de Folhas", required: true },
   { value: "foto_url", label: "URL da Foto (use {codigo} como variável)", required: true },
@@ -106,12 +113,29 @@ export function ApiImportWizardStep5({
   const [customFields, setCustomFields] = useState<CampoCustomizado[]>([]);
   const [loading, setLoading] = useState(true);
   const [tipoPreco, setTipoPreco] = useState<string>(fieldMapping["tipo_preco"]?.value || "produto");
+  const [ncmCodigos, setNcmCodigos] = useState<NcmCodigo[]>([]);
+  const [ncmSearch, setNcmSearch] = useState("");
 
   useEffect(() => {
     if (selectedGrupoId) {
       loadCustomFields();
     }
+    loadNcmCodigos();
   }, [selectedGrupoId]);
+
+  const loadNcmCodigos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("ncm_codigos")
+        .select("id, codigo, descricao")
+        .order("codigo");
+
+      if (error) throw error;
+      setNcmCodigos(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar códigos NCM:", error);
+    }
+  };
 
   const loadCustomFields = async () => {
     setLoading(true);
@@ -180,10 +204,15 @@ export function ApiImportWizardStep5({
   };
 
   const renderFieldMapping = (field: FieldDefinition) => {
-    const { value: fieldKey, label: fieldLabel, required, fixedOptions } = field;
+    const { value: fieldKey, label: fieldLabel, required, fixedOptions, isNcmField } = field;
     const config = fieldMapping[fieldKey];
     const hasFixedOptions = fixedOptions && fixedOptions.length > 0;
     const mappingType = hasFixedOptions ? "fixed" : (config?.type || "field");
+
+    const filteredNcmCodigos = ncmCodigos.filter(ncm => 
+      ncm.codigo.toLowerCase().includes(ncmSearch.toLowerCase()) ||
+      ncm.descricao.toLowerCase().includes(ncmSearch.toLowerCase())
+    ).slice(0, 100);
 
     return (
       <Card key={fieldKey} className="p-4">
@@ -262,6 +291,30 @@ export function ApiImportWizardStep5({
                   ))}
                 </SelectContent>
               </Select>
+            ) : isNcmField ? (
+              <div className="flex-1 space-y-2">
+                <Input
+                  placeholder="Buscar NCM por código ou descrição..."
+                  value={ncmSearch}
+                  onChange={(e) => setNcmSearch(e.target.value)}
+                  className="mb-2"
+                />
+                <Select
+                  value={config?.value || ""}
+                  onValueChange={(value) => updateMapping(fieldKey, { type: "fixed", value, format: "none" })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um NCM..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {filteredNcmCodigos.map(ncm => (
+                      <SelectItem key={ncm.id} value={ncm.codigo}>
+                        {ncm.codigo} - {ncm.descricao.substring(0, 50)}{ncm.descricao.length > 50 ? "..." : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             ) : (
               <Input
                 placeholder="Digite o valor fixo..."
