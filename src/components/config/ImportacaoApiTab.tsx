@@ -376,11 +376,6 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
             selectedFields={selectedFields}
             onSelectFields={setSelectedFields}
             data={apiData}
-            onExcelImport={(excelData, excelHeaders) => {
-              setApiData(excelData);
-              setApiHeaders(excelHeaders);
-              setSelectedFields([]);
-            }}
           />
         );
       case 3:
