@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { 
   ArrowLeft, Car, Gauge, Clock, MapPin, AlertTriangle, 
   Wifi, WifiOff, Activity, ChevronDown, ChevronUp, 
-  Bell, BellOff, Volume2, RefreshCw, Eye
+  Bell, BellOff, Volume2, RefreshCw, Eye, Maximize2, Minimize2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -50,6 +50,7 @@ const LogisticaMonitoramento: React.FC = () => {
   const [showAlerts, setShowAlerts] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [mapFullscreen, setMapFullscreen] = useState(false);
   
   const alertConfig: AlertConfig = {
     speedLimit: 120,
@@ -327,7 +328,10 @@ const LogisticaMonitoramento: React.FC = () => {
       {/* Content */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Vehicle List */}
-        <div className="w-full md:w-64 lg:w-72 flex-shrink-0 border-b md:border-b-0 md:border-r bg-background overflow-hidden flex flex-col max-h-[30vh] md:max-h-none">
+        <div className={cn(
+          "w-full md:w-64 lg:w-72 flex-shrink-0 border-b md:border-b-0 md:border-r bg-background overflow-hidden flex flex-col max-h-[30vh] md:max-h-none transition-all duration-300",
+          mapFullscreen && "hidden"
+        )}>
           <div className="p-2 sm:p-3 border-b flex items-center justify-between">
             <h3 className="font-medium text-sm flex items-center gap-2">
               <Car className="h-4 w-4" />
@@ -395,10 +399,28 @@ const LogisticaMonitoramento: React.FC = () => {
               fitBounds
             />
           )}
+          
+          {/* Fullscreen toggle button - positioned below map zoom controls */}
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute left-[10px] top-[82px] z-[400] h-[30px] w-[30px] bg-background border-2 border-[rgba(0,0,0,0.2)] shadow-none hover:bg-accent rounded-sm"
+            onClick={() => setMapFullscreen(!mapFullscreen)}
+            title={mapFullscreen ? "Sair do modo expandido" : "Expandir mapa"}
+          >
+            {mapFullscreen ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
+          </Button>
         </div>
 
         {/* Alerts Panel */}
-        <div className="w-full md:w-64 lg:w-72 flex-shrink-0 border-t md:border-t-0 md:border-l bg-background overflow-hidden flex flex-col max-h-[25vh] md:max-h-none">
+        <div className={cn(
+          "w-full md:w-64 lg:w-72 flex-shrink-0 border-t md:border-t-0 md:border-l bg-background overflow-hidden flex flex-col max-h-[25vh] md:max-h-none transition-all duration-300",
+          mapFullscreen && "hidden"
+        )}>
           <div 
             className="p-2 sm:p-3 border-b flex items-center justify-between cursor-pointer"
             onClick={() => setShowAlerts(!showAlerts)}
