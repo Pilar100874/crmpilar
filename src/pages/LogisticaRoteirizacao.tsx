@@ -258,29 +258,17 @@ const LogisticaRoteirizacao: React.FC = () => {
         estabelecimentoId = usuarioByEmail?.estabelecimento_id;
       }
 
-      // Fallback para administradores: verifica se é admin e usa primeiro estabelecimento
+      // Fallback: usa estabelecimento selecionado no localStorage (para admins)
       if (!estabelecimentoId) {
-        console.log('Verificando se é administrador...');
-        const { data: admin } = await supabase
-          .from('administradores')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        if (admin) {
-          console.log('Usuário é administrador, buscando primeiro estabelecimento...');
-          const { data: primeiroEstab } = await supabase
-            .from('estabelecimentos')
-            .select('id')
-            .limit(1)
-            .single();
-            
-          estabelecimentoId = primeiroEstab?.id;
+        const selectedEstabId = localStorage.getItem('selectedEstabelecimentoId');
+        if (selectedEstabId) {
+          console.log('Usando estabelecimento do localStorage:', selectedEstabId);
+          estabelecimentoId = selectedEstabId;
         }
       }
 
       if (!estabelecimentoId) {
-        throw new Error('Estabelecimento não encontrado. Cadastre um estabelecimento primeiro.');
+        throw new Error('Estabelecimento não encontrado. Selecione um estabelecimento antes de salvar.');
       }
       
       console.log('Estabelecimento ID:', estabelecimentoId);
