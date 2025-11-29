@@ -7,6 +7,9 @@ import { VeiculoDetailsPanel } from '@/components/logistica/VeiculoDetailsPanel'
 import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { List, X, Info } from 'lucide-react';
 
 const LogisticaDashboard: React.FC = () => {
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
@@ -15,6 +18,8 @@ const LogisticaDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [mobileListOpen, setMobileListOpen] = useState(false);
+  const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
 
   useEffect(() => {
     const initEstabelecimento = async () => {
@@ -121,9 +126,61 @@ const LogisticaDashboard: React.FC = () => {
     });
   };
 
+  const handleVeiculoSelect = (veiculo: VeiculoComStatus | null) => {
+    setSelectedVeiculo(veiculo);
+    setMobileListOpen(false);
+    if (veiculo) {
+      setMobileDetailsOpen(true);
+    }
+  };
+
   return (
-    <div className="h-[calc(100vh-64px)] flex">
-      <div className="w-80 flex-shrink-0">
+    <div className="h-[calc(100vh-64px)] flex flex-col md:flex-row relative">
+      {/* Mobile Header with buttons */}
+      <div className="md:hidden absolute top-2 left-2 right-2 z-10 flex justify-between">
+        <Sheet open={mobileListOpen} onOpenChange={setMobileListOpen}>
+          <SheetTrigger asChild>
+            <Button variant="secondary" size="sm" className="shadow-lg">
+              <List className="h-4 w-4 mr-2" />
+              Veículos ({veiculos.length})
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[85vw] sm:w-[350px] p-0">
+            <VeiculosList
+              veiculos={veiculos}
+              selectedVeiculoId={selectedVeiculo?.id}
+              onVeiculoSelect={handleVeiculoSelect}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+            />
+          </SheetContent>
+        </Sheet>
+
+        {selectedVeiculo && (
+          <Sheet open={mobileDetailsOpen} onOpenChange={setMobileDetailsOpen}>
+            <SheetTrigger asChild>
+              <Button variant="secondary" size="sm" className="shadow-lg">
+                <Info className="h-4 w-4 mr-2" />
+                Detalhes
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[85vw] sm:w-[350px] p-0">
+              <VeiculoDetailsPanel
+                veiculo={selectedVeiculo}
+                onClose={() => {
+                  setMobileDetailsOpen(false);
+                  setSelectedVeiculo(null);
+                }}
+              />
+            </SheetContent>
+          </Sheet>
+        )}
+      </div>
+
+      {/* Desktop Left Sidebar */}
+      <div className="hidden md:block w-72 lg:w-80 flex-shrink-0 border-r">
         <VeiculosList
           veiculos={veiculos}
           selectedVeiculoId={selectedVeiculo?.id}
@@ -135,7 +192,8 @@ const LogisticaDashboard: React.FC = () => {
         />
       </div>
 
-      <div className="flex-1 relative">
+      {/* Map Container */}
+      <div className="flex-1 relative min-h-[300px]">
         {loading ? (
           <div className="h-full flex items-center justify-center bg-muted/50">
             <div className="text-muted-foreground">Carregando...</div>
@@ -143,15 +201,22 @@ const LogisticaDashboard: React.FC = () => {
         ) : (
           <LazyLogisticaMap
             veiculos={veiculos}
-            onVeiculoClick={setSelectedVeiculo}
+            onVeiculoClick={(v) => {
+              setSelectedVeiculo(v);
+              // Open details on mobile when clicking marker
+              if (window.innerWidth < 768) {
+                setMobileDetailsOpen(true);
+              }
+            }}
             className="h-full w-full"
             fitBounds
           />
         )}
       </div>
 
+      {/* Desktop Right Sidebar - Details Panel */}
       {selectedVeiculo && (
-        <div className="w-80 flex-shrink-0">
+        <div className="hidden md:block w-72 lg:w-80 flex-shrink-0 border-l">
           <VeiculoDetailsPanel
             veiculo={selectedVeiculo}
             onClose={() => setSelectedVeiculo(null)}

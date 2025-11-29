@@ -45,22 +45,22 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
   });
 
   return (
-    <div className="h-full flex flex-col bg-background border-r">
-      <div className="p-4 border-b space-y-3">
-        <h2 className="font-semibold text-lg flex items-center gap-2">
-          <Car className="h-5 w-5" />
+    <div className="h-full flex flex-col bg-background">
+      <div className="p-3 sm:p-4 border-b space-y-2 sm:space-y-3">
+        <h2 className="font-semibold text-base sm:text-lg flex items-center gap-2">
+          <Car className="h-4 w-4 sm:h-5 sm:w-5" />
           Veículos ({filteredVeiculos.length})
         </h2>
         <Input
           placeholder="Buscar placa, motorista..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="h-9"
+          className="h-8 sm:h-9 text-sm"
         />
         <select 
           value={statusFilter} 
           onChange={(e) => onStatusFilterChange(e.target.value)}
-          className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+          className="h-8 sm:h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
         >
           <option value="todos">Todos os status</option>
           <option value="movendo">Em movimento</option>
@@ -79,21 +79,21 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
               <div
                 key={veiculo.id}
                 onClick={() => onVeiculoSelect(veiculo)}
-                className={`p-3 rounded-lg cursor-pointer transition-all ${
+                className={`p-2 sm:p-3 rounded-lg cursor-pointer transition-all ${
                   isSelected 
                     ? 'bg-primary/10 border-2 border-primary' 
                     : 'bg-card hover:bg-accent border border-border'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-1 sm:mb-2">
                     <div className="flex items-center gap-2">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             {veiculo.status !== 'offline' ? (
-                              <Wifi className="h-4 w-4 text-green-500" />
+                              <Wifi className="h-3 w-3 sm:h-4 sm:w-4 text-green-500" />
                             ) : (
-                              <WifiOff className="h-4 w-4 text-destructive" />
+                              <WifiOff className="h-3 w-3 sm:h-4 sm:w-4 text-destructive" />
                             )}
                           </TooltipTrigger>
                           <TooltipContent>
@@ -101,22 +101,22 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      <span className="font-semibold">{veiculo.placa}</span>
+                      <span className="font-semibold text-sm">{veiculo.placa}</span>
                     </div>
-                    <Badge variant="outline" className={`${config.textColor} text-xs`}>
+                    <Badge variant="outline" className={`${config.textColor} text-[10px] sm:text-xs`}>
                       {config.label}
                     </Badge>
                   </div>
 
                 {veiculo.motorista && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground mb-1">
                     <User className="h-3 w-3" />
-                    {veiculo.motorista}
+                    <span className="truncate">{veiculo.motorista}</span>
                   </div>
                 )}
 
                 {veiculo.ultima_posicao && (
-                  <div className="space-y-1 text-xs text-muted-foreground">
+                  <div className="space-y-1 text-[10px] sm:text-xs text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Gauge className="h-3 w-3" />
                       {Math.round(veiculo.ultima_posicao.velocidade)} km/h
@@ -132,7 +132,7 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
                 )}
 
                 {!veiculo.ultima_posicao && (
-                  <div className="text-xs text-muted-foreground italic">
+                  <div className="text-[10px] sm:text-xs text-muted-foreground italic">
                     Sem posição registrada
                   </div>
                 )}
@@ -141,7 +141,7 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
           })}
 
           {filteredVeiculos.length === 0 && (
-            <div className="p-4 text-center text-muted-foreground">
+            <div className="p-4 text-center text-muted-foreground text-sm">
               Nenhum veículo encontrado
             </div>
           )}

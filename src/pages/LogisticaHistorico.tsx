@@ -207,18 +207,18 @@ const LogisticaHistorico: React.FC = () => {
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b bg-background flex flex-col gap-3">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')}>
-              <ArrowLeft className="h-5 w-5" />
+      <div className="p-3 sm:p-4 border-b bg-background flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')} className="h-8 w-8 sm:h-9 sm:w-9">
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
             <div>
-              <h1 className="text-xl font-semibold flex items-center gap-2">
-                <Car className="h-5 w-5" />
+              <h1 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                <Car className="h-4 w-4 sm:h-5 sm:w-5" />
                 Histórico de Veículos
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {selectedVeiculoIds.length === 0 
                   ? 'Selecione veículos para visualizar' 
                   : `${selectedVeiculoIds.length} veículo(s) selecionado(s)`}
@@ -226,18 +226,20 @@ const LogisticaHistorico: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Multi Vehicle Selector */}
             <Popover open={selectorOpen} onOpenChange={setSelectorOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2 min-w-[200px] justify-start">
+                <Button variant="outline" className="gap-2 min-w-[140px] sm:min-w-[200px] justify-start text-sm">
                   <Car className="h-4 w-4" />
-                  {selectedVeiculoIds.length === 0 
-                    ? 'Selecionar veículos' 
-                    : `${selectedVeiculoIds.length} selecionado(s)`}
+                  <span className="truncate">
+                    {selectedVeiculoIds.length === 0 
+                      ? 'Selecionar' 
+                      : `${selectedVeiculoIds.length} veículo(s)`}
+                  </span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[300px] p-0 bg-popover z-[1000]" align="end">
+              <PopoverContent className="w-[280px] sm:w-[300px] p-0 bg-popover z-[1000]" align="end">
                 <Command>
                   <CommandInput placeholder="Buscar veículo..." />
                   <CommandList>
@@ -264,7 +266,7 @@ const LogisticaHistorico: React.FC = () => {
                                 style={{ backgroundColor: ROUTE_COLORS[index % ROUTE_COLORS.length] }}
                               />
                             )}
-                            <span className="flex-1 truncate">
+                            <span className="flex-1 truncate text-sm">
                               {v.placa} {v.descricao ? `- ${v.descricao}` : ''}
                             </span>
                           </CommandItem>
@@ -279,9 +281,10 @@ const LogisticaHistorico: React.FC = () => {
           {/* Date Picker */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2 text-sm">
                 <Calendar className="h-4 w-4" />
-                {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
+                <span className="hidden sm:inline">{format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}</span>
+                <span className="sm:hidden">{format(selectedDate, "dd/MM", { locale: ptBR })}</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 bg-popover z-[1000]" align="end">
@@ -304,7 +307,7 @@ const LogisticaHistorico: React.FC = () => {
               <Badge 
                 key={v.id} 
                 variant="secondary" 
-                className="gap-1 pr-1"
+                className="gap-1 pr-1 text-xs"
                 style={{ borderLeftColor: v.color, borderLeftWidth: 3 }}
               >
                 <span>{v.placa}</span>
@@ -323,25 +326,25 @@ const LogisticaHistorico: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Map */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative min-h-[250px] md:min-h-0">
           {selectedVeiculoIds.length === 0 ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
-              <div className="text-center">
-                <Car className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground">Selecione veículos para ver o histórico</p>
+              <div className="text-center p-4">
+                <Car className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">Selecione veículos para ver o histórico</p>
               </div>
             </div>
           ) : loading ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
-              <div className="text-muted-foreground">Carregando histórico...</div>
+              <div className="text-muted-foreground text-sm">Carregando histórico...</div>
             </div>
           ) : routes.length === 0 ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
-              <div className="text-center">
-                <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground">Nenhum registro para esta data</p>
+              <div className="text-center p-4">
+                <MapPin className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">Nenhum registro para esta data</p>
               </div>
             </div>
           ) : (
@@ -354,24 +357,24 @@ const LogisticaHistorico: React.FC = () => {
         </div>
 
         {/* Statistics Panel */}
-        <div className="w-80 flex-shrink-0 border-l bg-background p-4 overflow-auto">
-          <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
-            <Activity className="h-5 w-5" />
+        <div className="w-full md:w-72 lg:w-80 flex-shrink-0 border-t md:border-t-0 md:border-l bg-background p-3 sm:p-4 overflow-auto max-h-[40vh] md:max-h-none">
+          <h2 className="font-semibold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
+            <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
             Estatísticas do Dia
           </h2>
 
           {selectedVeiculoIds.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-xs sm:text-sm">
               Selecione veículos para ver as estatísticas.
             </p>
           ) : veiculosHistorico.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-xs sm:text-sm">
               Carregando...
             </p>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {veiculosHistorico.map((vh) => (
-                <div key={vh.veiculo.id} className="space-y-3">
+                <div key={vh.veiculo.id} className="space-y-2 sm:space-y-3">
                   <div 
                     className="flex items-center gap-2 pb-2 border-b"
                     style={{ borderBottomColor: vh.color }}
@@ -380,91 +383,91 @@ const LogisticaHistorico: React.FC = () => {
                       className="w-3 h-3 rounded-full flex-shrink-0" 
                       style={{ backgroundColor: vh.color }}
                     />
-                    <span className="font-medium">{vh.veiculo.placa}</span>
+                    <span className="font-medium text-sm">{vh.veiculo.placa}</span>
                     {vh.veiculo.descricao && (
-                      <span className="text-sm text-muted-foreground truncate">
+                      <span className="text-xs text-muted-foreground truncate">
                         {vh.veiculo.descricao}
                       </span>
                     )}
                   </div>
 
                   {!vh.estatisticas ? (
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-muted-foreground text-xs sm:text-sm">
                       Nenhum registro para esta data
                     </p>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
                       <Card className="col-span-2">
-                        <CardHeader className="p-3 pb-1">
-                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <CardHeader className="p-2 sm:p-3 pb-1">
+                          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <Route className="h-3 w-3" />
                             Distância
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <p className="text-lg font-bold">{vh.estatisticas.distancia_total_km} km</p>
+                        <CardContent className="p-2 sm:p-3 pt-0">
+                          <p className="text-base sm:text-lg font-bold">{vh.estatisticas.distancia_total_km} km</p>
                         </CardContent>
                       </Card>
 
                       <Card>
-                        <CardHeader className="p-3 pb-1">
-                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <CardHeader className="p-2 sm:p-3 pb-1">
+                          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <Gauge className="h-3 w-3" />
                             Vel. Máx
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <p className="text-lg font-bold">{vh.estatisticas.velocidade_maxima}</p>
-                          <p className="text-xs text-muted-foreground">km/h</p>
+                        <CardContent className="p-2 sm:p-3 pt-0">
+                          <p className="text-base sm:text-lg font-bold">{vh.estatisticas.velocidade_maxima}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">km/h</p>
                         </CardContent>
                       </Card>
 
                       <Card>
-                        <CardHeader className="p-3 pb-1">
-                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <CardHeader className="p-2 sm:p-3 pb-1">
+                          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <Gauge className="h-3 w-3" />
                             Vel. Média
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <p className="text-lg font-bold">{vh.estatisticas.velocidade_media}</p>
-                          <p className="text-xs text-muted-foreground">km/h</p>
+                        <CardContent className="p-2 sm:p-3 pt-0">
+                          <p className="text-base sm:text-lg font-bold">{vh.estatisticas.velocidade_media}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">km/h</p>
                         </CardContent>
                       </Card>
 
                       <Card>
-                        <CardHeader className="p-3 pb-1">
-                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <CardHeader className="p-2 sm:p-3 pb-1">
+                          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             Movimento
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <p className="text-sm font-bold">{formatMinutes(vh.estatisticas.tempo_movimento_minutos)}</p>
+                        <CardContent className="p-2 sm:p-3 pt-0">
+                          <p className="text-xs sm:text-sm font-bold">{formatMinutes(vh.estatisticas.tempo_movimento_minutos)}</p>
                         </CardContent>
                       </Card>
 
                       <Card>
-                        <CardHeader className="p-3 pb-1">
-                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <CardHeader className="p-2 sm:p-3 pb-1">
+                          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             Parado
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <p className="text-sm font-bold">{formatMinutes(vh.estatisticas.tempo_parado_minutos)}</p>
+                        <CardContent className="p-2 sm:p-3 pt-0">
+                          <p className="text-xs sm:text-sm font-bold">{formatMinutes(vh.estatisticas.tempo_parado_minutos)}</p>
                         </CardContent>
                       </Card>
 
                       <Card className="col-span-2">
-                        <CardHeader className="p-3 pb-1">
-                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <CardHeader className="p-2 sm:p-3 pb-1">
+                          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             Pontos Registrados
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-3 pt-0">
-                          <p className="text-lg font-bold">{vh.estatisticas.pontos_total}</p>
+                        <CardContent className="p-2 sm:p-3 pt-0">
+                          <p className="text-base sm:text-lg font-bold">{vh.estatisticas.pontos_total}</p>
                         </CardContent>
                       </Card>
                     </div>
