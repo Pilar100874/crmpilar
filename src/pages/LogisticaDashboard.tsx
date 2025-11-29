@@ -196,32 +196,9 @@ const LogisticaDashboard: React.FC = () => {
           onStatusFilterChange={setStatusFilter}
         />
       </div>
-      
-      {/* Collapse/Expand toggle button - always visible on desktop */}
-      <Button
-        variant="secondary"
-        size="sm"
-        className={cn(
-          "hidden md:flex absolute top-2 z-10 shadow-lg transition-all duration-300",
-          sidebarCollapsed ? "left-2" : "left-[calc(theme(spacing.72)-0.5rem)] lg:left-[calc(theme(spacing.80)-0.5rem)]"
-        )}
-        onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-      >
-        {sidebarCollapsed ? (
-          <>
-            <PanelLeft className="h-4 w-4 mr-2" />
-            Veículos ({veiculos.length})
-          </>
-        ) : (
-          <PanelLeftClose className="h-4 w-4" />
-        )}
-      </Button>
 
       {/* Map Container */}
-      <div className={cn(
-        "flex-1 relative min-h-[300px] transition-all duration-300",
-        sidebarCollapsed && "w-full"
-      )}>
+      <div className="flex-1 relative min-h-[300px]">
         {loading ? (
           <div className="h-full flex items-center justify-center bg-muted/50">
             <div className="text-muted-foreground">Carregando...</div>
@@ -240,6 +217,21 @@ const LogisticaDashboard: React.FC = () => {
             fitBounds
           />
         )}
+        
+        {/* Collapse/Expand sidebar button - positioned below map zoom controls */}
+        <Button
+          variant="outline"
+          size="icon"
+          className="hidden md:flex absolute left-[10px] top-[82px] z-[400] h-[30px] w-[30px] bg-background border-2 border-[rgba(0,0,0,0.2)] shadow-none hover:bg-accent rounded-sm"
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          title={sidebarCollapsed ? "Mostrar veículos" : "Ocultar veículos"}
+        >
+          {sidebarCollapsed ? (
+            <PanelLeft className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
+        </Button>
       </div>
 
       {/* Desktop Right Sidebar - Details Panel */}
