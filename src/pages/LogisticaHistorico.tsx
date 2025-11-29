@@ -44,35 +44,15 @@ const LogisticaHistorico: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
 
-  const getEstabelecimentoId = async (): Promise<string | null> => {
-    const storedId = localStorage.getItem('estabelecimento_id');
-    if (storedId) return storedId;
-
-    const { data } = await supabase
-      .from('estabelecimentos')
-      .select('id')
-      .limit(1)
-      .maybeSingle();
-
-    if (data?.id) {
-      localStorage.setItem('estabelecimento_id', data.id);
-      return data.id;
-    }
-    return null;
-  };
-
-  // Fetch all vehicles for the selector
+  // Fetch all vehicles for the selector (admin sees all vehicles)
   useEffect(() => {
     const fetchVeiculos = async () => {
       try {
-        const estabelecimentoId = await getEstabelecimentoId();
-        let query = supabase.from('veiculos').select('*').eq('ativo', true);
-        
-        if (estabelecimentoId) {
-          query = query.eq('estabelecimento_id', estabelecimentoId);
-        }
-        
-        const { data, error } = await query.order('placa');
+        const { data, error } = await supabase
+          .from('veiculos')
+          .select('*')
+          .eq('ativo', true)
+          .order('placa');
         if (error) throw error;
         setVeiculos((data || []) as Veiculo[]);
       } catch (error) {
