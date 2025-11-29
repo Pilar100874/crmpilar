@@ -69,6 +69,9 @@ import LogisticaRoteirizacao from "./pages/LogisticaRoteirizacao";
 import LogisticaRotas from "./pages/LogisticaRotas";
 import LogisticaConfig from "./pages/LogisticaConfig";
 import LogisticaAutomacoes from "./pages/LogisticaAutomacoes";
+import MarketplaceHub from "./pages/MarketplaceHub";
+import MarketplaceProdutos from "./pages/MarketplaceProdutos";
+import MarketplacePedidos from "./pages/MarketplacePedidos";
 
 const queryClient = new QueryClient();
 
@@ -156,6 +159,9 @@ const App = () => (
             <Route path="/logistica/rotas" element={<LogisticaRotas />} />
             <Route path="/logistica/automacoes" element={<LogisticaAutomacoes />} />
             <Route path="/logistica/config" element={<LogisticaConfig />} />
+            <Route path="/marketplaces" element={<MarketplaceHub />} />
+            <Route path="/marketplaces/produtos" element={<MarketplaceProdutos />} />
+            <Route path="/marketplaces/pedidos" element={<MarketplacePedidos />} />
           </Route>
           {/* Public routes (no layout) */}
           <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
