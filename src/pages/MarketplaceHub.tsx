@@ -891,10 +891,32 @@ export default function MarketplaceHub() {
                       <p className="font-mono">{selectedConta.seller_id || '-'}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground text-xs">Ambiente</p>
-                      <Badge variant="outline" className="text-xs">
-                        {selectedConta.ambiente === 'producao' ? 'Produção' : 'Sandbox'}
-                      </Badge>
+                      <p className="text-muted-foreground text-xs mb-1">Ambiente</p>
+                      <Select
+                        value={selectedConta.ambiente || 'sandbox'}
+                        onValueChange={async (value) => {
+                          try {
+                            const { error } = await supabase
+                              .from('contas_marketplace')
+                              .update({ ambiente: value })
+                              .eq('id', selectedConta.id);
+                            if (error) throw error;
+                            setSelectedConta({ ...selectedConta, ambiente: value });
+                            queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
+                            toast.success('Ambiente atualizado');
+                          } catch (err: any) {
+                            toast.error('Erro ao atualizar: ' + err.message);
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-8 w-[130px] text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="sandbox">Sandbox</SelectItem>
+                          <SelectItem value="producao">Produção</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <p className="text-muted-foreground text-xs">Status</p>
