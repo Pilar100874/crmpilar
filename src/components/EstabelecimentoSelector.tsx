@@ -31,7 +31,24 @@ export function EstabelecimentoSelector({ open, onSelectEstabelecimento, onClose
 
   useEffect(() => {
     if (open) {
-      fetchEstabelecimentos();
+      // Aguardar sessão estar pronta antes de buscar estabelecimentos
+      const initFetch = async () => {
+        // Aguardar um momento para a sessão ser estabelecida
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Verificar se a sessão está ativa
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Session check:", session?.user?.email);
+        
+        if (session) {
+          await fetchEstabelecimentos();
+        } else {
+          console.error("Nenhuma sessão ativa encontrada");
+        }
+      };
+      
+      initFetch();
+      
       // Verificar se já tem um estabelecimento selecionado anteriormente
       const savedEstabelecimentoId = localStorage.getItem("selectedEstabelecimentoId");
       if (savedEstabelecimentoId) {
@@ -47,8 +64,12 @@ export function EstabelecimentoSelector({ open, onSelectEstabelecimento, onClose
       .select("id, nome, cnpj")
       .order("nome");
 
+    console.log("Estabelecimentos query result:", { data, error });
+
     if (!error && data) {
       setEstabelecimentos(data);
+    } else if (error) {
+      console.error("Erro ao buscar estabelecimentos:", error);
     }
     setIsLoading(false);
   };
