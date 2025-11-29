@@ -31,12 +31,33 @@ const LogisticaConfig: React.FC = () => {
     loadConfig();
   }, []);
 
+  const getEstabelecimentoId = async (): Promise<string | null> => {
+    // First try localStorage
+    const storedId = localStorage.getItem('estabelecimento_id');
+    if (storedId) return storedId;
+
+    // For admins, try to get the first estabelecimento
+    const { data } = await supabase
+      .from('estabelecimentos')
+      .select('id')
+      .limit(1)
+      .maybeSingle();
+
+    if (data?.id) {
+      localStorage.setItem('estabelecimento_id', data.id);
+      return data.id;
+    }
+
+    return null;
+  };
+
   const loadConfig = async () => {
     setLoading(true);
     try {
-      const estabelecimentoId = localStorage.getItem('estabelecimento_id');
+      const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) {
         toast.error('Estabelecimento não encontrado');
+        setLoading(false);
         return;
       }
 
@@ -76,7 +97,12 @@ const LogisticaConfig: React.FC = () => {
     
     setSaving(true);
     try {
-      const estabelecimentoId = localStorage.getItem('estabelecimento_id');
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) {
+        toast.error('Estabelecimento não encontrado');
+        setSaving(false);
+        return;
+      }
 
       const { error } = await supabase
         .from('logistica_config')
