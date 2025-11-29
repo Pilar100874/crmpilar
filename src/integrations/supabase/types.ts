@@ -2716,6 +2716,38 @@ export type Database = {
           },
         ]
       }
+      logistica_config: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          token_rastreamento: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          token_rastreamento?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          token_rastreamento?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logistica_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_automations: {
         Row: {
           active: boolean

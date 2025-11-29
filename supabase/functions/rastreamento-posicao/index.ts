@@ -12,6 +12,7 @@ interface PosicaoPayload {
   velocidade?: number;
   direcao?: number;
   dataHora?: string;
+  token?: string;
 }
 
 // Traccar Client App format (background geolocation plugin)
@@ -38,6 +39,7 @@ function parseOsmAndFormat(url: URL): PosicaoPayload | null {
   const speed = url.searchParams.get('speed');
   const bearing = url.searchParams.get('bearing') || url.searchParams.get('hdop');
   const timestamp = url.searchParams.get('timestamp');
+  const token = url.searchParams.get('token');
   
   if (!id || !lat || !lon) {
     return null;
@@ -49,56 +51,67 @@ function parseOsmAndFormat(url: URL): PosicaoPayload | null {
     lng: parseFloat(lon),
     velocidade: speed ? parseFloat(speed) * 3.6 : 0, // Convert m/s to km/h
     direcao: bearing ? parseFloat(bearing) : undefined,
-    dataHora: timestamp ? new Date(parseInt(timestamp) * 1000).toISOString() : new Date().toISOString()
+    dataHora: timestamp ? new Date(parseInt(timestamp) * 1000).toISOString() : new Date().toISOString(),
+    token: token || undefined
   };
 }
 
-async function findVeiculoId(supabase: any, deviceId: string): Promise<string | null> {
+async function validateToken(supabase: any, token: string): Promise<{ valid: boolean; estabelecimentoId?: string }> {
+  if (!token) {
+    return { valid: false };
+  }
+
+  const { data, error } = await supabase
+    .from('logistica_config')
+    .select('estabelecimento_id')
+    .eq('token_rastreamento', token)
+    .single();
+
+  if (error || !data) {
+    console.log('Token validation failed:', error?.message || 'Not found');
+    return { valid: false };
+  }
+
+  return { valid: true, estabelecimentoId: data.estabelecimento_id };
+}
+
+async function findVeiculoId(supabase: any, deviceId: string, estabelecimentoId?: string): Promise<string | null> {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  
+  // Base query builder
+  const buildQuery = (table: string, field: string, value: string) => {
+    let query = supabase.from(table).select('id').eq(field, value).eq('ativo', true);
+    if (estabelecimentoId) {
+      query = query.eq('estabelecimento_id', estabelecimentoId);
+    }
+    return query.single();
+  };
   
   // If it's a UUID, try direct lookup
   if (uuidRegex.test(deviceId)) {
-    const { data: veiculo } = await supabase
-      .from('veiculos')
-      .select('id')
-      .eq('id', deviceId)
-      .eq('ativo', true)
-      .single();
-    
+    const { data: veiculo } = await buildQuery('veiculos', 'id', deviceId);
     if (veiculo) return veiculo.id;
   }
   
   // Try by traccar_device_id
-  const { data: veiculoByDevice } = await supabase
-    .from('veiculos')
-    .select('id')
-    .eq('traccar_device_id', deviceId)
-    .eq('ativo', true)
-    .single();
-  
+  const { data: veiculoByDevice } = await buildQuery('veiculos', 'traccar_device_id', deviceId);
   if (veiculoByDevice) return veiculoByDevice.id;
   
   // Try by placa (uppercase)
-  const { data: veiculoByPlaca } = await supabase
-    .from('veiculos')
-    .select('id')
-    .eq('placa', deviceId.toUpperCase())
-    .eq('ativo', true)
-    .single();
-  
+  const { data: veiculoByPlaca } = await buildQuery('veiculos', 'placa', deviceId.toUpperCase());
   if (veiculoByPlaca) return veiculoByPlaca.id;
   
   return null;
 }
 
-async function savePosition(supabase: any, payload: PosicaoPayload) {
+async function savePosition(supabase: any, payload: PosicaoPayload, estabelecimentoId?: string) {
   // Validate coordinates range
   if (payload.lat < -90 || payload.lat > 90 || payload.lng < -180 || payload.lng > 180) {
     return { error: 'Invalid coordinates', status: 400 };
   }
 
   // Find vehicle by device ID, placa, or UUID
-  const veiculoId = await findVeiculoId(supabase, payload.veiculoId);
+  const veiculoId = await findVeiculoId(supabase, payload.veiculoId, estabelecimentoId);
   
   if (!veiculoId) {
     console.error('Vehicle not found for identifier:', payload.veiculoId);
@@ -140,6 +153,8 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     const url = new URL(req.url);
+    let token: string | undefined;
+    let estabelecimentoId: string | undefined;
 
     // Handle GET request (OsmAnd/Traccar format)
     if (req.method === 'GET') {
@@ -158,10 +173,22 @@ Deno.serve(async (req) => {
           }
         );
       }
+
+      // Validate token if provided
+      if (payload.token) {
+        const tokenResult = await validateToken(supabase, payload.token);
+        if (!tokenResult.valid) {
+          return new Response(
+            JSON.stringify({ status: 'error', message: 'Invalid token' }),
+            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        estabelecimentoId = tokenResult.estabelecimentoId;
+      }
       
       console.log('Received OsmAnd/Traccar position:', payload);
       
-      const result = await savePosition(supabase, payload);
+      const result = await savePosition(supabase, payload, estabelecimentoId);
       
       if (result.error) {
         return new Response(
@@ -217,13 +244,26 @@ Deno.serve(async (req) => {
           lng: coords.longitude,
           velocidade: speedKmh,
           direcao: coords.heading && coords.heading > 0 ? coords.heading : undefined,
-          dataHora: traccarPayload.location?.timestamp || new Date().toISOString()
+          dataHora: traccarPayload.location?.timestamp || new Date().toISOString(),
+          token: rawPayload.token // Token can be passed at root level
         };
         
         console.log('Converted Traccar Client payload:', payload);
       } else {
         // Standard format
         payload = rawPayload as PosicaoPayload;
+      }
+
+      // Validate token if provided
+      if (payload.token) {
+        const tokenResult = await validateToken(supabase, payload.token);
+        if (!tokenResult.valid) {
+          return new Response(
+            JSON.stringify({ status: 'error', message: 'Invalid token' }),
+            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        estabelecimentoId = tokenResult.estabelecimentoId;
       }
 
       // Validate required fields
@@ -240,7 +280,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      const result = await savePosition(supabase, payload);
+      const result = await savePosition(supabase, payload, estabelecimentoId);
       
       if (result.error) {
         return new Response(
