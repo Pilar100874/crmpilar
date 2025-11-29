@@ -409,12 +409,12 @@ export default function Layout({ children }: LayoutProps) {
     fetchUserAndEstabelecimento();
   }, [user, isAdmin]);
 
-  // Close any open submenu whenever the route changes or on any click outside
+  // Close any open submenu whenever the route changes
   useEffect(() => {
     setOpenSubmenuId(null);
   }, [location.pathname]);
 
-  // Force close submenus on escape key
+  // Force close submenus on escape key and click outside
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -422,9 +422,26 @@ export default function Layout({ children }: LayoutProps) {
       }
     };
     
+    const handleClickOutside = (e: MouseEvent) => {
+      // Se clicou fora do sidebar e do painel de submenu, fecha o submenu
+      if (
+        openSubmenuId &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(e.target as Node) &&
+        submenuPanelRef.current &&
+        !submenuPanelRef.current.contains(e.target as Node)
+      ) {
+        setOpenSubmenuId(null);
+      }
+    };
+    
     window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, []);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openSubmenuId]);
 
   // Detecta mudanças no tamanho da tela
   useEffect(() => {
@@ -693,7 +710,8 @@ export default function Layout({ children }: LayoutProps) {
                   const isMenuOpen = openSubmenuId === item.id;
                   // Verifica se algum atalho está ativo para o mesmo path
                   const isPathInAtalhos = atalhos.some(a => item.subItems?.some(sub => sub.url === a.path && location.pathname === a.path));
-                  const shouldHighlight = isSubItemActive && !isPathInAtalhos;
+                  // Destaca se: submenu está aberto OU se tem subitem ativo (e não está em atalhos)
+                  const shouldHighlight = isMenuOpen || (isSubItemActive && !isPathInAtalhos);
                   
                   // Estilo travado (ícones apenas)
                   if (menuLocked) {
