@@ -31,18 +31,30 @@ const LogisticaRotas: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Tenta buscar estabelecimento do usuário
       const { data: usuario } = await supabase
         .from('usuarios')
         .select('estabelecimento_id')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (!usuario?.estabelecimento_id) return;
+      let estabelecimentoId = usuario?.estabelecimento_id;
+
+      // Fallback: usa localStorage para admins
+      if (!estabelecimentoId) {
+        estabelecimentoId = localStorage.getItem('selectedEstabelecimentoId');
+      }
+
+      if (!estabelecimentoId) {
+        console.log('Estabelecimento não encontrado');
+        setLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('rotas_salvas')
         .select('*')
-        .eq('estabelecimento_id', usuario.estabelecimento_id)
+        .eq('estabelecimento_id', estabelecimentoId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
