@@ -11,35 +11,64 @@ import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const LogisticaHistorico: React.FC = () => {
-  const { veiculoId } = useParams<{ veiculoId: string }>();
+  const { veiculoId: paramVeiculoId } = useParams<{ veiculoId: string }>();
   const navigate = useNavigate();
   
+  const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
+  const [selectedVeiculoId, setSelectedVeiculoId] = useState<string | null>(paramVeiculoId || null);
   const [veiculo, setVeiculo] = useState<Veiculo | null>(null);
   const [posicoes, setPosicoes] = useState<VeiculoPosicao[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState(true);
   const [estatisticas, setEstatisticas] = useState<HistoricoEstatisticas | null>(null);
 
+  // Fetch all vehicles for the selector
   useEffect(() => {
-    if (veiculoId) {
-      fetchVeiculo();
-    }
-  }, [veiculoId]);
+    const fetchVeiculos = async () => {
+      try {
+        const estabelecimentoId = localStorage.getItem('estabelecimento_id');
+        let query = supabase.from('veiculos').select('*').eq('ativo', true);
+        
+        if (estabelecimentoId) {
+          query = query.eq('estabelecimento_id', estabelecimentoId);
+        }
+        
+        const { data, error } = await query.order('placa');
+        if (error) throw error;
+        setVeiculos((data || []) as Veiculo[]);
+      } catch (error) {
+        console.error('Error fetching vehicles:', error);
+      }
+    };
+    fetchVeiculos();
+  }, []);
 
   useEffect(() => {
-    if (veiculoId && selectedDate) {
+    if (selectedVeiculoId) {
+      fetchVeiculo();
+    } else {
+      setVeiculo(null);
+      setPosicoes([]);
+      setEstatisticas(null);
+      setLoading(false);
+    }
+  }, [selectedVeiculoId]);
+
+  useEffect(() => {
+    if (selectedVeiculoId && selectedDate) {
       fetchPosicoes();
     }
-  }, [veiculoId, selectedDate]);
+  }, [selectedVeiculoId, selectedDate]);
 
   const fetchVeiculo = async () => {
     try {
       const { data, error } = await supabase
         .from('veiculos')
         .select('*')
-        .eq('id', veiculoId)
+        .eq('id', selectedVeiculoId)
         .single();
 
       if (error) throw error;
@@ -59,7 +88,7 @@ const LogisticaHistorico: React.FC = () => {
       const { data, error } = await supabase
         .from('veiculo_posicoes')
         .select('*')
-        .eq('veiculo_id', veiculoId)
+        .eq('veiculo_id', selectedVeiculoId)
         .gte('data_hora', start.toISOString())
         .lte('data_hora', end.toISOString())
         .order('data_hora', { ascending: true });
@@ -92,18 +121,15 @@ const LogisticaHistorico: React.FC = () => {
     for (let i = 0; i < posicoes.length; i++) {
       const posicao = posicoes[i];
       
-      // Track max and average speed
       if (posicao.velocidade > velocidadeMaxima) {
         velocidadeMaxima = posicao.velocidade;
       }
       somaVelocidades += posicao.velocidade;
 
-      // Calculate distance and time between consecutive points
       if (i > 0) {
         const prevPosicao = posicoes[i - 1];
         
-        // Calculate distance using Haversine formula
-        const R = 6371; // Earth's radius in km
+        const R = 6371;
         const dLat = (posicao.lat - prevPosicao.lat) * Math.PI / 180;
         const dLng = (posicao.lng - prevPosicao.lng) * Math.PI / 180;
         const a = 
@@ -114,13 +140,11 @@ const LogisticaHistorico: React.FC = () => {
         const distancia = R * c;
         distanciaTotal += distancia;
 
-        // Calculate time difference
         const tempoMinutos = differenceInMinutes(
           new Date(posicao.data_hora),
           new Date(prevPosicao.data_hora)
         );
 
-        // Consider moving if average speed > 5 km/h
         const velocidadeMedia = (posicao.velocidade + prevPosicao.velocidade) / 2;
         if (velocidadeMedia > 5) {
           tempoMovimento += tempoMinutos;
@@ -151,10 +175,16 @@ const LogisticaHistorico: React.FC = () => {
     return `${mins} min`;
   };
 
+  const handleVeiculoChange = (value: string) => {
+    setSelectedVeiculoId(value);
+    // Update URL without full navigation
+    navigate(`/logistica/historico/${value}`, { replace: true });
+  };
+
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b bg-background flex items-center justify-between">
+      <div className="p-4 border-b bg-background flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')}>
             <ArrowLeft className="h-5 w-5" />
@@ -163,7 +193,6 @@ const LogisticaHistorico: React.FC = () => {
             <h1 className="text-xl font-semibold flex items-center gap-2">
               <Car className="h-5 w-5" />
               Histórico do Veículo
-              {veiculo && <span className="text-primary">{veiculo.placa}</span>}
             </h1>
             {veiculo?.motorista && (
               <p className="text-sm text-muted-foreground">Motorista: {veiculo.motorista}</p>
@@ -171,30 +200,54 @@ const LogisticaHistorico: React.FC = () => {
           </div>
         </div>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <Calendar className="h-4 w-4" />
-              {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
-            <CalendarComponent
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              locale={ptBR}
-              disabled={(date) => date > new Date()}
-            />
-          </PopoverContent>
-        </Popover>
+        <div className="flex items-center gap-2">
+          {/* Vehicle Selector */}
+          <Select value={selectedVeiculoId || ''} onValueChange={handleVeiculoChange}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Selecione um veículo" />
+            </SelectTrigger>
+            <SelectContent>
+              {veiculos.map((v) => (
+                <SelectItem key={v.id} value={v.id}>
+                  {v.placa} {v.descricao ? `- ${v.descricao}` : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Date Picker */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Calendar className="h-4 w-4" />
+                {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <CalendarComponent
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                locale={ptBR}
+                disabled={(date) => date > new Date()}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 flex">
         {/* Map */}
         <div className="flex-1 relative">
-          {loading ? (
+          {!selectedVeiculoId ? (
+            <div className="h-full flex items-center justify-center bg-muted/50">
+              <div className="text-center">
+                <Car className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">Selecione um veículo para ver o histórico</p>
+              </div>
+            </div>
+          ) : loading ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
               <div className="text-muted-foreground">Carregando histórico...</div>
             </div>
@@ -224,7 +277,11 @@ const LogisticaHistorico: React.FC = () => {
             Estatísticas do Dia
           </h2>
 
-          {!estatisticas ? (
+          {!selectedVeiculoId ? (
+            <p className="text-muted-foreground text-sm">
+              Selecione um veículo para ver as estatísticas.
+            </p>
+          ) : !estatisticas ? (
             <p className="text-muted-foreground text-sm">
               Selecione uma data com registros para ver as estatísticas.
             </p>
