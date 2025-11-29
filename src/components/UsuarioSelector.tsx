@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
 import { toast } from "@/lib/toast-config";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface Usuario {
   id: string;
@@ -26,30 +27,45 @@ interface UsuarioSelectorProps {
   estabelecimentoId: string | null;
 }
 
-export function UsuarioSelector({ open, onClose, estabelecimentoId }: UsuarioSelectorProps) {
+export function UsuarioSelector({ open, onClose, estabelecimentoId: propEstabelecimentoId }: UsuarioSelectorProps) {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [selectedUsuario, setSelectedUsuario] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(propEstabelecimentoId);
 
   useEffect(() => {
-    if (open && estabelecimentoId) {
-      fetchUsuarios();
+    if (open) {
+      fetchEstabelecimentoAndUsuarios();
     }
-  }, [open, estabelecimentoId]);
+  }, [open, propEstabelecimentoId]);
 
-  const fetchUsuarios = async () => {
-    if (!estabelecimentoId) return;
-
+  const fetchEstabelecimentoAndUsuarios = async () => {
     setIsLoading(true);
+    
+    // Tenta usar o prop, senão busca via utilitário
+    let estabId = propEstabelecimentoId;
+    if (!estabId) {
+      estabId = await getEstabelecimentoId();
+      setEstabelecimentoId(estabId);
+    }
+
+    if (!estabId) {
+      console.error("Nenhum estabelecimento encontrado");
+      setIsLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("usuarios")
       .select("id, nome, email")
-      .eq("estabelecimento_id", estabelecimentoId)
+      .eq("estabelecimento_id", estabId)
       .order("nome");
 
     if (!error && data) {
       setUsuarios(data);
+    } else {
+      console.error("Erro ao buscar usuários:", error);
     }
     setIsLoading(false);
   };
