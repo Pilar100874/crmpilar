@@ -7530,6 +7530,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_system_admin: { Args: never; Returns: boolean }
       roles_present: { Args: never; Returns: boolean }
     }
     Enums: {
