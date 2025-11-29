@@ -20,7 +20,7 @@ export function ApiImportWizardStep0({
       <div className="space-y-2">
         <h2 className="text-2xl font-bold">Configuração do Relatório</h2>
         <p className="text-muted-foreground">
-          Defina o nome e a data de criação do relatório de importação via API
+          Defina o nome e a data de criação do relatório de importação
         </p>
       </div>
 

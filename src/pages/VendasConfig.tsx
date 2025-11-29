@@ -58,7 +58,7 @@ const tabItems: TabItem[] = [
   { id: 'custos-veiculo', label: 'Custos de Veículos', icon: Truck },
   { id: 'pedagio', label: 'API de Pedágio', icon: Calculator },
   { id: 'automacao', label: 'Regras de Automação', icon: Zap },
-  { id: 'importacao-api', label: 'Importação via API', icon: Globe },
+  { id: 'importacao-api', label: 'Importação de Produtos', icon: Globe },
 ];
 
 export default function VendasConfig() {
@@ -377,7 +377,7 @@ export default function VendasConfig() {
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     <Globe className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Importação de Produtos via API
+                    Importação de Produtos
                   </CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
                     Importe produtos de APIs externas para o cadastro de produtos
