@@ -567,9 +567,9 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
         <Card>
           <CardContent className="py-8 text-center">
             <Globe className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-            <h3 className="font-semibold mb-1">Nenhuma importação via API</h3>
+            <h3 className="font-semibold mb-1">Nenhuma importação de produtos</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Crie sua primeira importação de produtos via API
+              Crie sua primeira importação de produtos
             </p>
             <Button onClick={handleNewImport}>
               <Plus className="h-4 w-4 mr-2" />
