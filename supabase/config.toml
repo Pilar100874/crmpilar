@@ -110,3 +110,21 @@ verify_jwt = false
 
 [functions.shopee-sync]
 verify_jwt = true
+
+[functions.magalu-auth-start]
+verify_jwt = false
+
+[functions.magalu-auth-callback]
+verify_jwt = false
+
+[functions.magalu-sync]
+verify_jwt = true
+
+[functions.google-shopping-auth-start]
+verify_jwt = false
+
+[functions.google-shopping-auth-callback]
+verify_jwt = false
+
+[functions.google-shopping-sync]
+verify_jwt = true

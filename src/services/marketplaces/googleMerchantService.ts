@@ -1,134 +1,77 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BaseMarketplaceService } from "./baseService";
 
+const SUPABASE_URL = "https://ioxugupvxlcdweldocmq.supabase.co";
+
 export class GoogleMerchantService extends BaseMarketplaceService {
   constructor() {
     super("Google Shopping");
   }
 
   async conectarConta(contaMarketplaceId: string): Promise<void> {
-    // TODO: Implementar chamada real da Google Content API OAuth
-    // https://developers.google.com/shopping-content/guides/quickstart
-    
-    console.log(`[${this.marketplaceName}] Conectando conta ${contaMarketplaceId}...`);
-    
-    const mockToken = `GOOG_TOKEN_${Date.now()}`;
-    const mockRefresh = `GOOG_REFRESH_${Date.now()}`;
-    const expiracao = new Date();
-    expiracao.setHours(expiracao.getHours() + 1);
+    console.log(`[${this.marketplaceName}] Iniciando OAuth para conta ${contaMarketplaceId}...`);
 
-    await this.atualizarStatusConta(
-      contaMarketplaceId, 
-      'conectado', 
-      mockToken, 
-      mockRefresh, 
-      expiracao
-    );
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/google-shopping-auth-start?contaMarketplaceId=${contaMarketplaceId}`);
+    const data = await response.json();
 
-    await this.criarLog(
-      contaMarketplaceId,
-      'conexao',
-      'Conta conectada com sucesso ao Google Merchant Center (mock)',
-      true,
-      { token_expira: expiracao.toISOString() }
-    );
+    if (!response.ok) {
+      throw new Error(data.error || "Erro ao iniciar autenticação");
+    }
+
+    const authWindow = window.open(data.authUrl, "google-shopping-auth", "width=600,height=700,scrollbars=yes");
+
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        window.removeEventListener("message", messageHandler);
+        reject(new Error("Tempo limite excedido. Tente novamente."));
+      }, 5 * 60 * 1000);
+
+      const messageHandler = (event: MessageEvent) => {
+        if (event.data?.type === "google-shopping-oauth") {
+          clearTimeout(timeout);
+          window.removeEventListener("message", messageHandler);
+          if (event.data.success) resolve();
+          else reject(new Error(event.data.message || "Erro na autorização"));
+        }
+      };
+
+      window.addEventListener("message", messageHandler);
+
+      const checkWindow = setInterval(() => {
+        if (authWindow?.closed) {
+          clearInterval(checkWindow);
+          setTimeout(() => {
+            clearTimeout(timeout);
+            window.removeEventListener("message", messageHandler);
+            resolve();
+          }, 2000);
+        }
+      }, 500);
+    });
   }
 
   async sincronizarProdutos(contaMarketplaceId: string): Promise<void> {
-    // TODO: Implementar chamada real da Google Content API
-    // GET /content/v2.1/products
-    
-    console.log(`[${this.marketplaceName}] Sincronizando produtos para conta ${contaMarketplaceId}...`);
-
-    const estabelecimentoId = await this.getEstabelecimentoId();
-    
-    const { data: produtos } = await supabase
-      .from('produtos')
-      .select('id, nome')
-      .eq('estabelecimento_id', estabelecimentoId)
-      .eq('ativo', true)
-      .limit(10);
-
-    const { data: conta } = await supabase
-      .from('contas_marketplace')
-      .select('marketplace_id')
-      .eq('id', contaMarketplaceId)
-      .single();
-
-    if (produtos && conta) {
-      for (const produto of produtos) {
-        const { data: existing } = await supabase
-          .from('marketplace_produtos')
-          .select('id')
-          .eq('produto_id', produto.id)
-          .eq('conta_marketplace_id', contaMarketplaceId)
-          .single();
-
-        if (!existing) {
-          await supabase.from('marketplace_produtos').insert({
-            produto_id: produto.id,
-            marketplace_id: conta.marketplace_id,
-            conta_marketplace_id: contaMarketplaceId,
-            sku_marketplace: `online:pt:BR:${Math.random().toString(36).substring(7)}`,
-            titulo_marketplace: produto.nome,
-            status: 'listado',
-            ultimo_sync: new Date().toISOString(),
-          });
-        } else {
-          await supabase
-            .from('marketplace_produtos')
-            .update({
-              ultimo_sync: new Date().toISOString(),
-              status: 'listado',
-            })
-            .eq('id', existing.id);
-        }
-      }
-    }
-
-    await this.criarLog(
-      contaMarketplaceId,
-      'sync_produtos',
-      `${produtos?.length || 0} produtos sincronizados com Google Shopping (mock)`,
-      true,
-      { quantidade: produtos?.length || 0 }
-    );
+    const { data, error } = await supabase.functions.invoke("google-shopping-sync", {
+      body: { contaMarketplaceId, action: "produtos" },
+    });
+    if (error) throw new Error(error.message);
+    if (data && !data.success) throw new Error(data.error);
   }
 
   async sincronizarEstoquePrecos(contaMarketplaceId: string): Promise<void> {
-    // TODO: Implementar chamada real da Google Content API
-    // POST /content/v2.1/products/batch
-    
-    console.log(`[${this.marketplaceName}] Sincronizando estoque/preços para conta ${contaMarketplaceId}...`);
-
-    const { data: produtosMarketplace } = await supabase
-      .from('marketplace_produtos')
-      .select('id, produto_id')
-      .eq('conta_marketplace_id', contaMarketplaceId);
-
-    await this.criarLog(
-      contaMarketplaceId,
-      'sync_estoque_precos',
-      `Estoque e preços de ${produtosMarketplace?.length || 0} produtos atualizados no Google Shopping (mock)`,
-      true,
-      { quantidade: produtosMarketplace?.length || 0 }
-    );
+    const { data, error } = await supabase.functions.invoke("google-shopping-sync", {
+      body: { contaMarketplaceId, action: "estoque" },
+    });
+    if (error) throw new Error(error.message);
+    if (data && !data.success) throw new Error(data.error);
   }
 
   async sincronizarPedidos(contaMarketplaceId: string): Promise<void> {
-    // Google Merchant Center não tem pedidos diretamente
-    // Os pedidos vêm via Google Ads / Compras no Google
-    // TODO: Implementar integração com Google Ads API se necessário
-    
-    console.log(`[${this.marketplaceName}] Google Shopping não gerencia pedidos diretamente`);
-
-    await this.criarLog(
-      contaMarketplaceId,
-      'sync_pedidos',
-      'Google Shopping não gerencia pedidos diretamente - use Google Ads para ver conversões',
-      true,
-      { nota: 'Pedidos processados via plataforma de origem' }
-    );
+    const { data, error } = await supabase.functions.invoke("google-shopping-sync", {
+      body: { contaMarketplaceId, action: "pedidos" },
+    });
+    if (error) throw new Error(error.message);
+    if (data && !data.success) throw new Error(data.error);
   }
 }
 
