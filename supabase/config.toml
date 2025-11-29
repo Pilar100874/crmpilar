@@ -18,7 +18,6 @@ verify_jwt = false
 [functions.suggest-products]
 verify_jwt = false
 
-
 [functions.whatsapp-webhook]
 verify_jwt = false
 
@@ -85,3 +84,11 @@ verify_jwt = false
 [functions.openrouteservice-proxy]
 verify_jwt = true
 
+[functions.mercadolivre-auth-start]
+verify_jwt = false
+
+[functions.mercadolivre-auth-callback]
+verify_jwt = false
+
+[functions.mercadolivre-sync]
+verify_jwt = true
