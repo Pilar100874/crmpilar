@@ -109,31 +109,41 @@ export function EstabelecimentoSelector({ open, onSelectEstabelecimento, onClose
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="estabelecimento">Estabelecimento</Label>
-            <Select value={selectedEstabelecimento} onValueChange={setSelectedEstabelecimento}>
-              <SelectTrigger id="estabelecimento">
-                <SelectValue placeholder="Selecione um estabelecimento" />
-              </SelectTrigger>
-              <SelectContent>
-                {estabelecimentos.map((est) => (
-                  <SelectItem key={est.id} value={est.id}>
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">{est.nome}</span>
-                      <span className="text-xs text-muted-foreground">
-                        CNPJ: {formatCNPJ(est.cnpj)}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isLoading ? (
+              <div className="flex items-center justify-center p-4">
+                <span className="text-muted-foreground">Carregando estabelecimentos...</span>
+              </div>
+            ) : estabelecimentos.length === 0 ? (
+              <div className="flex items-center justify-center p-4">
+                <span className="text-destructive">Nenhum estabelecimento encontrado</span>
+              </div>
+            ) : (
+              <Select value={selectedEstabelecimento} onValueChange={setSelectedEstabelecimento}>
+                <SelectTrigger id="estabelecimento">
+                  <SelectValue placeholder="Selecione um estabelecimento" />
+                </SelectTrigger>
+                <SelectContent>
+                  {estabelecimentos.map((est) => (
+                    <SelectItem key={est.id} value={est.id}>
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">{est.nome}</span>
+                        <span className="text-xs text-muted-foreground">
+                          CNPJ: {formatCNPJ(est.cnpj)}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <Button
             onClick={handleConfirm}
-            disabled={!selectedEstabelecimento || isLoading}
+            disabled={!selectedEstabelecimento || isLoading || estabelecimentos.length === 0}
             className="w-full"
           >
-            Confirmar Seleção
+            {isLoading ? "Carregando..." : "Confirmar Seleção"}
           </Button>
         </div>
       </DialogContent>
