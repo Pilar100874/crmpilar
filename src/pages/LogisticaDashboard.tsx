@@ -6,6 +6,7 @@ import { LogisticaMap } from '@/components/logistica/LogisticaMap';
 import { VeiculosList } from '@/components/logistica/VeiculosList';
 import { VeiculoDetailsPanel } from '@/components/logistica/VeiculoDetailsPanel';
 import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logistica';
+import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
 const LogisticaDashboard: React.FC = () => {
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
@@ -13,8 +14,19 @@ const LogisticaDashboard: React.FC = () => {
   const [selectedVeiculo, setSelectedVeiculo] = useState<VeiculoComStatus | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
 
   useEffect(() => {
+    const initEstabelecimento = async () => {
+      const estabId = await getEstabelecimentoId();
+      setEstabelecimentoId(estabId);
+    };
+    initEstabelecimento();
+  }, []);
+
+  useEffect(() => {
+    if (!estabelecimentoId) return;
+    
     fetchVeiculos();
     
     // Subscribe to realtime updates
@@ -41,27 +53,18 @@ const LogisticaDashboard: React.FC = () => {
       supabase.removeChannel(channel);
       clearInterval(interval);
     };
-  }, []);
+  }, [estabelecimentoId]);
 
   const fetchVeiculos = async () => {
+    if (!estabelecimentoId) return;
+    
     try {
-      // Get user's estabelecimento
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: usuario } = await supabase
-        .from('usuarios')
-        .select('estabelecimento_id')
-        .eq('auth_user_id', user.id)
-        .single();
-
-      if (!usuario?.estabelecimento_id) return;
 
       // Fetch vehicles with latest position
       const { data: veiculosData, error } = await supabase
         .from('veiculos')
         .select('*')
-        .eq('estabelecimento_id', usuario.estabelecimento_id)
+        .eq('estabelecimento_id', estabelecimentoId)
         .eq('ativo', true)
         .order('placa');
 
