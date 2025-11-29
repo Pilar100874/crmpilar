@@ -1,5 +1,5 @@
 import React from 'react';
-import { Marker, Popup, Tooltip } from 'react-leaflet';
+import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { VeiculoComStatus } from '@/types/logistica';
 import { format } from 'date-fns';
@@ -51,7 +51,7 @@ const createVeiculoIcon = (status: 'movendo' | 'parado' | 'offline', direcao?: n
 export const VeiculoMarker: React.FC<VeiculoMarkerProps> = ({ veiculo, onClick }) => {
   if (!veiculo.ultima_posicao) return null;
 
-  const { lat, lng, velocidade, direcao, data_hora } = veiculo.ultima_posicao;
+  const { lat, lng, velocidade, data_hora, direcao } = veiculo.ultima_posicao;
   
   const icon = createVeiculoIcon(veiculo.status, direcao);
 
@@ -69,10 +69,6 @@ export const VeiculoMarker: React.FC<VeiculoMarkerProps> = ({ veiculo, onClick }
         click: () => onClick?.(veiculo)
       }}
     >
-      <Tooltip direction="top" offset={[0, -20]} permanent={false}>
-        <div className="font-medium">{veiculo.placa}</div>
-        {veiculo.motorista && <div className="text-xs">{veiculo.motorista}</div>}
-      </Tooltip>
       <Popup>
         <div className="min-w-[200px]">
           <h3 className="font-bold text-lg mb-2">{veiculo.placa}</h3>
