@@ -337,7 +337,7 @@ export default function MarketplaceHub() {
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
                       <SelectItem value="sandbox">Sandbox (Testes)</SelectItem>
                       <SelectItem value="producao">Produção</SelectItem>
                     </SelectContent>
