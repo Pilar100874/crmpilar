@@ -14,6 +14,22 @@ interface PosicaoPayload {
   dataHora?: string;
 }
 
+// Traccar Client App format (background geolocation plugin)
+interface TraccarClientPayload {
+  location?: {
+    timestamp?: string;
+    coords?: {
+      latitude?: number;
+      longitude?: number;
+      speed?: number;
+      heading?: number;
+      accuracy?: number;
+    };
+    is_moving?: boolean;
+  };
+  device_id?: string;
+}
+
 // Parse OsmAnd/Traccar format from query string
 function parseOsmAndFormat(url: URL): PosicaoPayload | null {
   const id = url.searchParams.get('id');
@@ -166,9 +182,49 @@ Deno.serve(async (req) => {
 
     // Handle POST request (JSON format)
     if (req.method === 'POST') {
-      const payload: PosicaoPayload = await req.json();
+      const rawPayload = await req.json();
       
-      console.log('Received JSON position data:', payload);
+      console.log('Received JSON position data:', rawPayload);
+
+      let payload: PosicaoPayload;
+
+      // Check if it's Traccar Client App format (background geolocation plugin)
+      if (rawPayload.location && rawPayload.device_id) {
+        const traccarPayload = rawPayload as TraccarClientPayload;
+        const coords = traccarPayload.location?.coords;
+        
+        if (!coords?.latitude || !coords?.longitude) {
+          return new Response(
+            JSON.stringify({ 
+              status: 'error', 
+              message: 'Invalid Traccar Client format: missing coordinates' 
+            }),
+            { 
+              status: 400, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+        
+        // Convert Traccar Client format to standard format
+        // Speed from Traccar is in m/s, convert to km/h (if positive)
+        const speedMs = coords.speed && coords.speed > 0 ? coords.speed : 0;
+        const speedKmh = speedMs * 3.6;
+        
+        payload = {
+          veiculoId: traccarPayload.device_id!,
+          lat: coords.latitude,
+          lng: coords.longitude,
+          velocidade: speedKmh,
+          direcao: coords.heading && coords.heading > 0 ? coords.heading : undefined,
+          dataHora: traccarPayload.location?.timestamp || new Date().toISOString()
+        };
+        
+        console.log('Converted Traccar Client payload:', payload);
+      } else {
+        // Standard format
+        payload = rawPayload as PosicaoPayload;
+      }
 
       // Validate required fields
       if (!payload.veiculoId || typeof payload.lat !== 'number' || typeof payload.lng !== 'number') {
