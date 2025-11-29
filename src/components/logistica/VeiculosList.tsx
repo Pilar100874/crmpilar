@@ -1,11 +1,10 @@
 import React from 'react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Car, MapPin, Clock, Gauge, User, Circle } from 'lucide-react';
+import { Car, Clock, Gauge, User } from 'lucide-react';
 import { VeiculoComStatus } from '@/types/logistica';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 
 interface VeiculosListProps {
@@ -57,17 +56,16 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
           onChange={(e) => onSearchChange(e.target.value)}
           className="h-9"
         />
-        <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-          <SelectTrigger className="h-9">
-            <SelectValue placeholder="Filtrar por status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os status</SelectItem>
-            <SelectItem value="movendo">Em movimento</SelectItem>
-            <SelectItem value="parado">Parado</SelectItem>
-            <SelectItem value="offline">Offline</SelectItem>
-          </SelectContent>
-        </Select>
+        <select 
+          value={statusFilter} 
+          onChange={(e) => onStatusFilterChange(e.target.value)}
+          className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+        >
+          <option value="todos">Todos os status</option>
+          <option value="movendo">Em movimento</option>
+          <option value="parado">Parado</option>
+          <option value="offline">Offline</option>
+        </select>
       </div>
 
       <ScrollArea className="flex-1">

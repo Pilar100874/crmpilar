@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { differenceInMinutes } from 'date-fns';
-import { LogisticaMap } from '@/components/logistica/LogisticaMap';
 import { VeiculosList } from '@/components/logistica/VeiculosList';
 import { VeiculoDetailsPanel } from '@/components/logistica/VeiculoDetailsPanel';
 import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
+import { MapPin } from 'lucide-react';
 
 const LogisticaDashboard: React.FC = () => {
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
@@ -29,7 +29,6 @@ const LogisticaDashboard: React.FC = () => {
     
     fetchVeiculos();
     
-    // Subscribe to realtime updates
     const channel = supabase
       .channel('veiculo-posicoes-updates')
       .on(
@@ -40,13 +39,11 @@ const LogisticaDashboard: React.FC = () => {
           table: 'veiculo_posicoes'
         },
         (payload) => {
-          console.log('New position received:', payload);
           handleNewPosition(payload.new as VeiculoPosicao);
         }
       )
       .subscribe();
 
-    // Refresh every 30 seconds
     const interval = setInterval(fetchVeiculos, 30000);
 
     return () => {
@@ -59,8 +56,6 @@ const LogisticaDashboard: React.FC = () => {
     if (!estabelecimentoId) return;
     
     try {
-
-      // Fetch vehicles with latest position
       const { data: veiculosData, error } = await supabase
         .from('veiculos')
         .select('*')
@@ -70,7 +65,6 @@ const LogisticaDashboard: React.FC = () => {
 
       if (error) throw error;
 
-      // Fetch latest position for each vehicle
       const veiculosComPosicao: VeiculoComStatus[] = await Promise.all(
         (veiculosData || []).map(async (veiculo) => {
           const { data: posicao } = await supabase
@@ -103,15 +97,9 @@ const LogisticaDashboard: React.FC = () => {
 
   const calculateStatus = (posicao: VeiculoPosicao | null): VeiculoStatus => {
     if (!posicao) return 'offline';
-
     const minutesSinceUpdate = differenceInMinutes(new Date(), new Date(posicao.data_hora));
-    
-    // If no update in 10 minutes, consider offline
     if (minutesSinceUpdate > 10) return 'offline';
-    
-    // If speed > 5 km/h, consider moving
     if (posicao.velocidade > 5) return 'movendo';
-    
     return 'parado';
   };
 
@@ -119,43 +107,27 @@ const LogisticaDashboard: React.FC = () => {
     setVeiculos(prev => prev.map(v => {
       if (v.id === posicao.veiculo_id) {
         const status = calculateStatus(posicao);
-        return {
-          ...v,
-          ultima_posicao: posicao,
-          status,
-          ultima_atualizacao: posicao.data_hora
-        };
+        return { ...v, ultima_posicao: posicao, status, ultima_atualizacao: posicao.data_hora };
       }
       return v;
     }));
 
-    // Update selected vehicle if it's the one that received the update
     setSelectedVeiculo(prev => {
       if (prev?.id === posicao.veiculo_id) {
         const status = calculateStatus(posicao);
-        return {
-          ...prev,
-          ultima_posicao: posicao,
-          status,
-          ultima_atualizacao: posicao.data_hora
-        };
+        return { ...prev, ultima_posicao: posicao, status, ultima_atualizacao: posicao.data_hora };
       }
       return prev;
     });
   };
 
-  const handleVeiculoSelect = (veiculo: VeiculoComStatus) => {
-    setSelectedVeiculo(veiculo);
-  };
-
   return (
     <div className="h-[calc(100vh-64px)] flex">
-      {/* Vehicles List */}
       <div className="w-80 flex-shrink-0">
         <VeiculosList
           veiculos={veiculos}
           selectedVeiculoId={selectedVeiculo?.id}
-          onVeiculoSelect={handleVeiculoSelect}
+          onVeiculoSelect={setSelectedVeiculo}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
           statusFilter={statusFilter}
@@ -163,22 +135,22 @@ const LogisticaDashboard: React.FC = () => {
         />
       </div>
 
-      {/* Map */}
       <div className="flex-1 relative">
         {loading ? (
           <div className="h-full flex items-center justify-center bg-muted/50">
-            <div className="text-muted-foreground">Carregando mapa...</div>
+            <div className="text-muted-foreground">Carregando...</div>
           </div>
         ) : (
-          <LogisticaMap
-            veiculos={veiculos}
-            onVeiculoClick={handleVeiculoSelect}
-            className="h-full w-full"
-          />
+          <div className="h-full flex items-center justify-center bg-muted/50">
+            <div className="text-center">
+              <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground">Mapa em desenvolvimento</p>
+              <p className="text-sm text-muted-foreground mt-1">{veiculos.length} veículos carregados</p>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Details Panel */}
       {selectedVeiculo && (
         <div className="w-80 flex-shrink-0">
           <VeiculoDetailsPanel
