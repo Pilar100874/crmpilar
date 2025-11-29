@@ -240,7 +240,7 @@ const LogisticaHistorico: React.FC = () => {
                     : `${selectedVeiculoIds.length} selecionado(s)`}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[300px] p-0 bg-popover" align="end">
+              <PopoverContent className="w-[300px] p-0 bg-popover z-[1000]" align="end">
                 <Command>
                   <CommandInput placeholder="Buscar veículo..." />
                   <CommandList>
@@ -279,15 +279,15 @@ const LogisticaHistorico: React.FC = () => {
               </PopoverContent>
             </Popover>
 
-            {/* Date Picker */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-popover" align="end">
+          {/* Date Picker */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Calendar className="h-4 w-4" />
+                {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-popover z-[1000]" align="end">
                 <CalendarComponent
                   mode="single"
                   selected={selectedDate}
