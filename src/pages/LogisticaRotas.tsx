@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { Badge } from '@/components/ui/badge';
 
@@ -187,12 +187,13 @@ const LogisticaRotas: React.FC = () => {
 
       {/* View Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-4xl h-[80vh]">
+        <DialogContent className="max-w-4xl h-[80vh] z-[9999]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Route className="h-5 w-5" />
               {selectedRota?.nome}
             </DialogTitle>
+            <DialogDescription>Detalhes da rota salva</DialogDescription>
           </DialogHeader>
 
           {selectedRota && (
