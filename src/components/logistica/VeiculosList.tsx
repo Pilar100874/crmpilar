@@ -1,11 +1,12 @@
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Car, Clock, Gauge, User } from 'lucide-react';
+import { Car, Clock, Gauge, User, Wifi, WifiOff } from 'lucide-react';
 import { VeiculoComStatus } from '@/types/logistica';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface VeiculosListProps {
   veiculos: VeiculoComStatus[];
@@ -85,14 +86,27 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${config.color}`} />
-                    <span className="font-semibold">{veiculo.placa}</span>
+                    <div className="flex items-center gap-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            {veiculo.status !== 'offline' ? (
+                              <Wifi className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <WifiOff className="h-4 w-4 text-destructive" />
+                            )}
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {veiculo.status !== 'offline' ? 'Rastreando' : 'Sem sinal'}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <span className="font-semibold">{veiculo.placa}</span>
+                    </div>
+                    <Badge variant="outline" className={`${config.textColor} text-xs`}>
+                      {config.label}
+                    </Badge>
                   </div>
-                  <Badge variant="outline" className={`${config.textColor} text-xs`}>
-                    {config.label}
-                  </Badge>
-                </div>
 
                 {veiculo.motorista && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">

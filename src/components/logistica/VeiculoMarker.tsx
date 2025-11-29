@@ -76,6 +76,17 @@ export const VeiculoMarker: React.FC<VeiculoMarkerProps> = ({ veiculo, onClick }
             <p className="text-sm text-gray-600 mb-2">{veiculo.descricao}</p>
           )}
           <div className="space-y-1 text-sm">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500">Rastreamento:</span>
+              <span className={`font-medium flex items-center gap-1 ${
+                veiculo.status !== 'offline' ? 'text-green-600' : 'text-red-500'
+              }`}>
+                <span className={`w-2 h-2 rounded-full ${
+                  veiculo.status !== 'offline' ? 'bg-green-500 animate-pulse' : 'bg-red-500'
+                }`} />
+                {veiculo.status !== 'offline' ? 'Online' : 'Offline'}
+              </span>
+            </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Motorista:</span>
               <span>{veiculo.motorista || '-'}</span>
