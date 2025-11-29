@@ -5,17 +5,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { 
   ShoppingCart, Search, ShoppingBag, Package, Box, Store, 
-  Calendar, DollarSign, User, MapPin, ChevronDown, Eye, Loader2, Code
+  Calendar, DollarSign, User, MapPin, ChevronDown, Eye, Loader2, Code, X, Filter
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -34,6 +37,14 @@ const marketplaceIcons: Record<string, any> = {
   'google_merchant': Search,
 };
 
+const periodPresets = [
+  { label: 'Hoje', getValue: () => ({ from: startOfDay(new Date()), to: endOfDay(new Date()) }) },
+  { label: 'Últimos 7 dias', getValue: () => ({ from: subDays(new Date(), 7), to: new Date() }) },
+  { label: 'Últimos 30 dias', getValue: () => ({ from: subDays(new Date(), 30), to: new Date() }) },
+  { label: 'Esta semana', getValue: () => ({ from: startOfWeek(new Date(), { weekStartsOn: 0 }), to: endOfWeek(new Date(), { weekStartsOn: 0 }) }) },
+  { label: 'Este mês', getValue: () => ({ from: startOfMonth(new Date()), to: endOfMonth(new Date()) }) },
+];
+
 export default function MarketplacePedidos() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,6 +52,8 @@ export default function MarketplacePedidos() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [selectedPedido, setSelectedPedido] = useState<any>(null);
   const [showJson, setShowJson] = useState(false);
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [selectedPreset, setSelectedPreset] = useState<string>("");
 
   useEffect(() => {
     const cached = localStorage.getItem('estabelecimentoId');
@@ -84,7 +97,7 @@ export default function MarketplacePedidos() {
   });
 
   const { data: pedidos, isLoading } = useQuery({
-    queryKey: ['pedidos_marketplace', estabelecimentoId, filterMarketplace, filterStatus],
+    queryKey: ['pedidos_marketplace', estabelecimentoId, filterMarketplace, filterStatus, dateRange.from?.toISOString(), dateRange.to?.toISOString()],
     queryFn: async () => {
       if (!estabelecimentoId) return [];
       let query = supabase
@@ -98,6 +111,12 @@ export default function MarketplacePedidos() {
       }
       if (filterStatus !== 'all') {
         query = query.eq('status', filterStatus);
+      }
+      if (dateRange.from) {
+        query = query.gte('data_pedido', dateRange.from.toISOString());
+      }
+      if (dateRange.to) {
+        query = query.lte('data_pedido', dateRange.to.toISOString());
       }
 
       const { data, error } = await query;
@@ -189,9 +208,76 @@ export default function MarketplacePedidos() {
         {/* Filters */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Filtros</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Filter className="h-4 w-4" />
+              Filtros
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Filtro por Período */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Período</Label>
+              <div className="flex flex-wrap gap-2">
+                {periodPresets.map((preset) => (
+                  <Button
+                    key={preset.label}
+                    variant={selectedPreset === preset.label ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      const range = preset.getValue();
+                      setDateRange(range);
+                      setSelectedPreset(preset.label);
+                    }}
+                  >
+                    {preset.label}
+                  </Button>
+                ))}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Personalizado
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarComponent
+                      mode="range"
+                      selected={{ from: dateRange.from, to: dateRange.to }}
+                      onSelect={(range) => {
+                        setDateRange({ from: range?.from, to: range?.to });
+                        setSelectedPreset("");
+                      }}
+                      locale={ptBR}
+                      numberOfMonths={2}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {(dateRange.from || dateRange.to) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setDateRange({ from: undefined, to: undefined });
+                      setSelectedPreset("");
+                    }}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Limpar
+                  </Button>
+                )}
+              </div>
+              {(dateRange.from || dateRange.to) && (
+                <p className="text-xs text-muted-foreground">
+                  {dateRange.from && format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })}
+                  {dateRange.from && dateRange.to && " até "}
+                  {dateRange.to && format(dateRange.to, "dd/MM/yyyy", { locale: ptBR })}
+                </p>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Outros Filtros */}
             <div className="flex flex-wrap gap-4">
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

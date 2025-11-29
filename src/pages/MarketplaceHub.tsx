@@ -35,11 +35,11 @@ const marketplaceIcons: Record<string, any> = {
   'search': Search,
 };
 
-const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
-  'conectado': { label: 'Conectado', color: 'bg-green-500/20 text-green-400 border-green-500/30', icon: CheckCircle2 },
-  'nao_conectado': { label: 'Não Conectado', color: 'bg-muted text-muted-foreground border-border', icon: Link2 },
-  'erro_token': { label: 'Token Expirado', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: XCircle },
-  'sincronizando': { label: 'Sincronizando', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', icon: RefreshCw },
+const statusConfig: Record<string, { label: string; color: string; icon: any; ledColor: string }> = {
+  'conectado': { label: 'Conectado', color: 'bg-green-500/20 text-green-400 border-green-500/30', icon: CheckCircle2, ledColor: 'bg-green-500' },
+  'nao_conectado': { label: 'Não Conectado', color: 'bg-muted text-muted-foreground border-border', icon: Link2, ledColor: 'bg-muted-foreground' },
+  'erro_token': { label: 'Token Expirado', color: 'bg-red-500/20 text-red-400 border-red-500/30', icon: XCircle, ledColor: 'bg-red-500' },
+  'sincronizando': { label: 'Sincronizando', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', icon: RefreshCw, ledColor: 'bg-yellow-500 animate-pulse' },
 };
 
 export default function MarketplaceHub() {
@@ -715,11 +715,20 @@ export default function MarketplaceHub() {
                         return (
                           <div key={conta.id} className="border rounded-lg p-3 space-y-3">
                             <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-medium text-sm">{conta.nome_loja}</p>
-                                {conta.seller_id && (
-                                  <p className="text-xs text-muted-foreground">ID: {conta.seller_id}</p>
-                                )}
+                              <div className="flex items-center gap-3">
+                                {/* LED Status Indicator */}
+                                <div className="relative">
+                                  <div className={`w-3 h-3 rounded-full ${status.ledColor}`} />
+                                  {conta.status === 'conectado' && (
+                                    <div className="absolute inset-0 w-3 h-3 rounded-full bg-green-500 animate-ping opacity-75" />
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-sm">{conta.nome_loja}</p>
+                                  {conta.seller_id && (
+                                    <p className="text-xs text-muted-foreground">ID: {conta.seller_id}</p>
+                                  )}
+                                </div>
                               </div>
                               <Badge variant="outline" className={status.color}>
                                 <StatusIcon className="h-3 w-3 mr-1" />
