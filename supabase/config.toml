@@ -92,3 +92,21 @@ verify_jwt = false
 
 [functions.mercadolivre-sync]
 verify_jwt = true
+
+[functions.amazon-auth-start]
+verify_jwt = false
+
+[functions.amazon-auth-callback]
+verify_jwt = false
+
+[functions.amazon-sync]
+verify_jwt = true
+
+[functions.shopee-auth-start]
+verify_jwt = false
+
+[functions.shopee-auth-callback]
+verify_jwt = false
+
+[functions.shopee-sync]
+verify_jwt = true
