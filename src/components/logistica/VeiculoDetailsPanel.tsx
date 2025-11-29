@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { X, Car, User, MapPin, Gauge, Clock, Navigation, History, Route } from 'lucide-react';
+import { X, Car, User, MapPin, Gauge, Clock, Navigation, History, Route, Copy, Check } from 'lucide-react';
 import { VeiculoComStatus } from '@/types/logistica';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface VeiculoDetailsPanelProps {
   veiculo: VeiculoComStatus;
@@ -25,6 +26,21 @@ export const VeiculoDetailsPanel: React.FC<VeiculoDetailsPanelProps> = ({
 }) => {
   const navigate = useNavigate();
   const config = statusConfig[veiculo.status];
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyGoogleMapsLink = async () => {
+    if (veiculo.ultima_posicao) {
+      const link = `https://www.google.com/maps?q=${veiculo.ultima_posicao.lat},${veiculo.ultima_posicao.lng}`;
+      try {
+        await navigator.clipboard.writeText(link);
+        setCopied(true);
+        toast.success('Link copiado! Cole em uma nova aba do navegador.');
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        toast.error('Erro ao copiar link');
+      }
+    }
+  };
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -155,19 +171,12 @@ export const VeiculoDetailsPanel: React.FC<VeiculoDetailsPanelProps> = ({
           <Button 
             variant="outline" 
             className="w-full justify-start text-sm"
-            onClick={() => {
-              if (veiculo.ultima_posicao) {
-                window.open(
-                  `https://www.google.com/maps?q=${veiculo.ultima_posicao.lat},${veiculo.ultima_posicao.lng}`,
-                  '_blank'
-                );
-              }
-            }}
+            onClick={handleCopyGoogleMapsLink}
             disabled={!veiculo.ultima_posicao}
             size="sm"
           >
-            <Route className="h-4 w-4 mr-2" />
-            Abrir no Google Maps
+            {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+            {copied ? "Link Copiado!" : "Copiar Link Google Maps"}
           </Button>
         </div>
       </div>
