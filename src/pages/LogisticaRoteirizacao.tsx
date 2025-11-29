@@ -450,9 +450,10 @@ const LogisticaRoteirizacao: React.FC = () => {
 
       {/* Save Dialog */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogContent>
+        <DialogContent className="z-[9999]">
           <DialogHeader>
             <DialogTitle>Salvar Rota</DialogTitle>
+            <p className="text-sm text-muted-foreground">Preencha os dados para salvar a rota calculada</p>
           </DialogHeader>
 
           <div className="space-y-4">
