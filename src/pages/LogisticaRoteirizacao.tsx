@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Route, MapPin, Clock, Navigation, Save, Loader2, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Route, Clock, Navigation, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
+import { AddressAutocomplete } from '@/components/logistica/AddressAutocomplete';
 import { formatDistance, formatDuration } from '@/services/openRouteService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -58,6 +58,13 @@ const LogisticaRoteirizacao: React.FC = () => {
   const updateWaypoint = (id: string, endereco: string) => {
     setWaypoints(prev => prev.map(w => 
       w.id === id ? { ...w, endereco, lat: undefined, lng: undefined, error: undefined } : w
+    ));
+    setRoute(null);
+  };
+
+  const updateWaypointWithCoords = (id: string, endereco: string, lat: number, lng: number) => {
+    setWaypoints(prev => prev.map(w => 
+      w.id === id ? { ...w, endereco, lat, lng, error: undefined } : w
     ));
     setRoute(null);
   };
@@ -283,11 +290,13 @@ const LogisticaRoteirizacao: React.FC = () => {
                   {index + 1}
                 </div>
                 <div className="flex-1">
-                  <Input
+                  <AddressAutocomplete
                     value={waypoint.endereco}
-                    onChange={(e) => updateWaypoint(waypoint.id, e.target.value)}
+                    onChange={(value) => updateWaypoint(waypoint.id, value)}
+                    onSelect={(address, lat, lng) => updateWaypointWithCoords(waypoint.id, address, lat, lng)}
                     placeholder={index === 0 ? 'Origem' : index === waypoints.length - 1 ? 'Destino' : `Parada ${index}`}
-                    className={waypoint.error ? 'border-destructive' : waypoint.lat ? 'border-green-500' : ''}
+                    hasError={!!waypoint.error}
+                    hasCoordinates={!!(waypoint.lat && waypoint.lng)}
                   />
                   {waypoint.error && (
                     <p className="text-xs text-destructive mt-1">{waypoint.error}</p>
