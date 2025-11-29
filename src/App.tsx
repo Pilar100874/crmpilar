@@ -62,6 +62,7 @@ import AutomacoesVendas from "./pages/AutomacoesVendas";
 import VendasConfig from "./pages/VendasConfig";
 import MeusConjuntos from "./pages/MeusConjuntos";
 import LogisticaDashboard from "./pages/LogisticaDashboard";
+import LogisticaMonitoramento from "./pages/LogisticaMonitoramento";
 import LogisticaVeiculos from "./pages/LogisticaVeiculos";
 import LogisticaHistorico from "./pages/LogisticaHistorico";
 import LogisticaRoteirizacao from "./pages/LogisticaRoteirizacao";
@@ -147,6 +148,7 @@ const App = () => (
             <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
             <Route path="/perfil" element={<Perfil />} />
             <Route path="/logistica" element={<LogisticaDashboard />} />
+            <Route path="/logistica/monitoramento" element={<LogisticaMonitoramento />} />
             <Route path="/logistica/veiculos" element={<LogisticaVeiculos />} />
             <Route path="/logistica/historico" element={<LogisticaHistorico />} />
             <Route path="/logistica/historico/:veiculoId" element={<LogisticaHistorico />} />

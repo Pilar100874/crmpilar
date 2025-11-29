@@ -172,6 +172,7 @@ const menuItems: MenuItem[] = [
     icon: LucideIcons.Truck,
     subItems: [
       { id: "Logística Dashboard", title: "Dashboard", url: "/logistica", icon: LucideIcons.MapPin },
+      { id: "Logística Monitoramento", title: "Monitoramento", url: "/logistica/monitoramento", icon: LucideIcons.Eye },
       { id: "Logística Veículos", title: "Veículos", url: "/logistica/veiculos", icon: LucideIcons.Car },
       { id: "Logística Histórico", title: "Histórico", url: "/logistica/historico", icon: Clock },
       { id: "Logística Roteirização", title: "Roteirização", url: "/logistica/roteirizacao", icon: LucideIcons.Route },
