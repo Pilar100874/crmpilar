@@ -144,6 +144,8 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     routeLayersRef.current = [];
 
     // Add new routes
+    const allRoutePoints: L.LatLngExpression[] = [];
+    
     routes.forEach(route => {
       const positions: L.LatLngExpression[] = route.coordinates.map(c => [c.lat, c.lng]);
       const polyline = L.polyline(positions, {
@@ -152,8 +154,17 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
         opacity: 0.8
       }).addTo(map);
       routeLayersRef.current.push(polyline);
+      
+      // Collect all points for bounds
+      positions.forEach(p => allRoutePoints.push(p));
     });
-  }, [routes]);
+
+    // Fit bounds to show all routes
+    if (fitBounds && allRoutePoints.length > 0) {
+      const bounds = L.latLngBounds(allRoutePoints);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  }, [routes, fitBounds]);
 
   return (
     <div ref={mapContainerRef} className={className} />
