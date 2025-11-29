@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, ArrowLeft, Plus } from "lucide-react";
+import { Save, ArrowLeft, Plus, Play, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -16,9 +16,11 @@ import {
   useNodesState,
   useEdgesState,
   Connection,
+  Edge,
   Node,
   ReactFlowProvider,
   BackgroundVariant,
+  MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { 
@@ -34,6 +36,7 @@ import {
 import { LogisticaFlowNode } from "@/components/logistica/automacao/LogisticaFlowNode";
 import { LogisticaBlockLibrary } from "@/components/logistica/automacao/LogisticaBlockLibrary";
 import { LogisticaPropertiesPanel } from "@/components/logistica/automacao/LogisticaPropertiesPanel";
+import { LogisticaSimulator } from "@/components/logistica/automacao/LogisticaSimulator";
 import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { LOGISTICA_BLOCKS } from "@/types/automacaoLogistica";
 import { toast } from "@/hooks/use-toast";
@@ -50,6 +53,18 @@ import { Pencil, Trash2 } from "lucide-react";
 
 const nodeTypes = {
   custom: LogisticaFlowNode,
+};
+
+const defaultEdgeOptions = {
+  type: 'smoothstep',
+  animated: true,
+  style: { strokeWidth: 2, stroke: 'hsl(var(--primary))' },
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    width: 20,
+    height: 20,
+    color: 'hsl(var(--primary))',
+  },
 };
 
 let id = 0;
@@ -88,6 +103,95 @@ function EditorContent({
   const [currentNoteValue, setCurrentNoteValue] = useState("");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const [showSimulator, setShowSimulator] = useState(false);
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+  const [breakpointNodes, setBreakpointNodes] = useState<Set<string>>(new Set());
+  const [skipNodes, setSkipNodes] = useState<Set<string>>(new Set());
+
+  const handleSetBreakpoint = useCallback((nodeId: string) => {
+    setBreakpointNodes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
+      }
+      return newSet;
+    });
+    setNodes((nds) =>
+      nds.map((n) => {
+        if (n.id === nodeId) {
+          const isBreakpoint = !breakpointNodes.has(nodeId);
+          return {
+            ...n,
+            data: { ...n.data, isBreakpoint },
+          };
+        }
+        return n;
+      })
+    );
+    toast({ title: breakpointNodes.has(nodeId) ? "Pausa removida" : "Pausa adicionada" });
+  }, [breakpointNodes, setNodes]);
+
+  const handleSetSkip = useCallback((nodeId: string) => {
+    setSkipNodes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
+      }
+      return newSet;
+    });
+    setNodes((nds) =>
+      nds.map((n) => {
+        if (n.id === nodeId) {
+          const isSkipped = !skipNodes.has(nodeId);
+          return {
+            ...n,
+            data: { ...n.data, isSkipped },
+          };
+        }
+        return n;
+      })
+    );
+    toast({ title: skipNodes.has(nodeId) ? "Bloco não será mais pulado" : "Bloco será pulado" });
+  }, [skipNodes, setNodes]);
+
+  const handleClearDebug = useCallback((nodeId: string) => {
+    setBreakpointNodes((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(nodeId);
+      return newSet;
+    });
+    setSkipNodes((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(nodeId);
+      return newSet;
+    });
+    setNodes((nds) =>
+      nds.map((n) => {
+        if (n.id === nodeId) {
+          return {
+            ...n,
+            data: { ...n.data, isBreakpoint: false, isSkipped: false },
+          };
+        }
+        return n;
+      })
+    );
+    toast({ title: "Bloco liberado" });
+  }, [setNodes]);
+
+  const handleHighlightNode = useCallback((nodeId: string | null) => {
+    setHighlightedNodeId(nodeId);
+    setNodes((nds) =>
+      nds.map((n) => ({
+        ...n,
+        data: { ...n.data, isHighlighted: n.id === nodeId },
+      }))
+    );
+  }, [setNodes]);
 
   const handleDuplicateNode = useCallback(
     (nodeId: string) => {
@@ -197,12 +301,15 @@ function EditorContent({
           onDuplicate: handleDuplicateNode,
           onDelete: handleDeleteNode,
           onAddNote: handleAddNote,
+          onSetBreakpoint: handleSetBreakpoint,
+          onSetSkip: handleSetSkip,
+          onClearDebug: handleClearDebug,
         },
       };
       setNodes([initialNode]);
       setEdges([]);
     }
-  }, [automacaoId, handleDuplicateNode, handleDeleteNode, handleAddNote, setNodes, setEdges]);
+  }, [automacaoId, handleDuplicateNode, handleDeleteNode, handleAddNote, handleSetBreakpoint, handleSetSkip, handleClearDebug, setNodes, setEdges]);
 
   const loadAutomacao = async (id: string) => {
     try {
@@ -224,7 +331,7 @@ function EditorContent({
             ? JSON.parse(data.flow_data) 
             : data.flow_data;
           
-          if (flowData.nodes) {
+        if (flowData.nodes) {
             const nodesWithCallbacks = flowData.nodes.map((node: Node) => ({
               ...node,
               data: {
@@ -232,6 +339,9 @@ function EditorContent({
                 onDuplicate: handleDuplicateNode,
                 onDelete: handleDeleteNode,
                 onAddNote: handleAddNote,
+                onSetBreakpoint: handleSetBreakpoint,
+                onSetSkip: handleSetSkip,
+                onClearDebug: handleClearDebug,
               },
             }));
             setNodes(nodesWithCallbacks);
@@ -251,10 +361,30 @@ function EditorContent({
 
   const onConnect = useCallback(
     (params: Connection) => {
-      setEdges((eds) => addEdge(params, eds));
+      setEdges((eds) => addEdge({ ...params, ...defaultEdgeOptions }, eds));
       setHasUnsavedChanges(true);
     },
     [setEdges]
+  );
+
+  const onReconnect = useCallback(
+    (oldEdge: Edge, newConnection: Connection) => {
+      setEdges((els) => {
+        const filtered = els.filter((e) => e.id !== oldEdge.id);
+        return addEdge({ ...newConnection, ...defaultEdgeOptions }, filtered);
+      });
+      setHasUnsavedChanges(true);
+      toast({ title: "Conexão movida" });
+    },
+    [setEdges]
+  );
+
+  const onEdgesDelete = useCallback(
+    (deleted: Edge[]) => {
+      setHasUnsavedChanges(true);
+      toast({ title: `${deleted.length} conexão(ões) removida(s)` });
+    },
+    []
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -290,6 +420,9 @@ function EditorContent({
           onDuplicate: handleDuplicateNode,
           onDelete: handleDeleteNode,
           onAddNote: handleAddNote,
+          onSetBreakpoint: handleSetBreakpoint,
+          onSetSkip: handleSetSkip,
+          onClearDebug: handleClearDebug,
         },
       };
 
@@ -298,7 +431,7 @@ function EditorContent({
       setHasUnsavedChanges(true);
       toast({ title: `Bloco "${blockDef.label}" adicionado` });
     },
-    [reactFlowInstance, setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote]
+    [reactFlowInstance, setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote, handleSetBreakpoint, handleSetSkip, handleClearDebug]
   );
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
@@ -331,6 +464,9 @@ function EditorContent({
                 onDuplicate: handleDuplicateNode,
                 onDelete: handleDeleteNode,
                 onAddNote: handleAddNote,
+                onSetBreakpoint: handleSetBreakpoint,
+                onSetSkip: handleSetSkip,
+                onClearDebug: handleClearDebug,
               },
             };
           }
@@ -339,8 +475,33 @@ function EditorContent({
       );
       setHasUnsavedChanges(true);
     },
-    [setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote]
+    [setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote, handleSetBreakpoint, handleSetSkip, handleClearDebug]
   );
+
+  const handleZoomIn = useCallback(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.zoomIn({ duration: 200 });
+    }
+  }, [reactFlowInstance]);
+
+  const handleZoomOut = useCallback(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.zoomOut({ duration: 200 });
+    }
+  }, [reactFlowInstance]);
+
+  const handleFitView = useCallback(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.fitView({ duration: 300, padding: 0.2 });
+    }
+  }, [reactFlowInstance]);
+
+  const handleToggleSimulator = useCallback(() => {
+    setShowSimulator((prev) => !prev);
+    if (showSimulator) {
+      handleHighlightNode(null);
+    }
+  }, [showSimulator, handleHighlightNode]);
 
   const handleSave = async () => {
     if (!nomeAutomacao.trim()) {
@@ -415,23 +576,40 @@ function EditorContent({
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-card">
+      <div className="flex items-center justify-between p-3 border-b bg-card">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div>
-            <Input
-              value={nomeAutomacao}
-              onChange={(e) => {
-                setNomeAutomacao(e.target.value);
-                setHasUnsavedChanges(true);
-              }}
-              className="text-lg font-semibold border-none p-0 h-auto focus-visible:ring-0"
-            />
+          <Input
+            value={nomeAutomacao}
+            onChange={(e) => {
+              setNomeAutomacao(e.target.value);
+              setHasUnsavedChanges(true);
+            }}
+            className="text-lg font-semibold border-none p-0 h-auto focus-visible:ring-0 w-[200px]"
+          />
+          <div className="flex items-center gap-1 border-l pl-4">
+            <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-8 w-8">
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-8 w-8">
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={handleFitView} className="h-8 w-8">
+              <Maximize2 className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant={showSimulator ? "default" : "outline"} 
+            size="sm"
+            onClick={handleToggleSimulator}
+          >
+            <Play className="h-4 w-4 mr-2" />
+            {showSimulator ? "Fechar Simulador" : "Simular"}
+          </Button>
           <div className="flex items-center gap-2">
             <Checkbox
               id="ativa"
@@ -467,12 +645,16 @@ function EditorContent({
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onReconnect={onReconnect}
+            onEdgesDelete={onEdgesDelete}
             onInit={setReactFlowInstance}
             onDrop={onDrop}
             onDragOver={onDragOver}
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
+            defaultEdgeOptions={defaultEdgeOptions}
+            edgesReconnectable
             fitView
           >
             <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
@@ -481,11 +663,26 @@ function EditorContent({
           </ReactFlow>
         </div>
 
+        {/* Simulator Panel */}
+        {showSimulator && (
+          <div className="w-[350px] border-l">
+            <LogisticaSimulator
+              nodes={nodes}
+              edges={edges}
+              onHighlightNode={handleHighlightNode}
+              breakpointNodes={breakpointNodes}
+              skipNodes={skipNodes}
+            />
+          </div>
+        )}
+
         {/* Properties Panel */}
-        <LogisticaPropertiesPanel
-          selectedNode={selectedNode}
-          onUpdateNode={handleUpdateNode}
-        />
+        {!showSimulator && (
+          <LogisticaPropertiesPanel
+            selectedNode={selectedNode}
+            onUpdateNode={handleUpdateNode}
+          />
+        )}
       </div>
 
       {/* Note Dialog */}
