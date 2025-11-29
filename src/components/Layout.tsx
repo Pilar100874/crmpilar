@@ -543,7 +543,7 @@ export default function Layout({ children }: LayoutProps) {
           ref={sidebarRef} 
           className={`${
             menuLocked 
-              ? 'fixed left-0 top-0 bottom-0 w-16 md:w-20 lg:w-16 z-30' 
+              ? 'fixed left-0 top-0 bottom-0 w-16 md:w-20 lg:w-16 z-[500]' 
               : `slide-out-menu ${menuOpen ? 'open' : ''}`
           } border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col`}
           onMouseEnter={handleMenuMouseEnter}
