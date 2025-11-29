@@ -331,60 +331,65 @@ const LogisticaMonitoramento: React.FC = () => {
       )}
 
       {/* Content */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <div className={cn(
+        "flex-1 flex overflow-hidden",
+        mapFullscreen ? "absolute inset-0" : "flex-col md:flex-row"
+      )}>
         {/* Vehicle List */}
-        <div className={cn(
-          "w-full md:w-64 lg:w-72 flex-shrink-0 border-b md:border-b-0 md:border-r bg-background overflow-hidden flex flex-col max-h-[30vh] md:max-h-none transition-all duration-300",
-          mapFullscreen && "hidden"
-        )}>
-          <div className="p-2 sm:p-3 border-b flex items-center justify-between">
-            <h3 className="font-medium text-sm flex items-center gap-2">
-              <Car className="h-4 w-4" />
-              Veículos
-            </h3>
-          </div>
-          <ScrollArea className="flex-1">
-            <div className="p-2 space-y-1">
-              {veiculos.map(v => {
-                const config = statusConfig[v.status];
-                const isSelected = selectedVeiculoId === v.id;
-                
-                return (
-                  <div
-                    key={v.id}
-                    onClick={() => setSelectedVeiculoId(isSelected ? null : v.id)}
-                    className={cn(
-                      "p-2 rounded-lg cursor-pointer transition-all",
-                      isSelected 
-                        ? "bg-primary/10 border-2 border-primary" 
-                        : `bg-card hover:bg-accent border ${config.borderColor} border-l-4`
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {v.status !== 'offline' ? (
-                          <Wifi className="h-3 w-3 text-green-500" />
-                        ) : (
-                          <WifiOff className="h-3 w-3 text-destructive" />
-                        )}
-                        <span className="font-medium text-sm">{v.placa}</span>
-                      </div>
-                      <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
-                        {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
-                      </Badge>
-                    </div>
-                    {v.motorista && (
-                      <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
-                    )}
-                  </div>
-                );
-              })}
+        {!mapFullscreen && (
+          <div className="w-full md:w-64 lg:w-72 flex-shrink-0 border-b md:border-b-0 md:border-r bg-background overflow-hidden flex flex-col max-h-[30vh] md:max-h-none">
+            <div className="p-2 sm:p-3 border-b flex items-center justify-between">
+              <h3 className="font-medium text-sm flex items-center gap-2">
+                <Car className="h-4 w-4" />
+                Veículos
+              </h3>
             </div>
-          </ScrollArea>
-        </div>
+            <ScrollArea className="flex-1">
+              <div className="p-2 space-y-1">
+                {veiculos.map(v => {
+                  const config = statusConfig[v.status];
+                  const isSelected = selectedVeiculoId === v.id;
+                  
+                  return (
+                    <div
+                      key={v.id}
+                      onClick={() => setSelectedVeiculoId(isSelected ? null : v.id)}
+                      className={cn(
+                        "p-2 rounded-lg cursor-pointer transition-all",
+                        isSelected 
+                          ? "bg-primary/10 border-2 border-primary" 
+                          : `bg-card hover:bg-accent border ${config.borderColor} border-l-4`
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {v.status !== 'offline' ? (
+                            <Wifi className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <WifiOff className="h-3 w-3 text-destructive" />
+                          )}
+                          <span className="font-medium text-sm">{v.placa}</span>
+                        </div>
+                        <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
+                          {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
+                        </Badge>
+                      </div>
+                      {v.motorista && (
+                        <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
 
         {/* Map */}
-        <div className="flex-1 relative">
+        <div className={cn(
+          "relative",
+          mapFullscreen ? "w-full h-full" : "flex-1"
+        )}>
           {loading ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
               <div className="text-muted-foreground">Carregando...</div>
@@ -422,52 +427,51 @@ const LogisticaMonitoramento: React.FC = () => {
         </div>
 
         {/* Alerts Panel */}
-        <div className={cn(
-          "w-full md:w-64 lg:w-72 flex-shrink-0 border-t md:border-t-0 md:border-l bg-background overflow-hidden flex flex-col max-h-[25vh] md:max-h-none transition-all duration-300",
-          mapFullscreen && "hidden"
-        )}>
-          <div 
-            className="p-2 sm:p-3 border-b flex items-center justify-between cursor-pointer"
-            onClick={() => setShowAlerts(!showAlerts)}
-          >
-            <h3 className="font-medium text-sm flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4" />
-              Alertas
-              {alerts.length > 0 && (
-                <Badge variant="destructive" className="text-[10px]">{alerts.length}</Badge>
-              )}
-            </h3>
-            {showAlerts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </div>
-          {showAlerts && (
-            <ScrollArea className="flex-1">
-              <div className="p-2 space-y-2">
-                {alerts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">
-                    Nenhum alerta
-                  </p>
-                ) : (
-                  alerts.map((alert, index) => (
-                    <div 
-                      key={`${alert.veiculoId}-${alert.type}-${index}`}
-                      className="p-2 rounded-lg bg-card border text-xs cursor-pointer hover:bg-accent"
-                      onClick={() => setSelectedVeiculoId(alert.veiculoId)}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        {getAlertIcon(alert.type)}
-                        <span className="font-medium">{alert.placa}</span>
-                      </div>
-                      <p className="text-muted-foreground">{alert.message}</p>
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {format(alert.timestamp, "HH:mm:ss", { locale: ptBR })}
-                      </p>
-                    </div>
-                  ))
+        {!mapFullscreen && (
+          <div className="w-full md:w-64 lg:w-72 flex-shrink-0 border-t md:border-t-0 md:border-l bg-background overflow-hidden flex flex-col max-h-[25vh] md:max-h-none">
+            <div 
+              className="p-2 sm:p-3 border-b flex items-center justify-between cursor-pointer"
+              onClick={() => setShowAlerts(!showAlerts)}
+            >
+              <h3 className="font-medium text-sm flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Alertas
+                {alerts.length > 0 && (
+                  <Badge variant="destructive" className="text-[10px]">{alerts.length}</Badge>
                 )}
-              </div>
-            </ScrollArea>
-          )}
-        </div>
+              </h3>
+              {showAlerts ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </div>
+            {showAlerts && (
+              <ScrollArea className="flex-1">
+                <div className="p-2 space-y-2">
+                  {alerts.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-4">
+                      Nenhum alerta
+                    </p>
+                  ) : (
+                    alerts.map((alert, index) => (
+                      <div 
+                        key={`${alert.veiculoId}-${alert.type}-${index}`}
+                        className="p-2 rounded-lg bg-card border text-xs cursor-pointer hover:bg-accent"
+                        onClick={() => setSelectedVeiculoId(alert.veiculoId)}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          {getAlertIcon(alert.type)}
+                          <span className="font-medium">{alert.placa}</span>
+                        </div>
+                        <p className="text-muted-foreground">{alert.message}</p>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {format(alert.timestamp, "HH:mm:ss", { locale: ptBR })}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
