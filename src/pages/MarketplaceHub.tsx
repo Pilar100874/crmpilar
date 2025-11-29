@@ -56,6 +56,10 @@ export default function MarketplaceHub() {
   const [mlConfigConta, setMlConfigConta] = useState<any>(null);
   const [showMlSecret, setShowMlSecret] = useState(false);
   const [showMlHelp, setShowMlHelp] = useState(false);
+  const [showAmazonHelp, setShowAmazonHelp] = useState(false);
+  const [showShopeeHelp, setShowShopeeHelp] = useState(false);
+  const [showMagaluHelp, setShowMagaluHelp] = useState(false);
+  const [showGoogleHelp, setShowGoogleHelp] = useState(false);
 
   useEffect(() => {
     const cached = localStorage.getItem('estabelecimentoId');
@@ -376,12 +380,18 @@ export default function MarketplaceHub() {
                           <CardDescription className="text-xs">{marketplace.descricao}</CardDescription>
                         </div>
                       </div>
-                      {marketplace.nome === 'mercado_livre' && (
+                      {(marketplace.nome === 'mercado_livre' || marketplace.nome === 'amazon' || marketplace.nome === 'shopee' || marketplace.nome === 'magalu' || marketplace.nome === 'google_merchant') && (
                         <Button
                           size="icon"
                           variant="ghost"
                           className="h-8 w-8"
-                          onClick={() => setShowMlHelp(true)}
+                          onClick={() => {
+                            if (marketplace.nome === 'mercado_livre') setShowMlHelp(true);
+                            else if (marketplace.nome === 'amazon') setShowAmazonHelp(true);
+                            else if (marketplace.nome === 'shopee') setShowShopeeHelp(true);
+                            else if (marketplace.nome === 'magalu') setShowMagaluHelp(true);
+                            else if (marketplace.nome === 'google_merchant') setShowGoogleHelp(true);
+                          }}
                         >
                           <HelpCircle className="h-4 w-4" />
                         </Button>
@@ -389,12 +399,44 @@ export default function MarketplaceHub() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 space-y-3">
-                    {/* Redirect URI para Mercado Livre */}
+                    {/* Redirect URI para cada marketplace */}
                     {marketplace.nome === 'mercado_livre' && (
                       <div className="bg-muted/50 rounded-lg p-2 border">
                         <p className="text-xs text-muted-foreground mb-1 font-medium">Redirect URI (DevCenter):</p>
                         <code className="text-xs bg-background px-2 py-1 rounded block break-all select-all">
                           https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mercadolivre-auth-callback
+                        </code>
+                      </div>
+                    )}
+                    {marketplace.nome === 'amazon' && (
+                      <div className="bg-muted/50 rounded-lg p-2 border">
+                        <p className="text-xs text-muted-foreground mb-1 font-medium">Redirect URI (Seller Central):</p>
+                        <code className="text-xs bg-background px-2 py-1 rounded block break-all select-all">
+                          https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/amazon-auth-callback
+                        </code>
+                      </div>
+                    )}
+                    {marketplace.nome === 'shopee' && (
+                      <div className="bg-muted/50 rounded-lg p-2 border">
+                        <p className="text-xs text-muted-foreground mb-1 font-medium">Redirect URI (Partner Center):</p>
+                        <code className="text-xs bg-background px-2 py-1 rounded block break-all select-all">
+                          https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/shopee-auth-callback
+                        </code>
+                      </div>
+                    )}
+                    {marketplace.nome === 'magalu' && (
+                      <div className="bg-muted/50 rounded-lg p-2 border">
+                        <p className="text-xs text-muted-foreground mb-1 font-medium">Redirect URI (Portal Magalu):</p>
+                        <code className="text-xs bg-background px-2 py-1 rounded block break-all select-all">
+                          https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/magalu-auth-callback
+                        </code>
+                      </div>
+                    )}
+                    {marketplace.nome === 'google_merchant' && (
+                      <div className="bg-muted/50 rounded-lg p-2 border">
+                        <p className="text-xs text-muted-foreground mb-1 font-medium">Redirect URI (Google Cloud Console):</p>
+                        <code className="text-xs bg-background px-2 py-1 rounded block break-all select-all">
+                          https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/google-shopping-auth-callback
                         </code>
                       </div>
                     )}
@@ -767,6 +809,372 @@ export default function MarketplaceHub() {
                     <strong>Dica:</strong> Use o ambiente &quot;Sandbox&quot; para testes antes de conectar em produção.
                   </AlertDescription>
                 </Alert>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Ajuda da Amazon Brasil */}
+        <Dialog open={showAmazonHelp} onOpenChange={setShowAmazonHelp}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                Como configurar a Amazon Brasil
+              </DialogTitle>
+              <DialogDescription>
+                Siga o passo a passo para integrar sua conta
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-4 pr-4">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">1</div>
+                  <div>
+                    <p className="font-medium text-sm">Acesse o Seller Central da Amazon</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vá para{" "}
+                      <a href="https://sellercentral.amazon.com.br" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        sellercentral.amazon.com.br
+                      </a>
+                      {" "}e faça login com sua conta de vendedor.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">2</div>
+                  <div>
+                    <p className="font-medium text-sm">Acesse o Developer Central</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vá para{" "}
+                      <a href="https://developer.amazonservices.com.br" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        developer.amazonservices.com.br
+                      </a>
+                      {" "}e crie uma nova aplicação SP-API.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">3</div>
+                  <div>
+                    <p className="font-medium text-sm">Configure a aplicação</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Preencha os dados e adicione a seguinte OAuth Redirect URI:
+                    </p>
+                    <code className="text-xs bg-muted px-2 py-1 rounded block mt-2 break-all select-all">
+                      https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/amazon-auth-callback
+                    </code>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">4</div>
+                  <div>
+                    <p className="font-medium text-sm">Copie as credenciais</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Copie o <strong>Client ID</strong> e <strong>Client Secret</strong> (LWA credentials) gerados na aplicação.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">5</div>
+                  <div>
+                    <p className="font-medium text-sm">Adicione e conecte a conta</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Clique em &quot;Adicionar Conta&quot;, preencha os campos e depois clique em &quot;Conectar&quot; para autorizar.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Pronto!</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Agora você pode sincronizar produtos, pedidos e estoque da Amazon.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Ajuda da Shopee */}
+        <Dialog open={showShopeeHelp} onOpenChange={setShowShopeeHelp}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                Como configurar a Shopee
+              </DialogTitle>
+              <DialogDescription>
+                Siga o passo a passo para integrar sua conta
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-4 pr-4">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">1</div>
+                  <div>
+                    <p className="font-medium text-sm">Acesse o Shopee Open Platform</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vá para{" "}
+                      <a href="https://open.shopee.com.br" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        open.shopee.com.br
+                      </a>
+                      {" "}e faça login como desenvolvedor.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">2</div>
+                  <div>
+                    <p className="font-medium text-sm">Crie um novo App</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      No painel de desenvolvedor, crie um novo App e preencha as informações necessárias.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">3</div>
+                  <div>
+                    <p className="font-medium text-sm">Configure o Redirect URI</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Adicione a seguinte URL de callback:
+                    </p>
+                    <code className="text-xs bg-muted px-2 py-1 rounded block mt-2 break-all select-all">
+                      https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/shopee-auth-callback
+                    </code>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">4</div>
+                  <div>
+                    <p className="font-medium text-sm">Copie Partner ID e Partner Key</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Após aprovação do App, copie o <strong>Partner ID</strong> e <strong>Partner Key</strong> gerados.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">5</div>
+                  <div>
+                    <p className="font-medium text-sm">Adicione e conecte a conta</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Clique em &quot;Adicionar Conta&quot;, preencha os campos e depois clique em &quot;Conectar&quot; para autorizar a loja.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Pronto!</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Agora você pode sincronizar produtos, pedidos e estoque da Shopee.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Ajuda do Magazine Luiza */}
+        <Dialog open={showMagaluHelp} onOpenChange={setShowMagaluHelp}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                Como configurar o Magazine Luiza
+              </DialogTitle>
+              <DialogDescription>
+                Siga o passo a passo para integrar sua conta
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-4 pr-4">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">1</div>
+                  <div>
+                    <p className="font-medium text-sm">Acesse o Portal de Parceiros Magalu</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vá para{" "}
+                      <a href="https://dev.magalu.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        dev.magalu.com
+                      </a>
+                      {" "}e faça login com sua conta de seller.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">2</div>
+                  <div>
+                    <p className="font-medium text-sm">Crie uma nova aplicação</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      No portal de desenvolvedores, crie uma nova aplicação para integração.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">3</div>
+                  <div>
+                    <p className="font-medium text-sm">Configure o Redirect URI</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Adicione a seguinte URL de callback:
+                    </p>
+                    <code className="text-xs bg-muted px-2 py-1 rounded block mt-2 break-all select-all">
+                      https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/magalu-auth-callback
+                    </code>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">4</div>
+                  <div>
+                    <p className="font-medium text-sm">Copie as credenciais</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Copie o <strong>Client ID</strong> e <strong>Client Secret</strong> gerados na aplicação.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">5</div>
+                  <div>
+                    <p className="font-medium text-sm">Adicione e conecte a conta</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Clique em &quot;Adicionar Conta&quot;, preencha os campos e depois clique em &quot;Conectar&quot; para autorizar.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Pronto!</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Agora você pode sincronizar produtos, pedidos e estoque do Magazine Luiza.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Ajuda do Google Shopping */}
+        <Dialog open={showGoogleHelp} onOpenChange={setShowGoogleHelp}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                Como configurar o Google Shopping
+              </DialogTitle>
+              <DialogDescription>
+                Siga o passo a passo para integrar sua conta
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-4 pr-4">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">1</div>
+                  <div>
+                    <p className="font-medium text-sm">Acesse o Google Cloud Console</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vá para{" "}
+                      <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        console.cloud.google.com
+                      </a>
+                      {" "}e crie ou selecione um projeto.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">2</div>
+                  <div>
+                    <p className="font-medium text-sm">Ative a Content API for Shopping</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      No menu APIs & Services, ative a &quot;Content API for Shopping&quot;.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">3</div>
+                  <div>
+                    <p className="font-medium text-sm">Crie credenciais OAuth 2.0</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Em Credentials, crie um &quot;OAuth 2.0 Client ID&quot; do tipo Web Application e adicione a URI:
+                    </p>
+                    <code className="text-xs bg-muted px-2 py-1 rounded block mt-2 break-all select-all">
+                      https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/google-shopping-auth-callback
+                    </code>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">4</div>
+                  <div>
+                    <p className="font-medium text-sm">Copie as credenciais</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Copie o <strong>Client ID</strong> e <strong>Client Secret</strong> gerados.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">5</div>
+                  <div>
+                    <p className="font-medium text-sm">Vincule ao Merchant Center</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Certifique-se de que sua conta do{" "}
+                      <a href="https://merchants.google.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        Google Merchant Center
+                      </a>
+                      {" "}está configurada.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">6</div>
+                  <div>
+                    <p className="font-medium text-sm">Adicione e conecte a conta</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Clique em &quot;Adicionar Conta&quot;, preencha os campos e depois clique em &quot;Conectar&quot; para autorizar.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Pronto!</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Agora você pode sincronizar produtos com o Google Shopping.
+                    </p>
+                  </div>
+                </div>
               </div>
             </ScrollArea>
           </DialogContent>
