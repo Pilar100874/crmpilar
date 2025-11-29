@@ -9,11 +9,17 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+interface LogisticaConfigData {
+  id: string;
+  token_rastreamento: string;
+  heigit_api_key: string | null;
+}
+
 const LogisticaConfig: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [config, setConfig] = useState<{ id: string; token_rastreamento: string } | null>(null);
+  const [config, setConfig] = useState<LogisticaConfigData | null>(null);
   const [copied, setCopied] = useState<'key' | 'url' | 'token' | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [apiKey, setApiKey] = useState('');
@@ -43,8 +49,8 @@ const LogisticaConfig: React.FC = () => {
       if (error) throw error;
 
       if (data) {
-        setConfig(data);
-        setApiKey(data.token_rastreamento || '');
+        setConfig(data as LogisticaConfigData);
+        setApiKey((data as LogisticaConfigData).heigit_api_key || '');
       } else {
         // Create config if it doesn't exist
         const { data: newConfig, error: createError } = await supabase
@@ -54,8 +60,8 @@ const LogisticaConfig: React.FC = () => {
           .single();
 
         if (createError) throw createError;
-        setConfig(newConfig);
-        setApiKey(newConfig.token_rastreamento || '');
+        setConfig(newConfig as LogisticaConfigData);
+        setApiKey('');
       }
     } catch (error) {
       console.error('Error loading config:', error);
@@ -74,12 +80,12 @@ const LogisticaConfig: React.FC = () => {
 
       const { error } = await supabase
         .from('logistica_config')
-        .update({ token_rastreamento: apiKey })
+        .update({ heigit_api_key: apiKey } as any)
         .eq('estabelecimento_id', estabelecimentoId);
 
       if (error) throw error;
 
-      setConfig({ ...config, token_rastreamento: apiKey });
+      setConfig({ ...config, heigit_api_key: apiKey });
       toast.success('Chave da API salva com sucesso');
     } catch (error) {
       console.error('Error saving API key:', error);
