@@ -376,6 +376,15 @@ export default function MarketplaceHub() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 space-y-3">
+                    {/* Redirect URI para Mercado Livre */}
+                    {marketplace.nome === 'mercado_livre' && (
+                      <div className="bg-muted/50 rounded-lg p-2 border">
+                        <p className="text-xs text-muted-foreground mb-1 font-medium">Redirect URI (DevCenter):</p>
+                        <code className="text-xs bg-background px-2 py-1 rounded block break-all select-all">
+                          https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mercadolivre-auth-callback
+                        </code>
+                      </div>
+                    )}
                     {contasMarketplace.length === 0 ? (
                       <div className="text-center py-6 text-muted-foreground">
                         <Store className="h-8 w-8 mx-auto mb-2 opacity-50" />
