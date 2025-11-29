@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 
 interface Waypoint {
@@ -457,10 +457,10 @@ const LogisticaRoteirizacao: React.FC = () => {
 
       {/* Save Dialog */}
       <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogContent className="z-[9999]">
+        <DialogContent className="z-[9999] [&~*]:z-[9998]">
           <DialogHeader>
             <DialogTitle>Salvar Rota</DialogTitle>
-            <p className="text-sm text-muted-foreground">Preencha os dados para salvar a rota calculada</p>
+            <DialogDescription>Preencha os dados para salvar a rota calculada</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
