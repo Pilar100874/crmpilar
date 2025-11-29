@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,6 @@ import {
   useNodesState,
   useEdgesState,
   Connection,
-  Edge,
   Node,
   ReactFlowProvider,
   BackgroundVariant,
@@ -207,7 +206,7 @@ function EditorContent({
 
   const loadAutomacao = async (id: string) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("logistica_automacoes")
         .select("*")
         .eq("id", id)
@@ -370,11 +369,11 @@ function EditorContent({
         estabelecimento_id: estabelecimentoId,
         nome: nomeAutomacao,
         ativo: isAtiva,
-        flow_data: flowData as any,
+        flow_data: flowData,
       };
 
       if (currentId) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("logistica_automacoes")
           .update(automacaoData)
           .eq("id", currentId);
@@ -382,7 +381,7 @@ function EditorContent({
         if (error) throw error;
         toast({ title: "Automação atualizada!" });
       } else {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from("logistica_automacoes")
           .insert([automacaoData])
           .select()
@@ -493,7 +492,7 @@ function EditorContent({
       <BlockNoteDialog
         open={noteDialogOpen}
         onOpenChange={setNoteDialogOpen}
-        initialNote={currentNoteValue}
+        currentNote={currentNoteValue}
         onSave={handleSaveNote}
       />
 
@@ -529,7 +528,7 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
       const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) return;
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("logistica_automacoes")
         .select("*")
         .eq("estabelecimento_id", estabelecimentoId)
@@ -551,7 +550,7 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
 
   const toggleAtivo = async (id: string, ativo: boolean) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("logistica_automacoes")
         .update({ ativo })
         .eq("id", id);
@@ -572,7 +571,7 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
     if (!confirm("Deseja realmente excluir esta automação?")) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("logistica_automacoes")
         .delete()
         .eq("id", id);

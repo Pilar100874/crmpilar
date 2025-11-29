@@ -2716,6 +2716,47 @@ export type Database = {
           },
         ]
       }
+      logistica_automacoes: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          flow_data: Json
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          flow_data: Json
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          flow_data?: Json
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logistica_automacoes_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       logistica_config: {
         Row: {
           created_at: string
