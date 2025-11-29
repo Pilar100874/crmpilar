@@ -9,7 +9,8 @@ import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { List, X, Info } from 'lucide-react';
+import { List, X, Info, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const LogisticaDashboard: React.FC = () => {
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
@@ -20,6 +21,7 @@ const LogisticaDashboard: React.FC = () => {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const initEstabelecimento = async () => {
@@ -180,7 +182,10 @@ const LogisticaDashboard: React.FC = () => {
       </div>
 
       {/* Desktop Left Sidebar */}
-      <div className="hidden md:block w-72 lg:w-80 flex-shrink-0 border-r">
+      <div className={cn(
+        "hidden md:flex flex-shrink-0 border-r transition-all duration-300 relative",
+        sidebarCollapsed ? "w-0 overflow-hidden" : "w-72 lg:w-80"
+      )}>
         <VeiculosList
           veiculos={veiculos}
           selectedVeiculoId={selectedVeiculo?.id}
@@ -190,7 +195,33 @@ const LogisticaDashboard: React.FC = () => {
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
         />
+        {/* Collapse toggle button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute -right-3 top-1/2 -translate-y-1/2 z-20 h-6 w-6 rounded-full bg-background border shadow-md hover:bg-accent"
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+        >
+          {sidebarCollapsed ? (
+            <PanelLeft className="h-3 w-3" />
+          ) : (
+            <PanelLeftClose className="h-3 w-3" />
+          )}
+        </Button>
       </div>
+      
+      {/* Expand button when collapsed */}
+      {sidebarCollapsed && (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="hidden md:flex absolute left-2 top-2 z-20 shadow-lg"
+          onClick={() => setSidebarCollapsed(false)}
+        >
+          <PanelLeft className="h-4 w-4 mr-2" />
+          Veículos ({veiculos.length})
+        </Button>
+      )}
 
       {/* Map Container */}
       <div className="flex-1 relative min-h-[300px]">

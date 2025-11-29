@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Car, Clock, Gauge, User, Wifi, WifiOff, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { Car, Clock, Gauge, User, Wifi, WifiOff } from 'lucide-react';
 import { VeiculoComStatus } from '@/types/logistica';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { cn } from '@/lib/utils';
 
 interface VeiculosListProps {
   veiculos: VeiculoComStatus[];
@@ -36,8 +33,6 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
   statusFilter,
   onStatusFilterChange
 }) => {
-  const [searchOpen, setSearchOpen] = useState(true);
-  
   const filteredVeiculos = veiculos.filter(v => {
     const matchesSearch = 
       v.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -49,47 +44,29 @@ export const VeiculosList: React.FC<VeiculosListProps> = ({
     return matchesSearch && matchesStatus;
   });
 
-  const hasActiveFilters = searchTerm !== '' || statusFilter !== 'todos';
-
   return (
     <div className="h-full flex flex-col bg-background">
-      <div className="p-3 sm:p-4 border-b">
-        <Collapsible open={searchOpen} onOpenChange={setSearchOpen}>
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-base sm:text-lg flex items-center gap-2">
-              <Car className="h-4 w-4 sm:h-5 sm:w-5" />
-              Veículos ({filteredVeiculos.length})
-            </h2>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Search className={cn("h-4 w-4", hasActiveFilters && "text-primary")} />
-                {searchOpen ? (
-                  <ChevronUp className="h-3 w-3 ml-1" />
-                ) : (
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                )}
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-          <CollapsibleContent className="space-y-2 mt-2">
-            <Input
-              placeholder="Buscar placa, motorista..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="h-8 sm:h-9 text-sm"
-            />
-            <select 
-              value={statusFilter} 
-              onChange={(e) => onStatusFilterChange(e.target.value)}
-              className="h-8 sm:h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-            >
-              <option value="todos">Todos os status</option>
-              <option value="movendo">Em movimento</option>
-              <option value="parado">Parado</option>
-              <option value="offline">Offline</option>
-            </select>
-          </CollapsibleContent>
-        </Collapsible>
+      <div className="p-3 sm:p-4 border-b space-y-2 sm:space-y-3">
+        <h2 className="font-semibold text-base sm:text-lg flex items-center gap-2">
+          <Car className="h-4 w-4 sm:h-5 sm:w-5" />
+          Veículos ({filteredVeiculos.length})
+        </h2>
+        <Input
+          placeholder="Buscar placa, motorista..."
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="h-8 sm:h-9 text-sm"
+        />
+        <select 
+          value={statusFilter} 
+          onChange={(e) => onStatusFilterChange(e.target.value)}
+          className="h-8 sm:h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+        >
+          <option value="todos">Todos os status</option>
+          <option value="movendo">Em movimento</option>
+          <option value="parado">Parado</option>
+          <option value="offline">Offline</option>
+        </select>
       </div>
 
       <ScrollArea className="flex-1">
