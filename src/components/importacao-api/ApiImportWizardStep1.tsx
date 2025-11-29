@@ -90,31 +90,40 @@ export function ApiImportWizardStep1({
   const fetchApiData = async () => {
     setFetchingData(true);
     try {
-      let url = "";
+      let result: any;
       
       if (useCustomUrl) {
-        url = localCustomUrl;
+        // URL personalizada - fazer fetch direto
+        const response = await fetch(localCustomUrl);
+        if (!response.ok) {
+          throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        result = await response.json();
       } else if (selectedApiId) {
         const selectedApi = apis.find(a => a.id === selectedApiId);
+        
         if (selectedApi?.custom_url) {
-          url = selectedApi.custom_url;
+          // API com URL customizada - fazer fetch direto
+          const response = await fetch(selectedApi.custom_url);
+          if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+          }
+          result = await response.json();
         } else if (selectedApi) {
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-          url = `${supabaseUrl}/functions/v1/${selectedApi.endpoint_path}`;
+          // API do banco - executar via execute-dynamic-query
+          const { data, error } = await supabase.functions.invoke('execute-dynamic-query', {
+            body: { endpoint_id: selectedApi.id }
+          });
+          
+          if (error) throw error;
+          result = data;
         }
       }
 
-      if (!url) {
-        toast.error("URL da API não definida");
+      if (!result) {
+        toast.error("Não foi possível obter dados da API");
         return;
       }
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Erro HTTP: ${response.status}`);
-      }
-
-      const result = await response.json();
       
       // Tentar extrair os dados de diferentes formatos de resposta
       let data: any[] = [];
