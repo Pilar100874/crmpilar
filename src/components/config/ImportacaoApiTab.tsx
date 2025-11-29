@@ -392,6 +392,8 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
           <ApiImportWizardStep4
             selectedGrupoId={selectedGrupoId}
             onGrupoChange={setSelectedGrupoId}
+            apiData={apiData}
+            selectedFields={selectedFields}
           />
         );
       case 5:
