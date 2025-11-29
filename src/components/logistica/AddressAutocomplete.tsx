@@ -2,19 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AddressSuggestion {
-  place_id: number;
+  id: string;
   display_name: string;
-  lat: string;
-  lon: string;
-  address?: {
-    road?: string;
-    suburb?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-  };
+  lat: number;
+  lon: number;
+  label: string;
 }
 
 interface AddressAutocompleteProps {
@@ -44,7 +39,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>();
 
-  // Search addresses using Nominatim
+  // Search addresses using OpenRouteService via edge function
   const searchAddresses = async (query: string) => {
     if (query.length < 3) {
       setSuggestions([]);
@@ -54,21 +49,31 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
     setLoading(true);
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=5&addressdetails=1`,
-        {
-          headers: {
-            'Accept-Language': 'pt-BR',
-          },
+      const response = await supabase.functions.invoke('openrouteservice-proxy', {
+        body: {
+          action: 'geocode',
+          text: query + ', Brasil'
         }
-      );
+      });
 
-      if (!response.ok) throw new Error('Search failed');
+      if (response.error) throw response.error;
 
-      const data: AddressSuggestion[] = await response.json();
-      setSuggestions(data);
-      setIsOpen(data.length > 0);
-      setSelectedIndex(-1);
+      const data = response.data;
+      if (data.features && data.features.length > 0) {
+        const suggestions: AddressSuggestion[] = data.features.map((feature: any) => ({
+          id: feature.properties.id || `${feature.geometry.coordinates[0]}-${feature.geometry.coordinates[1]}`,
+          display_name: feature.properties.label,
+          lat: feature.geometry.coordinates[1],
+          lon: feature.geometry.coordinates[0],
+          label: feature.properties.label
+        }));
+        setSuggestions(suggestions);
+        setIsOpen(suggestions.length > 0);
+        setSelectedIndex(-1);
+      } else {
+        setSuggestions([]);
+        setIsOpen(false);
+      }
     } catch (error) {
       console.error('Address search error:', error);
       setSuggestions([]);
@@ -108,9 +113,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   }, []);
 
   const handleSelect = (suggestion: AddressSuggestion) => {
-    const lat = parseFloat(suggestion.lat);
-    const lng = parseFloat(suggestion.lon);
-    onSelect(suggestion.display_name, lat, lng);
+    onSelect(suggestion.display_name, suggestion.lat, suggestion.lon);
     setIsOpen(false);
     setSuggestions([]);
   };
@@ -144,7 +147,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     if (parts.length > 2) {
       return {
         main: parts.slice(0, 2).join(', '),
-        secondary: parts.slice(2, 5).join(', '),
+        secondary: parts.slice(2, 4).join(', '),
       };
     }
     return {
@@ -182,7 +185,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             const { main, secondary } = formatAddress(suggestion);
             return (
               <div
-                key={suggestion.place_id}
+                key={suggestion.id}
                 onClick={() => handleSelect(suggestion)}
                 className={cn(
                   'flex items-start gap-2 px-3 py-2 cursor-pointer transition-colors',
