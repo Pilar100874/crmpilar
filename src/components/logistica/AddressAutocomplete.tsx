@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Loader2, Building2, MapPinned } from 'lucide-react';
+import { MapPin, Loader2, MapPinned } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -9,7 +9,7 @@ interface AddressSuggestion {
   lat: number;
   lon: number;
   label: string;
-  type: 'cep' | 'city' | 'address';
+  type: 'cep' | 'address';
 }
 
 interface AddressAutocompleteProps {
@@ -22,111 +22,37 @@ interface AddressAutocompleteProps {
   hasCoordinates?: boolean;
 }
 
-// Cache de coordenadas de cidades do IBGE
-const cityCoordinatesCache: Record<string, { lat: number; lon: number }> = {};
-
-// Busca cidades brasileiras via IBGE (100% gratuito e completo)
-async function searchCitiesIBGE(query: string): Promise<AddressSuggestion[]> {
-  if (query.length < 2) return [];
-  
-  try {
-    // Busca todas as cidades e filtra localmente (API IBGE não tem filtro por nome)
-    const response = await fetch(
-      'https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome'
-    );
-    
-    if (!response.ok) return [];
-    
-    const cities = await response.json();
-    const queryLower = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    
-    // Filtra cidades que contêm o texto buscado
-    const filtered = cities
-      .filter((city: any) => {
-        const cityName = city.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        const stateName = city.microrregiao?.mesorregiao?.UF?.nome?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') || '';
-        const stateSigla = city.microrregiao?.mesorregiao?.UF?.sigla?.toLowerCase() || '';
-        
-        return cityName.includes(queryLower) || 
-               `${cityName} ${stateSigla}`.includes(queryLower) ||
-               `${cityName} ${stateName}`.includes(queryLower);
-      })
-      .slice(0, 6);
-    
-    // Busca coordenadas para cada cidade encontrada
-    const results: AddressSuggestion[] = [];
-    
-    for (const city of filtered) {
-      const stateSigla = city.microrregiao?.mesorregiao?.UF?.sigla || '';
-      const displayName = `${city.nome}, ${stateSigla}, Brasil`;
-      const cacheKey = `${city.id}`;
-      
-      let coords = cityCoordinatesCache[cacheKey];
-      
-      if (!coords) {
-        // Busca coordenadas via Nominatim
-        try {
-          const geoResponse = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(displayName)}&limit=1`,
-            { headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'LogisticaApp/1.0' } }
-          );
-          const geoData = await geoResponse.json();
-          
-          if (geoData && geoData.length > 0) {
-            coords = {
-              lat: parseFloat(geoData[0].lat),
-              lon: parseFloat(geoData[0].lon)
-            };
-            cityCoordinatesCache[cacheKey] = coords;
-          }
-        } catch (e) {
-          console.error('Geo error:', e);
-        }
-      }
-      
-      if (coords) {
-        results.push({
-          id: `city-${city.id}`,
-          display_name: displayName,
-          lat: coords.lat,
-          lon: coords.lon,
-          label: displayName,
-          type: 'city'
-        });
-      }
-      
-      // Pequeno delay para não sobrecarregar Nominatim
-      if (filtered.indexOf(city) < filtered.length - 1) {
-        await new Promise(r => setTimeout(r, 100));
-      }
-    }
-    
-    return results;
-  } catch (error) {
-    console.error('IBGE search error:', error);
-    return [];
-  }
-}
-
-// Busca por CEP usando ViaCEP + coordenadas
+// Busca por CEP usando ViaCEP + coordenadas via Nominatim
 async function searchByCEP(cep: string): Promise<AddressSuggestion[]> {
   const cleanCep = cep.replace(/\D/g, '');
-  if (cleanCep.length < 5) return [];
+  
+  // CEP brasileiro precisa ter 8 dígitos
+  if (cleanCep.length !== 8) return [];
 
   try {
+    console.log('Buscando CEP:', cleanCep);
+    
     const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
     const data = await response.json();
     
-    if (data.erro) return [];
+    console.log('Resposta ViaCEP:', data);
     
-    const fullAddress = `${data.logradouro ? data.logradouro + ', ' : ''}${data.bairro ? data.bairro + ', ' : ''}${data.localidade}, ${data.uf}, Brasil`;
+    if (data.erro) {
+      console.log('CEP não encontrado');
+      return [];
+    }
     
-    // Busca coordenadas
+    // Monta endereço para buscar coordenadas - usa cidade + estado que sempre funciona
+    const citySearch = `${data.localidade}, ${data.uf}, Brasil`;
+    console.log('Buscando coordenadas para:', citySearch);
+    
     const geoResponse = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&countrycodes=br&limit=1`,
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(citySearch)}&countrycodes=br&limit=1`,
       { headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'LogisticaApp/1.0' } }
     );
     const geoData = await geoResponse.json();
+    
+    console.log('Resposta Nominatim:', geoData);
     
     if (geoData && geoData.length > 0) {
       const displayParts = [];
@@ -159,7 +85,7 @@ async function searchNominatim(query: string): Promise<AddressSuggestion[]> {
     const searchQuery = query.toLowerCase().includes('brasil') ? query : `${query}, Brasil`;
     
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=br&limit=5&addressdetails=1`,
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&countrycodes=br&limit=6&addressdetails=1`,
       { headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'LogisticaApp/1.0' } }
     );
     
@@ -169,7 +95,6 @@ async function searchNominatim(query: string): Promise<AddressSuggestion[]> {
     
     if (data && data.length > 0) {
       return data.map((item: any) => {
-        // Formata o endereço de forma mais limpa
         const address = item.address || {};
         const parts = [];
         
@@ -201,7 +126,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   value,
   onChange,
   onSelect,
-  placeholder = 'Digite cidade, endereço ou CEP...',
+  placeholder = 'Digite endereço ou CEP (8 dígitos)...',
   className,
   hasError,
   hasCoordinates,
@@ -225,22 +150,22 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     
     try {
       let results: AddressSuggestion[] = [];
-      const isCepSearch = /^\d{5}/.test(query.replace(/\D/g, ''));
       
-      // Busca em paralelo para ser mais rápido
-      const promises: Promise<AddressSuggestion[]>[] = [];
+      // Verifica se é busca por CEP (8 dígitos numéricos)
+      const cleanQuery = query.replace(/\D/g, '');
+      const isCepSearch = cleanQuery.length === 8;
       
       if (isCepSearch) {
-        promises.push(searchByCEP(query));
+        // Busca por CEP
+        results = await searchByCEP(query);
       }
       
-      // Sempre busca no Nominatim
-      promises.push(searchNominatim(query));
+      // Se não é CEP ou CEP não encontrou, busca no Nominatim
+      if (results.length === 0) {
+        results = await searchNominatim(query);
+      }
       
-      const allResults = await Promise.all(promises);
-      results = allResults.flat();
-      
-      // Remove duplicatas baseado em coordenadas próximas
+      // Remove duplicatas
       const uniqueResults: AddressSuggestion[] = [];
       for (const result of results) {
         const isDuplicate = uniqueResults.some(r => 
@@ -251,7 +176,6 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         }
       }
       
-      // Limita a 8 resultados
       const finalResults = uniqueResults.slice(0, 8);
       
       setSuggestions(finalResults);
@@ -337,17 +261,6 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     };
   };
 
-  const getTypeIcon = (type: AddressSuggestion['type']) => {
-    switch (type) {
-      case 'cep':
-        return <MapPinned className="h-4 w-4 text-green-500" />;
-      case 'city':
-        return <Building2 className="h-4 w-4 text-blue-500" />;
-      default:
-        return <MapPin className="h-4 w-4 text-muted-foreground" />;
-    }
-  };
-
   return (
     <div ref={containerRef} className="relative">
       <div className="relative">
@@ -385,7 +298,11 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
                 )}
               >
                 <div className="flex items-center justify-center w-5 h-5 mt-0.5">
-                  {getTypeIcon(suggestion.type)}
+                  {suggestion.type === 'cep' ? (
+                    <MapPinned className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{main}</p>
