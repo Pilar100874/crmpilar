@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Route, Search, Eye, Trash2, MapPin, Clock, Navigation, Calendar, FileText } from 'lucide-react';
+import { Route, Search, Eye, Trash2, MapPin, Clock, Navigation, Calendar, FileText, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { RotaSalva } from '@/types/logistica';
@@ -22,6 +23,128 @@ const LogisticaRotas: React.FC = () => {
   const [selectedRota, setSelectedRota] = useState<RotaSalva | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const generatePDF = (rota: RotaSalva) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    // Header
+    doc.setFillColor(59, 130, 246);
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Relatório de Rota', pageWidth / 2, 20, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(rota.nome, pageWidth / 2, 32, { align: 'center' });
+    
+    // Route Info Section
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Informações da Rota', 20, 55);
+    
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 58, pageWidth - 20, 58);
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    
+    const infoY = 68;
+    const lineHeight = 8;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Data de Criação:', 20, infoY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(format(new Date(rota.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }), 70, infoY);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Distância Total:', 20, infoY + lineHeight);
+    doc.setFont('helvetica', 'normal');
+    doc.text(rota.distancia_metros ? formatDistance(rota.distancia_metros) : '-', 70, infoY + lineHeight);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Tempo Estimado:', 20, infoY + lineHeight * 2);
+    doc.setFont('helvetica', 'normal');
+    doc.text(rota.tempo_estimado_segundos ? formatDuration(rota.tempo_estimado_segundos) : '-', 70, infoY + lineHeight * 2);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Nº de Paradas:', 20, infoY + lineHeight * 3);
+    doc.setFont('helvetica', 'normal');
+    doc.text(String(rota.pontos_parada?.length || 0), 70, infoY + lineHeight * 3);
+    
+    if (rota.descricao) {
+      doc.setFont('helvetica', 'bold');
+      doc.text('Descrição:', 20, infoY + lineHeight * 4);
+      doc.setFont('helvetica', 'normal');
+      const descLines = doc.splitTextToSize(rota.descricao, pageWidth - 40);
+      doc.text(descLines, 20, infoY + lineHeight * 5);
+    }
+    
+    // Stops Section
+    if (rota.pontos_parada && rota.pontos_parada.length > 0) {
+      const stopsStartY = rota.descricao ? infoY + lineHeight * 7 : infoY + lineHeight * 5;
+      
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Itinerário', 20, stopsStartY);
+      
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, stopsStartY + 3, pageWidth - 20, stopsStartY + 3);
+      
+      doc.setFontSize(10);
+      let currentY = stopsStartY + 12;
+      
+      rota.pontos_parada.forEach((parada, idx) => {
+        if (currentY > 270) {
+          doc.addPage();
+          currentY = 20;
+        }
+        
+        const label = idx === 0 ? 'Origem' : idx === rota.pontos_parada!.length - 1 ? 'Destino' : `Parada ${idx}`;
+        
+        // Circle indicator
+        if (idx === 0) {
+          doc.setFillColor(34, 197, 94);
+        } else if (idx === rota.pontos_parada!.length - 1) {
+          doc.setFillColor(239, 68, 68);
+        } else {
+          doc.setFillColor(59, 130, 246);
+        }
+        doc.circle(25, currentY - 2, 3, 'F');
+        
+        doc.setTextColor(100, 100, 100);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${idx + 1}. ${label}`, 32, currentY);
+        
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'normal');
+        const addressLines = doc.splitTextToSize(parada.endereco, pageWidth - 55);
+        doc.text(addressLines, 32, currentY + 5);
+        
+        currentY += 10 + (addressLines.length - 1) * 5;
+      });
+    }
+    
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(9);
+      doc.setTextColor(150, 150, 150);
+      doc.text(
+        `Gerado em ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })} - Página ${i} de ${pageCount}`,
+        pageWidth / 2,
+        290,
+        { align: 'center' }
+      );
+    }
+    
+    doc.save(`rota-${rota.nome.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+  };
 
   useEffect(() => {
     fetchRotas();
@@ -210,6 +333,14 @@ const LogisticaRotas: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => generatePDF(rota)}
+                    title="Gerar PDF"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => {
                       setSelectedRota(rota);
@@ -247,40 +378,51 @@ const LogisticaRotas: React.FC = () => {
 
               {/* Stats Row */}
               {selectedRota && (
-                <div className="grid grid-cols-3 gap-4 mt-4">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-background/80 backdrop-blur-sm border">
-                    <div className="p-2 rounded-md bg-orange-500/10">
-                      <MapPin className="h-5 w-5 text-orange-500" />
+                <div className="flex items-center justify-between mt-4">
+                  <div className="grid grid-cols-3 gap-4 flex-1">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-background/80 backdrop-blur-sm border">
+                      <div className="p-2 rounded-md bg-orange-500/10">
+                        <MapPin className="h-5 w-5 text-orange-500" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Paradas</p>
+                        <p className="font-bold text-lg">
+                          {selectedRota.pontos_parada?.length || selectedRota.coordenadas_json.coordinates?.length || 0}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Paradas</p>
-                      <p className="font-bold text-lg">
-                        {selectedRota.pontos_parada?.length || selectedRota.coordenadas_json.coordinates?.length || 0}
-                      </p>
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-background/80 backdrop-blur-sm border">
+                      <div className="p-2 rounded-md bg-blue-500/10">
+                        <Navigation className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Distância</p>
+                        <p className="font-bold text-lg">
+                          {selectedRota.distancia_metros ? formatDistance(selectedRota.distancia_metros) : '-'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-background/80 backdrop-blur-sm border">
+                      <div className="p-2 rounded-md bg-green-500/10">
+                        <Clock className="h-5 w-5 text-green-500" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Tempo Estimado</p>
+                        <p className="font-bold text-lg">
+                          {selectedRota.tempo_estimado_segundos ? formatDuration(selectedRota.tempo_estimado_segundos) : '-'}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-background/80 backdrop-blur-sm border">
-                    <div className="p-2 rounded-md bg-blue-500/10">
-                      <Navigation className="h-5 w-5 text-blue-500" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Distância</p>
-                      <p className="font-bold text-lg">
-                        {selectedRota.distancia_metros ? formatDistance(selectedRota.distancia_metros) : '-'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-background/80 backdrop-blur-sm border">
-                    <div className="p-2 rounded-md bg-green-500/10">
-                      <Clock className="h-5 w-5 text-green-500" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Tempo Estimado</p>
-                      <p className="font-bold text-lg">
-                        {selectedRota.tempo_estimado_segundos ? formatDuration(selectedRota.tempo_estimado_segundos) : '-'}
-                      </p>
-                    </div>
-                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => generatePDF(selectedRota)}
+                    className="ml-4 shrink-0"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Gerar PDF
+                  </Button>
                 </div>
               )}
             </div>
