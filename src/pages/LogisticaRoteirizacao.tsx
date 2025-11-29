@@ -217,41 +217,85 @@ const LogisticaRoteirizacao: React.FC = () => {
     }
 
     setSaving(true);
+    console.log('Iniciando salvamento da rota...');
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error('Auth error:', authError);
+        throw new Error('Erro de autenticação');
+      }
+      
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+      
+      console.log('Usuário autenticado:', user.id);
 
-      const { data: usuario } = await supabase
+      // Usa maybeSingle para evitar erro se não encontrar
+      const { data: usuario, error: userError } = await supabase
         .from('usuarios')
         .select('estabelecimento_id')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (!usuario?.estabelecimento_id) throw new Error('Estabelecimento não encontrado');
+      if (userError) {
+        console.error('User query error:', userError);
+        throw new Error('Erro ao buscar usuário');
+      }
+      
+      // Fallback: tenta buscar por email se não encontrou por auth_user_id
+      let estabelecimentoId = usuario?.estabelecimento_id;
+      
+      if (!estabelecimentoId && user.email) {
+        console.log('Tentando buscar por email:', user.email);
+        const { data: usuarioByEmail } = await supabase
+          .from('usuarios')
+          .select('estabelecimento_id')
+          .eq('email', user.email)
+          .maybeSingle();
+          
+        estabelecimentoId = usuarioByEmail?.estabelecimento_id;
+      }
 
-      const { error } = await supabase
+      if (!estabelecimentoId) {
+        throw new Error('Estabelecimento não encontrado para este usuário');
+      }
+      
+      console.log('Estabelecimento ID:', estabelecimentoId);
+
+      // Prepara dados para salvar
+      const rotaData = {
+        estabelecimento_id: estabelecimentoId,
+        nome: routeName.trim(),
+        descricao: routeDescription?.trim() || null,
+        coordenadas_json: {
+          coordinates: waypoints.filter(w => w.lat && w.lng).map(w => ({ lat: w.lat!, lng: w.lng! })),
+          geometry: route.coordinates
+        },
+        pontos_parada: waypoints.filter(w => w.lat && w.lng).map((w, idx) => ({
+          endereco: w.endereco,
+          lat: w.lat!,
+          lng: w.lng!,
+          ordem: idx
+        })),
+        distancia_metros: route.distance,
+        tempo_estimado_segundos: Math.round(route.duration)
+      };
+      
+      console.log('Salvando rota:', rotaData);
+
+      const { error: insertError } = await supabase
         .from('rotas_salvas')
-        .insert({
-          estabelecimento_id: usuario.estabelecimento_id,
-          nome: routeName,
-          descricao: routeDescription || null,
-          coordenadas_json: {
-            coordinates: waypoints.filter(w => w.lat && w.lng).map(w => ({ lat: w.lat!, lng: w.lng! })),
-            geometry: route.coordinates
-          },
-          pontos_parada: waypoints.filter(w => w.lat && w.lng).map((w, idx) => ({
-            endereco: w.endereco,
-            lat: w.lat!,
-            lng: w.lng!,
-            ordem: idx
-          })),
-          distancia_metros: route.distance,
-          tempo_estimado_segundos: Math.round(route.duration)
-        });
+        .insert(rotaData);
 
-      if (error) throw error;
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw new Error(insertError.message || 'Erro ao inserir rota');
+      }
 
+      console.log('Rota salva com sucesso!');
       toast.success('Rota salva com sucesso!');
       setSaveDialogOpen(false);
       setRouteName('');
