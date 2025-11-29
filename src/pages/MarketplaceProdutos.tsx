@@ -51,6 +51,32 @@ interface ProcessResult {
   error?: string;
 }
 
+interface CampoCustomizado {
+  id: string;
+  nome: string;
+  campo_key: string;
+  tipo: string;
+  opcoes: any;
+  obrigatorio: boolean;
+  placeholder: string | null;
+  unidade: string | null;
+  ativo: boolean;
+  pesquisa_faixa?: boolean;
+}
+
+interface RangeFilter {
+  min: string;
+  max: string;
+}
+
+interface CustomFieldFilters {
+  range: Record<string, RangeFilter>;
+  text: Record<string, string>;
+  select: Record<string, string>;
+  checkbox: Record<string, boolean | null>;
+  number: Record<string, string>;
+}
+
 export default function MarketplaceProdutos() {
   const queryClient = useQueryClient();
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
@@ -80,6 +106,16 @@ export default function MarketplaceProdutos() {
   // Seleção de produtos e marketplaces
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [selectedContas, setSelectedContas] = useState<Set<string>>(new Set());
+
+  // Filtros de campos customizados
+  const [filterCamposCustomizados, setFilterCamposCustomizados] = useState<CampoCustomizado[]>([]);
+  const [customFieldFilters, setCustomFieldFilters] = useState<CustomFieldFilters>({
+    range: {},
+    text: {},
+    select: {},
+    checkbox: {},
+    number: {}
+  });
 
   useEffect(() => {
     const cached = localStorage.getItem('estabelecimentoId');
@@ -159,7 +195,7 @@ export default function MarketplaceProdutos() {
       if (!estabelecimentoId) return [];
       const { data, error } = await supabase
         .from('produtos')
-        .select('id, nome, ativo, codigo, ncm, categoria_id, grupo_id, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)')
+        .select('id, nome, ativo, codigo, ncm, categoria_id, grupo_id, campos_customizados, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)')
         .eq('estabelecimento_id', estabelecimentoId)
         .order('nome');
       if (error) throw error;
@@ -167,6 +203,80 @@ export default function MarketplaceProdutos() {
     },
     enabled: !!estabelecimentoId,
   });
+
+  // Load custom fields when filterGrupo changes
+  useEffect(() => {
+    if (filterGrupo && filterGrupo !== "all") {
+      loadFilterCamposCustomizados(filterGrupo);
+    } else {
+      setFilterCamposCustomizados([]);
+      setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
+    }
+  }, [filterGrupo]);
+
+  const loadFilterCamposCustomizados = async (grupoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('produto_campos_customizados')
+        .select('*')
+        .eq('grupo_id', grupoId)
+        .eq('ativo', true)
+        .order('ordem');
+
+      if (error) throw error;
+      setFilterCamposCustomizados(data || []);
+      
+      // Initialize filters for each campo based on type
+      const newFilters: CustomFieldFilters = { range: {}, text: {}, select: {}, checkbox: {}, number: {} };
+      (data || []).forEach(campo => {
+        if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+          newFilters.range[campo.campo_key] = { min: "", max: "" };
+        } else if (campo.tipo === 'numero') {
+          newFilters.number[campo.campo_key] = "";
+        } else if (campo.tipo === 'texto') {
+          newFilters.text[campo.campo_key] = "";
+        } else if (campo.tipo === 'selecao') {
+          newFilters.select[campo.campo_key] = "";
+        } else if (campo.tipo === 'checkbox') {
+          newFilters.checkbox[campo.campo_key] = null;
+        }
+      });
+      setCustomFieldFilters(newFilters);
+    } catch (error) {
+      console.error('Erro ao carregar campos para filtro:', error);
+      setFilterCamposCustomizados([]);
+    }
+  };
+
+  const updateCustomFilter = (type: keyof CustomFieldFilters, campoKey: string, value: any) => {
+    setCustomFieldFilters(prev => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        [campoKey]: value
+      }
+    }));
+  };
+
+  const updateRangeFilter = (campoKey: string, field: "min" | "max", value: string) => {
+    setCustomFieldFilters(prev => ({
+      ...prev,
+      range: {
+        ...prev.range,
+        [campoKey]: {
+          ...prev.range[campoKey],
+          [field]: value
+        }
+      }
+    }));
+  };
+
+  const hasCustomFilters = 
+    Object.values(customFieldFilters.range).some(rf => rf?.min || rf?.max) ||
+    Object.values(customFieldFilters.text).some(v => v) ||
+    Object.values(customFieldFilters.select).some(v => v) ||
+    Object.values(customFieldFilters.checkbox).some(v => v !== null) ||
+    Object.values(customFieldFilters.number).some(v => v);
 
   const { data: vinculosMap } = useQuery({
     queryKey: ['marketplace_produtos_map', estabelecimentoId],
@@ -256,6 +366,69 @@ export default function MarketplaceProdutos() {
     if (filterMarketplaceStatus !== "all") {
       result = result.filter(p => hasAnyMarketplaceStatus(p.id, filterMarketplaceStatus));
     }
+
+    // Apply custom field filters
+    filterCamposCustomizados.forEach(campo => {
+      const getCamposCustom = (p: any) => (p as any).campos_customizados || {};
+      
+      // Range filter (numeric with pesquisa_faixa)
+      if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+        const range = customFieldFilters.range[campo.campo_key];
+        if (range && (range.min || range.max)) {
+          const minVal = range.min ? parseFloat(range.min) : 0;
+          const maxVal = range.max ? parseFloat(range.max) : 99999999;
+          result = result.filter(p => {
+            const fieldValue = parseFloat(getCamposCustom(p)[campo.campo_key]) || 0;
+            return fieldValue >= minVal && fieldValue <= maxVal;
+          });
+        }
+      }
+      
+      // Simple number filter
+      else if (campo.tipo === 'numero') {
+        const filterVal = customFieldFilters.number[campo.campo_key];
+        if (filterVal) {
+          result = result.filter(p => {
+            const fieldValue = String(getCamposCustom(p)[campo.campo_key] || "");
+            return fieldValue.includes(filterVal);
+          });
+        }
+      }
+      
+      // Text filter
+      else if (campo.tipo === 'texto') {
+        const filterVal = customFieldFilters.text[campo.campo_key];
+        if (filterVal) {
+          const term = filterVal.toLowerCase();
+          result = result.filter(p => {
+            const fieldValue = String(getCamposCustom(p)[campo.campo_key] || "").toLowerCase();
+            return fieldValue.includes(term);
+          });
+        }
+      }
+      
+      // Selection filter
+      else if (campo.tipo === 'selecao') {
+        const filterVal = customFieldFilters.select[campo.campo_key];
+        if (filterVal) {
+          result = result.filter(p => {
+            const fieldValue = getCamposCustom(p)[campo.campo_key];
+            return fieldValue === filterVal;
+          });
+        }
+      }
+      
+      // Checkbox filter
+      else if (campo.tipo === 'checkbox') {
+        const filterVal = customFieldFilters.checkbox[campo.campo_key];
+        if (filterVal !== null) {
+          result = result.filter(p => {
+            const fieldValue = Boolean(getCamposCustom(p)[campo.campo_key]);
+            return fieldValue === filterVal;
+          });
+        }
+      }
+    });
     
     // Ordenação
     result.sort((a, b) => {
@@ -281,7 +454,7 @@ export default function MarketplaceProdutos() {
     });
     
     return result;
-  }, [produtos, searchTerm, filterSku, filterNcm, filterStatus, filterCategoria, filterGrupo, filterMarketplace, filterMarketplaceStatus, sortField, sortDirection, vinculosMap]);
+  }, [produtos, searchTerm, filterSku, filterNcm, filterStatus, filterCategoria, filterGrupo, filterMarketplace, filterMarketplaceStatus, sortField, sortDirection, vinculosMap, customFieldFilters, filterCamposCustomizados]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -333,9 +506,10 @@ export default function MarketplaceProdutos() {
     setFilterGrupo("all");
     setFilterMarketplace("all");
     setFilterMarketplaceStatus("all");
+    setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
   };
 
-  const hasActiveFilters = searchTerm || filterSku || filterNcm || filterStatus !== "all" || filterCategoria !== "all" || filterGrupo !== "all" || filterMarketplace !== "all" || filterMarketplaceStatus !== "all";
+  const hasActiveFilters = searchTerm || filterSku || filterNcm || filterStatus !== "all" || filterCategoria !== "all" || filterGrupo !== "all" || filterMarketplace !== "all" || filterMarketplaceStatus !== "all" || hasCustomFilters;
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-4 w-4 opacity-50" />;
@@ -659,6 +833,128 @@ export default function MarketplaceProdutos() {
                         </Select>
                       </div>
                     </div>
+
+                    {/* Custom field filters */}
+                    {filterCamposCustomizados.length > 0 && (
+                      <div className="border-t pt-4 mt-4">
+                        <span className="text-xs font-medium text-muted-foreground mb-3 block">
+                          Filtros de campos customizados
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {filterCamposCustomizados.map(campo => {
+                            // Range filter for numeric fields with pesquisa_faixa
+                            if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+                              return (
+                                <div key={campo.id} className="bg-background rounded-md p-3 border">
+                                  <Label className="text-xs font-medium mb-2 block">
+                                    {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                                  </Label>
+                                  <div className="flex items-center gap-2">
+                                    <Input
+                                      type="number"
+                                      placeholder="De"
+                                      value={customFieldFilters.range[campo.campo_key]?.min || ""}
+                                      onChange={(e) => updateRangeFilter(campo.campo_key, "min", e.target.value)}
+                                      className="text-sm h-8"
+                                    />
+                                    <span className="text-xs text-muted-foreground">até</span>
+                                    <Input
+                                      type="number"
+                                      placeholder="Até"
+                                      value={customFieldFilters.range[campo.campo_key]?.max || ""}
+                                      onChange={(e) => updateRangeFilter(campo.campo_key, "max", e.target.value)}
+                                      className="text-sm h-8"
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            }
+                            
+                            // Simple number filter
+                            if (campo.tipo === 'numero') {
+                              return (
+                                <div key={campo.id} className="bg-background rounded-md p-3 border">
+                                  <Label className="text-xs font-medium mb-2 block">
+                                    {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                                  </Label>
+                                  <Input
+                                    type="number"
+                                    placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                                    value={customFieldFilters.number[campo.campo_key] || ""}
+                                    onChange={(e) => updateCustomFilter('number', campo.campo_key, e.target.value)}
+                                    className="text-sm h-8"
+                                  />
+                                </div>
+                              );
+                            }
+                            
+                            // Text filter
+                            if (campo.tipo === 'texto') {
+                              return (
+                                <div key={campo.id} className="bg-background rounded-md p-3 border">
+                                  <Label className="text-xs font-medium mb-2 block">{campo.nome}</Label>
+                                  <Input
+                                    type="text"
+                                    placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                                    value={customFieldFilters.text[campo.campo_key] || ""}
+                                    onChange={(e) => updateCustomFilter('text', campo.campo_key, e.target.value)}
+                                    className="text-sm h-8"
+                                  />
+                                </div>
+                              );
+                            }
+                            
+                            // Selection filter
+                            if (campo.tipo === 'selecao') {
+                              const opcoes = Array.isArray(campo.opcoes) ? campo.opcoes : [];
+                              return (
+                                <div key={campo.id} className="bg-background rounded-md p-3 border">
+                                  <Label className="text-xs font-medium mb-2 block">{campo.nome}</Label>
+                                  <Select 
+                                    value={customFieldFilters.select[campo.campo_key] || ""} 
+                                    onValueChange={(val) => updateCustomFilter('select', campo.campo_key, val === "all" ? "" : val)}
+                                  >
+                                    <SelectTrigger className="text-sm h-8">
+                                      <SelectValue placeholder={`Selecione ${campo.nome.toLowerCase()}`} />
+                                    </SelectTrigger>
+                                    <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                                      <SelectItem value="all">Todos</SelectItem>
+                                      {opcoes.map((opcao: string, idx: number) => (
+                                        <SelectItem key={idx} value={opcao}>{opcao}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              );
+                            }
+                            
+                            // Checkbox filter
+                            if (campo.tipo === 'checkbox') {
+                              return (
+                                <div key={campo.id} className="bg-background rounded-md p-3 border">
+                                  <Label className="text-xs font-medium mb-2 block">{campo.nome}</Label>
+                                  <Select 
+                                    value={customFieldFilters.checkbox[campo.campo_key] === null ? "all" : customFieldFilters.checkbox[campo.campo_key] ? "true" : "false"} 
+                                    onValueChange={(val) => updateCustomFilter('checkbox', campo.campo_key, val === "all" ? null : val === "true")}
+                                  >
+                                    <SelectTrigger className="text-sm h-8">
+                                      <SelectValue placeholder="Selecione" />
+                                    </SelectTrigger>
+                                    <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                                      <SelectItem value="all">Todos</SelectItem>
+                                      <SelectItem value="true">Sim</SelectItem>
+                                      <SelectItem value="false">Não</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              );
+                            }
+                            
+                            return null;
+                          })}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Botão limpar filtros */}
                     {hasActiveFilters && (
