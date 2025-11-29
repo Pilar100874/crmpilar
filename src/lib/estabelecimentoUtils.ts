@@ -23,6 +23,12 @@ export async function getEstabelecimentoId(estabelecimentoId?: string): Promise<
     return selectedEstabelecimentoId;
   }
 
+  // 2.1 Verifica também o estabelecimentoId (usado em outras partes do sistema)
+  const storedEstabelecimentoId = localStorage.getItem('estabelecimentoId');
+  if (storedEstabelecimentoId) {
+    return storedEstabelecimentoId;
+  }
+
   // 3. Busca o estabelecimento_id do usuário na tabela usuarios
   try {
     const { data: { user } } = await supabase.auth.getUser();
