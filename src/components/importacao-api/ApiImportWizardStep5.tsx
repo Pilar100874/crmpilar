@@ -22,6 +22,7 @@ interface FieldDefinition {
   required: boolean;
   fixedOptions?: string[];
   isNcmField?: boolean;
+  hint?: string;
 }
 
 interface NcmCodigo {
@@ -53,11 +54,14 @@ const STANDARD_FIELDS: FieldDefinition[] = [
   { value: "ncm", label: "NCM (validado)", required: true, isNcmField: true } as FieldDefinition & { isNcmField?: boolean },
   { value: "gramatura", label: "Gramatura", required: true },
   { value: "numero_folhas", label: "Número de Folhas", required: true },
-  { value: "foto_url", label: "URL da Foto (use {codigo} como variável)", required: true },
+  { value: "foto_url", label: "URL da Foto", required: true, hint: "Ex: https://site.com/imagens/{codigo}.jpg" } as FieldDefinition & { hint?: string },
   { value: "ativo", label: "Ativo", required: true, fixedOptions: ["Ativo", "Inativo"] },
 ];
 
-const FREIGHT_FIELDS = [
+// Campos que já existem na aba padrão e não devem aparecer na aba custom
+const STANDARD_FIELD_KEYS = STANDARD_FIELDS.map(f => f.value);
+
+const FREIGHT_FIELDS: FieldDefinition[] = [
   { value: "peso_unitario", label: "Peso Unitário (kg)", required: true },
   { value: "peso_frete_tipo", label: "Tipo de Cálculo de Peso", required: true, fixedOptions: ["Peso Fixo (Embalagem)", "Peso Calculado (Quantidade × Peso Unitário)"] },
   { value: "altura", label: "Altura (cm)", required: true },
@@ -204,7 +208,7 @@ export function ApiImportWizardStep5({
   };
 
   const renderFieldMapping = (field: FieldDefinition) => {
-    const { value: fieldKey, label: fieldLabel, required, fixedOptions, isNcmField } = field;
+    const { value: fieldKey, label: fieldLabel, required, fixedOptions, isNcmField, hint } = field;
     const config = fieldMapping[fieldKey];
     const hasFixedOptions = fixedOptions && fixedOptions.length > 0;
     const mappingType = hasFixedOptions ? "fixed" : (config?.type || "field");
@@ -227,6 +231,9 @@ export function ApiImportWizardStep5({
                   </Badge>
                 )}
               </Label>
+              {hint && (
+                <p className="text-xs text-muted-foreground mt-1">{hint}</p>
+              )}
             </div>
 
             <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -466,7 +473,8 @@ export function ApiImportWizardStep5({
   };
 
   const priceFieldsCount = tipoPreco === "produto" ? PRICE_FIELDS_PRODUTO.length : PRICE_FIELDS_CATEGORIA.length;
-  const totalFields = STANDARD_FIELDS.length + FREIGHT_FIELDS.length + PACKAGING_FIELDS.length + priceFieldsCount + 1 + customFields.length;
+  const filteredCustomFields = customFields.filter(c => !STANDARD_FIELD_KEYS.includes(c.campo_key));
+  const totalFields = STANDARD_FIELDS.length + FREIGHT_FIELDS.length + PACKAGING_FIELDS.length + priceFieldsCount + 1 + filteredCustomFields.length;
 
   return (
     <div className="space-y-4">
@@ -512,7 +520,7 @@ export function ApiImportWizardStep5({
           <TabsTrigger value="custom" className="text-xs">
             <span className="hidden sm:inline">Custom</span>
             <span className="sm:hidden">Cus</span>
-            ({customFields.length})
+            ({filteredCustomFields.length})
           </TabsTrigger>
         </TabsList>
 
@@ -603,13 +611,13 @@ export function ApiImportWizardStep5({
               <div className="text-center py-8 text-muted-foreground">
                 Carregando campos customizados...
               </div>
-            ) : customFields.length === 0 ? (
+            ) : filteredCustomFields.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 Nenhum campo customizado encontrado para este grupo
               </div>
             ) : (
               <div className="space-y-3">
-                {customFields.map((campo) =>
+                {filteredCustomFields.map((campo) =>
                   renderCustomFieldMapping(
                     `custom_${campo.campo_key}`,
                     `${campo.nome}${campo.unidade ? ` (${campo.unidade})` : ""}`,
