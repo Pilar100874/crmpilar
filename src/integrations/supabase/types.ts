@@ -1734,6 +1734,69 @@ export type Database = {
           },
         ]
       }
+      entregas_programadas: {
+        Row: {
+          created_at: string
+          endereco: string
+          hora_chegada: string | null
+          hora_prevista: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          observacoes: string | null
+          ordem: number | null
+          rota_id: string | null
+          status: string | null
+          updated_at: string
+          veiculo_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          endereco: string
+          hora_chegada?: string | null
+          hora_prevista?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          observacoes?: string | null
+          ordem?: number | null
+          rota_id?: string | null
+          status?: string | null
+          updated_at?: string
+          veiculo_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          endereco?: string
+          hora_chegada?: string | null
+          hora_prevista?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          observacoes?: string | null
+          ordem?: number | null
+          rota_id?: string | null
+          status?: string | null
+          updated_at?: string
+          veiculo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entregas_programadas_rota_id_fkey"
+            columns: ["rota_id"]
+            isOneToOne: false
+            referencedRelation: "rotas_salvas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entregas_programadas_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estabelecimentos: {
         Row: {
           automacao_vendas_config: Json | null
@@ -5340,6 +5403,53 @@ export type Database = {
           },
         ]
       }
+      rotas_salvas: {
+        Row: {
+          coordenadas_json: Json
+          created_at: string
+          descricao: string | null
+          distancia_metros: number | null
+          estabelecimento_id: string | null
+          id: string
+          nome: string
+          pontos_parada: Json | null
+          tempo_estimado_segundos: number | null
+          updated_at: string
+        }
+        Insert: {
+          coordenadas_json: Json
+          created_at?: string
+          descricao?: string | null
+          distancia_metros?: number | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome: string
+          pontos_parada?: Json | null
+          tempo_estimado_segundos?: number | null
+          updated_at?: string
+        }
+        Update: {
+          coordenadas_json?: Json
+          created_at?: string
+          descricao?: string | null
+          distancia_metros?: number | null
+          estabelecimento_id?: string | null
+          id?: string
+          nome?: string
+          pontos_parada?: Json | null
+          tempo_estimado_segundos?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rotas_salvas_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       segmentos: {
         Row: {
           created_at: string | null
@@ -6399,6 +6509,91 @@ export type Database = {
             columns: ["unidade_id"]
             isOneToOne: false
             referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      veiculo_posicoes: {
+        Row: {
+          created_at: string
+          data_hora: string
+          direcao: number | null
+          id: string
+          lat: number
+          lng: number
+          veiculo_id: string
+          velocidade: number | null
+        }
+        Insert: {
+          created_at?: string
+          data_hora?: string
+          direcao?: number | null
+          id?: string
+          lat: number
+          lng: number
+          veiculo_id: string
+          velocidade?: number | null
+        }
+        Update: {
+          created_at?: string
+          data_hora?: string
+          direcao?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          veiculo_id?: string
+          velocidade?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "veiculo_posicoes_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      veiculos: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string | null
+          id: string
+          motorista: string | null
+          placa: string
+          tipo_veiculo: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          motorista?: string | null
+          placa: string
+          tipo_veiculo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          motorista?: string | null
+          placa?: string
+          tipo_veiculo?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "veiculos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
             referencedColumns: ["id"]
           },
         ]
