@@ -58,6 +58,8 @@ const nodeTypes = {
 const defaultEdgeOptions = {
   type: 'smoothstep',
   animated: true,
+  selectable: true,
+  focusable: true,
   style: { strokeWidth: 2, stroke: 'hsl(var(--primary))' },
   markerEnd: {
     type: MarkerType.ArrowClosed,
@@ -443,9 +445,38 @@ function EditorContent({
     setSelectedNode(node);
   }, []);
 
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
+
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
+    setSelectedEdgeId(null);
   }, []);
+
+  const onEdgeClick = useCallback((_event: React.MouseEvent, edge: Edge) => {
+    setSelectedEdgeId(edge.id);
+    setSelectedNode(null);
+  }, []);
+
+  const handleDeleteSelectedEdge = useCallback(() => {
+    if (selectedEdgeId) {
+      setEdges((eds) => eds.filter((e) => e.id !== selectedEdgeId));
+      setSelectedEdgeId(null);
+      setHasUnsavedChanges(true);
+      toast({ title: "Conexão removida" });
+    }
+  }, [selectedEdgeId, setEdges]);
+
+  // Keyboard listener for edge deletion
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedEdgeId) {
+        event.preventDefault();
+        handleDeleteSelectedEdge();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedEdgeId, handleDeleteSelectedEdge]);
 
   const handleUpdateNode = useCallback(
     (nodeId: string, data: any) => {
@@ -641,7 +672,15 @@ function EditorContent({
         <div ref={reactFlowWrapper} className="flex-1">
           <ReactFlow
             nodes={nodes}
-            edges={edges}
+            edges={edges.map(e => ({
+              ...e,
+              selected: e.id === selectedEdgeId,
+              style: {
+                ...e.style,
+                strokeWidth: e.id === selectedEdgeId ? 4 : 2,
+                stroke: e.id === selectedEdgeId ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
+              },
+            }))}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
@@ -651,15 +690,32 @@ function EditorContent({
             onDrop={onDrop}
             onDragOver={onDragOver}
             onNodeClick={onNodeClick}
+            onEdgeClick={onEdgeClick}
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
             defaultEdgeOptions={defaultEdgeOptions}
             edgesReconnectable
+            elementsSelectable
+            edgesFocusable
+            deleteKeyCode={null}
             fitView
           >
             <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
             <Controls />
             <MiniMap />
+            {/* Delete Edge Button */}
+            {selectedEdgeId && (
+              <div className="absolute top-4 right-4 z-10">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteSelectedEdge}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir Conexão
+                </Button>
+              </div>
+            )}
           </ReactFlow>
         </div>
 
