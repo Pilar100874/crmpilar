@@ -52,9 +52,25 @@ export default function MarketplaceHub() {
     nome_loja: '', 
     seller_id: '', 
     ambiente: 'sandbox',
+    // Mercado Livre
     ml_client_id: '',
     ml_client_secret: '',
     ml_redirect_uri: '',
+    // Amazon
+    amazon_client_id: '',
+    amazon_client_secret: '',
+    amazon_refresh_token: '',
+    // Shopee
+    shopee_partner_id: '',
+    shopee_partner_key: '',
+    shopee_shop_id: '',
+    // Magazine Luiza
+    magalu_client_id: '',
+    magalu_client_secret: '',
+    // Google Shopping
+    google_client_id: '',
+    google_client_secret: '',
+    google_merchant_id: '',
   });
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [mlConfigConta, setMlConfigConta] = useState<any>(null);
@@ -127,20 +143,51 @@ export default function MarketplaceHub() {
     enabled: !!selectedConta?.id,
   });
 
-  // Verifica se marketplace selecionado é Mercado Livre
+  // Verifica qual marketplace está selecionado
   const selectedMarketplace = marketplaces?.find(m => m.id === newConta.marketplace_id);
   const isMercadoLivre = selectedMarketplace?.nome === 'mercado_livre';
+  const isAmazon = selectedMarketplace?.nome === 'amazon';
+  const isShopee = selectedMarketplace?.nome === 'shopee';
+  const isMagalu = selectedMarketplace?.nome === 'magalu';
+  const isGoogleMerchant = selectedMarketplace?.nome === 'google_merchant';
 
   const addContaMutation = useMutation({
     mutationFn: async (data: typeof newConta) => {
       if (!estabelecimentoId) throw new Error('Estabelecimento não encontrado');
       
-      // Monta configuracoes se for Mercado Livre
-      const configuracoes = isMercadoLivre ? {
-        ml_client_id: data.ml_client_id,
-        ml_client_secret: data.ml_client_secret,
-        ml_redirect_uri: data.ml_redirect_uri,
-      } : null;
+      // Monta configuracoes baseado no marketplace
+      let configuracoes: Record<string, any> | null = null;
+      
+      if (isMercadoLivre) {
+        configuracoes = {
+          ml_client_id: data.ml_client_id,
+          ml_client_secret: data.ml_client_secret,
+          ml_redirect_uri: data.ml_redirect_uri,
+        };
+      } else if (isAmazon) {
+        configuracoes = {
+          amazon_client_id: data.amazon_client_id,
+          amazon_client_secret: data.amazon_client_secret,
+          amazon_refresh_token: data.amazon_refresh_token,
+        };
+      } else if (isShopee) {
+        configuracoes = {
+          shopee_partner_id: data.shopee_partner_id,
+          shopee_partner_key: data.shopee_partner_key,
+          shopee_shop_id: data.shopee_shop_id,
+        };
+      } else if (isMagalu) {
+        configuracoes = {
+          magalu_client_id: data.magalu_client_id,
+          magalu_client_secret: data.magalu_client_secret,
+        };
+      } else if (isGoogleMerchant) {
+        configuracoes = {
+          google_client_id: data.google_client_id,
+          google_client_secret: data.google_client_secret,
+          google_merchant_id: data.google_merchant_id,
+        };
+      }
 
       const { error } = await supabase.from('contas_marketplace').insert({
         estabelecimento_id: estabelecimentoId,
@@ -164,6 +211,17 @@ export default function MarketplaceHub() {
         ml_client_id: '',
         ml_client_secret: '',
         ml_redirect_uri: '',
+        amazon_client_id: '',
+        amazon_client_secret: '',
+        amazon_refresh_token: '',
+        shopee_partner_id: '',
+        shopee_partner_key: '',
+        shopee_shop_id: '',
+        magalu_client_id: '',
+        magalu_client_secret: '',
+        google_client_id: '',
+        google_client_secret: '',
+        google_merchant_id: '',
       });
       setShowMlSecret(false);
       toast.success('Conta adicionada com sucesso');
@@ -237,11 +295,12 @@ export default function MarketplaceHub() {
                 Nova Conta
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-hidden">
               <DialogHeader>
                 <DialogTitle>Adicionar Nova Conta</DialogTitle>
                 <DialogDescription>Vincule uma nova conta de marketplace</DialogDescription>
               </DialogHeader>
+              <ScrollArea className="max-h-[calc(90vh-180px)] pr-4">
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label>Marketplace</Label>
@@ -345,8 +404,186 @@ export default function MarketplaceHub() {
                     </div>
                   </>
                 )}
+
+                {/* Campos específicos da Amazon */}
+                {isAmazon && (
+                  <>
+                    <Separator />
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Obtenha essas credenciais no{" "}
+                        <a
+                          href="https://sellercentral.amazon.com.br/apps/authorize/consent"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline"
+                        >
+                          Amazon Seller Central
+                        </a>
+                      </AlertDescription>
+                    </Alert>
+                    <div className="space-y-2">
+                      <Label>Client ID *</Label>
+                      <Input 
+                        value={newConta.amazon_client_id} 
+                        onChange={(e) => setNewConta(p => ({ ...p, amazon_client_id: e.target.value }))}
+                        placeholder="amzn1.application-oa2-client.xxx"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Client Secret *</Label>
+                      <Input 
+                        type="password"
+                        value={newConta.amazon_client_secret} 
+                        onChange={(e) => setNewConta(p => ({ ...p, amazon_client_secret: e.target.value }))}
+                        placeholder="••••••••••••••••"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Refresh Token (opcional)</Label>
+                      <Input 
+                        value={newConta.amazon_refresh_token} 
+                        onChange={(e) => setNewConta(p => ({ ...p, amazon_refresh_token: e.target.value }))}
+                        placeholder="Token de atualização (se já possuir)"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Campos específicos da Shopee */}
+                {isShopee && (
+                  <>
+                    <Separator />
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Obtenha essas credenciais no{" "}
+                        <a
+                          href="https://open.shopee.com/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline"
+                        >
+                          Shopee Open Platform
+                        </a>
+                      </AlertDescription>
+                    </Alert>
+                    <div className="space-y-2">
+                      <Label>Partner ID *</Label>
+                      <Input 
+                        value={newConta.shopee_partner_id} 
+                        onChange={(e) => setNewConta(p => ({ ...p, shopee_partner_id: e.target.value }))}
+                        placeholder="Ex: 123456"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Partner Key *</Label>
+                      <Input 
+                        type="password"
+                        value={newConta.shopee_partner_key} 
+                        onChange={(e) => setNewConta(p => ({ ...p, shopee_partner_key: e.target.value }))}
+                        placeholder="••••••••••••••••"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Shop ID (opcional)</Label>
+                      <Input 
+                        value={newConta.shopee_shop_id} 
+                        onChange={(e) => setNewConta(p => ({ ...p, shopee_shop_id: e.target.value }))}
+                        placeholder="ID da sua loja na Shopee"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Campos específicos do Magazine Luiza */}
+                {isMagalu && (
+                  <>
+                    <Separator />
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Obtenha essas credenciais no{" "}
+                        <a
+                          href="https://api-marketplace.magazineluiza.com.br/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline"
+                        >
+                          Portal Magalu Marketplace
+                        </a>
+                      </AlertDescription>
+                    </Alert>
+                    <div className="space-y-2">
+                      <Label>Client ID *</Label>
+                      <Input 
+                        value={newConta.magalu_client_id} 
+                        onChange={(e) => setNewConta(p => ({ ...p, magalu_client_id: e.target.value }))}
+                        placeholder="ID do cliente"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Client Secret *</Label>
+                      <Input 
+                        type="password"
+                        value={newConta.magalu_client_secret} 
+                        onChange={(e) => setNewConta(p => ({ ...p, magalu_client_secret: e.target.value }))}
+                        placeholder="••••••••••••••••"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Campos específicos do Google Shopping */}
+                {isGoogleMerchant && (
+                  <>
+                    <Separator />
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Obtenha essas credenciais no{" "}
+                        <a
+                          href="https://console.cloud.google.com/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline"
+                        >
+                          Google Cloud Console
+                        </a>
+                        . Ative a Content API for Shopping.
+                      </AlertDescription>
+                    </Alert>
+                    <div className="space-y-2">
+                      <Label>Client ID *</Label>
+                      <Input 
+                        value={newConta.google_client_id} 
+                        onChange={(e) => setNewConta(p => ({ ...p, google_client_id: e.target.value }))}
+                        placeholder="xxx.apps.googleusercontent.com"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Client Secret *</Label>
+                      <Input 
+                        type="password"
+                        value={newConta.google_client_secret} 
+                        onChange={(e) => setNewConta(p => ({ ...p, google_client_secret: e.target.value }))}
+                        placeholder="••••••••••••••••"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Merchant Center ID (opcional)</Label>
+                      <Input 
+                        value={newConta.google_merchant_id} 
+                        onChange={(e) => setNewConta(p => ({ ...p, google_merchant_id: e.target.value }))}
+                        placeholder="ID da conta no Merchant Center"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="flex justify-end gap-2">
+              </ScrollArea>
+              <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancelar</Button>
                 <Button 
                   onClick={() => addContaMutation.mutate(newConta)}
@@ -354,7 +591,11 @@ export default function MarketplaceHub() {
                     !newConta.marketplace_id || 
                     !newConta.nome_loja || 
                     addContaMutation.isPending ||
-                    (isMercadoLivre && (!newConta.ml_client_id || !newConta.ml_client_secret || !newConta.ml_redirect_uri))
+                    (isMercadoLivre && (!newConta.ml_client_id || !newConta.ml_client_secret || !newConta.ml_redirect_uri)) ||
+                    (isAmazon && (!newConta.amazon_client_id || !newConta.amazon_client_secret)) ||
+                    (isShopee && (!newConta.shopee_partner_id || !newConta.shopee_partner_key)) ||
+                    (isMagalu && (!newConta.magalu_client_id || !newConta.magalu_client_secret)) ||
+                    (isGoogleMerchant && (!newConta.google_client_id || !newConta.google_client_secret))
                   }
                 >
                   {addContaMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}

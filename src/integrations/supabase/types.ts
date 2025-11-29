@@ -4662,8 +4662,10 @@ export type Database = {
           categoria_id: string | null
           codigo: string | null
           comprimento: number | null
+          condicao: string | null
           created_at: string | null
           cubagem: number | null
+          descricao: string | null
           ean_13: string | null
           ean_14_1: string | null
           ean_14_2: string | null
@@ -4676,17 +4678,21 @@ export type Database = {
           embalagem_peso: number | null
           empilhamento_maximo: number | null
           estabelecimento_id: string | null
+          estoque: number | null
           foto_url: string | null
           fragil: boolean | null
+          garantia: string | null
           gramatura: number | null
           grupo_id: string | null
           id: string
           largura: number | null
+          marca: string | null
           ncm: string | null
           ncm_id: string | null
           nome: string
           numero_folhas: number | null
           observacoes_frete: string | null
+          origem: string | null
           peso_frete_tipo: string | null
           peso_unitario: number | null
           preco_ativo: boolean | null
@@ -4703,8 +4709,10 @@ export type Database = {
           categoria_id?: string | null
           codigo?: string | null
           comprimento?: number | null
+          condicao?: string | null
           created_at?: string | null
           cubagem?: number | null
+          descricao?: string | null
           ean_13?: string | null
           ean_14_1?: string | null
           ean_14_2?: string | null
@@ -4717,17 +4725,21 @@ export type Database = {
           embalagem_peso?: number | null
           empilhamento_maximo?: number | null
           estabelecimento_id?: string | null
+          estoque?: number | null
           foto_url?: string | null
           fragil?: boolean | null
+          garantia?: string | null
           gramatura?: number | null
           grupo_id?: string | null
           id?: string
           largura?: number | null
+          marca?: string | null
           ncm?: string | null
           ncm_id?: string | null
           nome: string
           numero_folhas?: number | null
           observacoes_frete?: string | null
+          origem?: string | null
           peso_frete_tipo?: string | null
           peso_unitario?: number | null
           preco_ativo?: boolean | null
@@ -4744,8 +4756,10 @@ export type Database = {
           categoria_id?: string | null
           codigo?: string | null
           comprimento?: number | null
+          condicao?: string | null
           created_at?: string | null
           cubagem?: number | null
+          descricao?: string | null
           ean_13?: string | null
           ean_14_1?: string | null
           ean_14_2?: string | null
@@ -4758,17 +4772,21 @@ export type Database = {
           embalagem_peso?: number | null
           empilhamento_maximo?: number | null
           estabelecimento_id?: string | null
+          estoque?: number | null
           foto_url?: string | null
           fragil?: boolean | null
+          garantia?: string | null
           gramatura?: number | null
           grupo_id?: string | null
           id?: string
           largura?: number | null
+          marca?: string | null
           ncm?: string | null
           ncm_id?: string | null
           nome?: string
           numero_folhas?: number | null
           observacoes_frete?: string | null
+          origem?: string | null
           peso_frete_tipo?: string | null
           peso_unitario?: number | null
           preco_ativo?: boolean | null
