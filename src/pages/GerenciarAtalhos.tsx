@@ -1,9 +1,9 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
-import { LayoutContext } from "@/contexts/LayoutContext";
+import { useLayout } from "@/contexts/LayoutContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, Loader2 } from "lucide-react";
@@ -14,7 +14,7 @@ import { menuStructure, MenuCategory } from "@/lib/menuStructure";
 export default function GerenciarAtalhos() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { openSubmenu } = useContext(LayoutContext);
+  const { openSubmenu } = useLayout();
   const {
     atalhos,
     adicionarAtalho,

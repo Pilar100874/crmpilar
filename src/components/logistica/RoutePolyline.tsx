@@ -1,6 +1,5 @@
 import React from 'react';
-import { Polyline, Tooltip } from 'react-leaflet';
-import { formatDistance, formatDuration } from '@/services/openRouteService';
+import { Polyline } from 'react-leaflet';
 
 interface Coordinate {
   lat: number;
@@ -22,9 +21,6 @@ export const RoutePolyline: React.FC<RoutePolylineProps> = ({
   color = '#3b82f6',
   weight = 4,
   opacity = 0.8,
-  distance,
-  duration,
-  showTooltip = true
 }) => {
   if (coordinates.length < 2) return null;
 
@@ -40,15 +36,6 @@ export const RoutePolyline: React.FC<RoutePolylineProps> = ({
         lineCap: 'round',
         lineJoin: 'round'
       }}
-    >
-      {showTooltip && (distance || duration) && (
-        <Tooltip sticky>
-          <div className="text-sm">
-            {distance && <div>Distância: {formatDistance(distance)}</div>}
-            {duration && <div>Tempo: {formatDuration(duration)}</div>}
-          </div>
-        </Tooltip>
-      )}
-    </Polyline>
+    />
   );
 };
