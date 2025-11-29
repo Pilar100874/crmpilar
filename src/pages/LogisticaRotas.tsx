@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { LogisticaMap } from '@/components/logistica/LogisticaMap';
+import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { Badge } from '@/components/ui/badge';
 
 const LogisticaRotas: React.FC = () => {
@@ -218,7 +218,7 @@ const LogisticaRotas: React.FC = () => {
 
               {/* Map */}
               <div className="flex-1 border rounded-lg overflow-hidden">
-                <LogisticaMap
+                <LazyLogisticaMap
                   routes={selectedRota.coordenadas_json.geometry ? [{
                     coordinates: selectedRota.coordenadas_json.geometry,
                     color: '#3b82f6',
