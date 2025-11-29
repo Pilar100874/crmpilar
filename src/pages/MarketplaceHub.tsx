@@ -22,6 +22,10 @@ import { getMarketplaceService } from "@/services/marketplaces";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MercadoLivreConfigDialog } from "@/components/marketplaces/MercadoLivreConfigDialog";
+import { AmazonConfigDialog } from "@/components/marketplaces/AmazonConfigDialog";
+import { ShopeeConfigDialog } from "@/components/marketplaces/ShopeeConfigDialog";
+import { MagaluConfigDialog } from "@/components/marketplaces/MagaluConfigDialog";
+import { GoogleShoppingConfigDialog } from "@/components/marketplaces/GoogleShoppingConfigDialog";
 
 const marketplaceIcons: Record<string, any> = {
   'shopping-bag': ShoppingBag,
@@ -54,6 +58,10 @@ export default function MarketplaceHub() {
   });
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [mlConfigConta, setMlConfigConta] = useState<any>(null);
+  const [amazonConfigConta, setAmazonConfigConta] = useState<any>(null);
+  const [shopeeConfigConta, setShopeeConfigConta] = useState<any>(null);
+  const [magaluConfigConta, setMagaluConfigConta] = useState<any>(null);
+  const [googleConfigConta, setGoogleConfigConta] = useState<any>(null);
   const [showMlSecret, setShowMlSecret] = useState(false);
   const [showMlHelp, setShowMlHelp] = useState(false);
   const [showAmazonHelp, setShowAmazonHelp] = useState(false);
@@ -479,13 +487,57 @@ export default function MarketplaceHub() {
                             </div>
                             
                             <div className="flex flex-wrap gap-1">
-                              {/* Botão Config para Mercado Livre */}
+                              {/* Botão Config para cada marketplace */}
                               {marketplace.nome === 'mercado_livre' && (
                                 <Button 
                                   size="sm" 
                                   variant="outline"
                                   className="text-xs h-7"
                                   onClick={() => setMlConfigConta(conta)}
+                                >
+                                  <Key className="h-3 w-3 mr-1" />
+                                  Config
+                                </Button>
+                              )}
+                              {marketplace.nome === 'amazon' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-xs h-7"
+                                  onClick={() => setAmazonConfigConta(conta)}
+                                >
+                                  <Key className="h-3 w-3 mr-1" />
+                                  Config
+                                </Button>
+                              )}
+                              {marketplace.nome === 'shopee' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-xs h-7"
+                                  onClick={() => setShopeeConfigConta(conta)}
+                                >
+                                  <Key className="h-3 w-3 mr-1" />
+                                  Config
+                                </Button>
+                              )}
+                              {marketplace.nome === 'magalu' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-xs h-7"
+                                  onClick={() => setMagaluConfigConta(conta)}
+                                >
+                                  <Key className="h-3 w-3 mr-1" />
+                                  Config
+                                </Button>
+                              )}
+                              {marketplace.nome === 'google_merchant' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-xs h-7"
+                                  onClick={() => setGoogleConfigConta(conta)}
                                 >
                                   <Key className="h-3 w-3 mr-1" />
                                   Config
@@ -692,6 +744,70 @@ export default function MarketplaceHub() {
             client_id: (mlConfigConta.configuracoes as any)?.ml_client_id,
             client_secret: (mlConfigConta.configuracoes as any)?.ml_client_secret,
             redirect_uri: (mlConfigConta.configuracoes as any)?.ml_redirect_uri,
+          } : undefined}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
+          }}
+        />
+
+        {/* Dialog de Configuração da Amazon */}
+        <AmazonConfigDialog
+          open={!!amazonConfigConta}
+          onOpenChange={(open) => !open && setAmazonConfigConta(null)}
+          contaId={amazonConfigConta?.id || ''}
+          contaNome={amazonConfigConta?.nome_loja || ''}
+          currentConfig={amazonConfigConta?.configuracoes ? {
+            client_id: (amazonConfigConta.configuracoes as any)?.amz_client_id,
+            client_secret: (amazonConfigConta.configuracoes as any)?.amz_client_secret,
+            redirect_uri: (amazonConfigConta.configuracoes as any)?.amz_redirect_uri,
+          } : undefined}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
+          }}
+        />
+
+        {/* Dialog de Configuração da Shopee */}
+        <ShopeeConfigDialog
+          open={!!shopeeConfigConta}
+          onOpenChange={(open) => !open && setShopeeConfigConta(null)}
+          contaId={shopeeConfigConta?.id || ''}
+          contaNome={shopeeConfigConta?.nome_loja || ''}
+          currentConfig={shopeeConfigConta?.configuracoes ? {
+            partner_id: (shopeeConfigConta.configuracoes as any)?.shopee_partner_id,
+            partner_key: (shopeeConfigConta.configuracoes as any)?.shopee_partner_key,
+          } : undefined}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
+          }}
+        />
+
+        {/* Dialog de Configuração do Magazine Luiza */}
+        <MagaluConfigDialog
+          open={!!magaluConfigConta}
+          onOpenChange={(open) => !open && setMagaluConfigConta(null)}
+          contaId={magaluConfigConta?.id || ''}
+          contaNome={magaluConfigConta?.nome_loja || ''}
+          currentConfig={magaluConfigConta?.configuracoes ? {
+            client_id: (magaluConfigConta.configuracoes as any)?.magalu_client_id,
+            client_secret: (magaluConfigConta.configuracoes as any)?.magalu_client_secret,
+            redirect_uri: (magaluConfigConta.configuracoes as any)?.magalu_redirect_uri,
+          } : undefined}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
+          }}
+        />
+
+        {/* Dialog de Configuração do Google Shopping */}
+        <GoogleShoppingConfigDialog
+          open={!!googleConfigConta}
+          onOpenChange={(open) => !open && setGoogleConfigConta(null)}
+          contaId={googleConfigConta?.id || ''}
+          contaNome={googleConfigConta?.nome_loja || ''}
+          currentConfig={googleConfigConta?.configuracoes ? {
+            client_id: (googleConfigConta.configuracoes as any)?.google_client_id,
+            client_secret: (googleConfigConta.configuracoes as any)?.google_client_secret,
+            redirect_uri: (googleConfigConta.configuracoes as any)?.google_redirect_uri,
+            merchant_id: (googleConfigConta.configuracoes as any)?.google_merchant_id,
           } : undefined}
           onSaved={() => {
             queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
