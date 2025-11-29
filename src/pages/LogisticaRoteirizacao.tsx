@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Route, MapPin, Clock, Navigation, Save, Loader2, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { LogisticaMap } from '@/components/logistica/LogisticaMap';
+import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { formatDistance, formatDuration } from '@/services/openRouteService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -380,7 +380,7 @@ const LogisticaRoteirizacao: React.FC = () => {
 
       {/* Map */}
       <div className="flex-1">
-        <LogisticaMap
+        <LazyLogisticaMap
           routes={route ? [{
             coordinates: route.coordinates,
             color: '#3b82f6',

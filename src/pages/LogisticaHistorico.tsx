@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { ArrowLeft, Calendar, Car, Route, Clock, Gauge, Activity, MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { LogisticaMap } from '@/components/logistica/LogisticaMap';
+import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { Veiculo, VeiculoPosicao, HistoricoEstatisticas } from '@/types/logistica';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
@@ -206,7 +206,7 @@ const LogisticaHistorico: React.FC = () => {
               </div>
             </div>
           ) : (
-            <LogisticaMap
+            <LazyLogisticaMap
               routes={[{
                 coordinates: routeCoordinates,
                 color: '#3b82f6',

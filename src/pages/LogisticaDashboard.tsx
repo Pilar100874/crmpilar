@@ -6,7 +6,7 @@ import { VeiculosList } from '@/components/logistica/VeiculosList';
 import { VeiculoDetailsPanel } from '@/components/logistica/VeiculoDetailsPanel';
 import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
-import { LogisticaMap } from '@/components/logistica/LogisticaMap';
+import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 
 const LogisticaDashboard: React.FC = () => {
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
@@ -141,7 +141,7 @@ const LogisticaDashboard: React.FC = () => {
             <div className="text-muted-foreground">Carregando...</div>
           </div>
         ) : (
-          <LogisticaMap
+          <LazyLogisticaMap
             veiculos={veiculos}
             onVeiculoClick={setSelectedVeiculo}
             className="h-full w-full"
