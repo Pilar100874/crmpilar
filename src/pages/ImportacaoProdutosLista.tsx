@@ -436,7 +436,7 @@ export default function ImportacaoProdutosLista() {
         </Card>
       ) : (
         <div className="grid gap-[1cm] md:grid-cols-3 lg:grid-cols-4">
-          {/* Card de Criação */}
+          {/* Card de Criação - Excel */}
           <Card 
             className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-primary/30 h-full flex flex-col"
             onClick={() => navigate("/importacao-produtos/novo")}
@@ -445,15 +445,37 @@ export default function ImportacaoProdutosLista() {
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <FileSpreadsheet className="w-6 h-6 text-primary" />
               </div>
-              <CardTitle>Criar Nova Importação</CardTitle>
+              <CardTitle className="text-base">Importação via Excel</CardTitle>
               <CardDescription>
-                Configure uma nova rotina de importação de produtos a partir de arquivos Excel
+                Importe produtos a partir de arquivos Excel (.xlsx, .xls)
               </CardDescription>
             </CardHeader>
             <CardContent className="mt-auto p-4 pt-0">
               <Button className="w-full">
                 <Plus className="w-4 h-4 mr-2" />
-                Criar Importação
+                Nova Importação Excel
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Card de Criação - API */}
+          <Card 
+            className="hover:shadow-lg transition-all cursor-pointer border-2 border-dashed border-green-500/30 h-full flex flex-col"
+            onClick={() => navigate("/importacao-produtos/api/novo")}
+          >
+            <CardHeader className="flex-1 p-4">
+              <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center mb-4">
+                <Globe className="w-6 h-6 text-green-600" />
+              </div>
+              <CardTitle className="text-base">Importação via API</CardTitle>
+              <CardDescription>
+                Importe produtos de APIs externas para o cadastro de produtos
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="mt-auto p-4 pt-0">
+              <Button className="w-full" variant="outline">
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Importação API
               </Button>
             </CardContent>
           </Card>

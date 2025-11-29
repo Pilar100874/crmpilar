@@ -36,6 +36,7 @@ import Layout from "./components/Layout";
 import Relatorios from "./pages/Relatorios";
 import ImportacaoProdutos from "./pages/ImportacaoProdutos";
 import ImportacaoProdutosLista from "./pages/ImportacaoProdutosLista";
+import ImportacaoProdutosAPI from "./pages/ImportacaoProdutosAPI";
 import Softphone from "./pages/Softphone";
 import VideoCall from "./pages/VideoCall";
 import StimulsoftViewer from "./pages/StimulsoftViewer";
@@ -118,6 +119,8 @@ const App = () => (
             <Route path="/importacao-produtos" element={<ImportacaoProdutosLista />} />
             <Route path="/importacao-produtos/novo" element={<ImportacaoProdutos />} />
             <Route path="/importacao-produtos/editar/:id" element={<ImportacaoProdutos />} />
+            <Route path="/importacao-produtos/api/novo" element={<ImportacaoProdutosAPI />} />
+            <Route path="/importacao-produtos/api/editar/:id" element={<ImportacaoProdutosAPI />} />
             <Route path="/softphone" element={<Softphone />} />
             <Route path="/videocall" element={<VideoCall />} />
             <Route path="/chat-webhook" element={<ChatWebhook />} />
