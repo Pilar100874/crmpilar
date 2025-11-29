@@ -44,7 +44,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Pencil, Plus, Image, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X } from "lucide-react";
+import { Trash2, Pencil, Plus, Image, Upload, Package, Truck, Barcode, Check, ChevronsUpDown, Search, DollarSign, ArrowUpDown, ArrowUp, ArrowDown, Filter, X, Store } from "lucide-react";
 import { Produto, ProdutoCategoria, ProdutoGrupo } from "@/types/orcamento";
 import { EmbalagemTab } from "./EmbalagemTab";
 import { DynamicProductFields } from "./DynamicProductFields";
@@ -126,6 +126,13 @@ interface FormData {
   preco_minimo: string;
   preco_tabela: string;
   preco_ativo: boolean;
+  // Campos para Marketplace
+  descricao: string;
+  marca: string;
+  estoque: string;
+  garantia: string;
+  origem: string;
+  condicao: string;
 }
 
 const initialFormData: FormData = {
@@ -168,6 +175,13 @@ const initialFormData: FormData = {
   preco_minimo: "",
   preco_tabela: "",
   preco_ativo: true,
+  // Campos para Marketplace
+  descricao: "",
+  marca: "",
+  estoque: "0",
+  garantia: "",
+  origem: "nacional",
+  condicao: "novo",
 };
 
 export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
@@ -697,6 +711,13 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         preco_minimo: formData.preco_minimo ? parseFloat(formData.preco_minimo) : null,
         preco_tabela: formData.preco_tabela ? parseFloat(formData.preco_tabela) : null,
         preco_ativo: formData.preco_ativo,
+        // Campos para Marketplace
+        descricao: formData.descricao || null,
+        marca: formData.marca || null,
+        estoque: formData.estoque ? parseInt(formData.estoque) : 0,
+        garantia: formData.garantia || null,
+        origem: formData.origem || "nacional",
+        condicao: formData.condicao || "novo",
       };
 
       if (editingProduto) {
@@ -794,6 +815,13 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       preco_minimo: p.preco_minimo?.toString() || "",
       preco_tabela: p.preco_tabela?.toString() || "",
       preco_ativo: p.preco_ativo ?? true,
+      // Campos para Marketplace
+      descricao: p.descricao || "",
+      marca: p.marca || "",
+      estoque: p.estoque?.toString() || "0",
+      garantia: p.garantia || "",
+      origem: p.origem || "nacional",
+      condicao: p.condicao || "novo",
     });
     setShowDialog(true);
   };
@@ -1215,7 +1243,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
 
           <div className="overflow-y-auto max-h-[calc(95vh-120px)] sm:max-h-[calc(90vh-140px)] px-3 sm:px-6 py-3 sm:py-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
+              <TabsList className="grid w-full grid-cols-5 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
                 <TabsTrigger 
                   value="basico" 
                   className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
@@ -1246,6 +1274,14 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                   <Barcode className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span className="hidden sm:inline">Embalagem</span>
                   <span className="sm:hidden">EAN</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="marketplace" 
+                  className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 text-[10px] sm:text-sm py-1.5 sm:py-2.5 px-1 sm:px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+                >
+                  <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Marketplace</span>
+                  <span className="sm:hidden">MKT</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -1713,6 +1749,111 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                 onImgEan14_1Change={(url) => setFormData(prev => ({ ...prev, embalagem_img_ean14_1: url }))}
                 onImgEan14_2Change={(url) => setFormData(prev => ({ ...prev, embalagem_img_ean14_2: url }))}
               />
+            </TabsContent>
+
+            <TabsContent value="marketplace" className="mt-4 sm:mt-6">
+              <div className="space-y-4 sm:space-y-6">
+                {/* Identificação Marketplace */}
+                <div className="space-y-3 sm:space-y-4">
+                  <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Informações para Marketplaces</h4>
+                  
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-xs sm:text-sm font-medium">Descrição do Produto</Label>
+                    <Textarea
+                      value={formData.descricao}
+                      onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                      placeholder="Descrição detalhada do produto para anúncios em marketplaces"
+                      className="min-h-[100px] text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground">Descrição que aparecerá nos anúncios dos marketplaces</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Marca</Label>
+                      <Input
+                        value={formData.marca}
+                        onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
+                        placeholder="Ex: Samsung, Apple, Nike..."
+                        className="h-9 sm:h-10 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Estoque</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={formData.estoque}
+                        onChange={(e) => setFormData({ ...formData, estoque: e.target.value })}
+                        placeholder="Quantidade em estoque"
+                        className="h-9 sm:h-10 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detalhes */}
+                <div className="space-y-3 sm:space-y-4">
+                  <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Detalhes do Produto</h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Condição</Label>
+                      <Select
+                        value={formData.condicao}
+                        onValueChange={(value) => setFormData({ ...formData, condicao: value })}
+                      >
+                        <SelectTrigger className="h-9 sm:h-10 text-sm">
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="novo">Novo</SelectItem>
+                          <SelectItem value="usado">Usado</SelectItem>
+                          <SelectItem value="recondicionado">Recondicionado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Origem</Label>
+                      <Select
+                        value={formData.origem}
+                        onValueChange={(value) => setFormData({ ...formData, origem: value })}
+                      >
+                        <SelectTrigger className="h-9 sm:h-10 text-sm">
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="nacional">Nacional</SelectItem>
+                          <SelectItem value="importado">Importado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Garantia</Label>
+                      <Input
+                        value={formData.garantia}
+                        onChange={(e) => setFormData({ ...formData, garantia: e.target.value })}
+                        placeholder="Ex: 12 meses, 1 ano..."
+                        className="h-9 sm:h-10 text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="bg-muted/50 rounded-lg p-3 sm:p-4 border">
+                  <div className="flex items-start gap-2">
+                    <Store className="w-4 h-4 text-primary mt-0.5" />
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <p className="font-medium text-foreground">Campos usados pelos Marketplaces</p>
+                      <p>• <strong>SKU:</strong> Identificador único do produto (aba Básicos)</p>
+                      <p>• <strong>EAN-13:</strong> Código de barras para identificação (aba Embalagem)</p>
+                      <p>• <strong>Fotos:</strong> Imagens do produto e embalagens</p>
+                      <p>• <strong>Dimensões/Peso:</strong> Para cálculo de frete (aba Frete)</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
           </div>
