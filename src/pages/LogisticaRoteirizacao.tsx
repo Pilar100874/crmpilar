@@ -242,7 +242,6 @@ const LogisticaRoteirizacao: React.FC = () => {
 
       if (userError) {
         console.error('User query error:', userError);
-        throw new Error('Erro ao buscar usuário');
       }
       
       // Fallback: tenta buscar por email se não encontrou por auth_user_id
@@ -259,8 +258,29 @@ const LogisticaRoteirizacao: React.FC = () => {
         estabelecimentoId = usuarioByEmail?.estabelecimento_id;
       }
 
+      // Fallback para administradores: verifica se é admin e usa primeiro estabelecimento
       if (!estabelecimentoId) {
-        throw new Error('Estabelecimento não encontrado para este usuário');
+        console.log('Verificando se é administrador...');
+        const { data: admin } = await supabase
+          .from('administradores')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (admin) {
+          console.log('Usuário é administrador, buscando primeiro estabelecimento...');
+          const { data: primeiroEstab } = await supabase
+            .from('estabelecimentos')
+            .select('id')
+            .limit(1)
+            .single();
+            
+          estabelecimentoId = primeiroEstab?.id;
+        }
+      }
+
+      if (!estabelecimentoId) {
+        throw new Error('Estabelecimento não encontrado. Cadastre um estabelecimento primeiro.');
       }
       
       console.log('Estabelecimento ID:', estabelecimentoId);
