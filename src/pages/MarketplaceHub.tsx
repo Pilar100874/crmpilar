@@ -406,8 +406,9 @@ export default function MarketplaceHub() {
                       <Label>Redirect URI (automático)</Label>
                       <Input 
                         value={MARKETPLACE_REDIRECT_URIS.mercado_livre}
-                        disabled
-                        className="bg-muted text-muted-foreground cursor-not-allowed"
+                        readOnly
+                        className="bg-muted text-foreground cursor-text select-all"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
                       />
                       <p className="text-xs text-muted-foreground">
                         Cadastre esta URL no app do Mercado Livre
@@ -455,8 +456,9 @@ export default function MarketplaceHub() {
                       <Label>Redirect URI (automático)</Label>
                       <Input 
                         value={MARKETPLACE_REDIRECT_URIS.amazon}
-                        disabled
-                        className="bg-muted text-muted-foreground cursor-not-allowed"
+                        readOnly
+                        className="bg-muted text-foreground cursor-text select-all"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
                       />
                       <p className="text-xs text-muted-foreground">
                         Cadastre esta URL no app da Amazon
@@ -512,8 +514,9 @@ export default function MarketplaceHub() {
                       <Label>Redirect URI (automático)</Label>
                       <Input 
                         value={MARKETPLACE_REDIRECT_URIS.shopee}
-                        disabled
-                        className="bg-muted text-muted-foreground cursor-not-allowed"
+                        readOnly
+                        className="bg-muted text-foreground cursor-text select-all"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
                       />
                       <p className="text-xs text-muted-foreground">
                         Cadastre esta URL no app da Shopee
@@ -569,8 +572,9 @@ export default function MarketplaceHub() {
                       <Label>Redirect URI (automático)</Label>
                       <Input 
                         value={MARKETPLACE_REDIRECT_URIS.magalu}
-                        disabled
-                        className="bg-muted text-muted-foreground cursor-not-allowed"
+                        readOnly
+                        className="bg-muted text-foreground cursor-text select-all"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
                       />
                       <p className="text-xs text-muted-foreground">
                         Cadastre esta URL no portal Magalu
@@ -619,8 +623,9 @@ export default function MarketplaceHub() {
                       <Label>Redirect URI (automático)</Label>
                       <Input 
                         value={MARKETPLACE_REDIRECT_URIS.google_merchant}
-                        disabled
-                        className="bg-muted text-muted-foreground cursor-not-allowed"
+                        readOnly
+                        className="bg-muted text-foreground cursor-text select-all"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
                       />
                       <p className="text-xs text-muted-foreground">
                         Cadastre esta URL no Google Cloud Console
