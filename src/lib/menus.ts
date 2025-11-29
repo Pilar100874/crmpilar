@@ -69,6 +69,11 @@ export const MENU_CONFIG = [
   { id: "Logística Rotas", label: "Rotas Salvas" },
   { id: "Logística Automações", label: "Automações" },
   { id: "Logística Config", label: "Configuração" },
+  { id: "Logística Monitoramento", label: "Monitoramento" },
+  { id: "Marketplaces", label: "Marketplaces" },
+  { id: "Marketplace Hub", label: "Hub de Marketplaces" },
+  { id: "Marketplace Produtos", label: "Produtos x Canais" },
+  { id: "Marketplace Pedidos", label: "Pedidos" },
 ] as const;
 
 // Lista apenas dos IDs dos menus (para compatibilidade com código existente)
