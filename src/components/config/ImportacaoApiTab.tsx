@@ -70,8 +70,8 @@ export function ImportacaoApiTab({ estabelecimentoId }: ImportacaoApiTabProps) {
 
   const stepLabels = [
     "Configuração",
-    "Selecionar API",
-    "Campos da API",
+    "Selecionar",
+    "Campos",
     "Filtros",
     "Grupo de Produtos",
     "Mapeamento",
