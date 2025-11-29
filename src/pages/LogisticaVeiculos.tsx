@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Car } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { VeiculosCRUD } from '@/components/logistica/VeiculosCRUD';
+import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
 const LogisticaVeiculos: React.FC = () => {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
@@ -14,17 +14,9 @@ const LogisticaVeiculos: React.FC = () => {
 
   const fetchEstabelecimento = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: usuario } = await supabase
-        .from('usuarios')
-        .select('estabelecimento_id')
-        .eq('auth_user_id', user.id)
-        .single();
-
-      if (usuario?.estabelecimento_id) {
-        setEstabelecimentoId(usuario.estabelecimento_id);
+      const estabId = await getEstabelecimentoId();
+      if (estabId) {
+        setEstabelecimentoId(estabId);
       }
     } catch (error) {
       console.error('Error fetching estabelecimento:', error);
