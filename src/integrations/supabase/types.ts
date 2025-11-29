@@ -6564,6 +6564,7 @@ export type Database = {
           motorista: string | null
           placa: string
           tipo_veiculo: string | null
+          traccar_device_id: string | null
           updated_at: string
         }
         Insert: {
@@ -6575,6 +6576,7 @@ export type Database = {
           motorista?: string | null
           placa: string
           tipo_veiculo?: string | null
+          traccar_device_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -6586,6 +6588,7 @@ export type Database = {
           motorista?: string | null
           placa?: string
           tipo_veiculo?: string | null
+          traccar_device_id?: string | null
           updated_at?: string
         }
         Relationships: [

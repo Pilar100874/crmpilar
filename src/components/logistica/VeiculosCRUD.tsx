@@ -40,6 +40,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     descricao: '',
     motorista: '',
     tipo_veiculo: '',
+    traccar_device_id: '',
     ativo: true
   });
 
@@ -65,7 +66,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
     }
   };
 
-  const handleOpenDialog = (veiculo?: Veiculo) => {
+  const handleOpenDialog = (veiculo?: any) => {
     if (veiculo) {
       setSelectedVeiculo(veiculo);
       setFormData({
@@ -73,6 +74,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         descricao: veiculo.descricao || '',
         motorista: veiculo.motorista || '',
         tipo_veiculo: veiculo.tipo_veiculo || '',
+        traccar_device_id: veiculo.traccar_device_id || '',
         ativo: veiculo.ativo
       });
     } else {
@@ -82,6 +84,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
         descricao: '',
         motorista: '',
         tipo_veiculo: '',
+        traccar_device_id: '',
         ativo: true
       });
     }
@@ -103,6 +106,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             descricao: formData.descricao || null,
             motorista: formData.motorista || null,
             tipo_veiculo: formData.tipo_veiculo || null,
+            traccar_device_id: formData.traccar_device_id || null,
             ativo: formData.ativo
           })
           .eq('id', selectedVeiculo.id);
@@ -118,6 +122,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             descricao: formData.descricao || null,
             motorista: formData.motorista || null,
             tipo_veiculo: formData.tipo_veiculo || null,
+            traccar_device_id: formData.traccar_device_id || null,
             ativo: formData.ativo
           });
 
@@ -289,6 +294,18 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label>ID do Dispositivo Traccar</Label>
+              <Input
+                value={formData.traccar_device_id}
+                onChange={(e) => setFormData(prev => ({ ...prev, traccar_device_id: e.target.value }))}
+                placeholder="Ex: 123456 (ID do app Traccar)"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Informe o mesmo ID configurado no app Traccar Client
+              </p>
             </div>
 
             <div className="flex items-center justify-between">
