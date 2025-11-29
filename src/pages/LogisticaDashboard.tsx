@@ -141,12 +141,12 @@ const LogisticaDashboard: React.FC = () => {
             <div className="text-muted-foreground">Carregando...</div>
           </div>
         ) : (
-          <div className="h-full flex items-center justify-center bg-muted/50">
-            <div className="text-center">
-              <p className="text-muted-foreground">Mapa desabilitado temporariamente</p>
-              <p className="text-sm text-muted-foreground mt-1">{veiculos.length} veículos carregados</p>
-            </div>
-          </div>
+          <LazyLogisticaMap
+            veiculos={veiculos}
+            onVeiculoClick={setSelectedVeiculo}
+            className="h-full w-full"
+            fitBounds
+          />
         )}
       </div>
 
