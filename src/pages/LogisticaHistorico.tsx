@@ -66,12 +66,12 @@ const LogisticaHistorico: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedVeiculoIds.length > 0 && selectedDate) {
+    if (selectedVeiculoIds.length > 0 && selectedDate && veiculos.length > 0) {
       fetchAllPosicoes();
-    } else {
+    } else if (selectedVeiculoIds.length === 0) {
       setVeiculosHistorico([]);
     }
-  }, [selectedVeiculoIds, selectedDate]);
+  }, [selectedVeiculoIds, selectedDate, veiculos]);
 
   const fetchAllPosicoes = async () => {
     setLoading(true);
