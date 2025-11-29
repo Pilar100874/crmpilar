@@ -67,6 +67,7 @@ export const MENU_CONFIG = [
   { id: "Logística Histórico", label: "Histórico" },
   { id: "Logística Roteirização", label: "Roteirização" },
   { id: "Logística Rotas", label: "Rotas Salvas" },
+  { id: "Logística Automações", label: "Automações" },
   { id: "Logística Config", label: "Configuração" },
 ] as const;
 
