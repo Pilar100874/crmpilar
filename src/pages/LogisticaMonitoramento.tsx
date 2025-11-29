@@ -223,107 +223,112 @@ const LogisticaMonitoramento: React.FC = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col">
+    <div className={cn(
+      "flex flex-col",
+      mapFullscreen ? "h-screen fixed inset-0 z-50" : "h-[calc(100vh-64px)]"
+    )}>
       {/* Hidden audio element for alerts */}
       <audio ref={audioRef} src="/notification.mp3" preload="auto" />
 
-      {/* Header */}
-      <div className="p-3 sm:p-4 border-b bg-background flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')} className="h-8 w-8">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
-                Monitoramento em Tempo Real
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Última atualização: {format(lastUpdate, "HH:mm:ss", { locale: ptBR })}
-              </p>
+      {/* Header - hidden in fullscreen */}
+      {!mapFullscreen && (
+        <div className="p-3 sm:p-4 border-b bg-background flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')} className="h-8 w-8">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <h1 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                  <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Monitoramento em Tempo Real
+                </h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Última atualização: {format(lastUpdate, "HH:mm:ss", { locale: ptBR })}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+              {/* Auto Refresh Toggle */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-2">
+                      <RefreshCw className={cn("h-4 w-4", autoRefresh && "animate-spin")} />
+                      <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>Auto-atualização</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {/* Alerts Toggle */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-2">
+                      {alertsEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+                      <Switch checked={alertsEnabled} onCheckedChange={setAlertsEnabled} />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>Alertas</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {/* Sound Toggle */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-2">
+                      <Volume2 className={cn("h-4 w-4", !soundEnabled && "opacity-50")} />
+                      <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>Som de alerta</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <Button variant="outline" size="sm" onClick={fetchVeiculos}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Atualizar
+              </Button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-            {/* Auto Refresh Toggle */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-2">
-                    <RefreshCw className={cn("h-4 w-4", autoRefresh && "animate-spin")} />
-                    <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>Auto-atualização</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            {/* Alerts Toggle */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-2">
-                    {alertsEnabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
-                    <Switch checked={alertsEnabled} onCheckedChange={setAlertsEnabled} />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>Alertas</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            {/* Sound Toggle */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-2">
-                    <Volume2 className={cn("h-4 w-4", !soundEnabled && "opacity-50")} />
-                    <Switch checked={soundEnabled} onCheckedChange={setSoundEnabled} />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>Som de alerta</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <Button variant="outline" size="sm" onClick={fetchVeiculos}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Atualizar
-            </Button>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <Card className="p-2 sm:p-3">
+              <div className="flex items-center gap-2">
+                <Car className="h-4 w-4 text-primary" />
+                <span className="text-xs sm:text-sm text-muted-foreground">Total</span>
+              </div>
+              <p className="text-lg sm:text-xl font-bold">{stats.total}</p>
+            </Card>
+            <Card className="p-2 sm:p-3 border-l-2 border-l-green-500">
+              <div className="flex items-center gap-2">
+                <Activity className="h-4 w-4 text-green-500" />
+                <span className="text-xs sm:text-sm text-muted-foreground">Movendo</span>
+              </div>
+              <p className="text-lg sm:text-xl font-bold text-green-600">{stats.movendo}</p>
+            </Card>
+            <Card className="p-2 sm:p-3 border-l-2 border-l-amber-500">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-amber-500" />
+                <span className="text-xs sm:text-sm text-muted-foreground">Parado</span>
+              </div>
+              <p className="text-lg sm:text-xl font-bold text-amber-600">{stats.parado}</p>
+            </Card>
+            <Card className="p-2 sm:p-3 border-l-2 border-l-gray-400">
+              <div className="flex items-center gap-2">
+                <WifiOff className="h-4 w-4 text-gray-400" />
+                <span className="text-xs sm:text-sm text-muted-foreground">Offline</span>
+              </div>
+              <p className="text-lg sm:text-xl font-bold text-gray-500">{stats.offline}</p>
+            </Card>
           </div>
         </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <Card className="p-2 sm:p-3">
-            <div className="flex items-center gap-2">
-              <Car className="h-4 w-4 text-primary" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Total</span>
-            </div>
-            <p className="text-lg sm:text-xl font-bold">{stats.total}</p>
-          </Card>
-          <Card className="p-2 sm:p-3 border-l-2 border-l-green-500">
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-green-500" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Movendo</span>
-            </div>
-            <p className="text-lg sm:text-xl font-bold text-green-600">{stats.movendo}</p>
-          </Card>
-          <Card className="p-2 sm:p-3 border-l-2 border-l-amber-500">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-amber-500" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Parado</span>
-            </div>
-            <p className="text-lg sm:text-xl font-bold text-amber-600">{stats.parado}</p>
-          </Card>
-          <Card className="p-2 sm:p-3 border-l-2 border-l-gray-400">
-            <div className="flex items-center gap-2">
-              <WifiOff className="h-4 w-4 text-gray-400" />
-              <span className="text-xs sm:text-sm text-muted-foreground">Offline</span>
-            </div>
-            <p className="text-lg sm:text-xl font-bold text-gray-500">{stats.offline}</p>
-          </Card>
-        </div>
-      </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
