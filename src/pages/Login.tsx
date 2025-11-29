@@ -30,10 +30,13 @@ export default function Login() {
   const [userPassword, setUserPassword] = useState("");
 
   useEffect(() => {
-    const clearSession = async () => {
-      await supabase.auth.signOut();
-    };
-    clearSession();
+    // Limpar sessão apenas se não estiver no fluxo de seleção de estabelecimento
+    if (!showEstabelecimentoSelector) {
+      const clearSession = async () => {
+        await supabase.auth.signOut();
+      };
+      clearSession();
+    }
   }, []);
 
   const formatCPF = (value: string) => {
