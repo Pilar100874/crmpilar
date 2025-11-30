@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,6 +16,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { ProductFilter, ProductFilterState, applyProductFilters } from "./ProductFilter";
 
 interface ResumoPreco {
   produto_id: string;
@@ -31,22 +31,65 @@ interface ResumoPreco {
   diferenca_percentual: number | null;
   data_coleta: string | null;
   url_anuncio: string | null;
+  categoria_id?: string | null;
+  grupo_id?: string | null;
+  ativo?: boolean;
+  campos_customizados?: Record<string, any>;
 }
 
 export function DashboardPrecos() {
   const queryClient = useQueryClient();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterFonte, setFilterFonte] = useState("all");
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [filterDiferenca, setFilterDiferenca] = useState("all");
+  const [filterFonte, setFilterFonte] = useState("all");
+  const [productFilters, setProductFilters] = useState<ProductFilterState>({
+    searchTerm: "",
+    filterCategoria: "all",
+    filterGrupo: "all",
+    filterStatus: "all",
+    customFieldFilters: { range: {}, text: {}, select: {}, checkbox: {}, number: {} }
+  });
+  const [filterCamposCustomizados, setFilterCamposCustomizados] = useState<any[]>([]);
+
+  // Load estabelecimento ID
+  useEffect(() => {
+    getEstabelecimentoId().then(setEstabelecimentoId);
+  }, []);
+
+  // Load custom fields when group filter changes
+  useEffect(() => {
+    if (productFilters.filterGrupo && productFilters.filterGrupo !== "all") {
+      loadFilterCamposCustomizados(productFilters.filterGrupo);
+    } else {
+      setFilterCamposCustomizados([]);
+    }
+  }, [productFilters.filterGrupo]);
+
+  const loadFilterCamposCustomizados = async (grupoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('produto_campos_customizados')
+        .select('*')
+        .eq('grupo_id', grupoId)
+        .eq('ativo', true)
+        .order('ordem');
+
+      if (error) throw error;
+      setFilterCamposCustomizados(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar campos para filtro:', error);
+      setFilterCamposCustomizados([]);
+    }
+  };
 
   const { data: fontes } = useQuery({
     queryKey: ['fontes_dashboard'],
     queryFn: async () => {
-      const estabelecimentoId = await getEstabelecimentoId();
+      const estabId = await getEstabelecimentoId();
       const { data, error } = await supabase
         .from('fontes_pesquisa_precos')
         .select('id, nome_fonte')
-        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('estabelecimento_id', estabId)
         .eq('ativo', true);
       if (error) throw error;
       return data;
@@ -56,13 +99,13 @@ export function DashboardPrecos() {
   const { data: resumo, isLoading, refetch } = useQuery({
     queryKey: ['resumo_precos'],
     queryFn: async () => {
-      const estabelecimentoId = await getEstabelecimentoId();
+      const estabId = await getEstabelecimentoId();
       
       // Buscar produtos com mapeamentos
       const { data: produtos, error: produtosError } = await supabase
         .from('produtos')
-        .select('id, nome, codigo, ean_13, preco_tabela')
-        .eq('estabelecimento_id', estabelecimentoId)
+        .select('id, nome, codigo, ean_13, preco_tabela, categoria_id, grupo_id, ativo, campos_customizados')
+        .eq('estabelecimento_id', estabId)
         .eq('ativo', true);
       
       if (produtosError) throw produtosError;
@@ -103,7 +146,11 @@ export function DashboardPrecos() {
           diferenca_absoluta: diferencaAbsoluta,
           diferenca_percentual: diferencaPercentual,
           data_coleta: menorPreco?.data_coleta || null,
-          url_anuncio: menorPreco?.url_anuncio || null
+          url_anuncio: menorPreco?.url_anuncio || null,
+          categoria_id: produto.categoria_id,
+          grupo_id: produto.grupo_id,
+          ativo: produto.ativo,
+          campos_customizados: produto.campos_customizados as Record<string, any> || {}
         });
       }
 
@@ -126,29 +173,37 @@ export function DashboardPrecos() {
     }
   });
 
-  const filteredResumo = resumo?.filter(item => {
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      if (!item.nome_produto.toLowerCase().includes(term) &&
-          !item.sku.toLowerCase().includes(term) &&
-          !item.ean.toLowerCase().includes(term)) {
+  // Apply product filters first, then dashboard-specific filters
+  const filteredResumo = useMemo(() => {
+    if (!resumo) return [];
+
+    // Transform resumo to match product filter format
+    const produtosForFilter = resumo.map(item => ({
+      ...item,
+      nome: item.nome_produto,
+      codigo: item.sku,
+      ean_13: item.ean,
+    }));
+
+    // Apply product filters
+    const productFiltered = applyProductFilters(produtosForFilter, productFilters, filterCamposCustomizados);
+    
+    // Apply dashboard-specific filters (fonte and diferenca)
+    return productFiltered.filter(item => {
+      if (filterFonte !== "all" && item.fonte_id !== filterFonte) {
         return false;
       }
-    }
-    
-    if (filterFonte !== "all" && item.fonte_id !== filterFonte) {
-      return false;
-    }
-    
-    if (filterDiferenca === "cheaper" && (item.diferenca_percentual === null || item.diferenca_percentual >= 0)) {
-      return false;
-    }
-    if (filterDiferenca === "more_expensive" && (item.diferenca_percentual === null || item.diferenca_percentual < 0)) {
-      return false;
-    }
-    
-    return true;
-  });
+      
+      if (filterDiferenca === "cheaper" && (item.diferenca_percentual === null || item.diferenca_percentual >= 0)) {
+        return false;
+      }
+      if (filterDiferenca === "more_expensive" && (item.diferenca_percentual === null || item.diferenca_percentual < 0)) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [resumo, productFilters, filterCamposCustomizados, filterFonte, filterDiferenca]);
 
   const stats = {
     total: resumo?.length || 0,
@@ -218,15 +273,24 @@ export function DashboardPrecos() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Filters */}
+          {/* Product Filter */}
+          {estabelecimentoId && (
+            <ProductFilter
+              estabelecimentoId={estabelecimentoId}
+              onFilterChange={setProductFilters}
+              showStatusFilter={false}
+            />
+          )}
+
+          {/* Dashboard-specific Filters */}
           <div className="flex flex-wrap gap-4">
             <div className="flex-1 min-w-[200px]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar produto, SKU ou EAN..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Busca rápida por produto..."
+                  value={productFilters.searchTerm}
+                  onChange={(e) => setProductFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
                   className="pl-10"
                 />
               </div>
@@ -257,6 +321,13 @@ export function DashboardPrecos() {
               </Select>
             </div>
           </div>
+
+          {/* Results count */}
+          {filteredResumo.length !== resumo?.length && (
+            <div className="text-sm text-muted-foreground">
+              Exibindo {filteredResumo.length} de {resumo?.length || 0} produtos
+            </div>
+          )}
 
           {/* Table */}
           {isLoading ? (
