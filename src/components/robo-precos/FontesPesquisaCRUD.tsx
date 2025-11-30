@@ -119,7 +119,26 @@ export function FontesPesquisaCRUD() {
     nome_fonte: "",
     tipo: "api" as 'api' | 'scraping' | 'arquivo_importado',
     config_json: "",
-    ativo: true
+    ativo: true,
+    // Campos específicos para APIs
+    tipo_api: "mercado_livre" as string,
+    // Mercado Livre
+    ml_client_id: "",
+    ml_client_secret: "",
+    ml_site_id: "MLB",
+    // Amazon
+    amazon_access_key: "",
+    amazon_secret_key: "",
+    amazon_partner_tag: "",
+    amazon_region: "us-east-1",
+    // Google Merchant
+    google_merchant_id: "",
+    google_client_email: "",
+    google_private_key: "",
+    // Comum
+    limite_resultados: "20",
+    min_score_aceite: "0.45",
+    bonus_ean: "0.5",
   });
 
   const { data: fontes, isLoading } = useQuery({
@@ -136,15 +155,77 @@ export function FontesPesquisaCRUD() {
     }
   });
 
+  // Função para construir config_json a partir dos campos do formulário
+  const buildConfigJson = (data: typeof formData) => {
+    if (data.tipo !== 'api') {
+      // Para scraping/arquivo, usar JSON manual
+      try {
+        return data.config_json ? JSON.parse(data.config_json) : {};
+      } catch {
+        return {};
+      }
+    }
+
+    const baseConfig: Record<string, any> = {
+      tipo_api: data.tipo_api,
+      limite_resultados: parseInt(data.limite_resultados) || 20,
+      min_score_aceite: parseFloat(data.min_score_aceite) || 0.45,
+      bonus_ean: parseFloat(data.bonus_ean) || 0.5,
+    };
+
+    switch (data.tipo_api) {
+      case 'mercado_livre':
+        return {
+          ...baseConfig,
+          site_id: data.ml_site_id || 'MLB',
+          client_id: data.ml_client_id || '',
+          client_secret: data.ml_client_secret || '',
+        };
+      case 'amazon':
+        return {
+          ...baseConfig,
+          region: data.amazon_region || 'us-east-1',
+          marketplace: 'www.amazon.com.br',
+          access_key: data.amazon_access_key || '',
+          secret_key: data.amazon_secret_key || '',
+          partner_tag: data.amazon_partner_tag || '',
+        };
+      case 'google_merchant':
+        return {
+          ...baseConfig,
+          merchant_id: data.google_merchant_id || '',
+          client_email: data.google_client_email || '',
+          private_key: data.google_private_key || '',
+        };
+      default:
+        return baseConfig;
+    }
+  };
+
+  // Função para extrair campos do config_json
+  const parseConfigToFields = (config: any) => {
+    return {
+      tipo_api: config?.tipo_api || 'mercado_livre',
+      ml_client_id: config?.client_id || '',
+      ml_client_secret: config?.client_secret || '',
+      ml_site_id: config?.site_id || 'MLB',
+      amazon_access_key: config?.access_key || '',
+      amazon_secret_key: config?.secret_key || '',
+      amazon_partner_tag: config?.partner_tag || '',
+      amazon_region: config?.region || 'us-east-1',
+      google_merchant_id: config?.merchant_id || '',
+      google_client_email: config?.client_email || '',
+      google_private_key: config?.private_key || '',
+      limite_resultados: String(config?.limite_resultados || 20),
+      min_score_aceite: String(config?.min_score_aceite || 0.45),
+      bonus_ean: String(config?.bonus_ean || 0.5),
+    };
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       const estabelecimentoId = await getEstabelecimentoId();
-      let configJson = {};
-      try {
-        configJson = data.config_json ? JSON.parse(data.config_json) : {};
-      } catch {
-        throw new Error("JSON de configuração inválido");
-      }
+      const configJson = buildConfigJson(data);
       
       const { error } = await supabase.from('fontes_pesquisa_precos').insert({
         estabelecimento_id: estabelecimentoId,
@@ -168,12 +249,7 @@ export function FontesPesquisaCRUD() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: typeof formData & { id: string }) => {
-      let configJson = {};
-      try {
-        configJson = data.config_json ? JSON.parse(data.config_json) : {};
-      } catch {
-        throw new Error("JSON de configuração inválido");
-      }
+      const configJson = buildConfigJson(data);
       
       const { error } = await supabase.from('fontes_pesquisa_precos')
         .update({
@@ -216,17 +292,33 @@ export function FontesPesquisaCRUD() {
       nome_fonte: "",
       tipo: "api",
       config_json: "",
-      ativo: true
+      ativo: true,
+      tipo_api: "mercado_livre",
+      ml_client_id: "",
+      ml_client_secret: "",
+      ml_site_id: "MLB",
+      amazon_access_key: "",
+      amazon_secret_key: "",
+      amazon_partner_tag: "",
+      amazon_region: "us-east-1",
+      google_merchant_id: "",
+      google_client_email: "",
+      google_private_key: "",
+      limite_resultados: "20",
+      min_score_aceite: "0.45",
+      bonus_ean: "0.5",
     });
   };
 
   const handleEdit = (fonte: FontePesquisa) => {
     setEditingFonte(fonte);
+    const parsedFields = parseConfigToFields(fonte.config_json);
     setFormData({
       nome_fonte: fonte.nome_fonte,
       tipo: fonte.tipo,
       config_json: JSON.stringify(fonte.config_json, null, 2),
-      ativo: fonte.ativo
+      ativo: fonte.ativo,
+      ...parsedFields,
     });
     setShowDialog(true);
   };
@@ -308,31 +400,243 @@ export function FontesPesquisaCRUD() {
                       </div>
                     </SelectItem>
                   </SelectContent>
-                </Select>
+              </Select>
               </div>
 
-              <Alert>
-                <Info className="h-4 w-4" />
-                <AlertDescription className="text-xs">
-                  <strong>Exemplo de configuração para {tipoConfig[formData.tipo].label}:</strong>
-                  <pre className="mt-2 text-[10px] bg-muted p-2 rounded overflow-x-auto whitespace-pre-wrap">
-                    {tipoConfig[formData.tipo].exemplo}
-                  </pre>
-                  <p className="mt-2 text-muted-foreground">
-                    {tipoConfig[formData.tipo].ajuda}
-                  </p>
-                </AlertDescription>
-              </Alert>
+              {/* Campos específicos para API */}
+              {formData.tipo === 'api' && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Tipo de API</Label>
+                    <Select value={formData.tipo_api} onValueChange={(v) => setFormData(p => ({ ...p, tipo_api: v }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="mercado_livre">Mercado Livre</SelectItem>
+                        <SelectItem value="amazon">Amazon</SelectItem>
+                        <SelectItem value="google_merchant">Google Merchant / Shopping</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="space-y-2">
-                <Label>Configuração (JSON)</Label>
-                <Textarea
-                  value={formData.config_json}
-                  onChange={(e) => setFormData(p => ({ ...p, config_json: e.target.value }))}
-                  placeholder="Cole aqui o JSON de configuração..."
-                  className="font-mono text-xs min-h-[200px]"
-                />
-              </div>
+                  {/* Credenciais Mercado Livre */}
+                  {formData.tipo_api === 'mercado_livre' && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-blue-500/5">
+                      <h4 className="font-medium flex items-center gap-2 text-blue-500">
+                        <Database className="h-4 w-4" />
+                        Credenciais Mercado Livre
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Client ID</Label>
+                          <Input
+                            value={formData.ml_client_id}
+                            onChange={(e) => setFormData(p => ({ ...p, ml_client_id: e.target.value }))}
+                            placeholder="Ex: 1234567890123456"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Client Secret</Label>
+                          <Input
+                            type="password"
+                            value={formData.ml_client_secret}
+                            onChange={(e) => setFormData(p => ({ ...p, ml_client_secret: e.target.value }))}
+                            placeholder="••••••••••••••••"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Site ID</Label>
+                        <Select value={formData.ml_site_id} onValueChange={(v) => setFormData(p => ({ ...p, ml_site_id: v }))}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="MLB">MLB - Brasil</SelectItem>
+                            <SelectItem value="MLA">MLA - Argentina</SelectItem>
+                            <SelectItem value="MLM">MLM - México</SelectItem>
+                            <SelectItem value="MLC">MLC - Chile</SelectItem>
+                            <SelectItem value="MCO">MCO - Colômbia</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Alert className="bg-blue-500/10 border-blue-500/20">
+                        <Info className="h-4 w-4 text-blue-500" />
+                        <AlertDescription className="text-xs">
+                          Obtenha suas credenciais em <a href="https://developers.mercadolibre.com.br" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">developers.mercadolibre.com.br</a>
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+
+                  {/* Credenciais Amazon */}
+                  {formData.tipo_api === 'amazon' && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-orange-500/5">
+                      <h4 className="font-medium flex items-center gap-2 text-orange-500">
+                        <Database className="h-4 w-4" />
+                        Credenciais Amazon Product Advertising API
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Access Key</Label>
+                          <Input
+                            value={formData.amazon_access_key}
+                            onChange={(e) => setFormData(p => ({ ...p, amazon_access_key: e.target.value }))}
+                            placeholder="AKIAIOSFODNN7EXAMPLE"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Secret Key</Label>
+                          <Input
+                            type="password"
+                            value={formData.amazon_secret_key}
+                            onChange={(e) => setFormData(p => ({ ...p, amazon_secret_key: e.target.value }))}
+                            placeholder="••••••••••••••••"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Partner Tag</Label>
+                          <Input
+                            value={formData.amazon_partner_tag}
+                            onChange={(e) => setFormData(p => ({ ...p, amazon_partner_tag: e.target.value }))}
+                            placeholder="meutag-20"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Região</Label>
+                          <Select value={formData.amazon_region} onValueChange={(v) => setFormData(p => ({ ...p, amazon_region: v }))}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="us-east-1">us-east-1 (Brasil)</SelectItem>
+                              <SelectItem value="us-west-2">us-west-2</SelectItem>
+                              <SelectItem value="eu-west-1">eu-west-1</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <Alert className="bg-orange-500/10 border-orange-500/20">
+                        <Info className="h-4 w-4 text-orange-500" />
+                        <AlertDescription className="text-xs">
+                          Cadastre-se no <a href="https://affiliate-program.amazon.com" target="_blank" rel="noopener noreferrer" className="text-orange-500 underline">Amazon Associates</a> e acesse o Product Advertising API.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+
+                  {/* Credenciais Google Merchant */}
+                  {formData.tipo_api === 'google_merchant' && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-green-500/5">
+                      <h4 className="font-medium flex items-center gap-2 text-green-500">
+                        <Database className="h-4 w-4" />
+                        Credenciais Google Merchant Center
+                      </h4>
+                      <div className="space-y-2">
+                        <Label>Merchant ID</Label>
+                        <Input
+                          value={formData.google_merchant_id}
+                          onChange={(e) => setFormData(p => ({ ...p, google_merchant_id: e.target.value }))}
+                          placeholder="123456789"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Client Email (Service Account)</Label>
+                        <Input
+                          value={formData.google_client_email}
+                          onChange={(e) => setFormData(p => ({ ...p, google_client_email: e.target.value }))}
+                          placeholder="service@projeto.iam.gserviceaccount.com"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Private Key</Label>
+                        <Textarea
+                          value={formData.google_private_key}
+                          onChange={(e) => setFormData(p => ({ ...p, google_private_key: e.target.value }))}
+                          placeholder="-----BEGIN PRIVATE KEY-----&#10;...&#10;-----END PRIVATE KEY-----"
+                          className="font-mono text-xs min-h-[100px]"
+                        />
+                      </div>
+                      <Alert className="bg-green-500/10 border-green-500/20">
+                        <Info className="h-4 w-4 text-green-500" />
+                        <AlertDescription className="text-xs">
+                          Configure uma Service Account no <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-green-500 underline">Google Cloud Console</a> com acesso ao Merchant Center.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+
+                  {/* Parâmetros comuns */}
+                  <div className="space-y-4 p-4 border rounded-lg">
+                    <h4 className="font-medium">Parâmetros de Busca</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label>Limite de Resultados</Label>
+                        <Input
+                          type="number"
+                          value={formData.limite_resultados}
+                          onChange={(e) => setFormData(p => ({ ...p, limite_resultados: e.target.value }))}
+                          min={1}
+                          max={50}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Score Mínimo (0-1)</Label>
+                        <Input
+                          type="number"
+                          step="0.05"
+                          value={formData.min_score_aceite}
+                          onChange={(e) => setFormData(p => ({ ...p, min_score_aceite: e.target.value }))}
+                          min={0}
+                          max={1}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Bônus EAN (0-1)</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={formData.bonus_ean}
+                          onChange={(e) => setFormData(p => ({ ...p, bonus_ean: e.target.value }))}
+                          min={0}
+                          max={1}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Para scraping e arquivo, mostrar JSON manual */}
+              {formData.tipo !== 'api' && (
+                <>
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      <strong>Exemplo de configuração para {tipoConfig[formData.tipo].label}:</strong>
+                      <pre className="mt-2 text-[10px] bg-muted p-2 rounded overflow-x-auto whitespace-pre-wrap">
+                        {tipoConfig[formData.tipo].exemplo}
+                      </pre>
+                      <p className="mt-2 text-muted-foreground">
+                        {tipoConfig[formData.tipo].ajuda}
+                      </p>
+                    </AlertDescription>
+                  </Alert>
+
+                  <div className="space-y-2">
+                    <Label>Configuração (JSON)</Label>
+                    <Textarea
+                      value={formData.config_json}
+                      onChange={(e) => setFormData(p => ({ ...p, config_json: e.target.value }))}
+                      placeholder="Cole aqui o JSON de configuração..."
+                      className="font-mono text-xs min-h-[200px]"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="flex items-center gap-2">
                 <Switch
