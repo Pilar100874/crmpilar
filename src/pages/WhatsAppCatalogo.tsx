@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,12 +11,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { 
   Package, Search, MessageCircle, RefreshCw, 
   CheckCircle2, XCircle, Loader2,
   Filter, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown, ChevronUp,
-  ArrowRight, ArrowLeft, Send, Check, ShoppingCart
+  ArrowRight, ArrowLeft, Send, Check, ShoppingCart, Settings, Save
 } from "lucide-react";
 
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
@@ -28,20 +30,37 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
 
 type SortField = 'nome' | 'codigo' | 'categoria' | 'grupo' | 'ativo';
 type SortDirection = 'asc' | 'desc';
-type WizardStep = 1 | 2 | 3;
+type WizardStep = 1 | 2;
 
 interface ProcessResult {
   productId: string;
   productName: string;
-  contaId: string;
-  contaName: string;
   success: boolean;
   error?: string;
+}
+
+interface WhatsAppCatalogoConfig {
+  phone_number_id: string;
+  business_account_id: string;
+  catalog_id: string;
+  access_token: string;
+  nome_conta: string;
 }
 
 export default function WhatsAppCatalogo() {
   const queryClient = useQueryClient();
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("produtos");
+  
+  // Config state
+  const [configSaving, setConfigSaving] = useState(false);
+  const [config, setConfig] = useState<WhatsAppCatalogoConfig>({
+    phone_number_id: "",
+    business_account_id: "",
+    catalog_id: "",
+    access_token: "",
+    nome_conta: ""
+  });
   
   // Wizard state
   const [wizardStep, setWizardStep] = useState<WizardStep>(1);
@@ -62,9 +81,8 @@ export default function WhatsAppCatalogo() {
   const [sortField, setSortField] = useState<SortField>('nome');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   
-  // Seleção de produtos e contas
+  // Seleção de produtos
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
-  const [selectedContas, setSelectedContas] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const cached = localStorage.getItem('estabelecimentoId');
@@ -80,33 +98,36 @@ export default function WhatsAppCatalogo() {
     }
   }, []);
 
-  // Buscar contas WhatsApp Commerce (do hub de marketplaces)
-  const { data: contasWhatsApp } = useQuery({
-    queryKey: ['contas_whatsapp_commerce', estabelecimentoId],
+  // Buscar configuração salva
+  const { data: savedConfig, refetch: refetchConfig } = useQuery({
+    queryKey: ['whatsapp_catalogo_config', estabelecimentoId],
     queryFn: async () => {
-      if (!estabelecimentoId) return [];
+      if (!estabelecimentoId) return null;
       
-      // Primeiro buscar o marketplace_id do WhatsApp Commerce
-      const { data: marketplace } = await supabase
-        .from('marketplaces')
-        .select('id')
-        .eq('nome', 'whatsapp_commerce')
+      const { data, error } = await supabase
+        .from('whatsapp_catalogo_config')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId)
         .maybeSingle();
       
-      if (!marketplace) return [];
-      
-      // Buscar contas desse marketplace
-      const { data, error } = await supabase
-        .from('contas_marketplace')
-        .select('*, marketplace:marketplaces(id, nome, nome_display)')
-        .eq('estabelecimento_id', estabelecimentoId)
-        .eq('marketplace_id', marketplace.id);
-      
-      if (error) throw error;
-      return data || [];
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
     },
     enabled: !!estabelecimentoId,
   });
+
+  // Atualiza state do config quando carrega do banco
+  useEffect(() => {
+    if (savedConfig) {
+      setConfig({
+        phone_number_id: savedConfig.phone_number_id || "",
+        business_account_id: savedConfig.business_account_id || "",
+        catalog_id: savedConfig.catalog_id || "",
+        access_token: savedConfig.access_token || "",
+        nome_conta: savedConfig.nome_conta || ""
+      });
+    }
+  }, [savedConfig]);
 
   const { data: categorias } = useQuery({
     queryKey: ['produto_categorias', estabelecimentoId],
