@@ -18,7 +18,7 @@ import {
   Package, Search, ShoppingBag, Store, Box, RefreshCw, 
   CheckCircle2, XCircle, Pause, AlertTriangle, Loader2, Eye,
   Filter, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown, ChevronUp,
-  X, ArrowRight, ArrowLeft, Send, Check
+  X, ArrowRight, ArrowLeft, Send, Check, ShoppingCart, MessageCircle
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -36,6 +36,11 @@ const marketplaceIcons: Record<string, any> = {
   'amazon': Box,
   'magalu': Store,
   'google_merchant': Search,
+  'americanas': ShoppingBag,
+  'carrefour': ShoppingCart,
+  'casas_bahia': Store,
+  'olx': Package,
+  'whatsapp_commerce': MessageCircle,
 };
 
 type SortField = 'nome' | 'codigo' | 'categoria' | 'grupo' | 'ativo';

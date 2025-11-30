@@ -16,7 +16,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Store, ShoppingBag, Package, Box, Search, Plus, RefreshCw, 
   Link2, RotateCcw, ShoppingCart, Settings, History, Eye, EyeOff,
-  CheckCircle2, XCircle, AlertCircle, Clock, Loader2, Key, HelpCircle
+  CheckCircle2, XCircle, AlertCircle, Clock, Loader2, Key, HelpCircle,
+  MessageCircle
 } from "lucide-react";
 import { getMarketplaceService } from "@/services/marketplaces";
 import { format } from "date-fns";
@@ -29,10 +30,15 @@ import { GoogleShoppingConfigDialog } from "@/components/marketplaces/GoogleShop
 
 const marketplaceIcons: Record<string, any> = {
   'shopping-bag': ShoppingBag,
+  'ShoppingBag': ShoppingBag,
   'package': Package,
+  'Package': Package,
   'box': Box,
   'store': Store,
+  'Store': Store,
   'search': Search,
+  'ShoppingCart': ShoppingCart,
+  'MessageCircle': MessageCircle,
 };
 
 const statusConfig: Record<string, { label: string; color: string; icon: any; ledColor: string; ledShadow: string }> = {
@@ -43,12 +49,17 @@ const statusConfig: Record<string, { label: string; color: string; icon: any; le
 };
 
 // Redirect URIs fixos para cada marketplace (não editáveis)
-const MARKETPLACE_REDIRECT_URIS = {
+const MARKETPLACE_REDIRECT_URIS: Record<string, string> = {
   mercado_livre: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/mercadolivre-auth-callback',
   amazon: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/amazon-auth-callback',
   shopee: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/shopee-auth-callback',
   magalu: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/magalu-auth-callback',
   google_merchant: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/google-shopping-auth-callback',
+  americanas: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/americanas-auth-callback',
+  carrefour: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/carrefour-auth-callback',
+  casas_bahia: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/casasbahia-auth-callback',
+  olx: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/olx-auth-callback',
+  whatsapp_commerce: 'https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/whatsapp-commerce-auth-callback',
 };
 
 export default function MarketplaceHub() {

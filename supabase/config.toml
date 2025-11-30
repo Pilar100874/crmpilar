@@ -128,3 +128,48 @@ verify_jwt = false
 
 [functions.google-shopping-sync]
 verify_jwt = true
+
+[functions.americanas-auth-start]
+verify_jwt = false
+
+[functions.americanas-auth-callback]
+verify_jwt = false
+
+[functions.americanas-sync]
+verify_jwt = true
+
+[functions.carrefour-auth-start]
+verify_jwt = false
+
+[functions.carrefour-auth-callback]
+verify_jwt = false
+
+[functions.carrefour-sync]
+verify_jwt = true
+
+[functions.casasbahia-auth-start]
+verify_jwt = false
+
+[functions.casasbahia-auth-callback]
+verify_jwt = false
+
+[functions.casasbahia-sync]
+verify_jwt = true
+
+[functions.olx-auth-start]
+verify_jwt = false
+
+[functions.olx-auth-callback]
+verify_jwt = false
+
+[functions.olx-sync]
+verify_jwt = true
+
+[functions.whatsapp-commerce-auth-start]
+verify_jwt = false
+
+[functions.whatsapp-commerce-auth-callback]
+verify_jwt = false
+
+[functions.whatsapp-commerce-sync]
+verify_jwt = true

@@ -16,7 +16,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { 
   ShoppingCart, Search, ShoppingBag, Package, Box, Store, 
-  Calendar, DollarSign, User, MapPin, ChevronDown, Eye, Loader2, Code, X, Filter
+  Calendar, DollarSign, User, MapPin, ChevronDown, Eye, Loader2, Code, X, Filter,
+  MessageCircle
 } from "lucide-react";
 import { format, startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -35,6 +36,11 @@ const marketplaceIcons: Record<string, any> = {
   'amazon': Box,
   'magalu': Store,
   'google_merchant': Search,
+  'americanas': ShoppingBag,
+  'carrefour': ShoppingCart,
+  'casas_bahia': Store,
+  'olx': Package,
+  'whatsapp_commerce': MessageCircle,
 };
 
 const periodPresets = [
