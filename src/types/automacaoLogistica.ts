@@ -7,12 +7,13 @@ export type LogisticaBlockType =
   | 'condicao_horario'
   | 'acao_whatsapp'
   | 'acao_notificacao'
-  | 'acao_email'
-  | 'acao_marcar_mapa';
+  | 'acao_email';
 
 export interface LogisticaBlockConfig {
   // Para condicao_parado
   tempo_minutos?: number;
+  marcar_no_mapa?: boolean;
+  icone_parada?: '10_20' | '21_30' | 'mais_30';
   // Para condicao_velocidade
   velocidade_km?: number;
   operador_velocidade?: 'maior' | 'menor';
@@ -39,8 +40,6 @@ export interface LogisticaBlockConfig {
   email_destino?: string;
   assunto_email?: string;
   corpo_email?: string;
-  // Para acao_marcar_mapa
-  categoria_tempo?: '10_20' | '21_30' | 'mais_30' | 'automatico';
 }
 
 export interface LogisticaBlock {
@@ -171,16 +170,6 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     icon: 'Mail',
     description: 'Envia um e-mail',
     defaultData: { email_destino: '', assunto_email: '', corpo_email: '' },
-    outputs: 1,
-  },
-  {
-    type: 'acao_marcar_mapa',
-    label: 'Marcar no Mapa',
-    category: 'acao',
-    color: '#DC2626',
-    icon: 'MapPinned',
-    description: 'Marca a posição do veículo parado no mapa com ícone específico',
-    defaultData: { categoria_tempo: 'automatico' },
     outputs: 1,
   },
 ];

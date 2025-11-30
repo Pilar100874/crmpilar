@@ -52,6 +52,66 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 Dispara quando o veículo ficar parado por mais tempo que o especificado
               </p>
             </div>
+            
+            <div className="border-t pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Checkbox
+                  id="marcar_no_mapa"
+                  checked={config.marcar_no_mapa || false}
+                  onCheckedChange={(checked) => updateConfig('marcar_no_mapa', checked)}
+                />
+                <Label htmlFor="marcar_no_mapa" className="font-medium">Marcar no mapa</Label>
+              </div>
+              
+              {config.marcar_no_mapa && (
+                <div className="space-y-3 pl-6">
+                  <Label>Selecione o ícone de marcação</Label>
+                  <div className="space-y-2">
+                    <div 
+                      className={`flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-colors ${config.icone_parada === '10_20' ? 'border-yellow-500 bg-yellow-500/10' : 'hover:bg-muted'}`}
+                      onClick={() => updateConfig('icone_parada', '10_20')}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-yellow-500 border-2 border-white shadow flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">P</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Parado 10-20 min</p>
+                        <p className="text-xs text-muted-foreground">Ícone amarelo</p>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className={`flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-colors ${config.icone_parada === '21_30' ? 'border-orange-500 bg-orange-500/10' : 'hover:bg-muted'}`}
+                      onClick={() => updateConfig('icone_parada', '21_30')}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-orange-500 border-2 border-white shadow flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">P</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Parado 21-30 min</p>
+                        <p className="text-xs text-muted-foreground">Ícone laranja</p>
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className={`flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-colors ${config.icone_parada === 'mais_30' ? 'border-red-600 bg-red-600/10' : 'hover:bg-muted'}`}
+                      onClick={() => updateConfig('icone_parada', 'mais_30')}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-red-600 border-2 border-white shadow flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">P</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">Parado +30 min</p>
+                        <p className="text-xs text-muted-foreground">Ícone vermelho</p>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Este ícone aparecerá no mapa de monitoramento e histórico quando a condição for atendida
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         );
 
@@ -253,47 +313,6 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 placeholder="Conteúdo do e-mail..."
                 rows={4}
               />
-            </div>
-          </div>
-        );
-
-      case 'acao_marcar_mapa':
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Categoria de tempo parado</Label>
-              <Select
-                value={config.categoria_tempo || 'automatico'}
-                onValueChange={(value) => updateConfig('categoria_tempo', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="automatico">Automático (baseado no tempo)</SelectItem>
-                  <SelectItem value="10_20">Parado 10-20 minutos (Amarelo)</SelectItem>
-                  <SelectItem value="21_30">Parado 21-30 minutos (Laranja)</SelectItem>
-                  <SelectItem value="mais_30">Parado +30 minutos (Vermelho)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-2">
-                <strong>Automático:</strong> O ícone será escolhido com base no tempo parado configurado na condição anterior.
-              </p>
-            </div>
-            <div className="rounded-lg border p-3 space-y-2">
-              <p className="text-sm font-medium">Legenda dos ícones:</p>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-yellow-500 border-2 border-white shadow" />
-                <span className="text-xs">10-20 minutos parado</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-orange-500 border-2 border-white shadow" />
-                <span className="text-xs">21-30 minutos parado</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-red-600 border-2 border-white shadow" />
-                <span className="text-xs">Mais de 30 minutos parado</span>
-              </div>
             </div>
           </div>
         );

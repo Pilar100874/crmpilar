@@ -3,7 +3,7 @@ import { Handle, Position, NodeProps } from '@xyflow/react';
 import { 
   Play, Pause, Gauge, MapPin, MapPinOff, Clock, 
   MessageCircle, Bell, Mail, Copy, Trash2, StickyNote,
-  MoreVertical, SkipForward, X, ArrowRight, MapPinned
+  MoreVertical, SkipForward, X, ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LOGISTICA_BLOCKS, LogisticaBlockType } from '@/types/automacaoLogistica';
@@ -27,7 +27,6 @@ const iconMap: Record<string, any> = {
   MessageCircle,
   Bell,
   Mail,
-  MapPinned,
 };
 
 interface LogisticaFlowNodeProps extends NodeProps {
@@ -228,14 +227,15 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
           {data.type === 'condicao_saida_area' && (
             <span>{data.config?.area_nome || 'Configurar área...'}</span>
           )}
-          {data.type === 'acao_marcar_mapa' && (
-            <span>
-              {data.config?.categoria_tempo === 'automatico' ? 'Automático (baseado no tempo)' :
-               data.config?.categoria_tempo === '10_20' ? 'Parado 10-20 min (Amarelo)' :
-               data.config?.categoria_tempo === '21_30' ? 'Parado 21-30 min (Laranja)' :
-               data.config?.categoria_tempo === 'mais_30' ? 'Parado +30 min (Vermelho)' :
-               'Marcar posição no mapa'}
-            </span>
+          {data.type === 'condicao_parado' && data.config?.marcar_no_mapa && (
+            <div className="flex items-center gap-1 mt-1">
+              <div className={`w-3 h-3 rounded-full ${
+                data.config?.icone_parada === '10_20' ? 'bg-yellow-500' :
+                data.config?.icone_parada === '21_30' ? 'bg-orange-500' :
+                data.config?.icone_parada === 'mais_30' ? 'bg-red-600' : 'bg-gray-400'
+              }`} />
+              <span className="text-[10px]">Marcar no mapa</span>
+            </div>
           )}
         </div>
 
