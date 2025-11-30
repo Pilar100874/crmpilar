@@ -78,11 +78,16 @@ const LogisticaMonitoramento: React.FC = () => {
     
     const { data, error } = await supabase
       .from('logistica_paradas_marcadas')
-      .select('*')
-      .eq('estabelecimento_id', estabelecimentoId);
+      .select(`
+        *,
+        veiculo:veiculos(placa, descricao)
+      `)
+      .eq('estabelecimento_id', estabelecimentoId)
+      .eq('ativa', true)
+      .order('created_at', { ascending: false });
 
     if (!error && data) {
-      setParadasMarcadas(data as ParadaMarcada[]);
+      setParadasMarcadas((data || []) as unknown as ParadaMarcada[]);
     }
   }, [estabelecimentoId]);
 
