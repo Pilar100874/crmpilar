@@ -129,8 +129,8 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
       return {
         type: 'binary',
         outputs: [
-          { id: 'yes', label: outputLabels[0] || 'Sim', color: { bg: 'bg-green-500', hover: 'hover:bg-green-600', border: 'border-green-700', text: 'text-green-700' } },
-          { id: 'no', label: outputLabels[1] || 'Não', color: { bg: 'bg-red-500', hover: 'hover:bg-red-600', border: 'border-red-700', text: 'text-red-700' } }
+          { id: 'yes', label: outputLabels[0] || 'Sim', isPrimary: true },
+          { id: 'no', label: outputLabels[1] || 'Não', isPrimary: false }
         ]
       };
     }
@@ -240,7 +240,7 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
                 key={out.id}
                 className={cn(
                   "relative p-1.5 rounded-md",
-                  out.color.bg
+                  out.isPrimary ? "bg-pink-500" : "bg-primary/10 border border-primary/20"
                 )}
                 title={out.label}
               >
@@ -529,24 +529,22 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
             <div 
               key={out.id}
               className={cn(
-                "relative flex items-center justify-between gap-2 py-2 px-3 rounded-md group transition-colors",
-                out.color.bg,
-                out.color.hover
+                "relative flex items-center justify-between gap-2 py-2.5 px-3 rounded-md group transition-colors",
+                out.isPrimary 
+                  ? "bg-pink-500 hover:bg-pink-600" 
+                  : "bg-primary/10 border border-primary/20 hover:bg-primary/20"
               )}
             >
-              <span className="text-xs font-medium text-white">{out.label}</span>
+              <span className={cn("text-xs font-medium", out.isPrimary ? "text-white" : "text-primary")}>{out.label}</span>
               <div className="relative">
                 <Handle
                   type="source"
                   position={Position.Right}
                   id={out.id}
-                  className={cn(
-                    "!bg-white !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !rounded-full group-hover:!scale-110 !transition-transform",
-                    `!${out.color.border}`
-                  )}
+                  className="!bg-primary !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
                   style={{ position: 'relative' }}
                 />
-                <ArrowRight className={cn("w-3 h-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none", out.color.text)} />
+                <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
           ))}
@@ -560,7 +558,7 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
             <div 
               key={out.id}
               className={cn(
-                "relative flex items-center justify-between gap-2 py-2 px-3 rounded-md group transition-colors",
+                "relative flex items-center justify-between gap-2 py-2.5 px-3 rounded-md group transition-colors",
                 out.color.bg,
                 out.color.hover
               )}
@@ -571,13 +569,10 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
                   type="source"
                   position={Position.Right}
                   id={out.id}
-                  className={cn(
-                    "!bg-white !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !rounded-full group-hover:!scale-110 !transition-transform",
-                    `!${out.color.border}`
-                  )}
+                  className="!bg-primary !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-white !rounded-full group-hover:!scale-110 !transition-transform"
                   style={{ position: 'relative' }}
                 />
-                <ArrowRight className={cn("w-3 h-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none", out.color.text)} />
+                <ArrowRight className="w-3 h-3 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
           ))}
