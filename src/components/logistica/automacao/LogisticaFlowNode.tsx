@@ -3,7 +3,11 @@ import { Handle, Position, NodeProps } from '@xyflow/react';
 import { 
   Play, Pause, Gauge, MapPin, MapPinOff, Clock, 
   MessageCircle, Bell, Mail, Copy, Trash2, StickyNote,
-  MoreVertical, SkipForward, X, ArrowRight
+  MoreVertical, SkipForward, X, ArrowRight,
+  AlertTriangle, CircleAlert, Truck, Package, Home, Building2,
+  Fuel, Wrench, Coffee, ShoppingCart, Factory, Warehouse,
+  ParkingCircle, TrafficCone, Construction, Timer, Ban,
+  CircleCheck, CircleX, Flag, Star, Heart, Zap, LucideIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LOGISTICA_BLOCKS, LogisticaBlockType, CondicaoTempoParado } from '@/types/automacaoLogistica';
@@ -27,6 +31,35 @@ const iconMap: Record<string, any> = {
   MessageCircle,
   Bell,
   Mail,
+};
+
+// Map for marker icons
+const markerIconMap: Record<string, LucideIcon> = {
+  MapPin,
+  AlertTriangle,
+  CircleAlert,
+  Pause,
+  Truck,
+  Package,
+  Home,
+  Building2,
+  Fuel,
+  Wrench,
+  Coffee,
+  ShoppingCart,
+  Factory,
+  Warehouse,
+  ParkingCircle,
+  TrafficCone,
+  Construction,
+  Timer,
+  Ban,
+  CircleCheck,
+  CircleX,
+  Flag,
+  Star,
+  Heart,
+  Zap,
 };
 
 // Cores para as saídas dinâmicas de tempo
@@ -286,17 +319,24 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
           {data.type === 'condicao_saida_area' && (
             <span>{data.config?.area_nome || 'Configurar área...'}</span>
           )}
-          {data.type === 'acao_marcar_mapa' && (
-            <div className="flex items-center gap-1">
-              <div 
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: data.config?.cor_icone_parada || '#EAB308' }}
-              />
-              <span className="truncate max-w-[140px]">
-                {data.config?.legenda_parada || 'Marcar no mapa'}
-              </span>
-            </div>
-          )}
+          {data.type === 'acao_marcar_mapa' && (() => {
+            const iconName = data.config?.icone_parada || 'MapPin';
+            const MarkerIcon = markerIconMap[iconName] || MapPin;
+            const iconColor = data.config?.cor_icone_parada || '#EAB308';
+            return (
+              <div className="flex items-center gap-2">
+                <div 
+                  className="p-1.5 rounded-md flex items-center justify-center"
+                  style={{ backgroundColor: iconColor }}
+                >
+                  <MarkerIcon className="w-4 h-4 text-white" />
+                </div>
+                <span className="truncate max-w-[130px] font-medium">
+                  {data.config?.legenda_parada || 'Marcar no mapa'}
+                </span>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Breakpoint/Skip indicators */}
