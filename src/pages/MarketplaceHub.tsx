@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,7 +17,7 @@ import {
   Store, ShoppingBag, Package, Box, Search, Plus, RefreshCw, 
   Link2, RotateCcw, ShoppingCart, Settings, History, Eye, EyeOff,
   CheckCircle2, XCircle, AlertCircle, Clock, Loader2, Key, HelpCircle,
-  MessageCircle, ExternalLink, ListChecks
+  MessageCircle
 } from "lucide-react";
 import { getMarketplaceService } from "@/services/marketplaces";
 import { format } from "date-fns";
@@ -1010,187 +1009,8 @@ export default function MarketplaceHub() {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <>
-            {/* Card especial WhatsApp Commerce - Catálogo de Produtos */}
-            <Card className="overflow-hidden border-2 border-green-500/30 bg-gradient-to-br from-green-500/5 to-green-600/10">
-              <CardHeader className="bg-gradient-to-r from-green-500/20 to-green-600/10 border-b border-green-500/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-xl bg-green-500/20 border border-green-500/30">
-                      <MessageCircle className="h-8 w-8 text-green-500" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl text-green-600 dark:text-green-400">
-                        WhatsApp Commerce
-                      </CardTitle>
-                      <CardDescription className="text-sm">
-                        Catálogo de Produtos para WhatsApp Business
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <Badge className="bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30">
-                    <ListChecks className="h-3 w-3 mr-1" />
-                    Catálogo
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-foreground">O que é?</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Gerencie seu catálogo de produtos no WhatsApp Business. Envie produtos diretamente 
-                      para seus clientes através do WhatsApp, facilitando a visualização e compra.
-                    </p>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        Sincronize produtos do seu catálogo
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        Envie listas de produtos via WhatsApp
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                        Gerencie múltiplas contas
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="flex flex-col justify-center gap-3">
-                    <div className="p-4 rounded-lg bg-muted/50 border">
-                      <p className="text-sm font-medium mb-2">Como começar:</p>
-                      <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                        <li>Adicione uma conta WhatsApp Commerce abaixo</li>
-                        <li>Configure suas credenciais do Meta</li>
-                        <li>Acesse o Catálogo para enviar produtos</li>
-                      </ol>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline"
-                        className="flex-1 border-green-500/30 hover:bg-green-500/10"
-                        onClick={() => {
-                          const whatsappMarketplace = marketplaces?.find(m => m.nome === 'whatsapp_commerce');
-                          if (whatsappMarketplace) {
-                            setNewConta(p => ({ ...p, marketplace_id: whatsappMarketplace.id }));
-                            setShowAddDialog(true);
-                          }
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Adicionar Conta
-                      </Button>
-                      <Link to="/whatsapp-catalogo" className="flex-1">
-                        <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Abrir Catálogo
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Mostrar contas WhatsApp Commerce existentes */}
-                {(() => {
-                  const whatsappMarketplace = marketplaces?.find(m => m.nome === 'whatsapp_commerce');
-                  const whatsappContas = whatsappMarketplace ? getContasByMarketplace(whatsappMarketplace.id) : [];
-                  
-                  if (whatsappContas.length > 0) {
-                    return (
-                      <div className="mt-4 pt-4 border-t border-green-500/20">
-                        <p className="text-sm font-medium mb-3">Contas conectadas:</p>
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {whatsappContas.map(conta => {
-                            const status = statusConfig[conta.status] || statusConfig.nao_conectado;
-                            const StatusIcon = status.icon;
-                            const isActionLoading = loadingAction?.startsWith(conta.id);
-                            
-                            return (
-                              <div key={conta.id} className="border rounded-lg p-3 bg-background/50 space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <div className={`w-2.5 h-2.5 rounded-full ${status.ledColor} ${status.ledShadow}`} />
-                                    <span className="font-medium text-sm">{conta.nome_loja}</span>
-                                  </div>
-                                  <Badge variant="outline" className={`text-xs ${status.color}`}>
-                                    {status.label}
-                                  </Badge>
-                                </div>
-                                <div className="flex gap-1 flex-wrap">
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    className="text-xs h-7"
-                                    onClick={() => setWhatsappConfigConta(conta)}
-                                  >
-                                    <Key className="h-3 w-3 mr-1" />
-                                    Config
-                                  </Button>
-                                  {conta.status !== 'conectado' && (
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline"
-                                      className="text-xs h-7"
-                                      onClick={() => executeAction(conta.id, 'whatsapp_commerce', 'conectar')}
-                                      disabled={isActionLoading}
-                                    >
-                                      {loadingAction === `${conta.id}-conectar` ? (
-                                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                      ) : (
-                                        <Link2 className="h-3 w-3 mr-1" />
-                                      )}
-                                      Conectar
-                                    </Button>
-                                  )}
-                                  {conta.status === 'conectado' && (
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline"
-                                      className="text-xs h-7"
-                                      onClick={() => executeAction(conta.id, 'whatsapp_commerce', 'sync_produtos')}
-                                      disabled={isActionLoading}
-                                    >
-                                      {loadingAction === `${conta.id}-sync_produtos` ? (
-                                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                      ) : (
-                                        <RefreshCw className="h-3 w-3 mr-1" />
-                                      )}
-                                      Sincronizar
-                                    </Button>
-                                  )}
-                                  <Button 
-                                    size="sm" 
-                                    variant="ghost"
-                                    className="text-xs h-7"
-                                    onClick={() => setSelectedConta(conta)}
-                                  >
-                                    <History className="h-3 w-3 mr-1" />
-                                    Logs
-                                  </Button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-              </CardContent>
-            </Card>
-
-            {/* Separador */}
-            <div className="flex items-center gap-4 my-2">
-              <Separator className="flex-1" />
-              <span className="text-sm text-muted-foreground font-medium">Outros Marketplaces</span>
-              <Separator className="flex-1" />
-            </div>
-
-            {/* Grid de marketplaces (excluindo WhatsApp Commerce) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {marketplaces?.filter(m => m.nome !== 'whatsapp_commerce').map(marketplace => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {marketplaces?.map(marketplace => {
               const Icon = getIcon(marketplace.icone);
               const contasMarketplace = getContasByMarketplace(marketplace.id);
 
@@ -1455,7 +1275,7 @@ export default function MarketplaceHub() {
                                 <Eye className="h-3 w-3 mr-1" />
                                 Detalhes
                               </Button>
-                              </div>
+                            </div>
                           </div>
                         );
                       })
@@ -1465,7 +1285,6 @@ export default function MarketplaceHub() {
               );
             })}
           </div>
-          </>
         )}
 
         {/* Sheet de Detalhes */}
