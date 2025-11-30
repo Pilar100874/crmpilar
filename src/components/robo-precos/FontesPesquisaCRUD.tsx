@@ -13,7 +13,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Database, Globe, FileSpreadsheet, Info, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Database, Globe, FileSpreadsheet, Info, Loader2, HelpCircle, ExternalLink, Search } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 interface FontePesquisa {
@@ -30,56 +32,8 @@ const tipoConfig = {
     label: "API",
     icon: Database,
     color: "bg-blue-500/20 text-blue-400",
-    exemplo: `// 1️⃣ MERCADO LIVRE (MLB) - API Pública
-{
-  "tipo_api": "mercado_livre",
-  "site_id": "MLB",
-  "limite_resultados": 20,
-  "min_score_aceite": 0.45,
-  "bonus_ean": 0.5
-}
-
-// 2️⃣ AMAZON (Product Advertising API)
-{
-  "tipo_api": "amazon",
-  "region": "us-east-1",
-  "marketplace": "www.amazon.com.br",
-  "access_key": "SUA_ACCESS_KEY",
-  "secret_key": "SUA_SECRET_KEY",
-  "partner_tag": "SEU_TAG-20",
-  "limite_resultados": 10,
-  "min_score_aceite": 0.40
-}
-
-// 3️⃣ GOOGLE MERCHANT CENTER
-{
-  "tipo_api": "google_merchant",
-  "merchant_id": "123456789",
-  "client_email": "service@projeto.iam.gserviceaccount.com",
-  "private_key": "-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----",
-  "limite_resultados": 20,
-  "min_score_aceite": 0.40
-}`,
-    ajuda: `🎯 DRIVERS DISPONÍVEIS:
-
-📦 MERCADO LIVRE (mercado_livre)
-• API pública, não requer autenticação
-• site_id: MLB (Brasil), MLA (Argentina), MLM (México)
-
-🛒 AMAZON (amazon)
-• Requer cadastro no Amazon Associates
-• Obter credenciais em affiliate-program.amazon.com
-
-🛍️ GOOGLE MERCHANT (google_merchant)
-• Requer conta Google Cloud com Service Account
-• merchant_id: ID do Merchant Center
-
-⚙️ PARÂMETROS COMUNS:
-• limite_resultados: quantidade de itens a analisar
-• min_score_aceite: score mínimo (0-1) para aceitar match
-• bonus_ean: bônus no score se EAN coincidir
-
-📌 REGRA: Busca sempre pelo NOME DO PRODUTO`
+    exemplo: ``,
+    ajuda: ``
   },
   scraping: {
     label: "Scraping",
@@ -109,6 +63,181 @@ Configure regex para extrair preço e título da página.
 O sistema buscará produtos pelo NOME (similaridade Jaccard).
 EAN/SKU são usados para bonus de validação.`
   }
+};
+
+// Guias de configuração detalhados para cada tipo de API
+const apiHelpGuides: Record<string, {
+  titulo: string;
+  descricao: string;
+  passos: string[];
+  links: { label: string; url: string }[];
+  custo: string;
+  dificuldade: 'Fácil' | 'Médio' | 'Difícil';
+  cor: string;
+}> = {
+  mercado_livre: {
+    titulo: "Mercado Livre - API Pública",
+    descricao: "API oficial do Mercado Livre para consulta de produtos. Funciona sem autenticação para buscas públicas.",
+    passos: [
+      "Não é necessário cadastro para buscas públicas",
+      "Para uso avançado: Acesse developers.mercadolibre.com.br",
+      "Crie uma aplicação para obter Client ID e Secret",
+      "Configure as credenciais no formulário"
+    ],
+    links: [
+      { label: "Portal do Desenvolvedor", url: "https://developers.mercadolibre.com.br" },
+      { label: "Documentação da API", url: "https://developers.mercadolibre.com.br/es_ar/items-y-busquedas" }
+    ],
+    custo: "Gratuito (uso básico)",
+    dificuldade: "Fácil",
+    cor: "bg-yellow-500"
+  },
+  google_custom_search: {
+    titulo: "Google Custom Search API",
+    descricao: "Pesquisa em sites específicos usando a infraestrutura do Google. Ideal para comparar preços em múltiplos e-commerces.",
+    passos: [
+      "Acesse console.cloud.google.com e crie um projeto",
+      "Ative a 'Custom Search API' em APIs & Services",
+      "Vá em 'Credenciais' e crie uma API Key",
+      "Acesse programmablesearchengine.google.com",
+      "Crie um 'Mecanismo de Pesquisa Personalizado'",
+      "Configure os sites que deseja pesquisar (ex: mercadolivre.com.br)",
+      "Copie o ID do mecanismo (CX)",
+      "Cole a API Key e o CX no formulário"
+    ],
+    links: [
+      { label: "Google Cloud Console", url: "https://console.cloud.google.com/apis/credentials" },
+      { label: "Programmable Search Engine", url: "https://programmablesearchengine.google.com/controlpanel/all" },
+      { label: "Documentação", url: "https://developers.google.com/custom-search/v1/overview" }
+    ],
+    custo: "100 buscas/dia grátis. US$5 por 1000 buscas extras.",
+    dificuldade: "Médio",
+    cor: "bg-cyan-500"
+  },
+  firecrawl: {
+    titulo: "Firecrawl - Web Scraping Inteligente",
+    descricao: "Serviço de web scraping que extrai dados estruturados de páginas. Útil quando APIs não estão disponíveis.",
+    passos: [
+      "Acesse firecrawl.dev e crie uma conta",
+      "Vá em Dashboard > API Keys",
+      "Gere uma nova API Key",
+      "Cole a API Key no formulário",
+      "Configure os sites que deseja extrair dados"
+    ],
+    links: [
+      { label: "Site Oficial", url: "https://firecrawl.dev" },
+      { label: "Documentação", url: "https://docs.firecrawl.dev" },
+      { label: "Dashboard", url: "https://firecrawl.dev/app" }
+    ],
+    custo: "500 créditos grátis/mês. Planos a partir de US$19/mês.",
+    dificuldade: "Fácil",
+    cor: "bg-red-500"
+  },
+  amazon: {
+    titulo: "Amazon Product Advertising API",
+    descricao: "API oficial da Amazon para consulta de produtos e preços. Requer conta no programa de afiliados.",
+    passos: [
+      "Cadastre-se no Amazon Associates (affiliate-program.amazon.com)",
+      "Aguarde aprovação da conta (pode levar alguns dias)",
+      "Acesse Product Advertising API",
+      "Gere suas credenciais (Access Key e Secret Key)",
+      "Crie uma Partner Tag",
+      "Configure as credenciais no formulário"
+    ],
+    links: [
+      { label: "Amazon Associates", url: "https://affiliate-program.amazon.com" },
+      { label: "PA API Console", url: "https://webservices.amazon.com/paapi5/scratchpad" },
+      { label: "Documentação", url: "https://webservices.amazon.com/paapi5/documentation" }
+    ],
+    custo: "Gratuito (requer vendas como afiliado para manter acesso)",
+    dificuldade: "Difícil",
+    cor: "bg-orange-500"
+  },
+  google_merchant: {
+    titulo: "Google Merchant Center",
+    descricao: "Acesse dados de produtos do Google Shopping via API. Requer conta de lojista no Merchant Center.",
+    passos: [
+      "Acesse console.cloud.google.com",
+      "Crie um projeto e ative a Content API for Shopping",
+      "Vá em IAM & Admin > Service Accounts",
+      "Crie uma Service Account com permissão de leitura",
+      "Gere uma chave JSON e extraia o email e private_key",
+      "No Merchant Center, adicione a Service Account como usuário",
+      "Cole as credenciais no formulário"
+    ],
+    links: [
+      { label: "Google Cloud Console", url: "https://console.cloud.google.com" },
+      { label: "Merchant Center", url: "https://merchants.google.com" },
+      { label: "Documentação Content API", url: "https://developers.google.com/shopping-content/guides/quickstart" }
+    ],
+    custo: "Gratuito",
+    dificuldade: "Difícil",
+    cor: "bg-green-500"
+  }
+};
+
+// Componente de guia de ajuda
+const ApiHelpGuide = ({ tipoApi }: { tipoApi: string }) => {
+  const guide = apiHelpGuides[tipoApi];
+  if (!guide) return null;
+
+  const getDifficultyColor = (dif: string) => {
+    switch (dif) {
+      case 'Fácil': return 'bg-green-500/20 text-green-400';
+      case 'Médio': return 'bg-yellow-500/20 text-yellow-400';
+      case 'Difícil': return 'bg-red-500/20 text-red-400';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
+  return (
+    <ScrollArea className="h-[400px] pr-4">
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className={`w-3 h-3 rounded-full ${guide.cor}`} />
+          <h3 className="font-semibold text-lg">{guide.titulo}</h3>
+        </div>
+        
+        <p className="text-sm text-muted-foreground">{guide.descricao}</p>
+        
+        <div className="flex gap-2">
+          <Badge variant="outline" className={getDifficultyColor(guide.dificuldade)}>
+            {guide.dificuldade}
+          </Badge>
+          <Badge variant="outline" className="bg-muted">
+            {guide.custo}
+          </Badge>
+        </div>
+        
+        <div className="space-y-2">
+          <h4 className="font-medium text-sm">📋 Passo a Passo:</h4>
+          <ol className="list-decimal list-inside space-y-1 text-sm">
+            {guide.passos.map((passo, i) => (
+              <li key={i} className="text-muted-foreground">{passo}</li>
+            ))}
+          </ol>
+        </div>
+        
+        <div className="space-y-2">
+          <h4 className="font-medium text-sm">🔗 Links Úteis:</h4>
+          <div className="flex flex-col gap-1">
+            {guide.links.map((link, i) => (
+              <a
+                key={i}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-primary hover:underline flex items-center gap-1"
+              >
+                <ExternalLink className="h-3 w-3" />
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </ScrollArea>
+  );
 };
 
 export function FontesPesquisaCRUD() {
@@ -438,7 +567,22 @@ export function FontesPesquisaCRUD() {
               {formData.tipo === 'api' && (
                 <>
                   <div className="space-y-2">
-                    <Label>Tipo de API</Label>
+                    <div className="flex items-center justify-between">
+                      <Label>Tipo de API</Label>
+                      {apiHelpGuides[formData.tipo_api] && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 gap-1 text-xs text-muted-foreground">
+                              <HelpCircle className="h-3 w-3" />
+                              Como configurar
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-96" align="end">
+                            <ApiHelpGuide tipoApi={formData.tipo_api} />
+                          </PopoverContent>
+                        </Popover>
+                      )}
+                    </div>
                     <Select value={formData.tipo_api} onValueChange={(v) => setFormData(p => ({ ...p, tipo_api: v }))}>
                       <SelectTrigger>
                         <SelectValue />
@@ -806,9 +950,21 @@ export function FontesPesquisaCRUD() {
               {fontes?.map((fonte) => {
                 const config = tipoConfig[fonte.tipo];
                 const Icon = config.icon;
+                const tipoApi = fonte.config_json?.tipo_api;
+                const hasHelp = tipoApi && apiHelpGuides[tipoApi];
+                
                 return (
                   <TableRow key={fonte.id}>
-                    <TableCell className="font-medium">{fonte.nome_fonte}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {fonte.nome_fonte}
+                        {tipoApi && (
+                          <Badge variant="secondary" className="text-xs">
+                            {tipoApi.replace(/_/g, ' ')}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={config.color}>
                         <Icon className="h-3 w-3 mr-1" />
@@ -821,6 +977,18 @@ export function FontesPesquisaCRUD() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
+                      {hasHelp && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon" title="Como configurar">
+                              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-96" align="end">
+                            <ApiHelpGuide tipoApi={tipoApi} />
+                          </PopoverContent>
+                        </Popover>
+                      )}
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(fonte)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
