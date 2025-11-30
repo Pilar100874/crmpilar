@@ -19,6 +19,7 @@ interface CurrentMarker {
 interface LazyLogisticaMapProps {
   veiculos?: VeiculoComStatus[];
   routes?: RouteData[];
+  fullRouteBounds?: Array<{ lat: number; lng: number }>;
   paradasMarcadas?: ParadaMarcada[];
   currentMarker?: CurrentMarker;
   center?: [number, number];

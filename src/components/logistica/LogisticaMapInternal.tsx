@@ -108,6 +108,7 @@ interface CurrentMarker {
 interface LogisticaMapInternalProps {
   veiculos?: VeiculoComStatus[];
   routes?: RouteData[];
+  fullRouteBounds?: Array<{ lat: number; lng: number }>;
   paradasMarcadas?: ParadaMarcada[];
   currentMarker?: CurrentMarker;
   center?: [number, number];
@@ -121,6 +122,7 @@ interface LogisticaMapInternalProps {
 const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   veiculos = [],
   routes = [],
+  fullRouteBounds,
   paradasMarcadas = [],
   currentMarker,
   center = [-15.7801, -47.9292],
@@ -136,6 +138,13 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const paradasMarkersRef = useRef<Map<string, L.Marker>>(new Map());
   const routeLayersRef = useRef<L.Polyline[]>([]);
   const currentMarkerRef = useRef<L.Marker | null>(null);
+
+  const initialBoundsFittedRef = useRef(false);
+
+  // Reset initial bounds flag when fullRouteBounds changes (new data loaded)
+  useEffect(() => {
+    initialBoundsFittedRef.current = false;
+  }, [fullRouteBounds?.length]);
 
   // Initialize map
   useEffect(() => {
@@ -154,6 +163,16 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       }
     };
   }, []);
+
+  // Fit to full route bounds on initial load (for timeline preview)
+  useEffect(() => {
+    if (!mapRef.current || !fullRouteBounds || fullRouteBounds.length === 0) return;
+    if (initialBoundsFittedRef.current) return;
+
+    const bounds = L.latLngBounds(fullRouteBounds.map(c => [c.lat, c.lng] as L.LatLngExpression));
+    mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+    initialBoundsFittedRef.current = true;
+  }, [fullRouteBounds]);
 
   // Update markers when veiculos change
   useEffect(() => {
