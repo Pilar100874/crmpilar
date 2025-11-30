@@ -95,6 +95,21 @@ export default function MarketplaceHub() {
     google_client_id: '',
     google_client_secret: '',
     google_merchant_id: '',
+    // Americanas
+    americanas_client_id: '',
+    americanas_client_secret: '',
+    // Carrefour
+    carrefour_client_id: '',
+    carrefour_client_secret: '',
+    // Casas Bahia (Via)
+    via_client_id: '',
+    via_client_secret: '',
+    // OLX
+    olx_client_id: '',
+    olx_client_secret: '',
+    // WhatsApp Commerce
+    whatsapp_app_id: '',
+    whatsapp_app_secret: '',
   });
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [mlConfigConta, setMlConfigConta] = useState<any>(null);
@@ -179,6 +194,11 @@ export default function MarketplaceHub() {
   const isShopee = selectedMarketplace?.nome === 'shopee';
   const isMagalu = selectedMarketplace?.nome === 'magalu';
   const isGoogleMerchant = selectedMarketplace?.nome === 'google_merchant';
+  const isAmericanas = selectedMarketplace?.nome === 'americanas';
+  const isCarrefour = selectedMarketplace?.nome === 'carrefour';
+  const isCasasBahia = selectedMarketplace?.nome === 'casas_bahia';
+  const isOlx = selectedMarketplace?.nome === 'olx';
+  const isWhatsappCommerce = selectedMarketplace?.nome === 'whatsapp_commerce';
 
   const addContaMutation = useMutation({
     mutationFn: async (data: typeof newConta) => {
@@ -220,6 +240,36 @@ export default function MarketplaceHub() {
           google_merchant_id: data.google_merchant_id,
           google_redirect_uri: MARKETPLACE_REDIRECT_URIS.google_merchant,
         };
+      } else if (isAmericanas) {
+        configuracoes = {
+          americanas_client_id: data.americanas_client_id,
+          americanas_client_secret: data.americanas_client_secret,
+          americanas_redirect_uri: MARKETPLACE_REDIRECT_URIS.americanas,
+        };
+      } else if (isCarrefour) {
+        configuracoes = {
+          carrefour_client_id: data.carrefour_client_id,
+          carrefour_client_secret: data.carrefour_client_secret,
+          carrefour_redirect_uri: MARKETPLACE_REDIRECT_URIS.carrefour,
+        };
+      } else if (isCasasBahia) {
+        configuracoes = {
+          via_client_id: data.via_client_id,
+          via_client_secret: data.via_client_secret,
+          via_redirect_uri: MARKETPLACE_REDIRECT_URIS.casas_bahia,
+        };
+      } else if (isOlx) {
+        configuracoes = {
+          olx_client_id: data.olx_client_id,
+          olx_client_secret: data.olx_client_secret,
+          olx_redirect_uri: MARKETPLACE_REDIRECT_URIS.olx,
+        };
+      } else if (isWhatsappCommerce) {
+        configuracoes = {
+          whatsapp_app_id: data.whatsapp_app_id,
+          whatsapp_app_secret: data.whatsapp_app_secret,
+          whatsapp_redirect_uri: MARKETPLACE_REDIRECT_URIS.whatsapp_commerce,
+        };
       }
 
       const { error } = await supabase.from('contas_marketplace').insert({
@@ -254,6 +304,16 @@ export default function MarketplaceHub() {
         google_client_id: '',
         google_client_secret: '',
         google_merchant_id: '',
+        americanas_client_id: '',
+        americanas_client_secret: '',
+        carrefour_client_id: '',
+        carrefour_client_secret: '',
+        via_client_id: '',
+        via_client_secret: '',
+        olx_client_id: '',
+        olx_client_secret: '',
+        whatsapp_app_id: '',
+        whatsapp_app_secret: '',
       });
       setShowMlSecret(false);
       toast.success('Conta adicionada com sucesso');
@@ -662,6 +722,258 @@ export default function MarketplaceHub() {
                     </div>
                   </>
                 )}
+
+                {/* Campos específicos da Americanas */}
+                {isAmericanas && (
+                  <>
+                    <Separator />
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Obtenha essas credenciais no{" "}
+                        <a
+                          href="https://developer.americanas.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline"
+                        >
+                          Portal de Desenvolvedores Americanas
+                        </a>
+                      </AlertDescription>
+                    </Alert>
+                    <div className="space-y-2">
+                      <Label>Client ID *</Label>
+                      <Input 
+                        value={newConta.americanas_client_id} 
+                        onChange={(e) => setNewConta(p => ({ ...p, americanas_client_id: e.target.value }))}
+                        placeholder="Seu Client ID"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Client Secret *</Label>
+                      <Input 
+                        type="password"
+                        value={newConta.americanas_client_secret} 
+                        onChange={(e) => setNewConta(p => ({ ...p, americanas_client_secret: e.target.value }))}
+                        placeholder="••••••••••••••••"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Redirect URI (automático)</Label>
+                      <Input 
+                        value={MARKETPLACE_REDIRECT_URIS.americanas}
+                        readOnly
+                        className="bg-muted text-foreground cursor-text select-all"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Cadastre esta URL no portal Americanas
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Campos específicos do Carrefour */}
+                {isCarrefour && (
+                  <>
+                    <Separator />
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Obtenha essas credenciais no{" "}
+                        <a
+                          href="https://marketplace.carrefour.com.br"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline"
+                        >
+                          Portal Carrefour Marketplace
+                        </a>
+                      </AlertDescription>
+                    </Alert>
+                    <div className="space-y-2">
+                      <Label>Client ID *</Label>
+                      <Input 
+                        value={newConta.carrefour_client_id} 
+                        onChange={(e) => setNewConta(p => ({ ...p, carrefour_client_id: e.target.value }))}
+                        placeholder="Seu Client ID"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Client Secret *</Label>
+                      <Input 
+                        type="password"
+                        value={newConta.carrefour_client_secret} 
+                        onChange={(e) => setNewConta(p => ({ ...p, carrefour_client_secret: e.target.value }))}
+                        placeholder="••••••••••••••••"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Redirect URI (automático)</Label>
+                      <Input 
+                        value={MARKETPLACE_REDIRECT_URIS.carrefour}
+                        readOnly
+                        className="bg-muted text-foreground cursor-text select-all"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Cadastre esta URL no portal Carrefour
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Campos específicos do Casas Bahia (Via) */}
+                {isCasasBahia && (
+                  <>
+                    <Separator />
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Obtenha essas credenciais no{" "}
+                        <a
+                          href="https://developer.via.com.br"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline"
+                        >
+                          Portal de Desenvolvedores Via
+                        </a>
+                      </AlertDescription>
+                    </Alert>
+                    <div className="space-y-2">
+                      <Label>Client ID *</Label>
+                      <Input 
+                        value={newConta.via_client_id} 
+                        onChange={(e) => setNewConta(p => ({ ...p, via_client_id: e.target.value }))}
+                        placeholder="Seu Client ID"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Client Secret *</Label>
+                      <Input 
+                        type="password"
+                        value={newConta.via_client_secret} 
+                        onChange={(e) => setNewConta(p => ({ ...p, via_client_secret: e.target.value }))}
+                        placeholder="••••••••••••••••"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Redirect URI (automático)</Label>
+                      <Input 
+                        value={MARKETPLACE_REDIRECT_URIS.casas_bahia}
+                        readOnly
+                        className="bg-muted text-foreground cursor-text select-all"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Cadastre esta URL no portal Via
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Campos específicos da OLX */}
+                {isOlx && (
+                  <>
+                    <Separator />
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Obtenha essas credenciais no{" "}
+                        <a
+                          href="https://developers.olx.com.br"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline"
+                        >
+                          Portal de Desenvolvedores OLX
+                        </a>
+                        . Ideal para B2B, lotes e máquinas.
+                      </AlertDescription>
+                    </Alert>
+                    <div className="space-y-2">
+                      <Label>Client ID *</Label>
+                      <Input 
+                        value={newConta.olx_client_id} 
+                        onChange={(e) => setNewConta(p => ({ ...p, olx_client_id: e.target.value }))}
+                        placeholder="Seu Client ID"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Client Secret *</Label>
+                      <Input 
+                        type="password"
+                        value={newConta.olx_client_secret} 
+                        onChange={(e) => setNewConta(p => ({ ...p, olx_client_secret: e.target.value }))}
+                        placeholder="••••••••••••••••"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Redirect URI (automático)</Label>
+                      <Input 
+                        value={MARKETPLACE_REDIRECT_URIS.olx}
+                        readOnly
+                        className="bg-muted text-foreground cursor-text select-all"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Cadastre esta URL no portal OLX
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Campos específicos do WhatsApp Commerce */}
+                {isWhatsappCommerce && (
+                  <>
+                    <Separator />
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription className="text-xs">
+                        Obtenha essas credenciais no{" "}
+                        <a
+                          href="https://developers.facebook.com/apps"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary underline"
+                        >
+                          Meta for Developers
+                        </a>
+                        . Configure um app com WhatsApp Business e Catalog Management.
+                      </AlertDescription>
+                    </Alert>
+                    <div className="space-y-2">
+                      <Label>App ID *</Label>
+                      <Input 
+                        value={newConta.whatsapp_app_id} 
+                        onChange={(e) => setNewConta(p => ({ ...p, whatsapp_app_id: e.target.value }))}
+                        placeholder="Seu App ID do Meta"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>App Secret *</Label>
+                      <Input 
+                        type="password"
+                        value={newConta.whatsapp_app_secret} 
+                        onChange={(e) => setNewConta(p => ({ ...p, whatsapp_app_secret: e.target.value }))}
+                        placeholder="••••••••••••••••"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Redirect URI (automático)</Label>
+                      <Input 
+                        value={MARKETPLACE_REDIRECT_URIS.whatsapp_commerce}
+                        readOnly
+                        className="bg-muted text-foreground cursor-text select-all"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Cadastre esta URL no Meta for Developers
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
               </ScrollArea>
               <div className="flex justify-end gap-2 pt-4 border-t">
@@ -676,7 +988,12 @@ export default function MarketplaceHub() {
                     (isAmazon && (!newConta.amazon_client_id || !newConta.amazon_client_secret)) ||
                     (isShopee && (!newConta.shopee_partner_id || !newConta.shopee_partner_key)) ||
                     (isMagalu && (!newConta.magalu_client_id || !newConta.magalu_client_secret)) ||
-                    (isGoogleMerchant && (!newConta.google_client_id || !newConta.google_client_secret))
+                    (isGoogleMerchant && (!newConta.google_client_id || !newConta.google_client_secret)) ||
+                    (isAmericanas && (!newConta.americanas_client_id || !newConta.americanas_client_secret)) ||
+                    (isCarrefour && (!newConta.carrefour_client_id || !newConta.carrefour_client_secret)) ||
+                    (isCasasBahia && (!newConta.via_client_id || !newConta.via_client_secret)) ||
+                    (isOlx && (!newConta.olx_client_id || !newConta.olx_client_secret)) ||
+                    (isWhatsappCommerce && (!newConta.whatsapp_app_id || !newConta.whatsapp_app_secret))
                   }
                 >
                   {addContaMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
