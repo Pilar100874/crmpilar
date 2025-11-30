@@ -109,12 +109,17 @@ async function validateToken(supabase: any, token: string): Promise<{ valid: boo
   return { valid: true, estabelecimentoId: data.estabelecimento_id };
 }
 
-async function findVeiculoId(supabase: any, deviceId: string, estabelecimentoId?: string): Promise<string | null> {
+interface VeiculoInfo {
+  id: string;
+  estabelecimento_id: string;
+}
+
+async function findVeiculoInfo(supabase: any, deviceId: string, estabelecimentoId?: string): Promise<VeiculoInfo | null> {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   
-  // Base query builder
+  // Base query builder - now returns both id and estabelecimento_id
   const buildQuery = (table: string, field: string, value: string) => {
-    let query = supabase.from(table).select('id').eq(field, value).eq('ativo', true);
+    let query = supabase.from(table).select('id, estabelecimento_id').eq(field, value).eq('ativo', true);
     if (estabelecimentoId) {
       query = query.eq('estabelecimento_id', estabelecimentoId);
     }
@@ -124,16 +129,16 @@ async function findVeiculoId(supabase: any, deviceId: string, estabelecimentoId?
   // If it's a UUID, try direct lookup
   if (uuidRegex.test(deviceId)) {
     const { data: veiculo } = await buildQuery('veiculos', 'id', deviceId);
-    if (veiculo) return veiculo.id;
+    if (veiculo) return { id: veiculo.id, estabelecimento_id: veiculo.estabelecimento_id };
   }
   
   // Try by traccar_device_id
   const { data: veiculoByDevice } = await buildQuery('veiculos', 'traccar_device_id', deviceId);
-  if (veiculoByDevice) return veiculoByDevice.id;
+  if (veiculoByDevice) return { id: veiculoByDevice.id, estabelecimento_id: veiculoByDevice.estabelecimento_id };
   
   // Try by placa (uppercase)
   const { data: veiculoByPlaca } = await buildQuery('veiculos', 'placa', deviceId.toUpperCase());
-  if (veiculoByPlaca) return veiculoByPlaca.id;
+  if (veiculoByPlaca) return { id: veiculoByPlaca.id, estabelecimento_id: veiculoByPlaca.estabelecimento_id };
   
   return null;
 }
@@ -144,10 +149,10 @@ async function savePosition(supabase: any, payload: PosicaoPayload, estabelecime
     return { error: 'Invalid coordinates', status: 400 };
   }
 
-  // Find vehicle by device ID, placa, or UUID
-  const veiculoId = await findVeiculoId(supabase, payload.veiculoId, estabelecimentoId);
+  // Find vehicle by device ID, placa, or UUID - now returns both id and estabelecimento_id
+  const veiculoInfo = await findVeiculoInfo(supabase, payload.veiculoId, estabelecimentoId);
   
-  if (!veiculoId) {
+  if (!veiculoInfo) {
     console.error('Vehicle not found for identifier:', payload.veiculoId);
     return { error: 'Vehicle not found', status: 404 };
   }
@@ -156,7 +161,7 @@ async function savePosition(supabase: any, payload: PosicaoPayload, estabelecime
   const { data: posicao, error: posicaoError } = await supabase
     .from('veiculo_posicoes')
     .insert({
-      veiculo_id: veiculoId,
+      veiculo_id: veiculoInfo.id,
       lat: payload.lat,
       lng: payload.lng,
       velocidade: payload.velocidade || 0,
@@ -171,11 +176,12 @@ async function savePosition(supabase: any, payload: PosicaoPayload, estabelecime
     return { error: 'Failed to save position', status: 500 };
   }
 
-  console.log('Position saved successfully:', posicao.id, 'for vehicle:', veiculoId);
+  console.log('Position saved successfully:', posicao.id, 'for vehicle:', veiculoInfo.id);
   return { 
     data: posicao, 
     status: 200,
-    veiculoId: veiculoId,
+    veiculoId: veiculoInfo.id,
+    estabelecimentoId: veiculoInfo.estabelecimento_id, // Return estabelecimento_id from vehicle
     velocidade: payload.velocidade || 0
   };
 }
@@ -481,15 +487,20 @@ Deno.serve(async (req) => {
       }
 
       // Execute automations in background (fire and forget)
-      if (estabelecimentoId && result.veiculoId) {
+      // Use estabelecimentoId from token OR from vehicle record
+      const effectiveEstabelecimentoId = estabelecimentoId || result.estabelecimentoId;
+      if (effectiveEstabelecimentoId && result.veiculoId) {
+        console.log('🚀 Triggering automations for estabelecimento:', effectiveEstabelecimentoId);
         executarAutomacoesLogistica(
           supabase,
           result.veiculoId,
           payload.lat,
           payload.lng,
           payload.velocidade || 0,
-          estabelecimentoId
+          effectiveEstabelecimentoId
         ).catch(err => console.error('Automation error:', err));
+      } else {
+        console.log('⚠️ Skipping automations - no estabelecimentoId available');
       }
       
       return new Response(
@@ -585,15 +596,20 @@ Deno.serve(async (req) => {
       }
 
       // Execute automations in background
-      if (estabelecimentoId && result.veiculoId) {
+      // Use estabelecimentoId from token OR from vehicle record
+      const effectiveEstabelecimentoId = estabelecimentoId || result.estabelecimentoId;
+      if (effectiveEstabelecimentoId && result.veiculoId) {
+        console.log('🚀 Triggering automations for estabelecimento:', effectiveEstabelecimentoId);
         executarAutomacoesLogistica(
           supabase,
           result.veiculoId,
           payload.lat,
           payload.lng,
           payload.velocidade || 0,
-          estabelecimentoId
+          effectiveEstabelecimentoId
         ).catch(err => console.error('Automation error:', err));
+      } else {
+        console.log('⚠️ Skipping automations - no estabelecimentoId available');
       }
       
       return new Response(
