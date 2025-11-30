@@ -60,7 +60,7 @@ const tabItems: TabItem[] = [
   { id: 'pedagio', label: 'API de Pedágio', icon: Calculator },
   { id: 'automacao', label: 'Regras de Automação', icon: Zap },
   { id: 'importacao-api', label: 'Importação de Produtos', icon: Globe },
-  { id: 'whatsapp-catalogo', label: 'Catálogo WhatsApp', icon: MessageCircle },
+  { id: 'whatsapp-catalogo', label: 'Lista de Produtos no WhatsApp', icon: MessageCircle },
 ];
 
 export default function VendasConfig() {
