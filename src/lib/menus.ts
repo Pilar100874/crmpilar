@@ -21,7 +21,6 @@ export const MENU_CONFIG = [
   { id: "Orçamento", label: "Orçamento" },
   { id: "Config Vendas", label: "Configuração de Vendas" },
   { id: "Importação Produtos Sub", label: "Importação de Produtos de Terceiro" },
-  { id: "WhatsApp Catalogo", label: "WhatsApp Catálogo" },
   { id: "Conteúdos", label: "Listas" },
   { id: "Contatos", label: "Contatos" },
   { id: "Empresas", label: "Empresas" },
