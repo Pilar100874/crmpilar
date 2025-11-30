@@ -69,6 +69,7 @@ import LogisticaRoteirizacao from "./pages/LogisticaRoteirizacao";
 import LogisticaRotas from "./pages/LogisticaRotas";
 import LogisticaConfig from "./pages/LogisticaConfig";
 import LogisticaAutomacoes from "./pages/LogisticaAutomacoes";
+import WhatsAppCatalogo from "./pages/WhatsAppCatalogo";
 import MarketplaceHub from "./pages/MarketplaceHub";
 import MarketplaceProdutos from "./pages/MarketplaceProdutos";
 import MarketplacePedidos from "./pages/MarketplacePedidos";
@@ -162,6 +163,7 @@ const App = () => (
             <Route path="/marketplaces" element={<MarketplaceHub />} />
             <Route path="/marketplaces/produtos" element={<MarketplaceProdutos />} />
             <Route path="/marketplaces/pedidos" element={<MarketplacePedidos />} />
+            <Route path="/whatsapp-catalogo" element={<WhatsAppCatalogo />} />
           </Route>
           {/* Public routes (no layout) */}
           <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
