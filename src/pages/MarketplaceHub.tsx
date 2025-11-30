@@ -77,6 +77,9 @@ export default function MarketplaceHub() {
     nome_loja: '', 
     seller_id: '', 
     ambiente: 'sandbox',
+    // Ajuste de preço
+    ajuste_preco_fixo: 0,
+    ajuste_preco_percentual: 0,
     // Mercado Livre
     ml_client_id: '',
     ml_client_secret: '',
@@ -286,6 +289,8 @@ export default function MarketplaceHub() {
         seller_id: data.seller_id,
         ambiente: data.ambiente,
         status: 'nao_conectado',
+        ajuste_preco_fixo: data.ajuste_preco_fixo || 0,
+        ajuste_preco_percentual: data.ajuste_preco_percentual || 0,
         configuracoes,
       });
       if (error) throw error;
@@ -298,6 +303,8 @@ export default function MarketplaceHub() {
         nome_loja: '', 
         seller_id: '', 
         ambiente: 'sandbox',
+        ajuste_preco_fixo: 0,
+        ajuste_preco_percentual: 0,
         ml_client_id: '',
         ml_client_secret: '',
         amazon_client_id: '',
@@ -441,6 +448,39 @@ export default function MarketplaceHub() {
                       <SelectItem value="producao">Produção</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Ajuste de Preço */}
+                <Separator />
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Ajuste de Preço para Marketplace</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Configure um acréscimo fixo e/ou percentual sobre o preço dos produtos ao publicar neste marketplace
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Valor Fixo (R$)</Label>
+                    <Input 
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={newConta.ajuste_preco_fixo} 
+                      onChange={(e) => setNewConta(p => ({ ...p, ajuste_preco_fixo: parseFloat(e.target.value) || 0 }))}
+                      placeholder="0,00"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Percentual (%)</Label>
+                    <Input 
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={newConta.ajuste_preco_percentual} 
+                      onChange={(e) => setNewConta(p => ({ ...p, ajuste_preco_percentual: parseFloat(e.target.value) || 0 }))}
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
 
                 {/* Campos específicos do Mercado Livre */}
