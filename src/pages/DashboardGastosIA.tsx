@@ -60,14 +60,24 @@ export default function DashboardGastosIA() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Verificar se é administrador de sistema
-      const { data: admin } = await supabase
-        .from("administradores")
-        .select("id")
-        .eq("id", user.id)
+      // Buscar usuário na tabela usuarios
+      const { data: usuario } = await supabase
+        .from("usuarios")
+        .select("id, estabelecimento_id")
+        .eq("auth_user_id", user.id)
         .single();
 
-      if (admin) {
+      if (!usuario) return;
+
+      // Verificar se tem role admin
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", usuario.id)
+        .eq("role", "admin")
+        .single();
+
+      if (roleData) {
         setIsAdmin(true);
         // Carregar todos os estabelecimentos para seleção
         const { data: estabs } = await supabase
@@ -80,14 +90,8 @@ export default function DashboardGastosIA() {
           setEstabelecimentoId(estabs[0].id); // Seleciona o primeiro por padrão
         }
       } else {
-        // Usuário comum - buscar estabelecimento vinculado
-        const { data: usuario } = await supabase
-          .from("usuarios")
-          .select("estabelecimento_id")
-          .eq("auth_user_id", user.id)
-          .single();
-
-        if (usuario) {
+        // Usuário comum - usar estabelecimento vinculado
+        if (usuario.estabelecimento_id) {
           setEstabelecimentoId(usuario.estabelecimento_id);
         }
       }

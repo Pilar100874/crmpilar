@@ -53,27 +53,26 @@ export function EstabelecimentosCRUD() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Verifica se é administrador do sistema (tabela administradores)
-      const { data: adminData } = await supabase
-        .from("administradores")
+      // Buscar o usuário na tabela usuarios
+      const { data: usuario } = await supabase
+        .from("usuarios")
         .select("id")
-        .eq("id", user.id)
+        .eq("auth_user_id", user.id)
         .maybeSingle();
 
-      if (adminData) {
-        setIsSystemAdmin(true);
-        return;
-      }
+      if (!usuario) return;
 
       // Verifica se o usuário tem role admin na tabela user_roles
       const { data: userRole } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", user.id)
+        .eq("user_id", usuario.id)
         .eq("role", "admin")
         .maybeSingle();
 
       if (userRole) {
+        // Usuário com role admin tem acesso total
+        setIsSystemAdmin(true);
         setIsUserAdmin(true);
       }
     } catch (error) {

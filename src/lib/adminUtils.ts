@@ -2,21 +2,14 @@
  * Utilitários para verificação de permissões de admin no sistema.
  * 
  * Este arquivo contém funções reutilizáveis para verificar se um usuário
- * é administrador do sistema ou administrador de estabelecimento.
+ * é administrador do sistema.
  * 
- * IMPORTANTE: A arquitetura de admin tem dois níveis:
+ * ARQUITETURA DE ADMIN (SIMPLIFICADA):
  * 
- * 1. Administrador do Sistema (tabela administradores):
- *    - Acesso total a todos os estabelecimentos
- *    - Pode criar/editar/deletar estabelecimentos
- *    - Pode gerenciar usuários de qualquer estabelecimento
- *    - Verificado com: EXISTS (SELECT 1 FROM administradores WHERE id = auth.uid())
- * 
- * 2. Admin de Estabelecimento (tabela user_roles com role='admin'):
- *    - Acesso total apenas ao SEU estabelecimento
- *    - Pode gerenciar usuários, bots, flows, etc. do estabelecimento
- *    - NÃO pode modificar dados básicos do estabelecimento (CNPJ, nome, etc.)
- *    - Verificado com: has_role(auth.uid(), 'admin'::app_role)
+ * Usuário Admin (tabela user_roles com role='admin'):
+ *   - Acesso total a todos os menus e funcionalidades
+ *   - Pode gerenciar usuários, bots, flows, etc. de qualquer estabelecimento
+ *   - Verificado com: has_role(auth.uid(), 'admin'::app_role)
  * 
  * NOTA TÉCNICA CRÍTICA:
  * - auth.uid() retorna o ID de auth.users
@@ -31,22 +24,15 @@
  */
 
 export const ADMIN_ARCHITECTURE_DOCS = `
-Arquitetura de Administração - Documentação Técnica
+Arquitetura de Administração - Documentação Técnica (Simplificada)
 ====================================================
 
-DOIS NÍVEIS DE ADMIN:
+ADMIN VIA USER_ROLES:
 
-1. ADMINISTRADOR DO SISTEMA (tabela: administradores)
-   - Identificado por: EXISTS (SELECT 1 FROM administradores WHERE id = auth.uid())
-   - Pode: Gerenciar TODOS os estabelecimentos e seus dados
-   - Acesso: Irrestrito a todos os recursos
-   - Tabela: public.administradores
-   
-2. ADMIN DE ESTABELECIMENTO (tabela: user_roles)
-   - Identificado por: has_role(auth.uid(), 'admin'::app_role)
-   - Pode: Gerenciar apenas SEU estabelecimento
-   - Restrições: NÃO pode modificar dados básicos do estabelecimento
-   - Tabelas: public.usuarios + public.user_roles
+Identificado por: has_role(auth.uid(), 'admin'::app_role)
+Pode: Gerenciar TODOS os estabelecimentos e seus dados
+Acesso: Irrestrito a todos os recursos
+Tabelas: public.usuarios + public.user_roles
    
 MAPEAMENTO DE IDs (CRÍTICO):
    auth.users.id 
@@ -58,15 +44,14 @@ MAPEAMENTO DE IDs (CRÍTICO):
    user_roles.user_id
 
 FUNÇÕES UTILITÁRIAS:
-   isSystemAdmin() - Verifica se é admin do sistema
+   isSystemAdmin() - Verifica se tem role 'admin' (alias para isEstabelecimentoAdmin)
    isEstabelecimentoAdmin() - Verifica se tem role 'admin'
-   isAnyAdmin() - Verifica qualquer tipo de admin
+   isAnyAdmin() - Verifica se tem role 'admin'
    getUserIdFromAuth() - Converte auth.users.id → usuarios.id
 
 POLÍTICAS RLS PADRÃO:
-   - SELECT: Administrador sistema OU (admin estabelecimento E estabelecimento_id match)
+   - SELECT: Admin OU estabelecimento_id match
    - INSERT/UPDATE/DELETE: Mesma lógica do SELECT
-   - Estabelecimentos: Apenas administrador sistema pode modificar
 
 Para mais detalhes, veja: src/lib/estabelecimentoUtils.ts
 `;
