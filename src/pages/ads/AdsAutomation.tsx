@@ -9,11 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { 
-  Plus, Play, Pause, Trash2, Edit, Zap, Target, DollarSign, 
-  TrendingDown, AlertTriangle, Bell, Loader2, Settings, Eye
+  Plus, Play, Trash2, Edit, Zap, Loader2, Save, Download, Upload, 
+  ZoomIn, ZoomOut, Maximize2, ArrowLeft, Blocks
 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import {
@@ -25,82 +24,28 @@ import {
   useEdgesState,
   addEdge,
   Connection,
-  Node,
   Edge,
-  Panel,
+  Node,
+  BackgroundVariant,
+  ReactFlowProvider,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { AdsFlowNode } from "@/components/ads-automation/AdsFlowNode";
+import { AdsBlockLibrary } from "@/components/ads-automation/AdsBlockLibrary";
+import { AdsPropertiesPanel } from "@/components/ads-automation/AdsPropertiesPanel";
+import { BlockNoteDialog } from "@/components/omnichannel-builder/BlockNoteDialog";
+import { ADS_BLOCK_DEFINITIONS, AdsFlowNodeData } from "@/types/adsFlow";
 
-// Tipos de nós disponíveis
 const nodeTypes = {
-  trigger: {
-    label: "Gatilho",
-    icon: Zap,
-    color: "#f97316",
-    options: [
-      { value: "roas_baixo", label: "ROAS abaixo de X" },
-      { value: "gasto_alto", label: "Gasto acima de X" },
-      { value: "cpc_alto", label: "CPC acima de X" },
-      { value: "sem_conversoes", label: "Sem conversões em X horas" },
-      { value: "ctr_baixo", label: "CTR abaixo de X%" },
-    ],
-  },
-  condition: {
-    label: "Condição",
-    icon: Target,
-    color: "#8b5cf6",
-    options: [
-      { value: "plataforma", label: "Se plataforma for" },
-      { value: "campanha", label: "Se campanha conter" },
-      { value: "horario", label: "Se horário for" },
-    ],
-  },
-  action: {
-    label: "Ação",
-    icon: Play,
-    color: "#22c55e",
-    options: [
-      { value: "pausar_campanha", label: "Pausar campanha" },
-      { value: "reduzir_orcamento", label: "Reduzir orçamento em X%" },
-      { value: "aumentar_orcamento", label: "Aumentar orçamento em X%" },
-      { value: "notificar", label: "Enviar notificação" },
-      { value: "webhook", label: "Chamar webhook" },
-    ],
-  },
+  custom: AdsFlowNode,
 };
 
-const CustomNode = ({ data }: { data: any }) => {
-  const config = nodeTypes[data.type as keyof typeof nodeTypes];
-  const Icon = config?.icon || Zap;
-  
-  return (
-    <div
-      className="px-4 py-3 rounded-lg border-2 shadow-lg min-w-[180px]"
-      style={{ 
-        borderColor: config?.color || "#666",
-        backgroundColor: `${config?.color}15`,
-      }}
-    >
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="h-4 w-4" style={{ color: config?.color }} />
-        <span className="text-xs font-medium text-muted-foreground">{config?.label}</span>
-      </div>
-      <p className="text-sm font-medium">{data.label}</p>
-      {data.value && (
-        <p className="text-xs text-muted-foreground mt-1">Valor: {data.value}</p>
-      )}
-    </div>
-  );
-};
+let nodeIdCounter = 0;
+const generateNodeId = () => `ads_node_${Date.now()}_${nodeIdCounter++}`;
 
-const nodeTypesConfig = {
-  trigger: CustomNode,
-  condition: CustomNode,
-  action: CustomNode,
-};
-
-export default function AdsAutomation() {
+function AdsAutomationContent() {
   const queryClient = useQueryClient();
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedAutomation, setSelectedAutomation] = useState<any>(null);
@@ -109,6 +54,16 @@ export default function AdsAutomation() {
   
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [isBlockLibraryExpanded, setIsBlockLibraryExpanded] = useState(true);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Note dialog state
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
+  const [currentNoteValue, setCurrentNoteValue] = useState("");
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabelecimentoId);
@@ -139,7 +94,7 @@ export default function AdsAutomation() {
           estabelecimento_id: estabelecimentoId,
           nome: newAutomation.nome,
           descricao: newAutomation.descricao,
-          flow_data: { nodes: [], edges: [] },
+          flow_data: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } },
           ativo: false,
         })
         .select()
@@ -152,8 +107,7 @@ export default function AdsAutomation() {
       queryClient.invalidateQueries({ queryKey: ["ads_automacoes"] });
       setShowCreateDialog(false);
       setNewAutomation({ nome: "", descricao: "" });
-      setSelectedAutomation(data);
-      setIsEditing(true);
+      loadAutomation(data);
       toast.success("Automação criada com sucesso");
     },
     onError: (error: any) => {
@@ -162,10 +116,12 @@ export default function AdsAutomation() {
   });
 
   const updateAutomationMutation = useMutation({
-    mutationFn: async (data: { id: string; flow_data?: any; ativo?: boolean }) => {
+    mutationFn: async (data: { id: string; flow_data?: any; ativo?: boolean; nome?: string; descricao?: string }) => {
       const updateData: any = { updated_at: new Date().toISOString() };
       if (data.flow_data !== undefined) updateData.flow_data = data.flow_data;
       if (data.ativo !== undefined) updateData.ativo = data.ativo;
+      if (data.nome !== undefined) updateData.nome = data.nome;
+      if (data.descricao !== undefined) updateData.descricao = data.descricao;
       
       const { error } = await supabase
         .from("ads_automacoes")
@@ -176,7 +132,7 @@ export default function AdsAutomation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ads_automacoes"] });
-      toast.success("Automação atualizada");
+      setHasUnsavedChanges(false);
     },
     onError: (error: any) => {
       toast.error("Erro ao atualizar: " + error.message);
@@ -200,36 +156,309 @@ export default function AdsAutomation() {
   });
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    (params: Connection) => {
+      setEdges((eds) => addEdge(params, eds));
+      setHasUnsavedChanges(true);
+    },
     [setEdges]
   );
+
+  const onEdgesDelete = useCallback(() => {
+    setHasUnsavedChanges(true);
+  }, []);
 
   const loadAutomation = (automation: any) => {
     setSelectedAutomation(automation);
     const flowData = automation.flow_data || { nodes: [], edges: [] };
-    setNodes(flowData.nodes || []);
+    
+    // Add callbacks to nodes
+    const nodesWithCallbacks = (flowData.nodes || []).map((node: any) => ({
+      ...node,
+      data: {
+        ...node.data,
+        onSetBreakpoint: handleSetBreakpoint,
+        onSetSkip: handleSetSkip,
+        onDuplicate: handleDuplicate,
+        onDelete: handleDeleteNode,
+        onClearDebug: handleClearDebug,
+        onAddNote: handleAddNote,
+      }
+    }));
+    
+    setNodes(nodesWithCallbacks);
     setEdges(flowData.edges || []);
     setIsEditing(true);
+    setHasUnsavedChanges(false);
+    setSelectedNode(null);
   };
 
-  const saveFlow = () => {
+  const handleSave = useCallback(async () => {
     if (!selectedAutomation) return;
+    setIsSaving(true);
     
-    updateAutomationMutation.mutate({
-      id: selectedAutomation.id,
-      flow_data: { nodes, edges },
-    });
+    try {
+      const flowData = {
+        nodes: nodes.map(n => ({
+          ...n,
+          data: {
+            label: (n.data as any).label,
+            type: (n.data as any).type,
+            config: (n.data as any).config,
+            note: (n.data as any).note,
+            isBreakpoint: (n.data as any).isBreakpoint,
+            isSkipped: (n.data as any).isSkipped,
+          }
+        })),
+        edges,
+        viewport: reactFlowInstance?.getViewport(),
+      };
+
+      await updateAutomationMutation.mutateAsync({
+        id: selectedAutomation.id,
+        flow_data: flowData,
+      });
+      
+      toast.success("Automação salva com sucesso!");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [selectedAutomation, nodes, edges, reactFlowInstance, updateAutomationMutation]);
+
+  const handleSetBreakpoint = useCallback((nodeId: string) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, isBreakpoint: !(node.data as any).isBreakpoint } }
+          : node
+      )
+    );
+    setHasUnsavedChanges(true);
+  }, [setNodes]);
+
+  const handleSetSkip = useCallback((nodeId: string) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, isSkipped: !(node.data as any).isSkipped } }
+          : node
+      )
+    );
+    setHasUnsavedChanges(true);
+  }, [setNodes]);
+
+  const handleClearDebug = useCallback((nodeId: string) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, isBreakpoint: false, isSkipped: false } }
+          : node
+      )
+    );
+    setHasUnsavedChanges(true);
+  }, [setNodes]);
+
+  const handleDuplicate = useCallback((nodeId: string) => {
+    const nodeToDuplicate = nodes.find((n) => n.id === nodeId);
+    if (!nodeToDuplicate) return;
+
+    const newNode: Node = {
+      ...nodeToDuplicate,
+      id: generateNodeId(),
+      position: {
+        x: nodeToDuplicate.position.x + 50,
+        y: nodeToDuplicate.position.y + 50,
+      },
+      data: {
+        ...nodeToDuplicate.data,
+        onSetBreakpoint: handleSetBreakpoint,
+        onSetSkip: handleSetSkip,
+        onDuplicate: handleDuplicate,
+        onDelete: handleDeleteNode,
+        onClearDebug: handleClearDebug,
+        onAddNote: handleAddNote,
+      },
+    };
+
+    setNodes((nds) => [...nds, newNode]);
+    toast.success("Bloco duplicado!");
+    setHasUnsavedChanges(true);
+  }, [nodes, setNodes]);
+
+  const handleDeleteNode = useCallback((nodeId: string) => {
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    setSelectedNode(null);
+    toast.success("Bloco excluído!");
+    setHasUnsavedChanges(true);
+  }, [setNodes, setEdges]);
+
+  const handleAddNote = useCallback((nodeId: string) => {
+    const node = nodes.find((n) => n.id === nodeId);
+    if (!node) return;
+    setCurrentNoteNodeId(nodeId);
+    setCurrentNoteValue((node.data as any).note || "");
+    setNoteDialogOpen(true);
+  }, [nodes]);
+
+  const handleSaveNote = useCallback((note: string) => {
+    if (!currentNoteNodeId) return;
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === currentNoteNodeId
+          ? { ...n, data: { ...n.data, note } }
+          : n
+      )
+    );
+    toast.success(note ? "Nota adicionada!" : "Nota removida!");
+    setCurrentNoteNodeId(null);
+    setHasUnsavedChanges(true);
+  }, [currentNoteNodeId, setNodes]);
+
+  const handleUpdateNode = useCallback((nodeId: string, data: Partial<AdsFlowNodeData>) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                ...data,
+                config: {
+                  ...(node.data as any).config,
+                  ...data.config,
+                },
+              },
+            }
+          : node
+      )
+    );
+    setHasUnsavedChanges(true);
+  }, [setNodes]);
+
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      if (!reactFlowWrapper.current || !reactFlowInstance) return;
+
+      const type = event.dataTransfer.getData("application/reactflow");
+      if (!type) return;
+
+      const blockDef = ADS_BLOCK_DEFINITIONS.find((b) => b.type === type);
+      if (!blockDef) return;
+
+      const bounds = reactFlowWrapper.current.getBoundingClientRect();
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX - bounds.left,
+        y: event.clientY - bounds.top,
+      });
+
+      const newNode: Node = {
+        id: generateNodeId(),
+        type: "custom",
+        position,
+        data: {
+          label: blockDef.label,
+          type: blockDef.type,
+          config: JSON.parse(JSON.stringify(blockDef.defaultData || {})),
+          onSetBreakpoint: handleSetBreakpoint,
+          onSetSkip: handleSetSkip,
+          onDuplicate: handleDuplicate,
+          onDelete: handleDeleteNode,
+          onClearDebug: handleClearDebug,
+          onAddNote: handleAddNote,
+        },
+      };
+
+      setNodes((nds) => [...nds, newNode]);
+      setSelectedNode(newNode);
+      toast.success(`Bloco "${blockDef.label}" adicionado!`);
+      setHasUnsavedChanges(true);
+    },
+    [reactFlowInstance, setNodes, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote]
+  );
+
+  const onDragStart = (event: React.DragEvent, nodeType: string) => {
+    event.dataTransfer.setData("application/reactflow", nodeType);
+    event.dataTransfer.effectAllowed = "move";
   };
 
-  const addNode = (type: string, option: string, label: string) => {
-    const newNode: Node = {
-      id: `${type}-${Date.now()}`,
-      type,
-      position: { x: Math.random() * 300 + 100, y: Math.random() * 200 + 100 },
-      data: { type, option, label, value: "" },
+  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node) => {
+    setSelectedNode(node);
+  }, []);
+
+  const onPaneClick = useCallback(() => {
+    setSelectedNode(null);
+  }, []);
+
+  const handleExport = useCallback(() => {
+    const flowData = {
+      nodes: nodes.map(n => ({
+        ...n,
+        data: {
+          label: (n.data as any).label,
+          type: (n.data as any).type,
+          config: (n.data as any).config,
+          note: (n.data as any).note,
+        }
+      })),
+      edges,
+      viewport: reactFlowInstance?.getViewport(),
     };
-    setNodes((nds) => [...nds, newNode]);
-  };
+    const dataStr = JSON.stringify(flowData, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `ads-automation-${selectedAutomation?.nome || 'flow'}-${Date.now()}.json`;
+    link.click();
+    toast.success("Fluxo exportado!");
+  }, [nodes, edges, reactFlowInstance, selectedAutomation]);
+
+  const handleImport = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const flow = JSON.parse(event.target?.result as string);
+          const nodesWithCallbacks = (flow.nodes || []).map((node: any) => ({
+            ...node,
+            id: generateNodeId(),
+            data: {
+              ...node.data,
+              onSetBreakpoint: handleSetBreakpoint,
+              onSetSkip: handleSetSkip,
+              onDuplicate: handleDuplicate,
+              onDelete: handleDeleteNode,
+              onClearDebug: handleClearDebug,
+              onAddNote: handleAddNote,
+            }
+          }));
+          setNodes(nodesWithCallbacks);
+          setEdges(flow.edges || []);
+          if (flow.viewport && reactFlowInstance) {
+            reactFlowInstance.setViewport(flow.viewport);
+          }
+          toast.success("Fluxo importado!");
+          setHasUnsavedChanges(true);
+        } catch (error) {
+          toast.error("Erro ao importar fluxo. Verifique o arquivo.");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }, [setNodes, setEdges, reactFlowInstance, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -298,7 +527,7 @@ export default function AdsAutomation() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {automations?.map(automation => (
-                  <Card key={automation.id} className="overflow-hidden">
+                  <Card key={automation.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-base">{automation.nome}</CardTitle>
@@ -372,88 +601,129 @@ export default function AdsAutomation() {
       ) : (
         <div className="h-screen flex flex-col">
           {/* Editor Header */}
-          <div className="border-b p-4 flex items-center justify-between bg-background">
+          <div className="border-b p-3 flex items-center justify-between bg-background z-10">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" onClick={() => { setIsEditing(false); setSelectedAutomation(null); }}>
-                ← Voltar
+              <Button variant="ghost" size="sm" onClick={() => { setIsEditing(false); setSelectedAutomation(null); }}>
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Voltar
               </Button>
               <div>
-                <h2 className="font-semibold">{selectedAutomation?.nome}</h2>
+                <h2 className="font-semibold text-sm">{selectedAutomation?.nome}</h2>
                 <p className="text-xs text-muted-foreground">{selectedAutomation?.descricao}</p>
               </div>
+              {hasUnsavedChanges && (
+                <Badge variant="outline" className="text-orange-600 border-orange-600">
+                  Não salvo
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={saveFlow}>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setIsBlockLibraryExpanded(!isBlockLibraryExpanded)}
+              >
+                <Blocks className="h-4 w-4 mr-1" />
+                Blocos
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleImport}>
+                <Upload className="h-4 w-4 mr-1" />
+                Importar
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleExport}>
+                <Download className="h-4 w-4 mr-1" />
+                Exportar
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
                 Salvar
               </Button>
-              <Switch
-                checked={selectedAutomation?.ativo}
-                onCheckedChange={(checked) => {
-                  updateAutomationMutation.mutate({ id: selectedAutomation.id, ativo: checked });
-                  setSelectedAutomation((prev: any) => ({ ...prev, ativo: checked }));
-                }}
-              />
-              <span className="text-sm">{selectedAutomation?.ativo ? "Ativo" : "Inativo"}</span>
+              <div className="flex items-center gap-2 ml-2 pl-2 border-l">
+                <Switch
+                  checked={selectedAutomation?.ativo}
+                  onCheckedChange={(checked) => {
+                    updateAutomationMutation.mutate({ id: selectedAutomation.id, ativo: checked });
+                    setSelectedAutomation((prev: any) => ({ ...prev, ativo: checked }));
+                  }}
+                />
+                <span className="text-xs">{selectedAutomation?.ativo ? "Ativo" : "Inativo"}</span>
+              </div>
             </div>
           </div>
 
           {/* Flow Editor */}
-          <div className="flex-1 flex">
-            {/* Sidebar com blocos */}
-            <div className="w-64 border-r p-4 bg-muted/30">
-              <h3 className="font-medium mb-4">Blocos Disponíveis</h3>
-              <ScrollArea className="h-[calc(100vh-200px)]">
-                <div className="space-y-4">
-                  {Object.entries(nodeTypes).map(([type, config]) => (
-                    <div key={type}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <config.icon className="h-4 w-4" style={{ color: config.color }} />
-                        <span className="text-sm font-medium">{config.label}</span>
-                      </div>
-                      <div className="space-y-1 ml-6">
-                        {config.options.map(option => (
-                          <Button
-                            key={option.value}
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-xs h-8"
-                            onClick={() => addNode(type, option.value, option.label)}
-                          >
-                            <Plus className="h-3 w-3 mr-1" />
-                            {option.label}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
+          <div className="flex-1 flex overflow-hidden">
+            {/* Block Library */}
+            <AdsBlockLibrary
+              onDragStart={onDragStart}
+              isExpanded={isBlockLibraryExpanded}
+              onToggleExpanded={setIsBlockLibraryExpanded}
+            />
 
             {/* Canvas */}
-            <div className="flex-1">
+            <div className="flex-1" ref={reactFlowWrapper}>
               <ReactFlow
                 nodes={nodes}
                 edges={edges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
-                nodeTypes={nodeTypesConfig}
+                onEdgesDelete={onEdgesDelete}
+                onInit={setReactFlowInstance}
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+                onNodeClick={onNodeClick}
+                onPaneClick={onPaneClick}
+                nodeTypes={nodeTypes}
                 fitView
+                deleteKeyCode={["Backspace", "Delete"]}
+                className="bg-muted/30"
               >
-                <Controls />
-                <MiniMap />
-                <Background gap={12} size={1} />
-                <Panel position="top-right" className="bg-background/80 p-2 rounded-lg border">
-                  <p className="text-xs text-muted-foreground">
-                    Arraste para conectar os blocos
-                  </p>
-                </Panel>
+                <Controls className="bg-background border shadow-sm" />
+                <MiniMap 
+                  className="bg-background border shadow-sm"
+                  nodeColor={(node) => {
+                    const data = node.data as any;
+                    const blockDef = ADS_BLOCK_DEFINITIONS.find(b => b.type === data?.type);
+                    return blockDef?.color || '#888';
+                  }}
+                />
+                <Background variant={BackgroundVariant.Dots} gap={16} size={1} className="bg-muted/20" />
               </ReactFlow>
             </div>
+
+            {/* Properties Panel */}
+            {selectedNode && (
+              <AdsPropertiesPanel
+                selectedNode={selectedNode}
+                onUpdateNode={handleUpdateNode}
+                onClose={() => setSelectedNode(null)}
+              />
+            )}
           </div>
         </div>
       )}
+
+      {/* Note Dialog */}
+      <BlockNoteDialog
+        open={noteDialogOpen}
+        onOpenChange={setNoteDialogOpen}
+        currentNote={currentNoteValue}
+        onSave={handleSaveNote}
+      />
     </div>
+  );
+}
+
+export default function AdsAutomation() {
+  return (
+    <ReactFlowProvider>
+      <AdsAutomationContent />
+    </ReactFlowProvider>
   );
 }
