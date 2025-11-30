@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   LayoutDashboard,
   MessageSquare,
+  MessageCircle,
   Users,
   FileText,
   Settings,
@@ -112,6 +113,7 @@ const menuItems: MenuItem[] = [
       { id: "Orçamento", title: "Orçamento", url: "/orcamentos", icon: FileBarChart },
       { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: Settings },
       { id: "Importação Produtos Sub", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: Upload },
+      { id: "WhatsApp Catalogo", title: "WhatsApp Catálogo", url: "/whatsapp-catalogo", icon: MessageCircle },
     ]
   },
   {

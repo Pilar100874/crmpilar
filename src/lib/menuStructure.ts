@@ -53,6 +53,7 @@ export const menuStructure: MenuCategory[] = [
       { id: "Orçamento", title: "Orçamento", url: "/orcamentos", icon: LucideIcons.FileBarChart },
       { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: LucideIcons.Settings },
       { id: "Importação Produtos Sub", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: LucideIcons.Upload },
+      { id: "WhatsApp Catalogo", title: "WhatsApp Catálogo", url: "/whatsapp-catalogo", icon: LucideIcons.MessageCircle },
     ]
   },
   { 
