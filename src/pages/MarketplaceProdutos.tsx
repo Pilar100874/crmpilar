@@ -47,6 +47,11 @@ type SortField = 'nome' | 'codigo' | 'categoria' | 'grupo' | 'ativo';
 type SortDirection = 'asc' | 'desc';
 type WizardStep = 1 | 2 | 3;
 
+interface PriceAdjustment {
+  valorFixo: number;
+  percentual: number;
+}
+
 interface ProcessResult {
   productId: string;
   productName: string;
@@ -54,6 +59,8 @@ interface ProcessResult {
   contaName: string;
   success: boolean;
   error?: string;
+  precoOriginal?: number;
+  precoAjustado?: number;
 }
 
 interface CampoCustomizado {
@@ -111,6 +118,12 @@ export default function MarketplaceProdutos() {
   // Seleção de produtos e marketplaces
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [selectedContas, setSelectedContas] = useState<Set<string>>(new Set());
+  
+  // Ajuste de preço para publicação
+  const [priceAdjustment, setPriceAdjustment] = useState<PriceAdjustment>({
+    valorFixo: 0,
+    percentual: 0,
+  });
 
   // Filtros de campos customizados
   const [filterCamposCustomizados, setFilterCamposCustomizados] = useState<CampoCustomizado[]>([]);
@@ -200,7 +213,7 @@ export default function MarketplaceProdutos() {
       if (!estabelecimentoId) return [];
       const { data, error } = await supabase
         .from('produtos')
-        .select('id, nome, ativo, codigo, ncm, categoria_id, grupo_id, campos_customizados, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)')
+        .select('id, nome, ativo, codigo, ncm, categoria_id, grupo_id, campos_customizados, preco_tabela, categoria:produto_categorias(id, nome), grupo:produto_grupos(id, nome)')
         .eq('estabelecimento_id', estabelecimentoId)
         .order('nome');
       if (error) throw error;
@@ -549,6 +562,7 @@ export default function MarketplaceProdutos() {
     setSelectedContas(new Set());
     setProcessResults([]);
     setProcessProgress(0);
+    setPriceAdjustment({ valorFixo: 0, percentual: 0 });
   };
 
   // Process products - Step 3
@@ -563,6 +577,17 @@ export default function MarketplaceProdutos() {
     const totalOperations = productIds.length * contaIds.length;
     let completed = 0;
     const results: ProcessResult[] = [];
+
+    // Helper to calculate adjusted price
+    const calculateAdjustedPrice = (originalPrice: number | null): number | null => {
+      if (originalPrice === null || originalPrice === undefined) return null;
+      let adjustedPrice = originalPrice;
+      // Apply fixed value first
+      adjustedPrice += priceAdjustment.valorFixo;
+      // Apply percentage
+      adjustedPrice += (adjustedPrice * priceAdjustment.percentual) / 100;
+      return Math.round(adjustedPrice * 100) / 100; // Round to 2 decimals
+    };
 
     for (const productId of productIds) {
       const product = produtos?.find(p => p.id === productId);
@@ -600,6 +625,10 @@ export default function MarketplaceProdutos() {
               error: errors.join("; ")
             });
           } else {
+            // Calculate adjusted price
+            const precoOriginal = (product as any)?.preco_tabela || null;
+            const precoAjustado = calculateAdjustedPrice(precoOriginal);
+            
             // Insert into marketplace_produtos
             const { error } = await supabase
               .from('marketplace_produtos')
@@ -608,7 +637,12 @@ export default function MarketplaceProdutos() {
                 marketplace_id: conta?.marketplace_id,
                 conta_marketplace_id: contaId,
                 status: 'nao_listado',
-                dados_extras: {},
+                dados_extras: {
+                  preco_original: precoOriginal,
+                  preco_marketplace: precoAjustado,
+                  ajuste_valor_fixo: priceAdjustment.valorFixo,
+                  ajuste_percentual: priceAdjustment.percentual,
+                },
               });
 
             if (error) throw error;
@@ -618,7 +652,9 @@ export default function MarketplaceProdutos() {
               productName: product?.nome || 'Produto desconhecido',
               contaId,
               contaName: conta?.nome_loja || 'Conta desconhecida',
-              success: true
+              success: true,
+              precoOriginal: precoOriginal,
+              precoAjustado: precoAjustado ?? undefined,
             });
           }
         } catch (error: any) {
@@ -1136,44 +1172,128 @@ export default function MarketplaceProdutos() {
                   <p className="text-sm">Configure suas contas no Hub de Marketplaces</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {contasMarketplace?.map(conta => {
-                    const Icon = marketplaceIcons[conta.marketplace?.nome || ''] || Store;
-                    const isSelected = selectedContas.has(conta.id);
-                    
-                    return (
-                      <div
-                        key={conta.id}
-                        onClick={() => toggleContaSelection(conta.id)}
-                        className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                          isSelected 
-                            ? 'border-primary bg-primary/5 ring-2 ring-primary/20' 
-                            : 'hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Checkbox 
-                            checked={isSelected} 
-                            onCheckedChange={() => toggleContaSelection(conta.id)}
-                          />
-                          <Icon className="h-6 w-6 text-primary" />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{conta.nome_loja}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {conta.marketplace?.nome_display}
-                            </p>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {contasMarketplace?.map(conta => {
+                      const Icon = marketplaceIcons[conta.marketplace?.nome || ''] || Store;
+                      const isSelected = selectedContas.has(conta.id);
+                      
+                      return (
+                        <div
+                          key={conta.id}
+                          onClick={() => toggleContaSelection(conta.id)}
+                          className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                            isSelected 
+                              ? 'border-primary bg-primary/5 ring-2 ring-primary/20' 
+                              : 'hover:border-primary/50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Checkbox 
+                              checked={isSelected} 
+                              onCheckedChange={() => toggleContaSelection(conta.id)}
+                            />
+                            <Icon className="h-6 w-6 text-primary" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{conta.nome_loja}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {conta.marketplace?.nome_display}
+                              </p>
+                            </div>
                           </div>
                         </div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Price Adjustment Section */}
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="font-medium mb-3 flex items-center gap-2">
+                      <span className="text-primary">R$</span>
+                      Ajuste de Preço para Marketplace
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Configure um valor fixo e/ou percentual de aumento sobre o preço de tabela do produto.
+                      O cálculo é: (Preço + Valor Fixo) + Percentual%
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="valorFixo">Valor Fixo (R$)</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                          <Input
+                            id="valorFixo"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="0,00"
+                            value={priceAdjustment.valorFixo || ''}
+                            onChange={(e) => setPriceAdjustment(prev => ({
+                              ...prev,
+                              valorFixo: parseFloat(e.target.value) || 0
+                            }))}
+                            className="pl-10"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Valor adicionado ao preço de cada produto
+                        </p>
                       </div>
-                    );
-                  })}
-                </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="percentual">Percentual de Aumento (%)</Label>
+                        <div className="relative">
+                          <Input
+                            id="percentual"
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            placeholder="0"
+                            value={priceAdjustment.percentual || ''}
+                            onChange={(e) => setPriceAdjustment(prev => ({
+                              ...prev,
+                              percentual: parseFloat(e.target.value) || 0
+                            }))}
+                            className="pr-8"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Percentual aplicado após o valor fixo
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {(priceAdjustment.valorFixo > 0 || priceAdjustment.percentual > 0) && (
+                      <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mt-4">
+                        <p className="text-sm font-medium text-primary">Exemplo de cálculo:</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Produto com preço R$ 100,00 → 
+                          {priceAdjustment.valorFixo > 0 && ` + R$ ${priceAdjustment.valorFixo.toFixed(2)}`}
+                          {priceAdjustment.percentual > 0 && ` + ${priceAdjustment.percentual}%`}
+                          {' = '}
+                          <strong className="text-foreground">
+                            R$ {(
+                              (100 + priceAdjustment.valorFixo) * (1 + priceAdjustment.percentual / 100)
+                            ).toFixed(2)}
+                          </strong>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
               
               {selectedContas.size > 0 && (
                 <div className="bg-muted/50 rounded-lg p-4 mt-4">
                   <p className="text-sm">
                     <strong>{selectedProducts.size}</strong> produto(s) serão vinculados a <strong>{selectedContas.size}</strong> conta(s) de marketplace.
+                    {(priceAdjustment.valorFixo > 0 || priceAdjustment.percentual > 0) && (
+                      <span className="block mt-1 text-muted-foreground">
+                        Com ajuste de preço: 
+                        {priceAdjustment.valorFixo > 0 && ` +R$ ${priceAdjustment.valorFixo.toFixed(2)}`}
+                        {priceAdjustment.percentual > 0 && ` +${priceAdjustment.percentual}%`}
+                      </span>
+                    )}
                   </p>
                 </div>
               )}
@@ -1232,6 +1352,12 @@ export default function MarketplaceProdutos() {
                           <p className="text-sm text-muted-foreground">
                             → {result.contaName}
                           </p>
+                          {result.success && result.precoOriginal !== undefined && result.precoAjustado !== undefined && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Preço: R$ {result.precoOriginal?.toFixed(2) || '0,00'} → 
+                              <span className="text-primary font-medium"> R$ {result.precoAjustado?.toFixed(2) || '0,00'}</span>
+                            </p>
+                          )}
                           {result.error && (
                             <p className="text-sm text-red-500 mt-1">{result.error}</p>
                           )}
