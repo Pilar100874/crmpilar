@@ -55,7 +55,6 @@ const LogisticaMonitoramento: React.FC = () => {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
-  const [currentTime, setCurrentTime] = useState(new Date());
   
   const alertConfig: AlertConfig = {
     speedLimit: 120,
@@ -72,14 +71,6 @@ const LogisticaMonitoramento: React.FC = () => {
       setEstabelecimentoId(estabId);
     };
     fetchEstabelecimento();
-  }, []);
-
-  // Update clock every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
   }, []);
 
   const fetchParadasMarcadas = useCallback(async () => {
@@ -349,16 +340,13 @@ const LogisticaMonitoramento: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-            {/* Auto Refresh Toggle with Clock */}
+            {/* Auto Refresh Toggle */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex items-center gap-2">
                     <RefreshCw className={cn("h-4 w-4", autoRefresh && "animate-spin")} />
                     <Switch checked={autoRefresh} onCheckedChange={setAutoRefresh} />
-                    <span className="text-sm font-mono text-muted-foreground min-w-[60px]">
-                      {format(currentTime, "HH:mm:ss")}
-                    </span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>Auto-atualização</TooltipContent>
