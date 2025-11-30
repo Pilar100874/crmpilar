@@ -30,14 +30,21 @@ const tipoConfig = {
     label: "API",
     icon: Database,
     color: "bg-blue-500/20 text-blue-400",
-    exemplo: `{
-  "base_url": "https://api.mercadolivre.com.br",
-  "search_endpoint": "/sites/MLB/search",
-  "access_token": "SEU_TOKEN_AQUI",
-  "params": {
-    "limit": 10
-  }
-}`
+    exemplo: `// Mercado Livre (MLB) - RECOMENDADO
+{
+  "tipo_api": "mercado_livre",
+  "site_id": "MLB",
+  "limite_resultados": 10
+}
+
+// Amazon (em breve)
+{
+  "tipo_api": "amazon",
+  "marketplace_id": "A2Q3Y263D00KWC"
+}`,
+    ajuda: `A API do Mercado Livre é pública e não requer autenticação.
+O termo de busca será o NOME DO PRODUTO cadastrado.
+EAN/SKU são usados apenas para validar os resultados.`
   },
   scraping: {
     label: "Scraping",
@@ -45,11 +52,13 @@ const tipoConfig = {
     color: "bg-purple-500/20 text-purple-400",
     exemplo: `{
   "url_busca": "https://site.com/busca?q={TERMO}",
-  "seletor_preco": ".price-tag",
-  "seletor_nome": ".product-title",
-  "seletor_link": "a.product-link",
+  "regex_preco": "R\\\\$\\\\s*([\\\\d.,]+)",
+  "regex_titulo": "<h1[^>]*>([^<]+)</h1>",
   "timeout_ms": 5000
-}`
+}`,
+    ajuda: `Use {TERMO} na URL para substituir pelo nome do produto.
+Configure regex para extrair preço e título da página.
+IMPORTANTE: Use apenas em sites com permissão.`
   },
   arquivo_importado: {
     label: "Arquivo",
@@ -60,7 +69,10 @@ const tipoConfig = {
   "separador": ";",
   "encoding": "utf-8",
   "tem_cabecalho": true
-}`
+}`,
+    ajuda: `Importe planilhas de preços de concorrentes.
+O sistema buscará produtos pelo NOME (similaridade).
+EAN/SKU são usados para validação adicional.`
   }
 };
 
@@ -268,9 +280,12 @@ export function FontesPesquisaCRUD() {
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-xs">
                   <strong>Exemplo de configuração para {tipoConfig[formData.tipo].label}:</strong>
-                  <pre className="mt-2 text-[10px] bg-muted p-2 rounded overflow-x-auto">
+                  <pre className="mt-2 text-[10px] bg-muted p-2 rounded overflow-x-auto whitespace-pre-wrap">
                     {tipoConfig[formData.tipo].exemplo}
                   </pre>
+                  <p className="mt-2 text-muted-foreground">
+                    {tipoConfig[formData.tipo].ajuda}
+                  </p>
                 </AlertDescription>
               </Alert>
 
