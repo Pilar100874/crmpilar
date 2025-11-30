@@ -87,6 +87,7 @@ export const MENU_CONFIG = [
   { id: "Ads Credentials", label: "Credenciais Ads" },
   { id: "Ads Logs", label: "Logs de Coleta Ads" },
   { id: "Ads Automation", label: "Automações Ads" },
+  { id: "Robô de Preços", label: "Robô de Preços" },
 ] as const;
 
 // Lista apenas dos IDs dos menus (para compatibilidade com código existente)
