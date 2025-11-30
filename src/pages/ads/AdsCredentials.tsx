@@ -236,7 +236,7 @@ export default function AdsCredentials() {
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione uma plataforma" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent position="popper" className="z-[9999]">
                         {platforms?.map(p => {
                           const Icon = platformIcons[p.nome] || Search;
                           return (
