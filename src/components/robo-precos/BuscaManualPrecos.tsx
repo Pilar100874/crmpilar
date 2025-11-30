@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, Loader2, ExternalLink, TrendingDown, Package, Store, Target } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ResultadoBusca {
   id: string;
@@ -20,7 +21,7 @@ interface ResultadoBusca {
   seller_nickname?: string;
   free_shipping: boolean;
   available_quantity: number;
-  score: number; // Score de similaridade
+  score: number;
 }
 
 // Helpers de similaridade (mesmo algoritmo do backend)
@@ -63,21 +64,22 @@ export function BuscaManualPrecos() {
     setResultados([]);
 
     try {
-      const query = encodeURIComponent(termoBusca.trim());
-      const url = `https://api.mercadolibre.com/sites/MLB/search?q=${query}&limit=20`;
+      console.log("[Busca Manual] Buscando via edge function:", termoBusca);
       
-      console.log("[Busca Manual] Buscando:", url);
-      
-      const resp = await fetch(url);
-      
-      if (!resp.ok) {
-        throw new Error(`Erro na API: ${resp.status}`);
+      const { data, error } = await supabase.functions.invoke('mercadolivre-search', {
+        body: { query: termoBusca.trim(), limit: 20 }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Erro ao buscar preços');
       }
 
-      const json = await resp.json();
-      const items = json.results || [];
-      
-      setTotalResultados(json.paging?.total || 0);
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      const items = data.results || [];
+      setTotalResultados(data.paging?.total || 0);
 
       // Calcula score de similaridade para cada item
       const itemsComScore = items.map((item: any) => ({
@@ -103,7 +105,7 @@ export function BuscaManualPrecos() {
       if (top5.length === 0) {
         toast.info("Nenhum resultado encontrado para esta busca");
       } else {
-        toast.success(`Encontrados ${json.paging?.total || top5.length} produtos. Exibindo os 5 menores preços.`);
+        toast.success(`Encontrados ${data.paging?.total || top5.length} produtos. Exibindo os 5 menores preços.`);
       }
 
     } catch (error: any) {
