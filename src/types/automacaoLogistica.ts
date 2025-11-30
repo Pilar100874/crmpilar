@@ -15,6 +15,7 @@ export interface LogisticaBlockConfig {
   marcar_no_mapa?: boolean;
   icone_parada?: string;
   cor_icone_parada?: string;
+  legenda_parada?: string;
   // Para condicao_velocidade
   velocidade_km?: number;
   operador_velocidade?: 'maior' | 'menor';
