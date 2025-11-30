@@ -30,21 +30,29 @@ const tipoConfig = {
     label: "API",
     icon: Database,
     color: "bg-blue-500/20 text-blue-400",
-    exemplo: `// Mercado Livre (MLB) - RECOMENDADO
+    exemplo: `// Mercado Livre (MLB) - Driver Avançado
 {
   "tipo_api": "mercado_livre",
   "site_id": "MLB",
-  "limite_resultados": 10
+  "limite_resultados": 15,
+  "min_score_aceite": 0.3,
+  "bonus_ean": 0.5
 }
 
-// Amazon (em breve)
-{
-  "tipo_api": "amazon",
-  "marketplace_id": "A2Q3Y263D00KWC"
-}`,
-    ajuda: `A API do Mercado Livre é pública e não requer autenticação.
-O termo de busca será o NOME DO PRODUTO cadastrado.
-EAN/SKU são usados apenas para validar os resultados.`
+// Parâmetros:
+// - site_id: MLB (Brasil), MLA (Argentina), MLM (México)
+// - limite_resultados: quantidade de anúncios a analisar
+// - min_score_aceite: score mínimo (0-1) para aceitar match
+// - bonus_ean: bônus no score se EAN coincidir`,
+    ajuda: `🎯 Driver AVANÇADO do Mercado Livre:
+
+1. Busca pelo NOME DO PRODUTO como termo principal
+2. Calcula SIMILARIDADE de nome (Jaccard 0-1)
+3. Se EAN do produto coincidir → adiciona BÔNUS no score
+4. Score final = similaridade + bonus_ean (máx 1.0)
+5. Só aceita resultados com score >= min_score_aceite
+
+API pública, não requer autenticação.`
   },
   scraping: {
     label: "Scraping",
@@ -58,7 +66,7 @@ EAN/SKU são usados apenas para validar os resultados.`
 }`,
     ajuda: `Use {TERMO} na URL para substituir pelo nome do produto.
 Configure regex para extrair preço e título da página.
-IMPORTANTE: Use apenas em sites com permissão.`
+⚠️ IMPORTANTE: Use apenas em sites com permissão.`
   },
   arquivo_importado: {
     label: "Arquivo",
@@ -71,8 +79,8 @@ IMPORTANTE: Use apenas em sites com permissão.`
   "tem_cabecalho": true
 }`,
     ajuda: `Importe planilhas de preços de concorrentes.
-O sistema buscará produtos pelo NOME (similaridade).
-EAN/SKU são usados para validação adicional.`
+O sistema buscará produtos pelo NOME (similaridade Jaccard).
+EAN/SKU são usados para bonus de validação.`
   }
 };
 
