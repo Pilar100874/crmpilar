@@ -74,6 +74,16 @@ export const MENU_CONFIG = [
   { id: "Marketplace Hub", label: "Hub de Marketplaces" },
   { id: "Marketplace Produtos", label: "Produtos x Canais" },
   { id: "Marketplace Pedidos", label: "Pedidos" },
+  { id: "Ads", label: "Ads" },
+  { id: "Ads Dashboard", label: "Dashboard Geral Ads" },
+  { id: "Ads Google", label: "Google Ads" },
+  { id: "Ads Meta", label: "Meta Ads" },
+  { id: "Ads TikTok", label: "TikTok Ads" },
+  { id: "Ads MercadoLivre", label: "Mercado Livre Ads" },
+  { id: "Ads Amazon", label: "Amazon Ads" },
+  { id: "Ads Credentials", label: "Credenciais Ads" },
+  { id: "Ads Logs", label: "Logs de Coleta Ads" },
+  { id: "Ads Automation", label: "Automações Ads" },
 ] as const;
 
 // Lista apenas dos IDs dos menus (para compatibilidade com código existente)
