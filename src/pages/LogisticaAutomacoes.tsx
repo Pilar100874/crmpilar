@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, ArrowLeft, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Save, ArrowLeft, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks, Zap, Copy } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -40,14 +42,6 @@ import { LogisticaSimulator } from "@/components/logistica/automacao/LogisticaSi
 import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { LOGISTICA_BLOCKS } from "@/types/automacaoLogistica";
 import { toast } from "@/hooks/use-toast";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Pencil, Trash2 } from "lucide-react";
 
@@ -881,6 +875,34 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
     }
   };
 
+  const handleDuplicate = async (automacao: AutomacaoLogistica) => {
+    try {
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+
+      const { data, error } = await (supabase as any)
+        .from("logistica_automacoes")
+        .insert({
+          estabelecimento_id: estabelecimentoId,
+          nome: `${automacao.nome} (Cópia)`,
+          ativo: false,
+          flow_data: automacao.flow_data,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      setAutomacoes(prev => [data, ...prev]);
+      toast({ title: "Automação duplicada com sucesso" });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível duplicar a automação",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -896,66 +918,85 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
         </Button>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Criada em</TableHead>
-              <TableHead className="w-[100px]">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
-                  Carregando...
-                </TableCell>
-              </TableRow>
-            ) : automacoes.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                  Nenhuma automação cadastrada
-                </TableCell>
-              </TableRow>
-            ) : (
-              automacoes.map((automacao) => (
-                <TableRow key={automacao.id}>
-                  <TableCell className="font-medium">{automacao.nome}</TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={automacao.ativo}
-                      onCheckedChange={(checked) => toggleAtivo(automacao.id, checked)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {new Date(automacao.created_at).toLocaleDateString('pt-BR')}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit(automacao.id)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(automacao.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {automacoes.map((automacao) => (
+            <Card key={automacao.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-base truncate">{automacao.nome}</h3>
+                  <Switch
+                    checked={automacao.ativo}
+                    onCheckedChange={(checked) => toggleAtivo(automacao.id, checked)}
+                  />
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Badge variant={automacao.ativo ? "default" : "secondary"}>
+                    {automacao.ativo ? "Ativo" : "Inativo"}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {automacao.flow_data?.nodes?.length || 0} blocos
+                  </span>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Criada em: {new Date(automacao.created_at).toLocaleDateString('pt-BR')}
+                </p>
+
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => onEdit(automacao.id)}
+                  >
+                    <Pencil className="h-3 w-3 mr-1" />
+                    Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleDuplicate(automacao)}
+                    title="Duplicar"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => handleDelete(automacao.id)}
+                    title="Excluir"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+
+          {automacoes.length === 0 && (
+            <Card className="col-span-full">
+              <div className="flex flex-col items-center justify-center py-12">
+                <Zap className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-lg font-medium">Nenhuma automação criada</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Crie regras automáticas para monitoramento de veículos
+                </p>
+                <Button onClick={onNew}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Automação
+                </Button>
+              </div>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 }

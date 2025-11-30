@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Plus, Play, Trash2, Edit, Zap, Loader2, Save, Download, Upload, 
-  ZoomIn, ZoomOut, Maximize2, ArrowLeft, Blocks, Minimize2
+  ZoomIn, ZoomOut, Maximize2, ArrowLeft, Blocks, Minimize2, Copy
 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import {
@@ -152,6 +152,34 @@ function AdsAutomationContent() {
     },
     onError: (error: any) => {
       toast.error("Erro ao remover: " + error.message);
+    },
+  });
+
+  const duplicateAutomationMutation = useMutation({
+    mutationFn: async (automation: any) => {
+      if (!estabelecimentoId) throw new Error("Estabelecimento não encontrado");
+      
+      const { data, error } = await supabase
+        .from("ads_automacoes")
+        .insert({
+          estabelecimento_id: estabelecimentoId,
+          nome: `${automation.nome} (Cópia)`,
+          descricao: automation.descricao,
+          flow_data: automation.flow_data,
+          ativo: false,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ads_automacoes"] });
+      toast.success("Automação duplicada com sucesso");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao duplicar: " + error.message);
     },
   });
 
@@ -597,12 +625,21 @@ function AdsAutomationContent() {
                         <Button
                           size="sm"
                           variant="ghost"
+                          onClick={() => duplicateAutomationMutation.mutate(automation)}
+                          title="Duplicar"
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           className="text-destructive hover:text-destructive"
                           onClick={() => {
                             if (confirm("Tem certeza que deseja remover esta automação?")) {
                               deleteAutomationMutation.mutate(automation.id);
                             }
                           }}
+                          title="Excluir"
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
