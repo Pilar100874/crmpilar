@@ -257,6 +257,47 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
           </div>
         );
 
+      case 'acao_marcar_mapa':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Categoria de tempo parado</Label>
+              <Select
+                value={config.categoria_tempo || 'automatico'}
+                onValueChange={(value) => updateConfig('categoria_tempo', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="automatico">Automático (baseado no tempo)</SelectItem>
+                  <SelectItem value="10_20">Parado 10-20 minutos (Amarelo)</SelectItem>
+                  <SelectItem value="21_30">Parado 21-30 minutos (Laranja)</SelectItem>
+                  <SelectItem value="mais_30">Parado +30 minutos (Vermelho)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-2">
+                <strong>Automático:</strong> O ícone será escolhido com base no tempo parado configurado na condição anterior.
+              </p>
+            </div>
+            <div className="rounded-lg border p-3 space-y-2">
+              <p className="text-sm font-medium">Legenda dos ícones:</p>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-yellow-500 border-2 border-white shadow" />
+                <span className="text-xs">10-20 minutos parado</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-orange-500 border-2 border-white shadow" />
+                <span className="text-xs">21-30 minutos parado</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-red-600 border-2 border-white shadow" />
+                <span className="text-xs">Mais de 30 minutos parado</span>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return (
           <p className="text-sm text-muted-foreground">

@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { Veiculo, VeiculoPosicao, HistoricoEstatisticas } from '@/types/logistica';
+import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -41,12 +42,14 @@ const LogisticaHistorico: React.FC = () => {
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [selectedVeiculoIds, setSelectedVeiculoIds] = useState<string[]>(paramVeiculoId ? [paramVeiculoId] : []);
   const [veiculosHistorico, setVeiculosHistorico] = useState<VeiculoHistorico[]>([]);
+  const [paradasMarcadas, setParadasMarcadas] = useState<ParadaMarcada[]>([]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
     to: new Date()
   });
   const [loading, setLoading] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
+
 
   // Fetch all vehicles for the selector (admin sees all vehicles)
   useEffect(() => {
@@ -69,10 +72,38 @@ const LogisticaHistorico: React.FC = () => {
   useEffect(() => {
     if (selectedVeiculoIds.length > 0 && dateRange?.from && veiculos.length > 0) {
       fetchAllPosicoes();
+      fetchParadasMarcadas();
     } else if (selectedVeiculoIds.length === 0) {
       setVeiculosHistorico([]);
+      setParadasMarcadas([]);
     }
   }, [selectedVeiculoIds, dateRange, veiculos]);
+
+  const fetchParadasMarcadas = async () => {
+    if (!dateRange?.from || selectedVeiculoIds.length === 0) return;
+
+    try {
+      const start = startOfDay(dateRange.from);
+      const end = endOfDay(dateRange.to || dateRange.from);
+
+      const { data, error } = await supabase
+        .from('logistica_paradas_marcadas')
+        .select(`
+          *,
+          veiculo:veiculos(placa, descricao)
+        `)
+        .in('veiculo_id', selectedVeiculoIds)
+        .gte('data_inicio', start.toISOString())
+        .lte('data_inicio', end.toISOString())
+        .order('data_inicio', { ascending: false });
+
+      if (error) throw error;
+      
+      setParadasMarcadas((data || []) as unknown as ParadaMarcada[]);
+    } catch (error) {
+      console.error('Error fetching paradas marcadas:', error);
+    }
+  };
 
   const fetchAllPosicoes = async () => {
     if (!dateRange?.from) return;
@@ -411,6 +442,7 @@ const LogisticaHistorico: React.FC = () => {
           ) : (
             <LazyLogisticaMap
               routes={routes}
+              paradasMarcadas={paradasMarcadas}
               className="h-full w-full"
               fitBounds
             />
