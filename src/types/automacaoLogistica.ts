@@ -65,6 +65,9 @@ export interface ParadaMarcada {
   lng: number;
   tempo_parado_minutos: number;
   categoria_tempo: '10_20' | '21_30' | 'mais_30';
+  icone_parada?: string;
+  cor_icone_parada?: string;
+  legenda_parada?: string;
   data_inicio: string;
   data_fim: string | null;
   ativa: boolean;

@@ -22,16 +22,31 @@ const createVeiculoIcon = (status: string) => {
   });
 };
 
-// Ícones para paradas marcadas baseado na categoria de tempo
-const createParadaIcon = (categoria: '10_20' | '21_30' | 'mais_30') => {
-  const colors: Record<string, { bg: string; border: string; pulse: string }> = {
-    '10_20': { bg: '#eab308', border: '#ca8a04', pulse: 'rgba(234, 179, 8, 0.4)' },     // Amarelo
-    '21_30': { bg: '#f97316', border: '#ea580c', pulse: 'rgba(249, 115, 22, 0.4)' },    // Laranja
-    'mais_30': { bg: '#dc2626', border: '#b91c1c', pulse: 'rgba(220, 38, 38, 0.4)' },   // Vermelho
+// Ícones para paradas marcadas - usa cor e ícone personalizados
+const createParadaIcon = (cor: string, iconeName?: string) => {
+  // Gera SVG baseado no nome do ícone
+  const getIconSvg = (name?: string) => {
+    const icons: Record<string, string> = {
+      'MapPin': '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+      'Car': '<path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/>',
+      'Truck': '<path d="M5 18H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v11"/><path d="M14 9h4l4 4v4c0 .6-.4 1-1 1h-2"/><circle cx="7" cy="18" r="2"/><path d="M15 18H9"/><circle cx="17" cy="18" r="2"/>',
+      'Clock': '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      'Pause': '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+      'AlertTriangle': '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+      'AlertCircle': '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
+      'Ban': '<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+      'Timer': '<line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/>',
+      'Flag': '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>',
+      'Target': '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+      'Star': '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+      'Zap': '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+      'Flame': '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+      'Circle': '<circle cx="12" cy="12" r="10"/>',
+      'Square': '<rect width="18" height="18" x="3" y="3" rx="2"/>',
+    };
+    return icons[name || 'Pause'] || icons['Pause'];
   };
-  
-  const color = colors[categoria] || colors['10_20'];
-  
+
   return L.divIcon({
     className: 'custom-parada-icon',
     html: `
@@ -43,25 +58,24 @@ const createParadaIcon = (categoria: '10_20' | '21_30' | 'mais_30') => {
           transform: translate(-50%, -50%);
           width: 32px;
           height: 32px;
-          background-color: ${color.pulse};
+          background-color: ${cor}40;
           border-radius: 50%;
           animation: paradaPulse 2s infinite;
         "></div>
         <div style="
           position: relative;
-          background-color: ${color.bg};
-          width: 20px;
-          height: 20px;
+          background-color: ${cor};
+          width: 24px;
+          height: 24px;
           border-radius: 50%;
-          border: 3px solid ${color.border};
+          border: 3px solid white;
           box-shadow: 0 2px 6px rgba(0,0,0,0.4);
           display: flex;
           align-items: center;
           justify-content: center;
         ">
-          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="6" y="4" width="4" height="16"/>
-            <rect x="14" y="4" width="4" height="16"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            ${getIconSvg(iconeName)}
           </svg>
         </div>
       </div>
@@ -72,19 +86,9 @@ const createParadaIcon = (categoria: '10_20' | '21_30' | 'mais_30') => {
         }
       </style>
     `,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
   });
-};
-
-// Função para obter label da categoria
-const getCategoriaLabel = (categoria: '10_20' | '21_30' | 'mais_30') => {
-  const labels: Record<string, string> = {
-    '10_20': '10-20 minutos',
-    '21_30': '21-30 minutos',
-    'mais_30': 'Mais de 30 minutos',
-  };
-  return labels[categoria] || categoria;
 };
 
 interface RouteData {
@@ -227,20 +231,22 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
     paradasMarcadas.forEach(parada => {
       const pos: L.LatLngExpression = [parada.lat, parada.lng];
       const existingMarker = currentParadasMarkers.get(parada.id);
+      const cor = parada.cor_icone_parada || '#EAB308';
+      const icone = parada.icone_parada || 'Pause';
+      const legenda = parada.legenda_parada || 'Veículo Parado';
 
       if (existingMarker) {
         existingMarker.setLatLng(pos);
       } else {
         const marker = L.marker(pos, { 
-          icon: createParadaIcon(parada.categoria_tempo),
+          icon: createParadaIcon(cor, icone),
           zIndexOffset: 1000 // Paradas ficam acima dos veículos
         })
           .addTo(map)
           .bindPopup(`
             <div class="text-sm p-1">
-              <p class="font-bold text-red-600">⚠️ Veículo Parado</p>
+              <p class="font-bold" style="color: ${cor}">⚠️ ${legenda}</p>
               <p><strong>Placa:</strong> ${parada.veiculo?.placa || 'N/A'}</p>
-              <p><strong>Tempo:</strong> ${getCategoriaLabel(parada.categoria_tempo)}</p>
               <p><strong>Duração:</strong> ${parada.tempo_parado_minutos} min</p>
               <p><strong>Início:</strong> ${new Date(parada.data_inicio).toLocaleString('pt-BR')}</p>
               ${parada.data_fim ? `<p><strong>Fim:</strong> ${new Date(parada.data_fim).toLocaleString('pt-BR')}</p>` : '<p class="text-orange-600"><strong>Status:</strong> Em andamento</p>'}
