@@ -191,6 +191,22 @@ const menuItems: MenuItem[] = [
       { id: "Marketplace Pedidos", title: "Pedidos", url: "/marketplaces/pedidos", icon: LucideIcons.ShoppingCart },
     ]
   },
+  {
+    id: "Ads",
+    title: "Ads",
+    icon: LucideIcons.Megaphone,
+    subItems: [
+      { id: "Ads Dashboard", title: "Dashboard Geral", url: "/ads", icon: LucideIcons.BarChart3 },
+      { id: "Ads Google", title: "Google Ads", url: "/ads/google_ads", icon: LucideIcons.Search },
+      { id: "Ads Meta", title: "Meta Ads", url: "/ads/meta_ads", icon: LucideIcons.Facebook },
+      { id: "Ads TikTok", title: "TikTok Ads", url: "/ads/tiktok_ads", icon: LucideIcons.Music2 },
+      { id: "Ads MercadoLivre", title: "Mercado Livre Ads", url: "/ads/mercadolivre_ads", icon: LucideIcons.ShoppingBag },
+      { id: "Ads Amazon", title: "Amazon Ads", url: "/ads/amazon_ads", icon: LucideIcons.Package },
+      { id: "Ads Credentials", title: "Credenciais", url: "/ads/credentials", icon: LucideIcons.Key },
+      { id: "Ads Logs", title: "Logs de Coleta", url: "/ads/logs", icon: LucideIcons.FileText },
+      { id: "Ads Automation", title: "Automações", url: "/ads/automation", icon: LucideIcons.Zap },
+    ]
+  },
   { id: "Trocar Usuário", title: "Trocar Usuário", url: "/perfil", icon: UserIcon },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];

@@ -14,6 +14,172 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_accounts: {
+        Row: {
+          created_at: string | null
+          credenciais_json: Json | null
+          estabelecimento_id: string
+          id: string
+          nome_conta: string
+          plataforma_id: string
+          status: string | null
+          ultimo_sync: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credenciais_json?: Json | null
+          estabelecimento_id: string
+          id?: string
+          nome_conta: string
+          plataforma_id: string
+          status?: string | null
+          ultimo_sync?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credenciais_json?: Json | null
+          estabelecimento_id?: string
+          id?: string
+          nome_conta?: string
+          plataforma_id?: string
+          status?: string | null
+          ultimo_sync?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_accounts_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_accounts_plataforma_id_fkey"
+            columns: ["plataforma_id"]
+            isOneToOne: false
+            referencedRelation: "ad_platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_insights: {
+        Row: {
+          anuncio: string | null
+          campanha: string | null
+          cliques: number | null
+          conjunto: string | null
+          conta_id: string
+          conversoes: number | null
+          cpc: number | null
+          cpm: number | null
+          created_at: string | null
+          ctr: number | null
+          dados_brutos_json: Json | null
+          data: string
+          estabelecimento_id: string
+          gastos: number | null
+          id: string
+          impressoes: number | null
+          plataforma_id: string
+          receita: number | null
+          roas: number | null
+        }
+        Insert: {
+          anuncio?: string | null
+          campanha?: string | null
+          cliques?: number | null
+          conjunto?: string | null
+          conta_id: string
+          conversoes?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string | null
+          ctr?: number | null
+          dados_brutos_json?: Json | null
+          data: string
+          estabelecimento_id: string
+          gastos?: number | null
+          id?: string
+          impressoes?: number | null
+          plataforma_id: string
+          receita?: number | null
+          roas?: number | null
+        }
+        Update: {
+          anuncio?: string | null
+          campanha?: string | null
+          cliques?: number | null
+          conjunto?: string | null
+          conta_id?: string
+          conversoes?: number | null
+          cpc?: number | null
+          cpm?: number | null
+          created_at?: string | null
+          ctr?: number | null
+          dados_brutos_json?: Json | null
+          data?: string
+          estabelecimento_id?: string
+          gastos?: number | null
+          id?: string
+          impressoes?: number | null
+          plataforma_id?: string
+          receita?: number | null
+          roas?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_insights_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "ad_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_insights_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_insights_plataforma_id_fkey"
+            columns: ["plataforma_id"]
+            isOneToOne: false
+            referencedRelation: "ad_platforms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ad_platforms: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          icone: string | null
+          id: string
+          nome: string
+          nome_display: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+          nome_display: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+          nome_display?: string
+        }
+        Relationships: []
+      }
       administradores: {
         Row: {
           cpf: string
@@ -40,6 +206,92 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      ads_automacoes: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          flow_data: Json
+          id: string
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          flow_data?: Json
+          id?: string
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          flow_data?: Json
+          id?: string
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_automacoes_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ads_logs_coleta: {
+        Row: {
+          created_at: string | null
+          detalhes: Json | null
+          estabelecimento_id: string
+          id: string
+          mensagem: string | null
+          plataforma_id: string | null
+          tipo: string
+        }
+        Insert: {
+          created_at?: string | null
+          detalhes?: Json | null
+          estabelecimento_id: string
+          id?: string
+          mensagem?: string | null
+          plataforma_id?: string | null
+          tipo: string
+        }
+        Update: {
+          created_at?: string | null
+          detalhes?: Json | null
+          estabelecimento_id?: string
+          id?: string
+          mensagem?: string | null
+          plataforma_id?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ads_logs_coleta_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ads_logs_coleta_plataforma_id_fkey"
+            columns: ["plataforma_id"]
+            isOneToOne: false
+            referencedRelation: "ad_platforms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       api_endpoints: {
         Row: {
@@ -7235,6 +7487,60 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendas_atribuidas: {
+        Row: {
+          anuncio: string | null
+          campanha: string | null
+          created_at: string | null
+          data_venda: string
+          estabelecimento_id: string
+          id: string
+          origem: string | null
+          pedido_id: string | null
+          plataforma_id: string
+          valor_venda: number
+        }
+        Insert: {
+          anuncio?: string | null
+          campanha?: string | null
+          created_at?: string | null
+          data_venda: string
+          estabelecimento_id: string
+          id?: string
+          origem?: string | null
+          pedido_id?: string | null
+          plataforma_id: string
+          valor_venda: number
+        }
+        Update: {
+          anuncio?: string | null
+          campanha?: string | null
+          created_at?: string | null
+          data_venda?: string
+          estabelecimento_id?: string
+          id?: string
+          origem?: string | null
+          pedido_id?: string | null
+          plataforma_id?: string
+          valor_venda?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendas_atribuidas_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendas_atribuidas_plataforma_id_fkey"
+            columns: ["plataforma_id"]
+            isOneToOne: false
+            referencedRelation: "ad_platforms"
             referencedColumns: ["id"]
           },
         ]
