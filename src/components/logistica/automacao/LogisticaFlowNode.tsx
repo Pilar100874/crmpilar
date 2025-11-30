@@ -229,11 +229,10 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
           )}
           {data.type === 'condicao_parado' && data.config?.marcar_no_mapa && (
             <div className="flex items-center gap-1 mt-1">
-              <div className={`w-3 h-3 rounded-full ${
-                data.config?.icone_parada === '10_20' ? 'bg-yellow-500' :
-                data.config?.icone_parada === '21_30' ? 'bg-orange-500' :
-                data.config?.icone_parada === 'mais_30' ? 'bg-red-600' : 'bg-gray-400'
-              }`} />
+              <div 
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: data.config?.cor_icone_parada || '#EAB308' }}
+              />
               <span className="text-[10px]">Marcar no mapa</span>
             </div>
           )}
