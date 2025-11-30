@@ -3,12 +3,14 @@ import { Node } from '@xyflow/react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LogisticaBlockType, LOGISTICA_BLOCKS } from '@/types/automacaoLogistica';
+import { LogisticaBlockType, LOGISTICA_BLOCKS, CondicaoTempoParado } from '@/types/automacaoLogistica';
 import { AddressAutocomplete } from '@/components/logistica/AddressAutocomplete';
 import { IconePicker } from './IconePicker';
+import { Plus, Trash2 } from 'lucide-react';
 
 interface LogisticaPropertiesPanelProps {
   selectedNode: Node | null;
@@ -47,65 +49,119 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
     });
   };
 
+  // Funções para gerenciar múltiplas condições de tempo
+  const condicoesToempo: CondicaoTempoParado[] = config.condicoes_tempo || [{ tempo_minutos: 30, label: '30 min' }];
+
+  const addCondicaoTempo = () => {
+    const newCondicoes = [...condicoesToempo, { tempo_minutos: 15, label: '' }];
+    updateConfig('condicoes_tempo', newCondicoes);
+  };
+
+  const updateCondicaoTempo = (index: number, field: keyof CondicaoTempoParado, value: any) => {
+    const newCondicoes = [...condicoesToempo];
+    newCondicoes[index] = { ...newCondicoes[index], [field]: value };
+    updateConfig('condicoes_tempo', newCondicoes);
+  };
+
+  const removeCondicaoTempo = (index: number) => {
+    if (condicoesToempo.length <= 1) return;
+    const newCondicoes = condicoesToempo.filter((_, i) => i !== index);
+    updateConfig('condicoes_tempo', newCondicoes);
+  };
+
   const renderConfigFields = () => {
     switch (blockType) {
       case 'condicao_parado':
         return (
           <div className="space-y-4">
             <div>
-              <Label>Tempo parado (minutos)</Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="font-medium">Condições de tempo</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addCondicaoTempo}
+                  className="h-7 px-2"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Adicionar
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                {condicoesToempo.map((condicao, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 border rounded-md bg-muted/30">
+                    <div className="flex-1">
+                      <Label className="text-xs text-muted-foreground">Tempo (min)</Label>
+                      <Input
+                        type="number"
+                        value={condicao.tempo_minutos}
+                        onChange={(e) => updateCondicaoTempo(index, 'tempo_minutos', parseInt(e.target.value) || 0)}
+                        min={1}
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Label className="text-xs text-muted-foreground">Label (opcional)</Label>
+                      <Input
+                        value={condicao.label || ''}
+                        onChange={(e) => updateCondicaoTempo(index, 'label', e.target.value)}
+                        placeholder={`${condicao.tempo_minutos} min`}
+                        className="h-8"
+                      />
+                    </div>
+                    {condicoesToempo.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeCondicaoTempo(index)}
+                        className="h-8 w-8 p-0 mt-4 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              <p className="text-xs text-muted-foreground mt-2">
+                Dispara quando o veículo ficar parado por qualquer um dos tempos especificados. Use o bloco "Marcar no Mapa" para adicionar marcadores visuais.
+              </p>
+            </div>
+          </div>
+        );
+
+      case 'acao_marcar_mapa':
+        return (
+          <div className="space-y-4">
+            <div>
+              <Label>Ícone de marcação</Label>
+              <IconePicker
+                selectedIcon={config.icone_parada || 'MapPin'}
+                selectedColor={config.cor_icone_parada || '#EAB308'}
+                onIconChange={(icon) => updateConfig('icone_parada', icon)}
+                onColorChange={(color) => updateConfig('cor_icone_parada', color)}
+              />
+            </div>
+            
+            <div>
+              <Label>Legenda do marcador</Label>
               <Input
-                type="number"
-                value={config.tempo_minutos || 30}
-                onChange={(e) => updateConfig('tempo_minutos', parseInt(e.target.value) || 0)}
-                min={1}
+                value={legendaLocal}
+                onChange={(e) => setLegendaLocal(e.target.value)}
+                onBlur={() => updateConfig('legenda_parada', legendaLocal)}
+                placeholder="Ex: Veículo parado"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Dispara quando o veículo ficar parado por mais tempo que o especificado
+                Texto exibido ao clicar no marcador no mapa
               </p>
             </div>
             
-            <div className="border-t pt-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Checkbox
-                  id="marcar_no_mapa"
-                  checked={config.marcar_no_mapa || false}
-                  onCheckedChange={(checked) => updateConfig('marcar_no_mapa', checked)}
-                />
-                <Label htmlFor="marcar_no_mapa" className="font-medium">Marcar no mapa</Label>
-              </div>
-              
-              {config.marcar_no_mapa && (
-                <div className="space-y-4 pl-6">
-                  <div>
-                    <Label>Ícone de marcação</Label>
-                    <IconePicker
-                      selectedIcon={config.icone_parada || 'MapPin'}
-                      selectedColor={config.cor_icone_parada || '#EAB308'}
-                      onIconChange={(icon) => updateConfig('icone_parada', icon)}
-                      onColorChange={(color) => updateConfig('cor_icone_parada', color)}
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label>Legenda do marcador</Label>
-                    <Input
-                      value={legendaLocal}
-                      onChange={(e) => setLegendaLocal(e.target.value)}
-                      onBlur={() => updateConfig('legenda_parada', legendaLocal)}
-                      placeholder="Ex: Parado há mais de 30 min"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Texto exibido ao clicar no marcador no mapa
-                    </p>
-                  </div>
-                  
-                  <p className="text-xs text-muted-foreground">
-                    Este marcador aparecerá no mapa de monitoramento e histórico quando a condição for atendida
-                  </p>
-                </div>
-              )}
-            </div>
+            <p className="text-xs text-muted-foreground border-t pt-3">
+              Este marcador aparecerá no mapa de monitoramento quando a automação for executada. Apenas o último marcador será exibido para cada veículo.
+            </p>
           </div>
         );
 

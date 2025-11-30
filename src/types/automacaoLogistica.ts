@@ -5,14 +5,20 @@ export type LogisticaBlockType =
   | 'condicao_chegada'
   | 'condicao_saida_area'
   | 'condicao_horario'
+  | 'acao_marcar_mapa'
   | 'acao_whatsapp'
   | 'acao_notificacao'
   | 'acao_email';
 
+export interface CondicaoTempoParado {
+  tempo_minutos: number;
+  label?: string;
+}
+
 export interface LogisticaBlockConfig {
-  // Para condicao_parado
-  tempo_minutos?: number;
-  marcar_no_mapa?: boolean;
+  // Para condicao_parado - múltiplas condições de tempo
+  condicoes_tempo?: CondicaoTempoParado[];
+  // Para acao_marcar_mapa
   icone_parada?: string;
   cor_icone_parada?: string;
   legenda_parada?: string;
@@ -98,8 +104,8 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     category: 'condicao',
     color: '#F59E0B',
     icon: 'Pause',
-    description: 'Dispara quando o veículo ficar parado por X minutos',
-    defaultData: { tempo_minutos: 30 },
+    description: 'Dispara quando o veículo ficar parado por X minutos (múltiplas condições)',
+    defaultData: { condicoes_tempo: [{ tempo_minutos: 30, label: '30 min' }] },
     outputs: 2,
     outputLabels: ['Sim', 'Não'],
   },
@@ -147,6 +153,16 @@ export const LOGISTICA_BLOCKS: LogisticaBlock[] = [
     outputLabels: ['Dentro', 'Fora'],
   },
   // Ações
+  {
+    type: 'acao_marcar_mapa',
+    label: 'Marcar no Mapa',
+    category: 'acao',
+    color: '#EAB308',
+    icon: 'MapPin',
+    description: 'Adiciona um marcador no mapa de monitoramento',
+    defaultData: { icone_parada: 'MapPin', cor_icone_parada: '#EAB308', legenda_parada: '' },
+    outputs: 1,
+  },
   {
     type: 'acao_whatsapp',
     label: 'Enviar WhatsApp',
