@@ -669,68 +669,91 @@ function AdsAutomationContent() {
         </div>
       ) : (
         <div className="h-screen flex flex-col">
-          {/* Editor Header */}
-          <div className="border-b p-3 flex items-center justify-between bg-background z-10">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={() => { setIsEditing(false); setSelectedAutomation(null); }}>
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Voltar
-              </Button>
-              <div>
-                <h2 className="font-semibold text-sm">{selectedAutomation?.nome}</h2>
-                <p className="text-xs text-muted-foreground">{selectedAutomation?.descricao}</p>
+          {/* Editor Header - Estilo Bot Builder */}
+          <div className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 border-b border-border bg-card">
+            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <p className="text-xs sm:text-sm text-muted-foreground hidden md:block">
+                  Arraste blocos para criar seu fluxo
+                </p>
               </div>
-              {hasUnsavedChanges && (
-                <Badge variant="outline" className="text-orange-600 border-orange-600">
-                  Não salvo
-                </Badge>
-              )}
+              
+              <div className="flex gap-1 sm:border-l sm:border-border sm:pl-6">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setIsBlockLibraryExpanded(true)}
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                  title="Adicionar blocos"
+                >
+                  <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => reactFlowInstance?.zoomIn({ duration: 200 })}
+                  className="h-8 w-8 sm:h-9 sm:w-9"
+                  title="Aumentar zoom"
+                >
+                  <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => reactFlowInstance?.zoomOut({ duration: 200 })}
+                  className="h-8 w-8 sm:h-9 sm:w-9"
+                  title="Diminuir zoom"
+                >
+                  <ZoomOut className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => reactFlowInstance?.fitView({ duration: 300, padding: 0.2 })}
+                  className="h-8 w-8 sm:h-9 sm:w-9"
+                  title="Centralizar"
+                >
+                  <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleCollapseAll}
+                  className="h-8 w-8 sm:h-9 sm:w-9"
+                  title="Encolher todos"
+                >
+                  <Minimize2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                
+                {/* Nome da Automação */}
+                <div className="hidden md:flex items-center gap-2 border-l border-border pl-3 sm:pl-4">
+                  <label className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
+                    Nome:
+                  </label>
+                  <span className="text-xs sm:text-sm font-semibold">{selectedAutomation?.nome}</span>
+                  {hasUnsavedChanges && (
+                    <Badge variant="outline" className="text-orange-600 border-orange-600 text-[10px]">
+                      Não salvo
+                    </Badge>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setIsBlockLibraryExpanded(!isBlockLibraryExpanded)}
-              >
-                <Blocks className="h-4 w-4 mr-1" />
-                Blocos
+            
+            <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
+              <Button variant="outline" size="sm" onClick={() => { setIsEditing(false); setSelectedAutomation(null); }} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3">
+                <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Sair</span>
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleCollapseAll}
-                title="Encolher todos os blocos"
-              >
-                <Minimize2 className="h-4 w-4 mr-1" />
-                Encolher
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleExpandAll}
-                title="Ampliar todos os blocos"
-              >
-                <Maximize2 className="h-4 w-4 mr-1" />
-                Ampliar
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleImport}>
-                <Upload className="h-4 w-4 mr-1" />
+              <Button variant="outline" size="sm" onClick={handleImport} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex">
+                <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Importar
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleExport}>
-                <Download className="h-4 w-4 mr-1" />
+              <Button variant="outline" size="sm" onClick={handleExport} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex">
+                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Exportar
               </Button>
-              <Button 
-                variant="default" 
-                size="sm" 
-                onClick={handleSave}
-                disabled={isSaving}
-              >
-                {isSaving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
-                Salvar
-              </Button>
-              <div className="flex items-center gap-2 ml-2 pl-2 border-l">
+              <div className="flex items-center gap-2 border-l border-border pl-2">
                 <Switch
                   checked={selectedAutomation?.ativo}
                   onCheckedChange={(checked) => {
@@ -740,6 +763,23 @@ function AdsAutomationContent() {
                 />
                 <span className="text-xs">{selectedAutomation?.ativo ? "Ativo" : "Inativo"}</span>
               </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSave}
+                disabled={isSaving}
+                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+              >
+                {isSaving ? <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" /> : <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />}
+                Salvar
+              </Button>
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+              >
+                <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Testar</span>
+              </Button>
             </div>
           </div>
 
@@ -753,34 +793,71 @@ function AdsAutomationContent() {
             />
 
             {/* Canvas */}
-            <div className="flex-1" ref={reactFlowWrapper}>
+            <div className="flex-1 relative" ref={reactFlowWrapper}>
               <ReactFlow
                 nodes={nodes}
-                edges={edges}
+                edges={edges.map((edge) => ({
+                  ...edge,
+                  style: {
+                    stroke: edge.selected ? '#ea580c' : '#f97316',
+                    strokeWidth: edge.selected ? 2.5 : 1.33,
+                  },
+                  markerEnd: {
+                    type: 'arrowclosed' as any,
+                    width: 20,
+                    height: 20,
+                    color: edge.selected ? '#ea580c' : '#f97316',
+                  },
+                  type: 'smoothstep',
+                }))}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
                 onEdgesDelete={onEdgesDelete}
-                onInit={setReactFlowInstance}
+                onInit={(instance) => {
+                  setReactFlowInstance(instance);
+                  setTimeout(() => {
+                    instance.setViewport({ x: 0, y: 0, zoom: 1.0 });
+                  }, 0);
+                }}
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 onNodeClick={onNodeClick}
                 onPaneClick={onPaneClick}
                 nodeTypes={nodeTypes}
-                fitView
+                className="bg-background"
                 deleteKeyCode={["Backspace", "Delete"]}
-                className="bg-muted/30"
+                connectOnClick={false}
+                autoPanOnConnect={false}
+                autoPanOnNodeDrag={true}
+                defaultEdgeOptions={{
+                  animated: true,
+                  style: { stroke: '#f97316', strokeWidth: 2 },
+                  markerEnd: {
+                    type: 'arrowclosed' as any,
+                    width: 20,
+                    height: 20,
+                    color: '#f97316',
+                  },
+                  type: 'smoothstep',
+                }}
               >
-                <Controls className="bg-background border shadow-sm" />
-                <MiniMap 
-                  className="bg-background border shadow-sm"
+                <Background 
+                  variant={BackgroundVariant.Dots} 
+                  gap={20} 
+                  size={1.5}
+                  color="#cbd5e1"
+                  className="opacity-40"
+                />
+                <MiniMap
                   nodeColor={(node) => {
                     const data = node.data as any;
                     const blockDef = ADS_BLOCK_DEFINITIONS.find(b => b.type === data?.type);
-                    return blockDef?.color || '#888';
+                    return blockDef?.color || '#06b6d4';
                   }}
+                  className="bg-card border border-border rounded-lg shadow-lg"
+                  maskColor="rgba(255, 255, 255, 0.8)"
                 />
-                <Background variant={BackgroundVariant.Dots} gap={16} size={1} className="bg-muted/20" />
               </ReactFlow>
             </div>
 

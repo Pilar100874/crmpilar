@@ -628,54 +628,86 @@ function EditorContent({
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b bg-card">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <Input
-            value={nomeAutomacao}
-            onChange={(e) => {
-              setNomeAutomacao(e.target.value);
-              setHasUnsavedChanges(true);
-            }}
-            className="text-lg font-semibold border-none p-0 h-auto focus-visible:ring-0 w-[200px]"
-          />
-          <div className="flex items-center gap-1 border-l pl-4">
+      {/* Header - Estilo Bot Builder */}
+      <div className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 border-b border-border bg-card">
+        <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <p className="text-xs sm:text-sm text-muted-foreground hidden md:block">
+              Arraste blocos para criar seu fluxo
+            </p>
+          </div>
+          
+          <div className="flex gap-1 sm:border-l sm:border-border sm:pl-6">
             <Button 
               variant="outline" 
               size="icon" 
               onClick={() => setIsBlockLibraryExpanded(true)}
-              className="h-8 w-8"
-              title="Blocos"
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+              title="Adicionar blocos"
             >
-              <Blocks className="h-4 w-4" />
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <Button variant="outline" size="icon" onClick={handleCollapseAll} className="h-8 w-8" title="Encolher todos">
-              <Minimize2 className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleZoomIn}
+              className="h-8 w-8 sm:h-9 sm:w-9"
+              title="Aumentar zoom"
+            >
+              <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={handleExpandAll} className="h-8 w-8" title="Ampliar todos">
-              <Maximize2 className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleZoomOut}
+              className="h-8 w-8 sm:h-9 sm:w-9"
+              title="Diminuir zoom"
+            >
+              <ZoomOut className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-8 w-8">
-              <ZoomIn className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleFitView}
+              className="h-8 w-8 sm:h-9 sm:w-9"
+              title="Centralizar"
+            >
+              <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
-            <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-8 w-8">
-              <ZoomOut className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={handleCollapseAll}
+              className="h-8 w-8 sm:h-9 sm:w-9"
+              title="Encolher todos"
+            >
+              <Minimize2 className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
+            
+            {/* Nome da Automação */}
+            <div className="hidden md:flex items-center gap-2 border-l border-border pl-3 sm:pl-4">
+              <label className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
+                Nome:
+              </label>
+              <Input
+                value={nomeAutomacao}
+                onChange={(e) => {
+                  setNomeAutomacao(e.target.value);
+                  setHasUnsavedChanges(true);
+                }}
+                className="h-8 sm:h-9 w-[150px] sm:w-[200px] text-xs sm:text-sm"
+                placeholder="Nome da automação"
+              />
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Button 
-            variant={showSimulator ? "default" : "outline"} 
-            size="sm"
-            onClick={handleToggleSimulator}
-          >
-            <Play className="h-4 w-4 mr-2" />
-            {showSimulator ? "Fechar Simulador" : "Simular"}
+        
+        <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
+          <Button variant="outline" size="sm" onClick={handleBack} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3">
+            <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Sair</span>
           </Button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 border-l border-border pl-2">
             <Checkbox
               id="ativa"
               checked={isAtiva}
@@ -684,11 +716,25 @@ function EditorContent({
                 setHasUnsavedChanges(true);
               }}
             />
-            <Label htmlFor="ativa">Ativa</Label>
+            <Label htmlFor="ativa" className="text-xs sm:text-sm">Ativa</Label>
           </div>
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleSave}
+            className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+          >
+            <Save className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
             Salvar
+          </Button>
+          <Button 
+            size="sm" 
+            onClick={handleToggleSimulator}
+            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+          >
+            <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{showSimulator ? "Fechar Teste" : "Testar"}</span>
+            <span className="sm:hidden">Testar</span>
           </Button>
         </div>
       </div>
@@ -703,40 +749,73 @@ function EditorContent({
         />
 
         {/* Flow Canvas */}
-        <div ref={reactFlowWrapper} className="flex-1">
+        <div ref={reactFlowWrapper} className={`${showSimulator ? "mr-[350px]" : ""} flex-1 relative`}>
           <ReactFlow
             nodes={nodes}
-            edges={edges.map(e => ({
-              ...e,
-              selected: e.id === selectedEdgeId,
+            edges={edges.map((edge) => ({
+              ...edge,
+              selected: edge.id === selectedEdgeId,
               style: {
-                ...e.style,
-                strokeWidth: e.id === selectedEdgeId ? 4 : 2,
-                stroke: e.id === selectedEdgeId ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
+                stroke: edge.selected || edge.id === selectedEdgeId ? '#ea580c' : '#f97316',
+                strokeWidth: edge.selected || edge.id === selectedEdgeId ? 2.5 : 1.33,
               },
+              markerEnd: {
+                type: 'arrowclosed' as any,
+                width: 20,
+                height: 20,
+                color: edge.selected || edge.id === selectedEdgeId ? '#ea580c' : '#f97316',
+              },
+              type: 'smoothstep',
             }))}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onReconnect={onReconnect}
             onEdgesDelete={onEdgesDelete}
-            onInit={setReactFlowInstance}
+            onInit={(instance) => {
+              setReactFlowInstance(instance);
+              setTimeout(() => {
+                instance.setViewport({ x: 0, y: 0, zoom: 1.0 });
+              }, 0);
+            }}
             onDrop={onDrop}
             onDragOver={onDragOver}
             onNodeClick={onNodeClick}
             onEdgeClick={onEdgeClick}
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
-            defaultEdgeOptions={defaultEdgeOptions}
             edgesReconnectable
             elementsSelectable
             edgesFocusable
+            className="bg-background"
             deleteKeyCode={null}
-            fitView
+            connectOnClick={false}
+            autoPanOnConnect={false}
+            autoPanOnNodeDrag={true}
+            defaultEdgeOptions={{
+              animated: true,
+              style: { stroke: '#f97316', strokeWidth: 2 },
+              markerEnd: {
+                type: 'arrowclosed' as any,
+                width: 20,
+                height: 20,
+                color: '#f97316',
+              },
+              type: 'smoothstep',
+            }}
           >
-            <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-            <Controls />
-            <MiniMap />
+            <Background 
+              variant={BackgroundVariant.Dots} 
+              gap={20} 
+              size={1.5}
+              color="#cbd5e1"
+              className="opacity-40"
+            />
+            <MiniMap
+              nodeColor={() => "#06b6d4"}
+              className="bg-card border border-border rounded-lg shadow-lg"
+              maskColor="rgba(255, 255, 255, 0.8)"
+            />
             {/* Delete Edge Button */}
             {selectedEdgeId && (
               <div className="absolute top-4 right-4 z-10">
@@ -755,7 +834,7 @@ function EditorContent({
 
         {/* Simulator Panel */}
         {showSimulator && (
-          <div className="w-[350px] border-l">
+          <div className="fixed right-0 top-[90px] w-[350px] h-[calc(100vh-90px)] min-h-0 overflow-hidden flex flex-col bg-card backdrop-blur-sm border-l border-border z-40">
             <LogisticaSimulator
               nodes={nodes}
               edges={edges}
