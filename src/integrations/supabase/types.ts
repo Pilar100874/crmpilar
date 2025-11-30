@@ -2855,6 +2855,73 @@ export type Database = {
           },
         ]
       }
+      logistica_paradas_marcadas: {
+        Row: {
+          ativa: boolean
+          automacao_id: string | null
+          categoria_tempo: string
+          created_at: string
+          data_fim: string | null
+          data_inicio: string
+          estabelecimento_id: string
+          id: string
+          lat: number
+          lng: number
+          tempo_parado_minutos: number
+          veiculo_id: string
+        }
+        Insert: {
+          ativa?: boolean
+          automacao_id?: string | null
+          categoria_tempo: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio: string
+          estabelecimento_id: string
+          id?: string
+          lat: number
+          lng: number
+          tempo_parado_minutos: number
+          veiculo_id: string
+        }
+        Update: {
+          ativa?: boolean
+          automacao_id?: string | null
+          categoria_tempo?: string
+          created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          estabelecimento_id?: string
+          id?: string
+          lat?: number
+          lng?: number
+          tempo_parado_minutos?: number
+          veiculo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logistica_paradas_marcadas_automacao_id_fkey"
+            columns: ["automacao_id"]
+            isOneToOne: false
+            referencedRelation: "logistica_automacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logistica_paradas_marcadas_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logistica_paradas_marcadas_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketing_automations: {
         Row: {
           active: boolean

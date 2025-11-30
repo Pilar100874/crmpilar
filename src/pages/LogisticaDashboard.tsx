@@ -5,6 +5,7 @@ import { differenceInMinutes } from 'date-fns';
 import { VeiculosList } from '@/components/logistica/VeiculosList';
 import { VeiculoDetailsPanel } from '@/components/logistica/VeiculoDetailsPanel';
 import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logistica';
+import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { cn } from '@/lib/utils';
 
 const LogisticaDashboard: React.FC = () => {
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
+  const [paradasMarcadas, setParadasMarcadas] = useState<ParadaMarcada[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedVeiculo, setSelectedVeiculo] = useState<VeiculoComStatus | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,6 +37,7 @@ const LogisticaDashboard: React.FC = () => {
     if (!estabelecimentoId) return;
     
     fetchVeiculos();
+    fetchParadasMarcadas();
     
     const channel = supabase
       .channel('veiculo-posicoes-updates')
@@ -51,13 +54,55 @@ const LogisticaDashboard: React.FC = () => {
       )
       .subscribe();
 
-    const interval = setInterval(fetchVeiculos, 30000);
+    // Canal para atualizações de paradas marcadas em tempo real
+    const paradasChannel = supabase
+      .channel('paradas-marcadas-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'logistica_paradas_marcadas'
+        },
+        () => {
+          fetchParadasMarcadas();
+        }
+      )
+      .subscribe();
+
+    const interval = setInterval(() => {
+      fetchVeiculos();
+      fetchParadasMarcadas();
+    }, 30000);
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(paradasChannel);
       clearInterval(interval);
     };
   }, [estabelecimentoId]);
+
+  const fetchParadasMarcadas = async () => {
+    if (!estabelecimentoId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('logistica_paradas_marcadas')
+        .select(`
+          *,
+          veiculo:veiculos(placa, descricao)
+        `)
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('ativa', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setParadasMarcadas((data || []) as unknown as ParadaMarcada[]);
+    } catch (error) {
+      console.error('Error fetching paradas marcadas:', error);
+    }
+  };
 
   const fetchVeiculos = async () => {
     if (!estabelecimentoId) return;
@@ -206,6 +251,7 @@ const LogisticaDashboard: React.FC = () => {
         ) : (
           <LazyLogisticaMap
             veiculos={veiculos}
+            paradasMarcadas={paradasMarcadas}
             onVeiculoClick={(v) => {
               setSelectedVeiculo(v);
               // Open details on mobile when clicking marker

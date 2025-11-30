@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { VeiculoComStatus } from '@/types/logistica';
+import { ParadaMarcada } from '@/types/automacaoLogistica';
 
 interface RouteData {
   coordinates: Array<{ lat: number; lng: number }>;
@@ -11,9 +12,11 @@ interface RouteData {
 interface LazyLogisticaMapProps {
   veiculos?: VeiculoComStatus[];
   routes?: RouteData[];
+  paradasMarcadas?: ParadaMarcada[];
   center?: [number, number];
   zoom?: number;
   onVeiculoClick?: (veiculo: VeiculoComStatus) => void;
+  onParadaClick?: (parada: ParadaMarcada) => void;
   className?: string;
   fitBounds?: boolean;
 }
