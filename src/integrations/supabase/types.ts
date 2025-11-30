@@ -1074,6 +1074,8 @@ export type Database = {
       contas_marketplace: {
         Row: {
           access_token: string | null
+          ajuste_preco_fixo: number | null
+          ajuste_preco_percentual: number | null
           ambiente: string | null
           configuracoes: Json | null
           created_at: string | null
@@ -1089,6 +1091,8 @@ export type Database = {
         }
         Insert: {
           access_token?: string | null
+          ajuste_preco_fixo?: number | null
+          ajuste_preco_percentual?: number | null
           ambiente?: string | null
           configuracoes?: Json | null
           created_at?: string | null
@@ -1104,6 +1108,8 @@ export type Database = {
         }
         Update: {
           access_token?: string | null
+          ajuste_preco_fixo?: number | null
+          ajuste_preco_percentual?: number | null
           ambiente?: string | null
           configuracoes?: Json | null
           created_at?: string | null
