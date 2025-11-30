@@ -6,7 +6,7 @@ import {
   MoreVertical, SkipForward, X, ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LOGISTICA_BLOCKS, LogisticaBlockType } from '@/types/automacaoLogistica';
+import { LOGISTICA_BLOCKS, LogisticaBlockType, CondicaoTempoParado } from '@/types/automacaoLogistica';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +28,16 @@ const iconMap: Record<string, any> = {
   Bell,
   Mail,
 };
+
+// Cores para as saídas dinâmicas de tempo
+const TIME_OUTPUT_COLORS = [
+  { bg: 'bg-yellow-500', hover: 'hover:bg-yellow-600', border: 'border-yellow-700', text: 'text-yellow-700' },
+  { bg: 'bg-orange-500', hover: 'hover:bg-orange-600', border: 'border-orange-700', text: 'text-orange-700' },
+  { bg: 'bg-red-500', hover: 'hover:bg-red-600', border: 'border-red-700', text: 'text-red-700' },
+  { bg: 'bg-purple-500', hover: 'hover:bg-purple-600', border: 'border-purple-700', text: 'text-purple-700' },
+  { bg: 'bg-blue-500', hover: 'hover:bg-blue-600', border: 'border-blue-700', text: 'text-blue-700' },
+  { bg: 'bg-cyan-500', hover: 'hover:bg-cyan-600', border: 'border-cyan-700', text: 'text-cyan-700' },
+];
 
 interface LogisticaFlowNodeProps extends NodeProps {
   data: {
@@ -51,10 +61,47 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
   const blockDef = LOGISTICA_BLOCKS.find(b => b.type === data.type);
   const IconComponent = blockDef ? iconMap[blockDef.icon] : Play;
   const color = blockDef?.color || '#6B7280';
-  const outputs = blockDef?.outputs || 1;
-  const outputLabels = blockDef?.outputLabels || [];
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const isStartBlock = data.type === 'iniciar_automacao';
+
+  // Get dynamic outputs for condicao_parado
+  const getOutputsConfig = () => {
+    if (data.type === 'condicao_parado') {
+      const condicoesTempo: CondicaoTempoParado[] = data.config?.condicoes_tempo || 
+        (data.config?.tempo_minutos ? [{ tempo_minutos: data.config.tempo_minutos }] : [{ tempo_minutos: 30 }]);
+      
+      // Sort by time ascending
+      const sortedCondicoes = [...condicoesTempo].sort((a, b) => a.tempo_minutos - b.tempo_minutos);
+      
+      return {
+        type: 'dynamic_time',
+        outputs: sortedCondicoes.map((c, i) => ({
+          id: `tempo_${c.tempo_minutos}`,
+          label: c.label || `${c.tempo_minutos} min`,
+          tempo: c.tempo_minutos,
+          color: TIME_OUTPUT_COLORS[i % TIME_OUTPUT_COLORS.length]
+        }))
+      };
+    }
+    
+    // Default outputs
+    const outputs = blockDef?.outputs || 1;
+    const outputLabels = blockDef?.outputLabels || [];
+    
+    if (outputs === 2) {
+      return {
+        type: 'binary',
+        outputs: [
+          { id: 'yes', label: outputLabels[0] || 'Sim', color: { bg: 'bg-green-500', hover: 'hover:bg-green-600', border: 'border-green-700', text: 'text-green-700' } },
+          { id: 'no', label: outputLabels[1] || 'Não', color: { bg: 'bg-red-500', hover: 'hover:bg-red-600', border: 'border-red-700', text: 'text-red-700' } }
+        ]
+      };
+    }
+    
+    return { type: 'single', outputs: [] };
+  };
+
+  const outputsConfig = getOutputsConfig();
 
   const getCardClassName = () => {
     const baseClass = "min-w-[220px] max-w-[280px] transition-all duration-200 shadow-lg";
@@ -192,8 +239,20 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
 
         {/* Config preview */}
         <div className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1.5">
-          {data.type === 'condicao_parado' && data.config?.tempo_minutos && (
-            <span>Parado por mais de {data.config.tempo_minutos} min</span>
+          {data.type === 'condicao_parado' && outputsConfig.type === 'dynamic_time' && (
+            <div className="space-y-0.5">
+              <span className="font-medium">Condições de tempo:</span>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {outputsConfig.outputs.map((out: any, i: number) => (
+                  <span 
+                    key={out.id}
+                    className={cn("px-1.5 py-0.5 rounded text-white text-[10px]", out.color.bg)}
+                  >
+                    {out.label}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
           {data.type === 'condicao_velocidade' && data.config?.velocidade_km && (
             <span>
@@ -227,13 +286,13 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
           {data.type === 'condicao_saida_area' && (
             <span>{data.config?.area_nome || 'Configurar área...'}</span>
           )}
-          {data.type === 'condicao_parado' && data.config?.marcar_no_mapa && (
-            <div className="flex items-center gap-1 mt-1">
+          {data.type === 'acao_marcar_mapa' && (
+            <div className="flex items-center gap-1">
               <div 
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: data.config?.cor_icone_parada || '#EAB308' }}
               />
-              <span className="text-[10px] truncate max-w-[100px]">
+              <span className="truncate max-w-[140px]">
                 {data.config?.legenda_parada || 'Marcar no mapa'}
               </span>
             </div>
@@ -262,8 +321,8 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
         </div>
       )}
 
-      {/* Output Handles */}
-      {outputs === 1 && (
+      {/* Output Handles - Single Output */}
+      {outputsConfig.type === 'single' && (
         <div className="relative flex justify-center pb-2">
           <div className="relative flex items-center justify-center">
             <Handle
@@ -277,37 +336,65 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
         </div>
       )}
       
-      {outputs === 2 && (
+      {/* Output Handles - Binary (Yes/No) */}
+      {outputsConfig.type === 'binary' && (
         <div className="px-3 pb-3 space-y-1.5">
-          {/* Yes output */}
-          <div className="relative flex items-center justify-between gap-2 py-2 px-3 bg-green-500 rounded-md group hover:bg-green-600 transition-colors">
-            <span className="text-xs font-medium text-white">{outputLabels[0] || 'Sim'}</span>
-            <div className="relative">
-              <Handle
-                type="source"
-                position={Position.Right}
-                id="yes"
-                className="!bg-white !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-green-700 !rounded-full group-hover:!scale-110 !transition-transform"
-                style={{ position: 'relative' }}
-              />
-              <ArrowRight className="w-3 h-3 text-green-700 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+          {outputsConfig.outputs.map((out: any) => (
+            <div 
+              key={out.id}
+              className={cn(
+                "relative flex items-center justify-between gap-2 py-2 px-3 rounded-md group transition-colors",
+                out.color.bg,
+                out.color.hover
+              )}
+            >
+              <span className="text-xs font-medium text-white">{out.label}</span>
+              <div className="relative">
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={out.id}
+                  className={cn(
+                    "!bg-white !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !rounded-full group-hover:!scale-110 !transition-transform",
+                    `!${out.color.border}`
+                  )}
+                  style={{ position: 'relative' }}
+                />
+                <ArrowRight className={cn("w-3 h-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none", out.color.text)} />
+              </div>
             </div>
-          </div>
-          
-          {/* No output */}
-          <div className="relative flex items-center justify-between gap-2 py-2 px-3 bg-red-500 rounded-md group hover:bg-red-600 transition-colors">
-            <span className="text-xs font-medium text-white">{outputLabels[1] || 'Não'}</span>
-            <div className="relative">
-              <Handle
-                type="source"
-                position={Position.Right}
-                id="no"
-                className="!bg-white !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !border-red-700 !rounded-full group-hover:!scale-110 !transition-transform"
-                style={{ position: 'relative' }}
-              />
-              <ArrowRight className="w-3 h-3 text-red-700 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+          ))}
+        </div>
+      )}
+
+      {/* Output Handles - Dynamic Time Conditions */}
+      {outputsConfig.type === 'dynamic_time' && (
+        <div className="px-3 pb-3 space-y-1.5">
+          {outputsConfig.outputs.map((out: any) => (
+            <div 
+              key={out.id}
+              className={cn(
+                "relative flex items-center justify-between gap-2 py-2 px-3 rounded-md group transition-colors",
+                out.color.bg,
+                out.color.hover
+              )}
+            >
+              <span className="text-xs font-medium text-white">≥ {out.label}</span>
+              <div className="relative">
+                <Handle
+                  type="source"
+                  position={Position.Right}
+                  id={out.id}
+                  className={cn(
+                    "!bg-white !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !rounded-full group-hover:!scale-110 !transition-transform",
+                    `!${out.color.border}`
+                  )}
+                  style={{ position: 'relative' }}
+                />
+                <ArrowRight className={cn("w-3 h-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none", out.color.text)} />
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       )}
     </Card>
