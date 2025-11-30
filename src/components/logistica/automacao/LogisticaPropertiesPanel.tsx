@@ -19,6 +19,7 @@ interface LogisticaPropertiesPanelProps {
 
 export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: LogisticaPropertiesPanelProps) {
   const [legendaLocal, setLegendaLocal] = useState('');
+  const [condicoesLocal, setCondicoesLocal] = useState<CondicaoTempoParado[]>([]);
   
   const nodeData = selectedNode?.data as any;
   const config = nodeData?.config || {};
@@ -27,8 +28,9 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
   useEffect(() => {
     if (selectedNode) {
       setLegendaLocal(config.legenda_parada || '');
+      setCondicoesLocal(config.condicoes_tempo || [{ tempo_minutos: 30, label: '30 min' }]);
     }
-  }, [selectedNode?.id]);
+  }, [selectedNode?.id, JSON.stringify(config.condicoes_tempo)]);
   
   if (!selectedNode) {
     return (
@@ -49,23 +51,26 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
     });
   };
 
-  // Funções para gerenciar múltiplas condições de tempo
-  const condicoesToempo: CondicaoTempoParado[] = config.condicoes_tempo || [{ tempo_minutos: 30, label: '30 min' }];
-
   const addCondicaoTempo = () => {
-    const newCondicoes = [...condicoesToempo, { tempo_minutos: 15, label: '' }];
+    const newCondicoes = [...condicoesLocal, { tempo_minutos: 15, label: '' }];
+    setCondicoesLocal(newCondicoes);
     updateConfig('condicoes_tempo', newCondicoes);
   };
 
-  const updateCondicaoTempo = (index: number, field: keyof CondicaoTempoParado, value: any) => {
-    const newCondicoes = [...condicoesToempo];
+  const updateCondicaoTempoLocal = (index: number, field: keyof CondicaoTempoParado, value: any) => {
+    const newCondicoes = [...condicoesLocal];
     newCondicoes[index] = { ...newCondicoes[index], [field]: value };
-    updateConfig('condicoes_tempo', newCondicoes);
+    setCondicoesLocal(newCondicoes);
+  };
+
+  const saveCondicoesTempo = () => {
+    updateConfig('condicoes_tempo', condicoesLocal);
   };
 
   const removeCondicaoTempo = (index: number) => {
-    if (condicoesToempo.length <= 1) return;
-    const newCondicoes = condicoesToempo.filter((_, i) => i !== index);
+    if (condicoesLocal.length <= 1) return;
+    const newCondicoes = condicoesLocal.filter((_, i) => i !== index);
+    setCondicoesLocal(newCondicoes);
     updateConfig('condicoes_tempo', newCondicoes);
   };
 
@@ -90,14 +95,15 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
               </div>
               
               <div className="space-y-3">
-                {condicoesToempo.map((condicao, index) => (
+                {condicoesLocal.map((condicao, index) => (
                   <div key={index} className="flex items-center gap-2 p-2 border rounded-md bg-muted/30">
                     <div className="flex-1">
                       <Label className="text-xs text-muted-foreground">Tempo (min)</Label>
                       <Input
                         type="number"
                         value={condicao.tempo_minutos}
-                        onChange={(e) => updateCondicaoTempo(index, 'tempo_minutos', parseInt(e.target.value) || 0)}
+                        onChange={(e) => updateCondicaoTempoLocal(index, 'tempo_minutos', parseInt(e.target.value) || 1)}
+                        onBlur={saveCondicoesTempo}
                         min={1}
                         className="h-8"
                       />
@@ -106,12 +112,13 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                       <Label className="text-xs text-muted-foreground">Label (opcional)</Label>
                       <Input
                         value={condicao.label || ''}
-                        onChange={(e) => updateCondicaoTempo(index, 'label', e.target.value)}
+                        onChange={(e) => updateCondicaoTempoLocal(index, 'label', e.target.value)}
+                        onBlur={saveCondicoesTempo}
                         placeholder={`${condicao.tempo_minutos} min`}
                         className="h-8"
                       />
                     </div>
-                    {condicoesToempo.length > 1 && (
+                    {condicoesLocal.length > 1 && (
                       <Button
                         type="button"
                         variant="ghost"
