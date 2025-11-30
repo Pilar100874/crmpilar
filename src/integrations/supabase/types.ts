@@ -7505,6 +7505,50 @@ export type Database = {
           },
         ]
       }
+      whatsapp_catalogo_config: {
+        Row: {
+          access_token: string | null
+          business_account_id: string | null
+          catalog_id: string | null
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          nome_conta: string | null
+          phone_number_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          business_account_id?: string | null
+          catalog_id?: string | null
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          nome_conta?: string | null
+          phone_number_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          business_account_id?: string | null
+          catalog_id?: string | null
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          nome_conta?: string | null
+          phone_number_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_catalogo_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_config: {
         Row: {
           business_account_id: string | null

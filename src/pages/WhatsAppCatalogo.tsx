@@ -9,16 +9,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { 
-  Package, Search, MessageCircle, RefreshCw, 
+  Package, Search, MessageCircle, 
   CheckCircle2, XCircle, Loader2,
-  Filter, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown, ChevronUp,
-  ArrowRight, ArrowLeft, Send, Check, ShoppingCart, Settings, Save
+  Filter, ArrowUpDown, ArrowUp, ArrowDown,
+  ArrowRight, ArrowLeft, Send, Check, Settings, Save, Eye, EyeOff
 } from "lucide-react";
 
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
@@ -54,6 +54,7 @@ export default function WhatsAppCatalogo() {
   
   // Config state
   const [configSaving, setConfigSaving] = useState(false);
+  const [showToken, setShowToken] = useState(false);
   const [config, setConfig] = useState<WhatsAppCatalogoConfig>({
     phone_number_id: "",
     business_account_id: "",
@@ -105,13 +106,13 @@ export default function WhatsAppCatalogo() {
       if (!estabelecimentoId) return null;
       
       const { data, error } = await supabase
-        .from('whatsapp_catalogo_config')
+        .from('whatsapp_catalogo_config' as any)
         .select('*')
         .eq('estabelecimento_id', estabelecimentoId)
         .maybeSingle();
       
       if (error && error.code !== 'PGRST116') throw error;
-      return data;
+      return data as any;
     },
     enabled: !!estabelecimentoId,
   });
@@ -181,12 +182,12 @@ export default function WhatsAppCatalogo() {
       if (!estabelecimentoId) return {};
       const { data, error } = await supabase
         .from('marketplace_produtos')
-        .select('*, marketplace:marketplaces(id, nome, nome_display), conta:contas_marketplace(nome_loja)')
+        .select('*, marketplace:marketplaces(id, nome, nome_display)')
         .order('created_at', { ascending: false });
       if (error) throw error;
       
-      // Filter only whatsapp_commerce
-      const whatsappData = data?.filter(d => d.marketplace?.nome === 'whatsapp_commerce') || [];
+      // Filter only whatsapp_catalogo
+      const whatsappData = data?.filter(d => d.marketplace?.nome === 'whatsapp_catalogo') || [];
       
       const map: Record<string, any[]> = {};
       whatsappData.forEach(item => {
@@ -209,40 +210,36 @@ export default function WhatsAppCatalogo() {
     return vinculos.length > 0;
   };
 
+  const isConfigured = savedConfig && savedConfig.access_token && savedConfig.catalog_id;
+
   // Filtros e ordenação
   const filteredAndSortedProdutos = useMemo(() => {
     if (!produtos) return [];
     
     let result = [...produtos];
     
-    // Filtro de busca por nome
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(p => p.nome.toLowerCase().includes(term));
     }
     
-    // Filtro por SKU
     if (filterSku) {
       const term = filterSku.toLowerCase();
       result = result.filter(p => p.codigo?.toLowerCase().includes(term));
     }
     
-    // Filtro de status do produto
     if (filterStatus !== "all") {
       result = result.filter(p => filterStatus === "ativo" ? p.ativo : !p.ativo);
     }
     
-    // Filtro por categoria
     if (filterCategoria !== "all") {
       result = result.filter(p => p.categoria_id === filterCategoria);
     }
     
-    // Filtro por grupo
     if (filterGrupo !== "all") {
       result = result.filter(p => p.grupo_id === filterGrupo);
     }
     
-    // Filtro de status no catálogo
     if (filterCatalogoStatus !== "all") {
       if (filterCatalogoStatus === "no_catalogo") {
         result = result.filter(p => isInCatalogo(p.id));
@@ -251,7 +248,6 @@ export default function WhatsAppCatalogo() {
       }
     }
     
-    // Ordenação
     result.sort((a, b) => {
       let comparison = 0;
       switch (sortField) {
@@ -306,26 +302,6 @@ export default function WhatsAppCatalogo() {
     }
   };
 
-  const toggleContaSelection = (contaId: string) => {
-    setSelectedContas(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(contaId)) {
-        newSet.delete(contaId);
-      } else {
-        newSet.add(contaId);
-      }
-      return newSet;
-    });
-  };
-
-  const toggleSelectAllContas = () => {
-    if (selectedContas.size === contasWhatsApp?.length) {
-      setSelectedContas(new Set());
-    } else {
-      setSelectedContas(new Set(contasWhatsApp?.map(c => c.id)));
-    }
-  };
-
   const clearFilters = () => {
     setSearchTerm("");
     setFilterSku("");
@@ -335,10 +311,60 @@ export default function WhatsAppCatalogo() {
     setFilterCatalogoStatus("all");
   };
 
+  // Salvar configuração
+  const saveConfig = async () => {
+    if (!estabelecimentoId) return;
+    
+    setConfigSaving(true);
+    try {
+      if (savedConfig?.id) {
+        const { error } = await supabase
+          .from('whatsapp_catalogo_config' as any)
+          .update({
+            phone_number_id: config.phone_number_id,
+            business_account_id: config.business_account_id,
+            catalog_id: config.catalog_id,
+            access_token: config.access_token,
+            nome_conta: config.nome_conta,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', savedConfig.id);
+        
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('whatsapp_catalogo_config' as any)
+          .insert({
+            estabelecimento_id: estabelecimentoId,
+            phone_number_id: config.phone_number_id,
+            business_account_id: config.business_account_id,
+            catalog_id: config.catalog_id,
+            access_token: config.access_token,
+            nome_conta: config.nome_conta
+          });
+        
+        if (error) throw error;
+      }
+      
+      toast.success("Configuração salva com sucesso");
+      refetchConfig();
+    } catch (error: any) {
+      toast.error("Erro ao salvar: " + error.message);
+    } finally {
+      setConfigSaving(false);
+    }
+  };
+
   // Processar publicação no catálogo
   const processPublishing = async () => {
-    if (selectedProducts.size === 0 || selectedContas.size === 0) {
-      toast.error("Selecione produtos e contas para continuar");
+    if (selectedProducts.size === 0) {
+      toast.error("Selecione produtos para continuar");
+      return;
+    }
+
+    if (!isConfigured) {
+      toast.error("Configure a conta do WhatsApp primeiro");
+      setActiveTab("config");
       return;
     }
 
@@ -346,101 +372,95 @@ export default function WhatsAppCatalogo() {
     setProcessResults([]);
     setProcessProgress(0);
 
-    const totalOperations = selectedProducts.size * selectedContas.size;
+    const totalOperations = selectedProducts.size;
     let completed = 0;
     const results: ProcessResult[] = [];
 
     const productsList = filteredAndSortedProdutos?.filter(p => selectedProducts.has(p.id)) || [];
-    const contasList = contasWhatsApp?.filter(c => selectedContas.has(c.id)) || [];
+
+    // Get or create marketplace entry for whatsapp_catalogo
+    let marketplaceId: string | null = null;
+    const { data: marketplace } = await supabase
+      .from('marketplaces')
+      .select('id')
+      .eq('nome', 'whatsapp_catalogo')
+      .maybeSingle();
+    
+    if (marketplace) {
+      marketplaceId = marketplace.id;
+    }
 
     for (const produto of productsList) {
-      for (const conta of contasList) {
-        try {
-          // Validações
-          if (!produto.codigo) {
-            results.push({
-              productId: produto.id,
-              productName: produto.nome,
-              contaId: conta.id,
-              contaName: conta.nome_loja,
-              success: false,
-              error: "Produto sem SKU"
-            });
-            completed++;
-            setProcessProgress((completed / totalOperations) * 100);
-            continue;
-          }
+      try {
+        if (!produto.codigo) {
+          results.push({
+            productId: produto.id,
+            productName: produto.nome,
+            success: false,
+            error: "Produto sem SKU"
+          });
+          completed++;
+          setProcessProgress((completed / totalOperations) * 100);
+          continue;
+        }
 
-          if (!produto.nome) {
-            results.push({
-              productId: produto.id,
-              productName: produto.nome || 'Sem nome',
-              contaId: conta.id,
-              contaName: conta.nome_loja,
-              success: false,
-              error: "Produto sem nome"
-            });
-            completed++;
-            setProcessProgress((completed / totalOperations) * 100);
-            continue;
-          }
+        if (!produto.nome) {
+          results.push({
+            productId: produto.id,
+            productName: produto.nome || 'Sem nome',
+            success: false,
+            error: "Produto sem nome"
+          });
+          completed++;
+          setProcessProgress((completed / totalOperations) * 100);
+          continue;
+        }
 
-          // Verificar se já existe vínculo
-          const { data: existingVinculo } = await supabase
-            .from('marketplace_produtos')
-            .select('id')
-            .eq('produto_id', produto.id)
-            .eq('conta_marketplace_id', conta.id)
-            .maybeSingle();
+        // Verificar se já existe vínculo
+        const existingVinculos = vinculosMap?.[produto.id] || [];
+        if (existingVinculos.length > 0) {
+          results.push({
+            productId: produto.id,
+            productName: produto.nome,
+            success: false,
+            error: "Produto já está no catálogo"
+          });
+          completed++;
+          setProcessProgress((completed / totalOperations) * 100);
+          continue;
+        }
 
-          if (existingVinculo) {
-            results.push({
-              productId: produto.id,
-              productName: produto.nome,
-              contaId: conta.id,
-              contaName: conta.nome_loja,
-              success: false,
-              error: "Produto já vinculado a esta conta"
-            });
-            completed++;
-            setProcessProgress((completed / totalOperations) * 100);
-            continue;
-          }
-
-          // Criar vínculo
+        // Criar vínculo (sem conta_marketplace_id pois é configuração direta)
+        if (marketplaceId) {
           const { error: insertError } = await supabase
             .from('marketplace_produtos')
             .insert({
               produto_id: produto.id,
-              marketplace_id: conta.marketplace_id,
-              conta_marketplace_id: conta.id,
+              marketplace_id: marketplaceId,
+              conta_marketplace_id: marketplaceId, // usar marketplace_id como referência
               marketplace_product_id: produto.codigo,
               status: 'pendente'
             });
 
           if (insertError) throw insertError;
-
-          results.push({
-            productId: produto.id,
-            productName: produto.nome,
-            contaId: conta.id,
-            contaName: conta.nome_loja,
-            success: true
-          });
-        } catch (error: any) {
-          results.push({
-            productId: produto.id,
-            productName: produto.nome,
-            contaId: conta.id,
-            contaName: conta.nome_loja,
-            success: false,
-            error: error.message || "Erro desconhecido"
-          });
         }
 
-        completed++;
-        setProcessProgress((completed / totalOperations) * 100);
+        results.push({
+          productId: produto.id,
+          productName: produto.nome,
+          success: true
+        });
+      } catch (error: any) {
+        results.push({
+          productId: produto.id,
+          productName: produto.nome,
+          success: false,
+          error: error.message || "Erro desconhecido"
+        });
       }
+
+      completed++;
+      setProcessProgress((completed / totalOperations) * 100);
     }
 
     setProcessResults(results);
@@ -461,7 +481,6 @@ export default function WhatsAppCatalogo() {
   const resetWizard = () => {
     setWizardStep(1);
     setSelectedProducts(new Set());
-    setSelectedContas(new Set());
     setProcessResults([]);
     setProcessProgress(0);
   };
@@ -473,7 +492,7 @@ export default function WhatsAppCatalogo() {
 
   const renderWizardSteps = () => (
     <div className="flex items-center justify-center gap-2 mb-6">
-      {[1, 2, 3].map((step) => (
+      {[1, 2].map((step) => (
         <div key={step} className="flex items-center">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
             wizardStep >= step 
@@ -482,11 +501,111 @@ export default function WhatsAppCatalogo() {
           }`}>
             {wizardStep > step ? <Check className="h-4 w-4" /> : step}
           </div>
-          {step < 3 && (
+          {step < 2 && (
             <div className={`w-12 h-1 mx-2 rounded ${wizardStep > step ? 'bg-primary' : 'bg-muted'}`} />
           )}
         </div>
       ))}
+    </div>
+  );
+
+  // Render config tab
+  const renderConfigTab = () => (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Configurar Conta WhatsApp Business</h3>
+        <p className="text-sm text-muted-foreground">
+          Configure os dados da sua conta do WhatsApp Business para enviar produtos ao catálogo tradicional.
+        </p>
+      </div>
+
+      <div className="grid gap-4 max-w-2xl">
+        <div className="space-y-2">
+          <Label htmlFor="nome_conta">Nome da Conta</Label>
+          <Input
+            id="nome_conta"
+            placeholder="Ex: Minha Loja WhatsApp"
+            value={config.nome_conta}
+            onChange={(e) => setConfig(prev => ({ ...prev, nome_conta: e.target.value }))}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="phone_number_id">Phone Number ID</Label>
+          <Input
+            id="phone_number_id"
+            placeholder="ID do número de telefone do WhatsApp Business"
+            value={config.phone_number_id}
+            onChange={(e) => setConfig(prev => ({ ...prev, phone_number_id: e.target.value }))}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="business_account_id">Business Account ID</Label>
+          <Input
+            id="business_account_id"
+            placeholder="ID da conta Business do WhatsApp"
+            value={config.business_account_id}
+            onChange={(e) => setConfig(prev => ({ ...prev, business_account_id: e.target.value }))}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="catalog_id">Catalog ID</Label>
+          <Input
+            id="catalog_id"
+            placeholder="ID do catálogo no WhatsApp Business"
+            value={config.catalog_id}
+            onChange={(e) => setConfig(prev => ({ ...prev, catalog_id: e.target.value }))}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="access_token">Access Token</Label>
+          <div className="relative">
+            <Input
+              id="access_token"
+              type={showToken ? "text" : "password"}
+              placeholder="Token de acesso da API do WhatsApp"
+              value={config.access_token}
+              onChange={(e) => setConfig(prev => ({ ...prev, access_token: e.target.value }))}
+              className="pr-10"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3"
+              onClick={() => setShowToken(!showToken)}
+            >
+              {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex gap-2 pt-4">
+          <Button onClick={saveConfig} disabled={configSaving}>
+            {configSaving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            Salvar Configuração
+          </Button>
+        </div>
+
+        {isConfigured && (
+          <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+            <div className="flex items-center gap-2 text-green-500">
+              <CheckCircle2 className="h-5 w-5" />
+              <span className="font-medium">Conta configurada</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              {savedConfig?.nome_conta || "Conta WhatsApp Business"}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -497,7 +616,7 @@ export default function WhatsAppCatalogo() {
         <div>
           <h3 className="text-lg font-semibold">Selecione os Produtos</h3>
           <p className="text-sm text-muted-foreground">
-            Escolha os produtos para adicionar ao catálogo WhatsApp
+            Escolha os produtos para adicionar à lista de produtos no WhatsApp
           </p>
         </div>
         <Button
@@ -511,91 +630,89 @@ export default function WhatsAppCatalogo() {
       </div>
 
       <Collapsible open={showFilters}>
-        <CollapsibleContent>
-          <Card className="mb-4">
-            <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1 block">Buscar por nome</label>
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Nome do produto..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">SKU</label>
+        <Card className="mb-4">
+          <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Buscar por nome</label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Código SKU..."
-                  value={filterSku}
-                  onChange={(e) => setFilterSku(e.target.value)}
+                  placeholder="Nome do produto..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Status</label>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="ativo">Ativos</SelectItem>
-                    <SelectItem value="inativo">Inativos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Categoria</label>
-                <Select value={filterCategoria} onValueChange={setFilterCategoria}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas</SelectItem>
-                    {categorias?.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id}>{cat.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Grupo</label>
-                <Select value={filterGrupo} onValueChange={setFilterGrupo}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {grupos?.map(grp => (
-                      <SelectItem key={grp.id} value={grp.id}>{grp.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">No Catálogo</label>
-                <Select value={filterCatalogoStatus} onValueChange={setFilterCatalogoStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="no_catalogo">No Catálogo</SelectItem>
-                    <SelectItem value="fora_catalogo">Fora do Catálogo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end">
-                <Button variant="outline" onClick={clearFilters} size="sm">
-                  Limpar Filtros
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </CollapsibleContent>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">SKU</label>
+              <Input
+                placeholder="Código SKU..."
+                value={filterSku}
+                onChange={(e) => setFilterSku(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Status</label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="ativo">Ativos</SelectItem>
+                  <SelectItem value="inativo">Inativos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Categoria</label>
+              <Select value={filterCategoria} onValueChange={setFilterCategoria}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {categorias?.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Grupo</label>
+              <Select value={filterGrupo} onValueChange={setFilterGrupo}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {grupos?.map(grp => (
+                    <SelectItem key={grp.id} value={grp.id}>{grp.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">No Catálogo</label>
+              <Select value={filterCatalogoStatus} onValueChange={setFilterCatalogoStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="no_catalogo">No Catálogo</SelectItem>
+                  <SelectItem value="fora_catalogo">Fora do Catálogo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-end">
+              <Button variant="outline" onClick={clearFilters} size="sm">
+                Limpar Filtros
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </Collapsible>
 
       <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
@@ -680,110 +797,9 @@ export default function WhatsAppCatalogo() {
     </div>
   );
 
-  // Step 2: Selecionar contas WhatsApp
-  const renderStep2 = () => (
-    <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold">Selecione as Contas WhatsApp</h3>
-        <p className="text-sm text-muted-foreground">
-          Escolha para quais contas WhatsApp Commerce deseja enviar os produtos
-        </p>
-      </div>
-
-      {!contasWhatsApp || contasWhatsApp.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">
-              Nenhuma conta WhatsApp Commerce conectada.
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Conecte uma conta no Hub de Marketplaces primeiro.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-            <span>{contasWhatsApp.length} conta(s) disponível(is)</span>
-            <span>{selectedContas.size} selecionada(s)</span>
-          </div>
-
-          <div className="grid gap-3">
-            <Card 
-              className={`cursor-pointer transition-all ${
-                selectedContas.size === contasWhatsApp.length 
-                  ? 'border-primary bg-primary/5' 
-                  : 'hover:border-primary/50'
-              }`}
-              onClick={toggleSelectAllContas}
-            >
-              <CardContent className="p-4 flex items-center gap-4">
-                <Checkbox
-                  checked={selectedContas.size === contasWhatsApp.length}
-                  onCheckedChange={toggleSelectAllContas}
-                />
-                <div className="flex-1">
-                  <p className="font-medium">Selecionar Todas</p>
-                  <p className="text-sm text-muted-foreground">
-                    Enviar para todas as contas conectadas
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {contasWhatsApp.map(conta => (
-              <Card 
-                key={conta.id}
-                className={`cursor-pointer transition-all ${
-                  selectedContas.has(conta.id) 
-                    ? 'border-primary bg-primary/5' 
-                    : 'hover:border-primary/50'
-                }`}
-                onClick={() => toggleContaSelection(conta.id)}
-              >
-                <CardContent className="p-4 flex items-center gap-4">
-                  <Checkbox
-                    checked={selectedContas.has(conta.id)}
-                    onCheckedChange={() => toggleContaSelection(conta.id)}
-                  />
-                  <div className="p-2 rounded-lg bg-green-500/10">
-                    <MessageCircle className="h-6 w-6 text-green-500" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{conta.nome_loja}</p>
-                    <p className="text-sm text-muted-foreground">
-                      WhatsApp Commerce
-                    </p>
-                  </div>
-                  <Badge variant={conta.status === 'conectado' ? 'default' : 'secondary'}>
-                    {conta.status === 'conectado' ? 'Conectado' : conta.status}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </>
-      )}
-
-      <div className="flex justify-between gap-2">
-        <Button variant="outline" onClick={() => setWizardStep(1)}>
-          <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
-        </Button>
-        <Button 
-          onClick={() => setWizardStep(3)}
-          disabled={selectedContas.size === 0}
-        >
-          Próximo <ArrowRight className="h-4 w-4 ml-2" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  // Step 3: Processamento
-  const renderStep3 = () => {
+  // Step 2: Confirmação e Processamento
+  const renderStep2 = () => {
     const selectedProductsList = filteredAndSortedProdutos?.filter(p => selectedProducts.has(p.id)) || [];
-    const selectedContasList = contasWhatsApp?.filter(c => selectedContas.has(c.id)) || [];
     const successResults = processResults.filter(r => r.success);
     const errorResults = processResults.filter(r => !r.success);
 
@@ -833,18 +849,29 @@ export default function WhatsAppCatalogo() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <MessageCircle className="h-4 w-4" />
-                  Contas WhatsApp
+                  Conta WhatsApp
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold">{selectedContas.size}</p>
-                <ul className="text-sm space-y-1 mt-2">
-                  {selectedContasList.map(c => (
-                    <li key={c.id} className="truncate text-muted-foreground">
-                      • {c.nome_loja}
-                    </li>
-                  ))}
-                </ul>
+                {isConfigured ? (
+                  <>
+                    <p className="font-semibold">{savedConfig?.nome_conta || "Conta WhatsApp"}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Catalog ID: {savedConfig?.catalog_id}
+                    </p>
+                  </>
+                ) : (
+                  <div className="text-yellow-500">
+                    <p className="font-medium">Conta não configurada</p>
+                    <Button 
+                      variant="link" 
+                      className="p-0 h-auto text-yellow-500"
+                      onClick={() => setActiveTab("config")}
+                    >
+                      Clique para configurar
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -909,12 +936,12 @@ export default function WhatsAppCatalogo() {
         <div className="flex justify-between gap-2">
           {processResults.length === 0 ? (
             <>
-              <Button variant="outline" onClick={() => setWizardStep(2)}>
+              <Button variant="outline" onClick={() => setWizardStep(1)}>
                 <ArrowLeft className="h-4 w-4 mr-2" /> Voltar
               </Button>
               <Button 
                 onClick={processPublishing}
-                disabled={isProcessing}
+                disabled={isProcessing || !isConfigured}
               >
                 <Send className="h-4 w-4 mr-2" />
                 Enviar para Catálogo
@@ -944,9 +971,9 @@ export default function WhatsAppCatalogo() {
             <MessageCircle className="h-6 w-6 text-green-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Catálogo WhatsApp</h1>
+            <h1 className="text-2xl font-bold">Lista de Produtos no WhatsApp</h1>
             <p className="text-muted-foreground">
-              Gerencie os produtos do seu catálogo WhatsApp Commerce
+              Gerencie a lista de produtos no catálogo tradicional do WhatsApp Business
             </p>
           </div>
         </div>
@@ -954,11 +981,28 @@ export default function WhatsAppCatalogo() {
 
       <Card className="flex-1">
         <CardContent className="p-6">
-          {renderWizardSteps()}
-          
-          {wizardStep === 1 && renderStep1()}
-          {wizardStep === 2 && renderStep2()}
-          {wizardStep === 3 && renderStep3()}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-6">
+              <TabsTrigger value="config" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Configuração
+              </TabsTrigger>
+              <TabsTrigger value="produtos" className="flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                Adicionar Produtos
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="config">
+              {renderConfigTab()}
+            </TabsContent>
+
+            <TabsContent value="produtos">
+              {renderWizardSteps()}
+              {wizardStep === 1 && renderStep1()}
+              {wizardStep === 2 && renderStep2()}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

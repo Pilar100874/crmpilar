@@ -396,23 +396,23 @@ export default function VendasConfig() {
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
                   <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                     <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Catálogo WhatsApp
+                    Lista de Produtos no WhatsApp
                   </CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
-                    Gerencie produtos para o catálogo WhatsApp Commerce
+                    Gerencie produtos para a lista de produtos do WhatsApp Business
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">
                   <div className="text-center py-8">
                     <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <p className="text-muted-foreground mb-4">
-                      Acesse a página completa do Catálogo WhatsApp para gerenciar seus produtos
+                      Acesse a página completa para gerenciar seus produtos no WhatsApp
                     </p>
                     <Link 
                       to="/whatsapp-catalogo" 
                       className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
                     >
-                      Abrir Catálogo WhatsApp
+                      Abrir Lista de Produtos
                     </Link>
                   </div>
                 </CardContent>
