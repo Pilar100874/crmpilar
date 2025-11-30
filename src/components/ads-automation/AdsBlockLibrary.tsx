@@ -23,7 +23,7 @@ const blockCategories = [
     border: "border-orange-500/20",
     borderHover: "hover:border-orange-500/40",
     iconColor: "text-orange-600",
-    blocks: ['trigger_roas', 'trigger_spend', 'trigger_cpc', 'trigger_ctr', 'trigger_conversions', 'trigger_impressions', 'trigger_schedule'] as AdsBlockType[],
+    blocks: ['trigger_roas', 'trigger_spend', 'trigger_cpc', 'trigger_ctr', 'trigger_conversions', 'trigger_impressions', 'trigger_schedule', 'trigger_frequency', 'trigger_quality_score', 'trigger_budget_depleted', 'trigger_position'] as AdsBlockType[],
   },
   {
     name: "Condições",
@@ -33,7 +33,7 @@ const blockCategories = [
     border: "border-violet-500/20",
     borderHover: "hover:border-violet-500/40",
     iconColor: "text-violet-600",
-    blocks: ['condition_platform', 'condition_campaign', 'condition_time', 'condition_metric'] as AdsBlockType[],
+    blocks: ['condition_platform', 'condition_campaign', 'condition_time', 'condition_metric', 'condition_day_of_week', 'condition_budget_remaining', 'condition_device', 'condition_location'] as AdsBlockType[],
   },
   {
     name: "Ações",
@@ -43,7 +43,7 @@ const blockCategories = [
     border: "border-green-500/20",
     borderHover: "hover:border-green-500/40",
     iconColor: "text-green-600",
-    blocks: ['action_pause', 'action_resume', 'action_budget_decrease', 'action_budget_increase', 'action_notify', 'action_webhook', 'action_email', 'action_bid_adjust'] as AdsBlockType[],
+    blocks: ['action_pause', 'action_resume', 'action_activate', 'action_archive', 'action_budget_decrease', 'action_budget_increase', 'action_bid_adjust', 'action_bid_device', 'action_duplicate', 'action_schedule_change', 'action_notify', 'action_email', 'action_webhook', 'action_slack', 'action_create_report'] as AdsBlockType[],
   },
 ];
 

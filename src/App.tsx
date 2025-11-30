@@ -78,6 +78,9 @@ import AdsCredentials from "./pages/ads/AdsCredentials";
 import AdsLogs from "./pages/ads/AdsLogs";
 import AdsAutomation from "./pages/ads/AdsAutomation";
 import AdsPlatformDashboard from "./pages/ads/AdsPlatformDashboard";
+import AdsCampaigns from "./pages/ads/AdsCampaigns";
+import AdsReports from "./pages/ads/AdsReports";
+import AdsAlerts from "./pages/ads/AdsAlerts";
 
 const queryClient = new QueryClient();
 
@@ -171,6 +174,9 @@ const App = () => (
             <Route path="/whatsapp-catalogo" element={<WhatsAppCatalogo />} />
             {/* Ads Routes */}
             <Route path="/ads" element={<AdsDashboard />} />
+            <Route path="/ads/campaigns" element={<AdsCampaigns />} />
+            <Route path="/ads/reports" element={<AdsReports />} />
+            <Route path="/ads/alerts" element={<AdsAlerts />} />
             <Route path="/ads/google" element={<AdsPlatformDashboard />} />
             <Route path="/ads/meta" element={<AdsPlatformDashboard />} />
             <Route path="/ads/tiktok" element={<AdsPlatformDashboard />} />
