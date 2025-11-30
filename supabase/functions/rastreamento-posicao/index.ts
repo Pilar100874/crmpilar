@@ -208,6 +208,23 @@ function findConnectedActions(
   return connectedActions;
 }
 
+// Find the best matching time condition for stopped time
+function findMatchingTimeCondition(
+  condicoesTempo: CondicaoTempo[],
+  minutosParado: number
+): CondicaoTempo | null {
+  // Sort by time descending to find the highest threshold that is met
+  const sortedCondicoes = [...condicoesTempo].sort((a, b) => b.tempo_minutos - a.tempo_minutos);
+  
+  for (const condicao of sortedCondicoes) {
+    if (minutosParado >= condicao.tempo_minutos) {
+      return condicao;
+    }
+  }
+  
+  return null;
+}
+
 // Execute logistics automations for a vehicle
 async function executarAutomacoesLogistica(
   supabase: any,
@@ -280,37 +297,47 @@ async function executarAutomacoesLogistica(
         // Handle "condicao_parado" - Vehicle stopped condition
         if (nodeType === 'condicao_parado') {
           // Support both new format (condicoes_tempo) and old format (tempo_minutos)
-          const condicoesTempo = config.condicoes_tempo || 
+          const condicoesTempo: CondicaoTempo[] = config.condicoes_tempo || 
             (config.tempo_minutos ? [{ tempo_minutos: config.tempo_minutos }] : [{ tempo_minutos: 30 }]);
           
-          // Check if any time condition is met
-          const condicaoAtendida = condicoesTempo.find(
-            (c: CondicaoTempo) => velocidade <= 5 && minutosParado >= c.tempo_minutos
-          );
-          
-          if (condicaoAtendida) {
-            console.log(`✅ Automation triggered: Vehicle stopped for ${minutosParado} min (threshold: ${condicaoAtendida.tempo_minutos})`);
+          // Only process if vehicle is stopped
+          if (velocidade <= 5) {
+            // Find the best matching time condition (highest threshold that is met)
+            const condicaoAtendida = findMatchingTimeCondition(condicoesTempo, minutosParado);
             
-            // Find connected action nodes
-            const connectedActions = findConnectedActions(node.id, edges, nodes, 'sim');
-            
-            for (const actionNode of connectedActions) {
-              const actionType = actionNode.data?.type;
-              const actionConfig = actionNode.data?.config || {};
+            if (condicaoAtendida) {
+              console.log(`✅ Automation triggered: Vehicle stopped for ${minutosParado} min (threshold: ${condicaoAtendida.tempo_minutos})`);
               
-              // Handle "acao_marcar_mapa" action
-              if (actionType === 'acao_marcar_mapa') {
-                // Only keep the last marker config (overwrites previous)
-                markerToCreate = {
-                  icone: actionConfig.icone_parada || 'MapPin',
-                  cor: actionConfig.cor_icone_parada || '#EAB308',
-                  legenda: actionConfig.legenda_parada || `Parado há ${minutosParado} min`,
-                  automacaoId: automacao.id,
-                  automacaoNome: automacao.nome
-                };
+              // The output handle is based on the time condition
+              const outputHandle = `tempo_${condicaoAtendida.tempo_minutos}`;
+              
+              // Find connected action nodes from the matched time output
+              const connectedActions = findConnectedActions(node.id, edges, nodes, outputHandle);
+              
+              // Also try legacy 'sim' and 'yes' handles for backwards compatibility
+              if (connectedActions.length === 0) {
+                connectedActions.push(...findConnectedActions(node.id, edges, nodes, 'sim'));
+                connectedActions.push(...findConnectedActions(node.id, edges, nodes, 'yes'));
               }
               
-              // TODO: Handle other actions (WhatsApp, notification, email)
+              for (const actionNode of connectedActions) {
+                const actionType = actionNode.data?.type;
+                const actionConfig = actionNode.data?.config || {};
+                
+                // Handle "acao_marcar_mapa" action
+                if (actionType === 'acao_marcar_mapa') {
+                  // Only keep the last marker config (overwrites previous)
+                  markerToCreate = {
+                    icone: actionConfig.icone_parada || 'MapPin',
+                    cor: actionConfig.cor_icone_parada || '#EAB308',
+                    legenda: actionConfig.legenda_parada || `Parado há ${minutosParado} min`,
+                    automacaoId: automacao.id,
+                    automacaoNome: automacao.nome
+                  };
+                }
+                
+                // TODO: Handle other actions (WhatsApp, notification, email)
+              }
             }
           }
         }
