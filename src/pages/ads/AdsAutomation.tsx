@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Plus, Play, Trash2, Edit, Zap, Loader2, Save, Download, Upload, 
-  ZoomIn, ZoomOut, Maximize2, ArrowLeft, Blocks
+  ZoomIn, ZoomOut, Maximize2, ArrowLeft, Blocks, Minimize2
 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import {
@@ -182,6 +182,7 @@ function AdsAutomationContent() {
         onDelete: handleDeleteNode,
         onClearDebug: handleClearDebug,
         onAddNote: handleAddNote,
+        onToggleCollapse: handleToggleCollapse,
       }
     }));
     
@@ -207,6 +208,7 @@ function AdsAutomationContent() {
             note: (n.data as any).note,
             isBreakpoint: (n.data as any).isBreakpoint,
             isSkipped: (n.data as any).isSkipped,
+            isCollapsed: (n.data as any).isCollapsed,
           }
         })),
         edges,
@@ -276,6 +278,7 @@ function AdsAutomationContent() {
         onDelete: handleDeleteNode,
         onClearDebug: handleClearDebug,
         onAddNote: handleAddNote,
+        onToggleCollapse: handleToggleCollapse,
       },
     };
 
@@ -313,6 +316,33 @@ function AdsAutomationContent() {
     setCurrentNoteNodeId(null);
     setHasUnsavedChanges(true);
   }, [currentNoteNodeId, setNodes]);
+
+  const handleToggleCollapse = useCallback((nodeId: string) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, isCollapsed: !(node.data as any).isCollapsed } }
+          : node
+      )
+    );
+    setHasUnsavedChanges(true);
+  }, [setNodes]);
+
+  const handleCollapseAll = useCallback(() => {
+    setNodes((nds) =>
+      nds.map((node) => ({ ...node, data: { ...node.data, isCollapsed: true } }))
+    );
+    toast.success("Todos os blocos encolhidos");
+    setHasUnsavedChanges(true);
+  }, [setNodes]);
+
+  const handleExpandAll = useCallback(() => {
+    setNodes((nds) =>
+      nds.map((node) => ({ ...node, data: { ...node.data, isCollapsed: false } }))
+    );
+    toast.success("Todos os blocos ampliados");
+    setHasUnsavedChanges(true);
+  }, [setNodes]);
 
   const handleUpdateNode = useCallback((nodeId: string, data: Partial<AdsFlowNodeData>) => {
     setNodes((nds) =>
@@ -371,6 +401,7 @@ function AdsAutomationContent() {
           onDelete: handleDeleteNode,
           onClearDebug: handleClearDebug,
           onAddNote: handleAddNote,
+          onToggleCollapse: handleToggleCollapse,
         },
       };
 
@@ -379,7 +410,7 @@ function AdsAutomationContent() {
       toast.success(`Bloco "${blockDef.label}" adicionado!`);
       setHasUnsavedChanges(true);
     },
-    [reactFlowInstance, setNodes, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote]
+    [reactFlowInstance, setNodes, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote, handleToggleCollapse]
   );
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
@@ -442,6 +473,7 @@ function AdsAutomationContent() {
               onDelete: handleDeleteNode,
               onClearDebug: handleClearDebug,
               onAddNote: handleAddNote,
+              onToggleCollapse: handleToggleCollapse,
             }
           }));
           setNodes(nodesWithCallbacks);
@@ -458,7 +490,7 @@ function AdsAutomationContent() {
       reader.readAsText(file);
     };
     input.click();
-  }, [setNodes, setEdges, reactFlowInstance, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote]);
+  }, [setNodes, setEdges, reactFlowInstance, handleSetBreakpoint, handleSetSkip, handleDuplicate, handleDeleteNode, handleClearDebug, handleAddNote, handleToggleCollapse]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -625,6 +657,24 @@ function AdsAutomationContent() {
               >
                 <Blocks className="h-4 w-4 mr-1" />
                 Blocos
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleCollapseAll}
+                title="Encolher todos os blocos"
+              >
+                <Minimize2 className="h-4 w-4 mr-1" />
+                Encolher
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleExpandAll}
+                title="Ampliar todos os blocos"
+              >
+                <Maximize2 className="h-4 w-4 mr-1" />
+                Ampliar
               </Button>
               <Button variant="ghost" size="sm" onClick={handleImport}>
                 <Upload className="h-4 w-4 mr-1" />
