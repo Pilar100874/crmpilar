@@ -7,7 +7,8 @@ import {
   AlertTriangle, CircleAlert, Truck, Package, Home, Building2,
   Fuel, Wrench, Coffee, ShoppingCart, Factory, Warehouse,
   ParkingCircle, TrafficCone, Construction, Timer, Ban,
-  CircleCheck, CircleX, Flag, Star, Heart, Zap, LucideIcon
+  CircleCheck, CircleX, Flag, Star, Heart, Zap, LucideIcon,
+  Minimize2, Maximize2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LOGISTICA_BLOCKS, LogisticaBlockType, CondicaoTempoParado } from '@/types/automacaoLogistica';
@@ -81,12 +82,14 @@ interface LogisticaFlowNodeProps extends NodeProps {
     isBreakpoint?: boolean;
     isSkipped?: boolean;
     isHighlighted?: boolean;
+    isCollapsed?: boolean;
     onDuplicate?: (nodeId: string) => void;
     onDelete?: (nodeId: string) => void;
     onAddNote?: (nodeId: string) => void;
     onSetBreakpoint?: (nodeId: string) => void;
     onSetSkip?: (nodeId: string) => void;
     onClearDebug?: (nodeId: string) => void;
+    onToggleCollapse?: (nodeId: string) => void;
   };
 }
 
@@ -96,6 +99,7 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
   const color = blockDef?.color || '#6B7280';
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const isStartBlock = data.type === 'iniciar_automacao';
+  const isCollapsed = data.isCollapsed ?? false;
 
   // Get dynamic outputs for condicao_parado
   const getOutputsConfig = () => {
@@ -137,7 +141,9 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
   const outputsConfig = getOutputsConfig();
 
   const getCardClassName = () => {
-    const baseClass = "min-w-[220px] max-w-[280px] transition-all duration-200 shadow-lg";
+    const baseClass = isCollapsed
+      ? "min-w-[120px] max-w-[160px] transition-all duration-200 shadow-lg"
+      : "min-w-[220px] max-w-[280px] transition-all duration-200 shadow-lg";
     
     if (data.isHighlighted) {
       return `${baseClass} bg-card border-2 border-yellow-500 ring-2 ring-yellow-400 animate-pulse`;
@@ -162,6 +168,122 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
     }`;
   };
 
+  // Collapsed view
+  if (isCollapsed) {
+    return (
+      <Card className={getCardClassName()} style={{ borderColor: selected ? undefined : color }}>
+        {/* Input Handle */}
+        {!isStartBlock && (
+          <Handle
+            type="target"
+            position={Position.Top}
+            className="!w-4 !h-4 !bg-primary !border-2 !border-background"
+          />
+        )}
+
+        <div className="p-2">
+          <div className="flex items-center gap-2">
+            <div 
+              className="p-1.5 rounded-md flex-shrink-0"
+              style={{ backgroundColor: color }}
+            >
+              <IconComponent className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-semibold text-xs truncate flex-1">{blockDef?.label || data.label}</span>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onToggleCollapse?.(id);
+              }}
+              className="p-0.5 hover:bg-muted rounded transition-colors flex-shrink-0"
+              title="Ampliar bloco"
+            >
+              <Maximize2 className="w-3 h-3 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+
+        {/* Note indicator */}
+        {data.note && (
+          <div className="absolute -top-2 -right-2 bg-yellow-400 rounded-full p-1 shadow-md">
+            <StickyNote className="w-3 h-3 text-yellow-900" />
+          </div>
+        )}
+
+        {/* Breakpoint indicator */}
+        {data.isBreakpoint && (
+          <div className="absolute -top-2 -left-2 bg-orange-500 rounded-full p-1 shadow-md">
+            <Pause className="w-3 h-3 text-white" />
+          </div>
+        )}
+
+        {/* Output Handles - Single Output */}
+        {outputsConfig.type === 'single' && (
+          <div className="relative flex justify-center pb-2">
+            <div className="relative flex items-center justify-center">
+              <Handle
+                type="source"
+                position={Position.Bottom}
+                className="!w-5 !h-5 !bg-primary !border-2 !border-background !rounded-full !relative !bottom-0"
+                style={{ position: 'relative' }}
+              />
+              <ArrowRight className="w-3 h-3 text-white absolute pointer-events-none rotate-90" />
+            </div>
+          </div>
+        )}
+        
+        {/* Output Handles - Binary (Collapsed) */}
+        {outputsConfig.type === 'binary' && (
+          <div className="px-2 pb-2 flex gap-1 justify-center">
+            {outputsConfig.outputs.map((out: any) => (
+              <div 
+                key={out.id}
+                className={cn(
+                  "relative p-1.5 rounded-md",
+                  out.color.bg
+                )}
+                title={out.label}
+              >
+                <Handle
+                  type="source"
+                  position={Position.Bottom}
+                  id={out.id}
+                  className="!bg-white !w-3 !h-3 !relative !transform-none !border !rounded-full"
+                  style={{ position: 'relative' }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Output Handles - Dynamic Time (Collapsed) */}
+        {outputsConfig.type === 'dynamic_time' && (
+          <div className="px-2 pb-2 flex gap-1 flex-wrap justify-center">
+            {outputsConfig.outputs.map((out: any) => (
+              <div 
+                key={out.id}
+                className={cn(
+                  "relative p-1.5 rounded-md",
+                  out.color.bg
+                )}
+                title={out.label}
+              >
+                <Handle
+                  type="source"
+                  position={Position.Bottom}
+                  id={out.id}
+                  className="!bg-white !w-3 !h-3 !relative !transform-none !border !rounded-full"
+                  style={{ position: 'relative' }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    );
+  }
+
+  // Expanded view
   return (
     <Card className={getCardClassName()} style={{ borderColor: selected ? undefined : color }}>
       {/* Input Handle */}
@@ -189,6 +311,18 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
             </div>
             <p className="text-xs text-muted-foreground line-clamp-2">{blockDef?.description}</p>
           </div>
+
+          {/* Collapse button */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              data.onToggleCollapse?.(id);
+            }}
+            className="p-1 hover:bg-muted rounded transition-colors"
+            title="Encolher bloco"
+          >
+            <Minimize2 className="w-4 h-4 text-muted-foreground" />
+          </button>
           
           {/* Menu */}
           <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
@@ -198,6 +332,18 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem
+                onClick={() => {
+                  data.onToggleCollapse?.(id);
+                  setDropdownOpen(false);
+                }}
+              >
+                <Minimize2 className="w-4 h-4 mr-2 text-muted-foreground" />
+                Encolher Bloco
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
               <DropdownMenuItem
                 onClick={() => {
                   data.onSetBreakpoint?.(id);
