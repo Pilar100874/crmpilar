@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bot, Database, FileSpreadsheet, BarChart3, Settings, Link2 } from "lucide-react";
+import { Bot, Database, FileSpreadsheet, BarChart3, Settings, Link2, Search } from "lucide-react";
 import { FontesPesquisaCRUD } from "@/components/robo-precos/FontesPesquisaCRUD";
 import { MapeamentoProdutoFonte } from "@/components/robo-precos/MapeamentoProdutoFonte";
 import { ImportarArquivoPrecos } from "@/components/robo-precos/ImportarArquivoPrecos";
 import { DashboardPrecos } from "@/components/robo-precos/DashboardPrecos";
 import { LogsMonitorPreco } from "@/components/robo-precos/LogsMonitorPreco";
+import { BuscaManualPrecos } from "@/components/robo-precos/BuscaManualPrecos";
 
 export default function RoboPrecos() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("busca");
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -31,7 +32,11 @@ export default function RoboPrecos() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-flex">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-flex">
+            <TabsTrigger value="busca" className="gap-2">
+              <Search className="h-4 w-4" />
+              <span className="hidden sm:inline">Buscar</span>
+            </TabsTrigger>
             <TabsTrigger value="dashboard" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Dashboard</span>
@@ -53,6 +58,10 @@ export default function RoboPrecos() {
               <span className="hidden sm:inline">Logs</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="busca">
+            <BuscaManualPrecos />
+          </TabsContent>
 
           <TabsContent value="dashboard">
             <DashboardPrecos />
