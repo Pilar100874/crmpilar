@@ -135,6 +135,15 @@ interface FormData {
   condicao: string;
   foto_url_2: string;
   foto_url_3: string;
+  // Campos extras para Marketplace
+  mpn: string;
+  gtin: string;
+  cor: string;
+  tamanho: string;
+  material: string;
+  genero: string;
+  faixa_etaria: string;
+  categoria_google: string;
 }
 
 const initialFormData: FormData = {
@@ -186,6 +195,15 @@ const initialFormData: FormData = {
   condicao: "novo",
   foto_url_2: "",
   foto_url_3: "",
+  // Campos extras para Marketplace
+  mpn: "",
+  gtin: "",
+  cor: "",
+  tamanho: "",
+  material: "",
+  genero: "",
+  faixa_etaria: "",
+  categoria_google: "",
 };
 
 export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
@@ -724,6 +742,15 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
         condicao: formData.condicao || "novo",
         foto_url_2: formData.foto_url_2 || null,
         foto_url_3: formData.foto_url_3 || null,
+        // Campos extras para Marketplace
+        mpn: formData.mpn || null,
+        gtin: formData.gtin || null,
+        cor: formData.cor || null,
+        tamanho: formData.tamanho || null,
+        material: formData.material || null,
+        genero: formData.genero || null,
+        faixa_etaria: formData.faixa_etaria || null,
+        categoria_google: formData.categoria_google || null,
       };
 
       if (editingProduto) {
@@ -830,6 +857,15 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       condicao: p.condicao || "novo",
       foto_url_2: p.foto_url_2 || "",
       foto_url_3: p.foto_url_3 || "",
+      // Campos extras para Marketplace
+      mpn: p.mpn || "",
+      gtin: p.gtin || "",
+      cor: p.cor || "",
+      tamanho: p.tamanho || "",
+      material: p.material || "",
+      genero: p.genero || "",
+      faixa_etaria: p.faixa_etaria || "",
+      categoria_google: p.categoria_google || "",
     });
     setShowDialog(true);
   };
@@ -1844,6 +1880,116 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
                         placeholder="Ex: 12 meses, 1 ano..."
                         className="h-9 sm:h-10 text-sm"
                       />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Códigos de Identificação */}
+                <div className="space-y-3 sm:space-y-4">
+                  <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Códigos de Identificação</h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">MPN (Part Number do Fabricante)</Label>
+                      <Input
+                        value={formData.mpn}
+                        onChange={(e) => setFormData({ ...formData, mpn: e.target.value })}
+                        placeholder="Código do fabricante"
+                        className="h-9 sm:h-10 text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground">Código único atribuído pelo fabricante</p>
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">GTIN</Label>
+                      <Input
+                        value={formData.gtin}
+                        onChange={(e) => setFormData({ ...formData, gtin: e.target.value })}
+                        placeholder="Global Trade Item Number"
+                        className="h-9 sm:h-10 text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground">Código global (alternativo ao EAN)</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Características do Produto */}
+                <div className="space-y-3 sm:space-y-4">
+                  <h4 className="text-xs sm:text-sm font-medium text-muted-foreground border-b pb-2">Características do Produto</h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Cor</Label>
+                      <Input
+                        value={formData.cor}
+                        onChange={(e) => setFormData({ ...formData, cor: e.target.value })}
+                        placeholder="Ex: Azul, Preto, Vermelho..."
+                        className="h-9 sm:h-10 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Tamanho</Label>
+                      <Input
+                        value={formData.tamanho}
+                        onChange={(e) => setFormData({ ...formData, tamanho: e.target.value })}
+                        placeholder="Ex: P, M, G, 42, 100ml..."
+                        className="h-9 sm:h-10 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Material</Label>
+                      <Input
+                        value={formData.material}
+                        onChange={(e) => setFormData({ ...formData, material: e.target.value })}
+                        placeholder="Ex: Algodão, Couro, Plástico..."
+                        className="h-9 sm:h-10 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Gênero</Label>
+                      <Select
+                        value={formData.genero || ""}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, genero: value }))}
+                      >
+                        <SelectTrigger className="h-9 sm:h-10 text-sm">
+                          <SelectValue placeholder="Selecione o gênero" />
+                        </SelectTrigger>
+                        <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                          <SelectItem value="unissex">Unissex</SelectItem>
+                          <SelectItem value="masculino">Masculino</SelectItem>
+                          <SelectItem value="feminino">Feminino</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Faixa Etária</Label>
+                      <Select
+                        value={formData.faixa_etaria || ""}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, faixa_etaria: value }))}
+                      >
+                        <SelectTrigger className="h-9 sm:h-10 text-sm">
+                          <SelectValue placeholder="Selecione a faixa etária" />
+                        </SelectTrigger>
+                        <SelectContent position="popper" className="z-[9999]" sideOffset={4}>
+                          <SelectItem value="adulto">Adulto</SelectItem>
+                          <SelectItem value="infantil">Infantil</SelectItem>
+                          <SelectItem value="bebe">Bebê</SelectItem>
+                          <SelectItem value="adolescente">Adolescente</SelectItem>
+                          <SelectItem value="todas">Todas as Idades</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm font-medium">Categoria Google Shopping</Label>
+                      <Input
+                        value={formData.categoria_google}
+                        onChange={(e) => setFormData({ ...formData, categoria_google: e.target.value })}
+                        placeholder="ID da categoria Google"
+                        className="h-9 sm:h-10 text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground">ID numérico da taxonomia Google</p>
                     </div>
                   </div>
                 </div>
