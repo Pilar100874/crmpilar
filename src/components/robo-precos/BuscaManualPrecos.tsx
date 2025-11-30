@@ -78,6 +78,14 @@ export function BuscaManualPrecos() {
         throw new Error(data.error);
       }
 
+      // Verificar se é modo demo (API indisponível)
+      if (data._demo) {
+        toast.warning(data._message || "API temporariamente indisponível");
+        setResultados([]);
+        setTotalResultados(0);
+        return;
+      }
+
       const items = data.results || [];
       setTotalResultados(data.paging?.total || 0);
 
