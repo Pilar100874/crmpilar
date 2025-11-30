@@ -169,9 +169,9 @@ export function UsuarioSelector({ open, onClose, estabelecimentoId: propEstabele
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="usuario">Usuário</Label>
-            <Select value={selectedUsuario} onValueChange={setSelectedUsuario} disabled={isLoading || usuarios.length === 0}>
+            <Select value={selectedUsuario} onValueChange={setSelectedUsuario} disabled={isLoading}>
               <SelectTrigger id="usuario">
-                <SelectValue placeholder={isLoading ? "Carregando..." : usuarios.length === 0 ? "Nenhum usuário encontrado" : "Selecione um usuário"} />
+                <SelectValue placeholder={isLoading ? "Carregando..." : "Selecione um usuário"} />
               </SelectTrigger>
               <SelectContent>
                 {usuarios.length === 0 ? (
