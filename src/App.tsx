@@ -73,6 +73,11 @@ import WhatsAppCatalogo from "./pages/WhatsAppCatalogo";
 import MarketplaceHub from "./pages/MarketplaceHub";
 import MarketplaceProdutos from "./pages/MarketplaceProdutos";
 import MarketplacePedidos from "./pages/MarketplacePedidos";
+import AdsDashboard from "./pages/ads/AdsDashboard";
+import AdsCredentials from "./pages/ads/AdsCredentials";
+import AdsLogs from "./pages/ads/AdsLogs";
+import AdsAutomation from "./pages/ads/AdsAutomation";
+import AdsPlatformDashboard from "./pages/ads/AdsPlatformDashboard";
 
 const queryClient = new QueryClient();
 
@@ -164,6 +169,17 @@ const App = () => (
             <Route path="/marketplaces/produtos" element={<MarketplaceProdutos />} />
             <Route path="/marketplaces/pedidos" element={<MarketplacePedidos />} />
             <Route path="/whatsapp-catalogo" element={<WhatsAppCatalogo />} />
+            {/* Ads Routes */}
+            <Route path="/ads" element={<AdsDashboard />} />
+            <Route path="/ads/google" element={<AdsPlatformDashboard />} />
+            <Route path="/ads/meta" element={<AdsPlatformDashboard />} />
+            <Route path="/ads/tiktok" element={<AdsPlatformDashboard />} />
+            <Route path="/ads/mercadolivre" element={<AdsPlatformDashboard />} />
+            <Route path="/ads/amazon" element={<AdsPlatformDashboard />} />
+            <Route path="/ads/credentials" element={<AdsCredentials />} />
+            <Route path="/ads/logs" element={<AdsLogs />} />
+            <Route path="/ads/automation" element={<AdsAutomation />} />
+            <Route path="/ads/automation/:id" element={<AdsAutomation />} />
           </Route>
           {/* Public routes (no layout) */}
           <Route path="/orcamento/:token" element={<OrcamentoPublico />} />

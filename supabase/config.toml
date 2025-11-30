@@ -173,3 +173,24 @@ verify_jwt = false
 
 [functions.whatsapp-commerce-sync]
 verify_jwt = true
+
+[functions.ads-google-sync]
+verify_jwt = true
+
+[functions.ads-meta-sync]
+verify_jwt = true
+
+[functions.ads-tiktok-sync]
+verify_jwt = true
+
+[functions.ads-mercadolivre-sync]
+verify_jwt = true
+
+[functions.ads-amazon-sync]
+verify_jwt = true
+
+[functions.ads-sync-all]
+verify_jwt = true
+
+[functions.ads-generate-report]
+verify_jwt = true
