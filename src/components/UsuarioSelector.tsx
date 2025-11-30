@@ -50,17 +50,50 @@ export function UsuarioSelector({ open, onClose, estabelecimentoId: propEstabele
       setEstabelecimentoId(estabId);
     }
 
+    // Se ainda não tem estabelecimento, tenta buscar do usuário logado diretamente
+    if (!estabId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Tenta buscar por auth_user_id
+        const { data: userData } = await supabase
+          .from("usuarios")
+          .select("estabelecimento_id")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+        
+        if (userData?.estabelecimento_id) {
+          estabId = userData.estabelecimento_id;
+        } else {
+          // Tenta buscar por email
+          const { data: userByEmail } = await supabase
+            .from("usuarios")
+            .select("estabelecimento_id")
+            .eq("email", user.email)
+            .maybeSingle();
+          
+          if (userByEmail?.estabelecimento_id) {
+            estabId = userByEmail.estabelecimento_id;
+          }
+        }
+        setEstabelecimentoId(estabId);
+      }
+    }
+
     if (!estabId) {
       console.error("Nenhum estabelecimento encontrado");
       setIsLoading(false);
       return;
     }
 
+    console.log("Buscando usuários do estabelecimento:", estabId);
+
     const { data, error } = await supabase
       .from("usuarios")
       .select("id, nome, email")
       .eq("estabelecimento_id", estabId)
       .order("nome");
+
+    console.log("Usuários encontrados:", data?.length, data);
 
     if (!error && data) {
       setUsuarios(data);
@@ -136,21 +169,27 @@ export function UsuarioSelector({ open, onClose, estabelecimentoId: propEstabele
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="usuario">Usuário</Label>
-            <Select value={selectedUsuario} onValueChange={setSelectedUsuario}>
+            <Select value={selectedUsuario} onValueChange={setSelectedUsuario} disabled={isLoading || usuarios.length === 0}>
               <SelectTrigger id="usuario">
-                <SelectValue placeholder="Selecione um usuário" />
+                <SelectValue placeholder={isLoading ? "Carregando..." : usuarios.length === 0 ? "Nenhum usuário encontrado" : "Selecione um usuário"} />
               </SelectTrigger>
               <SelectContent>
-                {usuarios.map((usuario) => (
-                  <SelectItem key={usuario.id} value={usuario.id}>
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">{usuario.nome}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {usuario.email}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
+                {usuarios.length === 0 ? (
+                  <div className="p-2 text-sm text-muted-foreground text-center">
+                    Nenhum usuário disponível
+                  </div>
+                ) : (
+                  usuarios.map((usuario) => (
+                    <SelectItem key={usuario.id} value={usuario.id}>
+                      <div className="flex flex-col items-start">
+                        <span className="font-medium">{usuario.nome}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {usuario.email}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
