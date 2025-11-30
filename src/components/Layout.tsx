@@ -210,6 +210,7 @@ const menuItems: MenuItem[] = [
       { id: "Ads Logs", title: "Logs de Coleta", url: "/ads/logs", icon: LucideIcons.History },
     ]
   },
+  { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
   { id: "Trocar Usuário", title: "Trocar Usuário", url: "/perfil", icon: UserIcon },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
