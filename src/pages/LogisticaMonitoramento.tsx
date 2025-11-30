@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logistica';
+import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +19,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-
+import { executarAutomacoesLogistica, limparParadasAntigas } from '@/services/logisticaAutomacaoExecutor';
+import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', borderColor: 'border-green-500' },
   parado: { label: 'Parado', color: 'bg-amber-500', textColor: 'text-amber-600', borderColor: 'border-amber-500' },
@@ -42,6 +44,7 @@ interface VehicleAlert {
 const LogisticaMonitoramento: React.FC = () => {
   const navigate = useNavigate();
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
+  const [paradasMarcadas, setParadasMarcadas] = useState<ParadaMarcada[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedVeiculoId, setSelectedVeiculoId] = useState<string | null>(null);
   const [alertsEnabled, setAlertsEnabled] = useState(true);
@@ -51,6 +54,7 @@ const LogisticaMonitoramento: React.FC = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [mapFullscreen, setMapFullscreen] = useState(false);
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   
   const alertConfig: AlertConfig = {
     speedLimit: 120,
@@ -59,6 +63,28 @@ const LogisticaMonitoramento: React.FC = () => {
   };
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Fetch estabelecimento ID on mount
+  useEffect(() => {
+    const fetchEstabelecimento = async () => {
+      const estabId = await getEstabelecimentoId();
+      setEstabelecimentoId(estabId);
+    };
+    fetchEstabelecimento();
+  }, []);
+
+  const fetchParadasMarcadas = useCallback(async () => {
+    if (!estabelecimentoId) return;
+    
+    const { data, error } = await supabase
+      .from('logistica_paradas_marcadas')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimentoId);
+
+    if (!error && data) {
+      setParadasMarcadas(data as ParadaMarcada[]);
+    }
+  }, [estabelecimentoId]);
 
   const fetchVeiculos = useCallback(async () => {
     try {
@@ -101,13 +127,31 @@ const LogisticaMonitoramento: React.FC = () => {
       setVeiculos(veiculosComStatus);
       setLastUpdate(new Date());
       checkAlerts(veiculosComStatus);
+
+      // Execute automations after fetching vehicles
+      if (estabelecimentoId) {
+        const resultados = await executarAutomacoesLogistica(veiculosComStatus, estabelecimentoId);
+        
+        // Get list of vehicles that triggered automations
+        const veiculosComMarcacao = resultados.map(r => r.veiculo_id);
+        
+        // Clean up markers for vehicles that no longer meet conditions
+        await limparParadasAntigas(veiculosComMarcacao, estabelecimentoId);
+        
+        // Refresh paradas marcadas
+        await fetchParadasMarcadas();
+        
+        if (resultados.length > 0) {
+          console.log(`✅ ${resultados.length} marcações de automação executadas`);
+        }
+      }
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       toast.error('Erro ao carregar veículos');
     } finally {
       setLoading(false);
     }
-  }, [alertConfig]);
+  }, [alertConfig, estabelecimentoId, fetchParadasMarcadas]);
 
   const checkAlerts = (veiculosData: VeiculoComStatus[]) => {
     if (!alertsEnabled) return;
@@ -242,6 +286,7 @@ const LogisticaMonitoramento: React.FC = () => {
           ) : (
             <LazyLogisticaMap
               veiculos={veiculosComPosicao}
+              paradasMarcadas={paradasMarcadas}
               onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
               className="absolute inset-0"
               fitBounds
@@ -435,6 +480,7 @@ const LogisticaMonitoramento: React.FC = () => {
           ) : (
             <LazyLogisticaMap
               veiculos={veiculosComPosicao}
+              paradasMarcadas={paradasMarcadas}
               onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
               className="h-full w-full"
               fitBounds
