@@ -16,7 +16,8 @@ import {
   LucideIcon,
   PanelLeftClose,
   PanelLeft,
-  Globe
+  Globe,
+  MessageCircle
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,6 +60,7 @@ const tabItems: TabItem[] = [
   { id: 'pedagio', label: 'API de Pedágio', icon: Calculator },
   { id: 'automacao', label: 'Regras de Automação', icon: Zap },
   { id: 'importacao-api', label: 'Importação de Produtos', icon: Globe },
+  { id: 'whatsapp-catalogo', label: 'Catálogo WhatsApp', icon: MessageCircle },
 ];
 
 export default function VendasConfig() {
@@ -385,6 +387,31 @@ export default function VendasConfig() {
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">
                   {estabelecimentoId && <ImportacaoApiTab estabelecimentoId={estabelecimentoId} />}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="whatsapp-catalogo" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Catálogo WhatsApp
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Gerencie produtos para o catálogo WhatsApp Commerce
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">
+                  <div className="text-center py-8">
+                    <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground mb-4">
+                      Acesse a página completa do Catálogo WhatsApp para gerenciar seus produtos
+                    </p>
+                    <a href="/whatsapp-catalogo" className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                      Abrir Catálogo WhatsApp
+                    </a>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
