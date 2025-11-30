@@ -194,3 +194,9 @@ verify_jwt = true
 
 [functions.ads-generate-report]
 verify_jwt = true
+
+[functions.mercadolivre-search]
+verify_jwt = false
+
+[functions.monitor-precos-run]
+verify_jwt = true
