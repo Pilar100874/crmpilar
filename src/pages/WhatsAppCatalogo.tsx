@@ -80,20 +80,30 @@ export default function WhatsAppCatalogo() {
     }
   }, []);
 
-  // Buscar contas WhatsApp Commerce conectadas
+  // Buscar contas WhatsApp Commerce (do hub de marketplaces)
   const { data: contasWhatsApp } = useQuery({
     queryKey: ['contas_whatsapp_commerce', estabelecimentoId],
     queryFn: async () => {
       if (!estabelecimentoId) return [];
+      
+      // Primeiro buscar o marketplace_id do WhatsApp Commerce
+      const { data: marketplace } = await supabase
+        .from('marketplaces')
+        .select('id')
+        .eq('nome', 'whatsapp_commerce')
+        .maybeSingle();
+      
+      if (!marketplace) return [];
+      
+      // Buscar contas desse marketplace
       const { data, error } = await supabase
         .from('contas_marketplace')
         .select('*, marketplace:marketplaces(id, nome, nome_display)')
         .eq('estabelecimento_id', estabelecimentoId)
-        .eq('status', 'conectado')
-        .eq('marketplaces.nome', 'whatsapp_commerce');
+        .eq('marketplace_id', marketplace.id);
+      
       if (error) throw error;
-      // Filter only whatsapp_commerce
-      return data?.filter(c => c.marketplace?.nome === 'whatsapp_commerce') || [];
+      return data || [];
     },
     enabled: !!estabelecimentoId,
   });
