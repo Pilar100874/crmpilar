@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Loader2, ExternalLink, TrendingDown, Package, Store } from "lucide-react";
+import { Search, Loader2, ExternalLink, TrendingDown, Package, Store, Target } from "lucide-react";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 
 interface ResultadoBusca {
   id: string;
@@ -19,6 +20,31 @@ interface ResultadoBusca {
   seller_nickname?: string;
   free_shipping: boolean;
   available_quantity: number;
+  score: number; // Score de similaridade
+}
+
+// Helpers de similaridade (mesmo algoritmo do backend)
+function normalizarTexto(str: string): string {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function calcularSimilaridade(a: string, b: string): number {
+  const tokensA = new Set(normalizarTexto(a).split(' ').filter(t => t.length > 1));
+  const tokensB = new Set(normalizarTexto(b).split(' ').filter(t => t.length > 1));
+  
+  if (tokensA.size === 0 || tokensB.size === 0) return 0;
+  
+  const intersecao = new Set([...tokensA].filter(x => tokensB.has(x)));
+  const uniao = new Set([...tokensA, ...tokensB]);
+  
+  return intersecao.size / uniao.size;
 }
 
 export function BuscaManualPrecos() {
@@ -38,7 +64,7 @@ export function BuscaManualPrecos() {
 
     try {
       const query = encodeURIComponent(termoBusca.trim());
-      const url = `https://api.mercadolibre.com/sites/MLB/search?q=${query}&limit=20&sort=price_asc`;
+      const url = `https://api.mercadolibre.com/sites/MLB/search?q=${query}&limit=20`;
       
       console.log("[Busca Manual] Buscando:", url);
       
@@ -53,8 +79,8 @@ export function BuscaManualPrecos() {
       
       setTotalResultados(json.paging?.total || 0);
 
-      // Pega os 5 menores preços (já vem ordenado por preço)
-      const top5 = items.slice(0, 5).map((item: any) => ({
+      // Calcula score de similaridade para cada item
+      const itemsComScore = items.map((item: any) => ({
         id: item.id,
         title: item.title,
         price: item.price,
@@ -65,7 +91,12 @@ export function BuscaManualPrecos() {
         seller_nickname: item.seller?.nickname,
         free_shipping: item.shipping?.free_shipping || false,
         available_quantity: item.available_quantity || 0,
+        score: calcularSimilaridade(termoBusca, item.title),
       }));
+
+      // Ordena por preço e pega os 5 menores
+      itemsComScore.sort((a: any, b: any) => a.price - b.price);
+      const top5 = itemsComScore.slice(0, 5);
 
       setResultados(top5);
 
@@ -201,6 +232,20 @@ export function BuscaManualPrecos() {
                             {item.seller_nickname}
                           </span>
                         )}
+                      </div>
+                      {/* Score de Similaridade */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <Target className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Match:</span>
+                        <div className="w-20">
+                          <Progress value={item.score * 100} className="h-1.5" />
+                        </div>
+                        <span className={`text-xs font-medium ${
+                          item.score >= 0.6 ? 'text-green-500' : 
+                          item.score >= 0.3 ? 'text-yellow-500' : 'text-red-500'
+                        }`}>
+                          {(item.score * 100).toFixed(0)}%
+                        </span>
                       </div>
                     </div>
 
