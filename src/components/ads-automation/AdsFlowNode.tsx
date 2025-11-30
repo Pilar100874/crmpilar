@@ -1,8 +1,16 @@
 import { memo, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
-import { ADS_BLOCK_DEFINITIONS, AdsFlowNodeData } from "@/types/adsFlow";
-import * as Icons from "lucide-react";
+import { ADS_BLOCK_DEFINITIONS, AdsBlockType, AdsFlowNodeData } from "@/types/adsFlow";
+import { 
+  MoreVertical, Pause, SkipForward, Copy, Trash2, StickyNote, X, ArrowRight,
+  TrendingDown, DollarSign, MousePointerClick, Percent, Target, Eye, Clock,
+  Repeat, Star, AlertTriangle, ArrowUpDown, Layers, Megaphone, BarChart3,
+  Calendar, PiggyBank, Smartphone, MapPin, Play, TrendingUp, Bell, Webhook,
+  Mail, Archive, Power, CalendarClock, MessageSquare, FileText, LucideIcon
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +28,39 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreVertical, Pause, SkipForward, Copy, Trash2, StickyNote, X } from "lucide-react";
+
+const iconMap: Record<string, LucideIcon> = {
+  TrendingDown,
+  DollarSign,
+  MousePointerClick,
+  Percent,
+  Target,
+  Eye,
+  Clock,
+  Repeat,
+  Star,
+  AlertTriangle,
+  ArrowUpDown,
+  Layers,
+  Megaphone,
+  BarChart3,
+  Calendar,
+  PiggyBank,
+  Smartphone,
+  MapPin,
+  Pause,
+  Play,
+  TrendingUp,
+  Bell,
+  Webhook,
+  Mail,
+  Copy,
+  Archive,
+  Power,
+  CalendarClock,
+  MessageSquare,
+  FileText,
+};
 
 interface AdsFlowNodeProps {
   id: string;
@@ -42,31 +82,45 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
 
   if (!blockDef) return null;
 
-  const IconComponent = Icons[blockDef.icon as keyof typeof Icons] as any;
+  const IconComponent = iconMap[blockDef.icon] || Target;
+  const color = blockDef.color;
 
-  const getCategoryColor = () => {
-    switch (blockDef.category) {
-      case 'trigger': return { bg: 'from-orange-500/10 to-amber-500/10', border: 'border-orange-500/30', icon: 'text-orange-600' };
-      case 'condition': return { bg: 'from-violet-500/10 to-purple-500/10', border: 'border-violet-500/30', icon: 'text-violet-600' };
-      case 'action': return { bg: 'from-green-500/10 to-emerald-500/10', border: 'border-green-500/30', icon: 'text-green-600' };
-      default: return { bg: 'from-slate-500/10 to-gray-500/10', border: 'border-slate-500/30', icon: 'text-slate-600' };
+  // Get outputs configuration
+  const getOutputsConfig = () => {
+    const outputs = blockDef.outputs || 1;
+    const outputLabels = blockDef.outputLabels || [];
+    
+    if (outputs === 2) {
+      return {
+        type: 'binary',
+        outputs: [
+          { id: 'yes', label: outputLabels[0] || 'Sim', color: { bg: 'bg-green-500', hover: 'hover:bg-green-600', border: 'border-green-700', text: 'text-green-700' } },
+          { id: 'no', label: outputLabels[1] || 'Não', color: { bg: 'bg-red-500', hover: 'hover:bg-red-600', border: 'border-red-700', text: 'text-red-700' } }
+        ]
+      };
     }
+    
+    return { type: 'single', outputs: [] };
   };
 
-  const colors = getCategoryColor();
+  const outputsConfig = getOutputsConfig();
 
   const getCardClassName = () => {
     const baseClass = "min-w-[220px] max-w-[280px] transition-all duration-200 shadow-lg";
     
     if (data.isBreakpoint) {
-      return `${baseClass} bg-gradient-to-br ${colors.bg} border-2 border-orange-500 ${selected ? "ring-2 ring-primary" : ""}`;
+      return `${baseClass} bg-card border-2 border-orange-500 ${selected ? "ring-2 ring-primary" : ""}`;
     }
     
     if (data.isSkipped) {
-      return `${baseClass} bg-gradient-to-br from-slate-100 to-slate-50 border-2 border-slate-400 opacity-60 ${selected ? "ring-2 ring-primary" : ""}`;
+      return `${baseClass} bg-card/60 border-2 border-muted-foreground opacity-60 ${selected ? "ring-2 ring-primary" : ""}`;
     }
     
-    return `${baseClass} bg-gradient-to-br ${colors.bg} border ${colors.border} ${selected ? "ring-2 ring-primary border-primary" : "hover:border-primary/50"}`;
+    return `${baseClass} bg-card border-2 ${
+      selected 
+        ? "ring-2 ring-primary border-primary" 
+        : "border-border hover:border-muted-foreground"
+    }`;
   };
 
   const getConfigPreview = () => {
@@ -84,16 +138,48 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
         return `${config.hours || 24}h sem conversões`;
       case 'trigger_schedule':
         return config.cron || 'Não configurado';
+      case 'trigger_frequency':
+        return `Frequência > ${config.threshold || 3}`;
+      case 'trigger_quality_score':
+        return `Score < ${config.threshold || 5}`;
+      case 'trigger_budget_depleted':
+        return `< ${config.percentageRemaining || 20}% restante`;
+      case 'trigger_position':
+        return `Posição > ${config.threshold || 4}`;
       case 'condition_platform':
-        return config.platforms?.join(', ') || 'Todas';
+        return config.platforms?.length ? config.platforms.join(', ') : 'Todas';
       case 'condition_campaign':
         return config.nameContains || 'Qualquer';
+      case 'condition_time':
+        return `${config.startHour || 9}h - ${config.endHour || 18}h`;
+      case 'condition_day_of_week':
+        return config.days?.length ? `${config.days.length} dias` : 'Todos';
+      case 'condition_budget_remaining':
+        return `${config.operator || '<'} ${config.percentage || 50}%`;
+      case 'condition_device':
+        return config.devices?.length ? config.devices.join(', ') : 'Todos';
+      case 'condition_location':
+        return config.locations?.length ? `${config.locations.length} regiões` : 'Todas';
       case 'action_budget_decrease':
         return `-${config.percentage || 20}%`;
       case 'action_budget_increase':
         return `+${config.percentage || 20}%`;
       case 'action_notify':
-        return config.message?.substring(0, 20) || 'Configurar';
+        return config.message?.substring(0, 20) || 'Configurar...';
+      case 'action_webhook':
+        return config.url?.substring(0, 25) || 'Configurar URL...';
+      case 'action_email':
+        return config.to || 'Configurar email...';
+      case 'action_slack':
+        return config.webhookUrl ? 'Configurado' : 'Configurar...';
+      case 'action_bid_adjust':
+        return `${config.adjustment > 0 ? '+' : ''}${config.adjustment || 0}%`;
+      case 'action_bid_device':
+        return 'Ajustes por dispositivo';
+      case 'action_schedule_change':
+        return config.action === 'pause' ? 'Agendar pausa' : 'Agendar ativação';
+      case 'action_create_report':
+        return `Relatório ${config.period || '7d'}`;
       default:
         return null;
     }
@@ -103,34 +189,39 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
 
   return (
     <>
-      <Card className={getCardClassName()}>
-        <Handle 
-          type="target" 
-          position={Position.Top} 
-          className="!bg-primary !w-3 !h-3 !border-2 !border-white" 
+      <Card className={getCardClassName()} style={{ borderColor: selected ? undefined : color }}>
+        {/* Input Handle */}
+        <Handle
+          type="target"
+          position={Position.Top}
+          className="!w-4 !h-4 !bg-primary !border-2 !border-background"
         />
-        
+
         <div className="p-3">
+          {/* Header */}
           <div className="flex items-start gap-2 mb-2">
+            <Checkbox className="mt-0.5 h-4 w-4 border-muted-foreground" />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                {IconComponent && (
-                  <div className={`p-1.5 rounded-lg bg-white/80 border ${colors.border}`}>
-                    <IconComponent className={`w-4 h-4 ${colors.icon}`} />
-                  </div>
-                )}
-                <span className="font-semibold text-sm text-foreground truncate">{blockDef.label}</span>
+                <div 
+                  className="p-1.5 rounded-md"
+                  style={{ backgroundColor: color }}
+                >
+                  <IconComponent className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-semibold text-sm truncate">{blockDef.label}</span>
               </div>
               <p className="text-xs text-muted-foreground line-clamp-2">{blockDef.description}</p>
             </div>
             
+            {/* Menu */}
             <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
               <DropdownMenuTrigger asChild>
-                <button className="p-1 hover:bg-white/50 rounded transition-colors">
+                <button className="p-1 hover:bg-muted rounded transition-colors">
                   <MoreVertical className="w-4 h-4 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">
+              <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem
                   onClick={() => {
                     data.onSetBreakpoint?.(id);
@@ -147,7 +238,7 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
                     setDropdownOpen(false);
                   }}
                 >
-                  <SkipForward className="w-4 h-4 mr-2 text-slate-500" />
+                  <SkipForward className="w-4 h-4 mr-2 text-muted-foreground" />
                   {data.isSkipped ? "Não Pular Bloco" : "Pular Este Bloco"}
                 </DropdownMenuItem>
                 
@@ -180,7 +271,7 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
                   }}
                   disabled={!data.isBreakpoint && !data.isSkipped}
                 >
-                  <X className="w-4 h-4 mr-2 text-red-500" />
+                  <X className="w-4 h-4 mr-2 text-destructive" />
                   Liberar Bloco
                 </DropdownMenuItem>
                 
@@ -200,39 +291,80 @@ export const AdsFlowNode = memo(({ id, data, selected }: AdsFlowNodeProps) => {
             </DropdownMenu>
           </div>
 
+          {/* Config preview */}
           {configPreview && (
-            <div className="mt-2 px-2 py-1 bg-white/60 rounded text-xs text-muted-foreground border border-white/80">
+            <div className="text-xs text-muted-foreground bg-muted/50 rounded px-2 py-1.5">
               {configPreview}
             </div>
           )}
 
-          {data.note && (
-            <div className="mt-2 px-2 py-1 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-              <StickyNote className="w-3 h-3 inline mr-1" />
-              {data.note.length > 50 ? data.note.substring(0, 50) + '...' : data.note}
+          {/* Breakpoint/Skip indicators */}
+          {data.isBreakpoint && (
+            <div className="mt-2 flex items-center gap-1 text-xs text-orange-600">
+              <Pause className="w-3 h-3" />
+              <span>Pausar aqui</span>
             </div>
           )}
-
-          {/* Debug indicators */}
-          <div className="flex gap-1 mt-2">
-            {data.isBreakpoint && (
-              <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded text-[10px] font-medium">
-                BREAKPOINT
-              </span>
-            )}
-            {data.isSkipped && (
-              <span className="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-medium">
-                SKIP
-              </span>
-            )}
-          </div>
+          {data.isSkipped && (
+            <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+              <SkipForward className="w-3 h-3" />
+              <span>Bloco será pulado</span>
+            </div>
+          )}
         </div>
 
-        <Handle 
-          type="source" 
-          position={Position.Bottom} 
-          className="!bg-primary !w-3 !h-3 !border-2 !border-white" 
-        />
+        {/* Note indicator */}
+        {data.note && (
+          <div className="absolute -top-2 -right-2 bg-yellow-400 rounded-full p-1 shadow-md">
+            <StickyNote className="w-3 h-3 text-yellow-900" />
+          </div>
+        )}
+
+        {/* Output Handles - Single Output */}
+        {outputsConfig.type === 'single' && (
+          <div className="relative flex justify-center pb-2">
+            <div className="relative flex items-center justify-center">
+              <Handle
+                type="source"
+                position={Position.Bottom}
+                className="!w-5 !h-5 !bg-primary !border-2 !border-background !rounded-full !relative !bottom-0"
+                style={{ position: 'relative' }}
+              />
+              <ArrowRight className="w-3 h-3 text-white absolute pointer-events-none rotate-90" />
+            </div>
+          </div>
+        )}
+        
+        {/* Output Handles - Binary (Yes/No) */}
+        {outputsConfig.type === 'binary' && (
+          <div className="px-3 pb-3 space-y-1.5">
+            {outputsConfig.outputs.map((out) => (
+              <div 
+                key={out.id}
+                className={cn(
+                  "relative flex items-center justify-between gap-2 py-2 px-3 rounded-md group transition-colors",
+                  out.color.bg,
+                  out.color.hover
+                )}
+              >
+                <span className="text-xs font-medium text-white">{out.label}</span>
+                <div className="relative">
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    id={out.id}
+                    className={cn(
+                      "!bg-white !w-5 !h-5 !relative !transform-none !top-auto !right-0 !border-2 !rounded-full group-hover:!scale-110 !transition-transform",
+                      `!${out.color.border}`
+                    )}
+                    style={{ position: 'relative' }}
+                  />
+                  <ArrowRight className={cn("w-3 h-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none", out.color.text)} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

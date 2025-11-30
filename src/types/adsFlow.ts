@@ -45,6 +45,8 @@ export interface AdsBlockDefinition {
   category: 'trigger' | 'condition' | 'action';
   color: string;
   defaultData: Record<string, any>;
+  outputs?: number; // 1 = single, 2 = binary (yes/no)
+  outputLabels?: string[];
 }
 
 export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
@@ -156,7 +158,9 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
     icon: 'Layers',
     category: 'condition',
     color: '#8b5cf6',
-    defaultData: { platforms: [] }
+    defaultData: { platforms: [] },
+    outputs: 2,
+    outputLabels: ['Corresponde', 'Não corresponde']
   },
   {
     type: 'condition_campaign',
@@ -165,7 +169,9 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
     icon: 'Megaphone',
     category: 'condition',
     color: '#8b5cf6',
-    defaultData: { nameContains: '', campaignType: '' }
+    defaultData: { nameContains: '', campaignType: '' },
+    outputs: 2,
+    outputLabels: ['Corresponde', 'Não corresponde']
   },
   {
     type: 'condition_time',
@@ -174,7 +180,9 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
     icon: 'Clock',
     category: 'condition',
     color: '#8b5cf6',
-    defaultData: { startHour: 9, endHour: 18 }
+    defaultData: { startHour: 9, endHour: 18 },
+    outputs: 2,
+    outputLabels: ['Dentro', 'Fora']
   },
   {
     type: 'condition_metric',
@@ -183,7 +191,9 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
     icon: 'BarChart3',
     category: 'condition',
     color: '#8b5cf6',
-    defaultData: { metric: 'ctr', operator: '>', value: 0 }
+    defaultData: { metric: 'ctr', operator: '>', value: 0 },
+    outputs: 2,
+    outputLabels: ['Verdadeiro', 'Falso']
   },
   {
     type: 'condition_day_of_week',
@@ -192,7 +202,9 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
     icon: 'Calendar',
     category: 'condition',
     color: '#8b5cf6',
-    defaultData: { days: [] }
+    defaultData: { days: [] },
+    outputs: 2,
+    outputLabels: ['Corresponde', 'Não corresponde']
   },
   {
     type: 'condition_budget_remaining',
@@ -201,7 +213,9 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
     icon: 'PiggyBank',
     category: 'condition',
     color: '#8b5cf6',
-    defaultData: { percentage: 50, operator: '<' }
+    defaultData: { percentage: 50, operator: '<' },
+    outputs: 2,
+    outputLabels: ['Verdadeiro', 'Falso']
   },
   {
     type: 'condition_device',
@@ -210,7 +224,9 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
     icon: 'Smartphone',
     category: 'condition',
     color: '#8b5cf6',
-    defaultData: { devices: [] }
+    defaultData: { devices: [] },
+    outputs: 2,
+    outputLabels: ['Corresponde', 'Não corresponde']
   },
   {
     type: 'condition_location',
@@ -219,7 +235,9 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
     icon: 'MapPin',
     category: 'condition',
     color: '#8b5cf6',
-    defaultData: { locations: [] }
+    defaultData: { locations: [] },
+    outputs: 2,
+    outputLabels: ['Corresponde', 'Não corresponde']
   },
   // Actions
   {
