@@ -4735,10 +4735,12 @@ export type Database = {
           altura: number | null
           ativo: boolean | null
           campos_customizados: Json | null
+          categoria_google: string | null
           categoria_id: string | null
           codigo: string | null
           comprimento: number | null
           condicao: string | null
+          cor: string | null
           created_at: string | null
           cubagem: number | null
           descricao: string | null
@@ -4755,16 +4757,21 @@ export type Database = {
           empilhamento_maximo: number | null
           estabelecimento_id: string | null
           estoque: number | null
+          faixa_etaria: string | null
           foto_url: string | null
           foto_url_2: string | null
           foto_url_3: string | null
           fragil: boolean | null
           garantia: string | null
+          genero: string | null
           gramatura: number | null
           grupo_id: string | null
+          gtin: string | null
           id: string
           largura: number | null
           marca: string | null
+          material: string | null
+          mpn: string | null
           ncm: string | null
           ncm_id: string | null
           nome: string
@@ -4776,6 +4783,7 @@ export type Database = {
           preco_ativo: boolean | null
           preco_minimo: number | null
           preco_tabela: number | null
+          tamanho: string | null
           tipo_preco: string | null
           updated_at: string | null
           valor_seguro: number | null
@@ -4784,10 +4792,12 @@ export type Database = {
           altura?: number | null
           ativo?: boolean | null
           campos_customizados?: Json | null
+          categoria_google?: string | null
           categoria_id?: string | null
           codigo?: string | null
           comprimento?: number | null
           condicao?: string | null
+          cor?: string | null
           created_at?: string | null
           cubagem?: number | null
           descricao?: string | null
@@ -4804,16 +4814,21 @@ export type Database = {
           empilhamento_maximo?: number | null
           estabelecimento_id?: string | null
           estoque?: number | null
+          faixa_etaria?: string | null
           foto_url?: string | null
           foto_url_2?: string | null
           foto_url_3?: string | null
           fragil?: boolean | null
           garantia?: string | null
+          genero?: string | null
           gramatura?: number | null
           grupo_id?: string | null
+          gtin?: string | null
           id?: string
           largura?: number | null
           marca?: string | null
+          material?: string | null
+          mpn?: string | null
           ncm?: string | null
           ncm_id?: string | null
           nome: string
@@ -4825,6 +4840,7 @@ export type Database = {
           preco_ativo?: boolean | null
           preco_minimo?: number | null
           preco_tabela?: number | null
+          tamanho?: string | null
           tipo_preco?: string | null
           updated_at?: string | null
           valor_seguro?: number | null
@@ -4833,10 +4849,12 @@ export type Database = {
           altura?: number | null
           ativo?: boolean | null
           campos_customizados?: Json | null
+          categoria_google?: string | null
           categoria_id?: string | null
           codigo?: string | null
           comprimento?: number | null
           condicao?: string | null
+          cor?: string | null
           created_at?: string | null
           cubagem?: number | null
           descricao?: string | null
@@ -4853,16 +4871,21 @@ export type Database = {
           empilhamento_maximo?: number | null
           estabelecimento_id?: string | null
           estoque?: number | null
+          faixa_etaria?: string | null
           foto_url?: string | null
           foto_url_2?: string | null
           foto_url_3?: string | null
           fragil?: boolean | null
           garantia?: string | null
+          genero?: string | null
           gramatura?: number | null
           grupo_id?: string | null
+          gtin?: string | null
           id?: string
           largura?: number | null
           marca?: string | null
+          material?: string | null
+          mpn?: string | null
           ncm?: string | null
           ncm_id?: string | null
           nome?: string
@@ -4874,6 +4897,7 @@ export type Database = {
           preco_ativo?: boolean | null
           preco_minimo?: number | null
           preco_tabela?: number | null
+          tamanho?: string | null
           tipo_preco?: string | null
           updated_at?: string | null
           valor_seguro?: number | null
