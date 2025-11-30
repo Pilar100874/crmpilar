@@ -1,4 +1,5 @@
 export type AdsBlockType = 
+  // Triggers
   | 'trigger_roas'
   | 'trigger_spend'
   | 'trigger_cpc'
@@ -6,10 +7,20 @@ export type AdsBlockType =
   | 'trigger_conversions'
   | 'trigger_impressions'
   | 'trigger_schedule'
+  | 'trigger_frequency'
+  | 'trigger_quality_score'
+  | 'trigger_budget_depleted'
+  | 'trigger_position'
+  // Conditions
   | 'condition_platform'
   | 'condition_campaign'
   | 'condition_time'
   | 'condition_metric'
+  | 'condition_day_of_week'
+  | 'condition_budget_remaining'
+  | 'condition_device'
+  | 'condition_location'
+  // Actions
   | 'action_pause'
   | 'action_resume'
   | 'action_budget_decrease'
@@ -17,7 +28,14 @@ export type AdsBlockType =
   | 'action_notify'
   | 'action_webhook'
   | 'action_email'
-  | 'action_bid_adjust';
+  | 'action_bid_adjust'
+  | 'action_duplicate'
+  | 'action_archive'
+  | 'action_activate'
+  | 'action_bid_device'
+  | 'action_schedule_change'
+  | 'action_slack'
+  | 'action_create_report';
 
 export interface AdsBlockDefinition {
   type: AdsBlockType;
@@ -94,6 +112,42 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
     color: '#f97316',
     defaultData: { cron: '0 9 * * *' }
   },
+  {
+    type: 'trigger_frequency',
+    label: 'Frequência',
+    description: 'Gatilho quando frequência muda',
+    icon: 'Repeat',
+    category: 'trigger',
+    color: '#f97316',
+    defaultData: { threshold: 3, comparison: 'above' }
+  },
+  {
+    type: 'trigger_quality_score',
+    label: 'Score de Qualidade',
+    description: 'Gatilho quando score de qualidade muda',
+    icon: 'Star',
+    category: 'trigger',
+    color: '#f97316',
+    defaultData: { threshold: 5, comparison: 'below' }
+  },
+  {
+    type: 'trigger_budget_depleted',
+    label: 'Orçamento Esgotando',
+    description: 'Gatilho quando orçamento está acabando',
+    icon: 'AlertTriangle',
+    category: 'trigger',
+    color: '#f97316',
+    defaultData: { percentageRemaining: 20 }
+  },
+  {
+    type: 'trigger_position',
+    label: 'Posição do Anúncio',
+    description: 'Gatilho quando posição média muda',
+    icon: 'ArrowUpDown',
+    category: 'trigger',
+    color: '#f97316',
+    defaultData: { threshold: 4, comparison: 'above' }
+  },
   // Conditions
   {
     type: 'condition_platform',
@@ -130,6 +184,42 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
     category: 'condition',
     color: '#8b5cf6',
     defaultData: { metric: 'ctr', operator: '>', value: 0 }
+  },
+  {
+    type: 'condition_day_of_week',
+    label: 'Dia da Semana',
+    description: 'Verifica se é dia específico',
+    icon: 'Calendar',
+    category: 'condition',
+    color: '#8b5cf6',
+    defaultData: { days: [] }
+  },
+  {
+    type: 'condition_budget_remaining',
+    label: 'Orçamento Restante',
+    description: 'Verifica % do orçamento restante',
+    icon: 'PiggyBank',
+    category: 'condition',
+    color: '#8b5cf6',
+    defaultData: { percentage: 50, operator: '<' }
+  },
+  {
+    type: 'condition_device',
+    label: 'Dispositivo',
+    description: 'Verifica tipo de dispositivo',
+    icon: 'Smartphone',
+    category: 'condition',
+    color: '#8b5cf6',
+    defaultData: { devices: [] }
+  },
+  {
+    type: 'condition_location',
+    label: 'Localização',
+    description: 'Verifica região geográfica',
+    icon: 'MapPin',
+    category: 'condition',
+    color: '#8b5cf6',
+    defaultData: { locations: [] }
   },
   // Actions
   {
@@ -203,6 +293,69 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
     category: 'action',
     color: '#22c55e',
     defaultData: { adjustment: 0, type: 'percentage' }
+  },
+  {
+    type: 'action_duplicate',
+    label: 'Duplicar Campanha',
+    description: 'Cria cópia da campanha',
+    icon: 'Copy',
+    category: 'action',
+    color: '#22c55e',
+    defaultData: { nameSuffix: '_copy' }
+  },
+  {
+    type: 'action_archive',
+    label: 'Arquivar',
+    description: 'Arquiva campanha/anúncio',
+    icon: 'Archive',
+    category: 'action',
+    color: '#22c55e',
+    defaultData: { level: 'campaign' }
+  },
+  {
+    type: 'action_activate',
+    label: 'Ativar',
+    description: 'Ativa campanha/anúncio pausado',
+    icon: 'Power',
+    category: 'action',
+    color: '#22c55e',
+    defaultData: { level: 'campaign' }
+  },
+  {
+    type: 'action_bid_device',
+    label: 'Lance por Dispositivo',
+    description: 'Ajusta lance por tipo de dispositivo',
+    icon: 'Smartphone',
+    category: 'action',
+    color: '#22c55e',
+    defaultData: { mobile: 0, desktop: 0, tablet: 0 }
+  },
+  {
+    type: 'action_schedule_change',
+    label: 'Agendar Mudança',
+    description: 'Agenda ativação/pausa futura',
+    icon: 'CalendarClock',
+    category: 'action',
+    color: '#22c55e',
+    defaultData: { action: 'pause', scheduledTime: '' }
+  },
+  {
+    type: 'action_slack',
+    label: 'Notificar Slack',
+    description: 'Envia mensagem para canal Slack',
+    icon: 'MessageSquare',
+    category: 'action',
+    color: '#22c55e',
+    defaultData: { webhookUrl: '', message: '' }
+  },
+  {
+    type: 'action_create_report',
+    label: 'Gerar Relatório',
+    description: 'Cria relatório automático',
+    icon: 'FileText',
+    category: 'action',
+    color: '#22c55e',
+    defaultData: { reportType: 'performance', period: '7d' }
   },
 ];
 
