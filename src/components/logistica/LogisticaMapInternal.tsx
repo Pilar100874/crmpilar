@@ -236,7 +236,19 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       const legenda = parada.legenda_parada || 'Veículo Parado';
 
       if (existingMarker) {
+        // Update position and icon
         existingMarker.setLatLng(pos);
+        existingMarker.setIcon(createParadaIcon(cor, icone));
+        // Update popup content
+        existingMarker.setPopupContent(`
+          <div class="text-sm p-1">
+            <p class="font-bold" style="color: ${cor}">⚠️ ${legenda}</p>
+            <p><strong>Placa:</strong> ${parada.veiculo?.placa || 'N/A'}</p>
+            <p><strong>Duração:</strong> ${parada.tempo_parado_minutos} min</p>
+            <p><strong>Início:</strong> ${new Date(parada.data_inicio).toLocaleString('pt-BR')}</p>
+            ${parada.data_fim ? `<p><strong>Fim:</strong> ${new Date(parada.data_fim).toLocaleString('pt-BR')}</p>` : '<p class="text-orange-600"><strong>Status:</strong> Em andamento</p>'}
+          </div>
+        `);
       } else {
         const marker = L.marker(pos, { 
           icon: createParadaIcon(cor, icone),
