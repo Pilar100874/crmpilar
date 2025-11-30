@@ -31,6 +31,11 @@ interface TraccarClientPayload {
   device_id?: string;
 }
 
+interface CondicaoTempo {
+  tempo_minutos: number;
+  label?: string;
+}
+
 interface AutomacaoFlowNode {
   id: string;
   type: string;
@@ -38,18 +43,26 @@ interface AutomacaoFlowNode {
     type: string;
     label: string;
     config: {
-      tempo_minutos?: number;
-      marcar_no_mapa?: boolean;
+      condicoes_tempo?: CondicaoTempo[];
+      tempo_minutos?: number; // Retrocompatibilidade
       icone_parada?: string;
       cor_icone_parada?: string;
       legenda_parada?: string;
-      velocidade_maxima?: number;
+      velocidade_km?: number;
+      operador_velocidade?: 'maior' | 'menor';
       telefone?: string;
       mensagem?: string;
       titulo?: string;
       [key: string]: unknown;
     };
   };
+}
+
+interface AutomacaoFlowEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string;
 }
 
 // Parse OsmAnd/Traccar format from query string
@@ -167,6 +180,34 @@ async function savePosition(supabase: any, payload: PosicaoPayload, estabelecime
   };
 }
 
+// Find connected action nodes from a condition node
+function findConnectedActions(
+  conditionNodeId: string, 
+  edges: AutomacaoFlowEdge[], 
+  nodes: AutomacaoFlowNode[],
+  outputHandle: string = 'sim'
+): AutomacaoFlowNode[] {
+  const connectedActions: AutomacaoFlowNode[] = [];
+  
+  for (const edge of edges) {
+    if (edge.source === conditionNodeId) {
+      // Check if edge is from correct output handle
+      const handleMatch = edge.sourceHandle === outputHandle || 
+                         edge.sourceHandle === `${outputHandle}-0` ||
+                         (!edge.sourceHandle && outputHandle === 'sim');
+      
+      if (handleMatch) {
+        const targetNode = nodes.find(n => n.id === edge.target);
+        if (targetNode && targetNode.data?.type?.startsWith('acao_')) {
+          connectedActions.push(targetNode);
+        }
+      }
+    }
+  }
+  
+  return connectedActions;
+}
+
 // Execute logistics automations for a vehicle
 async function executarAutomacoesLogistica(
   supabase: any,
@@ -191,13 +232,13 @@ async function executarAutomacoesLogistica(
       return;
     }
 
-    // Get vehicle's last position to calculate stopped time
+    // Get vehicle's last positions to calculate stopped time
     const { data: posicoes } = await supabase
       .from('veiculo_posicoes')
       .select('*')
       .eq('veiculo_id', veiculoId)
       .order('data_hora', { ascending: false })
-      .limit(10);
+      .limit(20);
 
     // Calculate time stopped (if speed is 0)
     let minutosParado = 0;
@@ -215,109 +256,92 @@ async function executarAutomacoesLogistica(
 
     console.log(`Vehicle ${veiculoId}: speed=${velocidade}, stoppedMinutes=${minutosParado}`);
 
+    // Track if we should create a marker (only one per vehicle)
+    let markerToCreate: {
+      icone: string;
+      cor: string;
+      legenda: string;
+      automacaoId: string;
+      automacaoNome: string;
+    } | null = null;
+
     // Process each automation
     for (const automacao of automacoes) {
-      const flowData = automacao.flow_data as { nodes?: AutomacaoFlowNode[] };
+      const flowData = automacao.flow_data as { nodes?: AutomacaoFlowNode[]; edges?: AutomacaoFlowEdge[] };
       if (!flowData?.nodes) continue;
+      
+      const nodes = flowData.nodes;
+      const edges = flowData.edges || [];
 
-      for (const node of flowData.nodes) {
+      for (const node of nodes) {
         const nodeType = node.data?.type;
         const config = node.data?.config || {};
 
         // Handle "condicao_parado" - Vehicle stopped condition
         if (nodeType === 'condicao_parado') {
-          const tempoMinutos = config.tempo_minutos || 30;
+          // Support both new format (condicoes_tempo) and old format (tempo_minutos)
+          const condicoesTempo = config.condicoes_tempo || 
+            (config.tempo_minutos ? [{ tempo_minutos: config.tempo_minutos }] : [{ tempo_minutos: 30 }]);
           
-          if (velocidade <= 5 && minutosParado >= tempoMinutos) {
-            console.log(`✅ Automation triggered: Vehicle stopped for ${minutosParado} min (threshold: ${tempoMinutos})`);
+          // Check if any time condition is met
+          const condicaoAtendida = condicoesTempo.find(
+            (c: CondicaoTempo) => velocidade <= 5 && minutosParado >= c.tempo_minutos
+          );
+          
+          if (condicaoAtendida) {
+            console.log(`✅ Automation triggered: Vehicle stopped for ${minutosParado} min (threshold: ${condicaoAtendida.tempo_minutos})`);
             
-            // Create map marker if configured
-            if (config.marcar_no_mapa) {
-              let categoriaTempo = 'menos_5';
-              if (minutosParado >= 30) categoriaTempo = 'mais_30';
-              else if (minutosParado >= 15) categoriaTempo = '15_30';
-              else if (minutosParado >= 5) categoriaTempo = '5_15';
-
-              // Check if marker already exists
-              const { data: existing } = await supabase
-                .from('logistica_paradas_marcadas')
-                .select('id')
-                .eq('veiculo_id', veiculoId)
-                .eq('estabelecimento_id', estabelecimentoId)
-                .single();
-
-              const markerData = {
-                lat,
-                lng,
-                tempo_parado_minutos: minutosParado,
-                categoria_tempo: categoriaTempo,
-                icone_parada: config.icone_parada || 'MapPin',
-                cor_icone_parada: config.cor_icone_parada || '#EAB308',
-                legenda_parada: `${config.legenda_parada || `Parado há ${minutosParado} min`} (${automacao.nome})`
-              };
-
-              if (existing) {
-                await supabase
-                  .from('logistica_paradas_marcadas')
-                  .update(markerData)
-                  .eq('id', existing.id);
-                console.log('📍 Updated marker for vehicle:', veiculoId);
-              } else {
-                await supabase
-                  .from('logistica_paradas_marcadas')
-                  .insert({
-                    veiculo_id: veiculoId,
-                    estabelecimento_id: estabelecimentoId,
-                    data_inicio: new Date().toISOString(),
-                    automacao_id: automacao.id,
-                    ...markerData
-                  });
-                console.log('📍 Created marker for vehicle:', veiculoId);
+            // Find connected action nodes
+            const connectedActions = findConnectedActions(node.id, edges, nodes, 'sim');
+            
+            for (const actionNode of connectedActions) {
+              const actionType = actionNode.data?.type;
+              const actionConfig = actionNode.data?.config || {};
+              
+              // Handle "acao_marcar_mapa" action
+              if (actionType === 'acao_marcar_mapa') {
+                // Only keep the last marker config (overwrites previous)
+                markerToCreate = {
+                  icone: actionConfig.icone_parada || 'MapPin',
+                  cor: actionConfig.cor_icone_parada || '#EAB308',
+                  legenda: actionConfig.legenda_parada || `Parado há ${minutosParado} min`,
+                  automacaoId: automacao.id,
+                  automacaoNome: automacao.nome
+                };
               }
+              
+              // TODO: Handle other actions (WhatsApp, notification, email)
             }
-
-            // TODO: Execute other actions (WhatsApp, notification, email)
-            // These would connect to respective edge functions or services
           }
         }
 
         // Handle "condicao_velocidade" - Speed exceeded condition
         if (nodeType === 'condicao_velocidade') {
-          const velocidadeMaxima = config.velocidade_maxima || 80;
+          const velocidadeMaxima = config.velocidade_km || 80;
+          const operador = config.operador_velocidade || 'maior';
           
-          if (velocidade > velocidadeMaxima) {
-            console.log(`✅ Automation triggered: Speed ${velocidade} km/h exceeded ${velocidadeMaxima} km/h`);
+          const velocidadeExcedida = operador === 'maior' 
+            ? velocidade > velocidadeMaxima 
+            : velocidade < velocidadeMaxima;
+          
+          if (velocidadeExcedida) {
+            console.log(`✅ Automation triggered: Speed ${velocidade} km/h ${operador} ${velocidadeMaxima} km/h`);
             
-            if (config.marcar_no_mapa) {
-              const { data: existing } = await supabase
-                .from('logistica_paradas_marcadas')
-                .select('id')
-                .eq('veiculo_id', veiculoId)
-                .eq('estabelecimento_id', estabelecimentoId)
-                .eq('categoria_tempo', 'velocidade')
-                .single();
-
-              const markerData = {
-                lat,
-                lng,
-                tempo_parado_minutos: 0,
-                categoria_tempo: 'velocidade',
-                icone_parada: config.icone_parada || 'Gauge',
-                cor_icone_parada: config.cor_icone_parada || '#DC2626',
-                legenda_parada: `${config.legenda_parada || `Velocidade: ${Math.round(velocidade)} km/h`} (${automacao.nome})`
-              };
-
-              if (!existing) {
-                await supabase
-                  .from('logistica_paradas_marcadas')
-                  .insert({
-                    veiculo_id: veiculoId,
-                    estabelecimento_id: estabelecimentoId,
-                    data_inicio: new Date().toISOString(),
-                    automacao_id: automacao.id,
-                    ...markerData
-                  });
-                console.log('🚨 Created speed alert marker for vehicle:', veiculoId);
+            // Find connected action nodes
+            const connectedActions = findConnectedActions(node.id, edges, nodes, 'sim');
+            
+            for (const actionNode of connectedActions) {
+              const actionType = actionNode.data?.type;
+              const actionConfig = actionNode.data?.config || {};
+              
+              if (actionType === 'acao_marcar_mapa') {
+                markerToCreate = {
+                  icone: actionConfig.icone_parada || 'Gauge',
+                  cor: actionConfig.cor_icone_parada || '#DC2626',
+                  legenda: actionConfig.legenda_parada || `Velocidade: ${Math.round(velocidade)} km/h`,
+                  automacaoId: automacao.id,
+                  automacaoNome: automacao.nome
+                };
               }
             }
           }
@@ -325,18 +349,47 @@ async function executarAutomacoesLogistica(
       }
     }
 
-    // Clean up markers for vehicles that no longer meet conditions
+    // Create or update marker (only ONE per vehicle - the last one)
+    if (markerToCreate) {
+      // First, delete any existing markers for this vehicle
+      await supabase
+        .from('logistica_paradas_marcadas')
+        .delete()
+        .eq('veiculo_id', veiculoId)
+        .eq('estabelecimento_id', estabelecimentoId);
+      
+      // Then create the new marker
+      const markerData = {
+        veiculo_id: veiculoId,
+        estabelecimento_id: estabelecimentoId,
+        lat,
+        lng,
+        tempo_parado_minutos: minutosParado,
+        categoria_tempo: minutosParado >= 30 ? 'mais_30' : minutosParado >= 15 ? '15_30' : '5_15',
+        icone_parada: markerToCreate.icone,
+        cor_icone_parada: markerToCreate.cor,
+        legenda_parada: `${markerToCreate.legenda} (${markerToCreate.automacaoNome})`,
+        data_inicio: new Date().toISOString(),
+        automacao_id: markerToCreate.automacaoId
+      };
+      
+      await supabase
+        .from('logistica_paradas_marcadas')
+        .insert(markerData);
+      
+      console.log('📍 Created single marker for vehicle:', veiculoId);
+    }
+
+    // Clean up markers for vehicles that are moving
     if (velocidade > 5) {
-      // Vehicle is moving, remove any "parado" markers
       const { error: deleteError } = await supabase
         .from('logistica_paradas_marcadas')
         .delete()
         .eq('veiculo_id', veiculoId)
-        .eq('estabelecimento_id', estabelecimentoId)
-        .neq('categoria_tempo', 'velocidade');
+        .eq('estabelecimento_id', estabelecimentoId);
       
       if (!deleteError) {
-        console.log('🧹 Cleaned up stopped markers for moving vehicle:', veiculoId);
+        console.log('🧹 Cleaned up markers for moving vehicle:', veiculoId);
       }
     }
 
@@ -357,7 +410,6 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     const url = new URL(req.url);
-    let token: string | undefined;
     let estabelecimentoId: string | undefined;
 
     // Handle GET request (OsmAnd/Traccar format)
@@ -505,7 +557,7 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Execute automations in background (fire and forget)
+      // Execute automations in background
       if (estabelecimentoId && result.veiculoId) {
         executarAutomacoesLogistica(
           supabase,
@@ -516,7 +568,7 @@ Deno.serve(async (req) => {
           estabelecimentoId
         ).catch(err => console.error('Automation error:', err));
       }
-
+      
       return new Response(
         JSON.stringify({ 
           status: 'ok',
@@ -532,11 +584,10 @@ Deno.serve(async (req) => {
       { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error: unknown) {
+  } catch (error) {
     console.error('Error processing request:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return new Response(
-      JSON.stringify({ status: 'error', message: errorMessage }),
+      JSON.stringify({ status: 'error', message: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
