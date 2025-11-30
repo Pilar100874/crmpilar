@@ -27,6 +27,11 @@ import { AmazonConfigDialog } from "@/components/marketplaces/AmazonConfigDialog
 import { ShopeeConfigDialog } from "@/components/marketplaces/ShopeeConfigDialog";
 import { MagaluConfigDialog } from "@/components/marketplaces/MagaluConfigDialog";
 import { GoogleShoppingConfigDialog } from "@/components/marketplaces/GoogleShoppingConfigDialog";
+import { AmericanasConfigDialog } from "@/components/marketplaces/AmericanasConfigDialog";
+import { CarrefourConfigDialog } from "@/components/marketplaces/CarrefourConfigDialog";
+import { CasasBahiaConfigDialog } from "@/components/marketplaces/CasasBahiaConfigDialog";
+import { OlxConfigDialog } from "@/components/marketplaces/OlxConfigDialog";
+import { WhatsAppCommerceConfigDialog } from "@/components/marketplaces/WhatsAppCommerceConfigDialog";
 
 const marketplaceIcons: Record<string, any> = {
   'shopping-bag': ShoppingBag,
@@ -97,6 +102,11 @@ export default function MarketplaceHub() {
   const [shopeeConfigConta, setShopeeConfigConta] = useState<any>(null);
   const [magaluConfigConta, setMagaluConfigConta] = useState<any>(null);
   const [googleConfigConta, setGoogleConfigConta] = useState<any>(null);
+  const [americanasConfigConta, setAmericanasConfigConta] = useState<any>(null);
+  const [carrefourConfigConta, setCarrefourConfigConta] = useState<any>(null);
+  const [casasBahiaConfigConta, setCasasBahiaConfigConta] = useState<any>(null);
+  const [olxConfigConta, setOlxConfigConta] = useState<any>(null);
+  const [whatsappConfigConta, setWhatsappConfigConta] = useState<any>(null);
   const [showMlSecret, setShowMlSecret] = useState(false);
   const [showMlHelp, setShowMlHelp] = useState(false);
   const [showAmazonHelp, setShowAmazonHelp] = useState(false);
@@ -823,6 +833,61 @@ export default function MarketplaceHub() {
                                   Config
                                 </Button>
                               )}
+                              {marketplace.nome === 'americanas' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-xs h-7"
+                                  onClick={() => setAmericanasConfigConta(conta)}
+                                >
+                                  <Key className="h-3 w-3 mr-1" />
+                                  Config
+                                </Button>
+                              )}
+                              {marketplace.nome === 'carrefour' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-xs h-7"
+                                  onClick={() => setCarrefourConfigConta(conta)}
+                                >
+                                  <Key className="h-3 w-3 mr-1" />
+                                  Config
+                                </Button>
+                              )}
+                              {marketplace.nome === 'casas_bahia' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-xs h-7"
+                                  onClick={() => setCasasBahiaConfigConta(conta)}
+                                >
+                                  <Key className="h-3 w-3 mr-1" />
+                                  Config
+                                </Button>
+                              )}
+                              {marketplace.nome === 'olx' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-xs h-7"
+                                  onClick={() => setOlxConfigConta(conta)}
+                                >
+                                  <Key className="h-3 w-3 mr-1" />
+                                  Config
+                                </Button>
+                              )}
+                              {marketplace.nome === 'whatsapp_commerce' && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-xs h-7"
+                                  onClick={() => setWhatsappConfigConta(conta)}
+                                >
+                                  <Key className="h-3 w-3 mr-1" />
+                                  Config
+                                </Button>
+                              )}
                               {conta.status !== 'conectado' ? (
                                 <Button 
                                   size="sm" 
@@ -1111,6 +1176,71 @@ export default function MarketplaceHub() {
             redirect_uri: (googleConfigConta.configuracoes as any)?.google_redirect_uri,
             merchant_id: (googleConfigConta.configuracoes as any)?.google_merchant_id,
           } : undefined}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
+          }}
+        />
+
+        {/* Dialog de Configuração Americanas */}
+        <AmericanasConfigDialog
+          open={!!americanasConfigConta}
+          onOpenChange={(open) => !open && setAmericanasConfigConta(null)}
+          contaId={americanasConfigConta?.id || ''}
+          contaNome={americanasConfigConta?.nome_loja || ''}
+          redirectUri={MARKETPLACE_REDIRECT_URIS.americanas}
+          currentConfig={americanasConfigConta?.configuracoes as any}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
+          }}
+        />
+
+        {/* Dialog de Configuração Carrefour */}
+        <CarrefourConfigDialog
+          open={!!carrefourConfigConta}
+          onOpenChange={(open) => !open && setCarrefourConfigConta(null)}
+          contaId={carrefourConfigConta?.id || ''}
+          contaNome={carrefourConfigConta?.nome_loja || ''}
+          redirectUri={MARKETPLACE_REDIRECT_URIS.carrefour}
+          currentConfig={carrefourConfigConta?.configuracoes as any}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
+          }}
+        />
+
+        {/* Dialog de Configuração Casas Bahia */}
+        <CasasBahiaConfigDialog
+          open={!!casasBahiaConfigConta}
+          onOpenChange={(open) => !open && setCasasBahiaConfigConta(null)}
+          contaId={casasBahiaConfigConta?.id || ''}
+          contaNome={casasBahiaConfigConta?.nome_loja || ''}
+          redirectUri={MARKETPLACE_REDIRECT_URIS.casas_bahia}
+          currentConfig={casasBahiaConfigConta?.configuracoes as any}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
+          }}
+        />
+
+        {/* Dialog de Configuração OLX */}
+        <OlxConfigDialog
+          open={!!olxConfigConta}
+          onOpenChange={(open) => !open && setOlxConfigConta(null)}
+          contaId={olxConfigConta?.id || ''}
+          contaNome={olxConfigConta?.nome_loja || ''}
+          redirectUri={MARKETPLACE_REDIRECT_URIS.olx}
+          currentConfig={olxConfigConta?.configuracoes as any}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
+          }}
+        />
+
+        {/* Dialog de Configuração WhatsApp Commerce */}
+        <WhatsAppCommerceConfigDialog
+          open={!!whatsappConfigConta}
+          onOpenChange={(open) => !open && setWhatsappConfigConta(null)}
+          contaId={whatsappConfigConta?.id || ''}
+          contaNome={whatsappConfigConta?.nome_loja || ''}
+          redirectUri={MARKETPLACE_REDIRECT_URIS.whatsapp_commerce}
+          currentConfig={whatsappConfigConta?.configuracoes as any}
           onSaved={() => {
             queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
           }}
