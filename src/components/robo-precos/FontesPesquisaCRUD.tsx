@@ -135,6 +135,13 @@ export function FontesPesquisaCRUD() {
     google_merchant_id: "",
     google_client_email: "",
     google_private_key: "",
+    // Google Custom Search
+    google_cs_api_key: "",
+    google_cs_cx: "",
+    google_cs_sites: "mercadolivre.com.br,amazon.com.br,magazineluiza.com.br",
+    // Firecrawl
+    firecrawl_api_key: "",
+    firecrawl_sites: "mercadolivre.com.br,amazon.com.br",
     // Comum
     limite_resultados: "20",
     min_score_aceite: "0.45",
@@ -197,6 +204,19 @@ export function FontesPesquisaCRUD() {
           client_email: data.google_client_email || '',
           private_key: data.google_private_key || '',
         };
+      case 'google_custom_search':
+        return {
+          ...baseConfig,
+          api_key: data.google_cs_api_key || '',
+          cx: data.google_cs_cx || '',
+          sites: (data.google_cs_sites || '').split(',').map(s => s.trim()).filter(Boolean),
+        };
+      case 'firecrawl':
+        return {
+          ...baseConfig,
+          api_key: data.firecrawl_api_key || '',
+          sites: (data.firecrawl_sites || '').split(',').map(s => s.trim()).filter(Boolean),
+        };
       default:
         return baseConfig;
     }
@@ -204,8 +224,9 @@ export function FontesPesquisaCRUD() {
 
   // Função para extrair campos do config_json
   const parseConfigToFields = (config: any) => {
+    const tipoApi = config?.tipo_api || 'mercado_livre';
     return {
-      tipo_api: config?.tipo_api || 'mercado_livre',
+      tipo_api: tipoApi,
       ml_client_id: config?.client_id || '',
       ml_client_secret: config?.client_secret || '',
       ml_site_id: config?.site_id || 'MLB',
@@ -216,6 +237,11 @@ export function FontesPesquisaCRUD() {
       google_merchant_id: config?.merchant_id || '',
       google_client_email: config?.client_email || '',
       google_private_key: config?.private_key || '',
+      google_cs_api_key: tipoApi === 'google_custom_search' ? (config?.api_key || '') : '',
+      google_cs_cx: config?.cx || '',
+      google_cs_sites: Array.isArray(config?.sites) ? config.sites.join(', ') : (config?.sites || 'mercadolivre.com.br,amazon.com.br,magazineluiza.com.br'),
+      firecrawl_api_key: tipoApi === 'firecrawl' ? (config?.api_key || '') : '',
+      firecrawl_sites: Array.isArray(config?.sites) ? config.sites.join(', ') : (config?.sites || 'mercadolivre.com.br,amazon.com.br'),
       limite_resultados: String(config?.limite_resultados || 20),
       min_score_aceite: String(config?.min_score_aceite || 0.45),
       bonus_ean: String(config?.bonus_ean || 0.5),
@@ -304,6 +330,11 @@ export function FontesPesquisaCRUD() {
       google_merchant_id: "",
       google_client_email: "",
       google_private_key: "",
+      google_cs_api_key: "",
+      google_cs_cx: "",
+      google_cs_sites: "mercadolivre.com.br,amazon.com.br,magazineluiza.com.br",
+      firecrawl_api_key: "",
+      firecrawl_sites: "mercadolivre.com.br,amazon.com.br",
       limite_resultados: "20",
       min_score_aceite: "0.45",
       bonus_ean: "0.5",
@@ -413,9 +444,11 @@ export function FontesPesquisaCRUD() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="mercado_livre">Mercado Livre</SelectItem>
-                        <SelectItem value="amazon">Amazon</SelectItem>
-                        <SelectItem value="google_merchant">Google Merchant / Shopping</SelectItem>
+                        <SelectItem value="mercado_livre">Mercado Livre (API Pública)</SelectItem>
+                        <SelectItem value="google_custom_search">Google Custom Search (Recomendado)</SelectItem>
+                        <SelectItem value="firecrawl">Firecrawl (Web Scraping)</SelectItem>
+                        <SelectItem value="amazon">Amazon Product Advertising</SelectItem>
+                        <SelectItem value="google_merchant">Google Merchant Center</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -564,6 +597,92 @@ export function FontesPesquisaCRUD() {
                         <Info className="h-4 w-4 text-green-500" />
                         <AlertDescription className="text-xs">
                           Configure uma Service Account no <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-green-500 underline">Google Cloud Console</a> com acesso ao Merchant Center.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+
+                  {/* Credenciais Google Custom Search */}
+                  {formData.tipo_api === 'google_custom_search' && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-cyan-500/5">
+                      <h4 className="font-medium flex items-center gap-2 text-cyan-500">
+                        <Globe className="h-4 w-4" />
+                        Google Custom Search API
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>API Key *</Label>
+                          <Input
+                            type="password"
+                            value={formData.google_cs_api_key}
+                            onChange={(e) => setFormData(p => ({ ...p, google_cs_api_key: e.target.value }))}
+                            placeholder="AIzaSy..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Search Engine ID (CX) *</Label>
+                          <Input
+                            value={formData.google_cs_cx}
+                            onChange={(e) => setFormData(p => ({ ...p, google_cs_cx: e.target.value }))}
+                            placeholder="a1b2c3d4e5f6g7h8i"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Sites para pesquisar (separados por vírgula)</Label>
+                        <Input
+                          value={formData.google_cs_sites}
+                          onChange={(e) => setFormData(p => ({ ...p, google_cs_sites: e.target.value }))}
+                          placeholder="mercadolivre.com.br, amazon.com.br, magazineluiza.com.br"
+                        />
+                      </div>
+                      <Alert className="bg-cyan-500/10 border-cyan-500/20">
+                        <Info className="h-4 w-4 text-cyan-500" />
+                        <AlertDescription className="text-xs space-y-2">
+                          <p><strong>Como configurar:</strong></p>
+                          <ol className="list-decimal ml-4 space-y-1">
+                            <li>Acesse <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-cyan-500 underline">Google Cloud Console</a></li>
+                            <li>Crie um projeto e ative a "Custom Search API"</li>
+                            <li>Crie uma API Key nas credenciais</li>
+                            <li>Acesse <a href="https://programmablesearchengine.google.com/controlpanel/all" target="_blank" rel="noopener noreferrer" className="text-cyan-500 underline">Programmable Search Engine</a></li>
+                            <li>Crie um mecanismo de pesquisa e copie o ID (CX)</li>
+                          </ol>
+                          <p className="text-muted-foreground mt-2">100 buscas/dia grátis. US$5 por 1000 buscas extras.</p>
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
+
+                  {/* Credenciais Firecrawl */}
+                  {formData.tipo_api === 'firecrawl' && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-red-500/5">
+                      <h4 className="font-medium flex items-center gap-2 text-red-500">
+                        <Globe className="h-4 w-4" />
+                        Firecrawl (Web Scraping)
+                      </h4>
+                      <div className="space-y-2">
+                        <Label>API Key *</Label>
+                        <Input
+                          type="password"
+                          value={formData.firecrawl_api_key}
+                          onChange={(e) => setFormData(p => ({ ...p, firecrawl_api_key: e.target.value }))}
+                          placeholder="fc-..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Sites para pesquisar (separados por vírgula)</Label>
+                        <Input
+                          value={formData.firecrawl_sites}
+                          onChange={(e) => setFormData(p => ({ ...p, firecrawl_sites: e.target.value }))}
+                          placeholder="mercadolivre.com.br, amazon.com.br"
+                        />
+                      </div>
+                      <Alert className="bg-red-500/10 border-red-500/20">
+                        <Info className="h-4 w-4 text-red-500" />
+                        <AlertDescription className="text-xs space-y-2">
+                          <p><strong>Firecrawl</strong> é um serviço de web scraping que extrai dados estruturados de páginas.</p>
+                          <p>Cadastre-se em <a href="https://firecrawl.dev" target="_blank" rel="noopener noreferrer" className="text-red-500 underline">firecrawl.dev</a> para obter sua API Key.</p>
+                          <p className="text-muted-foreground">500 créditos grátis/mês. Planos pagos a partir de US$19/mês.</p>
                         </AlertDescription>
                       </Alert>
                     </div>
