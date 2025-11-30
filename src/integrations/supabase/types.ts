@@ -2860,12 +2860,15 @@ export type Database = {
           ativa: boolean
           automacao_id: string | null
           categoria_tempo: string
+          cor_icone_parada: string | null
           created_at: string
           data_fim: string | null
           data_inicio: string
           estabelecimento_id: string
+          icone_parada: string | null
           id: string
           lat: number
+          legenda_parada: string | null
           lng: number
           tempo_parado_minutos: number
           veiculo_id: string
@@ -2874,12 +2877,15 @@ export type Database = {
           ativa?: boolean
           automacao_id?: string | null
           categoria_tempo: string
+          cor_icone_parada?: string | null
           created_at?: string
           data_fim?: string | null
           data_inicio: string
           estabelecimento_id: string
+          icone_parada?: string | null
           id?: string
           lat: number
+          legenda_parada?: string | null
           lng: number
           tempo_parado_minutos: number
           veiculo_id: string
@@ -2888,12 +2894,15 @@ export type Database = {
           ativa?: boolean
           automacao_id?: string | null
           categoria_tempo?: string
+          cor_icone_parada?: string | null
           created_at?: string
           data_fim?: string | null
           data_inicio?: string
           estabelecimento_id?: string
+          icone_parada?: string | null
           id?: string
           lat?: number
+          legenda_parada?: string | null
           lng?: number
           tempo_parado_minutos?: number
           veiculo_id?: string
