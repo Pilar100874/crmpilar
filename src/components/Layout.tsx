@@ -260,30 +260,6 @@ export default function Layout({ children }: LayoutProps) {
       }
 
       try {
-        // Verifica se é administrador (tabela administradores)
-        const storedUserType = localStorage.getItem("userType");
-        const storedAdminId = localStorage.getItem("userId");
-
-        const { data: adminData } = await supabase
-          .from("administradores")
-          .select("id")
-          .eq("id", storedAdminId || user.id)
-          .maybeSingle();
-
-        if (!isMounted) return;
-
-        // Se for administrador da tabela, dá acesso total a todos os menus
-        if (adminData && storedUserType === "admin") {
-          setIsAdmin(true);
-          const allMenus: Record<string, MenuPermissions> = {};
-          MENUS_DISPONIVEIS.forEach(menuId => {
-            allMenus[menuId] = { view: true, create: true, edit: true, delete: true };
-          });
-          setAllowedMenus(allMenus);
-          sessionStorage.setItem("cached_user_id", user.id);
-          setIsLoading(false);
-          return;
-        }
 
         // Busca o usuário na tabela usuarios primeiro por auth_user_id, depois por email
         let usuario = null;
@@ -395,24 +371,13 @@ export default function Layout({ children }: LayoutProps) {
 
       try {
         // Buscar nome do usuário
-        if (isAdmin) {
-          const storedAdminId = localStorage.getItem("userId");
-          const { data: adminData } = await supabase
-            .from("administradores")
-            .select("nome")
-            .eq("id", storedAdminId || user.id)
-            .maybeSingle();
-          
-          setUserName(adminData?.nome || "Administrador");
-        } else {
-          const { data: userData } = await supabase
-            .from("usuarios")
-            .select("nome")
-            .ilike("email", user.email || "")
-            .maybeSingle();
-          
-          setUserName(userData?.nome || user.email?.split("@")[0] || "Usuário");
-        }
+        const { data: userData } = await supabase
+          .from("usuarios")
+          .select("nome")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+        
+        setUserName(userData?.nome || user.email?.split("@")[0] || "Usuário");
 
         // Buscar nome do estabelecimento
         const estabId = await getEstabelecimentoId();

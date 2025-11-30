@@ -5,8 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
  * 
  * Prioridade:
  * 1. estabelecimentoId passado como parâmetro (prop)
- * 2. selectedEstabelecimentoId do localStorage (para administradores)
- * 3. estabelecimento_id do usuário na tabela usuarios
+ * 2. selectedEstabelecimentoId do localStorage (para admins que podem ver múltiplos)
+ * 3. estabelecimentoId do localStorage
+ * 4. estabelecimento_id do usuário na tabela usuarios
  * 
  * @param estabelecimentoId - ID do estabelecimento passado como prop (opcional)
  * @returns O ID do estabelecimento ou null se não encontrado
@@ -17,7 +18,7 @@ export async function getEstabelecimentoId(estabelecimentoId?: string): Promise<
     return estabelecimentoId;
   }
 
-  // 2. Verifica se há um estabelecimento selecionado no localStorage (para admins)
+  // 2. Verifica se há um estabelecimento selecionado no localStorage
   const selectedEstabelecimentoId = localStorage.getItem('selectedEstabelecimentoId');
   if (selectedEstabelecimentoId) {
     return selectedEstabelecimentoId;
@@ -34,20 +35,8 @@ export async function getEstabelecimentoId(estabelecimentoId?: string): Promise<
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    // Verifica se é administrador
-    const { data: adminData } = await supabase
-      .from('administradores')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    // Se é administrador mas não selecionou estabelecimento, retorna null
-    if (adminData) {
-      return null;
-    }
-
-    // Se não é admin, busca na tabela usuarios
-    const { data: userData } = await (supabase as any)
+    // Busca na tabela usuarios
+    const { data: userData } = await supabase
       .from('usuarios')
       .select('estabelecimento_id')
       .eq('auth_user_id', user.id)
@@ -61,30 +50,17 @@ export async function getEstabelecimentoId(estabelecimentoId?: string): Promise<
 }
 
 /**
- * Verifica se o usuário atual é um administrador do sistema (tabela administradores).
+ * Verifica se o usuário atual tem role 'admin' na tabela user_roles.
+ * Usuários com esta role têm acesso total ao sistema.
  * 
- * @returns true se for administrador do sistema, false caso contrário
+ * @returns true se tiver role admin, false caso contrário
  */
 export async function isSystemAdmin(): Promise<boolean> {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
-
-    const { data: adminData } = await supabase
-      .from('administradores')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    return !!adminData;
-  } catch (error) {
-    console.error('Erro ao verificar admin do sistema:', error);
-    return false;
-  }
+  return isEstabelecimentoAdmin();
 }
 
 /**
- * Verifica se o usuário atual é um admin do estabelecimento (role admin na tabela user_roles).
+ * Verifica se o usuário atual é um admin (role admin na tabela user_roles).
  * 
  * IMPORTANTE: Esta função verifica através da tabela usuarios + user_roles.
  * A tabela user_roles.user_id referencia usuarios.id, não auth.users.id.
@@ -115,24 +91,19 @@ export async function isEstabelecimentoAdmin(): Promise<boolean> {
 
     return !!roleData;
   } catch (error) {
-    console.error('Erro ao verificar admin do estabelecimento:', error);
+    console.error('Erro ao verificar admin:', error);
     return false;
   }
 }
 
 /**
- * Verifica se o usuário tem qualquer tipo de permissão de admin
- * (administrador do sistema OU admin do estabelecimento).
+ * Verifica se o usuário tem permissão de admin.
+ * Agora simplificado - apenas verifica user_roles.
  * 
- * @returns true se for admin de qualquer tipo, false caso contrário
+ * @returns true se for admin, false caso contrário
  */
 export async function isAnyAdmin(): Promise<boolean> {
-  const [systemAdmin, estabelecimentoAdmin] = await Promise.all([
-    isSystemAdmin(),
-    isEstabelecimentoAdmin()
-  ]);
-  
-  return systemAdmin || estabelecimentoAdmin;
+  return isEstabelecimentoAdmin();
 }
 
 /**

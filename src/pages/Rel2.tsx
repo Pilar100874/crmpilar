@@ -123,21 +123,26 @@ export default function Rel2() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check if user is admin
-      const { data: adminData } = await supabase
-        .from('administradores')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      const isAdmin = !!adminData;
-
-      // Try to get from usuarios first
+      // Buscar usuário na tabela usuarios
       const { data: userData } = await supabase
         .from('usuarios')
-        .select('estabelecimento_id')
-        .eq('id', user.id)
+        .select('id, estabelecimento_id')
+        .eq('auth_user_id', user.id)
         .maybeSingle();
+      
+      let isAdmin = false;
+      
+      if (userData) {
+        // Verificar se tem role admin
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userData.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        
+        isAdmin = !!roleData;
+      }
 
       let estabelecimentoId = userData?.estabelecimento_id;
 
