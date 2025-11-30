@@ -65,16 +65,31 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
               </div>
               
               {config.marcar_no_mapa && (
-                <div className="space-y-3 pl-6">
-                  <Label>Ícone de marcação</Label>
-                  <IconePicker
-                    selectedIcon={config.icone_parada || 'MapPin'}
-                    selectedColor={config.cor_icone_parada || '#EAB308'}
-                    onIconChange={(icon) => updateConfig('icone_parada', icon)}
-                    onColorChange={(color) => updateConfig('cor_icone_parada', color)}
-                  />
+                <div className="space-y-4 pl-6">
+                  <div>
+                    <Label>Ícone de marcação</Label>
+                    <IconePicker
+                      selectedIcon={config.icone_parada || 'MapPin'}
+                      selectedColor={config.cor_icone_parada || '#EAB308'}
+                      onIconChange={(icon) => updateConfig('icone_parada', icon)}
+                      onColorChange={(color) => updateConfig('cor_icone_parada', color)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label>Legenda do marcador</Label>
+                    <Input
+                      value={config.legenda_parada || ''}
+                      onChange={(e) => updateConfig('legenda_parada', e.target.value)}
+                      placeholder="Ex: Parado há mais de 30 min"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Texto exibido ao clicar no marcador no mapa
+                    </p>
+                  </div>
+                  
                   <p className="text-xs text-muted-foreground">
-                    Este ícone aparecerá no mapa de monitoramento e histórico quando a condição for atendida
+                    Este marcador aparecerá no mapa de monitoramento e histórico quando a condição for atendida
                   </p>
                 </div>
               )}

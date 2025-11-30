@@ -233,7 +233,9 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: data.config?.cor_icone_parada || '#EAB308' }}
               />
-              <span className="text-[10px]">Marcar no mapa</span>
+              <span className="text-[10px] truncate max-w-[100px]">
+                {data.config?.legenda_parada || 'Marcar no mapa'}
+              </span>
             </div>
           )}
         </div>
