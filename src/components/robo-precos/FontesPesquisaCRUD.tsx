@@ -30,29 +30,56 @@ const tipoConfig = {
     label: "API",
     icon: Database,
     color: "bg-blue-500/20 text-blue-400",
-    exemplo: `// Mercado Livre (MLB) - Driver Avançado
+    exemplo: `// 1️⃣ MERCADO LIVRE (MLB) - API Pública
 {
   "tipo_api": "mercado_livre",
   "site_id": "MLB",
-  "limite_resultados": 15,
-  "min_score_aceite": 0.3,
+  "limite_resultados": 20,
+  "min_score_aceite": 0.45,
   "bonus_ean": 0.5
 }
 
-// Parâmetros:
-// - site_id: MLB (Brasil), MLA (Argentina), MLM (México)
-// - limite_resultados: quantidade de anúncios a analisar
-// - min_score_aceite: score mínimo (0-1) para aceitar match
-// - bonus_ean: bônus no score se EAN coincidir`,
-    ajuda: `🎯 Driver AVANÇADO do Mercado Livre:
+// 2️⃣ AMAZON (Product Advertising API)
+{
+  "tipo_api": "amazon",
+  "region": "us-east-1",
+  "marketplace": "www.amazon.com.br",
+  "access_key": "SUA_ACCESS_KEY",
+  "secret_key": "SUA_SECRET_KEY",
+  "partner_tag": "SEU_TAG-20",
+  "limite_resultados": 10,
+  "min_score_aceite": 0.40
+}
 
-1. Busca pelo NOME DO PRODUTO como termo principal
-2. Calcula SIMILARIDADE de nome (Jaccard 0-1)
-3. Se EAN do produto coincidir → adiciona BÔNUS no score
-4. Score final = similaridade + bonus_ean (máx 1.0)
-5. Só aceita resultados com score >= min_score_aceite
+// 3️⃣ GOOGLE MERCHANT CENTER
+{
+  "tipo_api": "google_merchant",
+  "merchant_id": "123456789",
+  "client_email": "service@projeto.iam.gserviceaccount.com",
+  "private_key": "-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----",
+  "limite_resultados": 20,
+  "min_score_aceite": 0.40
+}`,
+    ajuda: `🎯 DRIVERS DISPONÍVEIS:
 
-API pública, não requer autenticação.`
+📦 MERCADO LIVRE (mercado_livre)
+• API pública, não requer autenticação
+• site_id: MLB (Brasil), MLA (Argentina), MLM (México)
+
+🛒 AMAZON (amazon)
+• Requer cadastro no Amazon Associates
+• Obter credenciais em affiliate-program.amazon.com
+
+🛍️ GOOGLE MERCHANT (google_merchant)
+• Requer conta Google Cloud com Service Account
+• merchant_id: ID do Merchant Center
+
+⚙️ PARÂMETROS COMUNS:
+• limite_resultados: quantidade de itens a analisar
+• min_score_aceite: score mínimo (0-1) para aceitar match
+• bonus_ean: bônus no score se EAN coincidir
+
+📌 REGRA: Busca sempre pelo NOME DO PRODUTO`
   },
   scraping: {
     label: "Scraping",

@@ -348,6 +348,368 @@ async function processarResultadosML(
   };
 }
 
+// ==================== DRIVER AMAZON (Product Advertising API) ====================
+
+/**
+ * Driver para Amazon Product Advertising API
+ * - Usa NOME DO PRODUTO como base principal
+ * - Requer credenciais: access_key, secret_key, partner_tag
+ */
+async function buscarPrecoAmazon(
+  supabase: any,
+  fonte: any,
+  produto: any,
+  mapeamento: any
+): Promise<any> {
+  const config = fonte.config_json || {};
+  const accessKey = config.access_key;
+  const secretKey = config.secret_key;
+  const partnerTag = config.partner_tag;
+  const region = config.region || 'us-east-1';
+  const marketplace = config.marketplace || 'www.amazon.com.br';
+  const limite = config.limite_resultados || 10;
+  const minScoreAceite = config.min_score_aceite ?? 0.40;
+
+  if (!accessKey || !secretKey || !partnerTag) {
+    await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'erro',
+      'Credenciais Amazon não configuradas', { produto_id: produto.id });
+    return null;
+  }
+
+  const termoPrincipal = mapeamento?.termo_busca || produto.nome;
+  const produtoEan = normalizarEAN(produto.ean_13 || produto.ean);
+
+  if (!termoPrincipal) {
+    await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'erro',
+      `Produto ${produto.id} sem termo de busca/nome`, { produto_id: produto.id });
+    return null;
+  }
+
+  console.log(`[AMAZON] Buscando: "${termoPrincipal}"`);
+
+  try {
+    // Amazon PA-API 5.0 - Endpoint de busca
+    const host = `webservices.amazon.com.br`;
+    const path = '/paapi5/searchitems';
+    const timestamp = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
+    const date = timestamp.slice(0, 8);
+
+    const payload = JSON.stringify({
+      Keywords: termoPrincipal,
+      Resources: [
+        "ItemInfo.Title",
+        "Offers.Listings.Price",
+        "Images.Primary.Large",
+        "ItemInfo.ExternalIds"
+      ],
+      PartnerTag: partnerTag,
+      PartnerType: "Associates",
+      Marketplace: marketplace,
+      ItemCount: limite
+    });
+
+    // Criar assinatura AWS Signature V4 (simplificado)
+    const encoder = new TextEncoder();
+    const algorithm = 'AWS4-HMAC-SHA256';
+    const credentialScope = `${date}/${region}/ProductAdvertisingAPI/aws4_request`;
+
+    // HMAC-SHA256 helper
+    async function hmacSha256(key: ArrayBuffer | Uint8Array, message: string): Promise<ArrayBuffer> {
+      // Ensure we have a proper ArrayBuffer
+      let keyData: ArrayBuffer;
+      if (key instanceof ArrayBuffer) {
+        keyData = key;
+      } else {
+        keyData = new ArrayBuffer(key.byteLength);
+        new Uint8Array(keyData).set(key);
+      }
+      const cryptoKey = await crypto.subtle.importKey(
+        'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+      );
+      return await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(message));
+    }
+
+    async function sha256(message: string): Promise<string> {
+      const hash = await crypto.subtle.digest('SHA-256', encoder.encode(message));
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    const payloadHash = await sha256(payload);
+    const canonicalRequest = `POST\n${path}\n\ncontent-type:application/json; charset=UTF-8\nhost:${host}\nx-amz-date:${timestamp}\nx-amz-target:com.amazon.paapi5.v1.ProductAdvertisingAPIv1.SearchItems\n\ncontent-type;host;x-amz-date;x-amz-target\n${payloadHash}`;
+    const stringToSign = `${algorithm}\n${timestamp}\n${credentialScope}\n${await sha256(canonicalRequest)}`;
+
+    // Derive signing key
+    const kDate = await hmacSha256(encoder.encode(`AWS4${secretKey}`), date);
+    const kRegion = await hmacSha256(kDate, region);
+    const kService = await hmacSha256(kRegion, 'ProductAdvertisingAPI');
+    const kSigning = await hmacSha256(kService, 'aws4_request');
+
+    const signature = Array.from(new Uint8Array(await hmacSha256(kSigning, stringToSign)))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const authHeader = `${algorithm} Credential=${accessKey}/${credentialScope}, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=${signature}`;
+
+    const response = await fetch(`https://${host}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Host': host,
+        'X-Amz-Date': timestamp,
+        'X-Amz-Target': 'com.amazon.paapi5.v1.ProductAdvertisingAPIv1.SearchItems',
+        'Authorization': authHeader
+      },
+      body: payload
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'erro',
+        `Erro HTTP Amazon: ${response.status}`, { body: errorText });
+      return null;
+    }
+
+    const json = await response.json();
+    const items = json.SearchResult?.Items || [];
+
+    if (items.length === 0) {
+      await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'info',
+        `Nenhum resultado Amazon para "${termoPrincipal}"`, { produto_id: produto.id });
+      return null;
+    }
+
+    // Processar resultados com score
+    const nomeProduto = produto.nome || '';
+    const resultadosProcessados = items.map((item: any) => {
+      const titulo = item.ItemInfo?.Title?.DisplayValue || '';
+      const preco = item.Offers?.Listings?.[0]?.Price?.Amount || 0;
+      const url = item.DetailPageURL || '';
+      const eans = item.ItemInfo?.ExternalIds?.EANs?.DisplayValues || [];
+      
+      const simNome = similaridadeNome(nomeProduto, titulo);
+      let bonusEAN = 0;
+      if (produtoEan && eans.includes(produtoEan)) {
+        bonusEAN = 0.5;
+      }
+      const score = Math.min(1, simNome + bonusEAN);
+
+      return { titulo, preco, url, score, simNome, bonusEAN, asin: item.ASIN };
+    });
+
+    resultadosProcessados.sort((a: any, b: any) => b.score - a.score);
+    const melhor = resultadosProcessados.find((r: any) => r.score >= minScoreAceite && r.preco > 0);
+
+    if (!melhor) {
+      await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'info',
+        `Nenhum resultado Amazon com score >= ${minScoreAceite}`, { produto_id: produto.id });
+      return null;
+    }
+
+    const dataHoje = new Date().toISOString().slice(0, 10);
+
+    const { error } = await supabase.from('historico_precos_concorrentes').insert({
+      produto_id: produto.id,
+      fonte_id: fonte.id,
+      estabelecimento_id: fonte.estabelecimento_id,
+      nome_anuncio: melhor.titulo,
+      preco_encontrado: melhor.preco,
+      url_anuncio: melhor.url,
+      data_coleta: dataHoje,
+      detalhes_json: {
+        score: melhor.score,
+        simNome: melhor.simNome,
+        bonusEAN: melhor.bonusEAN,
+        asin: melhor.asin,
+        driver: 'amazon'
+      }
+    });
+
+    if (error) throw error;
+
+    await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'info',
+      `Coleta Amazon OK: "${produto.nome}" → R$ ${melhor.preco}`, { produto_id: produto.id });
+
+    return { produto_id: produto.id, fonte_id: fonte.id, nome_anuncio: melhor.titulo, preco_encontrado: melhor.preco };
+  } catch (e: any) {
+    console.error(`[AMAZON] Erro:`, e);
+    await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'erro',
+      `Erro Amazon: ${e.message}`, { produto_id: produto.id });
+    return null;
+  }
+}
+
+// ==================== DRIVER GOOGLE MERCHANT / SHOPPING ====================
+
+/**
+ * Driver para Google Merchant Center / Shopping API
+ * - Usa NOME DO PRODUTO como base principal
+ * - Requer Service Account com credenciais
+ */
+async function buscarPrecoGoogleMerchant(
+  supabase: any,
+  fonte: any,
+  produto: any,
+  mapeamento: any
+): Promise<any> {
+  const config = fonte.config_json || {};
+  const merchantId = config.merchant_id;
+  const clientEmail = config.client_email;
+  const privateKey = config.private_key;
+  const limite = config.limite_resultados || 20;
+  const minScoreAceite = config.min_score_aceite ?? 0.40;
+
+  if (!merchantId || !clientEmail || !privateKey) {
+    await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'erro',
+      'Credenciais Google Merchant não configuradas', { produto_id: produto.id });
+    return null;
+  }
+
+  const termoPrincipal = mapeamento?.termo_busca || produto.nome;
+  const produtoEan = normalizarEAN(produto.ean_13 || produto.ean);
+
+  if (!termoPrincipal) {
+    await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'erro',
+      `Produto ${produto.id} sem termo de busca/nome`, { produto_id: produto.id });
+    return null;
+  }
+
+  console.log(`[GOOGLE] Buscando: "${termoPrincipal}"`);
+
+  try {
+    // Criar JWT para autenticação com Service Account
+    const header = { alg: 'RS256', typ: 'JWT' };
+    const now = Math.floor(Date.now() / 1000);
+    const claims = {
+      iss: clientEmail,
+      scope: 'https://www.googleapis.com/auth/content',
+      aud: 'https://oauth2.googleapis.com/token',
+      iat: now,
+      exp: now + 3600
+    };
+
+    const base64url = (obj: any) => btoa(JSON.stringify(obj))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+    const unsignedToken = `${base64url(header)}.${base64url(claims)}`;
+
+    // Importar chave privada e assinar
+    const pemKey = privateKey.replace(/\\n/g, '\n');
+    const pemContents = pemKey.replace('-----BEGIN PRIVATE KEY-----', '')
+      .replace('-----END PRIVATE KEY-----', '').replace(/\s/g, '');
+    const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+
+    const cryptoKey = await crypto.subtle.importKey(
+      'pkcs8', binaryKey, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']
+    );
+
+    const signature = await crypto.subtle.sign(
+      'RSASSA-PKCS1-v1_5', cryptoKey, new TextEncoder().encode(unsignedToken)
+    );
+    const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+    const jwt = `${unsignedToken}.${signatureB64}`;
+
+    // Trocar JWT por access token
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+    });
+
+    if (!tokenResponse.ok) {
+      const err = await tokenResponse.text();
+      await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'erro',
+        `Erro auth Google: ${tokenResponse.status}`, { body: err });
+      return null;
+    }
+
+    const tokenData = await tokenResponse.json();
+    const accessToken = tokenData.access_token;
+
+    // Buscar produtos no Merchant Center
+    const query = encodeURIComponent(termoPrincipal);
+    const apiUrl = `https://shoppingcontent.googleapis.com/content/v2.1/${merchantId}/products?maxResults=${limite}`;
+
+    const productsResponse = await fetch(apiUrl, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+
+    if (!productsResponse.ok) {
+      const err = await productsResponse.text();
+      await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'erro',
+        `Erro Google Products API: ${productsResponse.status}`, { body: err });
+      return null;
+    }
+
+    const productsData = await productsResponse.json();
+    const resources = productsData.resources || [];
+
+    // Filtrar produtos que correspondem ao termo de busca
+    const nomeProduto = produto.nome || '';
+    const resultadosProcessados = resources
+      .filter((item: any) => {
+        const titulo = item.title || '';
+        return similaridadeNome(termoPrincipal, titulo) > 0.2;
+      })
+      .map((item: any) => {
+        const titulo = item.title || '';
+        const preco = item.price?.value ? parseFloat(item.price.value) : 0;
+        const url = item.link || '';
+        const gtin = item.gtin || '';
+
+        const simNome = similaridadeNome(nomeProduto, titulo);
+        let bonusEAN = 0;
+        if (produtoEan && normalizarEAN(gtin) === produtoEan) {
+          bonusEAN = 0.5;
+        }
+        const score = Math.min(1, simNome + bonusEAN);
+
+        return { titulo, preco, url, score, simNome, bonusEAN, gtin, offerId: item.offerId };
+      });
+
+    resultadosProcessados.sort((a: any, b: any) => b.score - a.score);
+    const melhor = resultadosProcessados.find((r: any) => r.score >= minScoreAceite && r.preco > 0);
+
+    if (!melhor) {
+      await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'info',
+        `Nenhum resultado Google Merchant com score >= ${minScoreAceite}`, { produto_id: produto.id });
+      return null;
+    }
+
+    const dataHoje = new Date().toISOString().slice(0, 10);
+
+    const { error } = await supabase.from('historico_precos_concorrentes').insert({
+      produto_id: produto.id,
+      fonte_id: fonte.id,
+      estabelecimento_id: fonte.estabelecimento_id,
+      nome_anuncio: melhor.titulo,
+      preco_encontrado: melhor.preco,
+      url_anuncio: melhor.url,
+      data_coleta: dataHoje,
+      detalhes_json: {
+        score: melhor.score,
+        simNome: melhor.simNome,
+        bonusEAN: melhor.bonusEAN,
+        gtin: melhor.gtin,
+        offerId: melhor.offerId,
+        driver: 'google_merchant'
+      }
+    });
+
+    if (error) throw error;
+
+    await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'info',
+      `Coleta Google Merchant OK: "${produto.nome}" → R$ ${melhor.preco}`, { produto_id: produto.id });
+
+    return { produto_id: produto.id, fonte_id: fonte.id, nome_anuncio: melhor.titulo, preco_encontrado: melhor.preco };
+  } catch (e: any) {
+    console.error(`[GOOGLE] Erro:`, e);
+    await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'erro',
+      `Erro Google Merchant: ${e.message}`, { produto_id: produto.id });
+    return null;
+  }
+}
+
 // ==================== ROTEADOR DE APIs ====================
 
 /**
@@ -368,11 +730,11 @@ async function buscarPrecoPorAPI(
     case 'mercado_livre':
       return buscarPrecoMercadoLivre(supabase, fonte, produto, mapeamento);
     
-    // TODO: Implementar outros drivers
-    // case 'amazon':
-    //   return buscarPrecoAmazon(supabase, fonte, produto, mapeamento);
-    // case 'magalu':
-    //   return buscarPrecoMagalu(supabase, fonte, produto, mapeamento);
+    case 'amazon':
+      return buscarPrecoAmazon(supabase, fonte, produto, mapeamento);
+    
+    case 'google_merchant':
+      return buscarPrecoGoogleMerchant(supabase, fonte, produto, mapeamento);
     
     default:
       await logColeta(supabase, fonte.id, fonte.estabelecimento_id, 'erro',
