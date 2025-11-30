@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Node } from '@xyflow/react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +16,18 @@ interface LogisticaPropertiesPanelProps {
 }
 
 export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: LogisticaPropertiesPanelProps) {
+  const [legendaLocal, setLegendaLocal] = useState('');
+  
+  const nodeData = selectedNode?.data as any;
+  const config = nodeData?.config || {};
+  
+  // Sincroniza estado local quando muda o nó selecionado
+  useEffect(() => {
+    if (selectedNode) {
+      setLegendaLocal(config.legenda_parada || '');
+    }
+  }, [selectedNode?.id]);
+  
   if (!selectedNode) {
     return (
       <div className="w-80 border-l bg-card p-4">
@@ -25,9 +38,7 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
     );
   }
 
-  const nodeData = selectedNode.data as any;
   const blockType = nodeData.type as LogisticaBlockType;
-  const config = nodeData.config || {};
   const blockDef = LOGISTICA_BLOCKS.find(b => b.type === blockType);
 
   const updateConfig = (key: string, value: any) => {
@@ -79,8 +90,9 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                   <div>
                     <Label>Legenda do marcador</Label>
                     <Input
-                      value={config.legenda_parada || ''}
-                      onChange={(e) => updateConfig('legenda_parada', e.target.value)}
+                      value={legendaLocal}
+                      onChange={(e) => setLegendaLocal(e.target.value)}
+                      onBlur={() => updateConfig('legenda_parada', legendaLocal)}
                       placeholder="Ex: Parado há mais de 30 min"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
