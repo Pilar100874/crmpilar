@@ -286,6 +286,11 @@ const LogisticaHistorico: React.FC = () => {
   // Get all positions for timeline (only when single vehicle selected)
   const timelinePosicoes = veiculosHistorico.length === 1 ? veiculosHistorico[0].posicoes : [];
 
+  // Full route bounds for initial zoom (all positions, not filtered)
+  const fullRouteBounds = veiculosHistorico.length === 1 && veiculosHistorico[0].posicoes.length > 0
+    ? veiculosHistorico[0].posicoes.map(p => ({ lat: p.lat, lng: p.lng }))
+    : undefined;
+
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
       {/* Header */}
@@ -489,6 +494,7 @@ const LogisticaHistorico: React.FC = () => {
               <div className="flex-1 relative">
                 <LazyLogisticaMap
                   routes={routes}
+                  fullRouteBounds={fullRouteBounds}
                   paradasMarcadas={paradasMarcadas}
                   currentMarker={currentMarkers[0] ? {
                     lat: currentMarkers[0].lat,

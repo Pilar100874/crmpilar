@@ -106,8 +106,6 @@ export const HistoricoTimeline: React.FC<HistoricoTimelineProps> = ({
     return null;
   }
 
-  const progress = ((currentIndex + 1) / posicoes.length) * 100;
-
   return (
     <div className={`bg-background/95 backdrop-blur-sm border rounded-lg p-3 space-y-3 ${className}`}>
       {/* Time display */}
@@ -137,14 +135,6 @@ export const HistoricoTimeline: React.FC<HistoricoTimelineProps> = ({
           min={0}
           step={1}
           className="cursor-pointer"
-        />
-      </div>
-
-      {/* Progress bar visual */}
-      <div className="h-1 bg-muted rounded-full overflow-hidden">
-        <div 
-          className="h-full bg-primary transition-all duration-100"
-          style={{ width: `${progress}%` }}
         />
       </div>
 
