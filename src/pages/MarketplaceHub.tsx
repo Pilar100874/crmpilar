@@ -128,6 +128,13 @@ export default function MarketplaceHub() {
   const [showShopeeHelp, setShowShopeeHelp] = useState(false);
   const [showMagaluHelp, setShowMagaluHelp] = useState(false);
   const [showGoogleHelp, setShowGoogleHelp] = useState(false);
+  const [showAmericanasHelp, setShowAmericanasHelp] = useState(false);
+  const [showCarrefourHelp, setShowCarrefourHelp] = useState(false);
+  const [showCasasBahiaHelp, setShowCasasBahiaHelp] = useState(false);
+  const [showOlxHelp, setShowOlxHelp] = useState(false);
+  const [showWhatsappHelp, setShowWhatsappHelp] = useState(false);
+  const [editingPriceContaId, setEditingPriceContaId] = useState<string | null>(null);
+  const [editPriceValues, setEditPriceValues] = useState({ valorFixo: 0, percentual: 0 });
 
   useEffect(() => {
     const cached = localStorage.getItem('estabelecimentoId');
@@ -1027,22 +1034,25 @@ export default function MarketplaceHub() {
                           <CardDescription className="text-xs">{marketplace.descricao}</CardDescription>
                         </div>
                       </div>
-                      {(marketplace.nome === 'mercado_livre' || marketplace.nome === 'amazon' || marketplace.nome === 'shopee' || marketplace.nome === 'magalu' || marketplace.nome === 'google_merchant') && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8"
-                          onClick={() => {
-                            if (marketplace.nome === 'mercado_livre') setShowMlHelp(true);
-                            else if (marketplace.nome === 'amazon') setShowAmazonHelp(true);
-                            else if (marketplace.nome === 'shopee') setShowShopeeHelp(true);
-                            else if (marketplace.nome === 'magalu') setShowMagaluHelp(true);
-                            else if (marketplace.nome === 'google_merchant') setShowGoogleHelp(true);
-                          }}
-                        >
-                          <HelpCircle className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => {
+                          if (marketplace.nome === 'mercado_livre') setShowMlHelp(true);
+                          else if (marketplace.nome === 'amazon') setShowAmazonHelp(true);
+                          else if (marketplace.nome === 'shopee') setShowShopeeHelp(true);
+                          else if (marketplace.nome === 'magalu') setShowMagaluHelp(true);
+                          else if (marketplace.nome === 'google_merchant') setShowGoogleHelp(true);
+                          else if (marketplace.nome === 'americanas') setShowAmericanasHelp(true);
+                          else if (marketplace.nome === 'carrefour') setShowCarrefourHelp(true);
+                          else if (marketplace.nome === 'casas_bahia') setShowCasasBahiaHelp(true);
+                          else if (marketplace.nome === 'olx') setShowOlxHelp(true);
+                          else if (marketplace.nome === 'whatsapp_commerce') setShowWhatsappHelp(true);
+                        }}
+                      >
+                        <HelpCircle className="h-4 w-4" />
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="p-4 space-y-3">
@@ -1275,6 +1285,105 @@ export default function MarketplaceHub() {
                                 <Eye className="h-3 w-3 mr-1" />
                                 Detalhes
                               </Button>
+                            </div>
+                            
+                            {/* Price Adjustment Section */}
+                            <div className="border-t pt-2 mt-2">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-medium text-muted-foreground">Ajuste de Preço</span>
+                                {editingPriceContaId === conta.id ? (
+                                  <div className="flex gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-6 px-2 text-xs"
+                                      onClick={() => setEditingPriceContaId(null)}
+                                    >
+                                      Cancelar
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      className="h-6 px-2 text-xs"
+                                      onClick={async () => {
+                                        try {
+                                          const { error } = await supabase
+                                            .from('contas_marketplace')
+                                            .update({
+                                              ajuste_preco_fixo: editPriceValues.valorFixo,
+                                              ajuste_preco_percentual: editPriceValues.percentual,
+                                            })
+                                            .eq('id', conta.id);
+                                          if (error) throw error;
+                                          queryClient.invalidateQueries({ queryKey: ['contas_marketplace'] });
+                                          toast.success('Ajuste de preço salvo');
+                                          setEditingPriceContaId(null);
+                                        } catch (err: any) {
+                                          toast.error('Erro: ' + err.message);
+                                        }
+                                      }}
+                                    >
+                                      Salvar
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 px-2 text-xs"
+                                    onClick={() => {
+                                      setEditPriceValues({
+                                        valorFixo: conta.ajuste_preco_fixo || 0,
+                                        percentual: conta.ajuste_preco_percentual || 0,
+                                      });
+                                      setEditingPriceContaId(conta.id);
+                                    }}
+                                  >
+                                    <Settings className="h-3 w-3 mr-1" />
+                                    Editar
+                                  </Button>
+                                )}
+                              </div>
+                              {editingPriceContaId === conta.id ? (
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <Label className="text-xs">Valor Fixo (R$)</Label>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={editPriceValues.valorFixo || ''}
+                                      onChange={(e) => setEditPriceValues(p => ({
+                                        ...p,
+                                        valorFixo: parseFloat(e.target.value) || 0
+                                      }))}
+                                      className="h-7 text-xs"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs">Percentual (%)</Label>
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      step="0.1"
+                                      value={editPriceValues.percentual || ''}
+                                      onChange={(e) => setEditPriceValues(p => ({
+                                        ...p,
+                                        percentual: parseFloat(e.target.value) || 0
+                                      }))}
+                                      className="h-7 text-xs"
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex gap-4 text-xs">
+                                  <span className="text-muted-foreground">
+                                    Fixo: <span className="text-foreground font-medium">R$ {(conta.ajuste_preco_fixo || 0).toFixed(2)}</span>
+                                  </span>
+                                  <span className="text-muted-foreground">
+                                    Percentual: <span className="text-foreground font-medium">{conta.ajuste_preco_percentual || 0}%</span>
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
@@ -2037,6 +2146,361 @@ export default function MarketplaceHub() {
                     <p className="font-medium text-sm">Pronto!</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       Agora você pode sincronizar produtos com o Google Shopping.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Ajuda da Americanas */}
+        <Dialog open={showAmericanasHelp} onOpenChange={setShowAmericanasHelp}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                Como configurar a Americanas
+              </DialogTitle>
+              <DialogDescription>
+                Siga o passo a passo para integrar sua conta
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-4 pr-4">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">1</div>
+                  <div>
+                    <p className="font-medium text-sm">Acesse o Portal de Sellers</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vá para{" "}
+                      <a href="https://developer.americanas.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        developer.americanas.com
+                      </a>
+                      {" "}e faça login com sua conta de seller.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">2</div>
+                  <div>
+                    <p className="font-medium text-sm">Solicite as credenciais da API</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      No portal, solicite acesso à API de integração e aguarde aprovação.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">3</div>
+                  <div>
+                    <p className="font-medium text-sm">Configure o Redirect URI</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Adicione a seguinte URL de callback:
+                    </p>
+                    <code className="text-xs bg-muted px-2 py-1 rounded block mt-2 break-all select-all">
+                      https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/americanas-auth-callback
+                    </code>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">4</div>
+                  <div>
+                    <p className="font-medium text-sm">Copie as credenciais</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Copie o <strong>Client ID</strong> e <strong>Client Secret</strong> fornecidos.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Pronto!</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Agora você pode sincronizar produtos, pedidos e estoque da Americanas.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Ajuda do Carrefour */}
+        <Dialog open={showCarrefourHelp} onOpenChange={setShowCarrefourHelp}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                Como configurar o Carrefour
+              </DialogTitle>
+              <DialogDescription>
+                Siga o passo a passo para integrar sua conta
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-4 pr-4">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">1</div>
+                  <div>
+                    <p className="font-medium text-sm">Acesse o Portal Carrefour Marketplace</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vá para{" "}
+                      <a href="https://marketplace.carrefour.com.br" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        marketplace.carrefour.com.br
+                      </a>
+                      {" "}e faça login com sua conta de seller.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">2</div>
+                  <div>
+                    <p className="font-medium text-sm">Solicite integração via API</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Entre em contato com o suporte do Carrefour para obter credenciais de API.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">3</div>
+                  <div>
+                    <p className="font-medium text-sm">Configure o Redirect URI</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Adicione a seguinte URL de callback:
+                    </p>
+                    <code className="text-xs bg-muted px-2 py-1 rounded block mt-2 break-all select-all">
+                      https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/carrefour-auth-callback
+                    </code>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Pronto!</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Agora você pode sincronizar produtos, pedidos e estoque do Carrefour.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Ajuda do Casas Bahia */}
+        <Dialog open={showCasasBahiaHelp} onOpenChange={setShowCasasBahiaHelp}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                Como configurar Casas Bahia (Via)
+              </DialogTitle>
+              <DialogDescription>
+                Siga o passo a passo para integrar sua conta
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-4 pr-4">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">1</div>
+                  <div>
+                    <p className="font-medium text-sm">Acesse o Portal Via Marketplace</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vá para{" "}
+                      <a href="https://developer.via.com.br" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        developer.via.com.br
+                      </a>
+                      {" "}e faça login com sua conta de seller.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">2</div>
+                  <div>
+                    <p className="font-medium text-sm">Crie uma aplicação de integração</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      No portal de desenvolvedores, crie uma nova aplicação para integração.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">3</div>
+                  <div>
+                    <p className="font-medium text-sm">Configure o Redirect URI</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Adicione a seguinte URL de callback:
+                    </p>
+                    <code className="text-xs bg-muted px-2 py-1 rounded block mt-2 break-all select-all">
+                      https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/casasbahia-auth-callback
+                    </code>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Pronto!</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Agora você pode sincronizar produtos, pedidos e estoque da Via (Casas Bahia, Ponto, Extra).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Ajuda da OLX */}
+        <Dialog open={showOlxHelp} onOpenChange={setShowOlxHelp}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                Como configurar a OLX
+              </DialogTitle>
+              <DialogDescription>
+                Siga o passo a passo para integrar sua conta
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-4 pr-4">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">1</div>
+                  <div>
+                    <p className="font-medium text-sm">Acesse o Portal de Desenvolvedores OLX</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vá para{" "}
+                      <a href="https://developers.olx.com.br" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        developers.olx.com.br
+                      </a>
+                      {" "}e crie uma conta de desenvolvedor.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">2</div>
+                  <div>
+                    <p className="font-medium text-sm">Crie uma aplicação</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      No painel de desenvolvedor, crie uma nova aplicação para integração.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">3</div>
+                  <div>
+                    <p className="font-medium text-sm">Configure o Redirect URI</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Adicione a seguinte URL de callback:
+                    </p>
+                    <code className="text-xs bg-muted px-2 py-1 rounded block mt-2 break-all select-all">
+                      https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/olx-auth-callback
+                    </code>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Pronto!</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Agora você pode publicar e gerenciar seus anúncios na OLX.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog de Ajuda do WhatsApp Commerce */}
+        <Dialog open={showWhatsappHelp} onOpenChange={setShowWhatsappHelp}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5 text-primary" />
+                Como configurar o WhatsApp Commerce
+              </DialogTitle>
+              <DialogDescription>
+                Siga o passo a passo para integrar sua conta
+              </DialogDescription>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh]">
+              <div className="space-y-4 pr-4">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">1</div>
+                  <div>
+                    <p className="font-medium text-sm">Acesse o Meta for Developers</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Vá para{" "}
+                      <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                        developers.facebook.com/apps
+                      </a>
+                      {" "}e crie ou selecione um aplicativo.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">2</div>
+                  <div>
+                    <p className="font-medium text-sm">Configure WhatsApp Business</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Adicione o produto &quot;WhatsApp&quot; ao seu app e configure o WhatsApp Business API.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">3</div>
+                  <div>
+                    <p className="font-medium text-sm">Adicione o produto Catalog</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Adicione &quot;Catalog&quot; ao seu app para gerenciar o catálogo de produtos.
+                    </p>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">4</div>
+                  <div>
+                    <p className="font-medium text-sm">Configure o Redirect URI</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Adicione a seguinte URL de callback nas configurações OAuth:
+                    </p>
+                    <code className="text-xs bg-muted px-2 py-1 rounded block mt-2 break-all select-all">
+                      https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/whatsapp-commerce-auth-callback
+                    </code>
+                  </div>
+                </div>
+                <Separator />
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-medium">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Pronto!</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Agora você pode sincronizar seu catálogo de produtos com o WhatsApp Business.
                     </p>
                   </div>
                 </div>
