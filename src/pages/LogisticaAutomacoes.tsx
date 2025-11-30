@@ -733,9 +733,9 @@ function EditorContent({
         )}
 
         {/* Properties Panel */}
-        {!showSimulator && (
+        {!showSimulator && selectedNode && (
           <LogisticaPropertiesPanel
-            selectedNode={selectedNode}
+            selectedNode={nodes.find(n => n.id === selectedNode.id) || selectedNode}
             onUpdateNode={handleUpdateNode}
           />
         )}
