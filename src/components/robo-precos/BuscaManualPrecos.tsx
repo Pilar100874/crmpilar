@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Loader2, ExternalLink, TrendingDown, Package, Store, Target } from "lucide-react";
+import { Search, Loader2, ExternalLink, TrendingDown, Package, Store, Target, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getEstabelecimentoId } from "@/lib/estabelecimento";
 
 interface ResultadoBusca {
   id: string;
@@ -22,6 +24,14 @@ interface ResultadoBusca {
   free_shipping: boolean;
   available_quantity: number;
   score: number;
+}
+
+interface FonteConfig {
+  tipo_api?: string;
+  client_id?: string;
+  client_secret?: string;
+  site_id?: string;
+  limite_resultados?: number;
 }
 
 // Helpers de similaridade (mesmo algoritmo do backend)
@@ -53,6 +63,35 @@ export function BuscaManualPrecos() {
   const [isLoading, setIsLoading] = useState(false);
   const [resultados, setResultados] = useState<ResultadoBusca[]>([]);
   const [totalResultados, setTotalResultados] = useState(0);
+  const [fonteConfig, setFonteConfig] = useState<FonteConfig | null>(null);
+  const [authRequired, setAuthRequired] = useState(false);
+
+  // Buscar configuração da fonte Mercado Livre
+  useEffect(() => {
+    const fetchFonteConfig = async () => {
+      try {
+        const estabelecimentoId = await getEstabelecimentoId();
+        const { data } = await supabase
+          .from('fontes_pesquisa_precos')
+          .select('config_json')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .eq('tipo', 'api')
+          .eq('ativo', true)
+          .limit(1);
+
+        if (data && data.length > 0) {
+          const config = data[0].config_json as FonteConfig;
+          if (config?.tipo_api === 'mercado_livre') {
+            setFonteConfig(config);
+          }
+        }
+      } catch (err) {
+        console.error('[Busca Manual] Erro ao buscar config:', err);
+      }
+    };
+
+    fetchFonteConfig();
+  }, []);
 
   const buscarPrecos = async () => {
     if (!termoBusca.trim()) {
@@ -62,12 +101,20 @@ export function BuscaManualPrecos() {
 
     setIsLoading(true);
     setResultados([]);
+    setAuthRequired(false);
 
     try {
       console.log("[Busca Manual] Buscando via edge function:", termoBusca);
+      console.log("[Busca Manual] Config:", fonteConfig);
       
       const { data, error } = await supabase.functions.invoke('mercadolivre-search', {
-        body: { query: termoBusca.trim(), limit: 20 }
+        body: { 
+          query: termoBusca.trim(), 
+          limit: fonteConfig?.limite_resultados || 20,
+          site_id: fonteConfig?.site_id || 'MLB',
+          client_id: fonteConfig?.client_id,
+          client_secret: fonteConfig?.client_secret,
+        }
       });
 
       if (error) {
@@ -78,9 +125,10 @@ export function BuscaManualPrecos() {
         throw new Error(data.error);
       }
 
-      // Verificar se é modo demo (API indisponível)
-      if (data._demo) {
-        toast.warning(data._message || "API temporariamente indisponível");
+      // Verificar se requer autenticação
+      if (data._requires_auth) {
+        setAuthRequired(true);
+        toast.warning(data._message || "API requer autenticação OAuth");
         setResultados([]);
         setTotalResultados(0);
         return;
@@ -179,6 +227,27 @@ export function BuscaManualPrecos() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Alerta de autenticação necessária */}
+      {authRequired && (
+        <Alert className="border-orange-500/50 bg-orange-500/10">
+          <AlertCircle className="h-4 w-4 text-orange-500" />
+          <AlertDescription className="text-sm">
+            <strong>Autenticação OAuth necessária.</strong> A API do Mercado Livre requer credenciais para funcionar.
+            Configure seu <strong>Client ID</strong> e <strong>Client Secret</strong> na aba "Fontes de Pesquisa".
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Status da configuração */}
+      {fonteConfig?.client_id && (
+        <Alert className="border-green-500/50 bg-green-500/10">
+          <Target className="h-4 w-4 text-green-500" />
+          <AlertDescription className="text-sm">
+            <strong>OAuth configurado</strong> - Usando credenciais do Mercado Livre ({fonteConfig.site_id || 'MLB'})
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Resultados */}
       {resultados.length > 0 && (
@@ -336,7 +405,7 @@ export function BuscaManualPrecos() {
       )}
 
       {/* Estado vazio */}
-      {!isLoading && resultados.length === 0 && (
+      {!isLoading && resultados.length === 0 && !authRequired && (
         <Card>
           <CardContent className="py-12">
             <div className="text-center text-muted-foreground">
@@ -345,6 +414,11 @@ export function BuscaManualPrecos() {
               <p className="text-sm">
                 Digite o nome do produto acima e clique em "Buscar" para ver os menores preços
               </p>
+              {!fonteConfig?.client_id && (
+                <p className="text-xs mt-4 text-orange-500">
+                  💡 Configure suas credenciais OAuth na aba "Fontes de Pesquisa" para acesso completo à API
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
