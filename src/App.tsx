@@ -81,6 +81,7 @@ import AdsPlatformDashboard from "./pages/ads/AdsPlatformDashboard";
 import AdsCampaigns from "./pages/ads/AdsCampaigns";
 import AdsReports from "./pages/ads/AdsReports";
 import AdsAlerts from "./pages/ads/AdsAlerts";
+import RoboPrecos from "./pages/RoboPrecos";
 
 const queryClient = new QueryClient();
 
@@ -171,6 +172,7 @@ const App = () => (
             <Route path="/marketplaces" element={<MarketplaceHub />} />
             <Route path="/marketplaces/produtos" element={<MarketplaceProdutos />} />
             <Route path="/marketplaces/pedidos" element={<MarketplacePedidos />} />
+            <Route path="/robo-precos" element={<RoboPrecos />} />
             <Route path="/whatsapp-catalogo" element={<WhatsAppCatalogo />} />
             {/* Ads Routes */}
             <Route path="/ads" element={<AdsDashboard />} />
