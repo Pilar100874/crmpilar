@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Save, ArrowLeft, Plus, Play, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { Save, ArrowLeft, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -210,9 +210,6 @@ function EditorContent({
           },
           data: {
             ...JSON.parse(JSON.stringify(nodeToDuplicate.data)),
-            onDuplicate: handleDuplicateNode,
-            onDelete: handleDeleteNode,
-            onAddNote: handleAddNote,
           },
         };
 
@@ -261,6 +258,33 @@ function EditorContent({
     [setNodes]
   );
 
+  const handleToggleCollapse = useCallback((nodeId: string) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, isCollapsed: !(node.data as any).isCollapsed } }
+          : node
+      )
+    );
+    setHasUnsavedChanges(true);
+  }, [setNodes]);
+
+  const handleCollapseAll = useCallback(() => {
+    setNodes((nds) =>
+      nds.map((node) => ({ ...node, data: { ...node.data, isCollapsed: true } }))
+    );
+    toast({ title: "Todos os blocos encolhidos" });
+    setHasUnsavedChanges(true);
+  }, [setNodes]);
+
+  const handleExpandAll = useCallback(() => {
+    setNodes((nds) =>
+      nds.map((node) => ({ ...node, data: { ...node.data, isCollapsed: false } }))
+    );
+    toast({ title: "Todos os blocos ampliados" });
+    setHasUnsavedChanges(true);
+  }, [setNodes]);
+
   const handleSaveNote = useCallback(
     (note: string) => {
       if (!currentNoteNodeId) return;
@@ -275,6 +299,7 @@ function EditorContent({
                 onDuplicate: handleDuplicateNode,
                 onDelete: handleDeleteNode,
                 onAddNote: handleAddNote,
+                onToggleCollapse: handleToggleCollapse,
               },
             };
           }
@@ -284,7 +309,7 @@ function EditorContent({
       toast({ title: note ? "Nota salva" : "Nota removida" });
       setCurrentNoteNodeId(null);
     },
-    [currentNoteNodeId, setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote]
+    [currentNoteNodeId, setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote, handleToggleCollapse]
   );
 
   // Initialize
@@ -306,12 +331,13 @@ function EditorContent({
           onSetBreakpoint: handleSetBreakpoint,
           onSetSkip: handleSetSkip,
           onClearDebug: handleClearDebug,
+          onToggleCollapse: handleToggleCollapse,
         },
       };
       setNodes([initialNode]);
       setEdges([]);
     }
-  }, [automacaoId, handleDuplicateNode, handleDeleteNode, handleAddNote, handleSetBreakpoint, handleSetSkip, handleClearDebug, setNodes, setEdges]);
+  }, [automacaoId, handleDuplicateNode, handleDeleteNode, handleAddNote, handleSetBreakpoint, handleSetSkip, handleClearDebug, handleToggleCollapse, setNodes, setEdges]);
 
   const loadAutomacao = async (id: string) => {
     try {
@@ -344,6 +370,7 @@ function EditorContent({
                 onSetBreakpoint: handleSetBreakpoint,
                 onSetSkip: handleSetSkip,
                 onClearDebug: handleClearDebug,
+                onToggleCollapse: handleToggleCollapse,
               },
             }));
             setNodes(nodesWithCallbacks);
@@ -425,6 +452,7 @@ function EditorContent({
           onSetBreakpoint: handleSetBreakpoint,
           onSetSkip: handleSetSkip,
           onClearDebug: handleClearDebug,
+          onToggleCollapse: handleToggleCollapse,
         },
       };
 
@@ -433,7 +461,7 @@ function EditorContent({
       setHasUnsavedChanges(true);
       toast({ title: `Bloco "${blockDef.label}" adicionado` });
     },
-    [reactFlowInstance, setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote, handleSetBreakpoint, handleSetSkip, handleClearDebug]
+    [reactFlowInstance, setNodes, handleDuplicateNode, handleDeleteNode, handleAddNote, handleSetBreakpoint, handleSetSkip, handleClearDebug, handleToggleCollapse]
   );
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
@@ -621,14 +649,26 @@ function EditorContent({
             className="text-lg font-semibold border-none p-0 h-auto focus-visible:ring-0 w-[200px]"
           />
           <div className="flex items-center gap-1 border-l pl-4">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => setIsBlockLibraryExpanded(true)}
+              className="h-8 w-8"
+              title="Blocos"
+            >
+              <Blocks className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={handleCollapseAll} className="h-8 w-8" title="Encolher todos">
+              <Minimize2 className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" onClick={handleExpandAll} className="h-8 w-8" title="Ampliar todos">
+              <Maximize2 className="h-4 w-4" />
+            </Button>
             <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-8 w-8">
               <ZoomIn className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-8 w-8">
               <ZoomOut className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" onClick={handleFitView} className="h-8 w-8">
-              <Maximize2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
