@@ -195,8 +195,13 @@ function findConnectedActions(
 ): AutomacaoFlowNode[] {
   const connectedActions: AutomacaoFlowNode[] = [];
   
+  console.log(`🔍 Finding actions from node ${conditionNodeId} with handle "${outputHandle}"`);
+  console.log(`📊 Total edges: ${edges.length}`);
+  
   for (const edge of edges) {
     if (edge.source === conditionNodeId) {
+      console.log(`  Edge found: source=${edge.source}, target=${edge.target}, sourceHandle=${edge.sourceHandle}`);
+      
       // Check if edge is from correct output handle
       const handleMatch = edge.sourceHandle === outputHandle || 
                          edge.sourceHandle === `${outputHandle}-0` ||
@@ -204,13 +209,17 @@ function findConnectedActions(
       
       if (handleMatch) {
         const targetNode = nodes.find(n => n.id === edge.target);
+        console.log(`  ✅ Handle matched! Target node: ${targetNode?.data?.type}`);
         if (targetNode && targetNode.data?.type?.startsWith('acao_')) {
           connectedActions.push(targetNode);
         }
+      } else {
+        console.log(`  ❌ Handle "${edge.sourceHandle}" doesn't match "${outputHandle}"`);
       }
     }
   }
   
+  console.log(`🎯 Found ${connectedActions.length} connected actions`);
   return connectedActions;
 }
 
@@ -306,6 +315,8 @@ async function executarAutomacoesLogistica(
           const condicoesTempo: CondicaoTempo[] = config.condicoes_tempo || 
             (config.tempo_minutos ? [{ tempo_minutos: config.tempo_minutos }] : [{ tempo_minutos: 30 }]);
           
+          console.log(`📋 Configured time conditions: ${JSON.stringify(condicoesTempo)}`);
+          
           // Only process if vehicle is stopped
           if (velocidade <= 5) {
             // Find the best matching time condition (highest threshold that is met)
@@ -318,17 +329,38 @@ async function executarAutomacoesLogistica(
               const outputHandle = `tempo_${condicaoAtendida.tempo_minutos}`;
               
               // Find connected action nodes from the matched time output
-              const connectedActions = findConnectedActions(node.id, edges, nodes, outputHandle);
+              let connectedActions = findConnectedActions(node.id, edges, nodes, outputHandle);
+              
+              // If no actions found for specific time handle, try all time conditions from highest to lowest
+              if (connectedActions.length === 0) {
+                console.log(`⚠️ No actions for handle "${outputHandle}", trying other time handles...`);
+                const sortedCondicoes = [...condicoesTempo].sort((a, b) => b.tempo_minutos - a.tempo_minutos);
+                for (const cond of sortedCondicoes) {
+                  if (minutosParado >= cond.tempo_minutos) {
+                    const altHandle = `tempo_${cond.tempo_minutos}`;
+                    connectedActions = findConnectedActions(node.id, edges, nodes, altHandle);
+                    if (connectedActions.length > 0) {
+                      console.log(`✅ Found actions using handle "${altHandle}"`);
+                      break;
+                    }
+                  }
+                }
+              }
               
               // Also try legacy 'sim' and 'yes' handles for backwards compatibility
               if (connectedActions.length === 0) {
+                console.log(`⚠️ Trying legacy handles 'sim' and 'yes'...`);
                 connectedActions.push(...findConnectedActions(node.id, edges, nodes, 'sim'));
                 connectedActions.push(...findConnectedActions(node.id, edges, nodes, 'yes'));
               }
               
+              console.log(`🎯 Total actions to execute: ${connectedActions.length}`);
+              
               for (const actionNode of connectedActions) {
                 const actionType = actionNode.data?.type;
                 const actionConfig = actionNode.data?.config || {};
+                
+                console.log(`🔧 Executing action: ${actionType}, config: ${JSON.stringify(actionConfig)}`);
                 
                 // Handle "acao_marcar_mapa" action
                 if (actionType === 'acao_marcar_mapa') {
@@ -340,6 +372,7 @@ async function executarAutomacoesLogistica(
                     automacaoId: automacao.id,
                     automacaoNome: automacao.nome
                   };
+                  console.log(`📍 Marker config: icon=${markerToCreate.icone}, color=${markerToCreate.cor}, legend=${markerToCreate.legenda}`);
                 }
                 
                 // TODO: Handle other actions (WhatsApp, notification, email)
