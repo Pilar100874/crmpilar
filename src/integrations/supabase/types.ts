@@ -374,6 +374,51 @@ export type Database = {
           },
         ]
       }
+      arquivos_precos_importados: {
+        Row: {
+          caminho_armazenamento: string | null
+          data_importacao: string | null
+          estabelecimento_id: string
+          fonte_id: string
+          id: string
+          mapeamento_colunas_json: Json | null
+          nome_arquivo: string
+        }
+        Insert: {
+          caminho_armazenamento?: string | null
+          data_importacao?: string | null
+          estabelecimento_id: string
+          fonte_id: string
+          id?: string
+          mapeamento_colunas_json?: Json | null
+          nome_arquivo: string
+        }
+        Update: {
+          caminho_armazenamento?: string | null
+          data_importacao?: string | null
+          estabelecimento_id?: string
+          fonte_id?: string
+          id?: string
+          mapeamento_colunas_json?: Json | null
+          nome_arquivo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arquivos_precos_importados_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "arquivos_precos_importados_fonte_id_fkey"
+            columns: ["fonte_id"]
+            isOneToOne: false
+            referencedRelation: "fontes_pesquisa_precos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       atendente_carteiras: {
         Row: {
           atendente_id: string
@@ -2291,6 +2336,47 @@ export type Database = {
           },
         ]
       }
+      fontes_pesquisa_precos: {
+        Row: {
+          ativo: boolean | null
+          config_json: Json | null
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          nome_fonte: string
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          config_json?: Json | null
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome_fonte: string
+          tipo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          config_json?: Json | null
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome_fonte?: string
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fontes_pesquisa_precos_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       form_field_configs: {
         Row: {
           category: string | null
@@ -2601,6 +2687,67 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historico_precos_concorrentes: {
+        Row: {
+          created_at: string | null
+          data_coleta: string | null
+          detalhes_json: Json | null
+          estabelecimento_id: string
+          fonte_id: string
+          id: string
+          nome_anuncio: string | null
+          preco_encontrado: number | null
+          produto_id: string
+          url_anuncio: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_coleta?: string | null
+          detalhes_json?: Json | null
+          estabelecimento_id: string
+          fonte_id: string
+          id?: string
+          nome_anuncio?: string | null
+          preco_encontrado?: number | null
+          produto_id: string
+          url_anuncio?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_coleta?: string | null
+          detalhes_json?: Json | null
+          estabelecimento_id?: string
+          fonte_id?: string
+          id?: string
+          nome_anuncio?: string | null
+          preco_encontrado?: number | null
+          produto_id?: string
+          url_anuncio?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_precos_concorrentes_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_precos_concorrentes_fonte_id_fkey"
+            columns: ["fonte_id"]
+            isOneToOne: false
+            referencedRelation: "fontes_pesquisa_precos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "historico_precos_concorrentes_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
             referencedColumns: ["id"]
           },
         ]
@@ -3037,6 +3184,47 @@ export type Database = {
           },
         ]
       }
+      linhas_arquivo_precos: {
+        Row: {
+          arquivo_id: string
+          created_at: string | null
+          ean: string | null
+          id: string
+          nome_produto: string | null
+          preco: number | null
+          raw_json: Json | null
+          sku: string | null
+        }
+        Insert: {
+          arquivo_id: string
+          created_at?: string | null
+          ean?: string | null
+          id?: string
+          nome_produto?: string | null
+          preco?: number | null
+          raw_json?: Json | null
+          sku?: string | null
+        }
+        Update: {
+          arquivo_id?: string
+          created_at?: string | null
+          ean?: string | null
+          id?: string
+          nome_produto?: string | null
+          preco?: number | null
+          raw_json?: Json | null
+          sku?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "linhas_arquivo_precos_arquivo_id_fkey"
+            columns: ["arquivo_id"]
+            isOneToOne: false
+            referencedRelation: "arquivos_precos_importados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       logistica_automacoes: {
         Row: {
           ativo: boolean | null
@@ -3185,6 +3373,51 @@ export type Database = {
             columns: ["veiculo_id"]
             isOneToOne: false
             referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      logs_monitor_preco: {
+        Row: {
+          created_at: string | null
+          detalhes: Json | null
+          estabelecimento_id: string
+          fonte_id: string | null
+          id: string
+          mensagem: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string | null
+          detalhes?: Json | null
+          estabelecimento_id: string
+          fonte_id?: string | null
+          id?: string
+          mensagem: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string | null
+          detalhes?: Json | null
+          estabelecimento_id?: string
+          fonte_id?: string | null
+          id?: string
+          mensagem?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logs_monitor_preco_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logs_monitor_preco_fonte_id_fkey"
+            columns: ["fonte_id"]
+            isOneToOne: false
+            referencedRelation: "fontes_pesquisa_precos"
             referencedColumns: ["id"]
           },
         ]
@@ -5187,6 +5420,60 @@ export type Database = {
             columns: ["ncm_id"]
             isOneToOne: false
             referencedRelation: "ncm_codigos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      produtos_fontes_precos: {
+        Row: {
+          ativo: boolean | null
+          chave_correspondencia: string | null
+          created_at: string | null
+          fonte_id: string
+          id: string
+          produto_id: string
+          termo_busca: string | null
+          termo_busca_alternativo: string | null
+          updated_at: string | null
+          url_direta: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          chave_correspondencia?: string | null
+          created_at?: string | null
+          fonte_id: string
+          id?: string
+          produto_id: string
+          termo_busca?: string | null
+          termo_busca_alternativo?: string | null
+          updated_at?: string | null
+          url_direta?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          chave_correspondencia?: string | null
+          created_at?: string | null
+          fonte_id?: string
+          id?: string
+          produto_id?: string
+          termo_busca?: string | null
+          termo_busca_alternativo?: string | null
+          updated_at?: string | null
+          url_direta?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produtos_fontes_precos_fonte_id_fkey"
+            columns: ["fonte_id"]
+            isOneToOne: false
+            referencedRelation: "fontes_pesquisa_precos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "produtos_fontes_precos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
             referencedColumns: ["id"]
           },
         ]
