@@ -98,10 +98,18 @@ interface RouteData {
   duration?: number;
 }
 
+interface CurrentMarker {
+  lat: number;
+  lng: number;
+  color: string;
+  label?: string;
+}
+
 interface LogisticaMapInternalProps {
   veiculos?: VeiculoComStatus[];
   routes?: RouteData[];
   paradasMarcadas?: ParadaMarcada[];
+  currentMarker?: CurrentMarker;
   center?: [number, number];
   zoom?: number;
   onVeiculoClick?: (veiculo: VeiculoComStatus) => void;
@@ -114,6 +122,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   veiculos = [],
   routes = [],
   paradasMarcadas = [],
+  currentMarker,
   center = [-15.7801, -47.9292],
   zoom = 4,
   onVeiculoClick,
@@ -126,6 +135,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const paradasMarkersRef = useRef<Map<string, L.Marker>>(new Map());
   const routeLayersRef = useRef<L.Polyline[]>([]);
+  const currentMarkerRef = useRef<L.Marker | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -306,6 +316,69 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       map.fitBounds(bounds, { padding: [50, 50] });
     }
   }, [routes, fitBounds]);
+
+  // Update current position marker (for timeline)
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+
+    // Remove existing current marker
+    if (currentMarkerRef.current) {
+      currentMarkerRef.current.remove();
+      currentMarkerRef.current = null;
+    }
+
+    // Add new current marker if provided
+    if (currentMarker) {
+      const icon = L.divIcon({
+        className: 'current-position-marker',
+        html: `
+          <div style="position: relative;">
+            <div style="
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 40px;
+              height: 40px;
+              background-color: ${currentMarker.color}40;
+              border-radius: 50%;
+              animation: currentPulse 1.5s infinite;
+            "></div>
+            <div style="
+              position: relative;
+              background-color: ${currentMarker.color};
+              width: 20px;
+              height: 20px;
+              border-radius: 50%;
+              border: 3px solid white;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            "></div>
+          </div>
+          <style>
+            @keyframes currentPulse {
+              0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
+              100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+            }
+          </style>
+        `,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+      });
+
+      currentMarkerRef.current = L.marker([currentMarker.lat, currentMarker.lng], { 
+        icon,
+        zIndexOffset: 2000 
+      })
+        .addTo(map)
+        .bindPopup(`
+          <div class="text-sm">
+            <p class="font-bold">${currentMarker.label || 'Posição atual'}</p>
+          </div>
+        `);
+    }
+  }, [currentMarker]);
 
   return (
     <div ref={mapContainerRef} className={className} />

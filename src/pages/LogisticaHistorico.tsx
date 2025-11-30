@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, startOfDay, endOfDay, differenceInMinutes, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -6,6 +6,7 @@ import { ArrowLeft, Calendar, Car, Route, Clock, Gauge, Activity, MapPin, Check,
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
+import { HistoricoTimeline } from '@/components/logistica/HistoricoTimeline';
 import { Veiculo, VeiculoPosicao, HistoricoEstatisticas } from '@/types/logistica';
 import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,8 @@ const LogisticaHistorico: React.FC = () => {
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [selectedVeiculoIds, setSelectedVeiculoIds] = useState<string[]>(paramVeiculoId ? [paramVeiculoId] : []);
   const [veiculosHistorico, setVeiculosHistorico] = useState<VeiculoHistorico[]>([]);
+  const [filteredVeiculosHistorico, setFilteredVeiculosHistorico] = useState<VeiculoHistorico[]>([]);
+  const [currentMarkerIndex, setCurrentMarkerIndex] = useState<number>(-1);
   const [paradasMarcadas, setParadasMarcadas] = useState<ParadaMarcada[]>([]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
@@ -49,6 +52,30 @@ const LogisticaHistorico: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
+
+  // Handle timeline change - filter positions up to current time
+  const handleTimelineChange = useCallback((filteredPosicoes: VeiculoPosicao[], currentIndex: number) => {
+    if (veiculosHistorico.length === 1) {
+      // Single vehicle - filter positions
+      setFilteredVeiculosHistorico(prev => {
+        const vh = veiculosHistorico[0];
+        return [{
+          ...vh,
+          posicoes: filteredPosicoes,
+          estatisticas: calculateEstatisticas(filteredPosicoes)
+        }];
+      });
+      setCurrentMarkerIndex(currentIndex);
+    }
+  }, [veiculosHistorico]);
+
+  // Sync filtered with full when multiple vehicles or on initial load
+  useEffect(() => {
+    if (veiculosHistorico.length !== 1) {
+      setFilteredVeiculosHistorico(veiculosHistorico);
+      setCurrentMarkerIndex(-1);
+    }
+  }, [veiculosHistorico]);
 
 
   // Fetch all vehicles for the selector (admin sees all vehicles)
@@ -230,16 +257,34 @@ const LogisticaHistorico: React.FC = () => {
     setSelectedVeiculoIds(prev => prev.filter(id => id !== veiculoId));
   };
 
-  const routes = veiculosHistorico.map(vh => ({
+  // Use filtered data for display
+  const displayData = filteredVeiculosHistorico.length > 0 ? filteredVeiculosHistorico : veiculosHistorico;
+
+  const routes = displayData.map(vh => ({
     coordinates: vh.posicoes.map(p => ({ lat: p.lat, lng: p.lng })),
     color: vh.color,
     distance: vh.estatisticas?.distancia_total_km ? vh.estatisticas.distancia_total_km * 1000 : undefined
   })).filter(r => r.coordinates.length > 0);
 
+  // Current marker position (last point in filtered positions)
+  const currentMarkers = displayData.map(vh => {
+    if (vh.posicoes.length === 0) return null;
+    const lastPos = vh.posicoes[vh.posicoes.length - 1];
+    return {
+      lat: lastPos.lat,
+      lng: lastPos.lng,
+      color: vh.color,
+      label: vh.veiculo.placa
+    };
+  }).filter(Boolean);
+
   const selectedVeiculosInfo = selectedVeiculoIds.map((id, index) => {
     const v = veiculos.find(v => v.id === id);
     return v ? { ...v, color: ROUTE_COLORS[index % ROUTE_COLORS.length] } : null;
   }).filter(Boolean) as (Veiculo & { color: string })[];
+
+  // Get all positions for timeline (only when single vehicle selected)
+  const timelinePosicoes = veiculosHistorico.length === 1 ? veiculosHistorico[0].posicoes : [];
 
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
@@ -440,12 +485,32 @@ const LogisticaHistorico: React.FC = () => {
               </div>
             </div>
           ) : (
-            <LazyLogisticaMap
-              routes={routes}
-              paradasMarcadas={paradasMarcadas}
-              className="h-full w-full"
-              fitBounds
-            />
+            <div className="h-full flex flex-col">
+              <div className="flex-1 relative">
+                <LazyLogisticaMap
+                  routes={routes}
+                  paradasMarcadas={paradasMarcadas}
+                  currentMarker={currentMarkers[0] ? {
+                    lat: currentMarkers[0].lat,
+                    lng: currentMarkers[0].lng,
+                    color: currentMarkers[0].color,
+                    label: currentMarkers[0].label
+                  } : undefined}
+                  className="h-full w-full"
+                  fitBounds={currentMarkerIndex === -1}
+                />
+              </div>
+              
+              {/* Timeline - only show when single vehicle is selected */}
+              {timelinePosicoes.length > 1 && (
+                <div className="p-3 border-t">
+                  <HistoricoTimeline
+                    posicoes={timelinePosicoes}
+                    onTimeChange={handleTimelineChange}
+                  />
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -453,20 +518,20 @@ const LogisticaHistorico: React.FC = () => {
         <div className="w-full md:w-72 lg:w-80 flex-shrink-0 border-t md:border-t-0 md:border-l bg-background p-3 sm:p-4 overflow-auto max-h-[40vh] md:max-h-none">
           <h2 className="font-semibold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
             <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
-            Estatísticas do Dia
+            {timelinePosicoes.length > 1 ? 'Estatísticas (até momento selecionado)' : 'Estatísticas do Dia'}
           </h2>
 
           {selectedVeiculoIds.length === 0 ? (
             <p className="text-muted-foreground text-xs sm:text-sm">
               Selecione veículos para ver as estatísticas.
             </p>
-          ) : veiculosHistorico.length === 0 ? (
+          ) : displayData.length === 0 ? (
             <p className="text-muted-foreground text-xs sm:text-sm">
               Carregando...
             </p>
           ) : (
             <div className="space-y-4 sm:space-y-6">
-              {veiculosHistorico.map((vh) => (
+              {displayData.map((vh) => (
                 <div key={vh.veiculo.id} className="space-y-2 sm:space-y-3">
                   <div 
                     className="flex items-center gap-2 pb-2 border-b"

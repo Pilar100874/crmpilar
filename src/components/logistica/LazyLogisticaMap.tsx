@@ -9,10 +9,18 @@ interface RouteData {
   duration?: number;
 }
 
+interface CurrentMarker {
+  lat: number;
+  lng: number;
+  color: string;
+  label?: string;
+}
+
 interface LazyLogisticaMapProps {
   veiculos?: VeiculoComStatus[];
   routes?: RouteData[];
   paradasMarcadas?: ParadaMarcada[];
+  currentMarker?: CurrentMarker;
   center?: [number, number];
   zoom?: number;
   onVeiculoClick?: (veiculo: VeiculoComStatus) => void;
