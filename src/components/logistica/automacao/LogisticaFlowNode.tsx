@@ -3,7 +3,7 @@ import { Handle, Position, NodeProps } from '@xyflow/react';
 import { 
   Play, Pause, Gauge, MapPin, MapPinOff, Clock, 
   MessageCircle, Bell, Mail, Copy, Trash2, StickyNote,
-  MoreVertical, SkipForward, X, ArrowRight
+  MoreVertical, SkipForward, X, ArrowRight, MapPinned
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LOGISTICA_BLOCKS, LogisticaBlockType } from '@/types/automacaoLogistica';
@@ -27,6 +27,7 @@ const iconMap: Record<string, any> = {
   MessageCircle,
   Bell,
   Mail,
+  MapPinned,
 };
 
 interface LogisticaFlowNodeProps extends NodeProps {
@@ -226,6 +227,15 @@ export const LogisticaFlowNode = memo(({ id, data, selected }: LogisticaFlowNode
           )}
           {data.type === 'condicao_saida_area' && (
             <span>{data.config?.area_nome || 'Configurar área...'}</span>
+          )}
+          {data.type === 'acao_marcar_mapa' && (
+            <span>
+              {data.config?.categoria_tempo === 'automatico' ? 'Automático (baseado no tempo)' :
+               data.config?.categoria_tempo === '10_20' ? 'Parado 10-20 min (Amarelo)' :
+               data.config?.categoria_tempo === '21_30' ? 'Parado 21-30 min (Laranja)' :
+               data.config?.categoria_tempo === 'mais_30' ? 'Parado +30 min (Vermelho)' :
+               'Marcar posição no mapa'}
+            </span>
           )}
         </div>
 
