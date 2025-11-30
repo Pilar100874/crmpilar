@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LogisticaBlockType, LOGISTICA_BLOCKS } from '@/types/automacaoLogistica';
 import { AddressAutocomplete } from '@/components/logistica/AddressAutocomplete';
+import { IconePicker } from './IconePicker';
 
 interface LogisticaPropertiesPanelProps {
   selectedNode: Node | null;
@@ -65,47 +66,13 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
               
               {config.marcar_no_mapa && (
                 <div className="space-y-3 pl-6">
-                  <Label>Selecione o ícone de marcação</Label>
-                  <div className="space-y-2">
-                    <div 
-                      className={`flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-colors ${config.icone_parada === '10_20' ? 'border-yellow-500 bg-yellow-500/10' : 'hover:bg-muted'}`}
-                      onClick={() => updateConfig('icone_parada', '10_20')}
-                    >
-                      <div className="w-6 h-6 rounded-full bg-yellow-500 border-2 border-white shadow flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">P</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Parado 10-20 min</p>
-                        <p className="text-xs text-muted-foreground">Ícone amarelo</p>
-                      </div>
-                    </div>
-                    
-                    <div 
-                      className={`flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-colors ${config.icone_parada === '21_30' ? 'border-orange-500 bg-orange-500/10' : 'hover:bg-muted'}`}
-                      onClick={() => updateConfig('icone_parada', '21_30')}
-                    >
-                      <div className="w-6 h-6 rounded-full bg-orange-500 border-2 border-white shadow flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">P</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Parado 21-30 min</p>
-                        <p className="text-xs text-muted-foreground">Ícone laranja</p>
-                      </div>
-                    </div>
-                    
-                    <div 
-                      className={`flex items-center gap-3 p-2 rounded-lg border cursor-pointer transition-colors ${config.icone_parada === 'mais_30' ? 'border-red-600 bg-red-600/10' : 'hover:bg-muted'}`}
-                      onClick={() => updateConfig('icone_parada', 'mais_30')}
-                    >
-                      <div className="w-6 h-6 rounded-full bg-red-600 border-2 border-white shadow flex items-center justify-center">
-                        <span className="text-white text-xs font-bold">P</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Parado +30 min</p>
-                        <p className="text-xs text-muted-foreground">Ícone vermelho</p>
-                      </div>
-                    </div>
-                  </div>
+                  <Label>Ícone de marcação</Label>
+                  <IconePicker
+                    selectedIcon={config.icone_parada || 'MapPin'}
+                    selectedColor={config.cor_icone_parada || '#EAB308'}
+                    onIconChange={(icon) => updateConfig('icone_parada', icon)}
+                    onColorChange={(color) => updateConfig('cor_icone_parada', color)}
+                  />
                   <p className="text-xs text-muted-foreground">
                     Este ícone aparecerá no mapa de monitoramento e histórico quando a condição for atendida
                   </p>

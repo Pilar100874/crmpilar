@@ -13,7 +13,8 @@ export interface LogisticaBlockConfig {
   // Para condicao_parado
   tempo_minutos?: number;
   marcar_no_mapa?: boolean;
-  icone_parada?: '10_20' | '21_30' | 'mais_30';
+  icone_parada?: string;
+  cor_icone_parada?: string;
   // Para condicao_velocidade
   velocidade_km?: number;
   operador_velocidade?: 'maior' | 'menor';
