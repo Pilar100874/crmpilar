@@ -31,6 +31,27 @@ interface TraccarClientPayload {
   device_id?: string;
 }
 
+interface AutomacaoFlowNode {
+  id: string;
+  type: string;
+  data: {
+    type: string;
+    label: string;
+    config: {
+      tempo_minutos?: number;
+      marcar_no_mapa?: boolean;
+      icone_parada?: string;
+      cor_icone_parada?: string;
+      legenda_parada?: string;
+      velocidade_maxima?: number;
+      telefone?: string;
+      mensagem?: string;
+      titulo?: string;
+      [key: string]: unknown;
+    };
+  };
+}
+
 // Parse OsmAnd/Traccar format from query string
 function parseOsmAndFormat(url: URL): PosicaoPayload | null {
   const id = url.searchParams.get('id');
@@ -138,7 +159,190 @@ async function savePosition(supabase: any, payload: PosicaoPayload, estabelecime
   }
 
   console.log('Position saved successfully:', posicao.id, 'for vehicle:', veiculoId);
-  return { data: posicao, status: 200 };
+  return { 
+    data: posicao, 
+    status: 200,
+    veiculoId: veiculoId,
+    velocidade: payload.velocidade || 0
+  };
+}
+
+// Execute logistics automations for a vehicle
+async function executarAutomacoesLogistica(
+  supabase: any,
+  veiculoId: string,
+  lat: number,
+  lng: number,
+  velocidade: number,
+  estabelecimentoId: string
+): Promise<void> {
+  try {
+    console.log('🔄 Executing automations for vehicle:', veiculoId);
+
+    // Fetch active automations for this establishment
+    const { data: automacoes, error: autoError } = await supabase
+      .from('logistica_automacoes')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .eq('ativo', true);
+
+    if (autoError || !automacoes || automacoes.length === 0) {
+      console.log('No active automations found');
+      return;
+    }
+
+    // Get vehicle's last position to calculate stopped time
+    const { data: posicoes } = await supabase
+      .from('veiculo_posicoes')
+      .select('*')
+      .eq('veiculo_id', veiculoId)
+      .order('data_hora', { ascending: false })
+      .limit(10);
+
+    // Calculate time stopped (if speed is 0)
+    let minutosParado = 0;
+    if (velocidade <= 5 && posicoes && posicoes.length > 1) {
+      // Find when vehicle started being stopped
+      for (const pos of posicoes) {
+        if (pos.velocidade <= 5) {
+          const diffMs = new Date().getTime() - new Date(pos.data_hora).getTime();
+          minutosParado = Math.floor(diffMs / 60000);
+        } else {
+          break;
+        }
+      }
+    }
+
+    console.log(`Vehicle ${veiculoId}: speed=${velocidade}, stoppedMinutes=${minutosParado}`);
+
+    // Process each automation
+    for (const automacao of automacoes) {
+      const flowData = automacao.flow_data as { nodes?: AutomacaoFlowNode[] };
+      if (!flowData?.nodes) continue;
+
+      for (const node of flowData.nodes) {
+        const nodeType = node.data?.type;
+        const config = node.data?.config || {};
+
+        // Handle "condicao_parado" - Vehicle stopped condition
+        if (nodeType === 'condicao_parado') {
+          const tempoMinutos = config.tempo_minutos || 30;
+          
+          if (velocidade <= 5 && minutosParado >= tempoMinutos) {
+            console.log(`✅ Automation triggered: Vehicle stopped for ${minutosParado} min (threshold: ${tempoMinutos})`);
+            
+            // Create map marker if configured
+            if (config.marcar_no_mapa) {
+              let categoriaTempo = 'menos_5';
+              if (minutosParado >= 30) categoriaTempo = 'mais_30';
+              else if (minutosParado >= 15) categoriaTempo = '15_30';
+              else if (minutosParado >= 5) categoriaTempo = '5_15';
+
+              // Check if marker already exists
+              const { data: existing } = await supabase
+                .from('logistica_paradas_marcadas')
+                .select('id')
+                .eq('veiculo_id', veiculoId)
+                .eq('estabelecimento_id', estabelecimentoId)
+                .single();
+
+              const markerData = {
+                lat,
+                lng,
+                tempo_parado_minutos: minutosParado,
+                categoria_tempo: categoriaTempo,
+                icone_parada: config.icone_parada || 'MapPin',
+                cor_icone_parada: config.cor_icone_parada || '#EAB308',
+                legenda_parada: `${config.legenda_parada || `Parado há ${minutosParado} min`} (${automacao.nome})`
+              };
+
+              if (existing) {
+                await supabase
+                  .from('logistica_paradas_marcadas')
+                  .update(markerData)
+                  .eq('id', existing.id);
+                console.log('📍 Updated marker for vehicle:', veiculoId);
+              } else {
+                await supabase
+                  .from('logistica_paradas_marcadas')
+                  .insert({
+                    veiculo_id: veiculoId,
+                    estabelecimento_id: estabelecimentoId,
+                    data_inicio: new Date().toISOString(),
+                    automacao_id: automacao.id,
+                    ...markerData
+                  });
+                console.log('📍 Created marker for vehicle:', veiculoId);
+              }
+            }
+
+            // TODO: Execute other actions (WhatsApp, notification, email)
+            // These would connect to respective edge functions or services
+          }
+        }
+
+        // Handle "condicao_velocidade" - Speed exceeded condition
+        if (nodeType === 'condicao_velocidade') {
+          const velocidadeMaxima = config.velocidade_maxima || 80;
+          
+          if (velocidade > velocidadeMaxima) {
+            console.log(`✅ Automation triggered: Speed ${velocidade} km/h exceeded ${velocidadeMaxima} km/h`);
+            
+            if (config.marcar_no_mapa) {
+              const { data: existing } = await supabase
+                .from('logistica_paradas_marcadas')
+                .select('id')
+                .eq('veiculo_id', veiculoId)
+                .eq('estabelecimento_id', estabelecimentoId)
+                .eq('categoria_tempo', 'velocidade')
+                .single();
+
+              const markerData = {
+                lat,
+                lng,
+                tempo_parado_minutos: 0,
+                categoria_tempo: 'velocidade',
+                icone_parada: config.icone_parada || 'Gauge',
+                cor_icone_parada: config.cor_icone_parada || '#DC2626',
+                legenda_parada: `${config.legenda_parada || `Velocidade: ${Math.round(velocidade)} km/h`} (${automacao.nome})`
+              };
+
+              if (!existing) {
+                await supabase
+                  .from('logistica_paradas_marcadas')
+                  .insert({
+                    veiculo_id: veiculoId,
+                    estabelecimento_id: estabelecimentoId,
+                    data_inicio: new Date().toISOString(),
+                    automacao_id: automacao.id,
+                    ...markerData
+                  });
+                console.log('🚨 Created speed alert marker for vehicle:', veiculoId);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Clean up markers for vehicles that no longer meet conditions
+    if (velocidade > 5) {
+      // Vehicle is moving, remove any "parado" markers
+      const { error: deleteError } = await supabase
+        .from('logistica_paradas_marcadas')
+        .delete()
+        .eq('veiculo_id', veiculoId)
+        .eq('estabelecimento_id', estabelecimentoId)
+        .neq('categoria_tempo', 'velocidade');
+      
+      if (!deleteError) {
+        console.log('🧹 Cleaned up stopped markers for moving vehicle:', veiculoId);
+      }
+    }
+
+  } catch (error) {
+    console.error('Error executing automations:', error);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -195,6 +399,18 @@ Deno.serve(async (req) => {
           JSON.stringify({ status: 'error', message: result.error }),
           { status: result.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      }
+
+      // Execute automations in background (fire and forget)
+      if (estabelecimentoId && result.veiculoId) {
+        executarAutomacoesLogistica(
+          supabase,
+          result.veiculoId,
+          payload.lat,
+          payload.lng,
+          payload.velocidade || 0,
+          estabelecimentoId
+        ).catch(err => console.error('Automation error:', err));
       }
       
       return new Response(
@@ -287,6 +503,18 @@ Deno.serve(async (req) => {
           JSON.stringify({ status: 'error', message: result.error }),
           { status: result.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      }
+
+      // Execute automations in background (fire and forget)
+      if (estabelecimentoId && result.veiculoId) {
+        executarAutomacoesLogistica(
+          supabase,
+          result.veiculoId,
+          payload.lat,
+          payload.lng,
+          payload.velocidade || 0,
+          estabelecimentoId
+        ).catch(err => console.error('Automation error:', err));
       }
 
       return new Response(
