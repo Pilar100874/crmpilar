@@ -80,35 +80,42 @@ serve(async (req) => {
             role: 'system',
             content: `Você é um extrator de dados de produtos de e-commerce. Extraia produtos do HTML fornecido.
 
-RETORNE APENAS JSON VÁLIDO, sem markdown:
+REGRAS IMPORTANTES:
+1. Extraia APENAS produtos reais da página (não ícones, banners, logos, botões)
+2. A imagem deve ser a FOTO DO PRODUTO (geralmente em tags <img> dentro do card do produto, com atributos como "src", "data-src", ou "srcset")
+3. NÃO extraia imagens de: ícones SVG, logos da loja, bandeiras de cartão, selos de segurança, imagens de frete/entrega
+4. A imagem do produto geralmente tem URLs com palavras como "product", "item", "foto", ou dimensões como "-292-", "-500-", etc.
+5. Converta preços para número (R$ 1.299,00 -> 1299.00)
+6. Extraia no máximo ${limite} produtos
+
+RETORNE APENAS JSON VÁLIDO, sem markdown ou código:
 {
   "products": [
     {
-      "nome": "nome do produto",
+      "nome": "nome completo do produto",
       "preco_numerico": 999.99,
-      "link": "url do produto",
-      "imagem": "url da imagem"
+      "link": "url da página do produto",
+      "imagem": "url da FOTO do produto (não ícone/logo)"
     }
   ]
-}
-
-Use os seletores CSS como guia, mas extraia o que encontrar mesmo se os seletores não baterem exatamente.
-Converta preços para número (R$ 1.299,00 -> 1299.00).
-Extraia no máximo ${limite} produtos.`
+}`
           },
           {
             role: 'user',
             content: `Seletores CSS sugeridos:
-- Container: ${seletores?.container_produto || 'não informado'}
-- Nome: ${seletores?.nome || 'não informado'}
+- Container do produto: ${seletores?.container_produto || 'não informado'}
+- Nome do produto: ${seletores?.nome || 'não informado'}
 - Preço: ${seletores?.preco || 'não informado'}
-- Link: ${seletores?.link || 'não informado'}
+- Link do produto: ${seletores?.link || 'não informado'}
+- Imagem do produto: ${seletores?.imagem || 'img dentro do container do produto'}
 - Regex preço: ${regex_preco || 'R\\$\\s*([\\d.,]+)'}
 
 Termo buscado: "${query}"
 
-HTML (primeiros 40KB):
-${html.substring(0, 40000)}`
+Extraia os produtos do HTML abaixo. Lembre-se: pegue SOMENTE a imagem do PRODUTO, não logos/ícones/banners.
+
+HTML (primeiros 50KB):
+${html.substring(0, 50000)}`
           }
         ],
       }),
