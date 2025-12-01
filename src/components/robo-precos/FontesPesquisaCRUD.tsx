@@ -17,6 +17,7 @@ import { Plus, Pencil, Trash2, Database, Globe, FileSpreadsheet, Info, Loader2, 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
+import { ScrapingTestPanel } from "./ScrapingTestPanel";
 
 interface FontePesquisa {
   id: string;
@@ -1119,23 +1120,26 @@ export function FontesPesquisaCRUD() {
                   <div className="space-y-4 p-4 border rounded-lg bg-purple-500/5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold">1</div>
-                        <h4 className="font-semibold">Escolha o Site</h4>
+                        <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm">1</div>
+                        <h4 className="font-semibold">Escolha como Configurar</h4>
                       </div>
-                      <Badge variant="outline" className="bg-green-500/20 text-green-400">Fácil</Badge>
                     </div>
                     
                     <p className="text-sm text-muted-foreground">
-                      Selecione um site pré-configurado, use <strong>Detecção Automática</strong> ou configure manualmente
+                      Use a <strong className="text-primary">Detecção Automática</strong> (recomendado), selecione um site pré-configurado ou configure manualmente
                     </p>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                       {Object.entries(scrapingPresets).map(([key, preset]) => (
                         <Button
                           key={key}
                           type="button"
                           variant={formData.scraping_preset === key ? "default" : "outline"}
-                          className={`h-auto py-3 flex flex-col gap-1 ${key === 'auto_detect' ? 'border-primary/50 bg-primary/5' : ''}`}
+                          className={`h-auto py-2 px-2 flex flex-col gap-1 text-center ${
+                            key === 'auto_detect' 
+                              ? 'col-span-3 sm:col-span-2 md:col-span-2 border-primary bg-primary/10 hover:bg-primary/20' 
+                              : ''
+                          }`}
                           onClick={() => {
                             handleScrapingPresetChange(key);
                             if (key === 'auto_detect') {
@@ -1144,8 +1148,8 @@ export function FontesPesquisaCRUD() {
                             }
                           }}
                         >
-                          <span className="text-lg">{preset.icon}</span>
-                          <span className="text-xs">{preset.label}</span>
+                          <span className="text-base">{preset.icon}</span>
+                          <span className="text-[10px] leading-tight">{preset.label}</span>
                         </Button>
                       ))}
                     </div>
@@ -1250,7 +1254,7 @@ export function FontesPesquisaCRUD() {
                   {/* Passo 2: URL de Busca */}
                   <div className="space-y-4 p-4 border rounded-lg">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold">2</div>
+                      <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm">2</div>
                       <h4 className="font-semibold">URL de Busca</h4>
                     </div>
                     
@@ -1282,7 +1286,7 @@ export function FontesPesquisaCRUD() {
                   <div className="space-y-4 p-4 border rounded-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold">3</div>
+                        <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm">3</div>
                         <h4 className="font-semibold">Identificação dos Elementos</h4>
                       </div>
                       <Popover>
@@ -1315,7 +1319,7 @@ export function FontesPesquisaCRUD() {
                       </Popover>
                     </div>
 
-                    {formData.scraping_preset !== 'manual' && (
+                    {formData.scraping_preset !== 'manual' && formData.scraping_preset !== 'auto_detect' && (
                       <Alert className="bg-amber-500/10 border-amber-500/20">
                         <Info className="h-4 w-4 text-amber-500" />
                         <AlertDescription className="text-xs">
@@ -1387,10 +1391,22 @@ export function FontesPesquisaCRUD() {
                     </div>
                   </div>
 
-                  {/* Passo 4: Configurações Avançadas (colapsável) */}
+                  {/* Passo 4: Testar Configuração */}
+                  <ScrapingTestPanel 
+                    urlBusca={formData.scraping_url_busca}
+                    seletores={{
+                      container_produto: formData.scraping_seletor_container,
+                      nome: formData.scraping_seletor_nome,
+                      preco: formData.scraping_seletor_preco,
+                      link: formData.scraping_seletor_link
+                    }}
+                    regexPreco={formData.scraping_regex_preco}
+                  />
+
+                  {/* Passo 5: Configurações Avançadas (colapsável) */}
                   <details className="border rounded-lg">
                     <summary className="p-4 cursor-pointer flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center font-bold">4</div>
+                      <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center font-bold text-sm">5</div>
                       <span className="font-medium">Configurações Avançadas</span>
                       <span className="text-xs text-muted-foreground ml-2">(opcional)</span>
                     </summary>
