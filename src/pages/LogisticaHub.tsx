@@ -146,21 +146,30 @@ const LogisticaHub: React.FC = () => {
 
   const currentTab = tabItems.find(item => item.id === activeTab);
 
+  // Tabs that should render fullscreen (no Card wrapper)
+  const fullscreenTabs = ['monitoramento', 'historico'];
+  const isFullscreenTab = fullscreenTabs.includes(activeTab);
+
   return (
-    <div className="p-4 sm:p-6 space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Truck className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Logística</h1>
-          <p className="text-sm text-muted-foreground">
-            Gestão completa de frota e entregas
-          </p>
+    <div className={cn(
+      "flex flex-col",
+      isFullscreenTab ? "h-[calc(100vh-64px)]" : "p-4 sm:p-6 space-y-4"
+    )}>
+      {/* Header - only show when not fullscreen */}
+      {!isFullscreenTab && (
+        <div className="flex items-center gap-3">
+          <Truck className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold">Logística</h1>
+            <p className="text-sm text-muted-foreground">
+              Gestão completa de frota e entregas
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Mobile: Select dropdown */}
-      <div className="md:hidden">
+      <div className={cn("md:hidden", isFullscreenTab && "p-2 border-b bg-background")}>
         <Select value={activeTab} onValueChange={setActiveTab}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Selecione uma opção" />
@@ -179,13 +188,17 @@ const LogisticaHub: React.FC = () => {
       </div>
 
       {/* Desktop: Sidebar + Content */}
-      <div className="hidden md:flex gap-4">
+      <div className={cn(
+        "hidden md:flex gap-4",
+        isFullscreenTab && "flex-1 overflow-hidden"
+      )}>
         {/* Sidebar Menu */}
         <div className={cn(
           "flex flex-col transition-all duration-300",
-          isMenuCollapsed ? "w-14" : "w-64"
+          isMenuCollapsed ? "w-14" : "w-64",
+          isFullscreenTab && "border-r bg-background"
         )}>
-          <Card className="flex-1">
+          <Card className={cn("flex-1", isFullscreenTab && "rounded-none border-0")}>
             <CardContent className="p-2">
               <div className="flex justify-end mb-2">
                 <Button
@@ -237,7 +250,45 @@ const LogisticaHub: React.FC = () => {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 min-w-0">
+        <div className={cn(
+          "flex-1 min-w-0",
+          isFullscreenTab && "overflow-hidden"
+        )}>
+          {isFullscreenTab ? (
+            // Fullscreen tabs - no Card wrapper
+            <div className="h-full">
+              {renderContent()}
+            </div>
+          ) : (
+            // Normal tabs - with Card wrapper
+            <Card>
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  {currentTab && <currentTab.icon className="h-5 w-5 text-primary" />}
+                  <CardTitle>{currentTab?.label}</CardTitle>
+                </div>
+                <CardDescription>{currentTab?.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {renderContent()}
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile: Content */}
+      <div className={cn(
+        "md:hidden",
+        isFullscreenTab && "flex-1 overflow-hidden"
+      )}>
+        {isFullscreenTab ? (
+          // Fullscreen tabs - no Card wrapper
+          <div className="h-full">
+            {renderContent()}
+          </div>
+        ) : (
+          // Normal tabs - with Card wrapper
           <Card>
             <CardHeader className="pb-4">
               <div className="flex items-center gap-2">
@@ -250,23 +301,7 @@ const LogisticaHub: React.FC = () => {
               {renderContent()}
             </CardContent>
           </Card>
-        </div>
-      </div>
-
-      {/* Mobile: Content */}
-      <div className="md:hidden">
-        <Card>
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-2">
-              {currentTab && <currentTab.icon className="h-5 w-5 text-primary" />}
-              <CardTitle>{currentTab?.label}</CardTitle>
-            </div>
-            <CardDescription>{currentTab?.description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {renderContent()}
-          </CardContent>
-        </Card>
+        )}
       </div>
     </div>
   );
