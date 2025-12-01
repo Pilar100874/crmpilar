@@ -119,9 +119,9 @@ export default function LandingPage() {
   ];
 
   return (
-    <main className="min-h-screen w-full bg-black">
+    <main className="min-h-screen w-full bg-background">
       <div className="relative flex h-screen items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-transparent z-10" />
         
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -137,17 +137,17 @@ export default function LandingPage() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8 }}
           />
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
             Sistema de Gestão Empresarial
           </h1>
-          <p className="text-xl md:text-2xl text-gray-400 mb-8">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-8">
             Simplifique sua gestão, maximize seus resultados
           </p>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5, duration: 1 }}
-            className="text-sm text-gray-500"
+            className="text-sm text-muted-foreground"
           >
             Role para começar
           </motion.div>
@@ -160,7 +160,7 @@ export default function LandingPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: showLogin ? 1 : 0 }}
         transition={{ duration: 0.5 }}
-        className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-b from-transparent to-black"
+        className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-b from-transparent to-background"
       >
         {showLogin && (
           <motion.div
@@ -169,10 +169,10 @@ export default function LandingPage() {
             transition={{ duration: 0.5 }}
             className="w-full max-w-md"
           >
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-2xl p-8">
+            <div className="bg-card border border-border rounded-lg shadow-lg p-8">
               <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold mb-2 text-white">Bem-vindo de volta</h2>
-                <p className="text-gray-400">
+                <h2 className="text-3xl font-bold mb-2">Bem-vindo de volta</h2>
+                <p className="text-muted-foreground">
                   Faça login para acessar o sistema
                 </p>
               </div>
@@ -184,26 +184,10 @@ export default function LandingPage() {
                   variables: {
                     default: {
                       colors: {
-                        brand: '#3b82f6',
-                        brandAccent: '#2563eb',
-                        inputBackground: '#18181b',
-                        inputText: '#ffffff',
-                        inputBorder: '#3f3f46',
-                        inputBorderFocus: '#3b82f6',
-                        inputBorderHover: '#52525b',
-                      },
-                      radii: {
-                        borderRadiusButton: '0.5rem',
-                        buttonBorderRadius: '0.5rem',
-                        inputBorderRadius: '0.5rem',
+                        brand: 'hsl(var(--primary))',
+                        brandAccent: 'hsl(var(--primary))',
                       },
                     },
-                  },
-                  className: {
-                    container: 'text-white',
-                    label: 'text-gray-300',
-                    button: 'bg-blue-600 hover:bg-blue-700',
-                    input: 'bg-zinc-800 text-white border-zinc-700',
                   },
                 }}
                 localization={{
