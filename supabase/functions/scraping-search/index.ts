@@ -99,17 +99,19 @@ async function searchVtexProducts(baseUrl: string, query: string, limite: number
           }
           
           return data.products.map((p: any) => {
-            // Extrair preço de venda (atual)
-            const sellingPrice = p.priceRange?.sellingPrice?.lowPrice || 
+            // Extrair preço de venda (atual) - spotPrice é o preço com desconto
+            const offer = p.items?.[0]?.sellers?.[0]?.commertialOffer || {};
+            const sellingPrice = offer.spotPrice || 
+                                offer.Price ||
+                                p.priceRange?.sellingPrice?.lowPrice || 
                                 p.priceRange?.sellingPrice?.highPrice ||
-                                p.items?.[0]?.sellers?.[0]?.commertialOffer?.Price ||
-                                p.items?.[0]?.sellers?.[0]?.commertialOffer?.spotPrice ||
                                 p.price || 0;
             
-            // Extrair preço de lista (original/sem desconto)
-            const listPrice = p.priceRange?.listPrice?.lowPrice || 
+            // Extrair preço de lista (original/sem desconto) - Price é geralmente o preço "de"
+            const listPrice = offer.ListPrice || 
+                             offer.Price ||
+                             p.priceRange?.listPrice?.lowPrice || 
                              p.priceRange?.listPrice?.highPrice ||
-                             p.items?.[0]?.sellers?.[0]?.commertialOffer?.ListPrice ||
                              p.listPrice || null;
             
             return {
@@ -135,9 +137,12 @@ async function searchVtexProducts(baseUrl: string, query: string, limite: number
           
           return data.map((p: any) => {
             const offer = p.items?.[0]?.sellers?.[0]?.commertialOffer || {};
-            const sellingPrice = offer.Price || offer.spotPrice ||
+            // spotPrice é o preço com desconto, Price é o original
+            const sellingPrice = offer.spotPrice || 
+                                offer.Price ||
                                 p.priceRange?.sellingPrice?.lowPrice || 0;
             const listPrice = offer.ListPrice ||
+                             offer.Price ||
                              p.priceRange?.listPrice?.lowPrice || null;
             return {
               nome: p.productName || p.nameComplete || p.name,
