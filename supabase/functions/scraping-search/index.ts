@@ -28,8 +28,8 @@ serve(async (req) => {
       );
     }
 
-    // Substituir {TERMO} pela query
-    const urlFinal = url_busca.replace('{TERMO}', encodeURIComponent(query));
+    // Substituir {TERMO} pela query (case insensitive)
+    const urlFinal = url_busca.replace(/\{TERMO\}/gi, encodeURIComponent(query));
     
     console.log('[Scraping Search] Buscando:', urlFinal);
 
@@ -112,10 +112,14 @@ RETORNE APENAS JSON VÁLIDO, sem markdown ou código:
 
 Termo buscado: "${query}"
 
-Extraia os produtos do HTML abaixo. Lembre-se: pegue SOMENTE a imagem do PRODUTO, não logos/ícones/banners.
+IMPORTANTE sobre IMAGENS:
+- A imagem DEVE ser a foto principal do produto (geralmente dentro de um <img> no card do produto)
+- A URL da imagem deve conter dimensões ou IDs (ex: /156942-292-292/, /500x500/)
+- NÃO pegue: logos, ícones SVG, imagens de frete, selos, bandeiras
+- Se não conseguir identificar a imagem correta do produto, retorne string vazia para o campo imagem
 
-HTML (primeiros 50KB):
-${html.substring(0, 50000)}`
+HTML (primeiros 60KB):
+${html.substring(0, 60000)}`
           }
         ],
       }),
