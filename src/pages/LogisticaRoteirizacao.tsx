@@ -27,7 +27,11 @@ interface RouteResult {
   duration: number;
 }
 
-const LogisticaRoteirizacao: React.FC = () => {
+interface LogisticaRoteirizacaoProps {
+  embedded?: boolean;
+}
+
+const LogisticaRoteirizacao: React.FC<LogisticaRoteirizacaoProps> = ({ embedded = false }) => {
   const [waypoints, setWaypoints] = useState<Waypoint[]>([
     { id: '1', endereco: '' },
     { id: '2', endereco: '' }

@@ -38,7 +38,11 @@ interface VeiculoHistorico {
   color: string;
 }
 
-const LogisticaHistorico: React.FC = () => {
+interface LogisticaHistoricoProps {
+  embedded?: boolean;
+}
+
+const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = false }) => {
   const { veiculoId: paramVeiculoId } = useParams<{ veiculoId: string }>();
   const navigate = useNavigate();
   
@@ -302,19 +306,23 @@ const LogisticaHistorico: React.FC = () => {
     : undefined;
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col">
+    <div className={cn("flex flex-col", embedded ? "h-full" : "h-[calc(100vh-64px)]")}>
       {/* Header */}
-      <div className="p-3 sm:p-4 border-b bg-background flex flex-col gap-3">
+      <div className={cn("border-b bg-background flex flex-col gap-3", embedded ? "p-2" : "p-3 sm:p-4")}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3 sm:gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')} className="h-8 w-8 sm:h-9 sm:w-9">
-              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
+            {!embedded && (
+              <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')} className="h-8 w-8 sm:h-9 sm:w-9">
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+            )}
             <div>
-              <h1 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                <Car className="h-4 w-4 sm:h-5 sm:w-5" />
-                Histórico de Veículos
-              </h1>
+              {!embedded && (
+                <h1 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                  <Car className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Histórico de Veículos
+                </h1>
+              )}
               <p className="text-xs sm:text-sm text-muted-foreground">
                 {selectedVeiculoIds.length === 0 
                   ? 'Selecione veículos para visualizar' 

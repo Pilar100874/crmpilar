@@ -41,7 +41,11 @@ interface VehicleAlert {
   timestamp: Date;
 }
 
-const LogisticaMonitoramento: React.FC = () => {
+interface LogisticaMonitoramentoProps {
+  embedded?: boolean;
+}
+
+const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedded = false }) => {
   const navigate = useNavigate();
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
   const [paradasMarcadas, setParadasMarcadas] = useState<ParadaMarcada[]>([]);
@@ -317,22 +321,26 @@ const LogisticaMonitoramento: React.FC = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col">
+    <div className={cn("flex flex-col", embedded ? "h-full" : "h-[calc(100vh-64px)]")}>
       {/* Hidden audio element for alerts */}
       <audio ref={audioRef} src="/notification.mp3" preload="auto" />
 
       {/* Header */}
-      <div className="p-3 sm:p-4 border-b bg-background flex flex-col gap-3">
+      <div className={cn("border-b bg-background flex flex-col gap-3", embedded ? "p-2" : "p-3 sm:p-4")}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')} className="h-8 w-8">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
+            {!embedded && (
+              <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')} className="h-8 w-8">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
             <div>
-              <h1 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-                <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
-                Monitoramento em Tempo Real
-              </h1>
+              {!embedded && (
+                <h1 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+                  <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Monitoramento em Tempo Real
+                </h1>
+              )}
               <p className="text-xs sm:text-sm text-muted-foreground">
                 Última atualização: {format(lastUpdate, "HH:mm:ss", { locale: ptBR })}
               </p>
