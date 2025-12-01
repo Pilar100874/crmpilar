@@ -6,6 +6,57 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Detecta se é um site VTEX baseado na URL ou HTML
+function isVtexStore(url: string, html: string): boolean {
+  const vtexPatterns = [
+    'vtex.com',
+    'vtexassets.com',
+    'vteximg.com',
+    'vtexcommercestable',
+    'vtex-',
+    'class="vtex',
+    'data-vtex',
+  ];
+  return vtexPatterns.some(p => url.includes(p) || html.includes(p));
+}
+
+// Detecta a plataforma de e-commerce
+function detectPlatform(url: string, html: string): string {
+  if (isVtexStore(url, html)) return 'vtex';
+  if (html.includes('Shopify') || html.includes('cdn.shopify.com')) return 'shopify';
+  if (html.includes('woocommerce') || html.includes('wp-content')) return 'woocommerce';
+  if (html.includes('magento') || html.includes('Magento_')) return 'magento';
+  if (html.includes('tray.com.br') || html.includes('Tray')) return 'tray';
+  if (html.includes('nuvemshop') || html.includes('Nuvemshop')) return 'nuvemshop';
+  if (html.includes('loja integrada') || html.includes('lojaintegrada')) return 'loja_integrada';
+  return 'unknown';
+}
+
+// Gera URL de busca baseado na plataforma
+function generateSearchUrlPattern(url: string, platform: string): string {
+  const baseUrl = new URL(url).origin;
+  
+  switch (platform) {
+    case 'vtex':
+      return `${baseUrl}/{TERMO}?_q={TERMO}&map=ft`;
+    case 'shopify':
+      return `${baseUrl}/search?q={TERMO}`;
+    case 'woocommerce':
+      return `${baseUrl}/?s={TERMO}&post_type=product`;
+    case 'magento':
+      return `${baseUrl}/catalogsearch/result/?q={TERMO}`;
+    default:
+      // Try to detect from current URL
+      if (url.includes('?')) {
+        return url.replace(/q=[^&]+/, 'q={TERMO}')
+                  .replace(/search=[^&]+/, 'search={TERMO}')
+                  .replace(/_q=[^&]+/, '_q={TERMO}')
+                  .replace(/ft=[^&]+/, 'ft={TERMO}');
+      }
+      return `${baseUrl}/busca?q={TERMO}`;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -37,13 +88,39 @@ serve(async (req) => {
     }
 
     const html = await response.text();
+    console.log('HTML fetched, size:', html.length);
     
-    // Limit HTML size for AI analysis (first 50KB should contain product structure)
+    // Detect platform
+    const platform = detectPlatform(url, html);
+    console.log('Platform detected:', platform);
+    
+    // If it's a VTEX store, return optimized config
+    if (platform === 'vtex') {
+      const baseUrl = new URL(url).origin;
+      return new Response(
+        JSON.stringify({
+          success: true,
+          config: {
+            container_produto: '.vtex-search-result-3-x-galleryItem, .vtex-product-summary-2-x-container, [class*="productCard"], [class*="product-card"]',
+            nome: '.vtex-product-summary-2-x-productBrand, .vtex-product-summary-2-x-productNameContainer, [class*="productName"], [class*="product-name"]',
+            preco: '.vtex-product-price-1-x-sellingPrice, .vtex-product-price-1-x-currencyContainer, [class*="sellingPrice"], [class*="selling-price"]',
+            link: 'a@href',
+            regex_preco: 'R\\$\\s*([\\d.,]+)',
+            url_busca_pattern: generateSearchUrlPattern(url, platform),
+            confianca: 'alta',
+            plataforma: 'vtex',
+            nota: 'Site VTEX detectado. O sistema usará automaticamente a API do VTEX para buscar produtos com maior precisão.',
+          },
+          url_analisada: url,
+          plataforma_detectada: platform,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // For other platforms, use AI analysis
     const htmlSample = html.substring(0, 50000);
 
-    console.log('HTML fetched, size:', html.length);
-
-    // Use Lovable AI to analyze the HTML structure
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       console.error('LOVABLE_API_KEY not configured');
@@ -109,6 +186,7 @@ Dicas:
       const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         config = JSON.parse(jsonMatch[0]);
+        config.plataforma = platform;
       } else {
         throw new Error('JSON não encontrado na resposta');
       }
@@ -121,8 +199,9 @@ Dicas:
         preco: '',
         link: 'a@href',
         regex_preco: 'R\\$\\s*([\\d.,]+)',
-        url_busca_pattern: url.replace(/q=[^&]+/, 'q={TERMO}').replace(/search=[^&]+/, 'search={TERMO}'),
+        url_busca_pattern: generateSearchUrlPattern(url, platform),
         confianca: 'baixa',
+        plataforma: platform,
         erro: 'Não foi possível detectar automaticamente. Configure manualmente.'
       };
     }
@@ -132,6 +211,7 @@ Dicas:
         success: true,
         config,
         url_analisada: url,
+        plataforma_detectada: platform,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
