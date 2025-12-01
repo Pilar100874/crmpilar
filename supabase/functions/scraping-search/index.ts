@@ -87,26 +87,39 @@ async function searchVtexProducts(baseUrl: string, query: string, limite: number
         // Handle intelligent search response
         if (data.products && Array.isArray(data.products)) {
           console.log(`[VTEX Search] Encontrados ${data.products.length} produtos via intelligent search`);
-          return data.products.map((p: any) => ({
-            nome: p.productName || p.name,
-            preco_numerico: p.priceRange?.sellingPrice?.lowPrice || 
-                           p.items?.[0]?.sellers?.[0]?.commertialOffer?.Price ||
-                           p.price || 0,
-            link: ensureAbsoluteUrl(p.link || `/${p.linkText || p.slug}/p`, baseUrl),
-            imagem: p.items?.[0]?.images?.[0]?.imageUrl || p.image || '',
-          }));
+          return data.products.map((p: any) => {
+            const sellingPrice = p.priceRange?.sellingPrice?.lowPrice || 
+                                p.items?.[0]?.sellers?.[0]?.commertialOffer?.Price ||
+                                p.price || 0;
+            const listPrice = p.priceRange?.listPrice?.lowPrice || 
+                             p.items?.[0]?.sellers?.[0]?.commertialOffer?.ListPrice ||
+                             p.listPrice || null;
+            return {
+              nome: p.productName || p.name,
+              preco_numerico: sellingPrice,
+              preco_original: listPrice && listPrice > sellingPrice ? listPrice : null,
+              link: ensureAbsoluteUrl(p.link || `/${p.linkText || p.slug}/p`, baseUrl),
+              imagem: p.items?.[0]?.images?.[0]?.imageUrl || p.image || '',
+            };
+          });
         }
         
         // Handle legacy catalog API response (array)
         if (Array.isArray(data) && data.length > 0) {
           console.log(`[VTEX Search] Encontrados ${data.length} produtos via catalog API`);
-          return data.map((p: any) => ({
-            nome: p.productName || p.nameComplete || p.name,
-            preco_numerico: p.items?.[0]?.sellers?.[0]?.commertialOffer?.Price ||
-                           p.priceRange?.sellingPrice?.lowPrice || 0,
-            link: ensureAbsoluteUrl(p.link || p.detailUrl || '', baseUrl),
-            imagem: p.items?.[0]?.images?.[0]?.imageUrl || '',
-          }));
+          return data.map((p: any) => {
+            const sellingPrice = p.items?.[0]?.sellers?.[0]?.commertialOffer?.Price ||
+                                p.priceRange?.sellingPrice?.lowPrice || 0;
+            const listPrice = p.items?.[0]?.sellers?.[0]?.commertialOffer?.ListPrice ||
+                             p.priceRange?.listPrice?.lowPrice || null;
+            return {
+              nome: p.productName || p.nameComplete || p.name,
+              preco_numerico: sellingPrice,
+              preco_original: listPrice && listPrice > sellingPrice ? listPrice : null,
+              link: ensureAbsoluteUrl(p.link || p.detailUrl || '', baseUrl),
+              imagem: p.items?.[0]?.images?.[0]?.imageUrl || '',
+            };
+          });
         }
       } else if (contentType.includes('text/html')) {
         // Parse HTML response from buscapagina
@@ -240,6 +253,7 @@ REGRAS DE EXTRAÇÃO:
 3. NÃO extraia imagens de: ícones SVG, logos, bandeiras, selos, imagens de frete
 4. Converta preços para número (R$ 1.299,00 -> 1299.00, R$ 12,94 -> 12.94)
 5. Extraia no máximo ${limite} produtos
+6. IMPORTANTE: Se houver preço original/de lista (riscado) E preço promocional, extraia AMBOS
 
 RETORNE APENAS JSON VÁLIDO, sem markdown:
 {
@@ -247,11 +261,14 @@ RETORNE APENAS JSON VÁLIDO, sem markdown:
     {
       "nome": "nome completo do produto",
       "preco_numerico": 999.99,
+      "preco_original": 1199.99,
       "link": "url da página do produto",
       "imagem": "url da FOTO do produto"
     }
   ]
-}`
+}
+
+NOTA: preco_original é o preço DE (riscado/antes do desconto). Se não houver desconto, deixe null.`
           },
           {
             role: 'user',
@@ -310,14 +327,23 @@ ${html.substring(0, 80000)}`
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         if (parsed.products && Array.isArray(parsed.products)) {
-          results = parsed.products.map((p: any) => ({
-            nome: p.nome || p.title || p.name,
-            preco_numerico: typeof p.preco_numerico === 'number' 
+          results = parsed.products.map((p: any) => {
+            const preco = typeof p.preco_numerico === 'number' 
               ? p.preco_numerico 
-              : parseFloat(String(p.preco_numerico || p.price || 0).replace(/[^\d.,]/g, '').replace(',', '.')) || 0,
-            link: ensureAbsoluteUrl(p.link || p.url || '', baseUrl),
-            imagem: p.imagem || p.image,
-          }));
+              : parseFloat(String(p.preco_numerico || p.price || 0).replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+            const precoOriginal = p.preco_original 
+              ? (typeof p.preco_original === 'number' 
+                ? p.preco_original 
+                : parseFloat(String(p.preco_original).replace(/[^\d.,]/g, '').replace(',', '.')) || null)
+              : null;
+            return {
+              nome: p.nome || p.title || p.name,
+              preco_numerico: preco,
+              preco_original: precoOriginal && precoOriginal > preco ? precoOriginal : null,
+              link: ensureAbsoluteUrl(p.link || p.url || '', baseUrl),
+              imagem: p.imagem || p.image,
+            };
+          });
         }
       }
     } catch (parseErr) {
