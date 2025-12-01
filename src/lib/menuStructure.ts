@@ -98,6 +98,7 @@ export const menuStructure: MenuCategory[] = [
     ]
   },
 { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: LucideIcons.FileText },
+  { id: "Logística", title: "Logística", url: "/logistica", icon: LucideIcons.Truck },
   { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
   {
     id: "Marketplaces",
