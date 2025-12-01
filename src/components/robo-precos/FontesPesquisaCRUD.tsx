@@ -40,14 +40,27 @@ const tipoConfig = {
     icon: Globe,
     color: "bg-purple-500/20 text-purple-400",
     exemplo: `{
-  "url_busca": "https://site.com/busca?q={TERMO}",
+  "metodo": "fetch_html",
+  "url_busca": "https://www.exemplo.com.br/busca?q={TERMO}",
+  "seletores": {
+    "container_produto": ".product-item",
+    "nome": ".product-title",
+    "preco": ".product-price",
+    "link": ".product-link@href"
+  },
   "regex_preco": "R\\\\$\\\\s*([\\\\d.,]+)",
-  "regex_titulo": "<h1[^>]*>([^<]+)</h1>",
-  "timeout_ms": 5000
+  "headers": {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+  },
+  "timeout_ms": 10000,
+  "limite_resultados": 20,
+  "min_score_aceite": 0.45,
+  "bonus_ean": 0.5
 }`,
-    ajuda: `Use {TERMO} na URL para substituir pelo nome do produto.
-Configure regex para extrair preço e título da página.
-⚠️ IMPORTANTE: Use apenas em sites com permissão.`
+    ajuda: `Extraia preços diretamente de páginas web.
+Use {TERMO} na URL para substituir pelo nome do produto.
+Configure seletores CSS para localizar os elementos.
+⚠️ IMPORTANTE: Use apenas em sites com permissão e respeite os termos de uso.`
   },
   arquivo_importado: {
     label: "Arquivo",
@@ -876,6 +889,92 @@ export function FontesPesquisaCRUD() {
               {/* Para scraping e arquivo, mostrar JSON manual */}
               {formData.tipo !== 'api' && (
                 <>
+                  {/* Manual passo a passo para Scraping */}
+                  {formData.tipo === 'scraping' && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-purple-500/5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-purple-500" />
+                        <h3 className="font-semibold text-lg">Manual de Web Scraping</h3>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Badge variant="outline" className="bg-yellow-500/20 text-yellow-400">
+                          Médio
+                        </Badge>
+                        <Badge variant="outline" className="bg-muted">
+                          Gratuito (requer conhecimento técnico)
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-sm">📋 Passo a Passo:</h4>
+                        <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                          <li>
+                            <strong className="text-foreground">Identifique o site alvo</strong>
+                            <p className="ml-5 text-xs">Acesse o site e vá para a página de busca. Exemplo: magazine.com.br/busca</p>
+                          </li>
+                          <li>
+                            <strong className="text-foreground">Copie a URL de busca</strong>
+                            <p className="ml-5 text-xs">Faça uma busca no site e copie a URL. Substitua o termo buscado por <code className="bg-muted px-1 rounded">{"{TERMO}"}</code></p>
+                          </li>
+                          <li>
+                            <strong className="text-foreground">Inspecione os elementos</strong>
+                            <p className="ml-5 text-xs">Use F12 (DevTools) para identificar os seletores CSS dos elementos:</p>
+                            <ul className="ml-8 text-xs list-disc mt-1">
+                              <li><strong>container_produto:</strong> div/article que contém cada produto</li>
+                              <li><strong>nome:</strong> elemento com o nome do produto</li>
+                              <li><strong>preco:</strong> elemento com o preço</li>
+                              <li><strong>link:</strong> link para a página do produto (use @href para pegar o atributo)</li>
+                            </ul>
+                          </li>
+                          <li>
+                            <strong className="text-foreground">Configure o regex de preço</strong>
+                            <p className="ml-5 text-xs">Para capturar valores como R$ 199,90 use: <code className="bg-muted px-1 rounded">R\\$\\s*([\\d.,]+)</code></p>
+                          </li>
+                          <li>
+                            <strong className="text-foreground">Adicione headers se necessário</strong>
+                            <p className="ml-5 text-xs">Alguns sites bloqueiam requests sem User-Agent válido</p>
+                          </li>
+                          <li>
+                            <strong className="text-foreground">Teste a configuração</strong>
+                            <p className="ml-5 text-xs">Salve e execute uma pesquisa de teste com um produto conhecido</p>
+                          </li>
+                        </ol>
+                      </div>
+
+                      <Alert className="bg-amber-500/10 border-amber-500/20">
+                        <Info className="h-4 w-4 text-amber-500" />
+                        <AlertDescription className="text-xs space-y-1">
+                          <p><strong>⚠️ Importante:</strong></p>
+                          <ul className="list-disc ml-4">
+                            <li>Verifique os Termos de Uso do site antes de usar scraping</li>
+                            <li>Respeite o arquivo robots.txt do site</li>
+                            <li>Não faça muitas requisições em pouco tempo</li>
+                            <li>Alguns sites usam JavaScript (SPA) e podem precisar de Firecrawl</li>
+                          </ul>
+                        </AlertDescription>
+                      </Alert>
+
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm">🔗 Links Úteis:</h4>
+                        <div className="flex flex-col gap-1">
+                          <a href="https://www.w3schools.com/cssref/css_selectors.php" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                            <ExternalLink className="h-3 w-3" />
+                            Guia de Seletores CSS
+                          </a>
+                          <a href="https://regexr.com" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                            <ExternalLink className="h-3 w-3" />
+                            Regex Tester (RegExr)
+                          </a>
+                          <a href="https://developer.chrome.com/docs/devtools" target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+                            <ExternalLink className="h-3 w-3" />
+                            Chrome DevTools
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <Alert>
                     <Info className="h-4 w-4" />
                     <AlertDescription className="text-xs">
