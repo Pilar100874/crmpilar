@@ -17,7 +17,8 @@ import {
   PanelLeftClose,
   PanelLeft,
   Globe,
-  MessageCircle
+  MessageCircle,
+  FileUp
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,7 +60,8 @@ const tabItems: TabItem[] = [
   { id: 'custos-veiculo', label: 'Custos de Veículos', icon: Truck },
   { id: 'pedagio', label: 'API de Pedágio', icon: Calculator },
   { id: 'automacao', label: 'Regras de Automação', icon: Zap },
-  { id: 'importacao-api', label: 'Importação de Produtos', icon: Globe },
+  { id: 'importacao-api', label: 'Importação via API', icon: Globe },
+  { id: 'importacao-terceiros', label: 'Importação de Terceiros', icon: FileUp },
   { id: 'whatsapp-catalogo', label: 'Lista de Produtos no WhatsApp', icon: MessageCircle },
 ];
 
@@ -387,6 +389,34 @@ export default function VendasConfig() {
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">
                   {estabelecimentoId && <ImportacaoApiTab estabelecimentoId={estabelecimentoId} />}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="importacao-terceiros" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <FileUp className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Importação de Produtos de Terceiros
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Importe produtos de arquivos Excel e crie APIs para uso em relatórios
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">
+                  <div className="text-center py-8">
+                    <FileUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground mb-4">
+                      Acesse o assistente de importação para configurar produtos de terceiros
+                    </p>
+                    <Link 
+                      to="/importacao-produtos" 
+                      className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                    >
+                      Abrir Importação de Terceiros
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
