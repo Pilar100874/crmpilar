@@ -87,13 +87,31 @@ async function searchVtexProducts(baseUrl: string, query: string, limite: number
         // Handle intelligent search response
         if (data.products && Array.isArray(data.products)) {
           console.log(`[VTEX Search] Encontrados ${data.products.length} produtos via intelligent search`);
+          
+          // Log primeiro produto para debug da estrutura
+          if (data.products[0]) {
+            console.log('[VTEX Search] Estrutura do primeiro produto:', JSON.stringify({
+              priceRange: data.products[0].priceRange,
+              price: data.products[0].price,
+              listPrice: data.products[0].listPrice,
+              items: data.products[0].items?.[0]?.sellers?.[0]?.commertialOffer
+            }));
+          }
+          
           return data.products.map((p: any) => {
+            // Extrair preço de venda (atual)
             const sellingPrice = p.priceRange?.sellingPrice?.lowPrice || 
+                                p.priceRange?.sellingPrice?.highPrice ||
                                 p.items?.[0]?.sellers?.[0]?.commertialOffer?.Price ||
+                                p.items?.[0]?.sellers?.[0]?.commertialOffer?.spotPrice ||
                                 p.price || 0;
+            
+            // Extrair preço de lista (original/sem desconto)
             const listPrice = p.priceRange?.listPrice?.lowPrice || 
+                             p.priceRange?.listPrice?.highPrice ||
                              p.items?.[0]?.sellers?.[0]?.commertialOffer?.ListPrice ||
                              p.listPrice || null;
+            
             return {
               nome: p.productName || p.name,
               preco_numerico: sellingPrice,
@@ -107,10 +125,19 @@ async function searchVtexProducts(baseUrl: string, query: string, limite: number
         // Handle legacy catalog API response (array)
         if (Array.isArray(data) && data.length > 0) {
           console.log(`[VTEX Search] Encontrados ${data.length} produtos via catalog API`);
+          
+          // Log primeiro produto para debug
+          if (data[0]) {
+            console.log('[VTEX Search] Estrutura catalog API:', JSON.stringify({
+              commertialOffer: data[0].items?.[0]?.sellers?.[0]?.commertialOffer
+            }));
+          }
+          
           return data.map((p: any) => {
-            const sellingPrice = p.items?.[0]?.sellers?.[0]?.commertialOffer?.Price ||
+            const offer = p.items?.[0]?.sellers?.[0]?.commertialOffer || {};
+            const sellingPrice = offer.Price || offer.spotPrice ||
                                 p.priceRange?.sellingPrice?.lowPrice || 0;
-            const listPrice = p.items?.[0]?.sellers?.[0]?.commertialOffer?.ListPrice ||
+            const listPrice = offer.ListPrice ||
                              p.priceRange?.listPrice?.lowPrice || null;
             return {
               nome: p.productName || p.nameComplete || p.name,
