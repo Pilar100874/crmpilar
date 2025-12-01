@@ -30,6 +30,27 @@ function getBaseUrl(url: string): string {
   }
 }
 
+// Garante que o link seja uma URL absoluta
+function ensureAbsoluteUrl(link: string, baseUrl: string): string {
+  if (!link) return '';
+  
+  // Já é URL absoluta
+  if (link.startsWith('http://') || link.startsWith('https://')) {
+    return link;
+  }
+  
+  // Remove baseUrl duplicado se houver
+  const cleanBase = baseUrl.replace(/\/$/, '');
+  
+  // Link relativo começando com /
+  if (link.startsWith('/')) {
+    return `${cleanBase}${link}`;
+  }
+  
+  // Link relativo sem /
+  return `${cleanBase}/${link}`;
+}
+
 // Busca produtos via API VTEX
 async function searchVtexProducts(baseUrl: string, query: string, limite: number): Promise<any[]> {
   const endpoints = [
@@ -71,7 +92,7 @@ async function searchVtexProducts(baseUrl: string, query: string, limite: number
             preco_numerico: p.priceRange?.sellingPrice?.lowPrice || 
                            p.items?.[0]?.sellers?.[0]?.commertialOffer?.Price ||
                            p.price || 0,
-            link: p.link || `${baseUrl}/${p.linkText || p.slug}/p`,
+            link: ensureAbsoluteUrl(p.link || `/${p.linkText || p.slug}/p`, baseUrl),
             imagem: p.items?.[0]?.images?.[0]?.imageUrl || p.image || '',
           }));
         }
@@ -83,7 +104,7 @@ async function searchVtexProducts(baseUrl: string, query: string, limite: number
             nome: p.productName || p.nameComplete || p.name,
             preco_numerico: p.items?.[0]?.sellers?.[0]?.commertialOffer?.Price ||
                            p.priceRange?.sellingPrice?.lowPrice || 0,
-            link: p.link || `${baseUrl}${p.detailUrl || ''}`,
+            link: ensureAbsoluteUrl(p.link || p.detailUrl || '', baseUrl),
             imagem: p.items?.[0]?.images?.[0]?.imageUrl || '',
           }));
         }
@@ -294,7 +315,7 @@ ${html.substring(0, 80000)}`
             preco_numerico: typeof p.preco_numerico === 'number' 
               ? p.preco_numerico 
               : parseFloat(String(p.preco_numerico || p.price || 0).replace(/[^\d.,]/g, '').replace(',', '.')) || 0,
-            link: p.link || p.url,
+            link: ensureAbsoluteUrl(p.link || p.url || '', baseUrl),
             imagem: p.imagem || p.image,
           }));
         }
