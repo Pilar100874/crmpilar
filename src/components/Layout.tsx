@@ -172,35 +172,8 @@ const menuItems: MenuItem[] = [
     icon: LucideIcons.Truck,
     url: "/logistica"
   },
-  {
-    id: "Marketplaces",
-    title: "Marketplaces",
-    icon: LucideIcons.Store,
-    subItems: [
-      { id: "Marketplace Hub", title: "Hub de Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
-      { id: "Marketplace Produtos", title: "Produtos x Canais", url: "/marketplaces/produtos", icon: LucideIcons.Package },
-      { id: "Marketplace Pedidos", title: "Pedidos", url: "/marketplaces/pedidos", icon: LucideIcons.ShoppingCart },
-    ]
-  },
-  {
-    id: "Ads",
-    title: "Ads",
-    icon: LucideIcons.Megaphone,
-    subItems: [
-      { id: "Ads Dashboard", title: "Dashboard Geral", url: "/ads", icon: LucideIcons.BarChart3 },
-      { id: "Ads Campaigns", title: "Campanhas", url: "/ads/campaigns", icon: LucideIcons.Megaphone },
-      { id: "Ads Google", title: "Google Ads", url: "/ads/google", icon: LucideIcons.Search },
-      { id: "Ads Meta", title: "Meta Ads", url: "/ads/meta", icon: LucideIcons.Facebook },
-      { id: "Ads TikTok", title: "TikTok Ads", url: "/ads/tiktok", icon: LucideIcons.Music2 },
-      { id: "Ads MercadoLivre", title: "Mercado Livre Ads", url: "/ads/mercadolivre", icon: LucideIcons.ShoppingBag },
-      { id: "Ads Amazon", title: "Amazon Ads", url: "/ads/amazon", icon: LucideIcons.Package },
-      { id: "Ads Reports", title: "Relatórios", url: "/ads/reports", icon: LucideIcons.FileText },
-      { id: "Ads Alerts", title: "Alertas", url: "/ads/alerts", icon: LucideIcons.Bell },
-      { id: "Ads Automation", title: "Automações", url: "/ads/automation", icon: LucideIcons.Zap },
-      { id: "Ads Credentials", title: "Credenciais", url: "/ads/credentials", icon: LucideIcons.Key },
-      { id: "Ads Logs", title: "Logs de Coleta", url: "/ads/logs", icon: LucideIcons.History },
-    ]
-  },
+  { id: "Marketplaces", title: "Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
+  { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
   { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
   { id: "Trocar Usuário", title: "Trocar Usuário", url: "/perfil", icon: UserIcon },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
