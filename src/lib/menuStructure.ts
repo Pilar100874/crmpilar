@@ -53,7 +53,6 @@ export const menuStructure: MenuCategory[] = [
     subItems: [
       { id: "Orçamento", title: "Orçamento", url: "/orcamentos", icon: LucideIcons.FileBarChart },
       { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: LucideIcons.Settings },
-      { id: "Importação Produtos Sub", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: LucideIcons.Upload },
     ]
   },
   { 
