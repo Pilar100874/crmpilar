@@ -10,12 +10,14 @@ import {
   Zap, 
   Settings,
   PanelLeft,
-  PanelLeftClose
+  PanelLeftClose,
+  LucideIcon
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { toast } from 'sonner';
@@ -30,56 +32,26 @@ import LogisticaRotas from './LogisticaRotas';
 import LogisticaAutomacoes from './LogisticaAutomacoes';
 import LogisticaConfig from './LogisticaConfig';
 
-const tabItems = [
-  { 
-    id: 'dashboard', 
-    label: 'Dashboard', 
-    icon: MapPin,
-    description: 'Visão geral da frota'
-  },
-  { 
-    id: 'monitoramento', 
-    label: 'Monitoramento', 
-    icon: Eye,
-    description: 'Rastreamento em tempo real'
-  },
-  { 
-    id: 'veiculos', 
-    label: 'Veículos', 
-    icon: Car,
-    description: 'Cadastro de veículos'
-  },
-  { 
-    id: 'historico', 
-    label: 'Histórico', 
-    icon: Clock,
-    description: 'Histórico de trajetos'
-  },
-  { 
-    id: 'roteirizacao', 
-    label: 'Roteirização', 
-    icon: Route,
-    description: 'Planejamento de rotas'
-  },
-  { 
-    id: 'rotas', 
-    label: 'Rotas Salvas', 
-    icon: Navigation,
-    description: 'Rotas salvas'
-  },
-  { 
-    id: 'automacoes', 
-    label: 'Automações', 
-    icon: Zap,
-    description: 'Regras automáticas'
-  },
-  { 
-    id: 'config', 
-    label: 'Configuração', 
-    icon: Settings,
-    description: 'Configurações do sistema'
-  },
+interface TabItem {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  description: string;
+}
+
+const tabItems: TabItem[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: MapPin, description: 'Visão geral da frota' },
+  { id: 'monitoramento', label: 'Monitoramento', icon: Eye, description: 'Rastreamento em tempo real' },
+  { id: 'veiculos', label: 'Veículos', icon: Car, description: 'Cadastro de veículos' },
+  { id: 'historico', label: 'Histórico', icon: Clock, description: 'Histórico de trajetos' },
+  { id: 'roteirizacao', label: 'Roteirização', icon: Route, description: 'Planejamento de rotas' },
+  { id: 'rotas', label: 'Rotas Salvas', icon: Navigation, description: 'Rotas salvas' },
+  { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Regras automáticas' },
+  { id: 'config', label: 'Configuração', icon: Settings, description: 'Configurações do sistema' },
 ];
+
+// Tabs that should render fullscreen (no Card wrapper)
+const fullscreenTabs = ['monitoramento', 'historico'];
 
 const LogisticaHub: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -104,6 +76,10 @@ const LogisticaHub: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const isFullscreenTab = fullscreenTabs.includes(activeTab);
+  const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
+  const CurrentIcon = currentTabItem.icon;
 
   const renderContent = () => {
     if (loading) {
@@ -144,164 +120,136 @@ const LogisticaHub: React.FC = () => {
     }
   };
 
-  const currentTab = tabItems.find(item => item.id === activeTab);
-
-  // Tabs that should render fullscreen (no Card wrapper)
-  const fullscreenTabs = ['monitoramento', 'historico'];
-  const isFullscreenTab = fullscreenTabs.includes(activeTab);
-
   return (
-    <div className={cn(
-      "flex flex-col",
-      isFullscreenTab ? "h-[calc(100vh-64px)]" : "p-4 sm:p-6 space-y-4"
-    )}>
-      {/* Header - only show when not fullscreen */}
-      {!isFullscreenTab && (
-        <div className="flex items-center gap-3">
-          <Truck className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold">Logística</h1>
-            <p className="text-sm text-muted-foreground">
-              Gestão completa de frota e entregas
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile: Select dropdown */}
-      <div className={cn("md:hidden", isFullscreenTab && "p-2 border-b bg-background")}>
-        <Select value={activeTab} onValueChange={setActiveTab}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Selecione uma opção" />
-          </SelectTrigger>
-          <SelectContent>
-            {tabItems.map((item) => (
-              <SelectItem key={item.id} value={item.id}>
-                <div className="flex items-center gap-2">
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="border-b bg-card px-3 sm:px-6 py-3 sm:py-4">
+        <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+          <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          Logística
+        </h1>
+        <p className="text-muted-foreground text-xs sm:text-sm mt-1">
+          Gestão completa de frota e entregas
+        </p>
       </div>
 
-      {/* Desktop: Sidebar + Content */}
-      <div className={cn(
-        "hidden md:flex gap-4",
-        isFullscreenTab && "flex-1 overflow-hidden"
-      )}>
-        {/* Sidebar Menu */}
-        <div className={cn(
-          "flex flex-col transition-all duration-300",
-          isMenuCollapsed ? "w-14" : "w-64",
-          isFullscreenTab && "border-r bg-background"
-        )}>
-          <Card className={cn("flex-1", isFullscreenTab && "rounded-none border-0")}>
-            <CardContent className="p-2">
-              <div className="flex justify-end mb-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
-                  className="h-8 w-8"
-                >
-                  {isMenuCollapsed ? (
-                    <PanelLeft className="h-4 w-4" />
-                  ) : (
-                    <PanelLeftClose className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
+      <div className="flex-1 overflow-hidden">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col lg:flex-row">
+          {/* Mobile: Select dropdown */}
+          <div className="lg:hidden border-b bg-muted/30 p-3">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-full bg-background">
+                <SelectValue>
+                  <div className="flex items-center gap-2">
+                    <CurrentIcon className="h-4 w-4" />
+                    <span>{currentTabItem.label}</span>
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="bg-popover">
+                {tabItems.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <SelectItem key={tab.id} value={tab.id}>
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
+                        <span>{tab.label}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
 
-              <TooltipProvider delayDuration={0}>
-                <nav className="space-y-1">
-                  {tabItems.map((item) => (
-                    <Tooltip key={item.id}>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={() => setActiveTab(item.id)}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
-                            activeTab === item.id
-                              ? "bg-primary text-primary-foreground"
-                              : "hover:bg-muted text-muted-foreground hover:text-foreground"
-                          )}
-                        >
-                          <item.icon className="h-4 w-4 shrink-0" />
-                          {!isMenuCollapsed && (
-                            <span className="truncate">{item.label}</span>
-                          )}
-                        </button>
-                      </TooltipTrigger>
-                      {isMenuCollapsed && (
-                        <TooltipContent side="right">
-                          <p>{item.label}</p>
-                          <p className="text-xs text-muted-foreground">{item.description}</p>
-                        </TooltipContent>
-                      )}
+          {/* Desktop: Sidebar menu */}
+          <div className={cn(
+            "hidden lg:flex lg:flex-col lg:border-r lg:bg-muted/20 lg:p-3 lg:gap-1 lg:overflow-y-auto lg:shrink-0 transition-all duration-300",
+            isMenuCollapsed ? "lg:w-16" : "lg:w-64"
+          )}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setIsMenuCollapsed(!isMenuCollapsed)} 
+              className="mb-2 self-end"
+            >
+              {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            </Button>
+            <TooltipProvider delayDuration={0}>
+              {tabItems.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                const menuButton = (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left w-full",
+                      isActive 
+                        ? "bg-primary text-primary-foreground shadow-sm" 
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      isMenuCollapsed && "justify-center"
+                    )}
+                  >
+                    <Icon className={cn("h-4 w-4 shrink-0", !isActive && "opacity-70")} />
+                    {!isMenuCollapsed && <span className="truncate">{tab.label}</span>}
+                  </button>
+                );
+                if (isMenuCollapsed) {
+                  return (
+                    <Tooltip key={tab.id}>
+                      <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
+                      <TooltipContent side="right">{tab.label}</TooltipContent>
                     </Tooltip>
-                  ))}
-                </nav>
-              </TooltipProvider>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Content Area */}
-        <div className={cn(
-          "flex-1 min-w-0",
-          isFullscreenTab && "overflow-hidden"
-        )}>
-          {isFullscreenTab ? (
-            // Fullscreen tabs - no Card wrapper
-            <div className="h-full">
-              {renderContent()}
-            </div>
-          ) : (
-            // Normal tabs - with Card wrapper
-            <Card>
-              <CardHeader className="pb-4">
-                <div className="flex items-center gap-2">
-                  {currentTab && <currentTab.icon className="h-5 w-5 text-primary" />}
-                  <CardTitle>{currentTab?.label}</CardTitle>
-                </div>
-                <CardDescription>{currentTab?.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {renderContent()}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-
-      {/* Mobile: Content */}
-      <div className={cn(
-        "md:hidden",
-        isFullscreenTab && "flex-1 overflow-hidden"
-      )}>
-        {isFullscreenTab ? (
-          // Fullscreen tabs - no Card wrapper
-          <div className="h-full">
-            {renderContent()}
+                  );
+                }
+                return menuButton;
+              })}
+            </TooltipProvider>
           </div>
-        ) : (
-          // Normal tabs - with Card wrapper
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                {currentTab && <currentTab.icon className="h-5 w-5 text-primary" />}
-                <CardTitle>{currentTab?.label}</CardTitle>
-              </div>
-              <CardDescription>{currentTab?.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {renderContent()}
-            </CardContent>
-          </Card>
-        )}
+
+          {/* Content area */}
+          <div className={cn(
+            "flex-1 overflow-auto",
+            !isFullscreenTab && "p-3 sm:p-6"
+          )}>
+            {tabItems.map((tab) => {
+              const Icon = tab.icon;
+              const isFullscreen = fullscreenTabs.includes(tab.id);
+              
+              return (
+                <TabsContent 
+                  key={tab.id} 
+                  value={tab.id} 
+                  className={cn("mt-0", isFullscreen ? "h-full" : "")}
+                >
+                  {isFullscreen ? (
+                    // Fullscreen tabs - no Card wrapper
+                    <div className="h-full">
+                      {activeTab === tab.id && renderContent()}
+                    </div>
+                  ) : (
+                    // Normal tabs - with Card wrapper
+                    <Card className="h-full">
+                      <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                          {tab.label}
+                        </CardTitle>
+                        <CardDescription className="text-xs sm:text-sm">
+                          {tab.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="px-3 sm:px-6">
+                        {activeTab === tab.id && renderContent()}
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+              );
+            })}
+          </div>
+        </Tabs>
       </div>
     </div>
   );
