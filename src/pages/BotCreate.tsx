@@ -24,7 +24,11 @@ import { toast } from "@/lib/toast-config";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export default function BotCreate() {
+interface BotCreateProps {
+  embedded?: boolean;
+}
+
+export default function BotCreate({ embedded = false }: BotCreateProps) {
   const navigate = useNavigate();
   const { openSubmenu } = useLayout();
   const [bots, setBots] = useState<any[]>([]);

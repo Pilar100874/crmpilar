@@ -116,26 +116,8 @@ const menuItems: MenuItem[] = [
   },
   { id: "Conteúdos", title: "Listas", url: "/listas", icon: FileText },
   { id: "Email", title: "E-mail", url: "/email", icon: Mail },
-  { 
-    id: "Bot Test", 
-    title: "Bot", 
-    icon: Workflow,
-    subItems: [
-      { id: "Criar Bot", title: "Criar / Editar", url: "/bot-create", icon: Plus },
-      { id: "Testar", title: "Testar", url: "/bot-test", icon: TestTube2 },
-    ]
-  },
   { id: "Desenho", title: "Marketing", url: "/marketing", icon: Target },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: FileText },
-  {
-    id: "Telefonia",
-    title: "Telefonia",
-    icon: Phone,
-    subItems: [
-      { id: "Softphone", title: "Softphone", url: "/softphone", icon: Phone },
-      { id: "Videochamada", title: "Videochamada", url: "/videocall", icon: Video },
-    ]
-  },
   {
     id: "Logística",
     title: "Logística",

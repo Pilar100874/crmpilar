@@ -56,20 +56,11 @@ export const menuStructure: MenuCategory[] = [
     ]
   },
   { id: "Conteúdos", title: "Listas", url: "/listas", icon: LucideIcons.FileText },
-  { 
+  {
     id: "Email",
     title: "E-mail", 
     url: "/email",
     icon: LucideIcons.Mail
-  },
-  { 
-    id: "Bot Test", 
-    title: "Bot", 
-    icon: LucideIcons.Workflow,
-    subItems: [
-      { id: "Criar Bot", title: "Criar / Editar", url: "/bot-create", icon: LucideIcons.Plus },
-      { id: "Testar", title: "Testar", url: "/bot-test", icon: LucideIcons.TestTube2 },
-    ]
   },
   { 
     id: "Desenho", 
@@ -82,15 +73,6 @@ export const menuStructure: MenuCategory[] = [
   { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
   { id: "Marketplaces", title: "Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
-  {
-    id: "Telefonia",
-    title: "Telefonia", 
-    icon: LucideIcons.Phone,
-    subItems: [
-      { id: "Softphone", title: "Softphone", url: "/softphone", icon: LucideIcons.Phone },
-      { id: "Videochamada", title: "Videochamada", url: "/videocall", icon: LucideIcons.Video },
-    ]
-  },
   { 
     id: "Configurações",
     title: "Configurações", 

@@ -19,7 +19,8 @@ import {
   Plus,
   Edit,
   Trash2,
-  Power
+  Power,
+  TestTube2
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,6 +52,10 @@ import KnowledgeBaseCRUD from '@/components/config/KnowledgeBaseCRUD';
 import IAConfigCRUD from '@/components/config/IAConfigCRUD';
 import SLAConfigCRUD from '@/components/config/SLAConfigCRUD';
 
+// Import Bot components
+import BotCreate from './BotCreate';
+import BotTest from './BotTest';
+
 interface TabItem {
   id: string;
   label: string;
@@ -71,6 +76,8 @@ const tabItems: TabItem[] = [
   { id: 'base-conhecimento', label: 'Base de Conhecimento', icon: BookOpen },
   { id: 'ia-config', label: 'Configurações de IA', icon: Brain },
   { id: 'sla', label: 'SLA de Atendimento', icon: Clock },
+  { id: 'bot-criar', label: 'Criar / Editar Bot', icon: Plus },
+  { id: 'bot-testar', label: 'Testar Bot', icon: TestTube2 },
 ];
 
 // Skills Manager Component (embedded)
@@ -572,6 +579,26 @@ export default function AtendimentoConfig() {
                   <CardDescription className="text-xs sm:text-sm">Configure regras de SLA para atendimento</CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">{estabelecimentoId && <SLAConfigCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="bot-criar" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Plus className="h-4 w-4 sm:h-5 sm:w-5" />Criar / Editar Bot</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Crie e edite fluxos de bot para atendimento automatizado</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6"><BotCreate embedded /></CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="bot-testar" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><TestTube2 className="h-4 w-4 sm:h-5 sm:w-5" />Testar Bot</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Teste os fluxos de bot configurados</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6"><BotTest embedded /></CardContent>
               </Card>
             </TabsContent>
           </div>
