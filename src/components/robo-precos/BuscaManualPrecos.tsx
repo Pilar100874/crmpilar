@@ -192,11 +192,16 @@ export function BuscaManualPrecos() {
 
           if (tipoApi === 'firecrawl') {
             // Firecrawl - busca via web scraping inteligente
+            // config.sites pode ser string ou array
+            const sitesArray = Array.isArray(config.sites) 
+              ? config.sites 
+              : (typeof config.sites === 'string' ? config.sites.split(',').map((s: string) => s.trim()) : ['mercadolivre.com.br']);
+            
             const { data, error } = await supabase.functions.invoke('firecrawl-search', {
               body: { 
                 query: termoBusca.trim(),
                 api_key: config.api_key,
-                sites: config.sites?.split(',').map((s: string) => s.trim()) || ['mercadolivre.com.br'],
+                sites: sitesArray,
                 limit: config.limite_resultados || 20,
               }
             });
@@ -223,12 +228,17 @@ export function BuscaManualPrecos() {
 
           if (tipoApi === 'google_custom_search') {
             // Google Custom Search
+            // config.sites pode ser string ou array
+            const sitesArrayGcs = Array.isArray(config.sites) 
+              ? config.sites 
+              : (typeof config.sites === 'string' ? config.sites.split(',').map((s: string) => s.trim()) : undefined);
+            
             const { data, error } = await supabase.functions.invoke('google-search', {
               body: { 
                 query: termoBusca.trim(),
                 api_key: config.api_key,
                 cx: config.cx,
-                sites: config.sites?.split(',').map((s: string) => s.trim()),
+                sites: sitesArrayGcs,
                 limit: config.limite_resultados || 10,
               }
             });

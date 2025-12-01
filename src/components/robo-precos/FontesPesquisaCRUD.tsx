@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
 import { ScrapingTestPanel } from "./ScrapingTestPanel";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface FontePesquisa {
   id: string;
@@ -292,6 +293,8 @@ export function FontesPesquisaCRUD() {
     confianca?: string;
     erro?: string;
   } | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [fonteToDelete, setFonteToDelete] = useState<FontePesquisa | null>(null);
   const [formData, setFormData] = useState({
     nome_fonte: "",
     tipo: "api" as 'api' | 'scraping' | 'arquivo_importado',
@@ -1495,9 +1498,8 @@ export function FontesPesquisaCRUD() {
                         variant="ghost" 
                         size="icon"
                         onClick={() => {
-                          if (confirm("Tem certeza que deseja excluir esta fonte?")) {
-                            deleteMutation.mutate(fonte.id);
-                          }
+                          setFonteToDelete(fonte);
+                          setDeleteDialogOpen(true);
                         }}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -1510,6 +1512,21 @@ export function FontesPesquisaCRUD() {
           </Table>
         )}
       </CardContent>
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={() => {
+          if (fonteToDelete) {
+            deleteMutation.mutate(fonteToDelete.id);
+            setDeleteDialogOpen(false);
+            setFonteToDelete(null);
+          }
+        }}
+        title="Excluir Fonte de Pesquisa"
+        itemName={fonteToDelete?.nome_fonte}
+        isLoading={deleteMutation.isPending}
+      />
     </Card>
   );
 }
