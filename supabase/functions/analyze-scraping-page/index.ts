@@ -1,0 +1,145 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { url } = await req.json();
+
+    if (!url) {
+      return new Response(
+        JSON.stringify({ error: 'URL é obrigatória' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Fetching URL:', url);
+
+    // Fetch the page HTML
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro ao acessar página: ${response.status}`);
+    }
+
+    const html = await response.text();
+    
+    // Limit HTML size for AI analysis (first 50KB should contain product structure)
+    const htmlSample = html.substring(0, 50000);
+
+    console.log('HTML fetched, size:', html.length);
+
+    // Use Lovable AI to analyze the HTML structure
+    const aiResponse = await fetch('https://api.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: `Você é um especialista em web scraping. Analise o HTML fornecido de uma página de busca de e-commerce e identifique os seletores CSS para extrair informações de produtos.
+
+IMPORTANTE: Retorne APENAS um JSON válido, sem markdown, sem explicações, sem código de blocos. Apenas o JSON puro.
+
+O JSON deve ter esta estrutura exata:
+{
+  "container_produto": "seletor CSS do container de cada produto",
+  "nome": "seletor CSS do nome/título do produto (relativo ao container)",
+  "preco": "seletor CSS do preço do produto (relativo ao container)",
+  "link": "seletor CSS ou atributo do link do produto (use formato seletor@atributo se precisar extrair atributo, ex: a@href)",
+  "regex_preco": "regex para extrair valor numérico do preço, geralmente R\\$\\s*([\\d.,]+)",
+  "url_busca_pattern": "padrão da URL de busca com {TERMO} no lugar do termo de busca",
+  "confianca": "alta/media/baixa - nível de confiança na detecção"
+}
+
+Dicas:
+- Procure por classes que contenham palavras como: product, item, card, resultado, listing
+- Para preços, procure classes com: price, preco, valor, money
+- Para nomes, procure: title, name, nome, description
+- Links geralmente estão em tags <a> dentro do container do produto
+- Se não encontrar um seletor claro, use o mais genérico possível`
+          },
+          {
+            role: 'user',
+            content: `Analise este HTML e identifique os seletores CSS para scraping de produtos. URL original: ${url}\n\nHTML:\n${htmlSample}`
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 1000,
+      }),
+    });
+
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('AI API error:', errorText);
+      throw new Error('Erro na análise de IA');
+    }
+
+    const aiResult = await aiResponse.json();
+    const aiContent = aiResult.choices?.[0]?.message?.content || '';
+    
+    console.log('AI response:', aiContent);
+
+    // Parse the AI response
+    let config;
+    try {
+      // Try to extract JSON from the response
+      const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        config = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('JSON não encontrado na resposta');
+      }
+    } catch (parseError) {
+      console.error('Parse error:', parseError);
+      // Return a default structure if parsing fails
+      config = {
+        container_produto: '',
+        nome: '',
+        preco: '',
+        link: 'a@href',
+        regex_preco: 'R\\$\\s*([\\d.,]+)',
+        url_busca_pattern: url.replace(/q=[^&]+/, 'q={TERMO}').replace(/search=[^&]+/, 'search={TERMO}'),
+        confianca: 'baixa',
+        erro: 'Não foi possível detectar automaticamente. Configure manualmente.'
+      };
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        config,
+        url_analisada: url,
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao analisar página';
+    return new Response(
+      JSON.stringify({ 
+        error: errorMessage,
+        success: false 
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
