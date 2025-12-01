@@ -44,9 +44,16 @@ serve(async (req) => {
     console.log('HTML fetched, size:', html.length);
 
     // Use Lovable AI to analyze the HTML structure
-    const aiResponse = await fetch('https://api.lovable.dev/v1/chat/completions', {
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY not configured');
+      throw new Error('Configuração de IA não disponível');
+    }
+
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -81,8 +88,6 @@ Dicas:
             content: `Analise este HTML e identifique os seletores CSS para scraping de produtos. URL original: ${url}\n\nHTML:\n${htmlSample}`
           }
         ],
-        temperature: 0.1,
-        max_tokens: 1000,
       }),
     });
 
