@@ -71,9 +71,7 @@ import LogisticaRotas from "./pages/LogisticaRotas";
 import LogisticaConfig from "./pages/LogisticaConfig";
 import LogisticaAutomacoes from "./pages/LogisticaAutomacoes";
 import WhatsAppCatalogo from "./pages/WhatsAppCatalogo";
-import MarketplaceHub from "./pages/MarketplaceHub";
-import MarketplaceProdutos from "./pages/MarketplaceProdutos";
-import MarketplacePedidos from "./pages/MarketplacePedidos";
+import MarketplacesHubPage from "./pages/MarketplacesHubPage";
 import AdsDashboard from "./pages/ads/AdsDashboard";
 import AdsCredentials from "./pages/ads/AdsCredentials";
 import AdsLogs from "./pages/ads/AdsLogs";
@@ -173,9 +171,7 @@ const App = () => (
             <Route path="/logistica/rotas" element={<LogisticaRotas />} />
             <Route path="/logistica/automacoes" element={<LogisticaAutomacoes />} />
             <Route path="/logistica/config" element={<LogisticaConfig />} />
-            <Route path="/marketplaces" element={<MarketplaceHub />} />
-            <Route path="/marketplaces/produtos" element={<MarketplaceProdutos />} />
-            <Route path="/marketplaces/pedidos" element={<MarketplacePedidos />} />
+            <Route path="/marketplaces" element={<MarketplacesHubPage />} />
             <Route path="/robo-precos" element={<RoboPrecos />} />
             <Route path="/whatsapp-catalogo" element={<WhatsAppCatalogo />} />
             {/* Ads Routes */}

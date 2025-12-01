@@ -101,16 +101,7 @@ export const menuStructure: MenuCategory[] = [
   { id: "Logística", title: "Logística", url: "/logistica", icon: LucideIcons.Truck },
   { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
-  {
-    id: "Marketplaces",
-    title: "Marketplaces", 
-    icon: LucideIcons.Store,
-    subItems: [
-      { id: "Marketplace Hub", title: "Hub de Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
-      { id: "Marketplace Produtos", title: "Produtos x Canais", url: "/marketplaces/produtos", icon: LucideIcons.Package },
-      { id: "Marketplace Pedidos", title: "Pedidos", url: "/marketplaces/pedidos", icon: LucideIcons.ShoppingCart },
-    ]
-  },
+  { id: "Marketplaces", title: "Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
   {
     id: "Telefonia",
     title: "Telefonia", 

@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Megaphone, 
-  LayoutDashboard, 
-  Target,
-  FileBarChart,
-  Bell,
-  Key,
-  FileText,
-  Zap,
+  Store, 
+  Package, 
+  ShoppingCart,
   PanelLeft,
   PanelLeftClose,
   LucideIcon
@@ -22,56 +17,24 @@ import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 import { toast } from 'sonner';
 
 // Import existing components
-import AdsDashboard from './ads/AdsDashboard';
-import AdsCampaigns from './ads/AdsCampaigns';
-import AdsReports from './ads/AdsReports';
-import AdsAlerts from './ads/AdsAlerts';
-import AdsPlatformDashboard from './ads/AdsPlatformDashboard';
-import AdsCredentials from './ads/AdsCredentials';
-import AdsLogs from './ads/AdsLogs';
-import AdsAutomation from './ads/AdsAutomation';
-
-// Platform icons (using simple colored divs for now)
-const GoogleIcon = () => (
-  <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 via-red-500 to-yellow-500" />
-);
-const MetaIcon = () => (
-  <div className="w-4 h-4 rounded-full bg-blue-600" />
-);
-const TikTokIcon = () => (
-  <div className="w-4 h-4 rounded-full bg-black dark:bg-white" />
-);
-const MercadoLivreIcon = () => (
-  <div className="w-4 h-4 rounded-full bg-yellow-400" />
-);
-const AmazonIcon = () => (
-  <div className="w-4 h-4 rounded-full bg-orange-500" />
-);
+import MarketplaceHub from './MarketplaceHub';
+import MarketplaceProdutos from './MarketplaceProdutos';
+import MarketplacePedidos from './MarketplacePedidos';
 
 interface TabItem {
   id: string;
   label: string;
-  icon: LucideIcon | React.FC;
+  icon: LucideIcon;
   description: string;
-  platform?: string;
 }
 
 const tabItems: TabItem[] = [
-  { id: 'campaigns', label: 'Campanhas', icon: Target, description: 'Gerenciar campanhas de anúncios' },
-  { id: 'reports', label: 'Relatórios', icon: FileBarChart, description: 'Relatórios personalizados' },
-  { id: 'alerts', label: 'Alertas', icon: Bell, description: 'Configurar alertas de performance' },
-  { id: 'google', label: 'Google Ads', icon: GoogleIcon, description: 'Dashboard Google Ads', platform: 'google' },
-  { id: 'meta', label: 'Meta Ads', icon: MetaIcon, description: 'Dashboard Meta Ads (Facebook/Instagram)', platform: 'meta' },
-  { id: 'tiktok', label: 'TikTok Ads', icon: TikTokIcon, description: 'Dashboard TikTok Ads', platform: 'tiktok' },
-  { id: 'mercadolivre', label: 'Mercado Livre Ads', icon: MercadoLivreIcon, description: 'Dashboard Mercado Livre Ads', platform: 'mercado_livre' },
-  { id: 'amazon', label: 'Amazon Ads', icon: AmazonIcon, description: 'Dashboard Amazon Ads', platform: 'amazon' },
-  { id: 'credentials', label: 'Credenciais', icon: Key, description: 'Gerenciar credenciais das plataformas' },
-  { id: 'logs', label: 'Logs de Coleta', icon: FileText, description: 'Histórico de coleta de dados' },
-  { id: 'automation', label: 'Automações', icon: Zap, description: 'Regras de automação de anúncios' },
+  { id: 'produtos', label: 'Produtos x Canais', icon: Package, description: 'Gerenciar produtos vinculados aos marketplaces' },
+  { id: 'pedidos', label: 'Pedidos', icon: ShoppingCart, description: 'Acompanhar pedidos dos marketplaces' },
 ];
 
-const AdsHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' is the default for AdsDashboard
+const MarketplacesHubPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('hub');
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,7 +58,7 @@ const AdsHub: React.FC = () => {
   };
 
   const currentTabItem = tabItems.find(t => t.id === activeTab);
-  const CurrentIcon = currentTabItem?.icon || LayoutDashboard;
+  const CurrentIcon = currentTabItem?.icon || Store;
 
   const renderContent = () => {
     if (loading) {
@@ -114,46 +77,30 @@ const AdsHub: React.FC = () => {
       );
     }
 
-    const currentTab = tabItems.find(t => t.id === activeTab);
-
     switch (activeTab) {
-      case 'dashboard':
-        return <AdsDashboard />;
-      case 'campaigns':
-        return <AdsCampaigns />;
-      case 'reports':
-        return <AdsReports />;
-      case 'alerts':
-        return <AdsAlerts />;
-      case 'google':
-      case 'meta':
-      case 'tiktok':
-      case 'mercadolivre':
-      case 'amazon':
-        return <AdsPlatformDashboard platform={currentTab?.platform} />;
-      case 'credentials':
-        return <AdsCredentials />;
-      case 'logs':
-        return <AdsLogs />;
-      case 'automation':
-        return <AdsAutomation />;
+      case 'hub':
+        return <MarketplaceHub />;
+      case 'produtos':
+        return <MarketplaceProdutos />;
+      case 'pedidos':
+        return <MarketplacePedidos />;
       default:
-        return <AdsDashboard />;
+        return <MarketplaceHub />;
     }
   };
 
-  // For dashboard tab, render the AdsDashboard directly without card wrapper
-  if (activeTab === 'dashboard') {
+  // For hub tab, render the MarketplaceHub directly without card wrapper
+  if (activeTab === 'hub') {
     return (
       <div className="h-full flex flex-col">
         {/* Header */}
         <div className="border-b bg-card px-3 sm:px-6 py-3 sm:py-4">
           <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
-            <Megaphone className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-            Painel de Anúncios
+            <Store className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            Marketplaces
           </h1>
           <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-            Gestão unificada de campanhas e anúncios em múltiplas plataformas
+            Gestão de integrações com marketplaces e canais de venda
           </p>
         </div>
 
@@ -165,25 +112,24 @@ const AdsHub: React.FC = () => {
                 <SelectTrigger className="w-full bg-background">
                   <SelectValue>
                     <div className="flex items-center gap-2">
-                      <LayoutDashboard className="h-4 w-4" />
-                      <span>Dashboard Geral</span>
+                      <Store className="h-4 w-4" />
+                      <span>Hub de Marketplaces</span>
                     </div>
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
-                  <SelectItem value="dashboard">
+                  <SelectItem value="hub">
                     <div className="flex items-center gap-2">
-                      <LayoutDashboard className="h-4 w-4" />
-                      <span>Dashboard Geral</span>
+                      <Store className="h-4 w-4" />
+                      <span>Hub de Marketplaces</span>
                     </div>
                   </SelectItem>
                   {tabItems.map((tab) => {
                     const Icon = tab.icon;
-                    const isLucideIcon = typeof Icon === 'function' && 'displayName' in Icon;
                     return (
                       <SelectItem key={tab.id} value={tab.id}>
                         <div className="flex items-center gap-2">
-                          {isLucideIcon ? <Icon className="h-4 w-4" /> : <Icon />}
+                          <Icon className="h-4 w-4" />
                           <span>{tab.label}</span>
                         </div>
                       </SelectItem>
@@ -207,12 +153,12 @@ const AdsHub: React.FC = () => {
                 {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
               </Button>
               <TooltipProvider delayDuration={0}>
-                {/* Dashboard item (default) */}
+                {/* Hub item (default) */}
                 {(() => {
-                  const isActive = activeTab === 'dashboard';
+                  const isActive = activeTab === 'hub';
                   const menuButton = (
                     <button
-                      onClick={() => setActiveTab('dashboard')}
+                      onClick={() => setActiveTab('hub')}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left w-full",
                         isActive 
@@ -222,16 +168,16 @@ const AdsHub: React.FC = () => {
                       )}
                     >
                       <span className={cn("shrink-0", !isActive && "opacity-70")}>
-                        <LayoutDashboard className="h-4 w-4" />
+                        <Store className="h-4 w-4" />
                       </span>
-                      {!isMenuCollapsed && <span className="truncate">Dashboard Geral</span>}
+                      {!isMenuCollapsed && <span className="truncate">Hub de Marketplaces</span>}
                     </button>
                   );
                   if (isMenuCollapsed) {
                     return (
-                      <Tooltip key="dashboard">
+                      <Tooltip key="hub">
                         <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
-                        <TooltipContent side="right">Dashboard Geral</TooltipContent>
+                        <TooltipContent side="right">Hub de Marketplaces</TooltipContent>
                       </Tooltip>
                     );
                   }
@@ -241,7 +187,6 @@ const AdsHub: React.FC = () => {
                 {tabItems.map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
-                  const isLucideIcon = typeof Icon === 'function' && 'displayName' in Icon;
                   
                   const menuButton = (
                     <button
@@ -256,7 +201,7 @@ const AdsHub: React.FC = () => {
                       )}
                     >
                       <span className={cn("shrink-0", !isActive && "opacity-70")}>
-                        {isLucideIcon ? <Icon className="h-4 w-4" /> : <Icon />}
+                        <Icon className="h-4 w-4" />
                       </span>
                       {!isMenuCollapsed && <span className="truncate">{tab.label}</span>}
                     </button>
@@ -274,8 +219,8 @@ const AdsHub: React.FC = () => {
               </TooltipProvider>
             </div>
 
-            {/* Content area - Dashboard content directly */}
-            <div className="flex-1 overflow-auto p-3 sm:p-6">
+            {/* Content area - Hub content directly */}
+            <div className="flex-1 overflow-auto">
               {renderContent()}
             </div>
           </Tabs>
@@ -289,11 +234,11 @@ const AdsHub: React.FC = () => {
       {/* Header */}
       <div className="border-b bg-card px-3 sm:px-6 py-3 sm:py-4">
         <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
-          <Megaphone className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-          Painel de Anúncios
+          <Store className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          Marketplaces
         </h1>
         <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-          Gestão unificada de campanhas e anúncios em múltiplas plataformas
+          Gestão de integrações com marketplaces e canais de venda
         </p>
       </div>
 
@@ -305,29 +250,24 @@ const AdsHub: React.FC = () => {
               <SelectTrigger className="w-full bg-background">
                 <SelectValue>
                   <div className="flex items-center gap-2">
-                    {typeof CurrentIcon === 'function' && 'displayName' in CurrentIcon ? (
-                      <CurrentIcon className="h-4 w-4" />
-                    ) : (
-                      <CurrentIcon />
-                    )}
-                    <span>{currentTabItem?.label || 'Dashboard Geral'}</span>
+                    <CurrentIcon className="h-4 w-4" />
+                    <span>{currentTabItem?.label || 'Hub de Marketplaces'}</span>
                   </div>
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="bg-popover">
-                <SelectItem value="dashboard">
+                <SelectItem value="hub">
                   <div className="flex items-center gap-2">
-                    <LayoutDashboard className="h-4 w-4" />
-                    <span>Dashboard Geral</span>
+                    <Store className="h-4 w-4" />
+                    <span>Hub de Marketplaces</span>
                   </div>
                 </SelectItem>
                 {tabItems.map((tab) => {
                   const Icon = tab.icon;
-                  const isLucideIcon = typeof Icon === 'function' && 'displayName' in Icon;
                   return (
                     <SelectItem key={tab.id} value={tab.id}>
                       <div className="flex items-center gap-2">
-                        {isLucideIcon ? <Icon className="h-4 w-4" /> : <Icon />}
+                        <Icon className="h-4 w-4" />
                         <span>{tab.label}</span>
                       </div>
                     </SelectItem>
@@ -351,12 +291,12 @@ const AdsHub: React.FC = () => {
               {isMenuCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             </Button>
             <TooltipProvider delayDuration={0}>
-              {/* Dashboard item (default) */}
+              {/* Hub item (default) */}
               {(() => {
-                const isActive = activeTab === 'dashboard';
+                const isActive = activeTab === 'hub';
                 const menuButton = (
                   <button
-                    onClick={() => setActiveTab('dashboard')}
+                    onClick={() => setActiveTab('hub')}
                     className={cn(
                       "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 text-left w-full",
                       isActive 
@@ -366,16 +306,16 @@ const AdsHub: React.FC = () => {
                     )}
                   >
                     <span className={cn("shrink-0", !isActive && "opacity-70")}>
-                      <LayoutDashboard className="h-4 w-4" />
+                      <Store className="h-4 w-4" />
                     </span>
-                    {!isMenuCollapsed && <span className="truncate">Dashboard Geral</span>}
+                    {!isMenuCollapsed && <span className="truncate">Hub de Marketplaces</span>}
                   </button>
                 );
                 if (isMenuCollapsed) {
                   return (
-                    <Tooltip key="dashboard">
+                    <Tooltip key="hub">
                       <TooltipTrigger asChild>{menuButton}</TooltipTrigger>
-                      <TooltipContent side="right">Dashboard Geral</TooltipContent>
+                      <TooltipContent side="right">Hub de Marketplaces</TooltipContent>
                     </Tooltip>
                   );
                 }
@@ -385,7 +325,6 @@ const AdsHub: React.FC = () => {
               {tabItems.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
-                const isLucideIcon = typeof Icon === 'function' && 'displayName' in Icon;
                 
                 const menuButton = (
                   <button
@@ -400,7 +339,7 @@ const AdsHub: React.FC = () => {
                     )}
                   >
                     <span className={cn("shrink-0", !isActive && "opacity-70")}>
-                      {isLucideIcon ? <Icon className="h-4 w-4" /> : <Icon />}
+                      <Icon className="h-4 w-4" />
                     </span>
                     {!isMenuCollapsed && <span className="truncate">{tab.label}</span>}
                   </button>
@@ -422,7 +361,6 @@ const AdsHub: React.FC = () => {
           <div className="flex-1 overflow-auto p-3 sm:p-6">
             {tabItems.map((tab) => {
               const Icon = tab.icon;
-              const isLucideIcon = typeof Icon === 'function' && 'displayName' in Icon;
               
               return (
                 <TabsContent 
@@ -433,7 +371,7 @@ const AdsHub: React.FC = () => {
                   <Card className="h-full">
                     <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
                       <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        {isLucideIcon ? <Icon className="h-4 w-4 sm:h-5 sm:w-5" /> : <Icon />}
+                        <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                         {tab.label}
                       </CardTitle>
                       <CardDescription className="text-xs sm:text-sm">
@@ -454,4 +392,4 @@ const AdsHub: React.FC = () => {
   );
 };
 
-export default AdsHub;
+export default MarketplacesHubPage;
