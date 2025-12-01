@@ -19,7 +19,11 @@ import {
 } from "lucide-react";
 import { useVideoCall } from "@/hooks/useVideoCall";
 
-export default function VideoCall() {
+interface VideoCallProps {
+  embedded?: boolean;
+}
+
+export default function VideoCall({ embedded = false }: VideoCallProps) {
   const { toast } = useToast();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
@@ -120,10 +124,9 @@ export default function VideoCall() {
     return <Badge variant="destructive">Desconectado</Badge>;
   };
 
-  return (
-    <Layout>
-      <SubMenuHeader title="Videochamada" onOpenSubmenu={() => {}} />
-      <div className="container mx-auto p-4 space-y-6">
+  const content = (
+    <div className={embedded ? "space-y-6" : "container mx-auto p-4 space-y-6"}>
+      {!embedded && <SubMenuHeader title="Videochamada" onOpenSubmenu={() => {}} />}
         
         {/* Status de Conexão */}
         <Card>
@@ -299,6 +302,11 @@ export default function VideoCall() {
           </Card>
         )}
       </div>
-    </Layout>
   );
+
+  if (embedded) {
+    return content;
+  }
+
+  return <Layout>{content}</Layout>;
 }
