@@ -50,9 +50,23 @@ serve(async (req) => {
     console.log('HTML fetched, size:', html.length);
 
     // Use AI to extract products based on the selectors
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY not configured');
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'Configuração de IA não disponível',
+          etapa: 'ai'
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -100,8 +114,6 @@ HTML (primeiros 40KB):
 ${html.substring(0, 40000)}`
           }
         ],
-        temperature: 0.1,
-        max_tokens: 2000,
       }),
     });
 
