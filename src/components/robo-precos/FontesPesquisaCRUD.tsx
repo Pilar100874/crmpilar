@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Database, Globe, FileSpreadsheet, Info, Loader2, HelpCircle, ExternalLink, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Database, Globe, FileSpreadsheet, Info, Loader2, HelpCircle, ExternalLink, Search, Sparkles, Wand2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getEstabelecimentoId } from "@/lib/estabelecimento";
@@ -266,6 +266,18 @@ const scrapingPresets: Record<string, {
   regex_preco: string;
   icon: string;
 }> = {
+  auto_detect: {
+    label: "Detecção Automática (IA)",
+    url_busca: "",
+    seletores: {
+      container_produto: "",
+      nome: "",
+      preco: "",
+      link: ""
+    },
+    regex_preco: "R\\$\\s*([\\d.,]+)",
+    icon: "✨"
+  },
   magazine_luiza: {
     label: "Magazine Luiza",
     url_busca: "https://www.magazineluiza.com.br/busca/{TERMO}/",
@@ -333,6 +345,12 @@ export function FontesPesquisaCRUD() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingFonte, setEditingFonte] = useState<FontePesquisa | null>(null);
   const [scrapingStep, setScrapingStep] = useState(1);
+  const [autoDetectUrl, setAutoDetectUrl] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [autoDetectResult, setAutoDetectResult] = useState<{
+    confianca?: string;
+    erro?: string;
+  } | null>(null);
   const [formData, setFormData] = useState({
     nome_fonte: "",
     tipo: "api" as 'api' | 'scraping' | 'arquivo_importado',
@@ -375,6 +393,59 @@ export function FontesPesquisaCRUD() {
     scraping_timeout: "10000",
     scraping_user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
   });
+
+  // Função para analisar página automaticamente com IA
+  const handleAutoDetect = async () => {
+    if (!autoDetectUrl) {
+      toast.error("Cole a URL da página de busca do site");
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setAutoDetectResult(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-scraping-page', {
+        body: { url: autoDetectUrl }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.config) {
+        const config = data.config;
+        
+        // Preencher os campos automaticamente
+        setFormData(prev => ({
+          ...prev,
+          scraping_url_busca: config.url_busca_pattern || autoDetectUrl.replace(/=.+?(&|$)/, '={TERMO}$1'),
+          scraping_seletor_container: config.container_produto || '',
+          scraping_seletor_nome: config.nome || '',
+          scraping_seletor_preco: config.preco || '',
+          scraping_seletor_link: config.link || 'a@href',
+          scraping_regex_preco: config.regex_preco || "R\\$\\s*([\\d.,]+)",
+        }));
+
+        setAutoDetectResult({ confianca: config.confianca });
+        
+        const confiancaMsg = config.confianca === 'alta' 
+          ? '✅ Detecção com alta confiança!' 
+          : config.confianca === 'media'
+          ? '⚠️ Detecção parcial - revise os campos'
+          : '🔍 Detectado - recomendamos verificar manualmente';
+        
+        toast.success(confiancaMsg);
+      } else {
+        setAutoDetectResult({ erro: data?.error || 'Não foi possível analisar a página' });
+        toast.error(data?.error || 'Erro na análise automática');
+      }
+    } catch (err) {
+      console.error('Erro na análise:', err);
+      setAutoDetectResult({ erro: 'Erro ao conectar com o serviço de análise' });
+      toast.error('Erro ao analisar página');
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const { data: fontes, isLoading } = useQuery({
     queryKey: ['fontes_pesquisa_precos'],
@@ -633,6 +704,8 @@ export function FontesPesquisaCRUD() {
       scraping_user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
     });
     setScrapingStep(1);
+    setAutoDetectUrl("");
+    setAutoDetectResult(null);
   };
 
   const handleEdit = (fonte: FontePesquisa) => {
@@ -1053,17 +1126,23 @@ export function FontesPesquisaCRUD() {
                     </div>
                     
                     <p className="text-sm text-muted-foreground">
-                      Selecione um site pré-configurado ou configure manualmente
+                      Selecione um site pré-configurado, use <strong>Detecção Automática</strong> ou configure manualmente
                     </p>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       {Object.entries(scrapingPresets).map(([key, preset]) => (
                         <Button
                           key={key}
                           type="button"
                           variant={formData.scraping_preset === key ? "default" : "outline"}
-                          className="h-auto py-3 flex flex-col gap-1"
-                          onClick={() => handleScrapingPresetChange(key)}
+                          className={`h-auto py-3 flex flex-col gap-1 ${key === 'auto_detect' ? 'border-primary/50 bg-primary/5' : ''}`}
+                          onClick={() => {
+                            handleScrapingPresetChange(key);
+                            if (key === 'auto_detect') {
+                              setAutoDetectUrl('');
+                              setAutoDetectResult(null);
+                            }
+                          }}
                         >
                           <span className="text-lg">{preset.icon}</span>
                           <span className="text-xs">{preset.label}</span>
@@ -1071,7 +1150,94 @@ export function FontesPesquisaCRUD() {
                       ))}
                     </div>
 
-                    {formData.scraping_preset !== 'manual' && formData.scraping_preset && (
+                    {/* Interface de Detecção Automática */}
+                    {formData.scraping_preset === 'auto_detect' && (
+                      <div className="space-y-4 p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-5 w-5 text-primary" />
+                          <h5 className="font-medium">Detecção Automática com IA</h5>
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground">
+                          Cole a URL de uma página de busca do site e a IA vai detectar automaticamente os seletores.
+                        </p>
+
+                        <div className="space-y-2">
+                          <Label>URL da página de busca</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              value={autoDetectUrl}
+                              onChange={(e) => setAutoDetectUrl(e.target.value)}
+                              placeholder="Ex: https://www.loja.com.br/busca?q=celular"
+                              className="flex-1"
+                            />
+                            <Button
+                              type="button"
+                              onClick={handleAutoDetect}
+                              disabled={isAnalyzing || !autoDetectUrl}
+                              className="gap-2"
+                            >
+                              {isAnalyzing ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  Analisando...
+                                </>
+                              ) : (
+                                <>
+                                  <Wand2 className="h-4 w-4" />
+                                  Detectar
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+
+                        <Alert className="bg-blue-500/10 border-blue-500/20">
+                          <Search className="h-4 w-4 text-blue-500" />
+                          <AlertDescription className="text-xs">
+                            <strong>Como usar:</strong><br/>
+                            1. Vá ao site do concorrente e faça uma busca<br/>
+                            2. Copie a URL completa da barra de endereço<br/>
+                            3. Cole aqui e clique em "Detectar"<br/>
+                            4. A IA vai preencher os campos automaticamente!
+                          </AlertDescription>
+                        </Alert>
+
+                        {autoDetectResult && (
+                          <>
+                            {autoDetectResult.confianca && (
+                              <Alert className={`${
+                                autoDetectResult.confianca === 'alta' 
+                                  ? 'bg-green-500/10 border-green-500/20' 
+                                  : autoDetectResult.confianca === 'media'
+                                  ? 'bg-yellow-500/10 border-yellow-500/20'
+                                  : 'bg-orange-500/10 border-orange-500/20'
+                              }`}>
+                                <Info className={`h-4 w-4 ${
+                                  autoDetectResult.confianca === 'alta' ? 'text-green-500' : 
+                                  autoDetectResult.confianca === 'media' ? 'text-yellow-500' : 'text-orange-500'
+                                }`} />
+                                <AlertDescription className="text-xs">
+                                  {autoDetectResult.confianca === 'alta' && '✅ Detecção com alta confiança! Os campos foram preenchidos.'}
+                                  {autoDetectResult.confianca === 'media' && '⚠️ Detecção parcial. Revise os campos abaixo para garantir precisão.'}
+                                  {autoDetectResult.confianca === 'baixa' && '🔍 Detecção com baixa confiança. Recomendamos verificar cada campo manualmente.'}
+                                </AlertDescription>
+                              </Alert>
+                            )}
+                            {autoDetectResult.erro && (
+                              <Alert className="bg-red-500/10 border-red-500/20">
+                                <Info className="h-4 w-4 text-red-500" />
+                                <AlertDescription className="text-xs">
+                                  ❌ {autoDetectResult.erro}
+                                </AlertDescription>
+                              </Alert>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {formData.scraping_preset !== 'manual' && formData.scraping_preset !== 'auto_detect' && formData.scraping_preset && (
                       <Alert className="bg-green-500/10 border-green-500/20">
                         <Info className="h-4 w-4 text-green-500" />
                         <AlertDescription className="text-xs">
