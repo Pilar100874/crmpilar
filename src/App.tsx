@@ -82,6 +82,7 @@ import AdsPlatformDashboard from "./pages/ads/AdsPlatformDashboard";
 import AdsCampaigns from "./pages/ads/AdsCampaigns";
 import AdsReports from "./pages/ads/AdsReports";
 import AdsAlerts from "./pages/ads/AdsAlerts";
+import AdsHub from "./pages/AdsHub";
 import RoboPrecos from "./pages/RoboPrecos";
 import AtendimentoConfig from "./pages/AtendimentoConfig";
 
@@ -178,15 +179,11 @@ const App = () => (
             <Route path="/robo-precos" element={<RoboPrecos />} />
             <Route path="/whatsapp-catalogo" element={<WhatsAppCatalogo />} />
             {/* Ads Routes */}
-            <Route path="/ads" element={<AdsDashboard />} />
+            <Route path="/ads" element={<AdsHub />} />
+            <Route path="/ads/:platform" element={<AdsPlatformDashboard />} />
             <Route path="/ads/campaigns" element={<AdsCampaigns />} />
             <Route path="/ads/reports" element={<AdsReports />} />
             <Route path="/ads/alerts" element={<AdsAlerts />} />
-            <Route path="/ads/google" element={<AdsPlatformDashboard />} />
-            <Route path="/ads/meta" element={<AdsPlatformDashboard />} />
-            <Route path="/ads/tiktok" element={<AdsPlatformDashboard />} />
-            <Route path="/ads/mercadolivre" element={<AdsPlatformDashboard />} />
-            <Route path="/ads/amazon" element={<AdsPlatformDashboard />} />
             <Route path="/ads/credentials" element={<AdsCredentials />} />
             <Route path="/ads/logs" element={<AdsLogs />} />
             <Route path="/ads/automation" element={<AdsAutomation />} />

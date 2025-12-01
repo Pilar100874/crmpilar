@@ -27,8 +27,13 @@ const platformConfig: Record<string, { icon: any; color: string; name: string }>
   amazon_ads: { icon: Package, color: "#FF9900", name: "Amazon Ads" },
 };
 
-export default function AdsPlatformDashboard() {
-  const { platform } = useParams<{ platform: string }>();
+interface AdsPlatformDashboardProps {
+  platform?: string;
+}
+
+export default function AdsPlatformDashboard({ platform: platformProp }: AdsPlatformDashboardProps = {}) {
+  const { platform: platformParam } = useParams<{ platform: string }>();
+  const platform = platformProp || platformParam;
   const queryClient = useQueryClient();
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState("30d");
