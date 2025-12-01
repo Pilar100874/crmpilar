@@ -38,6 +38,7 @@ import { AutomacaoVendasCRUD } from '@/components/config/AutomacaoVendasCRUD';
 import { CustosVeiculosCRUD } from '@/components/config/CustosVeiculosCRUD';
 import PedagioAPIConfigCRUD from '@/components/config/PedagioAPIConfigCRUD';
 import { ImportacaoApiTab } from '@/components/config/ImportacaoApiTab';
+import { ImportacaoTerceirosTab } from '@/components/config/ImportacaoTerceirosTab';
 import { useQuery } from '@tanstack/react-query';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
@@ -405,18 +406,7 @@ export default function VendasConfig() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">
-                  <div className="text-center py-8">
-                    <FileUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground mb-4">
-                      Acesse o assistente de importação para configurar produtos de terceiros
-                    </p>
-                    <Link 
-                      to="/importacao-produtos" 
-                      className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-                    >
-                      Abrir Importação de Terceiros
-                    </Link>
-                  </div>
+                  {estabelecimentoId && <ImportacaoTerceirosTab estabelecimentoId={estabelecimentoId} />}
                 </CardContent>
               </Card>
             </TabsContent>
