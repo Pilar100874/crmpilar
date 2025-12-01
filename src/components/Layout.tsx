@@ -112,7 +112,6 @@ const menuItems: MenuItem[] = [
     subItems: [
       { id: "Orçamento", title: "Orçamento", url: "/orcamentos", icon: FileBarChart },
       { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: Settings },
-      { id: "Importação Produtos Sub", title: "Importação de Produtos de Terceiro", url: "/importacao-produtos", icon: Upload },
     ]
   },
   {
