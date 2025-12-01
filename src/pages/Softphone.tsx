@@ -12,7 +12,11 @@ import { useSipConnection } from "@/hooks/useSipConnection";
 import { SessionState } from "sip.js";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
-export default function Softphone() {
+interface SoftphoneProps {
+  embedded?: boolean;
+}
+
+export default function Softphone({ embedded = false }: SoftphoneProps) {
   const { toast } = useToast();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [userExtension, setUserExtension] = useState<string>("");
@@ -157,10 +161,9 @@ export default function Softphone() {
     return <Badge variant="destructive">Desconectado</Badge>;
   };
 
-  return (
-    <Layout>
-      <div className="p-6 space-y-6">
-        <SubMenuHeader title="Softphone" onOpenSubmenu={() => {}} />
+  const content = (
+    <div className={embedded ? "space-y-6" : "p-6 space-y-6"}>
+      {!embedded && <SubMenuHeader title="Softphone" onOpenSubmenu={() => {}} />}
 
         <Card>
           <CardHeader>
@@ -242,6 +245,11 @@ export default function Softphone() {
           </CardContent>
         </Card>
       </div>
-    </Layout>
   );
+
+  if (embedded) {
+    return content;
+  }
+
+  return <Layout>{content}</Layout>;
 }
