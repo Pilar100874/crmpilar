@@ -11,6 +11,7 @@ import BotBuilder from "./pages/BotBuilder";
 import BotTest from "./pages/BotTest";
 import BotCreate from "./pages/BotCreate";
 import Email from "./pages/Email";
+import EmailHub from "./pages/EmailHub";
 import Campanhas from "./pages/Campanhas";
 import Calendario from "./pages/Calendario";
 import Funil from "./pages/Funil";
@@ -20,9 +21,11 @@ import Empresas from "./pages/Empresas";
 import Todos from "./pages/Todos";
 import VinculosEmpresas from "./pages/VinculosEmpresas";
 import VinculosContatos from "./pages/VinculosContatos";
+import ListasHub from "./pages/ListasHub";
 import Config from "./pages/Config";
 import GlobalVariables from "./pages/GlobalVariables";
 import Desenho from "./pages/Desenho";
+import MarketingHub from "./pages/MarketingHub";
 import MarketingCanvas from "./pages/MarketingCanvas";
 import MarketingAutomacoes from "./pages/MarketingAutomacoes";
 import MarketingCampanhas from "./pages/MarketingCampanhas";
@@ -104,8 +107,9 @@ const App = () => (
           <Route element={<LayoutWrapper />}>
           <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/atendimento" element={<Atendimento />} />
-            <Route path="/email" element={<Email />} />
+            <Route path="/email" element={<EmailHub />} />
             <Route path="/email/:folder" element={<Email />} />
+            <Route path="/listas" element={<ListasHub />} />
             <Route path="/bot-builder" element={<BotBuilder />} />
             <Route path="/bot-test" element={<BotTest />} />
             <Route path="/bot-create" element={<BotCreate />} />
@@ -125,6 +129,7 @@ const App = () => (
             <Route path="/config/campanhas" element={<Campanhas />} />
             <Route path="/global-variables" element={<GlobalVariables />} />
             <Route path="/desenho" element={<Desenho />} />
+            <Route path="/marketing" element={<MarketingHub />} />
             <Route path="/marketing/canvas" element={<MarketingCanvas />} />
             <Route path="/marketing/automacoes" element={<MarketingAutomacoes />} />
             <Route path="/marketing/campanhas" element={<MarketingCampanhas />} />

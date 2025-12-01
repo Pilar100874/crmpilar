@@ -40,12 +40,17 @@ interface Email {
   folder: "inbox" | "sent" | "trash" | "archive";
 }
 
-export default function Email() {
+interface EmailProps {
+  embeddedFolder?: string;
+}
+
+export default function Email({ embeddedFolder }: EmailProps = {}) {
   const navigate = useNavigate();
   const { folder } = useParams<{ folder?: string }>();
   const { openSubmenu } = useLayout();
+  const effectiveFolder = embeddedFolder || folder;
   const [selectedFolder, setSelectedFolder] = useState<"inbox" | "sent" | "trash" | "archive">(
-    (folder as "inbox" | "sent" | "trash" | "archive") || "inbox"
+    (effectiveFolder as "inbox" | "sent" | "trash" | "archive") || "inbox"
   );
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [composing, setComposing] = useState(false);
