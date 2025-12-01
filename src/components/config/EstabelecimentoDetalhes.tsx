@@ -1301,57 +1301,6 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="ia-config" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center justify-between w-full pr-2">
-              <div className="flex items-center gap-2">
-                <Brain className="w-4 h-4 text-primary" />
-                <span className="font-medium">Configurações de IA</span>
-              </div>
-              <Dialog>
-                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                    <HelpCircle className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>💡 Configurações de IA - Guia Completo</DialogTitle>
-                    <DialogDescription className="space-y-4 text-left pt-4">
-                      <p>
-                        Configure qual provedor e modelo de IA será usado em cada contexto do sistema.
-                      </p>
-                      <div>
-                        <h4 className="font-semibold mb-2">🤖 Provedor Padrão (Lovable AI)</h4>
-                        <p className="text-sm">Por padrão, o sistema usa Lovable AI sem necessidade de chaves API. Configure apenas se desejar usar outro provedor.</p>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-2">📍 Contextos Disponíveis</h4>
-                        <ul className="text-sm space-y-1 list-disc list-inside">
-                          <li>Sugestão de Resposta: IA sugere respostas baseadas no contexto</li>
-                          <li>Resumo: IA resume conversas longas</li>
-                          <li>Tradução: IA traduz mensagens em tempo real</li>
-                          <li>Análise de Sentimento: IA analisa sentimento das mensagens</li>
-                          <li>Sugestão de Artigos KB: IA sugere artigos da base de conhecimento</li>
-                          <li>Extração de Itens: IA extrai itens de orçamento</li>
-                          <li>Sugestão de Produtos: IA sugere produtos</li>
-                        </ul>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-2">🔑 Provedores Externos</h4>
-                        <p className="text-sm">Para usar OpenAI, Anthropic ou Google diretamente, você precisará fornecer suas próprias chaves API.</p>
-                      </div>
-                    </DialogDescription>
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <IAConfigCRUD estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
-
         <AccordionItem value="quality-assurance" className="border rounded-md">
           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
             <div className="flex items-center justify-between w-full pr-2">
@@ -1393,50 +1342,6 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <QualityAssuranceCRUD estabelecimentoId={estabelecimentoId} />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="analise-sentimento" className="border rounded-md">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-            <div className="flex items-center justify-between w-full pr-2">
-              <div className="flex items-center gap-2">
-                <Brain className="w-4 h-4 text-primary" />
-                <span className="font-medium">Análise de Sentimento</span>
-              </div>
-              <Dialog>
-                <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                    <HelpCircle className="w-4 h-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Análise de Sentimento - Ajuda</DialogTitle>
-                    <DialogDescription className="text-left space-y-4 pt-4">
-                      <div>
-                        <h4 className="font-semibold mb-2">🤖 Análise Automática com IA</h4>
-                        <p className="text-sm">Cada mensagem é analisada em tempo real detectando sentimento (positivo/neutro/negativo), emoção e pontuação de 0.0 a 1.0.</p>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-2">🚨 Alertas Proativos</h4>
-                        <p className="text-sm">Notificações automáticas quando detecta múltiplas mensagens negativas, pontuação baixa ou palavras de escalação.</p>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-2">⚙️ Limites Configuráveis</h4>
-                        <p className="text-sm">Defina os limites de pontuação para classificação negativa/positiva e o número de mensagens negativas para alerta.</p>
-                      </div>
-                      <div>
-                        <h4 className="font-semibold mb-2">📈 Dashboard de Sentimento</h4>
-                        <p className="text-sm">Acompanhe score médio, distribuição de sentimentos, alertas e tendências ao longo do tempo.</p>
-                      </div>
-                    </DialogDescription>
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <SentimentAnalysisCRUD estabelecimentoId={estabelecimentoId} />
           </AccordionContent>
         </AccordionItem>
 
