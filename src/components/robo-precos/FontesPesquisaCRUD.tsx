@@ -1129,15 +1129,15 @@ export function FontesPesquisaCRUD() {
                       Use a <strong className="text-primary">Detecção Automática</strong> (recomendado), selecione um site pré-configurado ou configure manualmente
                     </p>
 
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {Object.entries(scrapingPresets).map(([key, preset]) => (
                         <Button
                           key={key}
                           type="button"
                           variant={formData.scraping_preset === key ? "default" : "outline"}
-                          className={`h-auto py-2 px-2 flex flex-col gap-1 text-center ${
+                          className={`h-auto min-h-[60px] py-3 px-3 flex flex-col items-center justify-center gap-1 whitespace-normal ${
                             key === 'auto_detect' 
-                              ? 'col-span-3 sm:col-span-2 md:col-span-2 border-primary bg-primary/10 hover:bg-primary/20' 
+                              ? 'col-span-2 sm:col-span-3 border-primary bg-primary/10 hover:bg-primary/20' 
                               : ''
                           }`}
                           onClick={() => {
@@ -1148,8 +1148,8 @@ export function FontesPesquisaCRUD() {
                             }
                           }}
                         >
-                          <span className="text-base">{preset.icon}</span>
-                          <span className="text-[10px] leading-tight">{preset.label}</span>
+                          <span className="text-lg">{preset.icon}</span>
+                          <span className="text-xs font-medium text-center leading-tight">{preset.label}</span>
                         </Button>
                       ))}
                     </div>
