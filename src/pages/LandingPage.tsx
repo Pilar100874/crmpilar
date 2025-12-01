@@ -6,7 +6,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { motion } from 'framer-motion';
-import logoPilar from '@/assets/logo-pilar.png';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -129,14 +128,6 @@ export default function LandingPage() {
           transition={{ duration: 1 }}
           className="relative z-20 text-center px-4"
         >
-          <motion.img
-            src={logoPilar}
-            alt="Pilar"
-            className="h-32 md:h-48 w-auto mx-auto mb-8"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.8 }}
-          />
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
             Sistema de Gestão Empresarial
           </h1>
