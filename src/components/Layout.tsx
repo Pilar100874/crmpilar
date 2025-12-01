@@ -101,6 +101,7 @@ const menuItems: MenuItem[] = [
       { id: "Painel Chats", title: "Painel", url: "/atendimento", icon: MessageSquare },
       { id: "Monitor de Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: Activity },
       { id: "Teste Roteamento", title: "Teste de Roteamento", url: "/test-roteamento", icon: TestTube2 },
+      { id: "Config Atendimento", title: "Configurações", url: "/atendimento-config", icon: Settings },
     ]
   },
   { id: "Campanhas", title: "Calendário", url: "/calendario", icon: Megaphone },

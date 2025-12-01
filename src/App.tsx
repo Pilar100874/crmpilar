@@ -82,6 +82,7 @@ import AdsCampaigns from "./pages/ads/AdsCampaigns";
 import AdsReports from "./pages/ads/AdsReports";
 import AdsAlerts from "./pages/ads/AdsAlerts";
 import RoboPrecos from "./pages/RoboPrecos";
+import AtendimentoConfig from "./pages/AtendimentoConfig";
 
 const queryClient = new QueryClient();
 
@@ -157,6 +158,7 @@ const App = () => (
             <Route path="/editor-regras" element={<EditorRegras />} />
             <Route path="/editor-regras/:id" element={<EditorRegras />} />
             <Route path="/vendas-config" element={<VendasConfig />} />
+            <Route path="/atendimento-config" element={<AtendimentoConfig />} />
             <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
             <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
             <Route path="/perfil" element={<Perfil />} />
