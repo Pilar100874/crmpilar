@@ -86,6 +86,7 @@ import AdsAlerts from "./pages/ads/AdsAlerts";
 import AdsHub from "./pages/AdsHub";
 import RoboPrecos from "./pages/RoboPrecos";
 import AtendimentoConfig from "./pages/AtendimentoConfig";
+import LandingPage from "./pages/LandingPage";
 
 const queryClient = new QueryClient();
 
@@ -103,7 +104,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
           <Route element={<LayoutWrapper />}>
           <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/atendimento" element={<Atendimento />} />
