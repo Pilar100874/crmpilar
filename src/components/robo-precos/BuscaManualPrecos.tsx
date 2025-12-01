@@ -286,6 +286,7 @@ export function BuscaManualPrecos() {
             id: `scrap-${index}-${Date.now()}`,
             title: item.nome || item.title,
             price: item.preco_numerico || item.price,
+            original_price: item.preco_original || null,
             permalink: item.link || item.url,
             thumbnail: item.imagem || '',
             condition: 'N/A',
