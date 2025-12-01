@@ -200,3 +200,15 @@ verify_jwt = false
 
 [functions.monitor-precos-run]
 verify_jwt = true
+
+[functions.firecrawl-search]
+verify_jwt = true
+
+[functions.scraping-search]
+verify_jwt = true
+
+[functions.analyze-scraping-page]
+verify_jwt = true
+
+[functions.test-scraping-config]
+verify_jwt = true
