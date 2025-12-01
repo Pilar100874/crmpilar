@@ -519,22 +519,6 @@ export function BuscaManualPrecos() {
                       {index + 1}º
                     </div>
 
-                    {/* Imagem */}
-                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0 flex items-center justify-center">
-                      {item.thumbnail ? (
-                        <img 
-                          src={item.thumbnail} 
-                          alt={item.title}
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.parentElement?.classList.add('no-image');
-                          }}
-                        />
-                      ) : (
-                        <Package className="h-8 w-8 text-muted-foreground/50" />
-                      )}
-                    </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
