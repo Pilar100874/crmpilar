@@ -12,7 +12,11 @@ import { Node, Edge } from "@xyflow/react";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 
-export default function BotTest() {
+interface BotTestProps {
+  embedded?: boolean;
+}
+
+export default function BotTest({ embedded = false }: BotTestProps) {
   const { openSubmenu } = useLayout();
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
