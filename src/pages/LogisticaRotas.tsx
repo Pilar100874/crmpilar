@@ -15,8 +15,13 @@ import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
-const LogisticaRotas: React.FC = () => {
+interface LogisticaRotasProps {
+  embedded?: boolean;
+}
+
+const LogisticaRotas: React.FC<LogisticaRotasProps> = ({ embedded = false }) => {
   const [rotas, setRotas] = useState<RotaSalva[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -215,21 +220,23 @@ const LogisticaRotas: React.FC = () => {
   );
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className={cn(embedded ? "" : "p-4 sm:p-6 max-w-7xl mx-auto")}>
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Route className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Rotas Salvas</h1>
-            <p className="text-sm text-muted-foreground">
-              {rotas.length} rota{rotas.length !== 1 ? 's' : ''} salva{rotas.length !== 1 ? 's' : ''}
-            </p>
+      {!embedded && (
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Route className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Rotas Salvas</h1>
+              <p className="text-sm text-muted-foreground">
+                {rotas.length} rota{rotas.length !== 1 ? 's' : ''} salva{rotas.length !== 1 ? 's' : ''}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Search */}
       <div className="mb-6">

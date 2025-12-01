@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 interface LogisticaConfigData {
   id: string;
@@ -15,7 +16,11 @@ interface LogisticaConfigData {
   heigit_api_key: string | null;
 }
 
-const LogisticaConfig: React.FC = () => {
+interface LogisticaConfigProps {
+  embedded?: boolean;
+}
+
+const LogisticaConfig: React.FC<LogisticaConfigProps> = ({ embedded = false }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -134,32 +139,34 @@ const LogisticaConfig: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="h-[calc(100vh-64px)] flex items-center justify-center">
+      <div className={cn("flex items-center justify-center", embedded ? "h-64" : "h-[calc(100vh-64px)]")}>
         <div className="text-muted-foreground">Carregando configuração...</div>
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col">
+    <div className={cn("flex flex-col", embedded ? "h-full" : "h-[calc(100vh-64px)]")}>
       {/* Header */}
-      <div className="p-4 border-b bg-background flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-xl font-semibold flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Configuração de Logística
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Configure as integrações e APIs do módulo de logística
-          </p>
+      {!embedded && (
+        <div className="p-4 border-b bg-background flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/logistica')}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-semibold flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Configuração de Logística
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Configure as integrações e APIs do módulo de logística
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className={cn("flex-1 overflow-auto", embedded ? "p-0" : "p-6")}>
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Heigit API Key Card */}
           <Card>
