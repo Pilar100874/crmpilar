@@ -6,6 +6,104 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Detecta se é um site VTEX baseado na URL ou HTML
+function isVtexStore(url: string, html: string): boolean {
+  const vtexPatterns = [
+    'vtex.com',
+    'vtexassets.com',
+    'vteximg.com',
+    'vtexcommercestable',
+    'vtex-',
+    'class="vtex',
+    'data-vtex',
+  ];
+  return vtexPatterns.some(p => url.includes(p) || html.includes(p));
+}
+
+// Extrai o domínio base da URL
+function getBaseUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return '';
+  }
+}
+
+// Busca produtos via API VTEX
+async function searchVtexProducts(baseUrl: string, query: string, limite: number): Promise<any[]> {
+  const endpoints = [
+    // VTEX Intelligent Search API
+    `${baseUrl}/api/io/_v/api/intelligent-search/product_search/?query=${encodeURIComponent(query)}&count=${limite}`,
+    // VTEX Legacy Search API
+    `${baseUrl}/api/catalog_system/pub/products/search/${encodeURIComponent(query)}?_from=0&_to=${limite - 1}`,
+    // Alternative search endpoint
+    `${baseUrl}/buscapagina?ft=${encodeURIComponent(query)}&PS=${limite}&sl=1&cc=1&sm=0&PageNumber=1`,
+  ];
+
+  for (const endpoint of endpoints) {
+    try {
+      console.log('[VTEX Search] Tentando endpoint:', endpoint);
+      
+      const response = await fetch(endpoint, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/html, */*',
+          'Accept-Language': 'pt-BR,pt;q=0.9',
+        },
+      });
+
+      if (!response.ok) {
+        console.log(`[VTEX Search] Endpoint ${endpoint} retornou ${response.status}`);
+        continue;
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      
+      if (contentType.includes('application/json')) {
+        const data = await response.json();
+        
+        // Handle intelligent search response
+        if (data.products && Array.isArray(data.products)) {
+          console.log(`[VTEX Search] Encontrados ${data.products.length} produtos via intelligent search`);
+          return data.products.map((p: any) => ({
+            nome: p.productName || p.name,
+            preco_numerico: p.priceRange?.sellingPrice?.lowPrice || 
+                           p.items?.[0]?.sellers?.[0]?.commertialOffer?.Price ||
+                           p.price || 0,
+            link: p.link || `${baseUrl}/${p.linkText || p.slug}/p`,
+            imagem: p.items?.[0]?.images?.[0]?.imageUrl || p.image || '',
+          }));
+        }
+        
+        // Handle legacy catalog API response (array)
+        if (Array.isArray(data) && data.length > 0) {
+          console.log(`[VTEX Search] Encontrados ${data.length} produtos via catalog API`);
+          return data.map((p: any) => ({
+            nome: p.productName || p.nameComplete || p.name,
+            preco_numerico: p.items?.[0]?.sellers?.[0]?.commertialOffer?.Price ||
+                           p.priceRange?.sellingPrice?.lowPrice || 0,
+            link: p.link || `${baseUrl}${p.detailUrl || ''}`,
+            imagem: p.items?.[0]?.images?.[0]?.imageUrl || '',
+          }));
+        }
+      } else if (contentType.includes('text/html')) {
+        // Parse HTML response from buscapagina
+        const html = await response.text();
+        if (html.includes('productName') || html.includes('product-item')) {
+          console.log('[VTEX Search] Recebeu HTML com produtos, tentando extrair');
+          // Return HTML for AI parsing
+          return [{ _vtexHtml: html }];
+        }
+      }
+    } catch (err) {
+      console.log(`[VTEX Search] Erro no endpoint: ${err}`);
+    }
+  }
+
+  return [];
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -30,10 +128,12 @@ serve(async (req) => {
 
     // Substituir {TERMO} pela query (case insensitive)
     const urlFinal = url_busca.replace(/\{TERMO\}/gi, encodeURIComponent(query));
+    const baseUrl = getBaseUrl(urlFinal);
     
     console.log('[Scraping Search] Buscando:', urlFinal);
+    console.log('[Scraping Search] Base URL:', baseUrl);
 
-    // Fazer fetch da página
+    // Fazer fetch da página inicial
     const response = await fetch(urlFinal, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -55,7 +155,34 @@ serve(async (req) => {
     const html = await response.text();
     console.log('[Scraping Search] HTML recebido, tamanho:', html.length);
 
-    // Usar IA para extrair produtos baseado nos seletores
+    let results: any[] = [];
+
+    // Detectar se é VTEX e tentar API direta
+    if (isVtexStore(urlFinal, html)) {
+      console.log('[Scraping Search] Site VTEX detectado, tentando API direta');
+      
+      const vtexProducts = await searchVtexProducts(baseUrl, query, limite);
+      
+      if (vtexProducts.length > 0 && !vtexProducts[0]._vtexHtml) {
+        console.log(`[Scraping Search] VTEX API retornou ${vtexProducts.length} produtos`);
+        results = vtexProducts.filter(p => p.nome && p.preco_numerico > 0);
+        
+        if (results.length > 0) {
+          return new Response(
+            JSON.stringify({
+              success: true,
+              results: results.slice(0, limite),
+              total: results.length,
+              url_buscada: urlFinal,
+              metodo: 'vtex_api',
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+    }
+
+    // Fallback: usar IA para extrair produtos do HTML
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       return new Response(
@@ -67,6 +194,7 @@ serve(async (req) => {
       );
     }
 
+    // Melhorar o prompt para sites com dados JSON embutidos
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -80,22 +208,26 @@ serve(async (req) => {
             role: 'system',
             content: `Você é um extrator de dados de produtos de e-commerce. Extraia produtos do HTML fornecido.
 
-REGRAS IMPORTANTES:
-1. Extraia APENAS produtos reais da página (não ícones, banners, logos, botões)
-2. A imagem deve ser a FOTO DO PRODUTO (geralmente em tags <img> dentro do card do produto, com atributos como "src", "data-src", ou "srcset")
-3. NÃO extraia imagens de: ícones SVG, logos da loja, bandeiras de cartão, selos de segurança, imagens de frete/entrega
-4. A imagem do produto geralmente tem URLs com palavras como "product", "item", "foto", ou dimensões como "-292-", "-500-", etc.
-5. Converta preços para número (R$ 1.299,00 -> 1299.00)
-6. Extraia no máximo ${limite} produtos
+IMPORTANTE - VERIFIQUE NESTA ORDEM:
+1. Primeiro procure por dados JSON embutidos no HTML (em tags <script type="application/ld+json">, __STATE__, __NEXT_DATA__, window.__PRELOADED_STATE__, ou variáveis JavaScript)
+2. Se não encontrar JSON, procure por elementos HTML com dados de produtos
+3. Sites VTEX geralmente têm dados em __STATE__ ou em atributos data-*
 
-RETORNE APENAS JSON VÁLIDO, sem markdown ou código:
+REGRAS DE EXTRAÇÃO:
+1. Extraia APENAS produtos reais (não ícones, banners, logos, botões)
+2. A imagem deve ser a FOTO DO PRODUTO (URL com "product", "item", dimensões como -292-, -500-)
+3. NÃO extraia imagens de: ícones SVG, logos, bandeiras, selos, imagens de frete
+4. Converta preços para número (R$ 1.299,00 -> 1299.00, R$ 12,94 -> 12.94)
+5. Extraia no máximo ${limite} produtos
+
+RETORNE APENAS JSON VÁLIDO, sem markdown:
 {
   "products": [
     {
       "nome": "nome completo do produto",
       "preco_numerico": 999.99,
       "link": "url da página do produto",
-      "imagem": "url da FOTO do produto (não ícone/logo)"
+      "imagem": "url da FOTO do produto"
     }
   ]
 }`
@@ -103,23 +235,22 @@ RETORNE APENAS JSON VÁLIDO, sem markdown ou código:
           {
             role: 'user',
             content: `Seletores CSS sugeridos:
-- Container do produto: ${seletores?.container_produto || 'não informado'}
-- Nome do produto: ${seletores?.nome || 'não informado'}
-- Preço: ${seletores?.preco || 'não informado'}
-- Link do produto: ${seletores?.link || 'não informado'}
-- Imagem do produto: ${seletores?.imagem || 'img dentro do container do produto'}
+- Container: ${seletores?.container_produto || 'detectar automaticamente'}
+- Nome: ${seletores?.nome || 'detectar automaticamente'}
+- Preço: ${seletores?.preco || 'detectar automaticamente'}
+- Link: ${seletores?.link || 'detectar automaticamente'}
+- Imagem: ${seletores?.imagem || 'detectar automaticamente'}
 - Regex preço: ${regex_preco || 'R\\$\\s*([\\d.,]+)'}
 
 Termo buscado: "${query}"
 
-IMPORTANTE sobre IMAGENS:
-- A imagem DEVE ser a foto principal do produto (geralmente dentro de um <img> no card do produto)
-- A URL da imagem deve conter dimensões ou IDs (ex: /156942-292-292/, /500x500/)
-- NÃO pegue: logos, ícones SVG, imagens de frete, selos, bandeiras
-- Se não conseguir identificar a imagem correta do produto, retorne string vazia para o campo imagem
+DICA: Se o HTML não tiver produtos visíveis, procure por:
+- <script type="application/ld+json"> com schema de produtos
+- Variáveis JavaScript como __STATE__, __NEXT_DATA__, __PRELOADED_STATE__
+- Atributos data-product, data-sku, data-price em elementos
 
-HTML (primeiros 60KB):
-${html.substring(0, 60000)}`
+HTML (primeiros 80KB):
+${html.substring(0, 80000)}`
           }
         ],
       }),
@@ -153,7 +284,6 @@ ${html.substring(0, 60000)}`
     
     console.log('[Scraping Search] Resposta IA:', content.substring(0, 500));
 
-    let results: any[] = [];
     try {
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
@@ -184,6 +314,7 @@ ${html.substring(0, 60000)}`
         results: results.slice(0, limite),
         total: results.length,
         url_buscada: urlFinal,
+        metodo: 'ai_extraction',
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
