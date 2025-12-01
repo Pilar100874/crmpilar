@@ -28,13 +28,13 @@ interface TabItem {
 }
 
 const tabItems: TabItem[] = [
-  { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Fluxos automatizados de marketing' },
   { id: 'campanhas', label: 'Campanhas', icon: Megaphone, description: 'Gestão de campanhas' },
+  { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
 ];
 
 const MarketingHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('canvas');
+  const [activeTab, setActiveTab] = useState('automacoes');
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
   const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
