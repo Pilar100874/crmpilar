@@ -66,81 +66,123 @@ serve(async (req) => {
           }),
         });
 
+        console.log(`[Firecrawl Search] Status Firecrawl: ${response.status}`);
+
         if (!response.ok) {
           const errorText = await response.text();
-          console.error(`[Firecrawl Search] Erro no site ${site}:`, errorText);
+          console.error(`[Firecrawl Search] Erro API Firecrawl (${response.status}):`, errorText);
           continue;
         }
 
         const data = await response.json();
+        console.log(`[Firecrawl Search] Firecrawl success: ${data.success}`);
         
         if (data.success && data.data) {
+          const contentLength = (data.data.markdown?.length || 0) + (data.data.html?.length || 0);
+          console.log(`[Firecrawl Search] Conteúdo recebido: ${contentLength} chars`);
+          
+          if (contentLength < 100) {
+            console.log('[Firecrawl Search] Conteúdo muito curto, pulando...');
+            continue;
+          }
+
           // Usar IA para extrair produtos do conteúdo
           const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
           
-          if (LOVABLE_API_KEY) {
-            const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model: 'google/gemini-2.5-flash',
-                messages: [
-                  {
-                    role: 'system',
-                    content: `Você é um extrator de dados de produtos. Extraia os produtos do conteúdo fornecido.
+          if (!LOVABLE_API_KEY) {
+            console.error('[Firecrawl Search] LOVABLE_API_KEY não configurada');
+            continue;
+          }
 
-RETORNE APENAS JSON VÁLIDO, sem markdown:
+          console.log('[Firecrawl Search] Chamando IA para extrair produtos...');
+
+          const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'google/gemini-2.5-flash',
+              messages: [
+                {
+                  role: 'system',
+                  content: `Você é um extrator de dados de produtos de e-commerce. Analise o conteúdo HTML/Markdown e extraia os produtos listados.
+
+REGRAS:
+1. Extraia TODOS os produtos que encontrar (máximo 15)
+2. O preço deve ser um NÚMERO (ex: R$ 1.299,00 -> 1299.00)
+3. Se não encontrar preço, use 0
+4. Links devem ser URLs completas quando possível
+
+RETORNE APENAS JSON VÁLIDO, sem markdown ou explicações:
 {
   "products": [
     {
-      "title": "nome do produto",
+      "title": "nome completo do produto",
       "price": 999.99,
-      "url": "link do produto",
+      "url": "link do produto (completo ou relativo)",
       "image": "url da imagem",
-      "seller": "nome do vendedor"
+      "seller": "vendedor ou loja"
     }
   ]
-}
-
-Extraia no máximo 10 produtos. Converta preços para número (ex: R$ 1.299,00 -> 1299.00).`
-                  },
-                  {
-                    role: 'user',
-                    content: `Site: ${site}\nBusca: ${query}\n\nConteúdo:\n${data.data.markdown?.substring(0, 30000) || data.data.html?.substring(0, 30000) || ''}`
-                  }
-                ],
-              }),
-            });
-
-            if (aiResponse.ok) {
-              const aiData = await aiResponse.json();
-              const content = aiData.choices?.[0]?.message?.content || '';
-              
-              try {
-                const jsonMatch = content.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                  const parsed = JSON.parse(jsonMatch[0]);
-                  if (parsed.products && Array.isArray(parsed.products)) {
-                    parsed.products.forEach((p: any) => {
-                      results.push({
-                        title: p.title,
-                        price: typeof p.price === 'number' ? p.price : parseFloat(String(p.price).replace(/[^\d.,]/g, '').replace(',', '.')) || 0,
-                        url: p.url,
-                        image: p.image,
-                        seller: p.seller || site,
-                        site: site,
-                      });
-                    });
-                  }
+}`
+                },
+                {
+                  role: 'user',
+                  content: `Site: ${site}\nBusca: "${query}"\n\nExtraia os produtos deste conteúdo:\n\n${data.data.markdown?.substring(0, 25000) || data.data.html?.substring(0, 25000) || ''}`
                 }
-              } catch (parseErr) {
-                console.error('[Firecrawl Search] Erro ao parsear resposta IA:', parseErr);
-              }
-            }
+              ],
+            }),
+          });
+
+          console.log(`[Firecrawl Search] Status IA: ${aiResponse.status}`);
+
+          if (!aiResponse.ok) {
+            const aiError = await aiResponse.text();
+            console.error('[Firecrawl Search] Erro IA:', aiError);
+            continue;
           }
+
+          const aiData = await aiResponse.json();
+          const content = aiData.choices?.[0]?.message?.content || '';
+          console.log(`[Firecrawl Search] Resposta IA (${content.length} chars):`, content.substring(0, 200));
+          
+          try {
+            // Tentar extrair JSON da resposta
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              const parsed = JSON.parse(jsonMatch[0]);
+              console.log(`[Firecrawl Search] Produtos extraídos: ${parsed.products?.length || 0}`);
+              
+              if (parsed.products && Array.isArray(parsed.products)) {
+                parsed.products.forEach((p: any) => {
+                  // Construir URL completa se necessário
+                  let productUrl = p.url || '';
+                  if (productUrl && !productUrl.startsWith('http')) {
+                    if (site.includes('mercadolivre')) {
+                      productUrl = `https://www.mercadolivre.com.br${productUrl.startsWith('/') ? '' : '/'}${productUrl}`;
+                    }
+                  }
+
+                  results.push({
+                    title: p.title || 'Produto sem nome',
+                    price: typeof p.price === 'number' ? p.price : parseFloat(String(p.price || '0').replace(/[^\d.,]/g, '').replace(',', '.')) || 0,
+                    url: productUrl,
+                    image: p.image || '',
+                    seller: p.seller || site,
+                    site: site,
+                  });
+                });
+              }
+            } else {
+              console.error('[Firecrawl Search] JSON não encontrado na resposta da IA');
+            }
+          } catch (parseErr) {
+            console.error('[Firecrawl Search] Erro ao parsear resposta IA:', parseErr);
+          }
+        } else {
+          console.log('[Firecrawl Search] Firecrawl não retornou dados válidos');
         }
       } catch (siteError) {
         console.error(`[Firecrawl Search] Erro no site ${site}:`, siteError);
@@ -151,7 +193,7 @@ Extraia no máximo 10 produtos. Converta preços para número (ex: R$ 1.299,00 -
     results.sort((a, b) => (a.price || 999999) - (b.price || 999999));
     const limitedResults = results.filter(r => r.price > 0).slice(0, limit);
 
-    console.log(`[Firecrawl Search] Retornando ${limitedResults.length} resultados`);
+    console.log(`[Firecrawl Search] Total encontrado: ${results.length}, Retornando: ${limitedResults.length}`);
 
     return new Response(
       JSON.stringify({
@@ -163,7 +205,7 @@ Extraia no máximo 10 produtos. Converta preços para número (ex: R$ 1.299,00 -
     );
 
   } catch (error) {
-    console.error('[Firecrawl Search] Erro:', error);
+    console.error('[Firecrawl Search] Erro geral:', error);
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Erro ao buscar com Firecrawl',
