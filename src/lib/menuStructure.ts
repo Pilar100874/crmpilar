@@ -55,28 +55,12 @@ export const menuStructure: MenuCategory[] = [
       { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: LucideIcons.Settings },
     ]
   },
-  { 
-    id: "Conteúdos",
-    title: "Listas", 
-    icon: LucideIcons.FileText,
-    subItems: [
-      { id: "Contatos", title: "Contatos", url: "/contatos", icon: LucideIcons.User },
-      { id: "Empresas", title: "Empresas", url: "/empresas", icon: LucideIcons.Building2 },
-      { id: "Todos", title: "Todos", url: "/todos", icon: LucideIcons.Users },
-      { id: "Vínculos Empresas", title: "Vínculo Empresas X Usuário / Segmento", url: "/vinculos-empresas", icon: LucideIcons.Building2 },
-      { id: "Vínculos Contatos", title: "Vínculo Contatos X Usuário / Segmento", url: "/vinculos-contatos", icon: LucideIcons.User },
-    ]
-  },
+  { id: "Conteúdos", title: "Listas", url: "/listas", icon: LucideIcons.FileText },
   { 
     id: "Email",
     title: "E-mail", 
-    icon: LucideIcons.Mail,
-    subItems: [
-      { id: "Caixa de Entrada", title: "Caixa de Entrada", url: "/email/inbox", icon: LucideIcons.MessageSquare },
-      { id: "Enviados", title: "Enviados", url: "/email/sent", icon: LucideIcons.MessageSquare },
-      { id: "Arquivados", title: "Arquivados", url: "/email/archive", icon: LucideIcons.MessageSquare },
-      { id: "Lixeira", title: "Lixeira", url: "/email/trash", icon: LucideIcons.MessageSquare },
-    ]
+    url: "/email",
+    icon: LucideIcons.Mail
   },
   { 
     id: "Bot Test", 
@@ -90,12 +74,8 @@ export const menuStructure: MenuCategory[] = [
   { 
     id: "Desenho", 
     title: "Marketing", 
-    icon: LucideIcons.Target,
-    subItems: [
-      { id: "Canvas", title: "Canvas", url: "/marketing/canvas", icon: LucideIcons.Palette },
-      { id: "Automações", title: "Automações", url: "/marketing/automacoes", icon: LucideIcons.Zap },
-      { id: "Campanhas Marketing", title: "Campanhas", url: "/marketing/campanhas", icon: LucideIcons.Megaphone },
-    ]
+    url: "/marketing",
+    icon: LucideIcons.Target
   },
 { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: LucideIcons.FileText },
   { id: "Logística", title: "Logística", url: "/logistica", icon: LucideIcons.Truck },

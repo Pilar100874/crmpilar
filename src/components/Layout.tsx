@@ -114,29 +114,8 @@ const menuItems: MenuItem[] = [
       { id: "Config Vendas", title: "Configuração de Vendas", url: "/vendas-config", icon: Settings },
     ]
   },
-  {
-    id: "Conteúdos",
-    title: "Listas", 
-    icon: FileText,
-    subItems: [
-      { id: "Contatos", title: "Contatos", url: "/contatos", icon: UserIcon },
-      { id: "Empresas", title: "Empresas", url: "/empresas", icon: Building2 },
-      { id: "Todos", title: "Todos", url: "/todos", icon: Users },
-      { id: "Vínculos Empresas", title: "Vínculo Empresas X Usuário / Segmento", url: "/vinculos-empresas", icon: Building2 },
-      { id: "Vínculos Contatos", title: "Vínculo Contatos X Usuário / Segmento", url: "/vinculos-contatos", icon: UserIcon },
-    ]
-  },
-  { 
-    id: "Email",
-    title: "E-mail", 
-    icon: Mail,
-    subItems: [
-      { id: "Caixa de Entrada", title: "Caixa de Entrada", url: "/email/inbox", icon: MessageSquare },
-      { id: "Enviados", title: "Enviados", url: "/email/sent", icon: MessageSquare },
-      { id: "Arquivados", title: "Arquivados", url: "/email/archive", icon: MessageSquare },
-      { id: "Lixeira", title: "Lixeira", url: "/email/trash", icon: MessageSquare },
-    ]
-  },
+  { id: "Conteúdos", title: "Listas", url: "/listas", icon: FileText },
+  { id: "Email", title: "E-mail", url: "/email", icon: Mail },
   { 
     id: "Bot Test", 
     title: "Bot", 
@@ -146,16 +125,7 @@ const menuItems: MenuItem[] = [
       { id: "Testar", title: "Testar", url: "/bot-test", icon: TestTube2 },
     ]
   },
-  { 
-    id: "Desenho", 
-    title: "Marketing", 
-    icon: Target,
-    subItems: [
-      { id: "Canvas", title: "Canvas", url: "/marketing/canvas", icon: Palette },
-      { id: "Automações", title: "Automações", url: "/marketing/automacoes", icon: Zap },
-      { id: "Campanhas Marketing", title: "Campanhas", url: "/marketing/campanhas", icon: Megaphone },
-    ]
-  },
+  { id: "Desenho", title: "Marketing", url: "/marketing", icon: Target },
   { id: "Relatórios", title: "Relatórios", url: "/relatorios", icon: FileText },
   {
     id: "Telefonia",
