@@ -254,7 +254,7 @@ const ApiHelpGuide = ({ tipoApi }: { tipoApi: string }) => {
   );
 };
 
-// Sites pré-configurados para scraping (fácil de usar)
+// Configuração para detecção automática de scraping
 const scrapingPresets: Record<string, {
   label: string;
   url_busca: string;
@@ -278,66 +278,6 @@ const scrapingPresets: Record<string, {
     },
     regex_preco: "R\\$\\s*([\\d.,]+)",
     icon: "✨"
-  },
-  magazine_luiza: {
-    label: "Magazine Luiza",
-    url_busca: "https://www.magazineluiza.com.br/busca/{TERMO}/",
-    seletores: {
-      container_produto: "[data-testid='product-card']",
-      nome: "[data-testid='product-title']",
-      preco: "[data-testid='price-value']",
-      link: "a[data-testid='product-card-container']@href"
-    },
-    regex_preco: "R\\$\\s*([\\d.,]+)",
-    icon: "🏪"
-  },
-  americanas: {
-    label: "Americanas",
-    url_busca: "https://www.americanas.com.br/busca/{TERMO}",
-    seletores: {
-      container_produto: "[data-testid='product-card']",
-      nome: "h3",
-      preco: "[data-testid='price-current']",
-      link: "a@href"
-    },
-    regex_preco: "R\\$\\s*([\\d.,]+)",
-    icon: "🛒"
-  },
-  casas_bahia: {
-    label: "Casas Bahia",
-    url_busca: "https://www.casasbahia.com.br/busca/{TERMO}",
-    seletores: {
-      container_produto: ".product-card",
-      nome: ".product-card__title",
-      preco: ".product-card__price",
-      link: "a@href"
-    },
-    regex_preco: "R\\$\\s*([\\d.,]+)",
-    icon: "🏠"
-  },
-  ponto_frio: {
-    label: "Ponto Frio",
-    url_busca: "https://www.pontofrio.com.br/busca/{TERMO}",
-    seletores: {
-      container_produto: ".product-card",
-      nome: ".product-card__title",
-      preco: ".product-card__price",
-      link: "a@href"
-    },
-    regex_preco: "R\\$\\s*([\\d.,]+)",
-    icon: "❄️"
-  },
-  manual: {
-    label: "Configuração Manual",
-    url_busca: "",
-    seletores: {
-      container_produto: "",
-      nome: "",
-      preco: "",
-      link: ""
-    },
-    regex_preco: "R\\$\\s*([\\d.,]+)",
-    icon: "⚙️"
   }
 };
 
@@ -384,7 +324,7 @@ export function FontesPesquisaCRUD() {
     min_score_aceite: "0.45",
     bonus_ean: "0.5",
     // Campos específicos para Scraping (simplificado)
-    scraping_preset: "manual" as string,
+    scraping_preset: "auto_detect" as string,
     scraping_url_busca: "",
     scraping_seletor_container: "",
     scraping_seletor_nome: "",
@@ -1116,138 +1056,90 @@ export function FontesPesquisaCRUD() {
               {/* Interface visual para Scraping */}
               {formData.tipo === 'scraping' && (
                 <div className="space-y-4">
-                  {/* Passo 1: Escolha do Site */}
+                  {/* Passo 1: Detecção Automática */}
                   <div className="space-y-4 p-4 border rounded-lg bg-purple-500/5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm">1</div>
-                        <h4 className="font-semibold">Escolha como Configurar</h4>
+                        <h4 className="font-semibold">Detecção Automática com IA</h4>
                       </div>
                     </div>
                     
                     <p className="text-sm text-muted-foreground">
-                      Use a <strong className="text-primary">Detecção Automática</strong> (recomendado), selecione um site pré-configurado ou configure manualmente
+                      Cole a URL de uma página de busca do site e a <strong className="text-primary">IA vai detectar automaticamente</strong> os seletores CSS necessários
                     </p>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {Object.entries(scrapingPresets).map(([key, preset]) => (
+                    <div className="space-y-2">
+                      <Label>URL da página de busca</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={autoDetectUrl}
+                          onChange={(e) => setAutoDetectUrl(e.target.value)}
+                          placeholder="Ex: https://www.loja.com.br/busca?q=celular"
+                          className="flex-1"
+                        />
                         <Button
-                          key={key}
                           type="button"
-                          variant={formData.scraping_preset === key ? "default" : "outline"}
-                          className={`h-auto min-h-[60px] py-3 px-3 flex flex-col items-center justify-center gap-1 whitespace-normal ${
-                            key === 'auto_detect' 
-                              ? 'col-span-2 sm:col-span-3 border-primary bg-primary/10 hover:bg-primary/20' 
-                              : ''
-                          }`}
-                          onClick={() => {
-                            handleScrapingPresetChange(key);
-                            if (key === 'auto_detect') {
-                              setAutoDetectUrl('');
-                              setAutoDetectResult(null);
-                            }
-                          }}
+                          onClick={handleAutoDetect}
+                          disabled={isAnalyzing || !autoDetectUrl}
+                          className="gap-2"
                         >
-                          <span className="text-lg">{preset.icon}</span>
-                          <span className="text-xs font-medium text-center leading-tight">{preset.label}</span>
+                          {isAnalyzing ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Analisando...
+                            </>
+                          ) : (
+                            <>
+                              <Wand2 className="h-4 w-4" />
+                              Detectar
+                            </>
+                          )}
                         </Button>
-                      ))}
+                      </div>
                     </div>
 
-                    {/* Interface de Detecção Automática */}
-                    {formData.scraping_preset === 'auto_detect' && (
-                      <div className="space-y-4 p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg border border-primary/20">
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="h-5 w-5 text-primary" />
-                          <h5 className="font-medium">Detecção Automática com IA</h5>
-                        </div>
-                        
-                        <p className="text-sm text-muted-foreground">
-                          Cole a URL de uma página de busca do site e a IA vai detectar automaticamente os seletores.
-                        </p>
+                    <Alert className="bg-blue-500/10 border-blue-500/20">
+                      <Search className="h-4 w-4 text-blue-500" />
+                      <AlertDescription className="text-xs">
+                        <strong>Como usar:</strong><br/>
+                        1. Vá ao site do concorrente e faça uma busca<br/>
+                        2. Copie a URL completa da barra de endereço<br/>
+                        3. Cole aqui e clique em "Detectar"<br/>
+                        4. A IA vai preencher os campos automaticamente!
+                      </AlertDescription>
+                    </Alert>
 
-                        <div className="space-y-2">
-                          <Label>URL da página de busca</Label>
-                          <div className="flex gap-2">
-                            <Input
-                              value={autoDetectUrl}
-                              onChange={(e) => setAutoDetectUrl(e.target.value)}
-                              placeholder="Ex: https://www.loja.com.br/busca?q=celular"
-                              className="flex-1"
-                            />
-                            <Button
-                              type="button"
-                              onClick={handleAutoDetect}
-                              disabled={isAnalyzing || !autoDetectUrl}
-                              className="gap-2"
-                            >
-                              {isAnalyzing ? (
-                                <>
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                  Analisando...
-                                </>
-                              ) : (
-                                <>
-                                  <Wand2 className="h-4 w-4" />
-                                  Detectar
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-
-                        <Alert className="bg-blue-500/10 border-blue-500/20">
-                          <Search className="h-4 w-4 text-blue-500" />
-                          <AlertDescription className="text-xs">
-                            <strong>Como usar:</strong><br/>
-                            1. Vá ao site do concorrente e faça uma busca<br/>
-                            2. Copie a URL completa da barra de endereço<br/>
-                            3. Cole aqui e clique em "Detectar"<br/>
-                            4. A IA vai preencher os campos automaticamente!
-                          </AlertDescription>
-                        </Alert>
-
-                        {autoDetectResult && (
-                          <>
-                            {autoDetectResult.confianca && (
-                              <Alert className={`${
-                                autoDetectResult.confianca === 'alta' 
-                                  ? 'bg-green-500/10 border-green-500/20' 
-                                  : autoDetectResult.confianca === 'media'
-                                  ? 'bg-yellow-500/10 border-yellow-500/20'
-                                  : 'bg-orange-500/10 border-orange-500/20'
-                              }`}>
-                                <Info className={`h-4 w-4 ${
-                                  autoDetectResult.confianca === 'alta' ? 'text-green-500' : 
-                                  autoDetectResult.confianca === 'media' ? 'text-yellow-500' : 'text-orange-500'
-                                }`} />
-                                <AlertDescription className="text-xs">
-                                  {autoDetectResult.confianca === 'alta' && '✅ Detecção com alta confiança! Os campos foram preenchidos.'}
-                                  {autoDetectResult.confianca === 'media' && '⚠️ Detecção parcial. Revise os campos abaixo para garantir precisão.'}
-                                  {autoDetectResult.confianca === 'baixa' && '🔍 Detecção com baixa confiança. Recomendamos verificar cada campo manualmente.'}
-                                </AlertDescription>
-                              </Alert>
-                            )}
-                            {autoDetectResult.erro && (
-                              <Alert className="bg-red-500/10 border-red-500/20">
-                                <Info className="h-4 w-4 text-red-500" />
-                                <AlertDescription className="text-xs">
-                                  ❌ {autoDetectResult.erro}
-                                </AlertDescription>
-                              </Alert>
-                            )}
-                          </>
+                    {autoDetectResult && (
+                      <>
+                        {autoDetectResult.confianca && (
+                          <Alert className={`${
+                            autoDetectResult.confianca === 'alta' 
+                              ? 'bg-green-500/10 border-green-500/20' 
+                              : autoDetectResult.confianca === 'media'
+                              ? 'bg-yellow-500/10 border-yellow-500/20'
+                              : 'bg-orange-500/10 border-orange-500/20'
+                          }`}>
+                            <Info className={`h-4 w-4 ${
+                              autoDetectResult.confianca === 'alta' ? 'text-green-500' : 
+                              autoDetectResult.confianca === 'media' ? 'text-yellow-500' : 'text-orange-500'
+                            }`} />
+                            <AlertDescription className="text-xs">
+                              {autoDetectResult.confianca === 'alta' && '✅ Detecção com alta confiança! Os campos foram preenchidos.'}
+                              {autoDetectResult.confianca === 'media' && '⚠️ Detecção parcial. Revise os campos abaixo para garantir precisão.'}
+                              {autoDetectResult.confianca === 'baixa' && '🔍 Detecção com baixa confiança. Recomendamos verificar cada campo manualmente.'}
+                            </AlertDescription>
+                          </Alert>
                         )}
-                      </div>
-                    )}
-
-                    {formData.scraping_preset !== 'manual' && formData.scraping_preset !== 'auto_detect' && formData.scraping_preset && (
-                      <Alert className="bg-green-500/10 border-green-500/20">
-                        <Info className="h-4 w-4 text-green-500" />
-                        <AlertDescription className="text-xs">
-                          ✅ Configuração automática aplicada! Os campos abaixo foram preenchidos para você.
-                        </AlertDescription>
-                      </Alert>
+                        {autoDetectResult.erro && (
+                          <Alert className="bg-red-500/10 border-red-500/20">
+                            <Info className="h-4 w-4 text-red-500" />
+                            <AlertDescription className="text-xs">
+                              ❌ {autoDetectResult.erro}
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </>
                     )}
                   </div>
 
