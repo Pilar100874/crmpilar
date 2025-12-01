@@ -48,23 +48,38 @@ export default function LandingPage() {
   }, [navigate]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        // Buscar dados do usuário após autenticação
-        const { data: usuario } = await supabase
-          .from("usuarios")
-          .select("id, estabelecimento_id")
-          .eq("auth_user_id", session.user.id)
-          .maybeSingle();
+        // Defer database queries to avoid deadlock
+        setTimeout(async () => {
+          try {
+            // Buscar dados do usuário após autenticação
+            const { data: usuario, error } = await supabase
+              .from("usuarios")
+              .select("id, estabelecimento_id")
+              .eq("auth_user_id", session.user.id)
+              .maybeSingle();
 
-        if (usuario) {
-          // Salvar informações no localStorage
-          localStorage.setItem("userType", "user");
-          localStorage.setItem("userId", usuario.id);
-          localStorage.setItem("estabelecimentoId", usuario.estabelecimento_id);
-        }
-        
-        navigate('/dashboard');
+            if (error) {
+              console.error("Erro ao buscar usuário:", error);
+              return;
+            }
+
+            if (usuario) {
+              // Salvar informações no localStorage
+              localStorage.setItem("userType", "user");
+              localStorage.setItem("userId", usuario.id);
+              localStorage.setItem("estabelecimentoId", usuario.estabelecimento_id);
+              
+              navigate('/dashboard');
+            } else {
+              console.error("Usuário não encontrado no sistema");
+              await supabase.auth.signOut();
+            }
+          } catch (err) {
+            console.error("Erro ao processar login:", err);
+          }
+        }, 0);
       }
     });
 
