@@ -88,6 +88,7 @@ import AdsHub from "./pages/AdsHub";
 import RoboPrecos from "./pages/RoboPrecos";
 import AtendimentoConfig from "./pages/AtendimentoConfig";
 import LandingPage from "./pages/LandingPage";
+import Avisos from "./pages/Avisos";
 
 const queryClient = new QueryClient();
 
@@ -168,6 +169,7 @@ const App = () => (
             <Route path="/vendas-config" element={<VendasConfig />} />
             <Route path="/atendimento-config" element={<AtendimentoConfig />} />
             <Route path="/chat-interno" element={<ChatInterno />} />
+            <Route path="/avisos" element={<Avisos />} />
             <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
             <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
             <Route path="/perfil" element={<Perfil />} />

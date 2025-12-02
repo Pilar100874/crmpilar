@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 export function ChatAvisosFloatingButton() {
   const [chatOpen, setChatOpen] = useState(false);
   const [avisosOpen, setAvisosOpen] = useState(false);
-  const { avisosNaoLidos } = useAvisosSistema();
+  const { avisosPendentes } = useAvisosSistema();
 
   const handleChatClick = () => {
     setChatOpen(!chatOpen);
@@ -57,12 +57,12 @@ export function ChatAvisosFloatingButton() {
           ) : (
             <>
               <Bell className="h-5 w-5" />
-              {avisosNaoLidos > 0 && (
+              {avisosPendentes > 0 && (
                 <Badge 
                   variant="destructive" 
                   className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
                 >
-                  {avisosNaoLidos > 9 ? '9+' : avisosNaoLidos}
+                  {avisosPendentes > 9 ? '9+' : avisosPendentes}
                 </Badge>
               )}
             </>
