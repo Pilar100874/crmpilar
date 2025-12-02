@@ -10,7 +10,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { LogisticaBlockType, LOGISTICA_BLOCKS, CondicaoTempoParado } from '@/types/automacaoLogistica';
 import { AddressAutocomplete } from '@/components/logistica/AddressAutocomplete';
 import { IconePicker } from './IconePicker';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, User } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Usuario {
+  id: string;
+  nome: string;
+  email: string;
+}
 
 interface LogisticaPropertiesPanelProps {
   selectedNode: Node | null;
@@ -20,9 +27,35 @@ interface LogisticaPropertiesPanelProps {
 export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: LogisticaPropertiesPanelProps) {
   const [legendaLocal, setLegendaLocal] = useState('');
   const [condicoesLocal, setCondicoesLocal] = useState<CondicaoTempoParado[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   
   const nodeData = selectedNode?.data as any;
   const config = nodeData?.config || {};
+
+  useEffect(() => {
+    const fetchUsuarios = async () => {
+      setLoadingUsuarios(true);
+      const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+      if (!estabelecimentoId) {
+        setLoadingUsuarios(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('id, nome, email')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('nome');
+
+      if (!error && data) {
+        setUsuarios(data);
+      }
+      setLoadingUsuarios(false);
+    };
+
+    fetchUsuarios();
+  }, []);
   
   // Sincroniza estado local quando muda o nó selecionado
   useEffect(() => {
@@ -323,6 +356,46 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
         return (
           <div className="space-y-4">
             <div>
+              <Label>Destinatário</Label>
+              <Select
+                value={config.destinatario_tipo || 'todos'}
+                onValueChange={(value) => updateConfig('destinatario_tipo', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os usuários</SelectItem>
+                  <SelectItem value="usuario">Usuário específico</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {config.destinatario_tipo === 'usuario' && (
+              <div>
+                <Label>Selecione o Usuário</Label>
+                <Select
+                  value={config.usuario_id || ''}
+                  onValueChange={(value) => updateConfig('usuario_id', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingUsuarios ? "Carregando..." : "Selecione..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {usuarios.map((usuario) => (
+                      <SelectItem key={usuario.id} value={usuario.id}>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          <span>{usuario.nome}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
+            <div>
               <Label>Título da notificação</Label>
               <Input
                 value={config.titulo_notificacao || ''}
@@ -338,6 +411,9 @@ export function LogisticaPropertiesPanel({ selectedNode, onUpdateNode }: Logisti
                 placeholder="Digite o conteúdo..."
                 rows={3}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Variáveis: {'{placa}'}, {'{motorista}'}, {'{endereco}'}, {'{velocidade}'}
+              </p>
             </div>
           </div>
         );
