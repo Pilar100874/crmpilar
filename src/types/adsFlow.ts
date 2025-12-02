@@ -35,7 +35,9 @@ export type AdsBlockType =
   | 'action_bid_device'
   | 'action_schedule_change'
   | 'action_slack'
-  | 'action_create_report';
+  | 'action_create_report'
+  | 'action_aviso_sistema'
+  | 'action_mensagem_interna';
 
 export interface AdsBlockDefinition {
   type: AdsBlockType;
@@ -374,6 +376,36 @@ export const ADS_BLOCK_DEFINITIONS: AdsBlockDefinition[] = [
     category: 'action',
     color: '#22c55e',
     defaultData: { reportType: 'performance', period: '7d' }
+  },
+  {
+    type: 'action_aviso_sistema',
+    label: 'Aviso do Sistema',
+    description: 'Envia aviso para usuários do sistema',
+    icon: 'Bell',
+    category: 'action',
+    color: '#f97316',
+    defaultData: { 
+      titulo: '',
+      mensagem: '',
+      tipo: 'info',
+      destinatarios_tipo: 'todos',
+      destinatarios_ids: [],
+      destinatarios_roles: []
+    }
+  },
+  {
+    type: 'action_mensagem_interna',
+    label: 'Mensagem Interna',
+    description: 'Envia mensagem no chat interno',
+    icon: 'MessageCircle',
+    category: 'action',
+    color: '#3b82f6',
+    defaultData: { 
+      tipo_destinatario: 'usuario',
+      usuario_id: '',
+      mensagem: '',
+      titulo_conversa: ''
+    }
   },
 ];
 

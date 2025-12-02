@@ -8512,6 +8512,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_conversation_participant: {
+        Args: { p_conversa_id: string; p_usuario_id: string }
+        Returns: boolean
+      }
       is_system_admin: { Args: never; Returns: boolean }
       roles_present: { Args: never; Returns: boolean }
     }
