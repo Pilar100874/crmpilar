@@ -7,7 +7,7 @@ interface Aviso {
   estabelecimento_id: string | null;
   titulo: string;
   mensagem: string;
-  tipo: 'info' | 'alerta' | 'urgente' | 'sucesso';
+  tipo: 'info' | 'alerta' | 'urgente' | 'sucesso' | 'erro';
   destinatarios_tipo: 'todos' | 'usuarios_especificos' | 'roles';
   destinatarios_ids: string[] | null;
   destinatarios_roles: string[] | null;
@@ -16,11 +16,15 @@ interface Aviso {
   ativo: boolean;
   created_at: string;
   lido?: boolean;
+  resolvido?: boolean;
+  resolvido_por?: string | null;
+  resolvido_em?: string | null;
 }
 
 export function useAvisosSistema() {
   const [avisos, setAvisos] = useState<Aviso[]>([]);
   const [avisosNaoLidos, setAvisosNaoLidos] = useState<number>(0);
+  const [avisosPendentes, setAvisosPendentes] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [usuarioAtualId, setUsuarioAtualId] = useState<string | null>(null);
 
@@ -52,13 +56,15 @@ export function useAvisosSistema() {
 
       const lidosIds = new Set((lidosData || []).map(l => l.aviso_id));
 
-      const avisosComStatus = (avisosData || []).map(aviso => ({
+      const avisosComStatus = (avisosData || []).map((aviso: any) => ({
         ...aviso,
         lido: lidosIds.has(aviso.id),
+        resolvido: aviso.resolvido ?? false,
       })) as Aviso[];
 
       setAvisos(avisosComStatus);
-      setAvisosNaoLidos(avisosComStatus.filter(a => !a.lido).length);
+      setAvisosNaoLidos(avisosComStatus.filter(a => !a.lido && !a.resolvido).length);
+      setAvisosPendentes(avisosComStatus.filter(a => !a.resolvido).length);
     } catch (error) {
       console.error('Erro ao carregar avisos:', error);
     } finally {
@@ -88,6 +94,32 @@ export function useAvisosSistema() {
     }
   };
 
+  const marcarResolvido = async (avisoId: string, resolvido: boolean) => {
+    if (!usuarioAtualId) return;
+
+    try {
+      const { error } = await supabase
+        .from('avisos_sistema')
+        .update({
+          resolvido,
+          resolvido_por: resolvido ? usuarioAtualId : null,
+          resolvido_em: resolvido ? new Date().toISOString() : null,
+        })
+        .eq('id', avisoId);
+
+      if (error) throw error;
+
+      setAvisos(prev => prev.map(a => 
+        a.id === avisoId ? { ...a, resolvido, resolvido_por: resolvido ? usuarioAtualId : null } : a
+      ));
+      setAvisosPendentes(prev => resolvido ? prev - 1 : prev + 1);
+      toast.success(resolvido ? 'Aviso resolvido' : 'Aviso reaberto');
+    } catch (error) {
+      console.error('Erro ao marcar aviso como resolvido:', error);
+      toast.error('Erro ao atualizar aviso');
+    }
+  };
+
   const marcarTodosComoLidos = async () => {
     if (!usuarioAtualId) return;
 
@@ -111,11 +143,11 @@ export function useAvisosSistema() {
     }
   };
 
-  const criarAviso = async (aviso: Omit<Aviso, 'id' | 'created_at' | 'lido'>) => {
+  const criarAviso = async (aviso: Omit<Aviso, 'id' | 'created_at' | 'lido' | 'resolvido'>) => {
     try {
       const { data, error } = await supabase
         .from('avisos_sistema')
-        .insert(aviso)
+        .insert({ ...aviso, resolvido: false })
         .select()
         .single();
 
@@ -137,22 +169,12 @@ export function useAvisosSistema() {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'avisos_sistema',
         },
-        (payload) => {
-          const novoAviso = { ...payload.new, lido: false } as Aviso;
-          setAvisos(prev => [novoAviso, ...prev]);
-          setAvisosNaoLidos(prev => prev + 1);
-          
-          // Notificação toast para avisos urgentes
-          if (novoAviso.tipo === 'urgente') {
-            toast.error(novoAviso.titulo, {
-              description: novoAviso.mensagem,
-              duration: 10000,
-            });
-          }
+        () => {
+          carregarAvisos();
         }
       )
       .subscribe();
@@ -160,7 +182,7 @@ export function useAvisosSistema() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [carregarAvisos]);
 
   useEffect(() => {
     carregarAvisos();
@@ -169,9 +191,11 @@ export function useAvisosSistema() {
   return {
     avisos,
     avisosNaoLidos,
+    avisosPendentes,
     loading,
     carregarAvisos,
     marcarComoLido,
+    marcarResolvido,
     marcarTodosComoLidos,
     criarAviso,
   };

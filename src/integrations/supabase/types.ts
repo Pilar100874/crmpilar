@@ -749,6 +749,9 @@ export type Database = {
           expira_em: string | null
           id: string
           mensagem: string
+          resolvido: boolean | null
+          resolvido_em: string | null
+          resolvido_por: string | null
           tipo: string
           titulo: string
         }
@@ -763,6 +766,9 @@ export type Database = {
           expira_em?: string | null
           id?: string
           mensagem: string
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
           tipo?: string
           titulo: string
         }
@@ -777,6 +783,9 @@ export type Database = {
           expira_em?: string | null
           id?: string
           mensagem?: string
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          resolvido_por?: string | null
           tipo?: string
           titulo?: string
         }
@@ -793,6 +802,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avisos_sistema_resolvido_por_fkey"
+            columns: ["resolvido_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
         ]
