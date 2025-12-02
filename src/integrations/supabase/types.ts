@@ -8513,6 +8513,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_chat_participant: { Args: { p_conversa_id: string }; Returns: boolean }
       is_system_admin: { Args: never; Returns: boolean }
       roles_present: { Args: never; Returns: boolean }
       user_in_estabelecimento: { Args: { estab_id: string }; Returns: boolean }

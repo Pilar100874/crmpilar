@@ -44,6 +44,7 @@ import VideoCall from "./pages/VideoCall";
 import StimulsoftViewer from "./pages/StimulsoftViewer";
 import ReportBroViewerPage from "./pages/ReportBroViewerPage";
 import WebChat from "./pages/WebChat";
+import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
 import DashboardAtendentePage from "./pages/DashboardAtendente";
@@ -166,6 +167,7 @@ const App = () => (
             <Route path="/editor-regras/:id" element={<EditorRegras />} />
             <Route path="/vendas-config" element={<VendasConfig />} />
             <Route path="/atendimento-config" element={<AtendimentoConfig />} />
+            <Route path="/chat-interno" element={<ChatInterno />} />
             <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
             <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
             <Route path="/perfil" element={<Perfil />} />
