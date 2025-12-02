@@ -39,6 +39,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     mensagens,
     loading,
     usuarioAtualId,
+    onlineUsers,
     carregarMensagens,
     enviarMensagem,
     criarConversa,
@@ -52,6 +53,10 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   const [tituloNovaConversa, setTituloNovaConversa] = useState('');
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const isUserOnline = (userId: string) => {
+    return onlineUsers.some(u => u.id === userId);
+  };
 
   useEffect(() => {
     if (conversaAtual) {
@@ -270,6 +275,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
               <div className="divide-y">
                 {usuarios.map((usuario) => {
                   const isSelected = usuariosSelecionados.includes(usuario.id);
+                  const online = isUserOnline(usuario.id);
                   return (
                     <button
                       key={usuario.id}
@@ -279,13 +285,25 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                         isSelected && "bg-primary/10"
                       )}
                     >
-                      <Avatar>
-                        <AvatarFallback>
-                          <User className="h-4 w-4" />
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar>
+                          <AvatarFallback>
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        {online && (
+                          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{usuario.nome}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium truncate">{usuario.nome}</p>
+                          {online && (
+                            <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600">
+                              Online
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground truncate">
                           {usuario.email}
                         </p>

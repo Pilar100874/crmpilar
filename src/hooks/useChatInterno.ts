@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface Conversa {
   id: string;
@@ -39,17 +40,83 @@ interface Mensagem {
   };
 }
 
+interface OnlineUser {
+  id: string;
+  nome: string;
+  online_at: string;
+}
+
 export function useChatInterno() {
   const [conversas, setConversas] = useState<Conversa[]>([]);
   const [conversaAtual, setConversaAtual] = useState<Conversa | null>(null);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [loading, setLoading] = useState(false);
   const [usuarioAtualId, setUsuarioAtualId] = useState<string | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+  const [presenceChannel, setPresenceChannel] = useState<RealtimeChannel | null>(null);
 
   useEffect(() => {
     const userId = localStorage.getItem('userId');
     setUsuarioAtualId(userId);
   }, []);
+
+  // Setup presence tracking
+  useEffect(() => {
+    if (!usuarioAtualId) return;
+
+    const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+    if (!estabelecimentoId) return;
+
+    // Get user name from localStorage or fetch it
+    const setupPresence = async () => {
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('nome')
+        .eq('id', usuarioAtualId)
+        .single();
+
+      const userName = userData?.nome || 'Usuário';
+
+      const channel = supabase.channel(`presence-chat-${estabelecimentoId}`)
+        .on('presence', { event: 'sync' }, () => {
+          const state = channel.presenceState();
+          const users: OnlineUser[] = [];
+          
+          Object.values(state).forEach((presences: any) => {
+            presences.forEach((presence: any) => {
+              if (presence.id !== usuarioAtualId) {
+                users.push({
+                  id: presence.id,
+                  nome: presence.nome,
+                  online_at: presence.online_at,
+                });
+              }
+            });
+          });
+          
+          setOnlineUsers(users);
+        })
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            await channel.track({
+              id: usuarioAtualId,
+              nome: userName,
+              online_at: new Date().toISOString(),
+            });
+          }
+        });
+
+      setPresenceChannel(channel);
+    };
+
+    setupPresence();
+
+    return () => {
+      if (presenceChannel) {
+        supabase.removeChannel(presenceChannel);
+      }
+    };
+  }, [usuarioAtualId]);
 
   const carregarConversas = useCallback(async () => {
     if (!usuarioAtualId) return;
@@ -232,6 +299,7 @@ export function useChatInterno() {
     mensagens,
     loading,
     usuarioAtualId,
+    onlineUsers,
     carregarConversas,
     carregarMensagens,
     criarConversa,
