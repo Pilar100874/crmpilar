@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertCircle, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { MultiUserSelector } from "./UserSelector";
 
 interface ConfigProps {
   config: any;
@@ -98,6 +99,14 @@ export const EnviarAvisoSistemaConfig = ({ config, handleConfigChange }: ConfigP
             placeholder="admin, gestor, atendente"
           />
         </div>
+      )}
+
+      {config.destinatarios_tipo === "usuarios_especificos" && (
+        <MultiUserSelector
+          value={config.destinatarios_ids || []}
+          onChange={(value) => handleConfigChange("destinatarios_ids", value)}
+          label="Selecione os Usuários"
+        />
       )}
 
       <div className="space-y-2">

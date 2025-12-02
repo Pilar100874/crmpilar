@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageCircle, Users, User } from "lucide-react";
+import { UserSelector } from "./UserSelector";
 
 interface ConfigProps {
   config: any;
@@ -45,14 +46,12 @@ export const EnviarMensagemInternaConfig = ({ config, handleConfigChange }: Conf
       </div>
 
       {config.tipo_destinatario === "usuario" && (
-        <div className="space-y-2">
-          <Label>ID do Usuário</Label>
-          <Input
-            value={config.usuario_id || ""}
-            onChange={(e) => handleConfigChange("usuario_id", e.target.value)}
-            placeholder="ID do usuário ou {{variavel}}"
-          />
-        </div>
+        <UserSelector
+          value={config.usuario_id || ""}
+          onChange={(value) => handleConfigChange("usuario_id", value)}
+          label="Selecione o Usuário"
+          placeholder="Selecione um usuário"
+        />
       )}
 
       {config.tipo_destinatario === "grupo" && (
