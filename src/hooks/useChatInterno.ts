@@ -196,6 +196,54 @@ export function useChatInterno() {
     try {
       const tipo = participantesIds.length > 1 ? 'grupo' : 'direto';
       
+      // Para conversas diretas (1:1), verificar se já existe uma conversa com essa pessoa
+      if (tipo === 'direto' && participantesIds.length === 1) {
+        const outroUsuarioId = participantesIds[0];
+        
+        // Buscar conversas diretas do usuário atual
+        const { data: minhasConversas } = await supabase
+          .from('chat_interno_participantes')
+          .select(`
+            conversa_id,
+            chat_interno_conversas!inner (
+              id,
+              tipo,
+              titulo,
+              created_at,
+              updated_at
+            )
+          `)
+          .eq('usuario_id', usuarioAtualId);
+
+        if (minhasConversas) {
+          // Verificar se alguma conversa direta tem o outro usuário
+          for (const conversa of minhasConversas) {
+            if ((conversa.chat_interno_conversas as any).tipo !== 'direto') continue;
+            
+            const { data: participantes } = await supabase
+              .from('chat_interno_participantes')
+              .select('usuario_id')
+              .eq('conversa_id', conversa.conversa_id);
+
+            if (participantes && participantes.length === 2) {
+              const ids = participantes.map(p => p.usuario_id);
+              if (ids.includes(outroUsuarioId) && ids.includes(usuarioAtualId)) {
+                // Conversa já existe, retornar ela
+                const conversaExistente = {
+                  id: (conversa.chat_interno_conversas as any).id,
+                  titulo: (conversa.chat_interno_conversas as any).titulo,
+                  tipo: (conversa.chat_interno_conversas as any).tipo as 'direto' | 'grupo',
+                  created_at: (conversa.chat_interno_conversas as any).created_at,
+                  updated_at: (conversa.chat_interno_conversas as any).updated_at,
+                };
+                toast.info('Conversa já existe');
+                return conversaExistente;
+              }
+            }
+          }
+        }
+      }
+      
       const { data: conversa, error: conversaError } = await supabase
         .from('chat_interno_conversas')
         .insert({
