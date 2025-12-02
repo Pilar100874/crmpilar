@@ -10,16 +10,25 @@ import {
   Plus, 
   Users, 
   Search,
-  ArrowLeft 
+  ArrowLeft,
+  User,
+  Check
 } from 'lucide-react';
 import { useChatInterno } from '@/hooks/useChatInterno';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ChatInternoPanelProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface Usuario {
+  id: string;
+  nome: string;
+  email: string;
 }
 
 export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
@@ -32,10 +41,16 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     usuarioAtualId,
     carregarMensagens,
     enviarMensagem,
+    criarConversa,
   } = useChatInterno();
 
   const [mensagemInput, setMensagemInput] = useState('');
   const [busca, setBusca] = useState('');
+  const [showNovaConversa, setShowNovaConversa] = useState(false);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [usuariosSelecionados, setUsuariosSelecionados] = useState<string[]>([]);
+  const [tituloNovaConversa, setTituloNovaConversa] = useState('');
+  const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,11 +65,65 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     }
   }, [mensagens]);
 
+  useEffect(() => {
+    if (showNovaConversa) {
+      fetchUsuarios();
+    }
+  }, [showNovaConversa]);
+
+  const fetchUsuarios = async () => {
+    setLoadingUsuarios(true);
+    const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+    if (!estabelecimentoId) {
+      setLoadingUsuarios(false);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, nome, email')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .order('nome');
+
+    if (!error && data) {
+      // Filtrar o usuário atual
+      setUsuarios(data.filter(u => u.id !== usuarioAtualId));
+    }
+    setLoadingUsuarios(false);
+  };
+
   const handleEnviar = async () => {
     if (!mensagemInput.trim() || !conversaAtual) return;
     
     await enviarMensagem(conversaAtual.id, mensagemInput.trim());
     setMensagemInput('');
+  };
+
+  const handleCriarConversa = async () => {
+    if (usuariosSelecionados.length === 0) return;
+
+    const novaConversa = await criarConversa(
+      usuariosSelecionados, 
+      usuariosSelecionados.length > 1 ? tituloNovaConversa : undefined
+    );
+
+    if (novaConversa) {
+      setShowNovaConversa(false);
+      setUsuariosSelecionados([]);
+      setTituloNovaConversa('');
+      setConversaAtual({
+        ...novaConversa,
+        tipo: novaConversa.tipo as 'direto' | 'grupo'
+      });
+    }
+  };
+
+  const toggleUsuario = (userId: string) => {
+    if (usuariosSelecionados.includes(userId)) {
+      setUsuariosSelecionados(usuariosSelecionados.filter(id => id !== userId));
+    } else {
+      setUsuariosSelecionados([...usuariosSelecionados, userId]);
+    }
   };
 
   const conversasFiltradas = conversas.filter(c => 
@@ -81,13 +150,33 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                 {conversaAtual.titulo || 'Conversa'}
               </span>
             </>
+          ) : showNovaConversa ? (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setShowNovaConversa(false);
+                  setUsuariosSelecionados([]);
+                }}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <span className="font-semibold flex-1 text-center">
+                Nova Conversa
+              </span>
+            </>
           ) : (
             <>
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-primary" />
                 <span className="font-semibold">Chat Interno</span>
               </div>
-              <Button variant="ghost" size="icon">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setShowNovaConversa(true)}
+              >
                 <Plus className="h-4 w-4" />
               </Button>
             </>
@@ -152,6 +241,83 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
             </div>
           </div>
         </>
+      ) : showNovaConversa ? (
+        // Seleção de usuários para nova conversa
+        <>
+          <div className="p-3 border-b space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Selecione os participantes:
+            </p>
+            {usuariosSelecionados.length > 1 && (
+              <Input
+                placeholder="Título do grupo (opcional)"
+                value={tituloNovaConversa}
+                onChange={(e) => setTituloNovaConversa(e.target.value)}
+              />
+            )}
+          </div>
+
+          <ScrollArea className="flex-1">
+            {loadingUsuarios ? (
+              <div className="p-4 text-center text-muted-foreground">
+                Carregando...
+              </div>
+            ) : usuarios.length === 0 ? (
+              <div className="p-4 text-center text-muted-foreground">
+                Nenhum usuário encontrado
+              </div>
+            ) : (
+              <div className="divide-y">
+                {usuarios.map((usuario) => {
+                  const isSelected = usuariosSelecionados.includes(usuario.id);
+                  return (
+                    <button
+                      key={usuario.id}
+                      onClick={() => toggleUsuario(usuario.id)}
+                      className={cn(
+                        "w-full p-3 hover:bg-muted/50 transition-colors flex items-center gap-3 text-left",
+                        isSelected && "bg-primary/10"
+                      )}
+                    >
+                      <Avatar>
+                        <AvatarFallback>
+                          <User className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{usuario.nome}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {usuario.email}
+                        </p>
+                      </div>
+                      {isSelected && (
+                        <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="h-3 w-3 text-primary-foreground" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+
+          {/* Botão de criar conversa */}
+          <div className="p-4 border-t">
+            <Button 
+              className="w-full" 
+              onClick={handleCriarConversa}
+              disabled={usuariosSelecionados.length === 0}
+            >
+              {usuariosSelecionados.length === 0 
+                ? 'Selecione participantes' 
+                : usuariosSelecionados.length === 1
+                  ? 'Iniciar Conversa'
+                  : `Criar Grupo (${usuariosSelecionados.length})`
+              }
+            </Button>
+          </div>
+        </>
       ) : (
         // Lista de conversas
         <>
@@ -173,8 +339,20 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                 Carregando...
               </div>
             ) : conversasFiltradas.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
-                Nenhuma conversa encontrada
+              <div className="p-8 text-center">
+                <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground text-sm">
+                  Nenhuma conversa encontrada
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-3"
+                  onClick={() => setShowNovaConversa(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Conversa
+                </Button>
               </div>
             ) : (
               <div className="divide-y">
