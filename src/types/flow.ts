@@ -39,7 +39,9 @@ export type NodeType =
   | "transferir_omnichannel"
   | "enviar_fila"
   | "atribuir_atendente"
-  | "definir_prioridade";
+  | "definir_prioridade"
+  | "enviar_aviso_sistema"
+  | "enviar_mensagem_interna";
 
 export interface BlockDefinition {
   type: NodeType;
@@ -422,6 +424,36 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     defaultData: { 
       prioridade: "normal",
       motivo: ""
+    },
+  },
+  {
+    type: "enviar_aviso_sistema",
+    label: "Enviar Aviso do Sistema",
+    description: "Cria um aviso para usuários do sistema",
+    icon: "Bell",
+    color: "text-orange-600",
+    defaultData: { 
+      titulo: "",
+      mensagem: "",
+      tipo: "info",
+      destinatarios_tipo: "todos",
+      destinatarios_roles: [],
+      expira_horas: null
+    },
+  },
+  {
+    type: "enviar_mensagem_interna",
+    label: "Enviar Mensagem Interna",
+    description: "Envia mensagem no chat interno",
+    icon: "MessageCircle",
+    color: "text-blue-600",
+    defaultData: { 
+      tipo_destinatario: "usuario",
+      usuario_id: "",
+      grupo_id: "",
+      roles: [],
+      mensagem: "",
+      titulo_conversa: ""
     },
   },
 ];

@@ -48,6 +48,7 @@ import logo from "@/assets/logo_branco_sidebar.png";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import { UsuarioSelector } from "@/components/UsuarioSelector";
 import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
+import { ChatAvisosFloatingButton } from "@/components/chat-interno/ChatAvisosFloatingButton";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
 import { LayoutContext } from "@/contexts/LayoutContext";
@@ -997,6 +998,7 @@ export default function Layout({ children }: LayoutProps) {
       />
 
       <IncomingCallNotification />
+      <ChatAvisosFloatingButton />
       
       <ChangePasswordDialog
         open={showChangePasswordDialog}
