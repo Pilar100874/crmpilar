@@ -43,6 +43,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     carregarMensagens,
     enviarMensagem,
     criarConversa,
+    carregarConversas,
   } = useChatInterno();
 
   const [mensagemInput, setMensagemInput] = useState('');
@@ -52,15 +53,48 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   const [usuariosSelecionados, setUsuariosSelecionados] = useState<string[]>([]);
   const [tituloNovaConversa, setTituloNovaConversa] = useState('');
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
+  const [participantesConversa, setParticipantesConversa] = useState<{[key: string]: Usuario[]}>({});
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const isUserOnline = (userId: string) => {
     return onlineUsers.some(u => u.id === userId);
   };
 
+  const carregarParticipantes = async (conversaId: string) => {
+    const { data } = await supabase
+      .from('chat_interno_participantes')
+      .select(`
+        usuario_id,
+        usuarios:usuarios!chat_interno_participantes_usuario_id_fkey (
+          id,
+          nome,
+          email
+        )
+      `)
+      .eq('conversa_id', conversaId);
+
+    if (data) {
+      const users = data.map((p: any) => p.usuarios).filter(Boolean);
+      setParticipantesConversa(prev => ({
+        ...prev,
+        [conversaId]: users
+      }));
+    }
+  };
+
+  const getConversaNome = (conversa: typeof conversas[0]) => {
+    if (conversa.titulo) return conversa.titulo;
+    const participants = participantesConversa[conversa.id] || [];
+    const otherUsers = participants.filter(p => p.id !== usuarioAtualId);
+    if (otherUsers.length === 0) return 'Conversa';
+    if (otherUsers.length === 1) return otherUsers[0].nome;
+    return otherUsers.map(u => u.nome).join(', ');
+  };
+
   useEffect(() => {
     if (conversaAtual) {
       carregarMensagens(conversaAtual.id);
+      carregarParticipantes(conversaAtual.id);
     }
   }, [conversaAtual, carregarMensagens]);
 
@@ -75,6 +109,15 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
       fetchUsuarios();
     }
   }, [showNovaConversa]);
+
+  useEffect(() => {
+    // Load participants for all conversations
+    conversas.forEach(c => {
+      if (!participantesConversa[c.id]) {
+        carregarParticipantes(c.id);
+      }
+    });
+  }, [conversas]);
 
   const fetchUsuarios = async () => {
     setLoadingUsuarios(true);
@@ -131,9 +174,11 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     }
   };
 
-  const conversasFiltradas = conversas.filter(c => 
-    !busca || c.titulo?.toLowerCase().includes(busca.toLowerCase())
-  );
+  const conversasFiltradas = conversas.filter(c => {
+    if (!busca) return true;
+    const nome = getConversaNome(c);
+    return nome.toLowerCase().includes(busca.toLowerCase());
+  });
 
   if (!isOpen) return null;
 
@@ -152,7 +197,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <span className="font-semibold flex-1 text-center">
-                {conversaAtual.titulo || 'Conversa'}
+                {getConversaNome(conversaAtual)}
               </span>
             </>
           ) : showNovaConversa ? (
@@ -385,13 +430,13 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                         {conversa.tipo === 'grupo' ? (
                           <Users className="h-4 w-4" />
                         ) : (
-                          conversa.titulo?.[0]?.toUpperCase() || 'C'
+                          getConversaNome(conversa)?.[0]?.toUpperCase() || 'C'
                         )}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">
-                        {conversa.titulo || 'Conversa'}
+                        {getConversaNome(conversa)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(conversa.updated_at), 'dd/MM HH:mm', { locale: ptBR })}
