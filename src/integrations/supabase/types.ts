@@ -8502,6 +8502,11 @@ export type Database = {
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       generate_orcamento_token: { Args: never; Returns: string }
       get_current_usuario_id: { Args: never; Returns: string }
+      get_current_usuario_id_safe: { Args: never; Returns: string }
+      get_user_conversation_ids: {
+        Args: { _auth_uid: string }
+        Returns: string[]
+      }
       get_user_estabelecimento_id: {
         Args: { _user_id: string }
         Returns: string
