@@ -701,6 +701,102 @@ export type Database = {
           },
         ]
       }
+      avisos_lidos: {
+        Row: {
+          aviso_id: string
+          id: string
+          lido_em: string
+          usuario_id: string
+        }
+        Insert: {
+          aviso_id: string
+          id?: string
+          lido_em?: string
+          usuario_id: string
+        }
+        Update: {
+          aviso_id?: string
+          id?: string
+          lido_em?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avisos_lidos_aviso_id_fkey"
+            columns: ["aviso_id"]
+            isOneToOne: false
+            referencedRelation: "avisos_sistema"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avisos_lidos_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      avisos_sistema: {
+        Row: {
+          ativo: boolean | null
+          created_at: string
+          criado_por: string | null
+          destinatarios_ids: string[] | null
+          destinatarios_roles: string[] | null
+          destinatarios_tipo: string
+          estabelecimento_id: string | null
+          expira_em: string | null
+          id: string
+          mensagem: string
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string
+          criado_por?: string | null
+          destinatarios_ids?: string[] | null
+          destinatarios_roles?: string[] | null
+          destinatarios_tipo?: string
+          estabelecimento_id?: string | null
+          expira_em?: string | null
+          id?: string
+          mensagem: string
+          tipo?: string
+          titulo: string
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string
+          criado_por?: string | null
+          destinatarios_ids?: string[] | null
+          destinatarios_roles?: string[] | null
+          destinatarios_tipo?: string
+          estabelecimento_id?: string | null
+          expira_em?: string | null
+          id?: string
+          mensagem?: string
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avisos_sistema_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avisos_sistema_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bot_flows: {
         Row: {
           active: boolean | null
@@ -1082,6 +1178,125 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "omnichannel_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_interno_conversas: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          tipo: string
+          titulo: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          tipo?: string
+          titulo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          tipo?: string
+          titulo?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_interno_conversas_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_interno_mensagens: {
+        Row: {
+          conteudo: string
+          conversa_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          remetente_id: string | null
+          tipo: string
+        }
+        Insert: {
+          conteudo: string
+          conversa_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          remetente_id?: string | null
+          tipo?: string
+        }
+        Update: {
+          conteudo?: string
+          conversa_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          remetente_id?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_interno_mensagens_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "chat_interno_conversas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_interno_mensagens_remetente_id_fkey"
+            columns: ["remetente_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_interno_participantes: {
+        Row: {
+          conversa_id: string
+          created_at: string
+          id: string
+          ultima_leitura: string | null
+          usuario_id: string
+        }
+        Insert: {
+          conversa_id: string
+          created_at?: string
+          id?: string
+          ultima_leitura?: string | null
+          usuario_id: string
+        }
+        Update: {
+          conversa_id?: string
+          created_at?: string
+          id?: string
+          ultima_leitura?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_interno_participantes_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "chat_interno_conversas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_interno_participantes_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
         ]

@@ -92,3 +92,7 @@ export {
   AtribuirAtendenteConfig,
   DefinirPrioridadeConfig,
 } from './RoutingBlocks';
+
+// Chat e Avisos Blocks
+export { EnviarAvisoSistemaConfig } from './EnviarAvisoSistemaConfig';
+export { EnviarMensagemInternaConfig } from './EnviarMensagemInternaConfig';
