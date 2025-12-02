@@ -200,44 +200,38 @@ export function useChatInterno() {
       if (tipo === 'direto' && participantesIds.length === 1) {
         const outroUsuarioId = participantesIds[0];
         
-        // Buscar conversas diretas do usuário atual
-        const { data: minhasConversas } = await supabase
-          .from('chat_interno_participantes')
-          .select(`
-            conversa_id,
-            chat_interno_conversas!inner (
-              id,
-              tipo,
-              titulo,
-              created_at,
-              updated_at
-            )
-          `)
-          .eq('usuario_id', usuarioAtualId);
+        // Buscar TODAS as conversas diretas do estabelecimento
+        const { data: todasConversas } = await supabase
+          .from('chat_interno_conversas')
+          .select('id')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .eq('tipo', 'direto');
 
-        if (minhasConversas) {
-          // Verificar se alguma conversa direta tem o outro usuário
-          for (const conversa of minhasConversas) {
-            if ((conversa.chat_interno_conversas as any).tipo !== 'direto') continue;
-            
+        if (todasConversas && todasConversas.length > 0) {
+          // Para cada conversa, verificar se tem exatamente os 2 usuários
+          for (const conversa of todasConversas) {
             const { data: participantes } = await supabase
               .from('chat_interno_participantes')
               .select('usuario_id')
-              .eq('conversa_id', conversa.conversa_id);
+              .eq('conversa_id', conversa.id);
 
             if (participantes && participantes.length === 2) {
               const ids = participantes.map(p => p.usuario_id);
               if (ids.includes(outroUsuarioId) && ids.includes(usuarioAtualId)) {
-                // Conversa já existe, retornar ela
-                const conversaExistente = {
-                  id: (conversa.chat_interno_conversas as any).id,
-                  titulo: (conversa.chat_interno_conversas as any).titulo,
-                  tipo: (conversa.chat_interno_conversas as any).tipo as 'direto' | 'grupo',
-                  created_at: (conversa.chat_interno_conversas as any).created_at,
-                  updated_at: (conversa.chat_interno_conversas as any).updated_at,
-                };
-                toast.info('Conversa já existe');
-                return conversaExistente;
+                // Conversa já existe! Buscar dados completos
+                const { data: conversaExistente } = await supabase
+                  .from('chat_interno_conversas')
+                  .select('*')
+                  .eq('id', conversa.id)
+                  .single();
+                
+                if (conversaExistente) {
+                  toast.info('Conversa já existe');
+                  return {
+                    ...conversaExistente,
+                    tipo: conversaExistente.tipo as 'direto' | 'grupo'
+                  };
+                }
               }
             }
           }
