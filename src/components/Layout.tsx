@@ -95,7 +95,7 @@ const menuItems: MenuItem[] = [
       { id: "Dashboard Gastos IA", title: "Gastos com IA", url: "/dashboard-gastos-ia", icon: Brain },
     ]
   },
-  { id: "Avisos", title: "Avisos", url: "/avisos", icon: LucideIcons.Bell },
+  // Avisos foi movido para badge ao lado do usuário
   { id: "Clientes", title: "Funil", url: "/funil", icon: Users },
   { 
     id: "Atendimento",
@@ -871,7 +871,7 @@ export default function Layout({ children }: LayoutProps) {
 
             {/* Menu de usuário como submenu */}
             {menuLocked ? (
-              <div className="relative w-full flex justify-center">
+              <div className="relative w-full flex flex-col items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setOpenSubmenuId(openSubmenuId === "UserMenu" ? null : "UserMenu")}
@@ -880,6 +880,15 @@ export default function Layout({ children }: LayoutProps) {
                 >
                   <UserIcon className="w-5 h-5 text-sidebar-foreground/70" />
                 </button>
+                {avisosPendentes > 0 && (
+                  <NavLink
+                    to="/avisos"
+                    className="flex items-center justify-center w-6 h-6 rounded-full bg-destructive text-destructive-foreground text-xs font-bold hover:bg-destructive/80 transition-colors"
+                    title={`${avisosPendentes} avisos pendentes`}
+                  >
+                    {avisosPendentes}
+                  </NavLink>
+                )}
                 
                 {openSubmenuId === "UserMenu" && (
                   <div ref={submenuPanelRef} onClick={(e) => e.stopPropagation()} className="fixed left-16 bottom-0 w-64 bg-sidebar border-r border-sidebar-border shadow-lg z-50">
@@ -918,16 +927,27 @@ export default function Layout({ children }: LayoutProps) {
               </div>
             ) : (
               <div className="relative w-full">
-                <button
-                  type="button"
-                  onClick={() => setOpenSubmenuId(openSubmenuId === "UserMenu" ? null : "UserMenu")}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors"
-                  title={userName || "Minha Conta"}
-                >
-                  <UserIcon className="w-5 h-5 text-sidebar-foreground/70 flex-shrink-0" />
-                  <span className="text-sm font-medium text-sidebar-foreground/70 flex-1 text-left truncate">{userName || "Minha Conta"}</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${openSubmenuId === "UserMenu" ? 'rotate-180' : ''}`} />
-                </button>
+                <div className="flex items-center gap-2 w-full">
+                  <button
+                    type="button"
+                    onClick={() => setOpenSubmenuId(openSubmenuId === "UserMenu" ? null : "UserMenu")}
+                    className="flex-1 flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent/50 hover:bg-sidebar-accent transition-colors"
+                    title={userName || "Minha Conta"}
+                  >
+                    <UserIcon className="w-5 h-5 text-sidebar-foreground/70 flex-shrink-0" />
+                    <span className="text-sm font-medium text-sidebar-foreground/70 flex-1 text-left truncate">{userName || "Minha Conta"}</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform ${openSubmenuId === "UserMenu" ? 'rotate-180' : ''}`} />
+                  </button>
+                  {avisosPendentes > 0 && (
+                    <NavLink
+                      to="/avisos"
+                      className="flex items-center justify-center min-w-6 h-6 px-1.5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold hover:bg-destructive/80 transition-colors"
+                      title={`${avisosPendentes} avisos pendentes`}
+                    >
+                      {avisosPendentes}
+                    </NavLink>
+                  )}
+                </div>
                 
                 {openSubmenuId === "UserMenu" && (
                   <div className="mt-1 ml-8 space-y-1">
