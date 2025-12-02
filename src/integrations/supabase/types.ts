@@ -8502,7 +8502,6 @@ export type Database = {
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       generate_orcamento_token: { Args: never; Returns: string }
       get_current_usuario_id: { Args: never; Returns: string }
-      get_user_conversas: { Args: never; Returns: string[] }
       get_user_estabelecimento_id: {
         Args: { _user_id: string }
         Returns: string
@@ -8516,6 +8515,7 @@ export type Database = {
       }
       is_system_admin: { Args: never; Returns: boolean }
       roles_present: { Args: never; Returns: boolean }
+      user_in_estabelecimento: { Args: { estab_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "gestor" | "agente"
