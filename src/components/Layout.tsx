@@ -429,8 +429,9 @@ export default function Layout({ children }: LayoutProps) {
   // Filtra os menus baseado nas permissões
   const visibleMenus = menuItems
     .filter((item) => {
-      // "Configurações" deve sempre aparecer para usuários autenticados
-      if (item.id === "Configurações") {
+      // Menus que sempre devem aparecer para usuários autenticados
+      const alwaysVisibleMenus = ["Configurações", "Avisos", "Trocar Usuário"];
+      if (alwaysVisibleMenus.includes(item.id)) {
         return true;
       }
 

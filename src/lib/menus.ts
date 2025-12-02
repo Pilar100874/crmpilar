@@ -4,6 +4,9 @@
 export const MENU_CONFIG = [
   { id: "Dashboards", label: "Dashboards" },
   { id: "Dashboard", label: "Painel" },
+  { id: "Avisos", label: "Avisos" },
+  { id: "Chat Interno", label: "Chat Interno" },
+  { id: "Teste Roteamento", label: "Teste de Roteamento" },
   { id: "Clientes", label: "Leads" },
   { id: "Atendimento", label: "Chats" },
   { id: "Painel Chats", label: "Painel" },
