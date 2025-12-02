@@ -7,6 +7,7 @@ import {
   SidebarContent,
 } from "@/components/ui/sidebar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -53,6 +54,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
 import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
+import { useAvisosSistema } from "@/hooks/useAvisosSistema";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import * as LucideIcons from "lucide-react";
 
@@ -93,6 +95,7 @@ const menuItems: MenuItem[] = [
       { id: "Dashboard Gastos IA", title: "Gastos com IA", url: "/dashboard-gastos-ia", icon: Brain },
     ]
   },
+  { id: "Avisos", title: "Avisos", url: "/avisos", icon: LucideIcons.Bell },
   { id: "Clientes", title: "Funil", url: "/funil", icon: Users },
   { 
     id: "Atendimento",
@@ -161,6 +164,7 @@ export default function Layout({ children }: LayoutProps) {
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { atalhos } = useAtalhos();
+  const { avisosPendentes } = useAvisosSistema();
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -785,6 +789,7 @@ export default function Layout({ children }: LayoutProps) {
                 
                 // Menu normal sem submenu
                 const isInAtalhos = item.url && atalhos.some(a => a.path === item.url);
+                const isAvisos = item.id === "Avisos";
                 
                 if (menuLocked) {
                   return (
@@ -792,7 +797,7 @@ export default function Layout({ children }: LayoutProps) {
                       key={item.title}
                       to={item.url!}
                       className={({ isActive }) =>
-                        `w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
+                        `w-12 h-12 flex items-center justify-center rounded-lg transition-all relative ${
                           isActive && !isInAtalhos
                             ? "bg-sidebar-primary text-sidebar-primary-foreground"
                             : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
@@ -801,6 +806,14 @@ export default function Layout({ children }: LayoutProps) {
                       title={item.title}
                     >
                       <item.icon className="w-6 h-6" />
+                      {isAvisos && avisosPendentes > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
+                        >
+                          {avisosPendentes > 9 ? '9+' : avisosPendentes}
+                        </Badge>
+                      )}
                     </NavLink>
                   );
                 }
@@ -820,6 +833,11 @@ export default function Layout({ children }: LayoutProps) {
                   >
                     <item.icon className="w-5 h-5 flex-shrink-0" />
                     <span className="text-sm font-medium">{item.title}</span>
+                    {isAvisos && avisosPendentes > 0 && (
+                      <Badge variant="destructive" className="ml-auto h-5 min-w-5 px-1">
+                        {avisosPendentes}
+                      </Badge>
+                    )}
                   </NavLink>
                 );
               })}
