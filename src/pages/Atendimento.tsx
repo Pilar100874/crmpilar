@@ -2,8 +2,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Menu } from "lucide-react";
-import { RadialMenu, RadialMenuTrigger, type RadialMenuItem } from "@/components/ui/radial-menu";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall } from "lucide-react";
+import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { PredictiveDialerDialog } from "@/components/atendimento/PredictiveDialerDialog";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
@@ -123,9 +123,6 @@ export default function Atendimento() {
   
   // Predictive Dialer state
   const [showPredictiveDialer, setShowPredictiveDialer] = useState(false);
-  
-  // Radial Menu state
-  const [showRadialMenu, setShowRadialMenu] = useState(false);
   
   // Bot redirect states
   const [availableBots, setAvailableBots] = useState<any[]>([]);
@@ -1696,8 +1693,46 @@ ${recentMessages}
     );
   }
 
+  const RADIAL_MENU_ITEMS: RadialMenuItem[] = [
+    { id: "chat", icon: MessageSquare, label: "Conversas", badge: activeConversationsCount },
+    { id: "agenda", icon: Calendar, label: "Agenda", badge: todayTasksCount },
+    { id: "email", icon: Mail, label: "E-mails", badge: unreadEmailsCount },
+    { id: "orcamento", icon: Receipt, label: "Orçamentos", badge: orcamentosEmAndamentoCount },
+    { id: "dialer", icon: PhoneCall, label: "Discador" },
+    { id: "ai", icon: Sparkles, label: "IA" },
+  ];
+
+  const handleRadialMenuSelect = (item: RadialMenuItem) => {
+    switch (item.id) {
+      case "chat":
+        setActiveTab("chat");
+        break;
+      case "agenda":
+        setActiveTab("agenda");
+        break;
+      case "email":
+        setActiveTab("email");
+        break;
+      case "orcamento":
+        setActiveTab("orcamento");
+        break;
+      case "dialer":
+        setShowPredictiveDialer(true);
+        break;
+      case "ai":
+        setShowAIChat(!showAIChat);
+        break;
+    }
+  };
+
   return (
-    <div className="h-screen min-h-0 flex bg-gray-100 overflow-hidden">
+    <RadialMenu
+      menuItems={RADIAL_MENU_ITEMS}
+      onSelect={handleRadialMenuSelect}
+      size={260}
+      className="h-screen min-h-0"
+    >
+      <div className="h-full flex bg-gray-100 overflow-hidden">
       {/* Conversation List */}
       <div className={`border-r border-border flex flex-col h-full min-h-0 transition-all duration-300 bg-gray-300 ${
         isMobile 
@@ -3027,64 +3062,7 @@ ${recentMessages}
         open={showPredictiveDialer}
         onOpenChange={setShowPredictiveDialer}
       />
-
-      {/* Radial Menu Trigger - Floating Button */}
-      <RadialMenuTrigger
-        onClick={() => setShowRadialMenu(true)}
-        icon={<Menu className="w-6 h-6" />}
-        className="fixed bottom-6 left-6 z-40"
-        badge={activeConversationsCount + todayTasksCount + unreadEmailsCount + orcamentosEmAndamentoCount}
-      />
-
-      {/* Radial Menu */}
-      <RadialMenu
-        isOpen={showRadialMenu}
-        onClose={() => setShowRadialMenu(false)}
-        size={280}
-        itemSize={60}
-        items={[
-          {
-            id: "chat",
-            icon: <MessageSquare className="w-5 h-5" />,
-            label: "Conversas",
-            badge: activeConversationsCount,
-            onClick: () => setActiveTab("chat"),
-          },
-          {
-            id: "agenda",
-            icon: <Calendar className="w-5 h-5" />,
-            label: "Agenda",
-            badge: todayTasksCount,
-            onClick: () => setActiveTab("agenda"),
-          },
-          {
-            id: "email",
-            icon: <Mail className="w-5 h-5" />,
-            label: "E-mails",
-            badge: unreadEmailsCount,
-            onClick: () => setActiveTab("email"),
-          },
-          {
-            id: "orcamento",
-            icon: <Receipt className="w-5 h-5" />,
-            label: "Orçamentos",
-            badge: orcamentosEmAndamentoCount,
-            onClick: () => setActiveTab("orcamento"),
-          },
-          {
-            id: "dialer",
-            icon: <PhoneCall className="w-5 h-5" />,
-            label: "Discador",
-            onClick: () => setShowPredictiveDialer(true),
-          },
-          {
-            id: "ai",
-            icon: <Sparkles className="w-5 h-5" />,
-            label: "IA",
-            onClick: () => setShowAIChat(!showAIChat),
-          },
-        ] as RadialMenuItem[]}
-      />
-    </div>
+      </div>
+    </RadialMenu>
   );
 }
