@@ -283,7 +283,7 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
                     </DropdownMenu>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Badge variant={flow.ativo ? "default" : "secondary"}>
@@ -297,6 +297,14 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
                       {new Date(flow.created_at).toLocaleDateString()}
                     </span>
                   </div>
+                  <Button 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => navigate(`/omnichannel-builder/${flow.id}`, { state: { from: location.pathname + location.search } })}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Abrir Editor
+                  </Button>
                 </CardContent>
               </Card>
             );

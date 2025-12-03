@@ -415,9 +415,18 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                     </Popover>
                   </div>
 
-                  {/* Data de criação */}
-                  <div className="text-xs text-muted-foreground">
-                    Criado em {new Date(automacao.created_at).toLocaleDateString()}
+                  {/* Data de criação e Botão Abrir Editor */}
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs text-muted-foreground">
+                      Criado em {new Date(automacao.created_at).toLocaleDateString()}
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => navigate(`/editor-regras?id=${automacao.id}`, { state: { from: location.pathname + location.search } })}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Abrir Editor
+                    </Button>
                   </div>
                 </div>
               </Card>
