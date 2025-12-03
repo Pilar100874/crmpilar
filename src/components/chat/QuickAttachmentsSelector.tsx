@@ -98,15 +98,13 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
+          <button
             disabled={disabled}
             title="Anexos rápidos"
-            className="rounded-full"
+            className="relative flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-muted hover:text-foreground border border-border/50 disabled:opacity-50 disabled:pointer-events-none"
           >
             <LinkIcon className="h-5 w-5" />
-          </Button>
+          </button>
         </PopoverTrigger>
         <PopoverContent className="w-[500px] p-0 rounded-2xl" align="end">
           <div className="p-4 border-b bg-muted/30 space-y-3">
