@@ -383,10 +383,14 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
   };
 
   const handleClose = () => {
+    console.log('handleClose chamado');
+    console.log('hasCanvasContent:', hasCanvasContent());
     if (hasCanvasContent()) {
+      console.log('Abrindo dialog de confirmação');
       setPendingNavigation(() => () => navigate('/marketing'));
       setShowExitDialog(true);
     } else {
+      console.log('Navegando para /marketing');
       navigate('/marketing');
     }
   };
