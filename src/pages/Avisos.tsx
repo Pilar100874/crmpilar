@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { 
   Bell, 
   Plus, 
@@ -27,12 +29,20 @@ import {
   AlertTriangle, 
   Info, 
   AlertCircle,
-  Trash2,
+  Users,
+  User,
 } from 'lucide-react';
 import { useAvisosSistema } from '@/hooks/useAvisosSistema';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+
+interface Usuario {
+  id: string;
+  nome: string;
+  email: string;
+}
 
 export default function Avisos() {
   const { avisos, loading, avisosPendentes, marcarResolvido, criarAviso } = useAvisosSistema();
@@ -42,6 +52,36 @@ export default function Avisos() {
   const [titulo, setTitulo] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [tipo, setTipo] = useState('info');
+  const [destinatariosTipo, setDestinatariosTipo] = useState<'todos' | 'usuarios_especificos'>('todos');
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState<string>('');
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [loadingUsuarios, setLoadingUsuarios] = useState(false);
+
+  // Carregar usuários quando abrir o dialog
+  useEffect(() => {
+    if (dialogOpen && usuarios.length === 0) {
+      carregarUsuarios();
+    }
+  }, [dialogOpen]);
+
+  const carregarUsuarios = async () => {
+    setLoadingUsuarios(true);
+    try {
+      const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('id, nome, email')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('nome');
+      
+      if (error) throw error;
+      setUsuarios(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error);
+    } finally {
+      setLoadingUsuarios(false);
+    }
+  };
 
   const handleSubmit = async () => {
     const estabelecimentoId = localStorage.getItem('estabelecimentoId');
@@ -51,8 +91,8 @@ export default function Avisos() {
       titulo: titulo.trim(),
       mensagem: mensagem.trim(),
       tipo: tipo as any,
-      destinatarios_tipo: 'todos',
-      destinatarios_ids: null,
+      destinatarios_tipo: destinatariosTipo,
+      destinatarios_ids: destinatariosTipo === 'usuarios_especificos' && usuarioSelecionado ? [usuarioSelecionado] : null,
       destinatarios_roles: null,
       expira_em: null,
       estabelecimento_id: estabelecimentoId,
@@ -62,7 +102,16 @@ export default function Avisos() {
 
     setTitulo('');
     setMensagem('');
+    setTipo('info');
+    setDestinatariosTipo('todos');
+    setUsuarioSelecionado('');
     setDialogOpen(false);
+  };
+
+  const isFormValid = () => {
+    if (!titulo.trim() || !mensagem.trim()) return false;
+    if (destinatariosTipo === 'usuarios_especificos' && !usuarioSelecionado) return false;
+    return true;
   };
 
   const getTipoIcon = (t: string) => {
@@ -95,21 +144,68 @@ export default function Avisos() {
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" />Novo Aviso</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader><DialogTitle>Criar Novo Aviso</DialogTitle></DialogHeader>
             <div className="space-y-4 mt-4">
               <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Título" />
-              <Textarea value={mensagem} onChange={(e) => setMensagem(e.target.value)} placeholder="Mensagem" rows={4} />
-              <Select value={tipo} onValueChange={setTipo}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="info">Informação</SelectItem>
-                  <SelectItem value="alerta">Alerta</SelectItem>
-                  <SelectItem value="erro">Erro</SelectItem>
-                  <SelectItem value="sucesso">Sucesso</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={handleSubmit} className="w-full" disabled={!titulo.trim() || !mensagem.trim()}>Criar</Button>
+              <Textarea value={mensagem} onChange={(e) => setMensagem(e.target.value)} placeholder="Mensagem" rows={3} />
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Tipo</Label>
+                <Select value={tipo} onValueChange={setTipo}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="info">Informação</SelectItem>
+                    <SelectItem value="alerta">Alerta</SelectItem>
+                    <SelectItem value="erro">Erro</SelectItem>
+                    <SelectItem value="sucesso">Sucesso</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Destinatários</Label>
+                <RadioGroup 
+                  value={destinatariosTipo} 
+                  onValueChange={(v) => {
+                    setDestinatariosTipo(v as 'todos' | 'usuarios_especificos');
+                    if (v === 'todos') setUsuarioSelecionado('');
+                  }}
+                  className="flex flex-col gap-2"
+                >
+                  <div className="flex items-center space-x-2 p-2 rounded-lg border hover:bg-muted/50 cursor-pointer">
+                    <RadioGroupItem value="todos" id="todos" />
+                    <Label htmlFor="todos" className="flex items-center gap-2 cursor-pointer flex-1">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      Todos os usuários
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-2 rounded-lg border hover:bg-muted/50 cursor-pointer">
+                    <RadioGroupItem value="usuarios_especificos" id="especifico" />
+                    <Label htmlFor="especifico" className="flex items-center gap-2 cursor-pointer flex-1">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      Usuário específico
+                    </Label>
+                  </div>
+                </RadioGroup>
+
+                {destinatariosTipo === 'usuarios_especificos' && (
+                  <Select value={usuarioSelecionado} onValueChange={setUsuarioSelecionado}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={loadingUsuarios ? "Carregando..." : "Selecione um usuário"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {usuarios.map((usuario) => (
+                        <SelectItem key={usuario.id} value={usuario.id}>
+                          {usuario.nome} ({usuario.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              <Button onClick={handleSubmit} className="w-full" disabled={!isFormValid()}>Criar</Button>
             </div>
           </DialogContent>
         </Dialog>
