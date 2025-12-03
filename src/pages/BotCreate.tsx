@@ -13,16 +13,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Plus, Workflow, ArrowRight, MoreVertical, Trash2, Edit, Power, Smartphone } from "lucide-react";
+import { Plus, Workflow, ArrowRight, Smartphone } from "lucide-react";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "@/lib/toast-config";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 
 interface BotCreateProps {
   embedded?: boolean;
@@ -561,130 +561,72 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                     {canalLabels[canal]}
                     <Badge variant="outline" className="text-xs">{canalBots.length}</Badge>
                   </h2>
-                  <div className="grid gap-4 sm:gap-6 md:gap-8 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  <WorkflowCardGrid>
                     {canalBots.map((bot) => (
-                      <Card 
-                        key={bot.id} 
-                        className="hover:shadow-lg transition-all cursor-pointer relative group h-full flex flex-col"
-                        onClick={() => navigate(`/bot-builder?id=${bot.id}`, { state: { from: location.pathname + location.search } })}
-                      >
-                        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
-                          <DropdownMenu open={openMenuId === bot.id} onOpenChange={(open) => setOpenMenuId(open ? bot.id : null)}>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
-                                <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenMenuId(null);
-                                navigate(`/bot-builder?id=${bot.id}`, { state: { from: location.pathname + location.search } });
-                              }}>
-                                <Edit className="w-4 h-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenMenuId(null);
-                                setSelectedBot(bot);
-                                setRenameName(bot.name);
-                                setRenameDescription(bot.description || "");
-                                setRenameDialogOpen(true);
-                              }}>
-                                <Edit className="w-4 h-4 mr-2" />
-                                Renomear
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenMenuId(null);
-                setSelectedBot(bot);
-                setDuplicateName(`${bot.name} (cópia)`);
-                setDuplicateDescription(bot.description || "");
-                setDuplicateWhatsAppType(bot.whatsapp_type || "waha");
-                setDuplicateDialogOpen(true);
-                              }}>
-                                <Plus className="w-4 h-4 mr-2" />
-                                Duplicar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenMenuId(null);
-                                handleToggleActive(bot.id, bot.active);
-                              }}>
-                                <Power className="w-4 h-4 mr-2" />
-                                {bot.active ? "Desativar" : "Ativar"}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenMenuId(null);
-                                  handleDeleteBot(bot.id, bot.name);
-                                }}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Excluir
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        
-                        <CardHeader className="flex-1 p-3 sm:p-4">
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 sm:mb-4">
-                            <Workflow className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-                          </div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <CardTitle className="flex-1 text-base sm:text-lg">{bot.name}</CardTitle>
-                            {bot.active && (
-                              <Badge variant="default" className="bg-green-500 text-xs">
-                                Ativo
-                              </Badge>
-                            )}
-                          </div>
-                          {bot.description && (
-                            <p className="text-xs sm:text-sm text-muted-foreground mb-2">{bot.description}</p>
-                          )}
-                          <div className="mb-2 flex items-center gap-2 flex-wrap">
-                            {bot.canais && bot.canais.length > 0 && (
-                              <Badge variant="secondary" className="text-xs">
-                                {canalLabels[bot.canais[0]] || bot.canais[0]}
-                              </Badge>
-                            )}
-                            {bot.canais && bot.canais.includes('whatsapp') && (
-                              <Badge 
-                                variant="outline" 
-                                className={`text-xs ${
-                                  bot.whatsapp_type === 'business' 
-                                    ? 'bg-green-500/10 text-green-700 border-green-500/20' 
-                                    : 'bg-primary/10 text-primary border-primary/20'
-                                }`}
-                              >
-                                {bot.whatsapp_type === 'business' ? 'Business' : 'WAHA'}
-                              </Badge>
-                            )}
-                          </div>
-                          <CardDescription className="text-xs sm:text-sm">
-                            {bot.flow_data?.nodes?.length || 0} blocos • 
-                            Atualizado {formatDistanceToNow(new Date(bot.updated_at), { 
-                              addSuffix: true, 
-                              locale: ptBR 
-                            })}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="mt-auto p-3 sm:p-4 pt-0 space-y-2 sm:space-y-3">
-                          {canal === 'whatsapp' && (
-                            <div className="space-y-1.5 sm:space-y-2" onClick={(e) => e.stopPropagation()}>
-                              <Label className="text-xs flex items-center gap-1">
-                                <Smartphone className="h-3 w-3" />
-                                Número WhatsApp
-                              </Label>
-                              <div className="flex gap-2">
+                      <WorkflowCard
+                        key={bot.id}
+                        id={bot.id}
+                        title={bot.name}
+                        description={bot.description}
+                        isActive={bot.active}
+                        blocksCount={bot.flow_data?.nodes?.length || 0}
+                        menuOpen={openMenuId === bot.id}
+                        onMenuOpenChange={(open) => setOpenMenuId(open ? bot.id : null)}
+                        onEdit={() => navigate(`/bot-builder?id=${bot.id}`, { state: { from: location.pathname + location.search } })}
+                        onRename={() => {
+                          setSelectedBot(bot);
+                          setRenameName(bot.name);
+                          setRenameDescription(bot.description || "");
+                          setRenameDialogOpen(true);
+                        }}
+                        onDuplicate={() => {
+                          setSelectedBot(bot);
+                          setDuplicateName(`${bot.name} (cópia)`);
+                          setDuplicateDescription(bot.description || "");
+                          setDuplicateWhatsAppType(bot.whatsapp_type || "waha");
+                          setDuplicateDialogOpen(true);
+                        }}
+                        onToggleActive={() => handleToggleActive(bot.id, bot.active)}
+                        onDelete={() => handleDeleteBot(bot.id, bot.name)}
+                        onOpenEditor={() => navigate(`/bot-builder?id=${bot.id}`, { state: { from: location.pathname + location.search } })}
+                        customContent={
+                          <>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {bot.canais && bot.canais.length > 0 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {canalLabels[bot.canais[0]] || bot.canais[0]}
+                                </Badge>
+                              )}
+                              {bot.canais && bot.canais.includes('whatsapp') && (
+                                <Badge 
+                                  variant="outline" 
+                                  className={`text-xs ${
+                                    bot.whatsapp_type === 'business' 
+                                      ? 'bg-green-500/10 text-green-700 border-green-500/20' 
+                                      : 'bg-primary/10 text-primary border-primary/20'
+                                  }`}
+                                >
+                                  {bot.whatsapp_type === 'business' ? 'Business' : 'WAHA'}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Atualizado {formatDistanceToNow(new Date(bot.updated_at), { 
+                                addSuffix: true, 
+                                locale: ptBR 
+                              })}
+                            </div>
+                            {canal === 'whatsapp' && (
+                              <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
+                                <Label className="text-xs flex items-center gap-1">
+                                  <Smartphone className="h-3 w-3" />
+                                  Número WhatsApp
+                                </Label>
                                 <Select
                                   value={selectedSessions[bot.id] || "none"}
                                   onValueChange={(value) => handleSessionChange(bot.id, value === "none" ? "" : value)}
                                 >
-                                  <SelectTrigger className="h-8 text-xs flex-1">
+                                  <SelectTrigger className="h-8 text-xs">
                                     <SelectValue placeholder="Nenhum número" />
                                   </SelectTrigger>
                                   <SelectContent className="bg-background z-50">
@@ -699,23 +641,12 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                                   </SelectContent>
                                 </Select>
                               </div>
-                            </div>
-                          )}
-                          <Button 
-                            variant="outline" 
-                            className="w-full text-xs sm:text-sm h-8 sm:h-9"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/bot-builder?id=${bot.id}`, { state: { from: location.pathname + location.search } });
-                            }}
-                          >
-                            <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                            Abrir Editor
-                          </Button>
-                        </CardContent>
-                      </Card>
+                            )}
+                          </>
+                        }
+                      />
                     ))}
-                  </div>
+                  </WorkflowCardGrid>
                 </div>
               );
             })}
