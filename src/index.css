@@ -191,7 +191,7 @@ All colors MUST be HSL.
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
-    z-index: 40;
+    z-index: 501;
     box-shadow: -2px 0 8px rgba(0,0,0,0.1);
   }
 
@@ -203,6 +203,22 @@ All colors MUST be HSL.
   .chat-tab svg {
     color: white;
     opacity: 0.9;
+  }
+
+  /* Animação de piscar para novas mensagens */
+  .chat-tab-pulse {
+    animation: chat-pulse 1s ease-in-out infinite;
+  }
+
+  @keyframes chat-pulse {
+    0%, 100% {
+      background: hsl(25 95% 53%);
+      box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+    }
+    50% {
+      background: hsl(25 95% 65%);
+      box-shadow: -2px 0 15px hsl(25 95% 53% / 0.5);
+    }
   }
 
   /* Chat Slide-out Menu */
@@ -221,34 +237,6 @@ All colors MUST be HSL.
 
   .chat-slide-menu.open {
     right: 0;
-  }
-
-  .chat-slide-menu-tab {
-    position: absolute;
-    left: -20px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 20px;
-    height: 60px;
-    background: hsl(25 95% 53%);
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-  }
-
-  .chat-slide-menu-tab:hover {
-    width: 25px;
-    background: hsl(25 95% 45%);
-  }
-
-  .chat-slide-menu-tab svg {
-    color: white;
-    opacity: 0.9;
   }
 }
 
