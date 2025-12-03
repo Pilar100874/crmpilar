@@ -186,8 +186,7 @@ All colors MUST be HSL.
   .chat-tab {
     position: fixed;
     right: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    bottom: 15%;
     width: 20px;
     height: 60px;
     background: hsl(25 95% 53%);
