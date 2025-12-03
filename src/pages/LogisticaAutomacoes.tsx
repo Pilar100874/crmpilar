@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks, Zap, Copy, MoreVertical, Power, Pencil, Trash2, Edit } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Save, X, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks, Zap, Copy, Trash2, Edit } from "lucide-react";
+import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 import {
   Dialog,
   DialogContent,
@@ -1034,89 +1034,41 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <WorkflowCardGrid>
           {automacoes.map((automacao) => (
-            <Card key={automacao.id} className="overflow-hidden hover:shadow-lg transition-shadow relative group">
-              <div className="absolute top-3 right-3 z-10">
-                <DropdownMenu open={openMenuId === automacao.id} onOpenChange={(open) => setOpenMenuId(open ? automacao.id : null)}>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => {
-                      setOpenMenuId(null);
-                      onEdit(automacao.id);
-                    }}>
-                      <Pencil className="w-4 h-4 mr-2" />
-                      Editar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      setOpenMenuId(null);
-                      setSelectedAutomacao(automacao);
-                      setRenameName(automacao.nome);
-                      setRenameDialogOpen(true);
-                    }}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Renomear
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      setOpenMenuId(null);
-                      handleDuplicate(automacao);
-                    }}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Duplicar
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      setOpenMenuId(null);
-                      toggleAtivo(automacao.id, !automacao.ativo);
-                    }}>
-                      <Power className="w-4 h-4 mr-2" />
-                      {automacao.ativo ? "Desativar" : "Ativar"}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        setOpenMenuId(null);
-                        handleDelete(automacao.id);
-                      }}
-                      className="text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Excluir
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <div className="p-4 space-y-3">
-                <div className="flex items-center justify-between pr-10">
-                  <h3 className="font-semibold text-base truncate">{automacao.nome}</h3>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Badge variant={automacao.ativo ? "default" : "secondary"}>
-                    {automacao.ativo ? "Ativo" : "Inativo"}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {automacao.flow_data?.nodes?.length || 0} blocos
-                  </span>
-                </div>
-
-                <p className="text-xs text-muted-foreground">
-                  Criada em: {new Date(automacao.created_at).toLocaleDateString('pt-BR')}
-                </p>
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => onEdit(automacao.id)}
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Abrir Editor
-                </Button>
-              </div>
-            </Card>
+            <WorkflowCard
+              key={automacao.id}
+              id={automacao.id}
+              title={automacao.nome}
+              isActive={automacao.ativo}
+              blocksCount={automacao.flow_data?.nodes?.length || 0}
+              createdAt={automacao.created_at}
+              menuOpen={openMenuId === automacao.id}
+              onMenuOpenChange={(open) => setOpenMenuId(open ? automacao.id : null)}
+              onEdit={() => {
+                setOpenMenuId(null);
+                onEdit(automacao.id);
+              }}
+              onRename={() => {
+                setOpenMenuId(null);
+                setSelectedAutomacao(automacao);
+                setRenameName(automacao.nome);
+                setRenameDialogOpen(true);
+              }}
+              onDuplicate={() => {
+                setOpenMenuId(null);
+                handleDuplicate(automacao);
+              }}
+              onToggleActive={() => {
+                setOpenMenuId(null);
+                toggleAtivo(automacao.id, !automacao.ativo);
+              }}
+              onDelete={() => {
+                setOpenMenuId(null);
+                handleDelete(automacao.id);
+              }}
+              onOpenEditor={() => onEdit(automacao.id)}
+            />
           ))}
 
           {automacoes.length === 0 && (
@@ -1134,7 +1086,7 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
               </div>
             </Card>
           )}
-        </div>
+        </WorkflowCardGrid>
       )}
 
       {/* Rename Dialog */}

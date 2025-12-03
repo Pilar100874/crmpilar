@@ -1,20 +1,13 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Power, PowerOff, Star, MoreVertical, Copy, Pencil } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import type { OmnichannelFlow } from "@/types/omnichannelFlow";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -208,109 +201,34 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
           </div>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <WorkflowCardGrid>
           {flows.map((flow) => {
             const flowData = flow.flow_data as any;
             const numBlocos = flowData?.nodes?.length || 0;
             
             return (
-              <Card 
-                key={flow.id} 
-                className={`relative ${flow.is_default ? "ring-2 ring-primary" : ""}`}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <span className="truncate">{flow.nome}</span>
-                        {flow.is_default && (
-                          <Star className="h-4 w-4 text-primary fill-primary flex-shrink-0" />
-                        )}
-                      </CardTitle>
-                      <CardDescription className="mt-1 line-clamp-2">
-                        {flow.descricao || "Sem descrição"}
-                      </CardDescription>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => navigate(`/omnichannel-builder/${flow.id}`, { state: { from: location.pathname + location.search } })}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openRenameDialog(flow)}>
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Renomear
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDuplicate(flow)}>
-                          <Copy className="h-4 w-4 mr-2" />
-                          Duplicar
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleToggleActive(flow.id, flow.ativo)}>
-                          {flow.ativo ? (
-                            <>
-                              <PowerOff className="h-4 w-4 mr-2" />
-                              Desativar
-                            </>
-                          ) : (
-                            <>
-                              <Power className="h-4 w-4 mr-2" />
-                              Ativar
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                        {flow.ativo && (
-                          <DropdownMenuItem onClick={() => handleToggleDefault(flow.id, flow.is_default || false)}>
-                            <Star className="h-4 w-4 mr-2" />
-                            {flow.is_default ? "Remover Padrão" : "Definir como Padrão"}
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => setDeleteId(flow.id)}
-                          disabled={flow.is_default}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Badge variant={flow.ativo ? "default" : "secondary"}>
-                        {flow.ativo ? "Ativo" : "Inativo"}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">
-                        {numBlocos} blocos
-                      </span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(flow.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => navigate(`/omnichannel-builder/${flow.id}`, { state: { from: location.pathname + location.search } })}
-                  >
-                    <Edit className="h-3 w-3 mr-1" />
-                    Abrir Editor
-                  </Button>
-                </CardContent>
-              </Card>
+              <WorkflowCard
+                key={flow.id}
+                id={flow.id}
+                title={flow.nome}
+                description={flow.descricao}
+                isActive={flow.ativo}
+                isDefault={flow.is_default}
+                blocksCount={numBlocos}
+                createdAt={flow.created_at}
+                onEdit={() => navigate(`/omnichannel-builder/${flow.id}`, { state: { from: location.pathname + location.search } })}
+                onRename={() => openRenameDialog(flow)}
+                onDuplicate={() => handleDuplicate(flow)}
+                onToggleActive={() => handleToggleActive(flow.id, flow.ativo)}
+                onToggleDefault={() => handleToggleDefault(flow.id, flow.is_default || false)}
+                onDelete={() => setDeleteId(flow.id)}
+                onOpenEditor={() => navigate(`/omnichannel-builder/${flow.id}`, { state: { from: location.pathname + location.search } })}
+                showDefaultOption={true}
+                deleteDisabled={flow.is_default}
+              />
             );
           })}
-        </div>
+        </WorkflowCardGrid>
       )}
 
       <DeleteConfirmDialog
