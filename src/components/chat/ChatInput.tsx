@@ -19,9 +19,9 @@ import { Message } from "@/pages/ChatWebhook";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
 
-// Simple circular toolbar button class - no background rectangle
-const toolbarBtnClass = "h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
-const toolbarBtnActiveClass = "h-10 w-10 rounded-full flex items-center justify-center text-primary hover:bg-primary/10 transition-colors";
+// Simple circular toolbar button class - each with its own circle
+const toolbarBtnClass = "h-10 w-10 rounded-full border border-border/50 bg-background flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm";
+const toolbarBtnActiveClass = "h-10 w-10 rounded-full border border-primary/50 bg-primary/10 flex items-center justify-center text-primary transition-colors shadow-sm";
 
 interface ChatInputProps {
   onSendMessage: (
@@ -432,8 +432,8 @@ export default function ChatInput({
   return (
     <>
       <div className="flex flex-col gap-3">
-        {/* Action Buttons Row - ExpandableTabs Style */}
-        <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-background p-1 shadow-sm justify-center">
+        {/* Action Buttons Row - Individual circles */}
+        <div className="flex flex-wrap items-center gap-2 justify-center">
           <QuickRepliesSelector onSelect={handleQuickReplySelect} disabled={disabled} />
           
           <QuickAttachmentsSelector onSelect={handleQuickAttachmentSelect} disabled={disabled} />
