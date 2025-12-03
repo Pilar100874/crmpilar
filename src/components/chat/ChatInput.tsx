@@ -814,6 +814,20 @@ export default function ChatInput({
   // Check if we have chat-specific items
   const hasChatItems = chatItems.length > 0;
   
+  // Debug log
+  console.log("ChatInput Menus Debug:", { 
+    generalItemsCount: generalItems.length, 
+    chatItemsCount: chatItems.length,
+    showToolsMenu,
+    showAIMenu,
+    hasAvailableBots: availableBots.length > 0,
+    hasWebhooks: webhooksForAutoResponse.length > 0,
+    hasAvailableUsers: availableUsers.length > 0,
+    hasImportReports: importReports.length > 0,
+    hasConversationId: !!conversationId,
+    hasToggleRealTimeTranslation: !!onToggleRealTimeTranslation
+  });
+  
   return (
     <>
       {/* Hidden file inputs */}
