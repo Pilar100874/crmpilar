@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface AutomacaoVendasCRUDProps {
   estabelecimentoId?: string;
@@ -33,6 +33,7 @@ interface AutomacaoVenda {
 
 export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [automacoes, setAutomacoes] = useState<AutomacaoVenda[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -200,7 +201,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
             Gerencie regras automáticas de desconto e promoções
           </p>
         </div>
-        <Button onClick={() => navigate("/editor-regras")} size="sm" className="shrink-0">
+        <Button onClick={() => navigate("/editor-regras", { state: { from: location.pathname + location.search } })} size="sm" className="shrink-0">
           <Plus className="h-4 w-4 mr-2" />
           Nova Regra
         </Button>
@@ -346,7 +347,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/editor-regras?id=${automacao.id}`)}
+                      onClick={() => navigate(`/editor-regras?id=${automacao.id}`, { state: { from: location.pathname + location.search } })}
                       title="Editar regra"
                       className="shrink-0"
                     >

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ interface AutomacaoVenda {
 
 export default function AutomacoesVendas() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [automacoes, setAutomacoes] = useState<AutomacaoVenda[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -150,7 +151,7 @@ export default function AutomacoesVendas() {
             Gerencie regras automáticas de desconto e promoções
           </p>
         </div>
-        <Button onClick={() => navigate("/editor-regras")} size="lg">
+        <Button onClick={() => navigate("/editor-regras", { state: { from: location.pathname + location.search } })} size="lg">
           <Plus className="h-5 w-5 mr-2" />
           Nova Regra
         </Button>
@@ -172,7 +173,7 @@ export default function AutomacoesVendas() {
               <p className="text-muted-foreground mb-4">
                 Crie sua primeira regra para o orçamento
               </p>
-              <Button onClick={() => navigate("/editor-regras")}>
+              <Button onClick={() => navigate("/editor-regras", { state: { from: location.pathname + location.search } })}>
                 <Plus className="h-4 w-4 mr-2" />
                 Criar primeira regra
               </Button>
@@ -223,7 +224,7 @@ export default function AutomacoesVendas() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => navigate(`/editor-regras?id=${automacao.id}`)}
+                    onClick={() => navigate(`/editor-regras?id=${automacao.id}`, { state: { from: location.pathname + location.search } })}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>

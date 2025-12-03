@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
@@ -54,8 +54,15 @@ const getId = () => {
 function EditorRegrasContent() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const regraIdFromUrl = searchParams.get("id");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  
+  // Captura a URL de origem para retornar ao fechar
+  const [originUrl] = useState(() => {
+    const state = location.state as { from?: string } | null;
+    return state?.from || "/vendas-config?tab=automacao";
+  });
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -510,7 +517,7 @@ function EditorRegrasContent() {
     if (hasUnsavedChanges) {
       setShowExitDialog(true);
     } else {
-      navigate("/vendas-config?tab=automacao");
+      navigate(originUrl);
     }
   };
 
@@ -528,7 +535,7 @@ function EditorRegrasContent() {
   const confirmExit = () => {
     setShowExitDialog(false);
     setHasUnsavedChanges(false);
-    navigate("/vendas-config?tab=automacao");
+    navigate(originUrl);
   };
 
   // Rastrear mudanças em nodes e edges
