@@ -7,7 +7,7 @@ import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { PredictiveDialerDialog } from "@/components/atendimento/PredictiveDialerDialog";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { format, startOfDay, endOfDay, addDays, subDays } from "date-fns";
@@ -1662,9 +1662,20 @@ ${recentMessages}
     }
   };
 
-  const filteredConversations = conversations.filter((conv) =>
-    conv.customer?.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Deduplica conversas por cliente, mantendo apenas a mais recente (já ordenado por updated_at desc)
+  const filteredConversations = useMemo(() => {
+    const seenCustomers = new Set<string>();
+    return conversations.filter((conv) => {
+      if (!conv.customer?.nome.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+      if (seenCustomers.has(conv.customer_id)) {
+        return false;
+      }
+      seenCustomers.add(conv.customer_id);
+      return true;
+    });
+  }, [conversations, searchTerm]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
