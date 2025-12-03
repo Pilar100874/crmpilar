@@ -7,8 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Save, X, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks, Zap, Copy } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import {
   ReactFlow,
   Background,
@@ -703,18 +701,7 @@ function EditorContent({
         </div>
         
         <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap items-center">
-          <div className="flex items-center gap-2 border-l border-border pl-2">
-            <Checkbox
-              id="ativa"
-              checked={isAtiva}
-              onCheckedChange={(checked) => {
-                setIsAtiva(checked as boolean);
-                setHasUnsavedChanges(true);
-              }}
-            />
-            <Label htmlFor="ativa" className="text-xs sm:text-sm">Ativa</Label>
-          </div>
-          <Button 
+          <Button
             variant="outline" 
             size="sm" 
             onClick={handleSave}
