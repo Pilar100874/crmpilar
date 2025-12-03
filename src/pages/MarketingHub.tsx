@@ -43,7 +43,7 @@ const MarketingHub: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'canvas':
-        return <MarketingCanvas />;
+        return <MarketingCanvas onClose={() => setActiveTab('automacoes')} />;
       case 'automacoes':
         return <MarketingAutomacoes />;
       case 'campanhas':

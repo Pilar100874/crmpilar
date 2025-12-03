@@ -52,9 +52,10 @@ const LoadingOverlay = () => {
 interface CanvasStudioV2Props {
   onBack?: () => void;
   selectedSize?: string;
+  onClose?: () => void;
 }
 
-const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props) => {
+const CanvasStudioV2 = ({ onBack, selectedSize = "medio", onClose: externalOnClose }: CanvasStudioV2Props) => {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState('design');
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -383,15 +384,24 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
   };
 
   const handleClose = () => {
-    console.log('handleClose chamado');
-    console.log('hasCanvasContent:', hasCanvasContent());
+    console.log('handleClose chamado, externalOnClose:', !!externalOnClose);
     if (hasCanvasContent()) {
       console.log('Abrindo dialog de confirmação');
-      setPendingNavigation(() => () => navigate('/marketing'));
+      setPendingNavigation(() => () => {
+        if (externalOnClose) {
+          externalOnClose();
+        } else {
+          navigate('/marketing');
+        }
+      });
       setShowExitDialog(true);
     } else {
-      console.log('Navegando para /marketing');
-      navigate('/marketing');
+      console.log('Fechando canvas');
+      if (externalOnClose) {
+        externalOnClose();
+      } else {
+        navigate('/marketing');
+      }
     }
   };
 
@@ -496,8 +506,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
   );
 };
 
-export default function MarketingCanvas() {
+export default function MarketingCanvas({ onClose }: { onClose?: () => void }) {
   return (
-    <CanvasStudioV2 selectedSize="medio" />
+    <CanvasStudioV2 selectedSize="medio" onClose={onClose} />
   );
 }
