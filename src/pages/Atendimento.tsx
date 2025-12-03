@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall } from "lucide-react";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
+import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { PredictiveDialerDialog } from "@/components/atendimento/PredictiveDialerDialog";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
@@ -1776,93 +1777,27 @@ ${recentMessages}
               </div>
             </div>
 
-        {/* Tabs - Modern Design */}
+        {/* Tabs - Modern Design with ExpandableTabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          {/* Tab Navigation Cards */}
-          <div className="grid grid-cols-4 gap-1.5 px-3 py-3 bg-slate-50/50 border-b border-border/30">
-            <button
-              onClick={() => setActiveTab("chat")}
-              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 ${
-                activeTab === "chat" 
-                  ? "bg-primary text-primary-foreground shadow-md scale-105" 
-                  : "bg-white/70 hover:bg-white hover:shadow-sm text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <div className="relative">
-                <MessageSquare className="w-5 h-5" />
-                {activeConversationsCount > 0 && (
-                  <span className={`absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center text-[10px] font-bold rounded-full px-1 ${
-                    activeTab === "chat" ? "bg-white text-primary" : "bg-primary text-white"
-                  }`}>
-                    {activeConversationsCount > 99 ? "99+" : activeConversationsCount}
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] font-medium">Chats</span>
-            </button>
-            
-            <button
-              onClick={() => setActiveTab("agenda")}
-              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 ${
-                activeTab === "agenda" 
-                  ? "bg-orange-500 text-white shadow-md scale-105" 
-                  : "bg-white/70 hover:bg-white hover:shadow-sm text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <div className="relative">
-                <Calendar className="w-5 h-5" />
-                {todayTasksCount > 0 && (
-                  <span className={`absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center text-[10px] font-bold rounded-full px-1 ${
-                    activeTab === "agenda" ? "bg-white text-orange-500" : "bg-orange-500 text-white"
-                  }`}>
-                    {todayTasksCount > 99 ? "99+" : todayTasksCount}
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] font-medium">Agenda</span>
-            </button>
-            
-            <button
-              onClick={() => setActiveTab("email")}
-              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 ${
-                activeTab === "email" 
-                  ? "bg-blue-500 text-white shadow-md scale-105" 
-                  : "bg-white/70 hover:bg-white hover:shadow-sm text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <div className="relative">
-                <Mail className="w-5 h-5" />
-                {unreadEmailsCount > 0 && (
-                  <span className={`absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center text-[10px] font-bold rounded-full px-1 ${
-                    activeTab === "email" ? "bg-white text-blue-500" : "bg-blue-500 text-white"
-                  }`}>
-                    {unreadEmailsCount > 99 ? "99+" : unreadEmailsCount}
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] font-medium">E-mails</span>
-            </button>
-            
-            <button
-              onClick={() => setActiveTab("orcamento")}
-              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 ${
-                activeTab === "orcamento" 
-                  ? "bg-emerald-500 text-white shadow-md scale-105" 
-                  : "bg-white/70 hover:bg-white hover:shadow-sm text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <div className="relative">
-                <Receipt className="w-5 h-5" />
-                {orcamentosEmAndamentoCount > 0 && (
-                  <span className={`absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center text-[10px] font-bold rounded-full px-1 ${
-                    activeTab === "orcamento" ? "bg-white text-emerald-500" : "bg-emerald-500 text-white"
-                  }`}>
-                    {orcamentosEmAndamentoCount > 99 ? "99+" : orcamentosEmAndamentoCount}
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] font-medium">Orçam.</span>
-            </button>
+          {/* Tab Navigation - Expandable Icons */}
+          <div className="px-3 py-3 bg-slate-50/50 border-b border-border/30 flex justify-center">
+            <ExpandableTabs
+              tabs={[
+                { title: "Chats", icon: MessageSquare, badge: activeConversationsCount },
+                { title: "Agenda", icon: Calendar, badge: todayTasksCount },
+                { title: "E-mails", icon: Mail, badge: unreadEmailsCount },
+                { title: "Orçamentos", icon: Receipt, badge: orcamentosEmAndamentoCount },
+              ]}
+              activeIndex={activeTab === "chat" ? 0 : activeTab === "agenda" ? 1 : activeTab === "email" ? 2 : activeTab === "orcamento" ? 3 : null}
+              onChange={(index) => {
+                if (index === 0) setActiveTab("chat");
+                else if (index === 1) setActiveTab("agenda");
+                else if (index === 2) setActiveTab("email");
+                else if (index === 3) setActiveTab("orcamento");
+              }}
+              activeColor="text-primary"
+              className="w-full justify-center"
+            />
           </div>
 
             {/* Chat Tab */}
