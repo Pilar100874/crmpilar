@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   ReactFlow,
   Background,
@@ -12,7 +12,6 @@ import {
   type NodeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import Layout from "@/components/Layout";
 import { FlowNode } from "@/components/omnichannel-builder/FlowNode";
 import { BlockLibrary } from "@/components/omnichannel-builder/BlockLibrary";
 import { PropertiesPanel } from "@/components/omnichannel-builder/PropertiesPanel";
@@ -29,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Save, FileText, History, AlertCircle, FileCode, ArrowLeft, BarChart3, Plus, PlayCircle, Play, Download, Upload, Activity, Search, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, Star } from "lucide-react";
+import { Save, FileText, History, AlertCircle, FileCode, X, BarChart3, Plus, PlayCircle, Play, Download, Upload, Activity, Search, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, Star } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -55,6 +54,14 @@ const initialNodes: OmnichannelNode[] = [
 export default function OmnichannelBuilder() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Captura a URL de origem para retornar ao fechar
+  const [originUrl] = useState(() => {
+    const state = location.state as { from?: string } | null;
+    return state?.from || "/atendimento-config";
+  });
+  
   const [nodes, setNodes, onNodesChange] = useNodesState<OmnichannelNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState<OmnichannelNode | null>(null);
@@ -497,7 +504,7 @@ export default function OmnichannelBuilder() {
         
         if (newFlow) await saveVersion(newFlow.id);
         
-        navigate("/config?section=omnichannel-flows");
+        navigate(originUrl);
       }
     } catch (error) {
       console.error("Erro ao salvar fluxo:", error);
@@ -508,35 +515,25 @@ export default function OmnichannelBuilder() {
   };
 
   return (
-    <Layout>
-      <div className="h-screen flex flex-col">
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header Unificado */}
-          <div className="p-2 sm:p-3 md:p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm gap-2">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/config?section=omnichannel-flows")}
-                className="h-8 w-8 sm:h-9 sm:w-9"
-              >
-                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header Unificado */}
+        <div className="h-14 p-2 sm:p-3 md:p-4 border-b border-border bg-card backdrop-blur-sm flex items-center justify-between shadow-sm gap-2">
+          <div className="flex items-center gap-2">
+            <div className="hidden md:block">
+              <h2 className="text-base sm:text-lg font-bold text-foreground leading-tight">WORKFLOW OMNICHANNEL</h2>
+              <p className="text-xs text-muted-foreground leading-tight">
+                Arraste blocos para criar seu fluxo
+              </p>
+            </div>
 
-              <div className="hidden md:block">
-                <h2 className="text-base sm:text-lg font-bold text-foreground leading-tight">WORKFLOW OMNICHANNEL</h2>
-                <p className="text-xs text-muted-foreground leading-tight">
-                  Arraste blocos para criar seu fluxo
-                </p>
-              </div>
-
-              <Input
-                value={flowName}
-                onChange={(e) => setFlowName(e.target.value)}
-                className="w-[150px] sm:w-[200px] h-8 sm:h-9 text-xs sm:text-sm"
-                placeholder="Nome do fluxo"
-              />
+            <Input
+              value={flowName}
+              onChange={(e) => setFlowName(e.target.value)}
+              className="w-[150px] sm:w-[200px] h-8 sm:h-9 text-xs sm:text-sm"
+              placeholder="Nome do fluxo"
+            />
               
               <div className="flex gap-1 border-l border-border pl-2 sm:pl-4">
                 <Button 
@@ -679,6 +676,15 @@ export default function OmnichannelBuilder() {
                 <Save className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 ${isSaving ? "animate-pulse" : ""}`} />
                 {isSaving ? "Salvando..." : "Salvar"}
               </Button>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={() => navigate(originUrl)}
+                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+              >
+                <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                Fechar
+              </Button>
             </div>
           </div>
 
@@ -788,7 +794,6 @@ export default function OmnichannelBuilder() {
             )}
           </div>
         </div>
-      </div>
 
         {/* Logs de Execução */}
         {id && (
@@ -825,6 +830,6 @@ export default function OmnichannelBuilder() {
           onSave={handleSaveNote}
         />
       </div>
-    </Layout>
+    </div>
   );
 }

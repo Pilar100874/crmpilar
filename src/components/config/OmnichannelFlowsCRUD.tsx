@@ -15,7 +15,7 @@ import {
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import type { OmnichannelFlow } from "@/types/omnichannelFlow";
 
 interface OmnichannelFlowsCRUDProps {
@@ -24,6 +24,7 @@ interface OmnichannelFlowsCRUDProps {
 
 export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUDProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [flows, setFlows] = useState<OmnichannelFlow[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -135,7 +136,7 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
             Gerencie os fluxos de roteamento de atendimento
           </p>
         </div>
-        <Button onClick={() => navigate("/omnichannel-builder")}>
+        <Button onClick={() => navigate("/omnichannel-builder", { state: { from: location.pathname + location.search } })}>
           <Plus className="h-4 w-4 mr-2" />
           Novo Fluxo
         </Button>
