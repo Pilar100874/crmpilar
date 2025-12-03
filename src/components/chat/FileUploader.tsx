@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast-config";
 
-const toolbarBtnClass = "h-10 w-10 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+const toolbarBtnClass = "h-10 w-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 
 interface FileUploaderProps {
   accept: string;
