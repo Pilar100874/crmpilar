@@ -1,191 +1,306 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
+import { X, type LucideIcon } from "lucide-react";
 
 export interface RadialMenuItem {
-  id: string;
-  icon: React.ReactNode;
+  id: string | number;
   label: string;
+  icon: LucideIcon;
   badge?: number;
-  onClick?: () => void;
 }
 
 interface RadialMenuProps {
-  items: RadialMenuItem[];
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect?: (item: RadialMenuItem) => void;
+  children?: React.ReactNode;
+  menuItems: RadialMenuItem[];
   size?: number;
-  itemSize?: number;
-  centerIcon?: React.ReactNode;
+  iconSize?: number;
+  bandWidth?: number;
+  innerGap?: number;
+  outerGap?: number;
+  outerRingWidth?: number;
+  onSelect?: (item: RadialMenuItem) => void;
   className?: string;
 }
 
 export function RadialMenu({
-  items,
-  isOpen,
-  onClose,
+  children,
+  menuItems,
+  size = 240,
+  iconSize = 18,
+  bandWidth = 50,
+  innerGap = 8,
+  outerGap = 8,
+  outerRingWidth = 12,
   onSelect,
-  size = 200,
-  itemSize = 56,
-  centerIcon,
   className,
 }: RadialMenuProps) {
-  const radius = size / 2 - itemSize / 2 - 8;
-  const angleStep = (2 * Math.PI) / items.length;
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [position, setPosition] = React.useState({ x: 0, y: 0 });
+  const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
-  const handleItemClick = (item: RadialMenuItem) => {
+  const innerRadius = size / 2 - bandWidth - outerGap - outerRingWidth;
+  const outerRadius = size / 2 - outerGap - outerRingWidth;
+  const angleStep = (2 * Math.PI) / menuItems.length;
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (rect) {
+      // Calculate position relative to the container
+      let x = e.clientX - rect.left;
+      let y = e.clientY - rect.top;
+      
+      // Ensure menu stays within bounds
+      const halfSize = size / 2;
+      x = Math.max(halfSize, Math.min(rect.width - halfSize, x));
+      y = Math.max(halfSize, Math.min(rect.height - halfSize, y));
+      
+      setPosition({ x, y });
+    }
+    
+    setIsOpen(true);
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setHoveredIndex(null);
+  };
+
+  const handleItemClick = (item: RadialMenuItem, index: number) => {
     onSelect?.(item);
-    item.onClick?.();
-    onClose();
+    handleClose();
+  };
+
+  // Close on click outside
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (isOpen) {
+        handleClose();
+      }
+    };
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        handleClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen]);
+
+  // Create SVG path for each menu segment
+  const createArcPath = (startAngle: number, endAngle: number) => {
+    const startOuter = {
+      x: size / 2 + outerRadius * Math.cos(startAngle),
+      y: size / 2 + outerRadius * Math.sin(startAngle),
+    };
+    const endOuter = {
+      x: size / 2 + outerRadius * Math.cos(endAngle),
+      y: size / 2 + outerRadius * Math.sin(endAngle),
+    };
+    const startInner = {
+      x: size / 2 + innerRadius * Math.cos(endAngle),
+      y: size / 2 + innerRadius * Math.sin(endAngle),
+    };
+    const endInner = {
+      x: size / 2 + innerRadius * Math.cos(startAngle),
+      y: size / 2 + innerRadius * Math.sin(startAngle),
+    };
+
+    const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
+
+    return `
+      M ${startOuter.x} ${startOuter.y}
+      A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${endOuter.x} ${endOuter.y}
+      L ${startInner.x} ${startInner.y}
+      A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${endInner.x} ${endInner.y}
+      Z
+    `;
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Overlay */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
-            onClick={onClose}
-          />
-          
-          {/* Menu Container */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className={cn(
-              "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50",
-              className
-            )}
-            style={{ width: size, height: size }}
-          >
-            {/* Ring */}
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0 rounded-full border-2 border-primary/20 bg-card/50 backdrop-blur-md"
-            />
-
-            {/* Center Button */}
-            <motion.button
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              transition={{ delay: 0.1, duration: 0.2 }}
-              onClick={onClose}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors z-10"
-            >
-              {centerIcon || <X className="w-6 h-6" />}
-            </motion.button>
-
-            {/* Menu Items */}
-            {items.map((item, index) => {
-              const angle = angleStep * index - Math.PI / 2;
-              const x = Math.cos(angle) * radius;
-              const y = Math.sin(angle) * radius;
-
-              return (
-                <motion.button
-                  key={item.id}
-                  initial={{ scale: 0, opacity: 0, x: 0, y: 0 }}
-                  animate={{ 
-                    scale: 1, 
-                    opacity: 1,
-                    x: x,
-                    y: y,
-                  }}
-                  exit={{ scale: 0, opacity: 0, x: 0, y: 0 }}
-                  transition={{ 
-                    delay: index * 0.05,
-                    duration: 0.3,
-                    ease: "easeOut"
-                  }}
-                  onClick={() => handleItemClick(item)}
-                  className={cn(
-                    "absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
-                    "flex flex-col items-center justify-center gap-1",
-                    "w-14 h-14 rounded-full",
-                    "bg-card border border-border shadow-lg",
-                    "hover:bg-accent hover:scale-110 hover:shadow-xl",
-                    "transition-all duration-200",
-                    "group"
-                  )}
-                  style={{
-                    width: itemSize,
-                    height: itemSize,
-                  }}
-                >
-                  <div className="relative">
-                    {item.icon}
-                    {item.badge !== undefined && item.badge > 0 && (
-                      <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 flex items-center justify-center text-[10px] font-medium bg-primary text-primary-foreground rounded-full">
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
-                  
-                  {/* Label tooltip */}
-                  <motion.span
-                    initial={{ opacity: 0, y: 5 }}
-                    whileHover={{ opacity: 1, y: 0 }}
-                    className="absolute -bottom-6 left-1/2 -translate-x-1/2 px-2 py-0.5 text-xs font-medium bg-popover text-popover-foreground rounded shadow whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    {item.label}
-                  </motion.span>
-                </motion.button>
-              );
-            })}
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
-
-// Trigger Button Component
-interface RadialMenuTriggerProps {
-  onClick: () => void;
-  icon?: React.ReactNode;
-  className?: string;
-  badge?: number;
-}
-
-export function RadialMenuTrigger({
-  onClick,
-  icon,
-  className,
-  badge,
-}: RadialMenuTriggerProps) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={onClick}
-      className={cn(
-        "relative w-14 h-14 rounded-full",
-        "bg-primary text-primary-foreground",
-        "flex items-center justify-center",
-        "shadow-lg hover:shadow-xl",
-        "transition-shadow duration-200",
-        className
-      )}
+    <div
+      ref={containerRef}
+      onContextMenu={handleContextMenu}
+      className={cn("relative", className)}
     >
-      {icon}
-      {badge !== undefined && badge > 0 && (
-        <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 flex items-center justify-center text-xs font-medium bg-destructive text-destructive-foreground rounded-full">
-          {badge}
-        </span>
-      )}
-    </motion.button>
+      {children}
+      
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 z-50"
+              onClick={handleClose}
+            />
+            
+            {/* Menu */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="absolute z-50 pointer-events-none"
+              style={{
+                left: position.x - size / 2,
+                top: position.y - size / 2,
+                width: size,
+                height: size,
+              }}
+            >
+              <svg
+                width={size}
+                height={size}
+                viewBox={`0 0 ${size} ${size}`}
+                className="pointer-events-auto"
+              >
+                {/* Outer ring */}
+                <circle
+                  cx={size / 2}
+                  cy={size / 2}
+                  r={size / 2 - outerGap}
+                  fill="none"
+                  stroke="hsl(var(--border))"
+                  strokeWidth={outerRingWidth}
+                  opacity={0.5}
+                />
+                
+                {/* Menu segments */}
+                {menuItems.map((item, index) => {
+                  const startAngle = angleStep * index - Math.PI / 2 - angleStep / 2;
+                  const endAngle = startAngle + angleStep;
+                  const midAngle = (startAngle + endAngle) / 2;
+                  const iconRadius = (innerRadius + outerRadius) / 2;
+                  const iconX = size / 2 + iconRadius * Math.cos(midAngle);
+                  const iconY = size / 2 + iconRadius * Math.sin(midAngle);
+                  const Icon = item.icon;
+                  const isHovered = hoveredIndex === index;
+
+                  return (
+                    <g
+                      key={item.id}
+                      onClick={() => handleItemClick(item, index)}
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                      className="cursor-pointer"
+                    >
+                      <motion.path
+                        d={createArcPath(startAngle, endAngle)}
+                        fill={isHovered ? "hsl(var(--accent))" : "hsl(var(--card))"}
+                        stroke="hsl(var(--border))"
+                        strokeWidth={1}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.03 }}
+                      />
+                      <motion.g
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1 + index * 0.03 }}
+                      >
+                        <foreignObject
+                          x={iconX - iconSize / 2}
+                          y={iconY - iconSize / 2}
+                          width={iconSize}
+                          height={iconSize}
+                          className="overflow-visible"
+                        >
+                          <div className="flex items-center justify-center w-full h-full">
+                            <Icon
+                              size={iconSize}
+                              className={cn(
+                                "transition-colors",
+                                isHovered ? "text-accent-foreground" : "text-foreground"
+                              )}
+                            />
+                          </div>
+                        </foreignObject>
+                        {/* Badge */}
+                        {item.badge !== undefined && item.badge > 0 && (
+                          <g>
+                            <circle
+                              cx={iconX + iconSize / 2}
+                              cy={iconY - iconSize / 2}
+                              r={8}
+                              fill="hsl(var(--primary))"
+                            />
+                            <text
+                              x={iconX + iconSize / 2}
+                              y={iconY - iconSize / 2}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              fill="hsl(var(--primary-foreground))"
+                              fontSize={9}
+                              fontWeight="bold"
+                            >
+                              {item.badge > 99 ? "99+" : item.badge}
+                            </text>
+                          </g>
+                        )}
+                      </motion.g>
+                    </g>
+                  );
+                })}
+
+                {/* Center button */}
+                <motion.g
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1 }}
+                  onClick={handleClose}
+                  className="cursor-pointer"
+                >
+                  <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={innerRadius - innerGap}
+                    fill="hsl(var(--primary))"
+                    className="hover:opacity-90 transition-opacity"
+                  />
+                  <foreignObject
+                    x={size / 2 - 12}
+                    y={size / 2 - 12}
+                    width={24}
+                    height={24}
+                  >
+                    <div className="flex items-center justify-center w-full h-full">
+                      <X size={20} className="text-primary-foreground" />
+                    </div>
+                  </foreignObject>
+                </motion.g>
+              </svg>
+
+              {/* Tooltip */}
+              <AnimatePresence>
+                {hoveredIndex !== null && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    className="absolute left-1/2 -translate-x-1/2 -bottom-8 px-3 py-1.5 bg-popover text-popover-foreground text-sm font-medium rounded-md shadow-lg border whitespace-nowrap"
+                  >
+                    {menuItems[hoveredIndex].label}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
