@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Save, ArrowLeft } from "lucide-react";
+import { Plus, Save, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -547,18 +547,10 @@ function EditorRegrasContent() {
   }, [nomeRegra, isAtiva, prioridade]);
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header */}
       <div className="h-14 border-b border-border flex items-center justify-between px-4 bg-gradient-to-r from-primary/5 to-primary/10 shadow-sm">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleBack}
-            className="h-8 w-8"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
           
           <div className="h-8 w-px bg-border" />
           
@@ -614,6 +606,10 @@ function EditorRegrasContent() {
           <Button onClick={handleSave} size="sm" className="h-8">
             <Save className="h-4 w-4 mr-2" />
             Salvar
+          </Button>
+          <Button variant="destructive" size="sm" className="h-8" onClick={handleBack}>
+            <X className="h-4 w-4 mr-2" />
+            Fechar
           </Button>
         </div>
       </div>
