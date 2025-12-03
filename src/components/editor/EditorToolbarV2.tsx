@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Share2, ZoomIn, ZoomOut, Save, Copy, Home, MonitorSmartphone } from "lucide-react";
+import { Download, Share2, ZoomIn, ZoomOut, Save, Copy, Home, MonitorSmartphone, Maximize2, Minimize2 } from "lucide-react";
 import { useCanvas } from "@/contexts/CanvasContext";
 import { toast } from "@/lib/toast-config";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { saveProject } from "@/lib/projectStorage";
 import { useNavigate } from "react-router-dom";
 import {
@@ -29,6 +29,34 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
   const [showSaveAsDialog, setShowSaveAsDialog] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Fullscreen toggle
+  const toggleFullscreen = useCallback(async () => {
+    const canvasArea = document.querySelector('[data-canvas-area]');
+    if (!canvasArea) return;
+
+    try {
+      if (!document.fullscreenElement) {
+        await canvasArea.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (error) {
+      console.error('Fullscreen error:', error);
+    }
+  }, []);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   const downloadDesign = () => {
     if (!fabricCanvas) return;
@@ -343,6 +371,20 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
           >
             <Save className="h-4 w-4 mr-2" />
             Salvar
+          </Button>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleFullscreen}
+            className="h-9 w-9 bg-white border-slate-300 text-slate-900 hover:bg-slate-50"
+            title={isFullscreen ? 'Sair do Fullscreen' : 'Tela Cheia'}
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-4 w-4" />
+            ) : (
+              <Maximize2 className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>
