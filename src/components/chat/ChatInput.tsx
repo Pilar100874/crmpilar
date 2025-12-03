@@ -680,7 +680,7 @@ export default function ChatInput({
                 ))}
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => { onBotRedirect(); setShowBotPopover(false); setShowToolsMenu(false); }} disabled={!selectedBotRedirect} className="w-full">
+            <Button size="sm" onClick={() => { onBotRedirect(); setShowBotPopover(false); setShowAIMenu(false); }} disabled={!selectedBotRedirect} className="w-full">
               <Zap className="h-4 w-4 mr-2" /> Redirecionar
             </Button>
           </div>
@@ -738,7 +738,7 @@ export default function ChatInput({
                 ))}
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => { onTransferUser(); setShowTransferPopover(false); setShowToolsMenu(false); }} disabled={!selectedTransferUser} className="w-full">
+            <Button size="sm" onClick={() => { onTransferUser(); setShowTransferPopover(false); setShowAIMenu(false); }} disabled={!selectedTransferUser} className="w-full">
               <UserPlus className="h-4 w-4 mr-2" /> Transferir
             </Button>
           </div>
@@ -807,12 +807,15 @@ export default function ChatInput({
   // Real-time translation toggle
   if (onToggleRealTimeTranslation) {
     chatItems.push(
-      <ToolbarBtn key="realtime-translate" icon={Languages} title="Tradução em Tempo Real" onClick={() => { onToggleRealTimeTranslation(); setShowToolsMenu(false); }} isActive={isRealTimeTranslationActive} disabled={disabled} />
+      <ToolbarBtn key="realtime-translate" icon={Languages} title="Tradução em Tempo Real" onClick={() => { onToggleRealTimeTranslation(); setShowAIMenu(false); }} isActive={isRealTimeTranslationActive} disabled={disabled} />
     );
   }
 
   // Check if we have chat-specific items
   const hasChatItems = chatItems.length > 0;
+  
+  // Debug log
+  console.log("ChatInput Debug:", { hasChatItems, chatItemsCount: chatItems.length, hasRealTimeTranslation: !!onToggleRealTimeTranslation });
 
   return (
     <>
@@ -915,9 +918,9 @@ export default function ChatInput({
             <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={disabled} />
 
             {/* AI Menu Button - positioned to expand upward (right side) */}
-            {hasChatItems && (
-              <div ref={aiMenuRef} className="relative">
-                {/* Chat/AI items ring */}
+            <div ref={aiMenuRef} className="relative">
+              {/* Chat/AI items ring */}
+              {chatItems.length > 0 && (
                 <div 
                   className={cn(
                     "absolute bottom-full right-0 mb-2 flex flex-col-reverse gap-1.5",
@@ -939,24 +942,24 @@ export default function ChatInput({
                     </div>
                   ))}
                 </div>
+              )}
 
-                {/* AI trigger button */}
-                <button 
-                  className={cn(
-                    "relative w-10 h-10 rounded-full cursor-pointer",
-                    "bg-muted/50 hover:bg-muted",
-                    "flex items-center justify-center",
-                    "transition-all duration-300 ease-out",
-                    "text-muted-foreground hover:text-foreground",
-                    showAIMenu && "bg-primary text-primary-foreground shadow-md"
-                  )}
-                  onClick={() => { setShowAIMenu(!showAIMenu); setShowToolsMenu(false); }}
-                  title={showAIMenu ? "Fechar IA" : "Recursos de IA"}
-                >
-                  <Sparkles className="h-5 w-5" />
-                </button>
-              </div>
-            )}
+              {/* AI trigger button - always visible */}
+              <button 
+                className={cn(
+                  "relative w-10 h-10 rounded-full cursor-pointer",
+                  "bg-muted/50 hover:bg-muted",
+                  "flex items-center justify-center",
+                  "transition-all duration-300 ease-out",
+                  "text-muted-foreground hover:text-foreground",
+                  showAIMenu && "bg-primary text-primary-foreground shadow-md"
+                )}
+                onClick={() => { setShowAIMenu(!showAIMenu); setShowToolsMenu(false); }}
+                title={showAIMenu ? "Fechar IA" : "Recursos de IA"}
+              >
+                <Sparkles className="h-5 w-5" />
+              </button>
+            </div>
             
             {/* Send button */}
             <Button 
