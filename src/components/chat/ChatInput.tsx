@@ -846,39 +846,13 @@ export default function ChatInput({
         <div className="relative z-50 bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2">
           {/* Input row */}
           <div className="flex items-end gap-2">
-            {/* Emoji picker */}
-            <EmojiPicker onEmojiSelect={handleEmojiSelect} disabled={disabled} />
-            
-            {/* Text input - takes remaining space */}
-            <div className="flex-1 relative">
-              <Textarea
-                ref={textareaRef}
-                value={message}
-                onChange={handleMessageChange}
-                onKeyDown={handleKeyPress}
-                placeholder="Digite sua mensagem..."
-                className={cn(
-                  "min-h-[40px] max-h-[120px] resize-none",
-                  "rounded-xl px-4 py-2.5",
-                  "bg-background/60 border-0",
-                  "focus:ring-1 focus:ring-primary/30",
-                  "placeholder:text-muted-foreground/60",
-                  "text-sm leading-relaxed"
-                )}
-                disabled={disabled}
-              />
-            </div>
-            
-            {/* Audio recorder */}
-            <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={disabled} />
-            
-            {/* Expandable Tools Menu - positioned to the RIGHT, expanding upward */}
+            {/* Expandable Tools Menu - positioned to expand upward */}
             <div ref={menuRef} className="relative">
               {/* Chat-specific items ring (outer/top ring) - only when has chat items */}
               {hasChatItems && (
                 <div 
                   className={cn(
-                    "absolute bottom-full right-0 flex flex-col-reverse gap-1.5",
+                    "absolute bottom-full left-0 flex flex-col-reverse gap-1.5",
                     "transition-all duration-300 origin-bottom",
                     showToolsMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                   )}
@@ -918,7 +892,7 @@ export default function ChatInput({
               {/* General items ring (inner/bottom ring) */}
               <div 
                 className={cn(
-                  "absolute bottom-full right-0 mb-2 flex flex-col-reverse gap-1.5",
+                  "absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5",
                   "transition-all duration-300 origin-bottom",
                   showToolsMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                 )}
@@ -954,6 +928,32 @@ export default function ChatInput({
                 <Plus className="h-5 w-5" />
               </button>
             </div>
+            
+            {/* Emoji picker */}
+            <EmojiPicker onEmojiSelect={handleEmojiSelect} disabled={disabled} />
+            
+            {/* Text input - takes remaining space */}
+            <div className="flex-1 relative">
+              <Textarea
+                ref={textareaRef}
+                value={message}
+                onChange={handleMessageChange}
+                onKeyDown={handleKeyPress}
+                placeholder="Digite sua mensagem..."
+                className={cn(
+                  "min-h-[40px] max-h-[120px] resize-none",
+                  "rounded-xl px-4 py-2.5",
+                  "bg-background/60 border-0",
+                  "focus:ring-1 focus:ring-primary/30",
+                  "placeholder:text-muted-foreground/60",
+                  "text-sm leading-relaxed"
+                )}
+                disabled={disabled}
+              />
+            </div>
+            
+            {/* Audio recorder */}
+            <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={disabled} />
             
             {/* Send button */}
             <Button 
