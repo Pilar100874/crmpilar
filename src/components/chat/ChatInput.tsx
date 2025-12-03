@@ -604,38 +604,67 @@ export default function ChatInput({
     }, 2000);
   };
 
-  // Build toolbar items for expandable menu
-  const toolbarItems: React.ReactNode[] = [];
+  // Build toolbar items - separated into general and chat-specific
+  const generalItems: React.ReactNode[] = [];
+  const chatItems: React.ReactNode[] = [];
 
-  // Basic file tools
-  toolbarItems.push(
+  // === GENERAL ITEMS (always visible) ===
+  generalItems.push(
     <ToolbarBtn key="image" icon={Image} title="Imagem" onClick={() => { imageInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
   );
-  toolbarItems.push(
+  generalItems.push(
     <ToolbarBtn key="file" icon={Paperclip} title="Arquivo" onClick={() => { fileInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
   );
-  toolbarItems.push(
+  generalItems.push(
     <ToolbarBtn key="variables" icon={Variable} title="Variáveis" onClick={() => { setShowVariables(true); setShowToolsMenu(false); }} disabled={disabled} />
   );
-
-  // Quick replies & attachments (rendered as popovers)
-  toolbarItems.push(
+  generalItems.push(
     <QuickRepliesSelector key="quick-replies" onSelect={(content) => { handleQuickReplySelect(content); setShowToolsMenu(false); }} disabled={disabled} />
   );
-  toolbarItems.push(
+  generalItems.push(
     <QuickAttachmentsSelector key="quick-attachments" onSelect={(attachment) => { handleQuickAttachmentSelect(attachment); setShowToolsMenu(false); }} disabled={disabled} />
   );
 
+  // Translate (general)
+  generalItems.push(
+    <Popover key="translate" open={showTranslatePopover} onOpenChange={setShowTranslatePopover}>
+      <PopoverTrigger asChild>
+        <button className={isTranslating ? toolbarBtnActiveClass : toolbarBtnClass} title="Traduzir" disabled={disabled}>
+          {isTranslating ? <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Languages size={18} />}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Traduzir para</Label>
+          <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">Inglês</SelectItem>
+              <SelectItem value="es">Espanhol</SelectItem>
+              <SelectItem value="pt">Português</SelectItem>
+              <SelectItem value="fr">Francês</SelectItem>
+              <SelectItem value="de">Alemão</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button size="sm" onClick={handleTranslateMessage} disabled={!message.trim() || isTranslating} className="w-full">
+            <Languages className="h-4 w-4 mr-2" /> Traduzir
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
+  // === CHAT-SPECIFIC ITEMS (only when in chat) ===
   // Bot redirect
   if (availableBots.length > 0 && onBotRedirectChange && onBotRedirect) {
-    toolbarItems.push(
+    chatItems.push(
       <Popover key="bot" open={showBotPopover} onOpenChange={setShowBotPopover}>
         <PopoverTrigger asChild>
           <button className={showBotPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Redirecionar para Bot">
-            <Bot size={20} />
+            <Bot size={18} />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-3" align="start">
+        <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
           <div className="space-y-3">
             <Label className="text-sm font-medium">Redirecionar para Bot</Label>
             <Select value={selectedBotRedirect || ""} onValueChange={onBotRedirectChange}>
@@ -657,14 +686,14 @@ export default function ChatInput({
 
   // Webhook auto-response
   if (webhooksForAutoResponse.length > 0 && onWebhookChange && onWebhookToggle) {
-    toolbarItems.push(
+    chatItems.push(
       <Popover key="webhook" open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
         <PopoverTrigger asChild>
           <button className={webhookAutoResponseActive ? toolbarBtnActiveClass : toolbarBtnClass} title="Resposta Automática">
-            <Webhook size={20} />
+            <Webhook size={18} />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-3" align="start">
+        <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-sm">Resposta Automática</Label>
@@ -686,14 +715,14 @@ export default function ChatInput({
 
   // Transfer to user
   if (availableUsers.length > 0 && onTransferUserChange && onTransferUser) {
-    toolbarItems.push(
+    chatItems.push(
       <Popover key="transfer" open={showTransferPopover} onOpenChange={setShowTransferPopover}>
         <PopoverTrigger asChild>
           <button className={showTransferPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Transferir para Usuário">
-            <UserPlus size={20} />
+            <UserPlus size={18} />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-3" align="start">
+        <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
           <div className="space-y-3">
             <Label className="text-sm font-medium">Transferir para</Label>
             <Select value={selectedTransferUser || ""} onValueChange={onTransferUserChange}>
@@ -715,21 +744,21 @@ export default function ChatInput({
 
   // AI Chat toggle
   if (onToggleAIChat) {
-    toolbarItems.push(
+    chatItems.push(
       <ToolbarBtn key="ai-chat" icon={Sparkles} title="Chat IA" onClick={() => { onToggleAIChat(); setShowToolsMenu(false); }} isActive={showAIChat} disabled={disabled} />
     );
   }
 
   // Import reports
   if (importReports.length > 0) {
-    toolbarItems.push(
+    chatItems.push(
       <Popover key="reports" open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>
         <PopoverTrigger asChild>
           <button className={showImportReportsPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Relatórios">
-            <FileCheck size={20} />
+            <FileCheck size={18} />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-72 p-3" align="start">
+        <PopoverContent className="w-72 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
           <div className="space-y-3">
             <Label className="text-sm font-medium">Relatórios Importados</Label>
             {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
@@ -756,60 +785,34 @@ export default function ChatInput({
 
   // Agent Assist - Context Response
   if (conversationId) {
-    toolbarItems.push(
+    chatItems.push(
       <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" onClick={handleGenerateContextResponse} isLoading={isGeneratingContextResponse} disabled={disabled || conversationMessages.length === 0} />
     );
   }
 
   // Agent Assist - Summary
   if (conversationId && onSummaryGenerated) {
-    toolbarItems.push(
+    chatItems.push(
       <ToolbarBtn key="summary" icon={FileText} title="Gerar Resumo" onClick={handleGenerateSummary} isLoading={isGeneratingSummary} disabled={disabled || conversationMessages.length === 0} />
     );
   }
 
   // Agent Assist - KB Articles
   if (conversationId) {
-    toolbarItems.push(
+    chatItems.push(
       <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" onClick={handleSuggestKBArticles} isLoading={isSuggestingKBArticles} disabled={disabled || conversationMessages.length === 0} />
     );
   }
 
-  // Translate
-  toolbarItems.push(
-    <Popover key="translate" open={showTranslatePopover} onOpenChange={setShowTranslatePopover}>
-      <PopoverTrigger asChild>
-        <button className={isTranslating ? toolbarBtnActiveClass : toolbarBtnClass} title="Traduzir" disabled={disabled}>
-          {isTranslating ? <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Languages size={20} />}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-56 p-3" align="start">
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Traduzir para</Label>
-          <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">Inglês</SelectItem>
-              <SelectItem value="es">Espanhol</SelectItem>
-              <SelectItem value="pt">Português</SelectItem>
-              <SelectItem value="fr">Francês</SelectItem>
-              <SelectItem value="de">Alemão</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button size="sm" onClick={handleTranslateMessage} disabled={!message.trim() || isTranslating} className="w-full">
-            <Languages className="h-4 w-4 mr-2" /> Traduzir
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-
   // Real-time translation toggle
   if (onToggleRealTimeTranslation) {
-    toolbarItems.push(
+    chatItems.push(
       <ToolbarBtn key="realtime-translate" icon={Languages} title="Tradução em Tempo Real" onClick={() => { onToggleRealTimeTranslation(); setShowToolsMenu(false); }} isActive={isRealTimeTranslationActive} disabled={disabled} />
     );
   }
+
+  // Check if we have chat-specific items
+  const hasChatItems = chatItems.length > 0;
 
   return (
     <>
@@ -845,7 +848,48 @@ export default function ChatInput({
           <div className="flex items-end gap-2">
             {/* Expandable Tools Menu - positioned to expand upward */}
             <div ref={menuRef} className="relative">
-              {/* Expanded menu items */}
+              {/* Chat-specific items ring (outer/top ring) - only when has chat items */}
+              {hasChatItems && (
+                <div 
+                  className={cn(
+                    "absolute bottom-full left-0 flex flex-col-reverse gap-1.5",
+                    "transition-all duration-300 origin-bottom",
+                    showToolsMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+                  )}
+                  style={{
+                    marginBottom: `${(generalItems.length * 42) + 12}px`
+                  }}
+                >
+                  {/* Chat items label */}
+                  <div 
+                    className={cn(
+                      "mb-1 px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-medium text-center",
+                      "transition-all duration-300",
+                      showToolsMenu ? "opacity-100" : "opacity-0"
+                    )}
+                    style={{
+                      transitionDelay: showToolsMenu ? `${(chatItems.length + generalItems.length) * 30}ms` : '0ms'
+                    }}
+                  >
+                    Chat
+                  </div>
+                  {chatItems.map((item, index) => (
+                    <div 
+                      key={`chat-${index}`}
+                      className="transform transition-all duration-200"
+                      style={{
+                        transitionDelay: showToolsMenu ? `${(index + generalItems.length + 1) * 30}ms` : '0ms',
+                        transform: showToolsMenu ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.9)',
+                        opacity: showToolsMenu ? 1 : 0,
+                      }}
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* General items ring (inner/bottom ring) */}
               <div 
                 className={cn(
                   "absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5",
@@ -853,9 +897,9 @@ export default function ChatInput({
                   showToolsMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                 )}
               >
-                {toolbarItems.map((item, index) => (
+                {generalItems.map((item, index) => (
                   <div 
-                    key={index}
+                    key={`general-${index}`}
                     className="transform transition-all duration-200"
                     style={{
                       transitionDelay: showToolsMenu ? `${index * 30}ms` : '0ms',
