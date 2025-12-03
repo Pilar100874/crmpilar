@@ -1736,7 +1736,8 @@ ${recentMessages}
         setShowPredictiveDialer(true);
         break;
       case "ai":
-        setShowAIChat(!showAIChat);
+        // AI menu now shows chat resources via ChatInput, not the AI chat panel
+        toast.info("Use o menu de IA no campo de mensagem para acessar os recursos de IA");
         break;
     }
   };
