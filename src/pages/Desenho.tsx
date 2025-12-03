@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CanvasProvider, useCanvas } from "@/contexts/CanvasContext";
 import CanvasWorkspace from "@/components/canvas/CanvasWorkspace";
@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { exportCanvasToPNG, exportCanvasToJSON } from "@/lib/canvasExport";
 import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Maximize2, Minimize2 } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { addToCart } from "@/lib/cart";
 import { saveProject } from "@/lib/projectStorage";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -68,36 +68,8 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
   const [showSaveConfirmDialog, setShowSaveConfirmDialog] = useState(false);
   const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [productData, setProductData] = useState<any>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const isEditingCartItem = sessionStorage.getItem('editingCartItemId') !== null;
-
-  // Fullscreen toggle
-  const toggleFullscreen = useCallback(async () => {
-    if (!canvasContainerRef.current) return;
-
-    try {
-      if (!document.fullscreenElement) {
-        await canvasContainerRef.current.requestFullscreen();
-        setIsFullscreen(true);
-      } else {
-        await document.exitFullscreen();
-        setIsFullscreen(false);
-      }
-    } catch (error) {
-      console.error('Fullscreen error:', error);
-    }
-  }, []);
-
-  // Listen for fullscreen changes
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
 
   // Check if canvas has content (excluding masks/guides)
   const hasCanvasContent = () => {
@@ -545,31 +517,11 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           )}
 
           {/* Canvas area - takes full available space */}
-          <div 
-            ref={canvasContainerRef}
-            className={`flex-1 relative overflow-hidden bg-muted/30 ${isFullscreen ? 'bg-background' : ''}`}
-          >
+          <div className="flex-1 relative overflow-hidden bg-muted/30">
             <LoadingOverlay />
             <CanvasWorkspace selectedSize={selectedSize} />
             <FloatingObjectToolbar />
             <ObjectActionsMenu />
-            
-            {/* Fullscreen Toggle Button - Top Right */}
-            <div className="absolute top-4 right-4 z-10">
-              <Button 
-                onClick={toggleFullscreen}
-                size="sm"
-                variant="outline"
-                className="gap-2 shadow-lg bg-background/80 backdrop-blur-sm"
-                title={isFullscreen ? 'Sair do Fullscreen' : 'Tela Cheia'}
-              >
-                {isFullscreen ? (
-                  <Minimize2 className="h-4 w-4" />
-                ) : (
-                  <Maximize2 className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
             
             {/* Floating Add to Cart Button - Bottom Right */}
             <div className="absolute bottom-4 right-4 z-10">
