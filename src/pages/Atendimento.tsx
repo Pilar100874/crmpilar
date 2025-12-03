@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2 } from "lucide-react";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { PredictiveDialerDialog } from "@/components/atendimento/PredictiveDialerDialog";
@@ -1711,7 +1711,20 @@ ${recentMessages}
     { id: "email", icon: Mail, label: "E-mails", badge: unreadEmailsCount },
     { id: "orcamento", icon: Receipt, label: "Orçamentos", badge: orcamentosEmAndamentoCount },
     { id: "dialer", icon: PhoneCall, label: "Discador" },
-    { id: "ai", icon: Sparkles, label: "IA" },
+    { 
+      id: "ai", 
+      icon: Sparkles, 
+      label: "IA",
+      subItems: [
+        { id: "ai-chat", icon: Wand2, label: "Chat IA" },
+        { id: "ai-suggestion", icon: Sparkles, label: "Sugestão Contextual" },
+        { id: "ai-summary", icon: FileText, label: "Gerar Resumo" },
+        { id: "ai-kb", icon: BookOpen, label: "Artigos KB" },
+        { id: "ai-translate", icon: Languages, label: "Tradução em Tempo Real" },
+        { id: "ai-bot", icon: Bot, label: "Redirecionar para Bot" },
+        { id: "ai-transfer", icon: UserPlus, label: "Transferir Usuário" },
+      ]
+    },
   ];
 
   const handleRadialMenuSelect = (item: RadialMenuItem) => {
@@ -1735,9 +1748,28 @@ ${recentMessages}
       case "dialer":
         setShowPredictiveDialer(true);
         break;
-      case "ai":
-        // AI menu now shows chat resources via ChatInput, not the AI chat panel
-        toast.info("Use o menu de IA no campo de mensagem para acessar os recursos de IA");
+      // AI submenu items
+      case "ai-chat":
+        setShowAIChat(!showAIChat);
+        break;
+      case "ai-suggestion":
+        toast.info("Use o campo de mensagem para sugestões contextuais");
+        break;
+      case "ai-summary":
+        toast.info("Use o campo de mensagem para gerar resumo");
+        break;
+      case "ai-kb":
+        toast.info("Use o campo de mensagem para artigos KB");
+        break;
+      case "ai-translate":
+        setIsRealTimeTranslationActive(!isRealTimeTranslationActive);
+        toast.success(isRealTimeTranslationActive ? "Tradução em tempo real desativada" : "Tradução em tempo real ativada");
+        break;
+      case "ai-bot":
+        toast.info("Use o campo de mensagem para redirecionar para bot");
+        break;
+      case "ai-transfer":
+        toast.info("Use o campo de mensagem para transferir usuário");
         break;
     }
   };

@@ -1,13 +1,14 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { X, type LucideIcon } from "lucide-react";
+import { X, ChevronLeft, type LucideIcon } from "lucide-react";
 
 export interface RadialMenuItem {
   id: string | number;
   label: string;
   icon: LucideIcon;
   badge?: number;
+  subItems?: RadialMenuItem[];
 }
 
 interface RadialMenuProps {
@@ -38,11 +39,13 @@ export function RadialMenu({
   const [isOpen, setIsOpen] = React.useState(false);
   const [position, setPosition] = React.useState({ x: 0, y: 0 });
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
+  const [activeSubMenu, setActiveSubMenu] = React.useState<RadialMenuItem | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
+  const currentItems = activeSubMenu?.subItems || menuItems;
   const innerRadius = size / 2 - bandWidth - outerGap - outerRingWidth;
   const outerRadius = size / 2 - outerGap - outerRingWidth;
-  const angleStep = (2 * Math.PI) / menuItems.length;
+  const angleStep = (2 * Math.PI) / currentItems.length;
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -62,14 +65,28 @@ export function RadialMenu({
     }
     
     setIsOpen(true);
+    setActiveSubMenu(null);
   };
 
   const handleClose = () => {
     setIsOpen(false);
     setHoveredIndex(null);
+    setActiveSubMenu(null);
+  };
+
+  const handleBack = () => {
+    setActiveSubMenu(null);
+    setHoveredIndex(null);
   };
 
   const handleItemClick = (item: RadialMenuItem, index: number) => {
+    // If item has subitems, open submenu
+    if (item.subItems && item.subItems.length > 0) {
+      setActiveSubMenu(item);
+      setHoveredIndex(null);
+      return;
+    }
+    
     onSelect?.(item);
     handleClose();
   };
@@ -78,7 +95,11 @@ export function RadialMenu({
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
-        handleClose();
+        if (activeSubMenu) {
+          handleBack();
+        } else {
+          handleClose();
+        }
       }
     };
 
@@ -87,7 +108,7 @@ export function RadialMenu({
     return () => {
       document.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen]);
+  }, [isOpen, activeSubMenu]);
 
   // Create SVG path for each menu segment
   const createArcPath = (startAngle: number, endAngle: number) => {
@@ -145,6 +166,7 @@ export function RadialMenu({
             
             {/* Menu */}
             <motion.div
+              key={activeSubMenu ? `sub-${activeSubMenu.id}` : "main"}
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.5 }}
@@ -164,19 +186,19 @@ export function RadialMenu({
                 viewBox={`0 0 ${size} ${size}`}
                 className="pointer-events-auto"
               >
-                {/* Outer ring */}
+                {/* Outer ring - different color for submenu */}
                 <circle
                   cx={size / 2}
                   cy={size / 2}
                   r={size / 2 - outerGap}
                   fill="none"
-                  stroke="hsl(var(--border))"
+                  stroke={activeSubMenu ? "hsl(var(--primary))" : "hsl(var(--border))"}
                   strokeWidth={outerRingWidth}
-                  opacity={0.5}
+                  opacity={activeSubMenu ? 0.7 : 0.5}
                 />
                 
                 {/* Menu segments */}
-                {menuItems.map((item, index) => {
+                {currentItems.map((item, index) => {
                   const startAngle = angleStep * index - Math.PI / 2 - angleStep / 2;
                   const endAngle = startAngle + angleStep;
                   const midAngle = (startAngle + endAngle) / 2;
@@ -185,6 +207,7 @@ export function RadialMenu({
                   const iconY = size / 2 + iconRadius * Math.sin(midAngle);
                   const Icon = item.icon;
                   const isHovered = hoveredIndex === index;
+                  const hasSubItems = item.subItems && item.subItems.length > 0;
 
                   return (
                     <g
@@ -196,8 +219,10 @@ export function RadialMenu({
                     >
                       <motion.path
                         d={createArcPath(startAngle, endAngle)}
-                        fill={isHovered ? "hsl(var(--accent))" : "hsl(var(--card))"}
-                        stroke="hsl(var(--border))"
+                        fill={isHovered 
+                          ? (activeSubMenu ? "hsl(var(--primary)/0.3)" : "hsl(var(--accent))") 
+                          : (activeSubMenu ? "hsl(var(--primary)/0.1)" : "hsl(var(--card))")}
+                        stroke={activeSubMenu ? "hsl(var(--primary)/0.5)" : "hsl(var(--border))"}
                         strokeWidth={1}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -220,7 +245,8 @@ export function RadialMenu({
                               size={iconSize}
                               className={cn(
                                 "transition-colors",
-                                isHovered ? "text-accent-foreground" : "text-foreground"
+                                isHovered ? "text-accent-foreground" : "text-foreground",
+                                activeSubMenu && "text-primary"
                               )}
                             />
                           </div>
@@ -247,24 +273,33 @@ export function RadialMenu({
                             </text>
                           </g>
                         )}
+                        {/* Submenu indicator */}
+                        {hasSubItems && (
+                          <circle
+                            cx={iconX + iconSize / 2 + 2}
+                            cy={iconY + iconSize / 2 + 2}
+                            r={4}
+                            fill="hsl(var(--primary))"
+                          />
+                        )}
                       </motion.g>
                     </g>
                   );
                 })}
 
-                {/* Center button */}
+                {/* Center button - Back or Close */}
                 <motion.g
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.1 }}
-                  onClick={handleClose}
+                  onClick={activeSubMenu ? handleBack : handleClose}
                   className="cursor-pointer"
                 >
                   <circle
                     cx={size / 2}
                     cy={size / 2}
                     r={innerRadius - innerGap}
-                    fill="hsl(var(--primary))"
+                    fill={activeSubMenu ? "hsl(var(--secondary))" : "hsl(var(--primary))"}
                     className="hover:opacity-90 transition-opacity"
                   />
                   <foreignObject
@@ -274,7 +309,11 @@ export function RadialMenu({
                     height={24}
                   >
                     <div className="flex items-center justify-center w-full h-full">
-                      <X size={20} className="text-primary-foreground" />
+                      {activeSubMenu ? (
+                        <ChevronLeft size={20} className="text-secondary-foreground" />
+                      ) : (
+                        <X size={20} className="text-primary-foreground" />
+                      )}
                     </div>
                   </foreignObject>
                 </motion.g>
@@ -289,10 +328,21 @@ export function RadialMenu({
                     exit={{ opacity: 0, y: 5 }}
                     className="absolute left-1/2 -translate-x-1/2 -bottom-8 px-3 py-1.5 bg-popover text-popover-foreground text-sm font-medium rounded-md shadow-lg border whitespace-nowrap"
                   >
-                    {menuItems[hoveredIndex].label}
+                    {currentItems[hoveredIndex].label}
                   </motion.div>
                 )}
               </AnimatePresence>
+              
+              {/* Submenu title */}
+              {activeSubMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute left-1/2 -translate-x-1/2 -top-8 px-3 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-md shadow-lg whitespace-nowrap"
+                >
+                  {activeSubMenu.label}
+                </motion.div>
+              )}
             </motion.div>
           </>
         )}
