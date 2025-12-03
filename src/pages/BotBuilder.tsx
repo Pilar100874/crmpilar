@@ -1092,134 +1092,72 @@ function BotBuilderContent() {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
-        <div className="p-2 sm:p-3 md:p-4 border-b border-border bg-card backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm gap-2 sm:gap-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6 w-full sm:w-auto">
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-foreground">CRIAR BOT</h2>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                Arraste blocos para criar seu fluxo
-              </p>
+        <div className="h-14 px-3 border-b border-border bg-card flex items-center justify-between shadow-sm shrink-0">
+          {/* Left section */}
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:block">
+              <h2 className="text-sm font-bold text-foreground whitespace-nowrap">CRIAR BOT</h2>
             </div>
             
-            <div className="flex gap-1 sm:border-l sm:border-border sm:pl-6">
+            <div className="flex items-center gap-1">
               <Button 
                 variant="outline" 
                 size="icon" 
                 onClick={() => setIsBlockLibraryExpanded(true)}
-                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+                className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 border-0 text-white shadow-lg"
                 title="Adicionar blocos"
               >
-                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Plus className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={handleZoomIn}
-                className="h-8 w-8 sm:h-9 sm:w-9"
-                title="Aumentar zoom"
-              >
-                <ZoomIn className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-8 w-8" title="Aumentar zoom">
+                <ZoomIn className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={handleZoomOut}
-                className="h-8 w-8 sm:h-9 sm:w-9"
-                title="Diminuir zoom"
-              >
-                <ZoomOut className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-8 w-8" title="Diminuir zoom">
+                <ZoomOut className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={handleFitView}
-                disabled={!!selectedNode}
-                className="h-8 w-8 sm:h-9 sm:w-9 disabled:opacity-50 disabled:cursor-not-allowed"
-                title={selectedNode ? "Feche as propriedades para centralizar" : "Centralizar"}
-              >
-                <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Button variant="outline" size="icon" onClick={handleFitView} disabled={!!selectedNode} className="h-8 w-8" title="Centralizar">
+                <Maximize2 className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={handleToggleLock}
-                className={`h-8 w-8 sm:h-9 sm:w-9 ${isLocked ? 'bg-cyan-600 text-white hover:bg-cyan-700' : ''}`}
-                title={isLocked ? "Desbloquear canvas" : "Bloquear canvas"}
-              >
-                {isLocked ? <Lock className="h-3 w-3 sm:h-4 sm:w-4" /> : <Unlock className="h-3 w-3 sm:h-4 sm:w-4" />}
+              <Button variant="outline" size="icon" onClick={handleToggleLock} className={`h-8 w-8 ${isLocked ? 'bg-cyan-600 text-white hover:bg-cyan-700' : ''}`} title={isLocked ? "Desbloquear" : "Bloquear"}>
+                {isLocked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
               </Button>
-              <div className="hidden lg:flex items-center gap-1">
-                <VariableManager
-                  variables={flowVariables}
-                  onVariablesChange={setFlowVariables}
-                  globalVariables={globalVariables}
-                />
-                <VariableMonitor
-                  variables={allVariables}
-                  context={simulatorContext}
-                />
-                <BlockMonitor
-                  selectedNode={selectedNode}
-                  nodes={nodes}
-                  edges={edges}
-                  context={simulatorContext}
-                  allVariables={allVariables}
-                />
-                <EmpresaFieldValidator
-                  selectedNode={selectedNode}
-                  context={simulatorContext}
-                />
-              </div>
-              
-              {/* Nome do Bot (somente leitura) - oculto em mobile */}
-              <div className="hidden md:flex items-center gap-2 border-l border-border pl-3 sm:pl-4">
-                <label className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">
-                  Nome do Bot:
-                </label>
-                <Input
-                  value={currentBotName}
-                  disabled
-                  className="h-8 sm:h-9 w-[150px] sm:w-[200px] bg-muted text-xs sm:text-sm"
-                  placeholder="Nome do bot"
-                />
-              </div>
+            </div>
+
+            <div className="hidden lg:flex items-center gap-1">
+              <VariableManager variables={flowVariables} onVariablesChange={setFlowVariables} globalVariables={globalVariables} />
+              <VariableMonitor variables={allVariables} context={simulatorContext} />
+              <BlockMonitor selectedNode={selectedNode} nodes={nodes} edges={edges} context={simulatorContext} allVariables={allVariables} />
+              <EmpresaFieldValidator selectedNode={selectedNode} context={simulatorContext} />
+            </div>
+            
+            {/* Bot name */}
+            <div className="hidden md:flex items-center gap-2 border-l border-border pl-3">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">Bot:</span>
+              <span className="text-sm font-medium truncate max-w-[150px]">{currentBotName}</span>
             </div>
           </div>
           
-          <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
-            <Button variant="outline" size="sm" onClick={handleImport} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex">
-              <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-              Importar
+          {/* Right section - Action buttons */}
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="sm" onClick={handleImport} className="h-8 px-2 hidden lg:flex">
+              <Upload className="h-4 w-4 mr-1.5" />
+              <span className="hidden xl:inline">Importar</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExport} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex">
-              <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-              Exportar
+            <Button variant="outline" size="sm" onClick={handleExport} className="h-8 px-2 hidden lg:flex">
+              <Download className="h-4 w-4 mr-1.5" />
+              <span className="hidden xl:inline">Exportar</span>
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => handleSave(false)}
-              disabled={isSaving}
-              className={`h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 ${isSaving ? "bg-green-50" : ""}`}
-            >
-              <Save className={`w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 ${isSaving ? "animate-pulse" : ""}`} />
-              {isSaving ? "Salvando..." : "Salvar"}
+            <Button variant="outline" size="sm" onClick={() => handleSave(false)} disabled={isSaving} className="h-8 px-2">
+              <Save className={`h-4 w-4 mr-1.5 ${isSaving ? "animate-pulse" : ""}`} />
+              <span className="hidden sm:inline">{isSaving ? "..." : "Salvar"}</span>
             </Button>
-            <Button size="sm" onClick={handleTest} className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3">
-              <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">{showSimulator ? "Fechar Teste" : "Testar Fluxo"}</span>
-              <span className="sm:hidden">Testar</span>
+            <Button size="sm" onClick={handleTest} className="h-8 px-2 bg-gradient-to-r from-primary to-primary/90">
+              <Play className="h-4 w-4 mr-1.5" />
+              <span className="hidden sm:inline">{showSimulator ? "Parar" : "Testar"}</span>
             </Button>
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={handleExit} 
-              disabled={isSaving} 
-              className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
-            >
-              <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <Button variant="destructive" size="sm" onClick={handleExit} disabled={isSaving} className="h-8 px-2">
+              <X className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">Fechar</span>
-              <span className="sm:hidden">Fechar</span>
             </Button>
           </div>
         </div>
