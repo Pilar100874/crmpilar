@@ -3,9 +3,6 @@ import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
 import {
   ReactFlow,
@@ -591,12 +588,11 @@ function EditorRegrasContent() {
     if (currentRegraId) {
       setHasUnsavedChanges(true);
     }
-  }, [nomeRegra, isAtiva, prioridade]);
+  }, [nomeRegra]);
 
   return (
     <WorkflowBuilderLayout
       title="Regras para o Orçamento"
-      subtitle="Editor de automação de vendas"
       flowName={nomeRegra}
       onFlowNameChange={setNomeRegra}
       onSave={handleSave}
@@ -609,37 +605,13 @@ function EditorRegrasContent() {
       onToggleLock={handleToggleLock}
       hasUnsavedChanges={hasUnsavedChanges}
       defaultReturnUrl="/vendas-config?tab=automacao"
-      leftContent={
-        <div className="hidden md:flex items-center gap-2 ml-2">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="ativa"
-              checked={isAtiva}
-              onCheckedChange={(checked) => setIsAtiva(checked as boolean)}
-            />
-            <Label htmlFor="ativa" className="text-xs sm:text-sm cursor-pointer">Ativa</Label>
-          </div>
-          <div className="h-8 w-px bg-border" />
-          <div className="flex items-center gap-2">
-            <Label className="text-xs sm:text-sm">Prioridade:</Label>
-            <Input
-              type="number"
-              value={prioridade}
-              onChange={(e) => setPrioridade(Number(e.target.value))}
-              className="h-8 w-16 sm:w-20 text-xs sm:text-sm"
-              min="1"
-              max="100"
-            />
-          </div>
-        </div>
-      }
       rightContent={
-        selectedEdgeId && (
+        selectedEdgeId ? (
           <Button variant="outline" size="sm" className="h-8 text-xs sm:text-sm px-2 sm:px-3" onClick={handleDeleteSelectedEdge}>
             <span className="hidden sm:inline">Remover conexão</span>
             <span className="sm:hidden">Remover</span>
           </Button>
-        )
+        ) : null
       }
     >
       {/* Block Library */}
