@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
   Plus, Play, Trash2, Edit, Zap, Loader2, Save, 
-  ZoomIn, ZoomOut, Maximize2, X, Blocks, Minimize2, Copy
+  ZoomIn, ZoomOut, Maximize2, X, Blocks, Minimize2, Copy, MoreVertical, Power
 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import {
@@ -64,6 +65,14 @@ function AdsAutomationContent() {
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [currentNoteNodeId, setCurrentNoteNodeId] = useState<string | null>(null);
   const [currentNoteValue, setCurrentNoteValue] = useState("");
+
+  // Rename dialog state
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [renameAutomation, setRenameAutomation] = useState<any>(null);
+  const [renameName, setRenameName] = useState("");
+  const [renameDescription, setRenameDescription] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   useEffect(() => {
     getEstabelecimentoId().then(setEstabelecimentoId);
@@ -180,6 +189,27 @@ function AdsAutomationContent() {
     },
     onError: (error: any) => {
       toast.error("Erro ao duplicar: " + error.message);
+    },
+  });
+
+  const renameAutomationMutation = useMutation({
+    mutationFn: async (data: { id: string; nome: string; descricao: string }) => {
+      const { error } = await supabase
+        .from("ads_automacoes")
+        .update({ nome: data.nome, descricao: data.descricao, updated_at: new Date().toISOString() })
+        .eq("id", data.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ads_automacoes"] });
+      toast.success("Automação renomeada com sucesso");
+      setRenameDialogOpen(false);
+      setRenameAutomation(null);
+      setRenameName("");
+      setRenameDescription("");
+    },
+    onError: (error: any) => {
+      toast.error("Erro ao renomear: " + error.message);
     },
   });
 
@@ -587,17 +617,49 @@ function AdsAutomationContent() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {automations?.map(automation => (
-                  <Card key={automation.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">{automation.nome}</CardTitle>
-                        <Switch
-                          checked={automation.ativo}
-                          onCheckedChange={(checked) => {
-                            updateAutomationMutation.mutate({ id: automation.id, ativo: checked });
-                          }}
-                        />
-                      </div>
+                  <Card key={automation.id} className="overflow-hidden hover:shadow-lg transition-shadow relative">
+                    <div className="absolute top-3 right-3 z-10">
+                      <DropdownMenu open={openMenuId === automation.id} onOpenChange={(open) => setOpenMenuId(open ? automation.id : null)}>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setOpenMenuId(null); loadAutomation(automation); }}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            setOpenMenuId(null);
+                            setRenameAutomation(automation);
+                            setRenameName(automation.nome);
+                            setRenameDescription(automation.descricao || "");
+                            setRenameDialogOpen(true);
+                          }}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Renomear
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setOpenMenuId(null); duplicateAutomationMutation.mutate(automation); }}>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Duplicar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setOpenMenuId(null); updateAutomationMutation.mutate({ id: automation.id, ativo: !automation.ativo }); }}>
+                            <Power className="w-4 h-4 mr-2" />
+                            {automation.ativo ? "Desativar" : "Ativar"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => { setOpenMenuId(null); if (confirm("Tem certeza?")) deleteAutomationMutation.mutate(automation.id); }}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <CardHeader className="pb-3 pr-12">
+                      <CardTitle className="text-base">{automation.nome}</CardTitle>
                       <CardDescription className="text-xs line-clamp-2">
                         {automation.descricao || "Sem descrição"}
                       </CardDescription>
@@ -611,39 +673,10 @@ function AdsAutomationContent() {
                           {(automation.flow_data as any)?.nodes?.length || 0} blocos
                         </span>
                       </div>
-                      
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => loadAutomation(automation)}
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Editar
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => duplicateAutomationMutation.mutate(automation)}
-                          title="Duplicar"
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => {
-                            if (confirm("Tem certeza que deseja remover esta automação?")) {
-                              deleteAutomationMutation.mutate(automation.id);
-                            }
-                          }}
-                          title="Excluir"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
+                      <Button size="sm" variant="outline" className="w-full" onClick={() => loadAutomation(automation)}>
+                        <Edit className="h-3 w-3 mr-1" />
+                        Abrir Editor
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -867,6 +900,32 @@ function AdsAutomationContent() {
         currentNote={currentNoteValue}
         onSave={handleSaveNote}
       />
+
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear Automação</DialogTitle>
+            <DialogDescription>Digite um novo nome para a automação.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome</Label>
+              <Input value={renameName} onChange={(e) => setRenameName(e.target.value)} placeholder="Nome da automação" />
+            </div>
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Textarea value={renameDescription} onChange={(e) => setRenameDescription(e.target.value)} placeholder="Descrição" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={() => renameAutomation && renameAutomationMutation.mutate({ id: renameAutomation.id, nome: renameName, descricao: renameDescription })} disabled={!renameName.trim() || renameAutomationMutation.isPending}>
+              {renameAutomationMutation.isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
