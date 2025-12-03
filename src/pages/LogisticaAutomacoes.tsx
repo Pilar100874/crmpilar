@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Save, ArrowLeft, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks, Zap, Copy } from "lucide-react";
+import { Save, X, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks, Zap, Copy } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -627,9 +627,9 @@ function EditorContent({
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Header - Estilo Bot Builder */}
-      <div className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 border-b border-border bg-card">
+      <div className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 border-b border-border bg-card h-14">
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <p className="text-xs sm:text-sm text-muted-foreground hidden md:block">
@@ -702,11 +702,7 @@ function EditorContent({
           </div>
         </div>
         
-        <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
-          <Button variant="outline" size="sm" onClick={handleBack} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3">
-            <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">Sair</span>
-          </Button>
+        <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap items-center">
           <div className="flex items-center gap-2 border-l border-border pl-2">
             <Checkbox
               id="ativa"
@@ -735,6 +731,15 @@ function EditorContent({
             <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
             <span className="hidden sm:inline">{showSimulator ? "Fechar Teste" : "Testar"}</span>
             <span className="sm:hidden">Testar</span>
+          </Button>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={handleBack}
+            className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+          >
+            <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Fechar</span>
           </Button>
         </div>
       </div>
