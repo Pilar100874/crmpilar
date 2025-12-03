@@ -2,7 +2,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall } from "lucide-react";
+import { PredictiveDialerDialog } from "@/components/atendimento/PredictiveDialerDialog";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -118,6 +119,9 @@ export default function Atendimento() {
   // Softphone states
   const [showSoftphone, setShowSoftphone] = useState(false);
   const [softphoneNumber, setSoftphoneNumber] = useState("");
+  
+  // Predictive Dialer state
+  const [showPredictiveDialer, setShowPredictiveDialer] = useState(false);
   
   // Bot redirect states
   const [availableBots, setAvailableBots] = useState<any[]>([]);
@@ -1897,6 +1901,17 @@ ${recentMessages}
                   Hoje
                 </Button>
                 
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowPredictiveDialer(true)}
+                  className="h-8"
+                  title="Discador Preditivo"
+                >
+                  <PhoneCall className="w-3.5 h-3.5 mr-1.5" />
+                  Discar
+                </Button>
+                
                 <Dialog open={showSortDialog} onOpenChange={setShowSortDialog}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="flex-1 h-8">
@@ -3013,6 +3028,11 @@ ${recentMessages}
         open={showSoftphone}
         onOpenChange={setShowSoftphone}
         initialNumber={softphoneNumber}
+      />
+
+      <PredictiveDialerDialog 
+        open={showPredictiveDialer}
+        onOpenChange={setShowPredictiveDialer}
       />
     </div>
   );
