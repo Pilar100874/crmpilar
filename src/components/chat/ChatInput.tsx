@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
+import { AnimatePresence, motion, Transition } from "framer-motion";
+import { cn } from "@/lib/utils";
 import AudioRecorder from "./AudioRecorder";
 import FileUploader from "./FileUploader";
 import VariableSequence from "./VariableSequence";
@@ -17,6 +19,24 @@ import QuickAttachmentsSelector from "./QuickAttachmentsSelector";
 import { Message } from "@/pages/ChatWebhook";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
+
+// Animation variants for expandable toolbar buttons
+const buttonVariants = {
+  initial: { gap: 0, paddingLeft: ".5rem", paddingRight: ".5rem" },
+  animate: (isSelected: boolean) => ({
+    gap: isSelected ? ".5rem" : 0,
+    paddingLeft: isSelected ? "1rem" : ".5rem",
+    paddingRight: isSelected ? "1rem" : ".5rem",
+  }),
+};
+
+const spanVariants = {
+  initial: { width: 0, opacity: 0 },
+  animate: { width: "auto", opacity: 1 },
+  exit: { width: 0, opacity: 0 },
+};
+
+const toolbarTransition: Transition = { delay: 0.1, type: "spring", bounce: 0, duration: 0.6 };
 
 interface ChatInputProps {
   onSendMessage: (
@@ -373,19 +393,109 @@ export default function ChatInput({
     );
   };
 
-  // Common button class for toolbar items
-  const toolbarButtonClass = (isActive = false) => 
-    `relative flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium transition-all duration-200 ${
-      isActive 
-        ? "bg-muted text-primary" 
-        : "text-muted-foreground hover:bg-muted hover:text-foreground border border-border/50"
-    }`;
+  // Helper function for animated toolbar button class
+  const getToolbarButtonClass = (isActive = false, isDisabled = false) => cn(
+    "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
+    isActive
+      ? "bg-muted text-primary"
+      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+    isDisabled && "opacity-50 cursor-not-allowed"
+  );
+
+  // Reusable Animated Toolbar Button Component
+  const AnimatedToolbarBtn = ({ 
+    icon: Icon, 
+    title, 
+    onClick, 
+    disabled = false, 
+    isActive = false, 
+    isLoading = false 
+  }: { 
+    icon: React.ElementType;
+    title: string;
+    onClick?: () => void;
+    disabled?: boolean;
+    isActive?: boolean;
+    isLoading?: boolean;
+  }) => (
+    <motion.button
+      variants={buttonVariants}
+      initial={false}
+      animate="animate"
+      custom={isActive}
+      onClick={onClick}
+      disabled={disabled}
+      transition={toolbarTransition}
+      title={title}
+      className={getToolbarButtonClass(isActive, disabled)}
+    >
+      {isLoading ? (
+        <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      ) : (
+        <Icon size={20} />
+      )}
+      <AnimatePresence initial={false}>
+        {isActive && (
+          <motion.span
+            variants={spanVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={toolbarTransition}
+            className="overflow-hidden whitespace-nowrap"
+          >
+            {title}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
+  );
+
+  // Animated Popover Trigger Button
+  const AnimatedPopoverBtn = ({ 
+    icon: Icon, 
+    title, 
+    isOpen,
+    disabled = false,
+  }: { 
+    icon: React.ElementType;
+    title: string;
+    isOpen: boolean;
+    disabled?: boolean;
+  }) => (
+    <motion.button
+      variants={buttonVariants}
+      initial={false}
+      animate="animate"
+      custom={isOpen}
+      disabled={disabled}
+      transition={toolbarTransition}
+      title={title}
+      className={getToolbarButtonClass(isOpen, disabled)}
+    >
+      <Icon size={20} />
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.span
+            variants={spanVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={toolbarTransition}
+            className="overflow-hidden whitespace-nowrap"
+          >
+            {title}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
+  );
 
   return (
     <>
       <div className="flex flex-col gap-3">
         {/* Action Buttons Row - ExpandableTabs Style */}
-        <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-background p-1.5 shadow-sm justify-center">
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-background p-1 shadow-sm justify-center">
           <QuickRepliesSelector onSelect={handleQuickReplySelect} disabled={disabled} />
           
           <QuickAttachmentsSelector onSelect={handleQuickAttachmentSelect} disabled={disabled} />
@@ -394,40 +504,37 @@ export default function ChatInput({
             accept="image/*"
             onFileSelected={handleImageSelected}
             disabled={disabled}
-            icon={<Image className="h-5 w-5" />}
+            icon={<Image size={20} />}
             tooltip="Enviar imagem"
-            buttonClassName={toolbarButtonClass()}
+            title="Imagem"
           />
           
           <FileUploader
             accept="*/*"
             onFileSelected={handleFileSelected}
             disabled={disabled}
-            icon={<Paperclip className="h-5 w-5" />}
+            icon={<Paperclip size={20} />}
             tooltip="Enviar arquivo"
-            buttonClassName={toolbarButtonClass()}
+            title="Arquivo"
           />
           
-          <button
+          <AnimatedToolbarBtn
+            icon={Variable}
+            title="Variáveis"
             onClick={() => setShowVariables(true)}
             disabled={disabled}
-            title="Enviar variáveis"
-            className={toolbarButtonClass()}
-          >
-            <Variable className="h-5 w-5" />
-          </button>
+          />
 
           {/* Bot Redirect Popover */}
           {availableBots.length > 0 && (
             <Popover open={showBotPopover} onOpenChange={setShowBotPopover}>
               <PopoverTrigger asChild>
-                <button
-                  title="Direcionar para bot"
+                <AnimatedPopoverBtn
+                  icon={Bot}
+                  title="Bot"
+                  isOpen={showBotPopover}
                   disabled={disabled}
-                  className={toolbarButtonClass()}
-                >
-                  <Bot className="h-5 w-5" />
-                </button>
+                />
               </PopoverTrigger>
                 <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
                   <div className="space-y-3">
@@ -474,13 +581,12 @@ export default function ChatInput({
             <>
               <Popover open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
                 <PopoverTrigger asChild>
-                  <button
-                    title="Selecionar webhook"
+                  <AnimatedPopoverBtn
+                    icon={Webhook}
+                    title="Webhook"
+                    isOpen={showWebhookPopover}
                     disabled={disabled}
-                    className={toolbarButtonClass()}
-                  >
-                    <Webhook className="h-5 w-5" />
-                  </button>
+                  />
                 </PopoverTrigger>
                   <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
                     <div className="space-y-3">
@@ -510,14 +616,13 @@ export default function ChatInput({
                   </PopoverContent>
                 </Popover>
               
-              <button
+              <AnimatedToolbarBtn
+                icon={Zap}
+                title={webhookAutoResponseActive ? "Ativo" : "Webhook"}
                 onClick={onWebhookToggle}
                 disabled={!selectedWebhookAutoResponse || disabled}
-                title={webhookAutoResponseActive ? "Desativar webhook" : "Ativar webhook"}
-                className={toolbarButtonClass(webhookAutoResponseActive)}
-              >
-                <Zap className={`h-5 w-5 ${!webhookAutoResponseActive ? 'opacity-50' : ''}`} />
-              </button>
+                isActive={webhookAutoResponseActive}
+              />
             </>
           )}
 
@@ -525,13 +630,12 @@ export default function ChatInput({
           {availableUsers.length > 0 && (
             <Popover open={showTransferPopover} onOpenChange={setShowTransferPopover}>
               <PopoverTrigger asChild>
-                <button
-                  title="Direcionar para usuário"
+                <AnimatedPopoverBtn
+                  icon={UserPlus}
+                  title="Transferir"
+                  isOpen={showTransferPopover}
                   disabled={disabled}
-                  className={toolbarButtonClass()}
-                >
-                  <UserPlus className="h-5 w-5" />
-                </button>
+                />
               </PopoverTrigger>
                 <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
                   <div className="space-y-3">
@@ -575,21 +679,22 @@ export default function ChatInput({
 
           {/* AI Chat Button */}
           {aiWebhooks.length > 0 && (
-            <button
+            <AnimatedToolbarBtn
+              icon={Sparkles}
+              title="Chat IA"
               onClick={onToggleAIChat}
               disabled={aiWebhooks.length === 0}
-              title="Chat com IA"
-              className={toolbarButtonClass(showAIChat)}
-            >
-              <Sparkles className="h-5 w-5" />
-            </button>
+              isActive={showAIChat}
+            />
           )}
 
           {/* Agent Assist Separator */}
           <div className="mx-1 h-[24px] w-[1.2px] bg-border" aria-hidden="true" />
 
           {/* 1. Sugestão de Resposta Contextual */}
-          <button
+          <AnimatedToolbarBtn
+            icon={MessageSquareText}
+            title="Sugerir"
             onClick={async () => {
               if (!conversationMessages || conversationMessages.length === 0) {
                 toast.error("Nenhuma mensagem para analisar");
@@ -621,18 +726,14 @@ export default function ChatInput({
               }
             }}
             disabled={disabled || isGeneratingContextResponse || !conversationId}
-            title="Sugerir resposta com base no contexto"
-            className={toolbarButtonClass()}
-          >
-            {isGeneratingContextResponse ? (
-              <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <MessageSquareText className="h-5 w-5" />
-            )}
-          </button>
+            isLoading={isGeneratingContextResponse}
+            isActive={isGeneratingContextResponse}
+          />
 
           {/* 2. Resumo Automático */}
-          <button
+          <AnimatedToolbarBtn
+            icon={FileCheck}
+            title="Resumir"
             onClick={async () => {
               if (!conversationMessages || conversationMessages.length === 0) {
                 toast.error("Nenhuma mensagem para resumir");
@@ -663,18 +764,14 @@ export default function ChatInput({
               }
             }}
             disabled={disabled || isGeneratingSummary || !conversationId}
-            title="Resumir conversa"
-            className={toolbarButtonClass()}
-          >
-            {isGeneratingSummary ? (
-              <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <FileCheck className="h-5 w-5" />
-            )}
-          </button>
+            isLoading={isGeneratingSummary}
+            isActive={isGeneratingSummary}
+          />
 
           {/* 3. Sugerir Artigos KB */}
-          <button
+          <AnimatedToolbarBtn
+            icon={BookOpen}
+            title="Artigos"
             onClick={async () => {
               if (!lastUserMessage) {
                 toast.error("Nenhuma mensagem do cliente para analisar");
@@ -714,26 +811,20 @@ export default function ChatInput({
               }
             }}
             disabled={disabled || isSuggestingKBArticles || !lastUserMessage}
-            title="Sugerir artigos da base de conhecimento"
-            className={toolbarButtonClass()}
-          >
-            {isSuggestingKBArticles ? (
-              <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <BookOpen className="h-5 w-5" />
-            )}
-          </button>
+            isLoading={isSuggestingKBArticles}
+            isActive={isSuggestingKBArticles}
+          />
+
 
           {/* 4. Tradução Automática */}
           <Popover open={showTranslatePopover} onOpenChange={setShowTranslatePopover}>
             <PopoverTrigger asChild>
-              <button
-                title="Traduzir mensagem"
+              <AnimatedPopoverBtn
+                icon={Languages}
+                title="Traduzir"
+                isOpen={showTranslatePopover}
                 disabled={disabled || !message.trim()}
-                className={toolbarButtonClass()}
-              >
-                <Languages className="h-5 w-5" />
-              </button>
+              />
             </PopoverTrigger>
             <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
               <div className="space-y-3">
@@ -808,13 +899,12 @@ export default function ChatInput({
           {/* Real-time Translation Toggle */}
           <Popover>
             <PopoverTrigger asChild>
-              <button
-                title="Tradução em tempo real"
+              <AnimatedPopoverBtn
+                icon={Languages}
+                title="Tradução Auto"
+                isOpen={isRealTimeTranslationActive}
                 disabled={disabled}
-                className={toolbarButtonClass(isRealTimeTranslationActive)}
-              >
-                <Languages className={`h-5 w-5 ${isRealTimeTranslationActive ? 'animate-pulse' : ''}`} />
-              </button>
+              />
             </PopoverTrigger>
             <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
               <div className="space-y-4">
@@ -862,13 +952,12 @@ export default function ChatInput({
           {/* Import Reports Button */}
           <Popover open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>
             <PopoverTrigger asChild>
-              <button
-                title="Anexar Estoque de Terceiros"
+              <AnimatedPopoverBtn
+                icon={FileText}
+                title="Estoque"
+                isOpen={showImportReportsPopover}
                 disabled={disabled}
-                className={toolbarButtonClass()}
-              >
-                <FileText className="h-5 w-5" />
-              </button>
+              />
             </PopoverTrigger>
             <PopoverContent className="w-80 z-50 rounded-2xl" align="start">
               <div className="space-y-4">
