@@ -1,8 +1,7 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast-config";
 import { AnimatePresence, motion, Transition } from "framer-motion";
-import { LucideIcon } from "lucide-react";
 
 const buttonVariants = {
   initial: { gap: 0, paddingLeft: ".5rem", paddingRight: ".5rem" },
@@ -29,7 +28,6 @@ interface FileUploaderProps {
   tooltip: string;
   buttonClassName?: string;
   title?: string;
-  isSelected?: boolean;
 }
 
 export default function FileUploader({
@@ -40,12 +38,15 @@ export default function FileUploader({
   tooltip,
   buttonClassName,
   title,
-  isSelected = false,
 }: FileUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleClick = () => {
+    setIsExpanded(true);
     inputRef.current?.click();
+    // Auto collapse after delay
+    setTimeout(() => setIsExpanded(false), 2000);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,6 +55,7 @@ export default function FileUploader({
       const fileUrl = URL.createObjectURL(file);
       onFileSelected(file, fileUrl);
       toast.success(`${file.name} selecionado`);
+      setIsExpanded(false);
       
       // Reset input
       if (inputRef.current) {
@@ -75,23 +77,23 @@ export default function FileUploader({
         variants={buttonVariants}
         initial={false}
         animate="animate"
-        custom={isSelected}
+        custom={isExpanded}
         onClick={handleClick}
         disabled={disabled}
         transition={transition}
         title={tooltip}
         className={cn(
           "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
-          isSelected
-            ? "bg-muted text-primary"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          isExpanded
+            ? "text-primary"
+            : "text-muted-foreground hover:text-foreground",
           disabled && "opacity-50 cursor-not-allowed",
           buttonClassName
         )}
       >
         {icon}
         <AnimatePresence initial={false}>
-          {isSelected && title && (
+          {isExpanded && title && (
             <motion.span
               variants={spanVariants}
               initial="initial"
