@@ -510,7 +510,7 @@ function EditorRegrasContent() {
     if (hasUnsavedChanges) {
       setShowExitDialog(true);
     } else {
-      navigate("/config?secao=cadastro-estabelecimentos&subsecao=automacao-vendas");
+      navigate("/vendas-config?tab=automacao");
     }
   };
 
@@ -528,7 +528,7 @@ function EditorRegrasContent() {
   const confirmExit = () => {
     setShowExitDialog(false);
     setHasUnsavedChanges(false);
-    navigate("/config?secao=cadastro-estabelecimentos&subsecao=automacao-vendas");
+    navigate("/vendas-config?tab=automacao");
   };
 
   // Rastrear mudanças em nodes e edges
