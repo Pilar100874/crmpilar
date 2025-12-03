@@ -384,10 +384,10 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
 
   const handleClose = () => {
     if (hasCanvasContent()) {
-      setPendingNavigation(() => () => navigate(-1));
+      setPendingNavigation(() => () => navigate('/marketing'));
       setShowExitDialog(true);
     } else {
-      navigate(-1);
+      navigate('/marketing');
     }
   };
 
