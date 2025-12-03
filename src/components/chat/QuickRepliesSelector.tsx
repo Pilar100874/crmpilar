@@ -12,8 +12,8 @@ import { Card } from "@/components/ui/card";
 import { toast } from "@/lib/toast-config";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
-const toolbarBtnClass = "h-10 w-10 rounded-full border border-border/50 bg-background flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm";
-const toolbarBtnActiveClass = "h-10 w-10 rounded-full border border-primary/50 bg-primary/10 flex items-center justify-center text-primary transition-colors shadow-sm";
+const toolbarBtnClass = "h-9 w-9 rounded-xl bg-card border border-border/30 shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted hover:border-border/50 hover:shadow-md transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
+const toolbarBtnActiveClass = "h-9 w-9 rounded-xl bg-primary/15 border border-primary/40 shadow-sm flex items-center justify-center text-primary hover:bg-primary/20 transition-all duration-200";
 
 interface QuickReply {
   id: string;
@@ -72,42 +72,42 @@ export default function QuickRepliesSelector({ onSelect, disabled }: QuickReplie
           title="Textos prontos"
           className={open ? toolbarBtnActiveClass : toolbarBtnClass}
         >
-          <MessageSquare size={20} />
+          <MessageSquare size={18} />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0 rounded-2xl" align="end">
-        <div className="p-3 border-b">
-          <h4 className="font-semibold">Textos Prontos</h4>
+      <PopoverContent className="w-80 p-0 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+        <div className="p-3 border-b border-border/50 bg-muted/30 rounded-t-xl">
+          <h4 className="font-semibold text-sm">Textos Prontos</h4>
         </div>
-        <ScrollArea className="h-[300px]">
-          <div className="p-2 space-y-2">
+        <ScrollArea className="h-[280px]">
+          <div className="p-2 space-y-1.5">
             {quickReplies.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="text-sm text-muted-foreground text-center py-8">
                 Nenhum texto pronto cadastrado
               </p>
             ) : (
               quickReplies.map((reply) => (
                 <Card
                   key={reply.id}
-                  className="p-3 cursor-pointer hover:bg-muted/50 transition-colors rounded-2xl"
+                  className="p-2.5 cursor-pointer hover:bg-muted/50 transition-all duration-150 rounded-lg border-border/30 hover:border-border/50 hover:shadow-sm"
                   onClick={() => handleSelect(reply.content)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-0.5">
                         {reply.shortcut && (
-                          <span className="text-xs text-primary font-mono bg-primary/10 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] text-primary font-mono bg-primary/10 px-1.5 py-0.5 rounded">
                             {reply.shortcut}
                           </span>
                         )}
-                        <h5 className="font-medium text-sm">{reply.title}</h5>
+                        <h5 className="font-medium text-xs">{reply.title}</h5>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      <p className="text-[11px] text-muted-foreground line-clamp-2">
                         {reply.content}
                       </p>
                     </div>
                     {reply.is_global && (
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
                         Global
                       </span>
                     )}

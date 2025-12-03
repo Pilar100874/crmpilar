@@ -19,9 +19,9 @@ import { Message } from "@/pages/ChatWebhook";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
 
-// Simple circular toolbar button class - each with its own circle
-const toolbarBtnClass = "h-10 w-10 rounded-full border border-border/50 bg-background flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm";
-const toolbarBtnActiveClass = "h-10 w-10 rounded-full border border-primary/50 bg-primary/10 flex items-center justify-center text-primary transition-colors shadow-sm";
+// Elegant toolbar button styles
+const toolbarBtnClass = "h-9 w-9 rounded-xl bg-card border border-border/30 shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted hover:border-border/50 hover:shadow-md transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
+const toolbarBtnActiveClass = "h-9 w-9 rounded-xl bg-primary/15 border border-primary/40 shadow-sm flex items-center justify-center text-primary hover:bg-primary/20 transition-all duration-200";
 
 interface ChatInputProps {
   onSendMessage: (
@@ -829,74 +829,104 @@ export default function ChatInput({
         className="hidden"
       />
       
-      <div className="flex flex-col gap-3">
-        {/* Text Input Row with Expandable Menu (left), Emoji, Text Area (center), Audio & Send (right) */}
-        <div className="flex items-end gap-2">
-          {/* Expandable Tools Menu */}
-          <div ref={menuRef} className="relative pb-1" style={{ height: 'auto' }}>
-            <div className="relative">
+      {/* Main container with elegant styling */}
+      <div className="relative">
+        {/* Expandable menu backdrop blur when open */}
+        {showToolsMenu && (
+          <div 
+            className="fixed inset-0 bg-background/20 backdrop-blur-[2px] z-40"
+            onClick={() => setShowToolsMenu(false)}
+          />
+        )}
+        
+        {/* Main input container */}
+        <div className="relative z-50 bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2">
+          {/* Input row */}
+          <div className="flex items-end gap-2">
+            {/* Expandable Tools Menu - positioned to expand upward */}
+            <div ref={menuRef} className="relative">
+              {/* Expanded menu items */}
+              <div 
+                className={cn(
+                  "absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5",
+                  "transition-all duration-300 origin-bottom",
+                  showToolsMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+                )}
+              >
+                {toolbarItems.map((item, index) => (
+                  <div 
+                    key={index}
+                    className="transform transition-all duration-200"
+                    style={{
+                      transitionDelay: showToolsMenu ? `${index * 30}ms` : '0ms',
+                      transform: showToolsMenu ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.9)',
+                      opacity: showToolsMenu ? 1 : 0,
+                    }}
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+
               {/* Main trigger button */}
               <button 
                 className={cn(
-                  "relative w-10 h-10 rounded-full cursor-pointer z-50",
-                  "bg-background border border-border/50 shadow-sm",
+                  "relative w-10 h-10 rounded-full cursor-pointer",
+                  "bg-muted/50 hover:bg-muted",
                   "flex items-center justify-center",
-                  "transition-all duration-300",
-                  showToolsMenu && "bg-primary text-primary-foreground border-primary rotate-45"
+                  "transition-all duration-300 ease-out",
+                  "text-muted-foreground hover:text-foreground",
+                  showToolsMenu && "bg-primary text-primary-foreground rotate-45 shadow-md"
                 )}
                 onClick={() => setShowToolsMenu(!showToolsMenu)}
                 title={showToolsMenu ? "Fechar menu" : "Abrir ferramentas"}
               >
                 <Plus className="h-5 w-5" />
               </button>
-
-              {/* Menu items - expand upward */}
-              {toolbarItems.map((item, index) => (
-                <div 
-                  key={index} 
-                  className={cn(
-                    "absolute left-0 w-10 h-10 rounded-full",
-                    "bg-background border border-border/50 shadow-sm",
-                    "flex items-center justify-center"
-                  )}
-                  style={{
-                    transform: `translateY(${showToolsMenu ? -((index + 1) * 44) : 0}px)`,
-                    opacity: showToolsMenu ? 1 : 0,
-                    zIndex: 40 - index,
-                    transition: `transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
-                               opacity ${showToolsMenu ? '300ms' : '200ms'}`,
-                    pointerEvents: showToolsMenu ? 'auto' : 'none',
-                  }}
-                >
-                  {item}
-                </div>
-              ))}
             </div>
+            
+            {/* Emoji picker */}
+            <EmojiPicker onEmojiSelect={handleEmojiSelect} disabled={disabled} />
+            
+            {/* Text input - takes remaining space */}
+            <div className="flex-1 relative">
+              <Textarea
+                ref={textareaRef}
+                value={message}
+                onChange={handleMessageChange}
+                onKeyDown={handleKeyPress}
+                placeholder="Digite sua mensagem..."
+                className={cn(
+                  "min-h-[40px] max-h-[120px] resize-none",
+                  "rounded-xl px-4 py-2.5",
+                  "bg-background/60 border-0",
+                  "focus:ring-1 focus:ring-primary/30",
+                  "placeholder:text-muted-foreground/60",
+                  "text-sm leading-relaxed"
+                )}
+                disabled={disabled}
+              />
+            </div>
+            
+            {/* Audio recorder */}
+            <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={disabled} />
+            
+            {/* Send button */}
+            <Button 
+              onClick={handleSend} 
+              disabled={!message.trim() || disabled} 
+              size="icon"
+              className={cn(
+                "rounded-full h-10 w-10",
+                "bg-primary hover:bg-primary/90",
+                "shadow-md hover:shadow-lg",
+                "transition-all duration-200",
+                "disabled:opacity-40"
+              )}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
-          
-          <EmojiPicker onEmojiSelect={handleEmojiSelect} disabled={disabled} />
-          
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={handleMessageChange}
-            onKeyDown={handleKeyPress}
-            placeholder="Digite sua mensagem..."
-            className="min-h-[44px] max-h-[120px] resize-none rounded-full px-4"
-            style={{ paddingTop: '12px', paddingBottom: '12px' }}
-            disabled={disabled}
-          />
-          
-          <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={disabled} />
-          
-          <Button 
-            onClick={handleSend} 
-            disabled={!message.trim() || disabled} 
-            size="icon"
-            className="rounded-full h-11 w-11"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
         </div>
       </div>
 
