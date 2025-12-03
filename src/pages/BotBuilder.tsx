@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Play, Save, Download, Upload, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, ArrowLeft } from "lucide-react";
+import { Plus, Play, Save, Download, Upload, ZoomIn, ZoomOut, Maximize2, Lock, Unlock, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1091,7 +1091,7 @@ function BotBuilderContent() {
   }, [navigate]);
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
         <div className="p-2 sm:p-3 md:p-4 border-b border-border bg-card backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm gap-2 sm:gap-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-6 w-full sm:w-auto">
             <div>
@@ -1187,11 +1187,6 @@ function BotBuilderContent() {
           </div>
           
           <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
-            <Button variant="outline" size="sm" onClick={handleExit} disabled={isSaving} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3">
-              <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">{isSaving ? "Salvando..." : "Sair"}</span>
-              <span className="sm:hidden">Sair</span>
-            </Button>
             <Button variant="outline" size="sm" onClick={handleImport} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex">
               <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Importar
@@ -1214,6 +1209,17 @@ function BotBuilderContent() {
               <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">{showSimulator ? "Fechar Teste" : "Testar Fluxo"}</span>
               <span className="sm:hidden">Testar</span>
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={handleExit} 
+              disabled={isSaving} 
+              className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+            >
+              <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Fechar</span>
+              <span className="sm:hidden">Fechar</span>
             </Button>
           </div>
         </div>
