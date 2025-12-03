@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, CalendarIcon, Settings, Copy, MoreVertical, Power } from "lucide-react";
+import { Plus, Edit, Trash2, CalendarIcon, Settings, MoreVertical, Power } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -204,6 +204,33 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
     }
   };
 
+  const handleRename = async () => {
+    if (!selectedAutomacao || !renameName.trim()) return;
+    
+    setIsRenaming(true);
+    try {
+      const { error } = await supabase
+        .from("automacoes_vendas")
+        .update({ 
+          nome: renameName.trim(),
+          descricao: renameDescription.trim() || null
+        })
+        .eq("id", selectedAutomacao.id);
+
+      if (error) throw error;
+
+      toast.success("Regra renomeada com sucesso!");
+      setRenameDialogOpen(false);
+      setSelectedAutomacao(null);
+      loadAutomacoes();
+    } catch (error) {
+      console.error("Erro ao renomear regra:", error);
+      toast.error("Erro ao renomear regra");
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-4">Carregando...</div>;
   }
@@ -264,7 +291,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
             return (
               <Card key={automacao.id} className="p-4 hover:shadow-lg transition-shadow">
                 <div className="space-y-4">
-                  {/* Cabeçalho com Switch */}
+                  {/* Cabeçalho com Menu */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-lg truncate">{automacao.nome}</h3>
@@ -272,18 +299,66 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                         {automacao.descricao || "Sem descrição"}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Switch
-                        checked={automacao.ativo}
-                        onCheckedChange={() => handleToggleActive(automacao.id, automacao.ativo)}
-                      />
-                      <span className={cn(
-                        "text-xs font-medium",
-                        automacao.ativo ? "text-green-600" : "text-muted-foreground"
-                      )}>
-                        {automacao.ativo ? "Ativa" : "Inativa"}
-                      </span>
-                    </div>
+                    <DropdownMenu open={openMenuId === automacao.id} onOpenChange={(open) => setOpenMenuId(open ? automacao.id : null)}>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => {
+                          setOpenMenuId(null);
+                          navigate(`/editor-regras?id=${automacao.id}`, { state: { from: location.pathname + location.search } });
+                        }}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setOpenMenuId(null);
+                          setSelectedAutomacao(automacao);
+                          setRenameName(automacao.nome);
+                          setRenameDescription(automacao.descricao || "");
+                          setRenameDialogOpen(true);
+                        }}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Renomear
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setOpenMenuId(null);
+                          handleDuplicate(automacao);
+                        }}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Duplicar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setOpenMenuId(null);
+                          handleToggleActive(automacao.id, automacao.ativo);
+                        }}>
+                          <Power className="h-4 w-4 mr-2" />
+                          {automacao.ativo ? "Desativar" : "Ativar"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            setDeleteId(automacao.id);
+                          }}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  {/* Status */}
+                  <div className="flex items-center gap-2">
+                    <Badge variant={automacao.ativo ? "default" : "secondary"}>
+                      {automacao.ativo ? "Ativa" : "Inativa"}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {numBlocos} {numBlocos === 1 ? "bloco" : "blocos"}
+                    </span>
                   </div>
 
                   {/* Informações */}
@@ -291,10 +366,6 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                     <div className="flex items-center gap-2">
                       <span className="text-muted-foreground">Prioridade:</span>
                       <Badge variant="outline">{automacao.prioridade}</Badge>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">Blocos:</span>
-                      <span className="font-medium">{numBlocos}</span>
                     </div>
                   </div>
 
@@ -348,38 +419,6 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                   <div className="text-xs text-muted-foreground">
                     Criado em {new Date(automacao.created_at).toLocaleDateString()}
                   </div>
-
-                  {/* Ações */}
-                  <div className="flex items-center gap-2 pt-2 border-t">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/editor-regras?id=${automacao.id}`, { state: { from: location.pathname + location.search } })}
-                      title="Editar regra"
-                      className="flex-1"
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Editar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDuplicate(automacao)}
-                      title="Duplicar regra"
-                      className="shrink-0"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDeleteId(automacao.id)}
-                      title="Excluir regra"
-                      className="shrink-0"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
                 </div>
               </Card>
             );
@@ -394,6 +433,46 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
         title="Excluir Regra de Automação"
         description="Tem certeza que deseja excluir esta regra? Esta ação não pode ser desfeita."
       />
+
+      {/* Dialog de Renomear */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear Regra</DialogTitle>
+            <DialogDescription>
+              Altere o nome e descrição da regra de automação.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rename-name">Nome</Label>
+              <Input
+                id="rename-name"
+                value={renameName}
+                onChange={(e) => setRenameName(e.target.value)}
+                placeholder="Nome da regra"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="rename-description">Descrição</Label>
+              <Input
+                id="rename-description"
+                value={renameDescription}
+                onChange={(e) => setRenameDescription(e.target.value)}
+                placeholder="Descrição da regra (opcional)"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameDialogOpen(false)} disabled={isRenaming}>
+              Cancelar
+            </Button>
+            <Button onClick={handleRename} disabled={isRenaming || !renameName.trim()}>
+              {isRenaming ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
