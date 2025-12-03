@@ -35,7 +35,11 @@ export function ChatAvisosFloatingButton() {
     <>
       {/* Aba lateral estilo menu - laranja */}
       <div 
-        className={cn("chat-tab", hasUnread && !chatOpen && "chat-tab-pulse")}
+        className={cn(
+          "chat-tab", 
+          chatOpen && "chat-open",
+          hasUnread && !chatOpen && "chat-tab-pulse"
+        )}
         onClick={handleChatClick}
       >
         <MessageCircle className="w-3 h-3" />

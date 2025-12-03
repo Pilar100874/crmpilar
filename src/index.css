@@ -200,6 +200,10 @@ All colors MUST be HSL.
     background: hsl(25 95% 45%);
   }
 
+  .chat-tab.chat-open {
+    right: 400px;
+  }
+
   .chat-tab svg {
     color: white;
     opacity: 0.9;
@@ -224,10 +228,10 @@ All colors MUST be HSL.
   /* Chat Slide-out Menu */
   .chat-slide-menu {
     position: fixed;
-    right: -320px;
+    right: -400px;
     top: 0;
     bottom: 0;
-    width: 320px;
+    width: 400px;
     z-index: 500;
     transition: right 0.3s ease;
     background: hsl(var(--background));
