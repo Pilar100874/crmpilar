@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Save, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { WorkflowBuilderLayout } from "@/components/workflow/WorkflowBuilderLayout";
 import {
   ReactFlow,
   Background,
@@ -79,6 +79,8 @@ function EditorRegrasContent() {
   const [currentNoteValue, setCurrentNoteValue] = useState("");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleDuplicateNode = useCallback(
     (nodeId: string) => {
@@ -401,12 +403,14 @@ function EditorRegrasContent() {
   );
 
   const handleSave = async () => {
+    setIsSaving(true);
     if (!nomeRegra.trim()) {
       toast({
         title: "Erro",
         description: "Por favor, insira um nome para a regra.",
         variant: "destructive",
       });
+      setIsSaving(false);
       return;
     }
 
@@ -444,6 +448,7 @@ function EditorRegrasContent() {
         description: `Os seguintes blocos não estão conectados: ${disconnectedLabels}. Todos os blocos devem estar conectados ao fluxo.`,
         variant: "destructive",
       });
+      setIsSaving(false);
       return;
     }
 
@@ -455,6 +460,7 @@ function EditorRegrasContent() {
           description: "Estabelecimento não encontrado",
           variant: "destructive",
         });
+        setIsSaving(false);
         return;
       }
 
@@ -484,7 +490,6 @@ function EditorRegrasContent() {
           description: "Regra atualizada com sucesso",
         });
         setHasUnsavedChanges(false);
-        navigate("/config?secao=cadastro-estabelecimentos&subsecao=automacao-vendas");
       } else {
         const { data, error } = await supabase
           .from("automacoes_vendas")
@@ -510,6 +515,8 @@ function EditorRegrasContent() {
         description: "Não foi possível salvar a regra",
         variant: "destructive",
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -538,6 +545,39 @@ function EditorRegrasContent() {
     navigate(originUrl);
   };
 
+  // Zoom handlers
+  const handleZoomIn = useCallback(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.zoomIn({ duration: 200 });
+    }
+  }, [reactFlowInstance]);
+
+  const handleZoomOut = useCallback(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.zoomOut({ duration: 200 });
+    }
+  }, [reactFlowInstance]);
+
+  const handleFitView = useCallback(() => {
+    if (reactFlowInstance) {
+      reactFlowInstance.fitView({ 
+        padding: 0.2,
+        duration: 300,
+        maxZoom: 1.2
+      });
+    }
+  }, [reactFlowInstance]);
+
+  const handleToggleLock = useCallback(() => {
+    setIsLocked(prev => {
+      toast({
+        title: !prev ? "Canvas bloqueado" : "Canvas desbloqueado",
+        description: !prev ? "O canvas está bloqueado para edição" : "O canvas está desbloqueado para edição",
+      });
+      return !prev;
+    });
+  }, []);
+
   // Rastrear mudanças em nodes e edges
   useEffect(() => {
     // Ignora a inicialização
@@ -554,154 +594,136 @@ function EditorRegrasContent() {
   }, [nomeRegra, isAtiva, prioridade]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
-      {/* Header */}
-      <div className="h-14 border-b border-border flex items-center justify-between px-4 bg-gradient-to-r from-primary/5 to-primary/10 shadow-sm">
-        <div className="flex items-center gap-3">
-          
-          <div className="h-8 w-px bg-border" />
-          
-          <Button
-            variant={isBlockLibraryExpanded ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setIsBlockLibraryExpanded(!isBlockLibraryExpanded)}
-            className="h-8"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Blocos
-          </Button>
-
-          <div className="h-8 w-px bg-border" />
-
-          <div className="flex items-center gap-2">
-            <Input
-              value={nomeRegra}
-              onChange={(e) => setNomeRegra(e.target.value)}
-              placeholder="Nome da regra"
-              className="h-8 w-64"
-            />
-          </div>
-
+    <WorkflowBuilderLayout
+      title="Regras para o Orçamento"
+      subtitle="Editor de automação de vendas"
+      flowName={nomeRegra}
+      onFlowNameChange={setNomeRegra}
+      onSave={handleSave}
+      isSaving={isSaving}
+      onZoomIn={handleZoomIn}
+      onZoomOut={handleZoomOut}
+      onFitView={handleFitView}
+      onAddBlock={() => setIsBlockLibraryExpanded(true)}
+      isLocked={isLocked}
+      onToggleLock={handleToggleLock}
+      hasUnsavedChanges={hasUnsavedChanges}
+      defaultReturnUrl="/vendas-config?tab=automacao"
+      leftContent={
+        <div className="hidden md:flex items-center gap-2 ml-2">
           <div className="flex items-center gap-2">
             <Checkbox
               id="ativa"
               checked={isAtiva}
               onCheckedChange={(checked) => setIsAtiva(checked as boolean)}
             />
-            <Label htmlFor="ativa" className="text-sm cursor-pointer">Ativa</Label>
+            <Label htmlFor="ativa" className="text-xs sm:text-sm cursor-pointer">Ativa</Label>
           </div>
-
+          <div className="h-8 w-px bg-border" />
           <div className="flex items-center gap-2">
-            <Label className="text-sm">Prioridade:</Label>
+            <Label className="text-xs sm:text-sm">Prioridade:</Label>
             <Input
               type="number"
               value={prioridade}
               onChange={(e) => setPrioridade(Number(e.target.value))}
-              className="h-8 w-20"
+              className="h-8 w-16 sm:w-20 text-xs sm:text-sm"
               min="1"
               max="100"
             />
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          {selectedEdgeId && (
-            <Button variant="outline" size="sm" className="h-8" onClick={handleDeleteSelectedEdge}>
-              Remover conexão selecionada
-            </Button>
-          )}
-          <Button onClick={handleSave} size="sm" className="h-8">
-            <Save className="h-4 w-4 mr-2" />
-            Salvar
+      }
+      rightContent={
+        selectedEdgeId && (
+          <Button variant="outline" size="sm" className="h-8 text-xs sm:text-sm px-2 sm:px-3" onClick={handleDeleteSelectedEdge}>
+            <span className="hidden sm:inline">Remover conexão</span>
+            <span className="sm:hidden">Remover</span>
           </Button>
-          <Button variant="destructive" size="sm" className="h-8" onClick={handleBack}>
-            <X className="h-4 w-4 mr-2" />
-            Fechar
-          </Button>
-        </div>
-      </div>
+        )
+      }
+    >
+      {/* Block Library */}
+      <AutomacaoBlockLibrary 
+        onDragStart={onDragStart}
+        isExpanded={isBlockLibraryExpanded}
+        onToggleExpanded={setIsBlockLibraryExpanded}
+      />
 
-      {/* Main content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Block Library */}
-        <AutomacaoBlockLibrary 
-          onDragStart={onDragStart}
-          isExpanded={isBlockLibraryExpanded}
-          onToggleExpanded={setIsBlockLibraryExpanded}
-        />
-
-        {/* Canvas */}
-        <div ref={reactFlowWrapper} className="flex-1 bg-muted/20">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges.map((edge) => ({
-              ...edge,
-              style: {
-                stroke: edge.selected ? '#ea580c' : '#f97316',
-                strokeWidth: edge.selected ? 2.5 : 1.33,
-              },
-              markerEnd: {
-                type: 'arrowclosed',
-                width: 20,
-                height: 20,
-                color: edge.selected ? '#ea580c' : '#f97316',
-              },
-              type: 'smoothstep',
-            }))}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onEdgesDelete={onEdgesDelete}
-            onInit={setReactFlowInstance}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onNodeClick={onNodeClick}
-            onPaneClick={onPaneClick}
-            nodeTypes={nodeTypes}
-            defaultViewport={{ x: 0, y: 0, zoom: 0.33 }}
-            deleteKeyCode="Delete"
-            className="bg-background"
-              defaultEdgeOptions={{
-                animated: true,
-                style: { stroke: '#f97316', strokeWidth: 2 },
-                markerEnd: {
-                  type: 'arrowclosed',
-                  width: 20,
-                  height: 20,
-                  color: '#f97316',
-                },
-                type: 'smoothstep',
-              }}
-          >
-            <Background 
-              variant={BackgroundVariant.Dots} 
-              gap={16}
-              size={1}
-              color="hsl(var(--muted-foreground))"
-              className="opacity-20"
-            />
-            <Controls 
-              className="bg-card border border-border shadow-lg rounded-lg"
-              showInteractive={false}
-            />
-            <MiniMap 
-              className="bg-card border border-border shadow-lg rounded-lg"
-              nodeColor="#8B5CF6"
-              maskColor="rgba(0, 0, 0, 0.1)"
-            />
-          </ReactFlow>
-        </div>
-
-        {/* Properties Panel */}
-        {selectedNode && (
-          <AutomacaoPropertiesPanel
-            node={selectedNode}
-            onUpdate={handleUpdateNode}
-            onDelete={handleDeleteNode}
-            onClose={() => setSelectedNode(null)}
+      {/* Canvas */}
+      <div ref={reactFlowWrapper} className="flex-1 bg-muted/20">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges.map((edge) => ({
+            ...edge,
+            style: {
+              stroke: edge.selected ? '#ea580c' : '#f97316',
+              strokeWidth: edge.selected ? 2.5 : 1.33,
+            },
+            markerEnd: {
+              type: 'arrowclosed',
+              width: 20,
+              height: 20,
+              color: edge.selected ? '#ea580c' : '#f97316',
+            },
+            type: 'smoothstep',
+          }))}
+          onNodesChange={isLocked ? undefined : onNodesChange}
+          onEdgesChange={isLocked ? undefined : onEdgesChange}
+          onConnect={isLocked ? undefined : onConnect}
+          onEdgesDelete={isLocked ? undefined : onEdgesDelete}
+          onInit={setReactFlowInstance}
+          onDrop={isLocked ? undefined : onDrop}
+          onDragOver={isLocked ? undefined : onDragOver}
+          onNodeClick={onNodeClick}
+          onEdgeClick={onEdgeClick}
+          onPaneClick={onPaneClick}
+          nodeTypes={nodeTypes}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.33 }}
+          deleteKeyCode={isLocked ? null : "Delete"}
+          nodesDraggable={!isLocked}
+          nodesConnectable={!isLocked}
+          elementsSelectable={!isLocked}
+          className="bg-background"
+          defaultEdgeOptions={{
+            animated: true,
+            style: { stroke: '#f97316', strokeWidth: 2 },
+            markerEnd: {
+              type: 'arrowclosed',
+              width: 20,
+              height: 20,
+              color: '#f97316',
+            },
+            type: 'smoothstep',
+          }}
+        >
+          <Background 
+            variant={BackgroundVariant.Dots} 
+            gap={16}
+            size={1}
+            color="hsl(var(--muted-foreground))"
+            className="opacity-20"
           />
-        )}
+          <Controls 
+            className="bg-card border border-border shadow-lg rounded-lg"
+            showInteractive={false}
+          />
+          <MiniMap 
+            className="bg-card border border-border shadow-lg rounded-lg"
+            nodeColor="#8B5CF6"
+            maskColor="rgba(0, 0, 0, 0.1)"
+          />
+        </ReactFlow>
       </div>
+
+      {/* Properties Panel */}
+      {selectedNode && (
+        <AutomacaoPropertiesPanel
+          node={selectedNode}
+          onUpdate={handleUpdateNode}
+          onDelete={handleDeleteNode}
+          onClose={() => setSelectedNode(null)}
+        />
+      )}
 
       {/* Dialog de nota */}
       <BlockNoteDialog
@@ -728,7 +750,7 @@ function EditorRegrasContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </WorkflowBuilderLayout>
   );
 }
 
