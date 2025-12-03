@@ -814,9 +814,6 @@ export default function ChatInput({
   // Check if we have chat-specific items
   const hasChatItems = chatItems.length > 0;
   
-  // Debug log
-  console.log("ChatInput Debug:", { hasChatItems, chatItemsCount: chatItems.length, hasRealTimeTranslation: !!onToggleRealTimeTranslation });
-
   return (
     <>
       {/* Hidden file inputs */}
@@ -955,7 +952,6 @@ export default function ChatInput({
                   showAIMenu && "bg-primary text-primary-foreground shadow-md"
                 )}
                 onClick={() => { 
-                  console.log("AI button clicked, current showAIMenu:", showAIMenu, "-> new:", !showAIMenu);
                   setShowAIMenu(!showAIMenu); 
                   setShowToolsMenu(false); 
                 }}
