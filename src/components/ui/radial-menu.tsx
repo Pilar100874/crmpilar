@@ -74,25 +74,17 @@ export function RadialMenu({
     handleClose();
   };
 
-  // Close on click outside
+  // Close on Escape
   React.useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (isOpen) {
-        handleClose();
-      }
-    };
-
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen) {
         handleClose();
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEscape);
     
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleEscape);
     };
   }, [isOpen]);
@@ -144,8 +136,11 @@ export function RadialMenu({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="fixed inset-0 z-50"
-              onClick={handleClose}
+              className="fixed inset-0 z-50 bg-black/20"
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                handleClose();
+              }}
             />
             
             {/* Menu */}
@@ -154,7 +149,8 @@ export function RadialMenu({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.5 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute z-50 pointer-events-none"
+              className="absolute z-[60] pointer-events-none"
+              onMouseDown={(e) => e.stopPropagation()}
               style={{
                 left: position.x - size / 2,
                 top: position.y - size / 2,
