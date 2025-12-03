@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Share2, ZoomIn, ZoomOut, Save, Copy, Home, MonitorSmartphone } from "lucide-react";
+import { Download, Share2, ZoomIn, ZoomOut, Save, Copy, Home, MonitorSmartphone, X } from "lucide-react";
 import { useCanvas } from "@/contexts/CanvasContext";
 import { toast } from "@/lib/toast-config";
 import { useState } from "react";
@@ -21,9 +21,10 @@ interface EditorToolbarV2Props {
   onProjectNameChange: (name: string) => void;
   currentPlatform?: { platform: string; label: string; width: number; height: number } | null;
   onChangePlatform?: () => void;
+  onClose?: () => void;
 }
 
-const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, onChangePlatform }: EditorToolbarV2Props) => {
+const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, onChangePlatform, onClose }: EditorToolbarV2Props) => {
   const navigate = useNavigate();
   const { fabricCanvas } = useCanvas();
   const [showSaveAsDialog, setShowSaveAsDialog] = useState(false);
@@ -344,6 +345,18 @@ const EditorToolbarV2 = ({ projectName, onProjectNameChange, currentPlatform, on
             <Save className="h-4 w-4 mr-2" />
             Salvar
           </Button>
+
+          {onClose && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={onClose}
+              className="h-9"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Fechar
+            </Button>
+          )}
         </div>
       </div>
 

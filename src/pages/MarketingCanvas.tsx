@@ -33,8 +33,6 @@ import { Progress } from "@/components/ui/progress";
 import { TemplateSelectionDialog } from "@/components/editor/TemplateSelectionDialog";
 import { PlatformSelectionDialog, PlatformPreset } from "@/components/editor/PlatformSelectionDialog";
 import { FabricImage, Rect } from "fabric";
-import { SubMenuHeader } from "@/components/SubMenuHeader";
-import { useLayout } from "@/contexts/LayoutContext";
 
 // Loading overlay shown while the editor initializes
 const LoadingOverlay = () => {
@@ -58,7 +56,6 @@ interface CanvasStudioV2Props {
 
 const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props) => {
   const navigate = useNavigate();
-  const { openSubmenu } = useLayout();
   const [activePanel, setActivePanel] = useState('design');
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedObjectType, setSelectedObjectType] = useState<string | null>(null);
@@ -385,6 +382,15 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
     }
   };
 
+  const handleClose = () => {
+    if (hasCanvasContent()) {
+      setPendingNavigation(() => () => navigate(-1));
+      setShowExitDialog(true);
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
     <CanvasProvider onSelectionChange={(objType) => {
         setSelectedObjectType(objType);
@@ -392,22 +398,14 @@ const CanvasStudioV2 = ({ onBack, selectedSize = "medio" }: CanvasStudioV2Props)
           setIsPanelOpen(true);
         }
       }}>
-        <div className="h-screen flex flex-col overflow-hidden bg-background">
-          {/* Header with submenu */}
-          <div className="flex items-center gap-4 px-4 py-2 border-b bg-card">
-            <SubMenuHeader 
-              title="Marketing"
-              onOpenSubmenu={() => openSubmenu("Desenho")}
-            />
-            <h1 className="text-sm font-semibold text-foreground">Canvas - Editor de Design</h1>
-          </div>
-          
+        <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background">
           {/* Toolbar */}
             <EditorToolbarV2 
               projectName={projectName}
               onProjectNameChange={setProjectName}
               currentPlatform={platformPreset}
               onChangePlatform={() => setShowPlatformDialog(true)}
+              onClose={handleClose}
             />
           
           <div className="h-full flex overflow-hidden relative pb-14 lg:pb-0">
