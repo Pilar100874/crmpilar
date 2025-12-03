@@ -152,7 +152,7 @@ All colors MUST be HSL.
     position: absolute;
     right: -20px;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%) scale(1);
     width: 20px;
     height: 60px;
     background: hsl(var(--sidebar-background));
@@ -163,12 +163,14 @@ All colors MUST be HSL.
     align-items: center;
     justify-content: center;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
   }
 
   .slide-out-menu-tab:hover {
-    width: 25px;
+    width: 28px;
+    transform: translateY(-50%) scale(1.1);
     background: hsl(var(--sidebar-accent));
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
   }
 
   .slide-out-menu-tab svg {
