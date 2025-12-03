@@ -1999,33 +1999,31 @@ ${recentMessages}
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <Button 
                   variant="secondary" 
                   size="sm" 
                   onClick={handleToday}
-                  className="flex-1 h-8"
+                  className="h-8 w-8 p-0 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-600"
+                  title="Hoje"
                 >
-                  <CalendarDays className="w-3.5 h-3.5 mr-1.5" />
-                  Hoje
+                  <CalendarDays className="w-4 h-4" />
                 </Button>
                 
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => setShowPredictiveDialer(true)}
-                  className="h-8"
+                  className="h-8 w-8 p-0 rounded-full border-orange-200 hover:bg-orange-50"
                   title="Discador Preditivo"
                 >
-                  <PhoneCall className="w-3.5 h-3.5 mr-1.5" />
-                  Discar
+                  <PhoneCall className="w-4 h-4 text-orange-600" />
                 </Button>
                 
                 <Dialog open={showSortDialog} onOpenChange={setShowSortDialog}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex-1 h-8">
-                      <ArrowUpDown className="w-3.5 h-3.5 mr-1.5" />
-                      Ordenação
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full border-orange-200 hover:bg-orange-50" title="Ordenação">
+                      <ArrowUpDown className="w-4 h-4 text-orange-600" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
