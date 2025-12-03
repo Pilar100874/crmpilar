@@ -2474,7 +2474,7 @@ ${recentMessages}
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden min-w-0 border-r border-border">
+      <div className="flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border">
         {selectedConversation && selectedConv ? (
           <>
             <div className="px-3 md:px-4 py-2.5 md:py-3 border-b bg-card shadow-sm flex-shrink-0">
