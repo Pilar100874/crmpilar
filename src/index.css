@@ -176,22 +176,23 @@ All colors MUST be HSL.
     opacity: 0.7;
   }
 
-  /* Chat Tab - estilo igual ao menu mas laranja */
+  /* Chat Tab - estilo igual ao menu mas laranja, lado direito */
   .chat-tab {
     position: fixed;
-    left: 0;
-    bottom: 80px;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
     width: 20px;
-    height: 40px;
+    height: 60px;
     background: hsl(25 95% 53%);
-    border-radius: 0 8px 8px 0;
+    border-radius: 8px 0 0 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
     z-index: 40;
-    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+    box-shadow: -2px 0 8px rgba(0,0,0,0.1);
   }
 
   .chat-tab:hover {
@@ -200,6 +201,52 @@ All colors MUST be HSL.
   }
 
   .chat-tab svg {
+    color: white;
+    opacity: 0.9;
+  }
+
+  /* Chat Slide-out Menu */
+  .chat-slide-menu {
+    position: fixed;
+    right: -320px;
+    top: 0;
+    bottom: 0;
+    width: 320px;
+    z-index: 500;
+    transition: right 0.3s ease;
+    background: hsl(var(--background));
+    border-left: 1px solid hsl(var(--border));
+    box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+  }
+
+  .chat-slide-menu.open {
+    right: 0;
+  }
+
+  .chat-slide-menu-tab {
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 60px;
+    background: hsl(25 95% 53%);
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .chat-slide-menu-tab:hover {
+    width: 25px;
+    background: hsl(25 95% 45%);
+  }
+
+  .chat-slide-menu-tab svg {
     color: white;
     opacity: 0.9;
   }
