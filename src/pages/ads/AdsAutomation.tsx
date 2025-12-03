@@ -11,8 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { 
-  Plus, Play, Trash2, Edit, Zap, Loader2, Save, Download, Upload, 
-  ZoomIn, ZoomOut, Maximize2, ArrowLeft, Blocks, Minimize2, Copy
+  Plus, Play, Trash2, Edit, Zap, Loader2, Save, 
+  ZoomIn, ZoomOut, Maximize2, X, Blocks, Minimize2, Copy
 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import {
@@ -668,9 +668,9 @@ function AdsAutomationContent() {
           </div>
         </div>
       ) : (
-        <div className="h-screen flex flex-col">
+        <div className="fixed inset-0 z-50 flex flex-col bg-background">
           {/* Editor Header - Estilo Bot Builder */}
-          <div className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 border-b border-border bg-card">
+          <div className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 border-b border-border bg-card h-14">
             <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
               <div className="flex items-center gap-2">
                 <p className="text-xs sm:text-sm text-muted-foreground hidden md:block">
@@ -740,29 +740,7 @@ function AdsAutomationContent() {
               </div>
             </div>
             
-            <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
-              <Button variant="outline" size="sm" onClick={() => { setIsEditing(false); setSelectedAutomation(null); }} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3">
-                <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Sair</span>
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleImport} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex">
-                <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Importar
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleExport} className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex">
-                <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Exportar
-              </Button>
-              <div className="flex items-center gap-2 border-l border-border pl-2">
-                <Switch
-                  checked={selectedAutomation?.ativo}
-                  onCheckedChange={(checked) => {
-                    updateAutomationMutation.mutate({ id: selectedAutomation.id, ativo: checked });
-                    setSelectedAutomation((prev: any) => ({ ...prev, ativo: checked }));
-                  }}
-                />
-                <span className="text-xs">{selectedAutomation?.ativo ? "Ativo" : "Inativo"}</span>
-              </div>
+            <div className="flex gap-1 sm:gap-2 flex-wrap sm:flex-nowrap items-center">
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -779,6 +757,15 @@ function AdsAutomationContent() {
               >
                 <Play className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Testar</span>
+              </Button>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={() => { setIsEditing(false); setSelectedAutomation(null); }}
+                className="h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+              >
+                <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Fechar</span>
               </Button>
             </div>
           </div>
