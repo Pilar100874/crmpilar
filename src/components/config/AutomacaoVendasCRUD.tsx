@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Power, PowerOff, CalendarIcon, Settings, Copy } from "lucide-react";
+import { Plus, Edit, Trash2, CalendarIcon, Settings, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -248,7 +248,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
             return (
               <Card key={automacao.id} className="p-4 hover:shadow-lg transition-shadow">
                 <div className="space-y-4">
-                  {/* Cabeçalho */}
+                  {/* Cabeçalho com Switch */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-lg truncate">{automacao.nome}</h3>
@@ -256,9 +256,18 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                         {automacao.descricao || "Sem descrição"}
                       </p>
                     </div>
-                    <Badge variant={automacao.ativo ? "default" : "secondary"}>
-                      {automacao.ativo ? "Ativa" : "Inativa"}
-                    </Badge>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Switch
+                        checked={automacao.ativo}
+                        onCheckedChange={() => handleToggleActive(automacao.id, automacao.ativo)}
+                      />
+                      <span className={cn(
+                        "text-xs font-medium",
+                        automacao.ativo ? "text-green-600" : "text-muted-foreground"
+                      )}>
+                        {automacao.ativo ? "Ativa" : "Inativa"}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Informações */}
@@ -325,33 +334,16 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                   </div>
 
                   {/* Ações */}
-                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleToggleActive(automacao.id, automacao.ativo)}
-                      className="flex-1 min-w-[140px]"
-                    >
-                      {automacao.ativo ? (
-                        <>
-                          <PowerOff className="h-4 w-4 mr-2" />
-                          Desativar
-                        </>
-                      ) : (
-                        <>
-                          <Power className="h-4 w-4 mr-2" />
-                          Ativar
-                        </>
-                      )}
-                    </Button>
+                  <div className="flex items-center gap-2 pt-2 border-t">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/editor-regras?id=${automacao.id}`, { state: { from: location.pathname + location.search } })}
                       title="Editar regra"
-                      className="shrink-0"
+                      className="flex-1"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar
                     </Button>
                     <Button
                       variant="outline"
