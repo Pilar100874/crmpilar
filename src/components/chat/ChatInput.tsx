@@ -923,7 +923,7 @@ export default function ChatInput({
               {chatItems.length > 0 && (
                 <div 
                   className={cn(
-                    "absolute bottom-full right-0 mb-2 flex flex-col-reverse gap-1.5",
+                    "absolute bottom-full right-0 mb-2 flex flex-col-reverse gap-1.5 z-[100]",
                     "transition-all duration-300 origin-bottom",
                     showAIMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                   )}
@@ -954,7 +954,11 @@ export default function ChatInput({
                   "text-muted-foreground hover:text-foreground",
                   showAIMenu && "bg-primary text-primary-foreground shadow-md"
                 )}
-                onClick={() => { setShowAIMenu(!showAIMenu); setShowToolsMenu(false); }}
+                onClick={() => { 
+                  console.log("AI button clicked, current showAIMenu:", showAIMenu, "-> new:", !showAIMenu);
+                  setShowAIMenu(!showAIMenu); 
+                  setShowToolsMenu(false); 
+                }}
                 title={showAIMenu ? "Fechar IA" : "Recursos de IA"}
               >
                 <Sparkles className="h-5 w-5" />
