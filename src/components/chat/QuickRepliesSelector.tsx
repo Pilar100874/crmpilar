@@ -64,15 +64,13 @@ export default function QuickRepliesSelector({ onSelect, disabled }: QuickReplie
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
+        <button
           disabled={disabled}
           title="Textos prontos"
-          className="rounded-full"
+          className="relative flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-muted hover:text-foreground border border-border/50 disabled:opacity-50 disabled:pointer-events-none"
         >
           <MessageSquare className="h-5 w-5" />
-        </Button>
+        </button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0 rounded-2xl" align="end">
         <div className="p-3 border-b">

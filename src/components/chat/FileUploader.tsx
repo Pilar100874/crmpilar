@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast-config";
 
 interface FileUploaderProps {
@@ -8,6 +8,7 @@ interface FileUploaderProps {
   disabled?: boolean;
   icon: React.ReactNode;
   tooltip: string;
+  buttonClassName?: string;
 }
 
 export default function FileUploader({
@@ -16,6 +17,7 @@ export default function FileUploader({
   disabled,
   icon,
   tooltip,
+  buttonClassName,
 }: FileUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -37,6 +39,8 @@ export default function FileUploader({
     }
   };
 
+  const defaultClassName = "relative flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-muted hover:text-foreground border border-border/50 disabled:opacity-50 disabled:pointer-events-none";
+
   return (
     <>
       <input
@@ -46,16 +50,14 @@ export default function FileUploader({
         onChange={handleFileChange}
         className="hidden"
       />
-      <Button
-        variant="outline"
-        size="icon"
+      <button
         onClick={handleClick}
         disabled={disabled}
         title={tooltip}
-        className="rounded-full"
+        className={cn(defaultClassName, buttonClassName)}
       >
         {icon}
-      </Button>
+      </button>
     </>
   );
 }
