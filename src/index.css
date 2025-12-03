@@ -173,6 +173,10 @@ All colors MUST be HSL.
     box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
   }
 
+  .slide-out-menu-tab.menu-open {
+    right: -20px;
+  }
+
   .slide-out-menu-tab svg {
     color: hsl(var(--sidebar-foreground));
     opacity: 0.7;

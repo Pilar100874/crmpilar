@@ -393,20 +393,26 @@ export default function Layout({ children }: LayoutProps) {
   }, []);
 
   const handleMenuMouseEnter = () => {
-    if (menuLocked) return; // Não abre automaticamente se travado
+    if (menuLocked) return;
+    // Não abre automaticamente - só mantém aberto se já estiver
     if (menuTimeoutRef.current) {
       clearTimeout(menuTimeoutRef.current);
       menuTimeoutRef.current = null;
     }
-    setMenuOpen(true);
   };
 
   const handleMenuMouseLeave = () => {
-    if (menuLocked) return; // Não fecha automaticamente se travado
+    if (menuLocked) return;
+    // Fecha com delay quando sai do menu
     menuTimeoutRef.current = setTimeout(() => {
       setMenuOpen(false);
       setOpenSubmenuId(null);
     }, 300);
+  };
+
+  const handleTabClick = () => {
+    if (menuLocked) return;
+    setMenuOpen(!menuOpen);
   };
 
   const handleToggleLock = () => {
@@ -472,8 +478,15 @@ export default function Layout({ children }: LayoutProps) {
         >
           {/* Aba lateral - só aparece quando não está travado */}
           {!menuLocked && (
-            <div className="slide-out-menu-tab">
-              <ChevronRight className="w-3 h-3" />
+            <div 
+              className={`slide-out-menu-tab ${menuOpen ? 'menu-open' : ''}`}
+              onClick={handleTabClick}
+            >
+              {menuOpen ? (
+                <ChevronLeft className="w-3 h-3" />
+              ) : (
+                <ChevronRight className="w-3 h-3" />
+              )}
             </div>
           )}
 
