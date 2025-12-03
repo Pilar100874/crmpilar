@@ -1112,7 +1112,7 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
                   className="w-full"
                   onClick={() => onEdit(automacao.id)}
                 >
-                  <Pencil className="h-3 w-3 mr-1" />
+                  <Edit className="h-3 w-3 mr-1" />
                   Abrir Editor
                 </Button>
               </div>

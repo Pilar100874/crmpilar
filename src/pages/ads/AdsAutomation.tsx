@@ -673,7 +673,12 @@ function AdsAutomationContent() {
                           {(automation.flow_data as any)?.nodes?.length || 0} blocos
                         </span>
                       </div>
-                      <Button size="sm" variant="outline" className="w-full" onClick={() => loadAutomation(automation)}>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="w-full" 
+                        onClick={() => loadAutomation(automation)}
+                      >
                         <Edit className="h-3 w-3 mr-1" />
                         Abrir Editor
                       </Button>

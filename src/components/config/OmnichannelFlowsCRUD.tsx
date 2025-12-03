@@ -299,10 +299,11 @@ export const OmnichannelFlowsCRUD = ({ estabelecimentoId }: OmnichannelFlowsCRUD
                   </div>
                   <Button 
                     size="sm" 
+                    variant="outline"
                     className="w-full"
                     onClick={() => navigate(`/omnichannel-builder/${flow.id}`, { state: { from: location.pathname + location.search } })}
                   >
-                    <Edit className="h-4 w-4 mr-2" />
+                    <Edit className="h-3 w-3 mr-1" />
                     Abrir Editor
                   </Button>
                 </CardContent>
