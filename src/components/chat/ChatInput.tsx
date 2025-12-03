@@ -853,13 +853,15 @@ export default function ChatInput({
                 className={cn(
                   "absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5 z-[200]",
                   "transition-all duration-300 origin-bottom",
+                  "max-h-[60vh] overflow-y-auto overflow-x-visible",
+                  "scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent",
                   showToolsMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                 )}
               >
                 {generalItems.map((item, index) => (
                   <div 
                     key={`general-${index}`}
-                    className="transform transition-all duration-200"
+                    className="transform transition-all duration-200 flex-shrink-0"
                     style={{
                       transitionDelay: showToolsMenu ? `${index * 30}ms` : '0ms',
                       transform: showToolsMenu ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.9)',
@@ -922,13 +924,15 @@ export default function ChatInput({
                   className={cn(
                     "absolute bottom-full right-0 mb-2 flex flex-col-reverse gap-1.5 z-[200]",
                     "transition-all duration-300 origin-bottom",
+                    "max-h-[60vh] overflow-y-auto overflow-x-visible",
+                    "scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent",
                     showAIMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                   )}
                 >
                   {chatItems.map((item, index) => (
                     <div 
                       key={`ai-${index}`}
-                      className="transform transition-all duration-200"
+                      className="transform transition-all duration-200 flex-shrink-0"
                       style={{
                         transitionDelay: showAIMenu ? `${index * 30}ms` : '0ms',
                         transform: showAIMenu ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.9)',
