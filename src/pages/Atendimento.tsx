@@ -1765,6 +1765,15 @@ ${recentMessages}
                 <h2 className="text-lg font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
                   Painel de Atendimento
                 </h2>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowConversationsList(false)}
+                  className="h-7 w-7 p-0"
+                  title="Ocultar painel"
+                >
+                  <PanelLeftClose className="h-4 w-4" />
+                </Button>
               </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -2426,22 +2435,15 @@ ${recentMessages}
             <div className="px-3 md:px-4 py-2.5 md:py-3 border-b bg-card shadow-sm flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {!isMobile && (
+                  {!isMobile && !showConversationsList && (
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => {
-                        const newState = !showConversationsList;
-                        setShowConversationsList(newState);
-                        // Em tablets, coordenar com o painel de detalhes
-                        if (isTablet && newState && showClientDetailsChat) {
-                          setShowClientDetailsChat(false);
-                        }
-                      }}
+                      onClick={() => setShowConversationsList(true)}
                       className="h-6 w-6 md:h-7 md:w-7 p-0"
-                      title={showConversationsList ? "Ocultar conversas" : "Mostrar conversas"}
+                      title="Mostrar painel"
                     >
-                      {showConversationsList ? <PanelLeftClose className="h-3.5 w-3.5 md:h-4 md:w-4" /> : <PanelLeft className="h-3.5 w-3.5 md:h-4 md:w-4" />}
+                      <PanelLeft className="h-3.5 w-3.5 md:h-4 md:w-4" />
                     </Button>
                   )}
                   <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center">
