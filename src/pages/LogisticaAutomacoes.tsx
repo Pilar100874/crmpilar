@@ -6,7 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks, Zap, Copy } from "lucide-react";
+import { Save, X, Plus, Play, ZoomIn, ZoomOut, Maximize2, Minimize2, Blocks, Zap, Copy, MoreVertical, Power, Pencil, Trash2, Edit } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   ReactFlow,
   Background,
@@ -40,8 +50,6 @@ import { LogisticaSimulator } from "@/components/logistica/automacao/LogisticaSi
 import { BlockNoteDialog } from "@/components/automacao-vendas/BlockNoteDialog";
 import { LOGISTICA_BLOCKS } from "@/types/automacaoLogistica";
 import { toast } from "@/hooks/use-toast";
-import { Switch } from "@/components/ui/switch";
-import { Pencil, Trash2 } from "lucide-react";
 
 const nodeTypes = {
   custom: LogisticaFlowNode,
@@ -876,6 +884,11 @@ function EditorContent({
 function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: () => void }) {
   const [automacoes, setAutomacoes] = useState<AutomacaoLogistica[]>([]);
   const [loading, setLoading] = useState(true);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [selectedAutomacao, setSelectedAutomacao] = useState<AutomacaoLogistica | null>(null);
+  const [renameName, setRenameName] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   useEffect(() => {
     loadAutomacoes();
@@ -974,6 +987,33 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
     }
   };
 
+  const handleRename = async () => {
+    if (!renameName.trim() || !selectedAutomacao) return;
+
+    setIsRenaming(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("logistica_automacoes")
+        .update({ nome: renameName.trim() })
+        .eq("id", selectedAutomacao.id);
+
+      if (error) throw error;
+      setAutomacoes(prev => prev.map(a => a.id === selectedAutomacao.id ? { ...a, nome: renameName.trim() } : a));
+      toast({ title: "Automação renomeada com sucesso" });
+      setRenameDialogOpen(false);
+      setSelectedAutomacao(null);
+      setRenameName("");
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível renomear a automação",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -996,14 +1036,61 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {automacoes.map((automacao) => (
-            <Card key={automacao.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+            <Card key={automacao.id} className="overflow-hidden hover:shadow-lg transition-shadow relative group">
+              <div className="absolute top-3 right-3 z-10">
+                <DropdownMenu open={openMenuId === automacao.id} onOpenChange={(open) => setOpenMenuId(open ? automacao.id : null)}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => {
+                      setOpenMenuId(null);
+                      onEdit(automacao.id);
+                    }}>
+                      <Pencil className="w-4 h-4 mr-2" />
+                      Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => {
+                      setOpenMenuId(null);
+                      setSelectedAutomacao(automacao);
+                      setRenameName(automacao.nome);
+                      setRenameDialogOpen(true);
+                    }}>
+                      <Edit className="w-4 h-4 mr-2" />
+                      Renomear
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => {
+                      setOpenMenuId(null);
+                      handleDuplicate(automacao);
+                    }}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Duplicar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => {
+                      setOpenMenuId(null);
+                      toggleAtivo(automacao.id, !automacao.ativo);
+                    }}>
+                      <Power className="w-4 h-4 mr-2" />
+                      {automacao.ativo ? "Desativar" : "Ativar"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        handleDelete(automacao.id);
+                      }}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
               <div className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pr-10">
                   <h3 className="font-semibold text-base truncate">{automacao.nome}</h3>
-                  <Switch
-                    checked={automacao.ativo}
-                    onCheckedChange={(checked) => toggleAtivo(automacao.id, checked)}
-                  />
                 </div>
                 
                 <div className="flex items-center gap-2">
@@ -1019,34 +1106,15 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
                   Criada em: {new Date(automacao.created_at).toLocaleDateString('pt-BR')}
                 </p>
 
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => onEdit(automacao.id)}
-                  >
-                    <Pencil className="h-3 w-3 mr-1" />
-                    Editar
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleDuplicate(automacao)}
-                    title="Duplicar"
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => handleDelete(automacao.id)}
-                    title="Excluir"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => onEdit(automacao.id)}
+                >
+                  <Pencil className="h-3 w-3 mr-1" />
+                  Abrir Editor
+                </Button>
               </div>
             </Card>
           ))}
@@ -1068,6 +1136,37 @@ function ListContent({ onEdit, onNew }: { onEdit: (id: string) => void; onNew: (
           )}
         </div>
       )}
+
+      {/* Rename Dialog */}
+      <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear Automação</DialogTitle>
+            <DialogDescription>
+              Digite um novo nome para a automação.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rename-name">Nome</Label>
+              <Input
+                id="rename-name"
+                value={renameName}
+                onChange={(e) => setRenameName(e.target.value)}
+                placeholder="Nome da automação"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleRename} disabled={isRenaming || !renameName.trim()}>
+              {isRenaming ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

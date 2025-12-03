@@ -1,10 +1,20 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, CalendarIcon, Settings, Copy } from "lucide-react";
+import { Plus, Edit, Trash2, CalendarIcon, Settings, Copy, MoreVertical, Power } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -38,6 +48,12 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [config, setConfig] = useState<any>({ nao_acumular_descontos: false });
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [selectedAutomacao, setSelectedAutomacao] = useState<AutomacaoVenda | null>(null);
+  const [renameName, setRenameName] = useState("");
+  const [renameDescription, setRenameDescription] = useState("");
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   useEffect(() => {
     if (estabelecimentoId) {
