@@ -467,12 +467,349 @@ export default function ChatInput({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Toolbar items for expandable menu
-  const toolbarItems = [
-    <ToolbarBtn key="image" icon={Image} title="Imagem" onClick={() => imageInputRef.current?.click()} disabled={disabled} />,
-    <ToolbarBtn key="file" icon={Paperclip} title="Arquivo" onClick={() => fileInputRef.current?.click()} disabled={disabled} />,
-    <ToolbarBtn key="variables" icon={Variable} title="Variáveis" onClick={() => { setShowVariables(true); setShowToolsMenu(false); }} disabled={disabled} />,
-  ];
+  // Agent Assist - Generate context-based response
+  const handleGenerateContextResponse = async () => {
+    if (!conversationId || conversationMessages.length === 0) {
+      toast.error("Nenhuma mensagem para analisar");
+      return;
+    }
+    setIsGeneratingContextResponse(true);
+    try {
+      const response = await supabase.functions.invoke("ai-agent-assist", {
+        body: { action: "suggest_response", conversationId, messages: conversationMessages.slice(-10) }
+      });
+      if (response.error) throw response.error;
+      const suggestion = response.data?.suggestion || response.data?.response;
+      if (suggestion) {
+        setMessage(suggestion);
+        toast.success("Sugestão gerada!");
+      }
+    } catch (error) {
+      console.error("Erro:", error);
+      toast.error("Erro ao gerar sugestão");
+    } finally {
+      setIsGeneratingContextResponse(false);
+      setShowToolsMenu(false);
+    }
+  };
+
+  // Agent Assist - Generate summary
+  const handleGenerateSummary = async () => {
+    if (!conversationId || conversationMessages.length === 0) {
+      toast.error("Nenhuma mensagem para resumir");
+      return;
+    }
+    setIsGeneratingSummary(true);
+    try {
+      const response = await supabase.functions.invoke("ai-agent-assist", {
+        body: { action: "summarize", conversationId, messages: conversationMessages }
+      });
+      if (response.error) throw response.error;
+      const summary = response.data?.summary;
+      if (summary) {
+        onSummaryGenerated?.(summary);
+        toast.success("Resumo gerado!");
+      }
+    } catch (error) {
+      console.error("Erro:", error);
+      toast.error("Erro ao gerar resumo");
+    } finally {
+      setIsGeneratingSummary(false);
+      setShowToolsMenu(false);
+    }
+  };
+
+  // Agent Assist - Suggest KB articles
+  const handleSuggestKBArticles = async () => {
+    if (!conversationId || conversationMessages.length === 0) {
+      toast.error("Nenhuma mensagem para analisar");
+      return;
+    }
+    setIsSuggestingKBArticles(true);
+    try {
+      const response = await supabase.functions.invoke("ai-agent-assist", {
+        body: { action: "kb_articles", conversationId, messages: conversationMessages.slice(-5) }
+      });
+      if (response.error) throw response.error;
+      const articles = response.data?.articles;
+      if (articles && articles.length > 0) {
+        const articleText = articles.map((a: any) => `• ${a.title}`).join("\n");
+        setMessage(articleText);
+        toast.success("Artigos sugeridos!");
+      } else {
+        toast.info("Nenhum artigo relevante encontrado");
+      }
+    } catch (error) {
+      console.error("Erro:", error);
+      toast.error("Erro ao buscar artigos");
+    } finally {
+      setIsSuggestingKBArticles(false);
+      setShowToolsMenu(false);
+    }
+  };
+
+  // Translate message
+  const handleTranslateMessage = async () => {
+    if (!message.trim()) {
+      toast.error("Digite uma mensagem para traduzir");
+      return;
+    }
+    setIsTranslating(true);
+    try {
+      const response = await supabase.functions.invoke("ai-agent-assist", {
+        body: { action: "translate", text: message, targetLanguage }
+      });
+      if (response.error) throw response.error;
+      const translation = response.data?.translation;
+      if (translation) {
+        setMessage(translation);
+        toast.success("Traduzido!");
+      }
+    } catch (error) {
+      console.error("Erro:", error);
+      toast.error("Erro ao traduzir");
+    } finally {
+      setIsTranslating(false);
+      setShowToolsMenu(false);
+    }
+  };
+
+  // Handle import report selection
+  const handleImportReportSelect = async (reportId: string, fileType: 'pdf' | 'excel') => {
+    setSelectedImportReport(reportId);
+    setReportFileType(fileType);
+    setIsProcessingReport(true);
+    setReportProgress(0);
+    
+    const interval = setInterval(() => {
+      setReportProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 200);
+
+    setTimeout(() => {
+      clearInterval(interval);
+      setReportProgress(100);
+      const report = importReports.find(r => r.id === reportId);
+      if (report) {
+        onSendMessage(`Relatório: ${report.nome}`, "file", report.url_arquivo, report.nome);
+      }
+      setIsProcessingReport(false);
+      setShowImportReportsPopover(false);
+      setShowToolsMenu(false);
+    }, 2000);
+  };
+
+  // Build toolbar items for expandable menu
+  const toolbarItems: React.ReactNode[] = [];
+
+  // Basic file tools
+  toolbarItems.push(
+    <ToolbarBtn key="image" icon={Image} title="Imagem" onClick={() => { imageInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
+  );
+  toolbarItems.push(
+    <ToolbarBtn key="file" icon={Paperclip} title="Arquivo" onClick={() => { fileInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
+  );
+  toolbarItems.push(
+    <ToolbarBtn key="variables" icon={Variable} title="Variáveis" onClick={() => { setShowVariables(true); setShowToolsMenu(false); }} disabled={disabled} />
+  );
+
+  // Quick replies & attachments (rendered as popovers)
+  toolbarItems.push(
+    <QuickRepliesSelector key="quick-replies" onSelect={(content) => { handleQuickReplySelect(content); setShowToolsMenu(false); }} disabled={disabled} />
+  );
+  toolbarItems.push(
+    <QuickAttachmentsSelector key="quick-attachments" onSelect={(attachment) => { handleQuickAttachmentSelect(attachment); setShowToolsMenu(false); }} disabled={disabled} />
+  );
+
+  // Bot redirect
+  if (availableBots.length > 0 && onBotRedirectChange && onBotRedirect) {
+    toolbarItems.push(
+      <Popover key="bot" open={showBotPopover} onOpenChange={setShowBotPopover}>
+        <PopoverTrigger asChild>
+          <button className={showBotPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Redirecionar para Bot">
+            <Bot size={20} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-3" align="start">
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Redirecionar para Bot</Label>
+            <Select value={selectedBotRedirect || ""} onValueChange={onBotRedirectChange}>
+              <SelectTrigger><SelectValue placeholder="Selecione um bot" /></SelectTrigger>
+              <SelectContent>
+                {availableBots.map((bot) => (
+                  <SelectItem key={bot.id} value={bot.id}>{bot.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={() => { onBotRedirect(); setShowBotPopover(false); setShowToolsMenu(false); }} disabled={!selectedBotRedirect} className="w-full">
+              <Zap className="h-4 w-4 mr-2" /> Redirecionar
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  // Webhook auto-response
+  if (webhooksForAutoResponse.length > 0 && onWebhookChange && onWebhookToggle) {
+    toolbarItems.push(
+      <Popover key="webhook" open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
+        <PopoverTrigger asChild>
+          <button className={webhookAutoResponseActive ? toolbarBtnActiveClass : toolbarBtnClass} title="Resposta Automática">
+            <Webhook size={20} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-3" align="start">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm">Resposta Automática</Label>
+              <Switch checked={webhookAutoResponseActive} onCheckedChange={onWebhookToggle} />
+            </div>
+            <Select value={selectedWebhookAutoResponse || ""} onValueChange={onWebhookChange}>
+              <SelectTrigger><SelectValue placeholder="Selecione webhook" /></SelectTrigger>
+              <SelectContent>
+                {webhooksForAutoResponse.map((wh) => (
+                  <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  // Transfer to user
+  if (availableUsers.length > 0 && onTransferUserChange && onTransferUser) {
+    toolbarItems.push(
+      <Popover key="transfer" open={showTransferPopover} onOpenChange={setShowTransferPopover}>
+        <PopoverTrigger asChild>
+          <button className={showTransferPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Transferir para Usuário">
+            <UserPlus size={20} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-3" align="start">
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Transferir para</Label>
+            <Select value={selectedTransferUser || ""} onValueChange={onTransferUserChange}>
+              <SelectTrigger><SelectValue placeholder="Selecione um usuário" /></SelectTrigger>
+              <SelectContent>
+                {availableUsers.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>{user.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={() => { onTransferUser(); setShowTransferPopover(false); setShowToolsMenu(false); }} disabled={!selectedTransferUser} className="w-full">
+              <UserPlus className="h-4 w-4 mr-2" /> Transferir
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  // AI Chat toggle
+  if (onToggleAIChat) {
+    toolbarItems.push(
+      <ToolbarBtn key="ai-chat" icon={Sparkles} title="Chat IA" onClick={() => { onToggleAIChat(); setShowToolsMenu(false); }} isActive={showAIChat} disabled={disabled} />
+    );
+  }
+
+  // Import reports
+  if (importReports.length > 0) {
+    toolbarItems.push(
+      <Popover key="reports" open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>
+        <PopoverTrigger asChild>
+          <button className={showImportReportsPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Relatórios">
+            <FileCheck size={20} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-72 p-3" align="start">
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Relatórios Importados</Label>
+            {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
+            <div className="max-h-48 overflow-y-auto space-y-2">
+              {importReports.map((report) => (
+                <div key={report.id} className="flex items-center justify-between p-2 rounded-lg border hover:bg-muted/50">
+                  <span className="text-sm truncate flex-1">{report.nome}</span>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => handleImportReportSelect(report.id, 'pdf')} disabled={isProcessingReport}>
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleImportReportSelect(report.id, 'excel')} disabled={isProcessingReport}>
+                      <FileSpreadsheet className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  // Agent Assist - Context Response
+  if (conversationId) {
+    toolbarItems.push(
+      <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" onClick={handleGenerateContextResponse} isLoading={isGeneratingContextResponse} disabled={disabled || conversationMessages.length === 0} />
+    );
+  }
+
+  // Agent Assist - Summary
+  if (conversationId && onSummaryGenerated) {
+    toolbarItems.push(
+      <ToolbarBtn key="summary" icon={FileText} title="Gerar Resumo" onClick={handleGenerateSummary} isLoading={isGeneratingSummary} disabled={disabled || conversationMessages.length === 0} />
+    );
+  }
+
+  // Agent Assist - KB Articles
+  if (conversationId) {
+    toolbarItems.push(
+      <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" onClick={handleSuggestKBArticles} isLoading={isSuggestingKBArticles} disabled={disabled || conversationMessages.length === 0} />
+    );
+  }
+
+  // Translate
+  toolbarItems.push(
+    <Popover key="translate" open={showTranslatePopover} onOpenChange={setShowTranslatePopover}>
+      <PopoverTrigger asChild>
+        <button className={isTranslating ? toolbarBtnActiveClass : toolbarBtnClass} title="Traduzir" disabled={disabled}>
+          {isTranslating ? <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Languages size={20} />}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-3" align="start">
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Traduzir para</Label>
+          <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">Inglês</SelectItem>
+              <SelectItem value="es">Espanhol</SelectItem>
+              <SelectItem value="pt">Português</SelectItem>
+              <SelectItem value="fr">Francês</SelectItem>
+              <SelectItem value="de">Alemão</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button size="sm" onClick={handleTranslateMessage} disabled={!message.trim() || isTranslating} className="w-full">
+            <Languages className="h-4 w-4 mr-2" /> Traduzir
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
+  // Real-time translation toggle
+  if (onToggleRealTimeTranslation) {
+    toolbarItems.push(
+      <ToolbarBtn key="realtime-translate" icon={Languages} title="Tradução em Tempo Real" onClick={() => { onToggleRealTimeTranslation(); setShowToolsMenu(false); }} isActive={isRealTimeTranslationActive} disabled={disabled} />
+    );
+  }
 
   return (
     <>
