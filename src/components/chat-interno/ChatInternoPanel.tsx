@@ -182,14 +182,9 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
 
   return (
     <div className={`chat-slide-menu ${isOpen ? 'open' : ''}`}>
-      {/* Tab do menu */}
-      <div className="chat-slide-menu-tab" onClick={onClose}>
-        <MessageCircle className="w-3 h-3" />
-      </div>
-      
       <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b bg-primary/5 rounded-t-lg">
+      <div className="p-4 border-b bg-primary/5">
         <div className="flex items-center justify-between">
           {conversaAtual ? (
             <>
