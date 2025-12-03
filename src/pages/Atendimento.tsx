@@ -1706,15 +1706,19 @@ ${recentMessages}
     switch (item.id) {
       case "chat":
         setActiveTab("chat");
+        setShowConversationsList(true);
         break;
       case "agenda":
         setActiveTab("agenda");
+        setShowConversationsList(true);
         break;
       case "email":
         setActiveTab("email");
+        setShowConversationsList(true);
         break;
       case "orcamento":
         setActiveTab("orcamento");
+        setShowConversationsList(true);
         break;
       case "dialer":
         setShowPredictiveDialer(true);
