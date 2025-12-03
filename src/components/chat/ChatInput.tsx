@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
-import { AnimatePresence, motion, Transition } from "framer-motion";
 import { cn } from "@/lib/utils";
 import AudioRecorder from "./AudioRecorder";
 import FileUploader from "./FileUploader";
@@ -20,23 +19,9 @@ import { Message } from "@/pages/ChatWebhook";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
 
-// Animation variants for expandable toolbar buttons
-const buttonVariants = {
-  initial: { gap: 0, paddingLeft: ".5rem", paddingRight: ".5rem" },
-  animate: (isSelected: boolean) => ({
-    gap: isSelected ? ".5rem" : 0,
-    paddingLeft: isSelected ? "1rem" : ".5rem",
-    paddingRight: isSelected ? "1rem" : ".5rem",
-  }),
-};
-
-const spanVariants = {
-  initial: { width: 0, opacity: 0 },
-  animate: { width: "auto", opacity: 1 },
-  exit: { width: 0, opacity: 0 },
-};
-
-const toolbarTransition: Transition = { delay: 0.1, type: "spring", bounce: 0, duration: 0.6 };
+// Simple circular toolbar button class
+const toolbarBtnClass = "h-10 w-10 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+const toolbarBtnActiveClass = "h-10 w-10 rounded-full border border-primary/50 bg-primary/10 flex items-center justify-center text-primary transition-colors";
 
 interface ChatInputProps {
   onSendMessage: (
@@ -393,17 +378,8 @@ export default function ChatInput({
     );
   };
 
-  // Helper function for animated toolbar button class
-  const getToolbarButtonClass = (isActive = false, isDisabled = false) => cn(
-    "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
-    isActive
-      ? "text-primary"
-      : "text-muted-foreground hover:text-foreground",
-    isDisabled && "opacity-50 cursor-not-allowed"
-  );
-
-  // Reusable Animated Toolbar Button Component
-  const AnimatedToolbarBtn = ({ 
+  // Simple Toolbar Button Component
+  const ToolbarBtn = ({ 
     icon: Icon, 
     title, 
     onClick, 
@@ -418,41 +394,22 @@ export default function ChatInput({
     isActive?: boolean;
     isLoading?: boolean;
   }) => (
-    <motion.button
-      variants={buttonVariants}
-      initial={false}
-      animate="animate"
-      custom={isActive}
+    <button
       onClick={onClick}
       disabled={disabled}
-      transition={toolbarTransition}
       title={title}
-      className={getToolbarButtonClass(isActive, disabled)}
+      className={isActive ? toolbarBtnActiveClass : toolbarBtnClass}
     >
       {isLoading ? (
         <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       ) : (
         <Icon size={20} />
       )}
-      <AnimatePresence initial={false}>
-        {isActive && (
-          <motion.span
-            variants={spanVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={toolbarTransition}
-            className="overflow-hidden whitespace-nowrap"
-          >
-            {title}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </motion.button>
+    </button>
   );
 
-  // Animated Popover Trigger Button
-  const AnimatedPopoverBtn = ({ 
+  // Simple Popover Trigger Button
+  const PopoverBtn = ({ 
     icon: Icon, 
     title, 
     isOpen,
@@ -463,32 +420,13 @@ export default function ChatInput({
     isOpen: boolean;
     disabled?: boolean;
   }) => (
-    <motion.button
-      variants={buttonVariants}
-      initial={false}
-      animate="animate"
-      custom={isOpen}
+    <button
       disabled={disabled}
-      transition={toolbarTransition}
       title={title}
-      className={getToolbarButtonClass(isOpen, disabled)}
+      className={isOpen ? toolbarBtnActiveClass : toolbarBtnClass}
     >
       <Icon size={20} />
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.span
-            variants={spanVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={toolbarTransition}
-            className="overflow-hidden whitespace-nowrap"
-          >
-            {title}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </motion.button>
+    </button>
   );
 
   return (
@@ -518,7 +456,7 @@ export default function ChatInput({
             title="Arquivo"
           />
           
-          <AnimatedToolbarBtn
+          <ToolbarBtn
             icon={Variable}
             title="Variáveis"
             onClick={() => setShowVariables(true)}
@@ -529,7 +467,7 @@ export default function ChatInput({
           {availableBots.length > 0 && (
             <Popover open={showBotPopover} onOpenChange={setShowBotPopover}>
               <PopoverTrigger asChild>
-                <AnimatedPopoverBtn
+                <PopoverBtn
                   icon={Bot}
                   title="Bot"
                   isOpen={showBotPopover}
@@ -581,7 +519,7 @@ export default function ChatInput({
             <>
               <Popover open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
                 <PopoverTrigger asChild>
-                  <AnimatedPopoverBtn
+                  <PopoverBtn
                     icon={Webhook}
                     title="Webhook"
                     isOpen={showWebhookPopover}
@@ -616,7 +554,7 @@ export default function ChatInput({
                   </PopoverContent>
                 </Popover>
               
-              <AnimatedToolbarBtn
+              <ToolbarBtn
                 icon={Zap}
                 title={webhookAutoResponseActive ? "Ativo" : "Webhook"}
                 onClick={onWebhookToggle}
@@ -630,7 +568,7 @@ export default function ChatInput({
           {availableUsers.length > 0 && (
             <Popover open={showTransferPopover} onOpenChange={setShowTransferPopover}>
               <PopoverTrigger asChild>
-                <AnimatedPopoverBtn
+                <PopoverBtn
                   icon={UserPlus}
                   title="Transferir"
                   isOpen={showTransferPopover}
@@ -679,7 +617,7 @@ export default function ChatInput({
 
           {/* AI Chat Button */}
           {aiWebhooks.length > 0 && (
-            <AnimatedToolbarBtn
+            <ToolbarBtn
               icon={Sparkles}
               title="Chat IA"
               onClick={onToggleAIChat}
@@ -692,7 +630,7 @@ export default function ChatInput({
           <div className="mx-1 h-[24px] w-[1.2px] bg-border" aria-hidden="true" />
 
           {/* 1. Sugestão de Resposta Contextual */}
-          <AnimatedToolbarBtn
+          <ToolbarBtn
             icon={MessageSquareText}
             title="Sugerir"
             onClick={async () => {
@@ -731,7 +669,7 @@ export default function ChatInput({
           />
 
           {/* 2. Resumo Automático */}
-          <AnimatedToolbarBtn
+          <ToolbarBtn
             icon={FileCheck}
             title="Resumir"
             onClick={async () => {
@@ -769,7 +707,7 @@ export default function ChatInput({
           />
 
           {/* 3. Sugerir Artigos KB */}
-          <AnimatedToolbarBtn
+          <ToolbarBtn
             icon={BookOpen}
             title="Artigos"
             onClick={async () => {
@@ -819,7 +757,7 @@ export default function ChatInput({
           {/* 4. Tradução Automática */}
           <Popover open={showTranslatePopover} onOpenChange={setShowTranslatePopover}>
             <PopoverTrigger asChild>
-              <AnimatedPopoverBtn
+              <PopoverBtn
                 icon={Languages}
                 title="Traduzir"
                 isOpen={showTranslatePopover}
@@ -899,7 +837,7 @@ export default function ChatInput({
           {/* Real-time Translation Toggle */}
           <Popover>
             <PopoverTrigger asChild>
-              <AnimatedPopoverBtn
+              <PopoverBtn
                 icon={Languages}
                 title="Tradução Auto"
                 isOpen={isRealTimeTranslationActive}
@@ -952,7 +890,7 @@ export default function ChatInput({
           {/* Import Reports Button */}
           <Popover open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>
             <PopoverTrigger asChild>
-              <AnimatedPopoverBtn
+              <PopoverBtn
                 icon={FileText}
                 title="Estoque"
                 isOpen={showImportReportsPopover}

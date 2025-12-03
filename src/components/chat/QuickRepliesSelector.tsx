@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MessageSquare } from "lucide-react";
-import { AnimatePresence, motion, Transition } from "framer-motion";
 import { cn } from "@/lib/utils";
 import {
   Popover,
@@ -13,22 +12,8 @@ import { Card } from "@/components/ui/card";
 import { toast } from "@/lib/toast-config";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
-const buttonVariants = {
-  initial: { gap: 0, paddingLeft: ".5rem", paddingRight: ".5rem" },
-  animate: (isSelected: boolean) => ({
-    gap: isSelected ? ".5rem" : 0,
-    paddingLeft: isSelected ? "1rem" : ".5rem",
-    paddingRight: isSelected ? "1rem" : ".5rem",
-  }),
-};
-
-const spanVariants = {
-  initial: { width: 0, opacity: 0 },
-  animate: { width: "auto", opacity: 1 },
-  exit: { width: 0, opacity: 0 },
-};
-
-const transition: Transition = { delay: 0.1, type: "spring", bounce: 0, duration: 0.6 };
+const toolbarBtnClass = "h-10 w-10 rounded-full border border-border/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+const toolbarBtnActiveClass = "h-10 w-10 rounded-full border border-primary/50 bg-primary/10 flex items-center justify-center text-primary transition-colors";
 
 interface QuickReply {
   id: string;
@@ -82,38 +67,13 @@ export default function QuickRepliesSelector({ onSelect, disabled }: QuickReplie
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <motion.button
-          variants={buttonVariants}
-          initial={false}
-          animate="animate"
-          custom={open}
+        <button
           disabled={disabled}
-          transition={transition}
           title="Textos prontos"
-          className={cn(
-            "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
-            open
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground",
-            disabled && "opacity-50 cursor-not-allowed"
-          )}
+          className={open ? toolbarBtnActiveClass : toolbarBtnClass}
         >
           <MessageSquare size={20} />
-          <AnimatePresence initial={false}>
-            {open && (
-              <motion.span
-                variants={spanVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                transition={transition}
-                className="overflow-hidden whitespace-nowrap"
-              >
-                Textos Prontos
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.button>
+        </button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0 rounded-2xl" align="end">
         <div className="p-3 border-b">
