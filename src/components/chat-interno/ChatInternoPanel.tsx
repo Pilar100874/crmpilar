@@ -180,10 +180,14 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     return nome.toLowerCase().includes(busca.toLowerCase());
   });
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed bottom-20 right-4 w-96 h-[500px] bg-background border rounded-lg shadow-xl flex flex-col z-50">
+    <div className={`chat-slide-menu ${isOpen ? 'open' : ''}`}>
+      {/* Tab do menu */}
+      <div className="chat-slide-menu-tab" onClick={onClose}>
+        <MessageCircle className="w-3 h-3" />
+      </div>
+      
+      <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 border-b bg-primary/5 rounded-t-lg">
         <div className="flex items-center justify-between">
@@ -454,6 +458,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
           </ScrollArea>
         </>
       )}
+      </div>
     </div>
   );
 }
