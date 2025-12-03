@@ -2,7 +2,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Menu } from "lucide-react";
+import { RadialMenu, RadialMenuTrigger, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { PredictiveDialerDialog } from "@/components/atendimento/PredictiveDialerDialog";
 import { NovoContatoDialog } from "@/components/NovoContatoDialog";
 import { useNavigate } from "react-router-dom";
@@ -122,6 +123,9 @@ export default function Atendimento() {
   
   // Predictive Dialer state
   const [showPredictiveDialer, setShowPredictiveDialer] = useState(false);
+  
+  // Radial Menu state
+  const [showRadialMenu, setShowRadialMenu] = useState(false);
   
   // Bot redirect states
   const [availableBots, setAvailableBots] = useState<any[]>([]);
@@ -1719,54 +1723,43 @@ ${recentMessages}
               </div>
             </div>
 
-        {/* Tabs */}
+        {/* Tabs - Controlled by Radial Menu */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <TabsList className="grid grid-cols-4 gap-2 md:gap-3 mx-2 mt-1 mb-0 flex-shrink-0 bg-transparent p-0 border-b border-border/50">
-            <TabsTrigger 
-              value="chat" 
-              className="relative flex items-center justify-center py-2 md:py-2.5 px-1 md:px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
-            >
-              <MessageSquare className="w-4 h-4 md:w-4.5 md:h-4.5" />
-              {activeConversationsCount > 0 && (
-                <Badge variant="secondary" className="absolute top-0.5 left-0.5 h-3.5 min-w-3.5 px-1 bg-gray-600 text-white text-[8px] rounded-full">
+          {/* Current Tab Indicator */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border/50 bg-muted/30">
+            <div className="flex items-center gap-2">
+              {activeTab === "chat" && <MessageSquare className="w-4 h-4 text-primary" />}
+              {activeTab === "agenda" && <Calendar className="w-4 h-4 text-primary" />}
+              {activeTab === "email" && <Mail className="w-4 h-4 text-primary" />}
+              {activeTab === "orcamento" && <Receipt className="w-4 h-4 text-primary" />}
+              <span className="text-sm font-medium">
+                {activeTab === "chat" && "Conversas"}
+                {activeTab === "agenda" && "Agenda"}
+                {activeTab === "email" && "E-mails"}
+                {activeTab === "orcamento" && "Orçamentos"}
+              </span>
+              {activeTab === "chat" && activeConversationsCount > 0 && (
+                <Badge variant="secondary" className="h-5 px-1.5 bg-primary text-primary-foreground text-xs">
                   {activeConversationsCount}
                 </Badge>
               )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="agenda" 
-              className="relative flex items-center justify-center py-2 md:py-2.5 px-1 md:px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
-            >
-              <Calendar className="w-4 h-4 md:w-4.5 md:h-4.5" />
-              {todayTasksCount > 0 && (
-                <Badge variant="secondary" className="absolute top-0.5 left-0.5 h-3.5 min-w-3.5 px-1 bg-gray-600 text-white text-[8px] rounded-full">
+              {activeTab === "agenda" && todayTasksCount > 0 && (
+                <Badge variant="secondary" className="h-5 px-1.5 bg-primary text-primary-foreground text-xs">
                   {todayTasksCount}
                 </Badge>
               )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="email" 
-              className="relative flex items-center justify-center py-2 md:py-2.5 px-1 md:px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
-            >
-              <Mail className="w-4 h-4 md:w-4.5 md:h-4.5" />
-              {unreadEmailsCount > 0 && (
-                <Badge variant="secondary" className="absolute top-0.5 left-0.5 h-3.5 min-w-3.5 px-1 bg-gray-600 text-white text-[8px] rounded-full">
+              {activeTab === "email" && unreadEmailsCount > 0 && (
+                <Badge variant="secondary" className="h-5 px-1.5 bg-primary text-primary-foreground text-xs">
                   {unreadEmailsCount}
                 </Badge>
               )}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="orcamento" 
-              className="relative flex items-center justify-center py-2 md:py-2.5 px-1 md:px-2 bg-transparent data-[state=active]:bg-gray-400/20 data-[state=active]:border-b-2 data-[state=active]:border-gray-500 transition-all duration-200 rounded-none border-b-2 border-transparent hover:border-gray-300"
-            >
-              <Receipt className="w-4 h-4 md:w-4.5 md:h-4.5" />
-              {orcamentosEmAndamentoCount > 0 && (
-                <Badge variant="secondary" className="absolute top-0.5 left-0.5 h-3.5 min-w-3.5 px-1 bg-gray-600 text-white text-[8px] rounded-full">
+              {activeTab === "orcamento" && orcamentosEmAndamentoCount > 0 && (
+                <Badge variant="secondary" className="h-5 px-1.5 bg-primary text-primary-foreground text-xs">
                   {orcamentosEmAndamentoCount}
                 </Badge>
               )}
-            </TabsTrigger>
-          </TabsList>
+            </div>
+          </div>
 
             {/* Chat Tab */}
           <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-3 md:pt-4 px-2 md:px-0">
@@ -3033,6 +3026,64 @@ ${recentMessages}
       <PredictiveDialerDialog 
         open={showPredictiveDialer}
         onOpenChange={setShowPredictiveDialer}
+      />
+
+      {/* Radial Menu Trigger - Floating Button */}
+      <RadialMenuTrigger
+        onClick={() => setShowRadialMenu(true)}
+        icon={<Menu className="w-6 h-6" />}
+        className="fixed bottom-6 left-6 z-40"
+        badge={activeConversationsCount + todayTasksCount + unreadEmailsCount + orcamentosEmAndamentoCount}
+      />
+
+      {/* Radial Menu */}
+      <RadialMenu
+        isOpen={showRadialMenu}
+        onClose={() => setShowRadialMenu(false)}
+        size={280}
+        itemSize={60}
+        items={[
+          {
+            id: "chat",
+            icon: <MessageSquare className="w-5 h-5" />,
+            label: "Conversas",
+            badge: activeConversationsCount,
+            onClick: () => setActiveTab("chat"),
+          },
+          {
+            id: "agenda",
+            icon: <Calendar className="w-5 h-5" />,
+            label: "Agenda",
+            badge: todayTasksCount,
+            onClick: () => setActiveTab("agenda"),
+          },
+          {
+            id: "email",
+            icon: <Mail className="w-5 h-5" />,
+            label: "E-mails",
+            badge: unreadEmailsCount,
+            onClick: () => setActiveTab("email"),
+          },
+          {
+            id: "orcamento",
+            icon: <Receipt className="w-5 h-5" />,
+            label: "Orçamentos",
+            badge: orcamentosEmAndamentoCount,
+            onClick: () => setActiveTab("orcamento"),
+          },
+          {
+            id: "dialer",
+            icon: <PhoneCall className="w-5 h-5" />,
+            label: "Discador",
+            onClick: () => setShowPredictiveDialer(true),
+          },
+          {
+            id: "ai",
+            icon: <Sparkles className="w-5 h-5" />,
+            label: "IA",
+            onClick: () => setShowAIChat(!showAIChat),
+          },
+        ] as RadialMenuItem[]}
       />
     </div>
   );
