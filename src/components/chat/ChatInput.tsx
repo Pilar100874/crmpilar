@@ -747,12 +747,7 @@ export default function ChatInput({
     );
   }
 
-  // AI Chat toggle
-  if (onToggleAIChat) {
-    chatItems.push(
-      <ToolbarBtn key="ai-chat" icon={Sparkles} title="Chat IA" onClick={() => { onToggleAIChat(); setShowToolsMenu(false); }} isActive={showAIChat} disabled={disabled} />
-    );
-  }
+  // AI Chat toggle - removed from menu, now handled by main AI button in parent
 
   // Import reports
   if (importReports.length > 0) {
