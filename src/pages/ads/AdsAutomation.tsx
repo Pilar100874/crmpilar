@@ -10,10 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 import { 
   Plus, Play, Trash2, Edit, Zap, Loader2, Save, 
-  ZoomIn, ZoomOut, Maximize2, X, Blocks, Minimize2, Copy, MoreVertical, Power
+  ZoomIn, ZoomOut, Maximize2, X, Blocks, Minimize2, Copy
 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import {
@@ -615,75 +615,30 @@ function AdsAutomationContent() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <WorkflowCardGrid>
                 {automations?.map(automation => (
-                  <Card key={automation.id} className="overflow-hidden hover:shadow-lg transition-shadow relative">
-                    <div className="absolute top-3 right-3 z-10">
-                      <DropdownMenu open={openMenuId === automation.id} onOpenChange={(open) => setOpenMenuId(open ? automation.id : null)}>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setOpenMenuId(null); loadAutomation(automation); }}>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            setOpenMenuId(null);
-                            setRenameAutomation(automation);
-                            setRenameName(automation.nome);
-                            setRenameDescription(automation.descricao || "");
-                            setRenameDialogOpen(true);
-                          }}>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Renomear
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { setOpenMenuId(null); duplicateAutomationMutation.mutate(automation); }}>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Duplicar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => { setOpenMenuId(null); updateAutomationMutation.mutate({ id: automation.id, ativo: !automation.ativo }); }}>
-                            <Power className="w-4 h-4 mr-2" />
-                            {automation.ativo ? "Desativar" : "Ativar"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => { setOpenMenuId(null); if (confirm("Tem certeza?")) deleteAutomationMutation.mutate(automation.id); }}
-                            className="text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    <CardHeader className="pb-3 pr-12">
-                      <CardTitle className="text-base">{automation.nome}</CardTitle>
-                      <CardDescription className="text-xs line-clamp-2">
-                        {automation.descricao || "Sem descrição"}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={automation.ativo ? "default" : "secondary"}>
-                          {automation.ativo ? "Ativo" : "Inativo"}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {(automation.flow_data as any)?.nodes?.length || 0} blocos
-                        </span>
-                      </div>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="w-full" 
-                        onClick={() => loadAutomation(automation)}
-                      >
-                        <Edit className="h-3 w-3 mr-1" />
-                        Abrir Editor
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <WorkflowCard
+                    key={automation.id}
+                    id={automation.id}
+                    title={automation.nome}
+                    description={automation.descricao}
+                    isActive={automation.ativo}
+                    blocksCount={(automation.flow_data as any)?.nodes?.length || 0}
+                    menuOpen={openMenuId === automation.id}
+                    onMenuOpenChange={(open) => setOpenMenuId(open ? automation.id : null)}
+                    onEdit={() => { setOpenMenuId(null); loadAutomation(automation); }}
+                    onRename={() => {
+                      setOpenMenuId(null);
+                      setRenameAutomation(automation);
+                      setRenameName(automation.nome);
+                      setRenameDescription(automation.descricao || "");
+                      setRenameDialogOpen(true);
+                    }}
+                    onDuplicate={() => { setOpenMenuId(null); duplicateAutomationMutation.mutate(automation); }}
+                    onToggleActive={() => { setOpenMenuId(null); updateAutomationMutation.mutate({ id: automation.id, ativo: !automation.ativo }); }}
+                    onDelete={() => { setOpenMenuId(null); if (confirm("Tem certeza?")) deleteAutomationMutation.mutate(automation.id); }}
+                    onOpenEditor={() => loadAutomation(automation)}
+                  />
                 ))}
 
                 {automations?.length === 0 && (
@@ -701,7 +656,7 @@ function AdsAutomationContent() {
                     </CardContent>
                   </Card>
                 )}
-              </div>
+              </WorkflowCardGrid>
             )}
           </div>
         </div>

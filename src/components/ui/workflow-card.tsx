@@ -1,0 +1,223 @@
+import { ReactNode } from "react";
+import { MoreVertical, Edit, Power, PowerOff, Trash2, Copy, Pencil, Star } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+export interface WorkflowCardProps {
+  id: string;
+  title: string;
+  description?: string | null;
+  isActive: boolean;
+  isDefault?: boolean;
+  blocksCount?: number;
+  createdAt?: string;
+  expiresAt?: string | null;
+  priority?: number;
+  className?: string;
+  menuOpen?: boolean;
+  onMenuOpenChange?: (open: boolean) => void;
+  onEdit?: () => void;
+  onRename?: () => void;
+  onDuplicate?: () => void;
+  onToggleActive?: () => void;
+  onToggleDefault?: () => void;
+  onDelete?: () => void;
+  onOpenEditor?: () => void;
+  customContent?: ReactNode;
+  showDefaultOption?: boolean;
+  deleteDisabled?: boolean;
+}
+
+export const WorkflowCard = ({
+  id,
+  title,
+  description,
+  isActive,
+  isDefault,
+  blocksCount,
+  createdAt,
+  expiresAt,
+  priority,
+  className,
+  menuOpen,
+  onMenuOpenChange,
+  onEdit,
+  onRename,
+  onDuplicate,
+  onToggleActive,
+  onToggleDefault,
+  onDelete,
+  onOpenEditor,
+  customContent,
+  showDefaultOption = false,
+  deleteDisabled = false,
+}: WorkflowCardProps) => {
+  return (
+    <div
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-xl",
+        // light styles
+        "bg-card [box-shadow:0_0_0_1px_rgba(0,0,0,.03),0_2px_4px_rgba(0,0,0,.05),0_12px_24px_rgba(0,0,0,.05)]",
+        // dark styles
+        "transform-gpu dark:[border:1px_solid_rgba(255,255,255,.1)] dark:[box-shadow:0_-20px_80px_-20px_#ffffff1f_inset]",
+        // hover effect
+        "transition-all duration-300 hover:shadow-lg hover:scale-[1.02]",
+        isDefault && "ring-2 ring-primary",
+        className
+      )}
+    >
+      {/* Hover overlay */}
+      <div className="pointer-events-none absolute inset-0 transform-gpu transition-all duration-300 group-hover:bg-black/[.02] group-hover:dark:bg-neutral-800/10" />
+
+      {/* Header */}
+      <div className="relative z-10 p-4 pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base truncate flex items-center gap-2">
+              <span className="truncate">{title}</span>
+              {isDefault && (
+                <Star className="h-4 w-4 text-primary fill-primary flex-shrink-0" />
+              )}
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+              {description || "Sem descrição"}
+            </p>
+          </div>
+          
+          <DropdownMenu open={menuOpen} onOpenChange={onMenuOpenChange}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="z-50">
+              {onEdit && (
+                <DropdownMenuItem onClick={onEdit}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </DropdownMenuItem>
+              )}
+              {onRename && (
+                <DropdownMenuItem onClick={onRename}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Renomear
+                </DropdownMenuItem>
+              )}
+              {onDuplicate && (
+                <DropdownMenuItem onClick={onDuplicate}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Duplicar
+                </DropdownMenuItem>
+              )}
+              {(onEdit || onRename || onDuplicate) && <DropdownMenuSeparator />}
+              {onToggleActive && (
+                <DropdownMenuItem onClick={onToggleActive}>
+                  {isActive ? (
+                    <>
+                      <PowerOff className="h-4 w-4 mr-2" />
+                      Desativar
+                    </>
+                  ) : (
+                    <>
+                      <Power className="h-4 w-4 mr-2" />
+                      Ativar
+                    </>
+                  )}
+                </DropdownMenuItem>
+              )}
+              {showDefaultOption && isActive && onToggleDefault && (
+                <DropdownMenuItem onClick={onToggleDefault}>
+                  <Star className="h-4 w-4 mr-2" />
+                  {isDefault ? "Remover Padrão" : "Definir como Padrão"}
+                </DropdownMenuItem>
+              )}
+              {onDelete && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={onDelete}
+                    disabled={deleteDisabled}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 px-4 pb-4 space-y-3 flex-1">
+        {/* Status and blocks */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Badge variant={isActive ? "default" : "secondary"}>
+              {isActive ? "Ativo" : "Inativo"}
+            </Badge>
+            {typeof blocksCount === "number" && (
+              <span className="text-xs text-muted-foreground">
+                {blocksCount} {blocksCount === 1 ? "bloco" : "blocos"}
+              </span>
+            )}
+          </div>
+          {typeof priority === "number" && (
+            <Badge variant="outline">Prioridade: {priority}</Badge>
+          )}
+        </div>
+
+        {/* Custom content slot */}
+        {customContent}
+
+        {/* Created at */}
+        {createdAt && (
+          <div className="text-xs text-muted-foreground">
+            Criado em {new Date(createdAt).toLocaleDateString()}
+          </div>
+        )}
+
+        {/* Open Editor Button */}
+        {onOpenEditor && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full transform-gpu transition-all duration-300 group-hover:bg-primary group-hover:text-primary-foreground"
+            onClick={onOpenEditor}
+          >
+            <Edit className="h-3 w-3 mr-1" />
+            Abrir Editor
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const WorkflowCardGrid = ({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4",
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+};

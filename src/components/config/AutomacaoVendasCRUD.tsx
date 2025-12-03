@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, CalendarIcon, Settings, MoreVertical, Power } from "lucide-react";
+import { Plus, CalendarIcon, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +20,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { WorkflowCard, WorkflowCardGrid } from "@/components/ui/workflow-card";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -283,93 +283,48 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
           <p className="text-sm mt-1">Clique em "Nova Regra" para começar</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+        <WorkflowCardGrid className="p-6">
           {automacoes.map((automacao) => {
             const flowData = automacao.flow_data as any;
             const numBlocos = flowData?.nodes?.length || 0;
             
             return (
-              <Card key={automacao.id} className="p-4 hover:shadow-lg transition-shadow">
-                <div className="space-y-4">
-                  {/* Cabeçalho com Menu */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg truncate">{automacao.nome}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                        {automacao.descricao || "Sem descrição"}
-                      </p>
-                    </div>
-                    <DropdownMenu open={openMenuId === automacao.id} onOpenChange={(open) => setOpenMenuId(open ? automacao.id : null)}>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => {
-                          setOpenMenuId(null);
-                          navigate(`/editor-regras?id=${automacao.id}`, { state: { from: location.pathname + location.search } });
-                        }}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          setOpenMenuId(null);
-                          setSelectedAutomacao(automacao);
-                          setRenameName(automacao.nome);
-                          setRenameDescription(automacao.descricao || "");
-                          setRenameDialogOpen(true);
-                        }}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Renomear
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          setOpenMenuId(null);
-                          handleDuplicate(automacao);
-                        }}>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Duplicar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          setOpenMenuId(null);
-                          handleToggleActive(automacao.id, automacao.ativo);
-                        }}>
-                          <Power className="h-4 w-4 mr-2" />
-                          {automacao.ativo ? "Desativar" : "Ativar"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => {
-                            setOpenMenuId(null);
-                            setDeleteId(automacao.id);
-                          }}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-
-                  {/* Status */}
-                  <div className="flex items-center gap-2">
-                    <Badge variant={automacao.ativo ? "default" : "secondary"}>
-                      {automacao.ativo ? "Ativa" : "Inativa"}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {numBlocos} {numBlocos === 1 ? "bloco" : "blocos"}
-                    </span>
-                  </div>
-
-                  {/* Informações */}
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">Prioridade:</span>
-                      <Badge variant="outline">{automacao.prioridade}</Badge>
-                    </div>
-                  </div>
-
-                  {/* Vencimento */}
+              <WorkflowCard
+                key={automacao.id}
+                id={automacao.id}
+                title={automacao.nome}
+                description={automacao.descricao}
+                isActive={automacao.ativo}
+                blocksCount={numBlocos}
+                priority={automacao.prioridade}
+                createdAt={automacao.created_at}
+                menuOpen={openMenuId === automacao.id}
+                onMenuOpenChange={(open) => setOpenMenuId(open ? automacao.id : null)}
+                onEdit={() => {
+                  setOpenMenuId(null);
+                  navigate(`/editor-regras?id=${automacao.id}`, { state: { from: location.pathname + location.search } });
+                }}
+                onRename={() => {
+                  setOpenMenuId(null);
+                  setSelectedAutomacao(automacao);
+                  setRenameName(automacao.nome);
+                  setRenameDescription(automacao.descricao || "");
+                  setRenameDialogOpen(true);
+                }}
+                onDuplicate={() => {
+                  setOpenMenuId(null);
+                  handleDuplicate(automacao);
+                }}
+                onToggleActive={() => {
+                  setOpenMenuId(null);
+                  handleToggleActive(automacao.id, automacao.ativo);
+                }}
+                onDelete={() => {
+                  setOpenMenuId(null);
+                  setDeleteId(automacao.id);
+                }}
+                onOpenEditor={() => navigate(`/editor-regras?id=${automacao.id}`, { state: { from: location.pathname + location.search } })}
+                customContent={
                   <div className="space-y-2">
                     <span className="text-xs text-muted-foreground">Vencimento:</span>
                     <Popover>
@@ -390,7 +345,7 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                           )}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0 z-50" align="start">
                         <Calendar
                           mode="single"
                           selected={automacao.expires_at ? new Date(automacao.expires_at) : undefined}
@@ -414,27 +369,11 @@ export const AutomacaoVendasCRUD = ({ estabelecimentoId }: AutomacaoVendasCRUDPr
                       </PopoverContent>
                     </Popover>
                   </div>
-
-                  {/* Data de criação */}
-                  <div className="text-xs text-muted-foreground">
-                    Criado em {new Date(automacao.created_at).toLocaleDateString()}
-                  </div>
-
-                  {/* Botão Abrir Editor */}
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => navigate(`/editor-regras?id=${automacao.id}`, { state: { from: location.pathname + location.search } })}
-                  >
-                    <Edit className="h-3 w-3 mr-1" />
-                    Abrir Editor
-                  </Button>
-                </div>
-              </Card>
+                }
+              />
             );
           })}
-        </div>
+        </WorkflowCardGrid>
       )}
 
       <DeleteConfirmDialog
