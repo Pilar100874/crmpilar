@@ -175,6 +175,34 @@ All colors MUST be HSL.
     color: hsl(var(--sidebar-foreground));
     opacity: 0.7;
   }
+
+  /* Chat Tab - estilo igual ao menu mas laranja */
+  .chat-tab {
+    position: fixed;
+    left: 0;
+    bottom: 80px;
+    width: 20px;
+    height: 40px;
+    background: hsl(25 95% 53%);
+    border-radius: 0 8px 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 40;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+  }
+
+  .chat-tab:hover {
+    width: 25px;
+    background: hsl(25 95% 45%);
+  }
+
+  .chat-tab svg {
+    color: white;
+    opacity: 0.9;
+  }
 }
 
 @layer base {
