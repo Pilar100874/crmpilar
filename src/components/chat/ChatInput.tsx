@@ -814,20 +814,6 @@ export default function ChatInput({
   // Check if we have chat-specific items
   const hasChatItems = chatItems.length > 0;
   
-  // Debug log
-  console.log("ChatInput Menus Debug:", { 
-    generalItemsCount: generalItems.length, 
-    chatItemsCount: chatItems.length,
-    showToolsMenu,
-    showAIMenu,
-    hasAvailableBots: availableBots.length > 0,
-    hasWebhooks: webhooksForAutoResponse.length > 0,
-    hasAvailableUsers: availableUsers.length > 0,
-    hasImportReports: importReports.length > 0,
-    hasConversationId: !!conversationId,
-    hasToggleRealTimeTranslation: !!onToggleRealTimeTranslation
-  });
-  
   return (
     <>
       {/* Hidden file inputs */}
@@ -859,13 +845,13 @@ export default function ChatInput({
         {/* Main input container */}
         <div className="relative z-50 bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2">
           {/* Input row */}
-          <div className="flex items-end gap-2">
+          <div className="flex items-end gap-2 overflow-visible">
             {/* Expandable Tools Menu - positioned to expand upward (left side) */}
             <div ref={menuRef} className="relative">
               {/* General items ring */}
               <div 
                 className={cn(
-                  "absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5",
+                  "absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5 z-[200]",
                   "transition-all duration-300 origin-bottom",
                   showToolsMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                 )}
@@ -934,7 +920,7 @@ export default function ChatInput({
               {chatItems.length > 0 && (
                 <div 
                   className={cn(
-                    "absolute bottom-full right-0 mb-2 flex flex-col-reverse gap-1.5 z-[100]",
+                    "absolute bottom-full right-0 mb-2 flex flex-col-reverse gap-1.5 z-[200]",
                     "transition-all duration-300 origin-bottom",
                     showAIMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                   )}
@@ -967,7 +953,7 @@ export default function ChatInput({
                 )}
                 onClick={() => { 
                   setShowAIMenu(!showAIMenu); 
-                  setShowToolsMenu(false); 
+                  setShowToolsMenu(false);
                 }}
                 title={showAIMenu ? "Fechar IA" : "Recursos de IA"}
               >
