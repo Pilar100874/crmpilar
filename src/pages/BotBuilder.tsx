@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, useEffect, useMemo } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Button } from "@/components/ui/button";
@@ -60,6 +60,7 @@ const getId = () => {
 function BotBuilderContent() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const botIdFromUrl = searchParams.get("id");
   const botNameFromUrl = searchParams.get("name");
   const botDescriptionFromUrl = searchParams.get("description");
@@ -67,6 +68,12 @@ function BotBuilderContent() {
   const whatsappTypeFromUrl = searchParams.get("whatsapp_type");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const savingRef = useRef(false);
+  
+  // Captura a URL de origem para retornar ao fechar
+  const [originUrl] = useState(() => {
+    const state = location.state as { from?: string } | null;
+    return state?.from || "/bot-create";
+  });
   
   // Criar bloco Start por padrão
   const initialNodes: Node[] = [
@@ -1071,24 +1078,24 @@ function BotBuilderContent() {
     if (hasUnsavedChanges) {
       setShowExitDialog(true);
     } else {
-      navigate("/bot-create");
+      navigate(originUrl);
     }
-  }, [hasUnsavedChanges, navigate]);
+  }, [hasUnsavedChanges, navigate, originUrl]);
 
   const handleExitWithSave = useCallback(async () => {
     const ok = await handleSave(false);
     if (ok) {
       setShowExitDialog(false);
-      navigate("/bot-create");
+      navigate(originUrl);
     } else {
       toast.error("Não foi possível salvar. Corrija os erros e tente novamente.");
     }
-  }, [handleSave, navigate]);
+  }, [handleSave, navigate, originUrl]);
 
   const handleExitWithoutSave = useCallback(() => {
     setShowExitDialog(false);
-    navigate("/bot-create");
-  }, [navigate]);
+    navigate(originUrl);
+  }, [navigate, originUrl]);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">

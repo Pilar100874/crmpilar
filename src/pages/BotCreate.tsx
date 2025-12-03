@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +30,7 @@ interface BotCreateProps {
 
 export default function BotCreate({ embedded = false }: BotCreateProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { openSubmenu } = useLayout();
   const [bots, setBots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -347,7 +348,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
 
       // Navegar para o builder com o nome do bot como parâmetro
       const whatsappTypeParam = selectedCanal === 'whatsapp' ? `&whatsapp_type=${selectedWhatsAppType}` : '';
-      navigate(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify([selectedCanal]))}${whatsappTypeParam}`);
+      navigate(`/bot-builder?name=${encodeURIComponent(newBotName.trim())}&description=${encodeURIComponent(newBotDescription.trim())}&canais=${encodeURIComponent(JSON.stringify([selectedCanal]))}${whatsappTypeParam}`, { state: { from: location.pathname + location.search } });
       setNewBotDialogOpen(false);
       setNewBotName("");
       setNewBotDescription("");
@@ -565,7 +566,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                       <Card 
                         key={bot.id} 
                         className="hover:shadow-lg transition-all cursor-pointer relative group h-full flex flex-col"
-                        onClick={() => navigate(`/bot-builder?id=${bot.id}`)}
+                        onClick={() => navigate(`/bot-builder?id=${bot.id}`, { state: { from: location.pathname + location.search } })}
                       >
                         <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
                           <DropdownMenu open={openMenuId === bot.id} onOpenChange={(open) => setOpenMenuId(open ? bot.id : null)}>
@@ -578,7 +579,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                               <DropdownMenuItem onClick={(e) => {
                                 e.stopPropagation();
                                 setOpenMenuId(null);
-                                navigate(`/bot-builder?id=${bot.id}`);
+                                navigate(`/bot-builder?id=${bot.id}`, { state: { from: location.pathname + location.search } });
                               }}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Editar
@@ -705,7 +706,7 @@ export default function BotCreate({ embedded = false }: BotCreateProps) {
                             className="w-full text-xs sm:text-sm h-8 sm:h-9"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/bot-builder?id=${bot.id}`);
+                              navigate(`/bot-builder?id=${bot.id}`, { state: { from: location.pathname + location.search } });
                             }}
                           >
                             <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
