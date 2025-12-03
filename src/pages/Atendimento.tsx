@@ -1747,141 +1747,207 @@ ${recentMessages}
       size={260}
       className="h-screen min-h-0"
     >
-      <div className="h-full flex bg-gray-100 overflow-hidden">
+      <div className="h-full flex bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
       {/* Conversation List */}
-      <div className={`border-r border-border flex flex-col h-full min-h-0 transition-all duration-300 bg-gray-300 ${
+      <div className={`border-r border-border/50 flex flex-col h-full min-h-0 transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-lg ${
         isMobile 
           ? 'hidden' 
           : showConversationsList 
-            ? 'w-80 md:w-64 lg:w-80' 
+            ? 'w-80 md:w-72 lg:w-80' 
             : 'w-0 border-r-0'
       }`}>
         {showConversationsList && (
           <>
-            <div className="px-3 md:px-4 py-2 md:py-3 border-b bg-primary/5 flex-shrink-0">
-              <div className="flex items-center justify-between mb-2 md:mb-3">
-                <h2 className="text-base md:text-lg font-semibold">Painel de Atendimento</h2>
+            {/* Modern Header */}
+            <div className="px-4 py-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b border-border/30 flex-shrink-0">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  Painel de Atendimento
+                </h2>
               </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar conversas..."
-                  className="pl-10 h-9 rounded-full text-sm"
+                  placeholder="Buscar..."
+                  className="pl-10 h-9 rounded-full text-sm bg-white/70 border-border/50 focus:bg-white transition-colors"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
 
-        {/* Tabs - Controlled by Radial Menu */}
+        {/* Tabs - Modern Design */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          {/* Current Tab Indicator */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-border/50 bg-muted/30">
-            <div className="flex items-center gap-2">
-              {activeTab === "chat" && <MessageSquare className="w-4 h-4 text-primary" />}
-              {activeTab === "agenda" && <Calendar className="w-4 h-4 text-primary" />}
-              {activeTab === "email" && <Mail className="w-4 h-4 text-primary" />}
-              {activeTab === "orcamento" && <Receipt className="w-4 h-4 text-primary" />}
-              <span className="text-sm font-medium">
-                {activeTab === "chat" && "Conversas"}
-                {activeTab === "agenda" && "Agenda"}
-                {activeTab === "email" && "E-mails"}
-                {activeTab === "orcamento" && "Orçamentos"}
-              </span>
-              {activeTab === "chat" && activeConversationsCount > 0 && (
-                <Badge variant="secondary" className="h-5 px-1.5 bg-primary text-primary-foreground text-xs">
-                  {activeConversationsCount}
-                </Badge>
-              )}
-              {activeTab === "agenda" && todayTasksCount > 0 && (
-                <Badge variant="secondary" className="h-5 px-1.5 bg-primary text-primary-foreground text-xs">
-                  {todayTasksCount}
-                </Badge>
-              )}
-              {activeTab === "email" && unreadEmailsCount > 0 && (
-                <Badge variant="secondary" className="h-5 px-1.5 bg-primary text-primary-foreground text-xs">
-                  {unreadEmailsCount}
-                </Badge>
-              )}
-              {activeTab === "orcamento" && orcamentosEmAndamentoCount > 0 && (
-                <Badge variant="secondary" className="h-5 px-1.5 bg-primary text-primary-foreground text-xs">
-                  {orcamentosEmAndamentoCount}
-                </Badge>
-              )}
-            </div>
+          {/* Tab Navigation Cards */}
+          <div className="grid grid-cols-4 gap-1.5 px-3 py-3 bg-slate-50/50 border-b border-border/30">
+            <button
+              onClick={() => setActiveTab("chat")}
+              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 ${
+                activeTab === "chat" 
+                  ? "bg-primary text-primary-foreground shadow-md scale-105" 
+                  : "bg-white/70 hover:bg-white hover:shadow-sm text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <div className="relative">
+                <MessageSquare className="w-5 h-5" />
+                {activeConversationsCount > 0 && (
+                  <span className={`absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center text-[10px] font-bold rounded-full px-1 ${
+                    activeTab === "chat" ? "bg-white text-primary" : "bg-primary text-white"
+                  }`}>
+                    {activeConversationsCount > 99 ? "99+" : activeConversationsCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-medium">Chats</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab("agenda")}
+              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 ${
+                activeTab === "agenda" 
+                  ? "bg-orange-500 text-white shadow-md scale-105" 
+                  : "bg-white/70 hover:bg-white hover:shadow-sm text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <div className="relative">
+                <Calendar className="w-5 h-5" />
+                {todayTasksCount > 0 && (
+                  <span className={`absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center text-[10px] font-bold rounded-full px-1 ${
+                    activeTab === "agenda" ? "bg-white text-orange-500" : "bg-orange-500 text-white"
+                  }`}>
+                    {todayTasksCount > 99 ? "99+" : todayTasksCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-medium">Agenda</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab("email")}
+              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 ${
+                activeTab === "email" 
+                  ? "bg-blue-500 text-white shadow-md scale-105" 
+                  : "bg-white/70 hover:bg-white hover:shadow-sm text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <div className="relative">
+                <Mail className="w-5 h-5" />
+                {unreadEmailsCount > 0 && (
+                  <span className={`absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center text-[10px] font-bold rounded-full px-1 ${
+                    activeTab === "email" ? "bg-white text-blue-500" : "bg-blue-500 text-white"
+                  }`}>
+                    {unreadEmailsCount > 99 ? "99+" : unreadEmailsCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-medium">E-mails</span>
+            </button>
+            
+            <button
+              onClick={() => setActiveTab("orcamento")}
+              className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all duration-200 ${
+                activeTab === "orcamento" 
+                  ? "bg-emerald-500 text-white shadow-md scale-105" 
+                  : "bg-white/70 hover:bg-white hover:shadow-sm text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <div className="relative">
+                <Receipt className="w-5 h-5" />
+                {orcamentosEmAndamentoCount > 0 && (
+                  <span className={`absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center text-[10px] font-bold rounded-full px-1 ${
+                    activeTab === "orcamento" ? "bg-white text-emerald-500" : "bg-emerald-500 text-white"
+                  }`}>
+                    {orcamentosEmAndamentoCount > 99 ? "99+" : orcamentosEmAndamentoCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-medium">Orçam.</span>
+            </button>
           </div>
 
             {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-3 md:pt-4 px-2 md:px-0">
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
-                <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                <p className="text-sm">Nenhuma conversa encontrada</p>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="w-8 h-8 text-primary/40" />
+                </div>
+                <p className="text-sm font-medium">Nenhuma conversa</p>
+                <p className="text-xs text-muted-foreground mt-1">Use o botão direito para acessar opções</p>
               </div>
             ) : (
-              filteredConversations.map((conv) => (
-                <div
-                  key={conv.id}
-                  onClick={() => setSelectedConversation(conv.id)}
-                  className={`px-3 py-3 border-b cursor-pointer hover:bg-gray-200/50 transition-colors ${
-                    selectedConversation === conv.id ? "bg-gray-200 border-l-4 border-l-primary" : ""
-                  }`}
-                >
-                  <div className="flex items-start gap-2.5">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="font-semibold text-sm truncate">
-                          {conv.customer?.nome || "Cliente"}
-                        </span>
-                        <span className="text-xs text-muted-foreground ml-2">
-                          {conv.lastMessage?.created_at
-                            ? getTimeAgo(conv.lastMessage.created_at)
-                            : getTimeAgo(conv.updated_at)}
-                        </span>
+              <div className="space-y-1.5">
+                {filteredConversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    onClick={() => setSelectedConversation(conv.id)}
+                    className={`px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                      selectedConversation === conv.id 
+                        ? "bg-primary/10 border border-primary/30 shadow-sm" 
+                        : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        selectedConversation === conv.id 
+                          ? "bg-primary text-primary-foreground" 
+                          : "bg-gradient-to-br from-slate-100 to-slate-200"
+                      }`}>
+                        <User className="w-5 h-5" />
                       </div>
-                      <p className="text-xs text-muted-foreground truncate mb-1">
-                        {conv.lastMessage?.text || "Sem mensagens"}
-                      </p>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {conv.bot_active !== false && (
-                          <Badge variant="default" className="text-[10px] px-1.5 py-0 bg-green-500">
-                            BOT
-                          </Badge>
-                        )}
-                        {conv.customerCompanies && conv.customerCompanies.length > 0 && (
-                          <>
-                            {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
-                              <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1">
-                                <Building2 className="w-2.5 h-2.5" />
-                                {rel.empresas?.nome_fantasia || rel.empresas?.nome || "Empresa"}
-                              </Badge>
-                            ))}
-                            {conv.customerCompanies.length > 1 && (
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                +{conv.customerCompanies.length - 1}
-                              </Badge>
-                            )}
-                          </>
-                        )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="font-semibold text-sm truncate">
+                            {conv.customer?.nome || "Cliente"}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                            {conv.lastMessage?.created_at
+                              ? getTimeAgo(conv.lastMessage.created_at)
+                              : getTimeAgo(conv.updated_at)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate mb-1.5">
+                          {conv.lastMessage?.text || "Sem mensagens"}
+                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {conv.bot_active !== false && (
+                            <Badge className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
+                              <Bot className="w-2.5 h-2.5 mr-0.5" />
+                              BOT
+                            </Badge>
+                          )}
+                          {conv.customerCompanies && conv.customerCompanies.length > 0 && (
+                            <>
+                              {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
+                                <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-white/50">
+                                  <Building2 className="w-2.5 h-2.5" />
+                                  {rel.empresas?.nome_fantasia || rel.empresas?.nome || "Empresa"}
+                                </Badge>
+                              ))}
+                              {conv.customerCompanies.length > 1 && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                  +{conv.customerCompanies.length - 1}
+                                </Badge>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </TabsContent>
 
           {/* Agenda Tab */}
-          <TabsContent value="agenda" className="flex-1 flex flex-row min-h-0 m-0 pt-4">
+          <TabsContent value="agenda" className="flex-1 flex flex-row min-h-0 m-0">
             {/* Main Content */}
             <div className={`flex flex-col transition-all duration-300 ${
               showClientDetailsAgenda && selectedTaskData ? 'w-[calc(100%-320px)]' : 'w-full'
             }`}>
-            {/* Agenda Controls */}
-            <div className="flex-shrink-0 px-3 pt-5 pb-2 border-b bg-background space-y-2">
+            {/* Agenda Controls - Modern Design */}
+            <div className="flex-shrink-0 px-3 py-3 bg-gradient-to-r from-orange-50 to-transparent border-b border-orange-100/50 space-y-2">
               {/* Date Navigation + Toggle Button */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 flex-1">
@@ -1889,16 +1955,16 @@ ${recentMessages}
                     variant="outline" 
                     size="sm" 
                     onClick={handlePreviousDay}
-                    className="h-8"
+                    className="h-8 w-8 p-0 rounded-full bg-white/70 hover:bg-white border-orange-200"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-4 h-4 text-orange-600" />
                   </Button>
                   
-                  <div className="flex-1 text-center">
-                    <p className="text-sm font-semibold">
+                  <div className="flex-1 text-center bg-white/70 rounded-xl py-1.5 px-3">
+                    <p className="text-sm font-bold text-orange-700">
                       {format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] text-orange-500 capitalize">
                       {format(agendaDate, "EEEE", { locale: ptBR })}
                     </p>
                   </div>
@@ -1907,9 +1973,9 @@ ${recentMessages}
                     variant="outline" 
                     size="sm" 
                     onClick={handleNextDay}
-                    className="h-8"
+                    className="h-8 w-8 p-0 rounded-full bg-white/70 hover:bg-white border-orange-200"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-4 h-4 text-orange-600" />
                   </Button>
                 </div>
 
@@ -2112,17 +2178,24 @@ ${recentMessages}
             </div>
 
             {/* Tasks List */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
               {todayTasks.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
-                  <Calendar className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                  <p className="text-sm">Nenhuma tarefa para esta data</p>
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 flex items-center justify-center">
+                    <Calendar className="w-8 h-8 text-orange-300" />
+                  </div>
+                  <p className="text-sm font-medium">Nenhuma tarefa</p>
+                  <p className="text-xs text-muted-foreground mt-1">para esta data</p>
                 </div>
               ) : (
                  todayTasks.map((task) => (
-                  <Card 
+                  <div 
                     key={task.id} 
-                    className="p-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                    className={`p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                      selectedTaskId === task.id 
+                        ? "bg-orange-100 border border-orange-200 shadow-sm" 
+                        : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
+                    }`}
                     onClick={() => {
                       setSelectedTaskId(task.id);
                       if (!showClientDetailsAgenda) {
@@ -2131,28 +2204,32 @@ ${recentMessages}
                     }}
                   >
                     <div className="flex items-start gap-3">
-                      <CheckCircle2 className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                        task.status === 'concluida' ? 'text-success' : 'text-muted-foreground'
-                      }`} />
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        task.status === 'concluida' 
+                          ? 'bg-green-100 text-green-600' 
+                          : 'bg-orange-100 text-orange-500'
+                      }`}>
+                        <CheckCircle2 className="w-4 h-4" />
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{task.title}</p>
+                        <p className="font-semibold text-sm truncate">{task.title}</p>
                         <p className="text-xs text-muted-foreground truncate">{task.contact_name}</p>
-                        <div className="flex items-center gap-3 mt-1.5">
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                           {task.time && (
-                            <span className="text-xs text-muted-foreground flex items-center">
+                            <span className="text-[10px] text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full flex items-center font-medium">
                               <Clock className="w-3 h-3 mr-1" />
                               {task.time}
                             </span>
                           )}
                           {task.origem && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-white/50">
                               {task.origem}
                             </Badge>
                           )}
                         </div>
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 ))
               )}
             </div>
@@ -2193,42 +2270,49 @@ ${recentMessages}
           </TabsContent>
 
           {/* Email Tab */}
-          <TabsContent value="email" className="flex-1 flex flex-row min-h-0 m-0 pt-3 md:pt-4">
+          <TabsContent value="email" className="flex-1 flex flex-row min-h-0 m-0">
             {/* Main Content */}
             <div className={`flex flex-col transition-all duration-300 ${
               showClientDetailsEmail && selectedEmailData?.customer ? 'w-[calc(100%-280px)] md:w-[calc(100%-256px)] lg:w-[calc(100%-320px)]' : 'w-full'
-            } overflow-y-auto min-h-0 overscroll-contain px-2 md:px-3 pt-2 md:pt-3 pb-2 space-y-2`}>
+            } overflow-y-auto min-h-0 overscroll-contain px-2 py-2 space-y-1.5`}>
             {/* Header with Toggle */}
-            <div className="flex items-center justify-end mb-2">
+            <div className="flex items-center justify-between px-2 py-2 bg-gradient-to-r from-blue-50 to-transparent rounded-xl mb-2">
+              <span className="text-xs font-medium text-blue-600">Caixa de Entrada</span>
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => {
                   const newState = !showClientDetailsEmail;
                   setShowClientDetailsEmail(newState);
-                  // Em tablets, coordenar com o painel de conversas
                   if (isTablet && newState && showConversationsList) {
                     setShowConversationsList(false);
                   }
                 }}
-                className="h-8 w-8 p-0"
+                className="h-7 w-7 p-0 rounded-full hover:bg-blue-100"
                 title={showClientDetailsEmail ? "Ocultar detalhes" : "Mostrar detalhes"}
               >
-                {showClientDetailsEmail ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                {showClientDetailsEmail ? <ChevronRight className="h-4 w-4 text-blue-600" /> : <ChevronLeft className="h-4 w-4 text-blue-600" />}
               </Button>
             </div>
             
             {userEmails.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
-                <Inbox className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                <p className="text-sm">Nenhum email recebido</p>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Inbox className="w-8 h-8 text-blue-300" />
+                </div>
+                <p className="text-sm font-medium">Caixa vazia</p>
+                <p className="text-xs text-muted-foreground mt-1">Nenhum e-mail recebido</p>
               </div>
             ) : (
               userEmails.map((email) => (
-                <Card 
+                <div 
                   key={email.id} 
-                  className={`p-3 cursor-pointer hover:bg-muted/50 transition-all ${
-                    !email.read ? 'bg-primary/5 border-primary/30 shadow-sm' : ''
+                  className={`p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                    selectedEmailId === email.id
+                      ? "bg-blue-100 border border-blue-200 shadow-sm"
+                      : !email.read 
+                        ? 'bg-blue-50/80 border border-blue-100 hover:bg-blue-50 hover:shadow-sm' 
+                        : 'bg-white/60 hover:bg-white hover:shadow-sm border border-transparent'
                   }`}
                     onClick={() => {
                       setSelectedEmailId(email.id);
@@ -2238,33 +2322,35 @@ ${recentMessages}
                     }}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-0.5">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      email.read ? 'bg-slate-100 text-slate-400' : 'bg-blue-500 text-white'
+                    }`}>
                       {email.read ? (
-                        <MailOpen className="w-4 h-4 text-muted-foreground" />
+                        <MailOpen className="w-4 h-4" />
                       ) : (
-                        <Mail className="w-4 h-4 text-primary" />
+                        <Mail className="w-4 h-4" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className={`font-medium text-sm truncate ${!email.read ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                      <div className="flex items-center justify-between mb-0.5">
+                        <p className={`text-sm truncate ${!email.read ? 'font-bold text-foreground' : 'font-medium text-muted-foreground'}`}>
                           {email.from_email}
                         </p>
-                        <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+                        <span className="text-[10px] text-muted-foreground ml-2 flex-shrink-0 bg-slate-100 px-1.5 py-0.5 rounded-full">
                           {format(new Date(email.date), 'dd/MM', { locale: ptBR })}
                         </span>
                       </div>
-                      <p className={`text-sm truncate ${!email.read ? 'font-medium' : 'text-muted-foreground'}`}>
+                      <p className={`text-xs truncate ${!email.read ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
                         {email.subject}
                       </p>
                       {!email.read && (
-                        <Badge variant="default" className="mt-1.5 text-[10px] px-1.5 py-0">
+                        <Badge className="mt-1.5 text-[10px] px-1.5 py-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
                           Novo
                         </Badge>
                       )}
                     </div>
                   </div>
-                </Card>
+                </div>
               ))
             )}
             </div>
@@ -2304,11 +2390,11 @@ ${recentMessages}
           </TabsContent>
           
           {/* Orçamento Tab */}
-          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 pt-4">
-            {/* Filtro de Status */}
-            <div className="mt-4 px-3 pt-1 pb-2 border-b bg-background">
+          <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0">
+            {/* Header with Filter */}
+            <div className="px-3 py-3 bg-gradient-to-r from-emerald-50 to-transparent border-b border-emerald-100/50">
               <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
-                <SelectTrigger className="w-full h-9">
+                <SelectTrigger className="w-full h-9 bg-white/70 border-emerald-200 rounded-xl">
                   <SelectValue placeholder="Todos os status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -2320,55 +2406,66 @@ ${recentMessages}
               </Select>
             </div>
 
-            <div className="px-3 pt-2 pb-2 space-y-2">
+            <div className="px-2 py-2 space-y-1.5">
             {orcamentos
               .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
               .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
               .length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
-                <Receipt className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                <p className="text-sm">Nenhum orçamento em andamento</p>
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <Receipt className="w-8 h-8 text-emerald-300" />
+                </div>
+                <p className="text-sm font-medium">Sem orçamentos</p>
+                <p className="text-xs text-muted-foreground mt-1">Nenhum orçamento em andamento</p>
               </div>
             ) : (
               orcamentos
                 .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
                 .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
                 .map((orc) => (
-                  <Card 
+                  <div 
                     key={orc.id} 
-                    className="p-3 cursor-pointer hover:bg-muted/50 transition-all"
+                    className={`p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                      selectedOrcamentoId === orc.id
+                        ? "bg-emerald-100 border border-emerald-200 shadow-sm"
+                        : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
+                    }`}
                     onClick={() => {
                       setSelectedOrcamentoId(orc.id);
                       setOrcamentoSheetOpen(true);
                     }}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 mt-0.5">
-                        <Receipt className="w-4 h-4 text-primary" />
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        selectedOrcamentoId === orc.id
+                          ? "bg-emerald-500 text-white"
+                          : "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600"
+                      }`}>
+                        <Receipt className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="font-medium text-sm truncate">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <p className="font-semibold text-sm truncate">
                             {orc.customers?.nome || orc.empresas?.nome_fantasia || orc.empresas?.nome || 'Cliente'}
                           </p>
-                          <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+                          <span className="text-[10px] text-muted-foreground ml-2 flex-shrink-0 bg-slate-100 px-1.5 py-0.5 rounded-full">
                             {format(new Date(orc.created_at), 'dd/MM', { locale: ptBR })}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-semibold text-primary">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-bold text-emerald-600">
                             {new Intl.NumberFormat('pt-BR', { 
                               style: 'currency', 
                               currency: 'BRL' 
                             }).format(orc.valor_total || 0)}
                           </p>
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          <Badge className="text-[10px] px-1.5 py-0 bg-emerald-100 text-emerald-700 border-0">
                             {orc.etapa || orc.status}
                           </Badge>
                         </div>
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 ))
             )}
             </div>
@@ -2377,7 +2474,7 @@ ${recentMessages}
         
         {/* Status do Atendente - Footer */}
         {atendente && (
-          <div className="border-t bg-card p-3 flex-shrink-0">
+          <div className="border-t bg-gradient-to-r from-slate-50 to-white p-3 flex-shrink-0">
             <AtendenteStatusSelector
               atendenteId={atendente.id}
               currentStatus={atendente.status}
