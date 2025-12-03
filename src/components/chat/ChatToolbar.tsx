@@ -69,8 +69,8 @@ export function ToolbarButton({
       className={cn(
         "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
         isSelected
-          ? "bg-muted text-primary"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          ? "text-primary"
+          : "text-muted-foreground hover:text-foreground",
         disabled && "opacity-50 cursor-not-allowed"
       )}
     >
@@ -126,8 +126,8 @@ export function ToolbarPopoverButton({
           className={cn(
             "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
             isOpen
-              ? "bg-muted text-primary"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              ? "text-primary"
+              : "text-muted-foreground hover:text-foreground",
             disabled && "opacity-50 cursor-not-allowed"
           )}
         >
@@ -219,8 +219,8 @@ export function ToolbarFileButton({
         className={cn(
           "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
           isSelected
-            ? "bg-muted text-primary"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            ? "text-primary"
+            : "text-muted-foreground hover:text-foreground",
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >

@@ -397,8 +397,8 @@ export default function ChatInput({
   const getToolbarButtonClass = (isActive = false, isDisabled = false) => cn(
     "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
     isActive
-      ? "bg-muted text-primary"
-      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+      ? "text-primary"
+      : "text-muted-foreground hover:text-foreground",
     isDisabled && "opacity-50 cursor-not-allowed"
   );
 
