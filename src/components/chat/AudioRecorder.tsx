@@ -53,15 +53,17 @@ export default function AudioRecorder({ onAudioRecorded, disabled }: AudioRecord
   };
 
   return (
-    <Button
-      variant={isRecording ? "destructive" : "outline"}
-      size="icon"
+    <button
       onClick={isRecording ? stopRecording : startRecording}
       disabled={disabled}
       title={isRecording ? "Parar gravação" : "Gravar áudio"}
-      className="rounded-full"
+      className={`h-9 w-9 rounded-xl flex items-center justify-center transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
+        isRecording 
+          ? "bg-destructive text-destructive-foreground shadow-md animate-pulse" 
+          : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+      }`}
     >
       {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-    </Button>
+    </button>
   );
 }

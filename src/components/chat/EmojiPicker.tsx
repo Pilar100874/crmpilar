@@ -34,31 +34,29 @@ export default function EmojiPicker({ onEmojiSelect, disabled }: EmojiPickerProp
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
+        <button
           disabled={disabled}
           title="Adicionar emoji"
-          className="rounded-full"
+          className="h-9 w-9 rounded-xl bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Smile className="h-5 w-5" />
-        </Button>
+        </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[320px] p-0" align="end">
-        <div className="p-2 border-b">
+      <PopoverContent className="w-[320px] p-0 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+        <div className="p-3 border-b border-border/50 bg-muted/30 rounded-t-xl">
           <h4 className="font-semibold text-sm">Emojis</h4>
         </div>
-        <ScrollArea className="h-[300px]">
-          <div className="p-2 space-y-3">
+        <ScrollArea className="h-[280px]">
+          <div className="p-3 space-y-4">
             {Object.entries(EMOJI_CATEGORIES).map(([category, emojis]) => (
               <div key={category}>
-                <h5 className="text-xs font-medium text-muted-foreground mb-2">{category}</h5>
-                <div className="grid grid-cols-8 gap-1">
+                <h5 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{category}</h5>
+                <div className="grid grid-cols-8 gap-0.5">
                   {emojis.map((emoji, index) => (
                     <button
                       key={`${emoji}-${index}`}
                       onClick={() => handleEmojiClick(emoji)}
-                      className="text-2xl hover:bg-muted rounded p-1 transition-colors"
+                      className="text-xl hover:bg-muted rounded-lg p-1.5 transition-all duration-150 hover:scale-110"
                       type="button"
                     >
                       {emoji}
