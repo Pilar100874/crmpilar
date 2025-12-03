@@ -101,9 +101,11 @@ export default function ChatInput({
   const [isRecording, setIsRecording] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [showAIMenu, setShowAIMenu] = useState(false);
   const [quickReplies, setQuickReplies] = useState<Array<{content: string, shortcut: string}>>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const aiMenuRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showBotPopover, setShowBotPopover] = useState(false);
@@ -132,18 +134,21 @@ export default function ChatInput({
     el.style.height = `${el.scrollHeight}px`;
   }, [message]);
 
-  // Close menu when clicking outside
+  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowToolsMenu(false);
       }
+      if (aiMenuRef.current && !aiMenuRef.current.contains(event.target as Node)) {
+        setShowAIMenu(false);
+      }
     };
-    if (showToolsMenu) {
+    if (showToolsMenu || showAIMenu) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showToolsMenu]);
+  }, [showToolsMenu, showAIMenu]);
   
   // Auto-suggestion states
   const [autoSuggestionEnabled, setAutoSuggestionEnabled] = useState(false);
@@ -835,10 +840,10 @@ export default function ChatInput({
       {/* Main container with elegant styling */}
       <div className="relative">
         {/* Expandable menu backdrop blur when open */}
-        {showToolsMenu && (
+        {(showToolsMenu || showAIMenu) && (
           <div 
             className="fixed inset-0 bg-background/20 backdrop-blur-[2px] z-40"
-            onClick={() => setShowToolsMenu(false)}
+            onClick={() => { setShowToolsMenu(false); setShowAIMenu(false); }}
           />
         )}
         
@@ -846,37 +851,9 @@ export default function ChatInput({
         <div className="relative z-50 bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2">
           {/* Input row */}
           <div className="flex items-end gap-2">
-            {/* Expandable Tools Menu - positioned to expand upward */}
+            {/* Expandable Tools Menu - positioned to expand upward (left side) */}
             <div ref={menuRef} className="relative">
-              {/* Chat-specific items ring (outer/top ring) - only when has chat items */}
-              {hasChatItems && (
-                <div 
-                  className={cn(
-                    "absolute bottom-full left-0 flex flex-col-reverse gap-1.5",
-                    "transition-all duration-300 origin-bottom",
-                    showToolsMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-                  )}
-                  style={{
-                    marginBottom: `${(generalItems.length * 42) + 12}px`
-                  }}
-                >
-                  {chatItems.map((item, index) => (
-                    <div 
-                      key={`chat-${index}`}
-                      className="transform transition-all duration-200"
-                      style={{
-                        transitionDelay: showToolsMenu ? `${(index + generalItems.length + 1) * 30}ms` : '0ms',
-                        transform: showToolsMenu ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.9)',
-                        opacity: showToolsMenu ? 1 : 0,
-                      }}
-                    >
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* General items ring (inner/bottom ring) */}
+              {/* General items ring */}
               <div 
                 className={cn(
                   "absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5",
@@ -909,7 +886,7 @@ export default function ChatInput({
                   "text-muted-foreground hover:text-foreground",
                   showToolsMenu && "bg-primary text-primary-foreground rotate-45 shadow-md"
                 )}
-                onClick={() => setShowToolsMenu(!showToolsMenu)}
+                onClick={() => { setShowToolsMenu(!showToolsMenu); setShowAIMenu(false); }}
                 title={showToolsMenu ? "Fechar menu" : "Abrir ferramentas"}
               >
                 <Plus className="h-5 w-5" />
@@ -941,6 +918,50 @@ export default function ChatInput({
             
             {/* Audio recorder */}
             <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={disabled} />
+
+            {/* AI Menu Button - positioned to expand upward (right side) */}
+            {hasChatItems && (
+              <div ref={aiMenuRef} className="relative">
+                {/* Chat/AI items ring */}
+                <div 
+                  className={cn(
+                    "absolute bottom-full right-0 mb-2 flex flex-col-reverse gap-1.5",
+                    "transition-all duration-300 origin-bottom",
+                    showAIMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+                  )}
+                >
+                  {chatItems.map((item, index) => (
+                    <div 
+                      key={`ai-${index}`}
+                      className="transform transition-all duration-200"
+                      style={{
+                        transitionDelay: showAIMenu ? `${index * 30}ms` : '0ms',
+                        transform: showAIMenu ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.9)',
+                        opacity: showAIMenu ? 1 : 0,
+                      }}
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+
+                {/* AI trigger button */}
+                <button 
+                  className={cn(
+                    "relative w-10 h-10 rounded-full cursor-pointer",
+                    "bg-muted/50 hover:bg-muted",
+                    "flex items-center justify-center",
+                    "transition-all duration-300 ease-out",
+                    "text-muted-foreground hover:text-foreground",
+                    showAIMenu && "bg-primary text-primary-foreground shadow-md"
+                  )}
+                  onClick={() => { setShowAIMenu(!showAIMenu); setShowToolsMenu(false); }}
+                  title={showAIMenu ? "Fechar IA" : "Recursos de IA"}
+                >
+                  <Sparkles className="h-5 w-5" />
+                </button>
+              </div>
+            )}
             
             {/* Send button */}
             <Button 
