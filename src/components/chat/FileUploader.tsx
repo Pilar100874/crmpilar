@@ -1,6 +1,25 @@
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast-config";
+import { AnimatePresence, motion, Transition } from "framer-motion";
+import { LucideIcon } from "lucide-react";
+
+const buttonVariants = {
+  initial: { gap: 0, paddingLeft: ".5rem", paddingRight: ".5rem" },
+  animate: (isSelected: boolean) => ({
+    gap: isSelected ? ".5rem" : 0,
+    paddingLeft: isSelected ? "1rem" : ".5rem",
+    paddingRight: isSelected ? "1rem" : ".5rem",
+  }),
+};
+
+const spanVariants = {
+  initial: { width: 0, opacity: 0 },
+  animate: { width: "auto", opacity: 1 },
+  exit: { width: 0, opacity: 0 },
+};
+
+const transition: Transition = { delay: 0.1, type: "spring", bounce: 0, duration: 0.6 };
 
 interface FileUploaderProps {
   accept: string;
@@ -9,6 +28,8 @@ interface FileUploaderProps {
   icon: React.ReactNode;
   tooltip: string;
   buttonClassName?: string;
+  title?: string;
+  isSelected?: boolean;
 }
 
 export default function FileUploader({
@@ -18,6 +39,8 @@ export default function FileUploader({
   icon,
   tooltip,
   buttonClassName,
+  title,
+  isSelected = false,
 }: FileUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -39,8 +62,6 @@ export default function FileUploader({
     }
   };
 
-  const defaultClassName = "relative flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-muted hover:text-foreground border border-border/50 disabled:opacity-50 disabled:pointer-events-none";
-
   return (
     <>
       <input
@@ -50,14 +71,40 @@ export default function FileUploader({
         onChange={handleFileChange}
         className="hidden"
       />
-      <button
+      <motion.button
+        variants={buttonVariants}
+        initial={false}
+        animate="animate"
+        custom={isSelected}
         onClick={handleClick}
         disabled={disabled}
+        transition={transition}
         title={tooltip}
-        className={cn(defaultClassName, buttonClassName)}
+        className={cn(
+          "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
+          isSelected
+            ? "bg-muted text-primary"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          disabled && "opacity-50 cursor-not-allowed",
+          buttonClassName
+        )}
       >
         {icon}
-      </button>
+        <AnimatePresence initial={false}>
+          {isSelected && title && (
+            <motion.span
+              variants={spanVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={transition}
+              className="overflow-hidden whitespace-nowrap"
+            >
+              {title}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
     </>
   );
 }

@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Link as LinkIcon, FileUp, Image as ImageIcon, FileText, FileSpreadsheet, ZoomIn, File, Search } from "lucide-react";
 import { getFileTypeIcon } from "@/lib/imageUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AnimatePresence, motion, Transition } from "framer-motion";
+import { cn } from "@/lib/utils";
 import {
   Popover,
   PopoverContent,
@@ -15,6 +17,23 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/lib/toast-config";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+
+const buttonVariants = {
+  initial: { gap: 0, paddingLeft: ".5rem", paddingRight: ".5rem" },
+  animate: (isSelected: boolean) => ({
+    gap: isSelected ? ".5rem" : 0,
+    paddingLeft: isSelected ? "1rem" : ".5rem",
+    paddingRight: isSelected ? "1rem" : ".5rem",
+  }),
+};
+
+const spanVariants = {
+  initial: { width: 0, opacity: 0 },
+  animate: { width: "auto", opacity: 1 },
+  exit: { width: 0, opacity: 0 },
+};
+
+const transition: Transition = { delay: 0.1, type: "spring", bounce: 0, duration: 0.6 };
 
 interface QuickAttachment {
   id: string;
@@ -98,13 +117,38 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
     <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <button
+          <motion.button
+            variants={buttonVariants}
+            initial={false}
+            animate="animate"
+            custom={open}
             disabled={disabled}
+            transition={transition}
             title="Anexos rápidos"
-            className="relative flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-muted hover:text-foreground border border-border/50 disabled:opacity-50 disabled:pointer-events-none"
+            className={cn(
+              "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
+              open
+                ? "bg-muted text-primary"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              disabled && "opacity-50 cursor-not-allowed"
+            )}
           >
-            <LinkIcon className="h-5 w-5" />
-          </button>
+            <LinkIcon size={20} />
+            <AnimatePresence initial={false}>
+              {open && (
+                <motion.span
+                  variants={spanVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={transition}
+                  className="overflow-hidden whitespace-nowrap"
+                >
+                  Anexos Rápidos
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
         </PopoverTrigger>
         <PopoverContent className="w-[500px] p-0 rounded-2xl" align="end">
           <div className="p-4 border-b bg-muted/30 space-y-3">
