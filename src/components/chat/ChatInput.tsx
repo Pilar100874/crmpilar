@@ -860,19 +860,6 @@ export default function ChatInput({
                     marginBottom: `${(generalItems.length * 42) + 12}px`
                   }}
                 >
-                  {/* Chat items label */}
-                  <div 
-                    className={cn(
-                      "mb-1 px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-medium text-center",
-                      "transition-all duration-300",
-                      showToolsMenu ? "opacity-100" : "opacity-0"
-                    )}
-                    style={{
-                      transitionDelay: showToolsMenu ? `${(chatItems.length + generalItems.length) * 30}ms` : '0ms'
-                    }}
-                  >
-                    Chat
-                  </div>
                   {chatItems.map((item, index) => (
                     <div 
                       key={`chat-${index}`}
