@@ -1748,7 +1748,19 @@ ${recentMessages}
       size={260}
       className="h-screen min-h-0"
     >
-      <div className="h-full flex bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+      <div className="h-full flex bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden relative">
+      {/* Botão para reabrir painel quando colapsado */}
+      {!isMobile && !showConversationsList && (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setShowConversationsList(true)}
+          className="absolute top-3 left-3 z-20 h-9 w-9 p-0 rounded-full bg-white/90 shadow-md hover:bg-white border border-border/50"
+          title="Abrir painel"
+        >
+          <PanelLeft className="h-4 w-4" />
+        </Button>
+      )}
       {/* Conversation List */}
       <div className={`border-r border-border/50 flex flex-col h-full min-h-0 transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-lg ${
         isMobile 
