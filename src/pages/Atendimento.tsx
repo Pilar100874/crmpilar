@@ -340,16 +340,9 @@ export default function Atendimento() {
   
   // Update counters when data changes
   useEffect(() => {
-    // Conta apenas chats não atendidos (novo ou em fila) dos últimos 7 dias
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const unattendedCount = conversations.filter(c => {
-      const isUnattended = c.chat_status === 'novo' || c.chat_status === 'em_fila';
-      const isRecent = new Date(c.updated_at) >= sevenDaysAgo;
-      return isUnattended && isRecent;
-    }).length;
-    setActiveConversationsCount(unattendedCount);
+    // Conta apenas chats em fila (aguardando atendimento)
+    const inQueueCount = conversations.filter(c => c.chat_status === 'em_fila').length;
+    setActiveConversationsCount(inQueueCount);
   }, [conversations]);
   
   useEffect(() => {
