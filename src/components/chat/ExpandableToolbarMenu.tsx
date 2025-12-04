@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ExpandableToolbarMenuProps {
   children: React.ReactNode;
@@ -25,29 +26,35 @@ export function ExpandableMenuItem({
   title 
 }: MenuItemProps) {
   return (
-    <button
-      className={cn(
-        "w-full h-full flex items-center justify-center transition-all duration-200",
-        "group",
-        disabled 
-          ? "text-muted-foreground/50 cursor-not-allowed" 
-          : "text-muted-foreground hover:text-foreground",
-        isActive && "text-primary"
-      )}
-      role="menuitem"
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-    >
-      <span className="flex items-center justify-center h-full">
-        {icon && (
-          <span className="h-5 w-5 transition-all duration-200 group-hover:scale-110">
-            {icon}
-          </span>
-        )}
-        {children}
-      </span>
-    </button>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            className={cn(
+              "w-full h-full flex items-center justify-center transition-all duration-200",
+              "group",
+              disabled 
+                ? "text-muted-foreground/50 cursor-not-allowed" 
+                : "text-muted-foreground hover:text-foreground",
+              isActive && "text-primary"
+            )}
+            role="menuitem"
+            onClick={onClick}
+            disabled={disabled}
+          >
+            <span className="flex items-center justify-center h-full">
+              {icon && (
+                <span className="h-5 w-5 transition-all duration-200 group-hover:scale-110">
+                  {icon}
+                </span>
+              )}
+              {children}
+            </span>
+          </button>
+        </TooltipTrigger>
+        {title && <TooltipContent>{title}</TooltipContent>}
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -96,19 +103,25 @@ export function ExpandableToolbarMenu({ children, className }: ExpandableToolbar
       {/* Container for all items */}
       <div className="relative">
         {/* Main trigger button - always visible */}
-        <div 
-          className={cn(
-            "relative w-10 h-10 rounded-full cursor-pointer z-50",
-            "bg-background border border-border/50 shadow-sm",
-            "flex items-center justify-center",
-            "transition-all duration-300",
-            isExpanded && "bg-primary text-primary-foreground border-primary rotate-45"
-          )}
-          onClick={handleToggle}
-          title={isExpanded ? "Fechar menu" : "Abrir menu"}
-        >
-          <Plus className="h-5 w-5" />
-        </div>
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div 
+                className={cn(
+                  "relative w-10 h-10 rounded-full cursor-pointer z-50",
+                  "bg-background border border-border/50 shadow-sm",
+                  "flex items-center justify-center",
+                  "transition-all duration-300",
+                  isExpanded && "bg-primary text-primary-foreground border-primary rotate-45"
+                )}
+                onClick={handleToggle}
+              >
+                <Plus className="h-5 w-5" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>{isExpanded ? "Fechar menu" : "Abrir menu"}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         {/* Menu items - expand upward */}
         {childrenArray.map((child, index) => {

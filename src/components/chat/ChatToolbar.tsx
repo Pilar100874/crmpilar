@@ -6,6 +6,7 @@ import { useOnClickOutside } from "usehooks-ts";
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const buttonVariants = {
   initial: {
@@ -57,39 +58,45 @@ export function ToolbarButton({
   };
 
   return (
-    <motion.button
-      variants={buttonVariants}
-      initial={false}
-      animate="animate"
-      custom={isSelected}
-      onClick={handleClick}
-      disabled={disabled}
-      transition={transition}
-      title={title}
-      className={cn(
-        "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
-        isSelected
-          ? "text-primary"
-          : "text-muted-foreground hover:text-foreground",
-        disabled && "opacity-50 cursor-not-allowed"
-      )}
-    >
-      <Icon size={20} />
-      <AnimatePresence initial={false}>
-        {isSelected && (
-          <motion.span
-            variants={spanVariants}
-            initial="initial"
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <motion.button
+            variants={buttonVariants}
+            initial={false}
             animate="animate"
-            exit="exit"
+            custom={isSelected}
+            onClick={handleClick}
+            disabled={disabled}
             transition={transition}
-            className="overflow-hidden whitespace-nowrap"
+            className={cn(
+              "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
+              isSelected
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground",
+              disabled && "opacity-50 cursor-not-allowed"
+            )}
           >
-            {title}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </motion.button>
+            <Icon size={20} />
+            <AnimatePresence initial={false}>
+              {isSelected && (
+                <motion.span
+                  variants={spanVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={transition}
+                  className="overflow-hidden whitespace-nowrap"
+                >
+                  {title}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+        </TooltipTrigger>
+        <TooltipContent>{title}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -114,40 +121,46 @@ export function ToolbarPopoverButton({
 }: ToolbarPopoverButtonProps) {
   return (
     <Popover open={isOpen} onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild>
-        <motion.button
-          variants={buttonVariants}
-          initial={false}
-          animate="animate"
-          custom={isOpen}
-          disabled={disabled}
-          transition={transition}
-          title={title}
-          className={cn(
-            "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
-            isOpen
-              ? "text-primary"
-              : "text-muted-foreground hover:text-foreground",
-            disabled && "opacity-50 cursor-not-allowed"
-          )}
-        >
-          <Icon size={20} />
-          <AnimatePresence initial={false}>
-            {isOpen && (
-              <motion.span
-                variants={spanVariants}
-                initial="initial"
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <motion.button
+                variants={buttonVariants}
+                initial={false}
                 animate="animate"
-                exit="exit"
+                custom={isOpen}
+                disabled={disabled}
                 transition={transition}
-                className="overflow-hidden whitespace-nowrap"
+                className={cn(
+                  "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
+                  isOpen
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground",
+                  disabled && "opacity-50 cursor-not-allowed"
+                )}
               >
-                {title}
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.button>
-      </PopoverTrigger>
+                <Icon size={20} />
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.span
+                      variants={spanVariants}
+                      initial="initial"
+                      animate="animate"
+                      exit="exit"
+                      transition={transition}
+                      className="overflow-hidden whitespace-nowrap"
+                    >
+                      {title}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent>{title}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent className="w-80 z-50 rounded-2xl" align={popoverAlign}>
         {children}
       </PopoverContent>
@@ -207,39 +220,45 @@ export function ToolbarFileButton({
         onChange={handleFileChange}
         className="hidden"
       />
-      <motion.button
-        variants={buttonVariants}
-        initial={false}
-        animate="animate"
-        custom={isSelected}
-        onClick={handleClick}
-        disabled={disabled}
-        transition={transition}
-        title={title}
-        className={cn(
-          "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
-          isSelected
-            ? "text-primary"
-            : "text-muted-foreground hover:text-foreground",
-          disabled && "opacity-50 cursor-not-allowed"
-        )}
-      >
-        <Icon size={20} />
-        <AnimatePresence initial={false}>
-          {isSelected && (
-            <motion.span
-              variants={spanVariants}
-              initial="initial"
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <motion.button
+              variants={buttonVariants}
+              initial={false}
               animate="animate"
-              exit="exit"
+              custom={isSelected}
+              onClick={handleClick}
+              disabled={disabled}
               transition={transition}
-              className="overflow-hidden whitespace-nowrap"
+              className={cn(
+                "relative flex items-center rounded-xl px-4 py-2 text-sm font-medium transition-colors duration-300",
+                isSelected
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+                disabled && "opacity-50 cursor-not-allowed"
+              )}
             >
-              {title}
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </motion.button>
+              <Icon size={20} />
+              <AnimatePresence initial={false}>
+                {isSelected && (
+                  <motion.span
+                    variants={spanVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={transition}
+                    className="overflow-hidden whitespace-nowrap"
+                  >
+                    {title}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          </TooltipTrigger>
+          <TooltipContent>{title}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </>
   );
 }

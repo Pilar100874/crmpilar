@@ -501,7 +501,7 @@ export default function ChatInput({
             )}
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top">
+        <TooltipContent>
           <p>{title}</p>
         </TooltipContent>
       </Tooltip>
@@ -530,7 +530,7 @@ export default function ChatInput({
             <Icon size={20} />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top">
+        <TooltipContent>
           <p>{title}</p>
         </TooltipContent>
       </Tooltip>
@@ -747,7 +747,7 @@ export default function ChatInput({
             </div>
           </PopoverContent>
         </Popover>
-        <TooltipContent side="top"><p>Traduzir</p></TooltipContent>
+        <TooltipContent><p>Traduzir</p></TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
@@ -783,7 +783,7 @@ export default function ChatInput({
               </div>
             </PopoverContent>
           </Popover>
-          <TooltipContent side="top"><p>Redirecionar para Bot</p></TooltipContent>
+          <TooltipContent><p>Redirecionar para Bot</p></TooltipContent>
         </Tooltip>
       </TooltipProvider>
     );
@@ -819,7 +819,7 @@ export default function ChatInput({
               </div>
             </PopoverContent>
           </Popover>
-          <TooltipContent side="top"><p>Resposta Automática</p></TooltipContent>
+          <TooltipContent><p>Resposta Automática</p></TooltipContent>
         </Tooltip>
       </TooltipProvider>
     );
@@ -855,7 +855,7 @@ export default function ChatInput({
               </div>
             </PopoverContent>
           </Popover>
-          <TooltipContent side="top"><p>Transferir para Usuário</p></TooltipContent>
+          <TooltipContent><p>Transferir para Usuário</p></TooltipContent>
         </Tooltip>
       </TooltipProvider>
     );
@@ -899,7 +899,7 @@ export default function ChatInput({
             </div>
           </PopoverContent>
         </Popover>
-        <TooltipContent side="top"><p>Relatórios</p></TooltipContent>
+        <TooltipContent><p>Relatórios</p></TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );
@@ -967,7 +967,7 @@ export default function ChatInput({
               </div>
             </PopoverContent>
           </Popover>
-          <TooltipContent side="top"><p>Tradução em Tempo Real</p></TooltipContent>
+          <TooltipContent><p>Tradução em Tempo Real</p></TooltipContent>
         </Tooltip>
       </TooltipProvider>
     );
@@ -1022,20 +1022,26 @@ export default function ChatInput({
               )}
 
               {/* Main trigger button */}
-              <button 
-                className={cn(
-                  "relative w-10 h-10 rounded-full cursor-pointer",
-                  "bg-muted/50 hover:bg-muted",
-                  "flex items-center justify-center",
-                  "transition-all duration-300 ease-out",
-                  "text-muted-foreground hover:text-foreground",
-                  showToolsMenu && "bg-primary text-primary-foreground rotate-45 shadow-md"
-                )}
-                onClick={() => setShowToolsMenu(!showToolsMenu)}
-                title={showToolsMenu ? "Fechar menu" : "Abrir ferramentas"}
-              >
-                <Plus className="h-5 w-5" />
-              </button>
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button 
+                      className={cn(
+                        "relative w-10 h-10 rounded-full cursor-pointer",
+                        "bg-muted/50 hover:bg-muted",
+                        "flex items-center justify-center",
+                        "transition-all duration-300 ease-out",
+                        "text-muted-foreground hover:text-foreground",
+                        showToolsMenu && "bg-primary text-primary-foreground rotate-45 shadow-md"
+                      )}
+                      onClick={() => setShowToolsMenu(!showToolsMenu)}
+                    >
+                      <Plus className="h-5 w-5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{showToolsMenu ? "Fechar menu" : "Abrir ferramentas"}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             
             {/* Emoji picker */}
