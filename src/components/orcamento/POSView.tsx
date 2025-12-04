@@ -1331,7 +1331,7 @@ export default function POSView({
         </div>
 
       {/* Painel Lateral - Lado Direito */}
-      <div className="w-[300px] bg-card border-l border-border flex flex-col overflow-hidden">
+      <div className="w-[300px] md:w-[400px] lg:w-[300px] bg-card border-l border-border flex flex-col overflow-hidden">
 
         {/* Header com Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
