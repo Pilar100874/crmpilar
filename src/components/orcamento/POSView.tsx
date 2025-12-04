@@ -1496,24 +1496,8 @@ export default function POSView({
           <TabsContent value="details" className="flex-1 m-0 overflow-hidden">
             <ScrollArea className="h-[calc(100vh-280px)] p-2">
               {/* Navegação rápida quando há conteúdo selecionado */}
-              {(showFreteInDetails || showRegrasInDetails || selectedProduto) && (
+              {(showRegrasInDetails || selectedProduto) && (
                 <div className="flex gap-1 mb-2 p-1 bg-muted/30 rounded-lg">
-                  <Button
-                    variant={showFreteInDetails ? "default" : "ghost"}
-                    size="sm"
-                    className="h-6 text-[10px] px-2 flex-1"
-                    onClick={() => {
-                      if (freteResult) {
-                        setSelectedProduto(null);
-                        setShowRegrasInDetails(false);
-                        setShowFreteInDetails(true);
-                      }
-                    }}
-                    disabled={!freteResult}
-                  >
-                    <Truck className="w-3 h-3 mr-1" />
-                    Frete
-                  </Button>
                   <Button
                     variant={showRegrasInDetails ? "default" : "ghost"}
                     size="sm"
@@ -1521,7 +1505,6 @@ export default function POSView({
                     onClick={() => {
                       if (regrasAplicadas.length > 0) {
                         setSelectedProduto(null);
-                        setShowFreteInDetails(false);
                         setShowRegrasInDetails(true);
                       }
                     }}
@@ -1545,13 +1528,7 @@ export default function POSView({
                 </div>
               )}
 
-              {showFreteInDetails && freteResult ? (
-                <div className="space-y-2">
-                  <FreteDetailsPanel 
-                    freteResult={freteResult}
-                  />
-                </div>
-              ) : showRegrasInDetails && regrasAplicadas.length > 0 ? (
+              {showRegrasInDetails && regrasAplicadas.length > 0 ? (
                 <div className="space-y-2">
                   {/* Header das Regras */}
                   <div className="bg-green-50 dark:bg-green-950/30 rounded p-2.5 border border-green-200 dark:border-green-800">
