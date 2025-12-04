@@ -98,23 +98,6 @@ export function UnifiedDetailsPanel({
             {getIcon()}
           </div>
           <h3 className="font-semibold text-lg text-center">{getTitle()}</h3>
-          
-          {/* Info básica */}
-          <div className="mt-2 space-y-1 text-center">
-            {protocolo && (
-              <p className="text-xs text-muted-foreground">
-                Protocolo: <span className="font-mono font-medium">{protocolo}</span>
-              </p>
-            )}
-            {status && (
-              <Badge variant="secondary" className="text-xs">{status}</Badge>
-            )}
-            {valorTotal !== undefined && valorTotal !== null && (
-              <p className="text-sm font-semibold text-primary">
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotal)}
-              </p>
-            )}
-          </div>
         </div>
       </div>
 
