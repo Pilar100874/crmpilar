@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/lib/toast-config";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const toolbarBtnClass = "h-9 w-9 rounded-xl bg-card border border-border/30 shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted hover:border-border/50 hover:shadow-md transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
 const toolbarBtnActiveClass = "h-9 w-9 rounded-xl bg-primary/15 border border-primary/40 shadow-sm flex items-center justify-center text-primary hover:bg-primary/20 transition-all duration-200";
@@ -66,15 +67,21 @@ export default function QuickRepliesSelector({ onSelect, disabled }: QuickReplie
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          disabled={disabled}
-          title="Textos prontos"
-          className={open ? toolbarBtnActiveClass : toolbarBtnClass}
-        >
-          <MessageSquare size={18} />
-        </button>
-      </PopoverTrigger>
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <button
+                disabled={disabled}
+                className={open ? toolbarBtnActiveClass : toolbarBtnClass}
+              >
+                <MessageSquare size={18} />
+              </button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent>Textos prontos</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent className="w-80 p-0 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
         <div className="p-3 border-b border-border/50 bg-muted/30 rounded-t-xl">
           <h4 className="font-semibold text-sm">Textos Prontos</h4>

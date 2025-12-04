@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, Square } from "lucide-react";
 import { toast } from "@/lib/toast-config";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface AudioRecorderProps {
   onAudioRecorded: (audioBlob: Blob, audioUrl: string) => void;
@@ -53,17 +54,25 @@ export default function AudioRecorder({ onAudioRecorded, disabled }: AudioRecord
   };
 
   return (
-    <button
-      onClick={isRecording ? stopRecording : startRecording}
-      disabled={disabled}
-      title={isRecording ? "Parar gravação" : "Gravar áudio"}
-      className={`h-9 w-9 rounded-xl flex items-center justify-center transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
-        isRecording 
-          ? "bg-destructive text-destructive-foreground shadow-md animate-pulse" 
-          : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-    </button>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={disabled}
+            className={`h-9 w-9 rounded-xl flex items-center justify-center transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
+              isRecording 
+                ? "bg-destructive text-destructive-foreground shadow-md animate-pulse" 
+                : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>
+          {isRecording ? "Parar gravação" : "Gravar áudio"}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

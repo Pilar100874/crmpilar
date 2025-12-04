@@ -7,6 +7,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface EmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
@@ -33,15 +34,21 @@ export default function EmojiPicker({ onEmojiSelect, disabled }: EmojiPickerProp
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          disabled={disabled}
-          title="Adicionar emoji"
-          className="h-9 w-9 rounded-xl bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <Smile className="h-5 w-5" />
-        </button>
-      </PopoverTrigger>
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <button
+                disabled={disabled}
+                className="h-9 w-9 rounded-xl bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Smile className="h-5 w-5" />
+              </button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent>Adicionar emoji</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent className="w-[320px] p-0 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
         <div className="p-3 border-b border-border/50 bg-muted/30 rounded-t-xl">
           <h4 className="font-semibold text-sm">Emojis</h4>
