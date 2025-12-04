@@ -31,6 +31,7 @@ import { OmnichannelManager } from "@/components/atendimento/OmnichannelManager"
 import { useOmnichannelRouting } from "@/hooks/useOmnichannelRouting";
 import { AtendenteStatusSelector } from "@/components/atendimento/AtendenteStatusSelector";
 import { ConversationSummaryPanel } from "@/components/atendimento/ConversationSummaryPanel";
+import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
 import type { Atendente } from "@/types/atendimento";
 
 interface Conversation {
@@ -203,6 +204,9 @@ export default function Atendimento() {
   // Atendente data
   const [atendente, setAtendente] = useState<Atendente | null>(null);
 
+  // Global client filter
+  const [globalFilter, setGlobalFilter] = useState<GlobalFilter | null>(null);
+
   // Omnichannel routing
   const { setupMessageListener } = useOmnichannelRouting();
   
@@ -339,24 +343,7 @@ export default function Atendimento() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   
-  // Update counters when data changes
-  useEffect(() => {
-    // Conta apenas chats em fila (aguardando atendimento)
-    const inQueueCount = conversations.filter(c => c.chat_status === 'em_fila').length;
-    setActiveConversationsCount(inQueueCount);
-  }, [conversations]);
-  
-  useEffect(() => {
-    const unreadCount = userEmails.filter(e => !e.read).length;
-    setUnreadEmailsCount(unreadCount);
-  }, [userEmails]);
-  
-  useEffect(() => {
-    const emAndamentoCount = orcamentos.filter(o => 
-      o.status !== 'cancelado' && o.status !== 'ganho'
-    ).length;
-    setOrcamentosEmAndamentoCount(emAndamentoCount);
-  }, [orcamentos]);
+  // Note: Counter updates moved after useMemos to avoid using variables before declaration
 
   // Fechar POSView e limpar conteúdo ao trocar de aba
   useEffect(() => {
@@ -1745,15 +1732,90 @@ ${recentMessages}
       if (!conv.customer?.nome.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
+      // Apply global filter
+      if (globalFilter) {
+        if (globalFilter.type === 'customer' && conv.customer_id !== globalFilter.id) {
+          return false;
+        }
+        if (globalFilter.type === 'empresa') {
+          // Check if conversation's customer is linked to the filtered empresa
+          const hasEmpresa = conv.customerCompanies?.some(
+            (ce: any) => ce.empresa_id === globalFilter.id || ce.empresas?.id === globalFilter.id
+          );
+          if (!hasEmpresa) return false;
+        }
+      }
       if (seenCustomers.has(conv.customer_id)) {
         return false;
       }
       seenCustomers.add(conv.customer_id);
       return true;
     });
-  }, [conversations, searchTerm]);
+  }, [conversations, searchTerm, globalFilter]);
+
+  // Filtered tasks based on global filter
+  const filteredTasks = useMemo(() => {
+    if (!globalFilter) return todayTasks;
+    
+    return todayTasks.filter((task) => {
+      if (globalFilter.type === 'customer') {
+        return task.contact_id === globalFilter.id;
+      }
+      // For empresa, we'd need to check if customer is linked to empresa
+      // This would require additional data - for now, filter by contact_name matching
+      return task.contact_name?.toLowerCase().includes(globalFilter.nome.toLowerCase());
+    });
+  }, [todayTasks, globalFilter]);
+
+  // Filtered emails based on global filter
+  const filteredEmails = useMemo(() => {
+    if (!globalFilter) return userEmails;
+    
+    return userEmails.filter((email) => {
+      // Filter by matching email address or name
+      return email.from_email?.toLowerCase().includes(globalFilter.nome.toLowerCase()) ||
+             email.to_email?.toLowerCase().includes(globalFilter.nome.toLowerCase());
+    });
+  }, [userEmails, globalFilter]);
+
+  // Filtered orcamentos based on global filter
+  const filteredOrcamentos = useMemo(() => {
+    if (!globalFilter) return orcamentos;
+    
+    return orcamentos.filter((orc) => {
+      if (globalFilter.type === 'customer') {
+        return orc.cliente_id === globalFilter.id;
+      }
+      if (globalFilter.type === 'empresa') {
+        return orc.empresa_id === globalFilter.id;
+      }
+      return true;
+    });
+  }, [orcamentos, globalFilter]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
+
+  // Update counters based on filtered data
+  useEffect(() => {
+    const inQueueCount = filteredConversations.filter(c => c.chat_status === 'em_fila').length;
+    setActiveConversationsCount(inQueueCount);
+  }, [filteredConversations]);
+  
+  useEffect(() => {
+    const unreadCount = filteredEmails.filter(e => !e.read).length;
+    setUnreadEmailsCount(unreadCount);
+  }, [filteredEmails]);
+  
+  useEffect(() => {
+    const emAndamentoCount = filteredOrcamentos.filter(o => 
+      o.status !== 'cancelado' && o.status !== 'ganho'
+    ).length;
+    setOrcamentosEmAndamentoCount(emAndamentoCount);
+  }, [filteredOrcamentos]);
+
+  useEffect(() => {
+    setTodayTasksCount(filteredTasks.length);
+  }, [filteredTasks]);
 
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -2227,7 +2289,23 @@ ${recentMessages}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+              {!globalFilter && (
+                <div className="mt-2">
+                  <GlobalClientFilter 
+                    activeFilter={globalFilter} 
+                    onFilterChange={setGlobalFilter} 
+                  />
+                </div>
+              )}
             </div>
+
+            {/* Global Filter Active Indicator */}
+            {globalFilter && (
+              <GlobalClientFilter 
+                activeFilter={globalFilter} 
+                onFilterChange={setGlobalFilter} 
+              />
+            )}
 
         {/* Tabs - Modern Design with ExpandableTabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 overflow-hidden">
@@ -2564,16 +2642,16 @@ ${recentMessages}
 
             {/* Tasks List */}
             <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-              {todayTasks.length === 0 ? (
+              {filteredTasks.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 flex items-center justify-center">
                     <Calendar className="w-8 h-8 text-orange-300" />
                   </div>
                   <p className="text-sm font-medium">Nenhuma tarefa</p>
-                  <p className="text-xs text-muted-foreground mt-1">para esta data</p>
+                  <p className="text-xs text-muted-foreground mt-1">{globalFilter ? 'para este filtro' : 'para esta data'}</p>
                 </div>
               ) : (
-                 todayTasks.map((task) => (
+                 filteredTasks.map((task) => (
                   <div 
                     key={task.id} 
                     className={`p-3 rounded-xl cursor-pointer transition-all duration-200 ${
@@ -2665,16 +2743,16 @@ ${recentMessages}
               </Button>
             </div>
             
-            {userEmails.length === 0 ? (
+            {filteredEmails.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
                   <Inbox className="w-8 h-8 text-blue-300" />
                 </div>
                 <p className="text-sm font-medium">Caixa vazia</p>
-                <p className="text-xs text-muted-foreground mt-1">Nenhum e-mail recebido</p>
+                <p className="text-xs text-muted-foreground mt-1">{globalFilter ? 'Nenhum e-mail para este filtro' : 'Nenhum e-mail recebido'}</p>
               </div>
             ) : (
-              userEmails.map((email) => (
+              filteredEmails.map((email) => (
                 <div 
                   key={email.id} 
                   className={`p-3 rounded-xl cursor-pointer transition-all duration-200 ${
@@ -2764,7 +2842,7 @@ ${recentMessages}
             </div>
 
             <div className="px-2 py-2 space-y-1.5">
-            {orcamentos
+            {filteredOrcamentos
               .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
               .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
               .length === 0 ? (
@@ -2773,10 +2851,10 @@ ${recentMessages}
                   <Receipt className="w-8 h-8 text-emerald-300" />
                 </div>
                 <p className="text-sm font-medium">Sem orçamentos</p>
-                <p className="text-xs text-muted-foreground mt-1">Nenhum orçamento em andamento</p>
+                <p className="text-xs text-muted-foreground mt-1">{globalFilter ? 'Nenhum orçamento para este filtro' : 'Nenhum orçamento em andamento'}</p>
               </div>
             ) : (
-              orcamentos
+              filteredOrcamentos
                 .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
                 .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
                 .map((orc) => (
