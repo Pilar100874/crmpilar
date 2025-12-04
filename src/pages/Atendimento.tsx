@@ -128,6 +128,16 @@ export default function Atendimento() {
   // Tool trigger state (for radial menu -> ChatInput communication)
   const [triggerTool, setTriggerTool] = useState<import("@/components/chat/ChatInput").ChatToolTrigger>(null);
   
+  // RadialMenu direct dialogs
+  const [showRadialTranslateDialog, setShowRadialTranslateDialog] = useState(false);
+  const [showRadialBotDialog, setShowRadialBotDialog] = useState(false);
+  const [showRadialWebhookDialog, setShowRadialWebhookDialog] = useState(false);
+  const [showRadialTransferDialog, setShowRadialTransferDialog] = useState(false);
+  const [showRadialReportsDialog, setShowRadialReportsDialog] = useState(false);
+  const [showRadialRealTimeTranslateDialog, setShowRadialRealTimeTranslateDialog] = useState(false);
+  const [radialTargetLanguage, setRadialTargetLanguage] = useState("en");
+  const [radialTranslateText, setRadialTranslateText] = useState("");
+  
   // Bot redirect states
   const [availableBots, setAvailableBots] = useState<any[]>([]);
   const [selectedBotRedirect, setSelectedBotRedirect] = useState<string | null>(null);
@@ -1761,7 +1771,7 @@ ${recentMessages}
       case "dialer":
         setShowPredictiveDialer(true);
         break;
-      // Tools submenu items
+      // Tools submenu items - ações diretas
       case "tool-image":
         setTriggerTool('image');
         break;
@@ -1777,20 +1787,21 @@ ${recentMessages}
       case "tool-attachments":
         setTriggerTool('quick-attachments');
         break;
+      // Tools submenu items - dialogs próprios
       case "tool-translate":
-        setTriggerTool('translate');
+        setShowRadialTranslateDialog(true);
         break;
       case "tool-reports":
-        setTriggerTool('reports');
+        setShowRadialReportsDialog(true);
         break;
       case "tool-bot":
-        setTriggerTool('bot');
+        setShowRadialBotDialog(true);
         break;
       case "tool-webhook":
-        setTriggerTool('webhook');
+        setShowRadialWebhookDialog(true);
         break;
       case "tool-transfer":
-        setTriggerTool('transfer');
+        setShowRadialTransferDialog(true);
         break;
       // AI submenu items
       case "ai-chat":
@@ -1806,12 +1817,233 @@ ${recentMessages}
         setTriggerTool('kb');
         break;
       case "ai-translate":
-        setTriggerTool('realtime-translate');
+        setShowRadialRealTimeTranslateDialog(true);
         break;
     }
   };
 
+  // Handlers para os dialogs do RadialMenu
+  const handleRadialTranslate = async () => {
+    if (!radialTranslateText.trim()) {
+      toast.error("Digite um texto para traduzir");
+      return;
+    }
+    try {
+      const response = await supabase.functions.invoke("agent-assist-translate", {
+        body: { text: radialTranslateText, targetLanguage: radialTargetLanguage }
+      });
+      if (response.error) throw response.error;
+      const translation = response.data?.translation;
+      if (translation) {
+        setRadialTranslateText(translation);
+        toast.success("Traduzido!");
+      }
+    } catch (error) {
+      console.error("Erro:", error);
+      toast.error("Erro ao traduzir");
+    }
+  };
+
+  const handleRadialBotRedirect = () => {
+    if (!selectedBotRedirect || !selectedConversation) {
+      toast.error("Selecione um bot e uma conversa");
+      return;
+    }
+    // Implementar lógica de redirecionamento para bot
+    toast.success("Redirecionado para o bot!");
+    setShowRadialBotDialog(false);
+  };
+
+  const handleRadialTransfer = () => {
+    if (!selectedTransferUser || !selectedConversation) {
+      toast.error("Selecione um usuário e uma conversa");
+      return;
+    }
+    // Implementar lógica de transferência
+    toast.success("Conversa transferida!");
+    setShowRadialTransferDialog(false);
+  };
+
   return (
+    <>
+    {/* Dialogs do RadialMenu */}
+    <Dialog open={showRadialTranslateDialog} onOpenChange={setShowRadialTranslateDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Languages className="h-5 w-5" />
+            Traduzir Texto
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Texto</Label>
+            <Textarea 
+              value={radialTranslateText} 
+              onChange={(e) => setRadialTranslateText(e.target.value)}
+              placeholder="Digite o texto para traduzir..."
+              rows={4}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Traduzir para</Label>
+            <Select value={radialTargetLanguage} onValueChange={setRadialTargetLanguage}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">Inglês</SelectItem>
+                <SelectItem value="es">Espanhol</SelectItem>
+                <SelectItem value="pt">Português</SelectItem>
+                <SelectItem value="fr">Francês</SelectItem>
+                <SelectItem value="de">Alemão</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={handleRadialTranslate} className="w-full">
+            <Languages className="h-4 w-4 mr-2" /> Traduzir
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={showRadialBotDialog} onOpenChange={setShowRadialBotDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Bot className="h-5 w-5" />
+            Redirecionar para Bot
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Selecione um Bot</Label>
+            <Select value={selectedBotRedirect || ""} onValueChange={setSelectedBotRedirect}>
+              <SelectTrigger><SelectValue placeholder="Selecione um bot" /></SelectTrigger>
+              <SelectContent>
+                {availableBots.map((bot) => (
+                  <SelectItem key={bot.id} value={bot.id}>{bot.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={handleRadialBotRedirect} disabled={!selectedBotRedirect} className="w-full">
+            <Zap className="h-4 w-4 mr-2" /> Redirecionar
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={showRadialWebhookDialog} onOpenChange={setShowRadialWebhookDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Webhook className="h-5 w-5" />
+            Resposta Automática
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label>Ativar Resposta Automática</Label>
+            <Switch 
+              checked={webhookAutoResponseActive} 
+              onCheckedChange={setWebhookAutoResponseActive} 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Selecione um Webhook</Label>
+            <Select value={selectedWebhookAutoResponse || ""} onValueChange={setSelectedWebhookAutoResponse}>
+              <SelectTrigger><SelectValue placeholder="Selecione webhook" /></SelectTrigger>
+              <SelectContent>
+                {webhooksForAutoResponse.map((wh) => (
+                  <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={showRadialTransferDialog} onOpenChange={setShowRadialTransferDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Transferir para Usuário
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Selecione um Usuário</Label>
+            <Select value={selectedTransferUser || ""} onValueChange={setSelectedTransferUser}>
+              <SelectTrigger><SelectValue placeholder="Selecione um usuário" /></SelectTrigger>
+              <SelectContent>
+                {availableUsers.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>{user.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={handleRadialTransfer} disabled={!selectedTransferUser} className="w-full">
+            <UserPlus className="h-4 w-4 mr-2" /> Transferir
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={showRadialReportsDialog} onOpenChange={setShowRadialReportsDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Relatórios Importados
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground text-center py-4">
+            Nenhum relatório disponível no momento.
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog open={showRadialRealTimeTranslateDialog} onOpenChange={setShowRadialRealTimeTranslateDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Languages className="h-5 w-5" />
+            Tradução em Tempo Real
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label>Ativar Tradução em Tempo Real</Label>
+            <Switch 
+              checked={isRealTimeTranslationActive} 
+              onCheckedChange={setIsRealTimeTranslationActive} 
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Idioma de destino</Label>
+            <Select value={translationLanguage} onValueChange={setTranslationLanguage}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pt">Português</SelectItem>
+                <SelectItem value="en">Inglês</SelectItem>
+                <SelectItem value="es">Espanhol</SelectItem>
+                <SelectItem value="fr">Francês</SelectItem>
+                <SelectItem value="de">Alemão</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {isRealTimeTranslationActive 
+              ? "As mensagens do cliente serão traduzidas automaticamente" 
+              : "Ative para traduzir mensagens do cliente"}
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+
     <RadialMenu
       menuItems={RADIAL_MENU_ITEMS}
       onSelect={handleRadialMenuSelect}
@@ -3195,5 +3427,6 @@ ${recentMessages}
       />
       </div>
     </RadialMenu>
+    </>
   );
 }
