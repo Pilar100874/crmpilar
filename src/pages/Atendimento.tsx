@@ -2868,7 +2868,8 @@ ${recentMessages}
         )}
       </div>
 
-      {/* Chat Area */}
+      {/* Chat Area - Esconde quando orçamento está aberto e não há conversa selecionada */}
+      {!(orcamentoSheetOpen && !selectedConversation) && (
       <div className="flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border">
         {selectedConversation && selectedConv ? (
           <>
@@ -3299,6 +3300,7 @@ ${recentMessages}
           </div>
         ) : null}
       </div>
+      )}
 
       {/* Right Sidebar - Company Details Panel */}
       {selectedConversation && selectedConv && showClientDetailsChat && (
