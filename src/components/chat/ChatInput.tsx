@@ -723,9 +723,9 @@ export default function ChatInput({
 
   // Translate
   allItems.push(
-    <Popover key="translate" open={showTranslatePopover} onOpenChange={setShowTranslatePopover}>
-      <TooltipProvider delayDuration={200}>
-        <Tooltip>
+    <TooltipProvider key="translate" delayDuration={200}>
+      <Tooltip>
+        <Popover open={showTranslatePopover} onOpenChange={setShowTranslatePopover}>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               <button className={isTranslating ? toolbarBtnActiveClass : toolbarBtnClass} disabled={disabled}>
@@ -733,37 +733,37 @@ export default function ChatInput({
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
-          <TooltipContent side="top"><p>Traduzir</p></TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <PopoverContent className="w-56 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Traduzir para</Label>
-          <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="en">Inglês</SelectItem>
-              <SelectItem value="es">Espanhol</SelectItem>
-              <SelectItem value="pt">Português</SelectItem>
-              <SelectItem value="fr">Francês</SelectItem>
-              <SelectItem value="de">Alemão</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button size="sm" onClick={handleTranslateMessage} disabled={!message.trim() || isTranslating} className="w-full">
-            <Languages className="h-4 w-4 mr-2" /> Traduzir
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
+          <PopoverContent className="w-56 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Traduzir para</Label>
+              <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">Inglês</SelectItem>
+                  <SelectItem value="es">Espanhol</SelectItem>
+                  <SelectItem value="pt">Português</SelectItem>
+                  <SelectItem value="fr">Francês</SelectItem>
+                  <SelectItem value="de">Alemão</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button size="sm" onClick={handleTranslateMessage} disabled={!message.trim() || isTranslating} className="w-full">
+                <Languages className="h-4 w-4 mr-2" /> Traduzir
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+        <TooltipContent side="top"><p>Traduzir</p></TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 
   // === CHAT/AI TOOLS ===
   // Bot redirect
   if (availableBots.length > 0 && onBotRedirectChange && onBotRedirect) {
     allItems.push(
-      <Popover key="bot" open={showBotPopover} onOpenChange={setShowBotPopover}>
-        <TooltipProvider delayDuration={200}>
-          <Tooltip>
+      <TooltipProvider key="bot" delayDuration={200}>
+        <Tooltip>
+          <Popover open={showBotPopover} onOpenChange={setShowBotPopover}>
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={showBotPopover ? toolbarBtnActiveClass : toolbarBtnClass}>
@@ -771,35 +771,35 @@ export default function ChatInput({
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <TooltipContent side="top"><p>Redirecionar para Bot</p></TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Redirecionar para Bot</Label>
-            <Select value={selectedBotRedirect || ""} onValueChange={onBotRedirectChange}>
-              <SelectTrigger><SelectValue placeholder="Selecione um bot" /></SelectTrigger>
-              <SelectContent>
-                {availableBots.map((bot) => (
-                  <SelectItem key={bot.id} value={bot.id}>{bot.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button size="sm" onClick={() => { onBotRedirect(); setShowBotPopover(false); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={!selectedBotRedirect} className="w-full">
-              <Zap className="h-4 w-4 mr-2" /> Redirecionar
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
+            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Redirecionar para Bot</Label>
+                <Select value={selectedBotRedirect || ""} onValueChange={onBotRedirectChange}>
+                  <SelectTrigger><SelectValue placeholder="Selecione um bot" /></SelectTrigger>
+                  <SelectContent>
+                    {availableBots.map((bot) => (
+                      <SelectItem key={bot.id} value={bot.id}>{bot.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" onClick={() => { onBotRedirect(); setShowBotPopover(false); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={!selectedBotRedirect} className="w-full">
+                  <Zap className="h-4 w-4 mr-2" /> Redirecionar
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <TooltipContent side="top"><p>Redirecionar para Bot</p></TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 
   // Webhook auto-response
   if (webhooksForAutoResponse.length > 0 && onWebhookChange && onWebhookToggle) {
     allItems.push(
-      <Popover key="webhook" open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
-        <TooltipProvider delayDuration={200}>
-          <Tooltip>
+      <TooltipProvider key="webhook" delayDuration={200}>
+        <Tooltip>
+          <Popover open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={webhookAutoResponseActive ? toolbarBtnActiveClass : toolbarBtnClass}>
@@ -807,35 +807,35 @@ export default function ChatInput({
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <TooltipContent side="top"><p>Resposta Automática</p></TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm">Resposta Automática</Label>
-              <Switch checked={webhookAutoResponseActive} onCheckedChange={onWebhookToggle} />
-            </div>
-            <Select value={selectedWebhookAutoResponse || ""} onValueChange={onWebhookChange}>
-              <SelectTrigger><SelectValue placeholder="Selecione webhook" /></SelectTrigger>
-              <SelectContent>
-                {webhooksForAutoResponse.map((wh) => (
-                  <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </PopoverContent>
-      </Popover>
+            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm">Resposta Automática</Label>
+                  <Switch checked={webhookAutoResponseActive} onCheckedChange={onWebhookToggle} />
+                </div>
+                <Select value={selectedWebhookAutoResponse || ""} onValueChange={onWebhookChange}>
+                  <SelectTrigger><SelectValue placeholder="Selecione webhook" /></SelectTrigger>
+                  <SelectContent>
+                    {webhooksForAutoResponse.map((wh) => (
+                      <SelectItem key={wh.id} value={wh.id}>{wh.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <TooltipContent side="top"><p>Resposta Automática</p></TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 
   // Transfer to user
   if (availableUsers.length > 0 && onTransferUserChange && onTransferUser) {
     allItems.push(
-      <Popover key="transfer" open={showTransferPopover} onOpenChange={setShowTransferPopover}>
-        <TooltipProvider delayDuration={200}>
-          <Tooltip>
+      <TooltipProvider key="transfer" delayDuration={200}>
+        <Tooltip>
+          <Popover open={showTransferPopover} onOpenChange={setShowTransferPopover}>
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={showTransferPopover ? toolbarBtnActiveClass : toolbarBtnClass}>
@@ -843,34 +843,34 @@ export default function ChatInput({
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <TooltipContent side="top"><p>Transferir para Usuário</p></TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Transferir para</Label>
-            <Select value={selectedTransferUser || ""} onValueChange={onTransferUserChange}>
-              <SelectTrigger><SelectValue placeholder="Selecione um usuário" /></SelectTrigger>
-              <SelectContent>
-                {availableUsers.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>{user.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button size="sm" onClick={() => { onTransferUser(); setShowTransferPopover(false); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={!selectedTransferUser} className="w-full">
-              <UserPlus className="h-4 w-4 mr-2" /> Transferir
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
+            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Transferir para</Label>
+                <Select value={selectedTransferUser || ""} onValueChange={onTransferUserChange}>
+                  <SelectTrigger><SelectValue placeholder="Selecione um usuário" /></SelectTrigger>
+                  <SelectContent>
+                    {availableUsers.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>{user.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" onClick={() => { onTransferUser(); setShowTransferPopover(false); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={!selectedTransferUser} className="w-full">
+                  <UserPlus className="h-4 w-4 mr-2" /> Transferir
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <TooltipContent side="top"><p>Transferir para Usuário</p></TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 
   // Import reports - always render to allow external trigger
   allItems.push(
-    <Popover key="reports" open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>
-      <TooltipProvider delayDuration={200}>
-        <Tooltip>
+    <TooltipProvider key="reports" delayDuration={200}>
+      <Tooltip>
+        <Popover open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               <button className={showImportReportsPopover ? toolbarBtnActiveClass : toolbarBtnClass}>
@@ -878,35 +878,35 @@ export default function ChatInput({
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
-          <TooltipContent side="top"><p>Relatórios</p></TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <PopoverContent className="w-72 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Relatórios Importados</Label>
-          {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
-          {importReports.length > 0 ? (
-            <div className="max-h-48 overflow-y-auto space-y-2">
-              {importReports.map((report) => (
-                <div key={report.id} className="flex items-center justify-between p-2 rounded-lg border hover:bg-muted/50">
-                  <span className="text-sm truncate flex-1">{report.nome}</span>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => handleImportReportSelect(report.id, 'pdf')} disabled={isProcessingReport}>
-                      <FileText className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleImportReportSelect(report.id, 'excel')} disabled={isProcessingReport}>
-                      <FileSpreadsheet className="h-4 w-4" />
-                    </Button>
-                  </div>
+          <PopoverContent className="w-72 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Relatórios Importados</Label>
+              {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
+              {importReports.length > 0 ? (
+                <div className="max-h-48 overflow-y-auto space-y-2">
+                  {importReports.map((report) => (
+                    <div key={report.id} className="flex items-center justify-between p-2 rounded-lg border hover:bg-muted/50">
+                      <span className="text-sm truncate flex-1">{report.nome}</span>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => handleImportReportSelect(report.id, 'pdf')} disabled={isProcessingReport}>
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleImportReportSelect(report.id, 'excel')} disabled={isProcessingReport}>
+                          <FileSpreadsheet className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhum relatório disponível</p>
+              )}
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">Nenhum relatório disponível</p>
-          )}
-        </div>
-      </PopoverContent>
-    </Popover>
+          </PopoverContent>
+        </Popover>
+        <TooltipContent side="top"><p>Relatórios</p></TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 
   // Agent Assist - Context Response
@@ -933,9 +933,9 @@ export default function ChatInput({
   // Real-time translation with popover
   if (onToggleRealTimeTranslation && onTranslationLanguageChange) {
     allItems.push(
-      <Popover key="realtime-translate" open={showRealTimeTranslatePopover} onOpenChange={setShowRealTimeTranslatePopover}>
-        <TooltipProvider delayDuration={200}>
-          <Tooltip>
+      <TooltipProvider key="realtime-translate" delayDuration={200}>
+        <Tooltip>
+          <Popover open={showRealTimeTranslatePopover} onOpenChange={setShowRealTimeTranslatePopover}>
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={isRealTimeTranslationActive ? toolbarBtnActiveClass : toolbarBtnClass}>
@@ -943,38 +943,38 @@ export default function ChatInput({
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <TooltipContent side="top"><p>Tradução em Tempo Real</p></TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Tradução em Tempo Real</Label>
-              <Switch 
-                checked={isRealTimeTranslationActive} 
-                onCheckedChange={() => {
-                  onToggleRealTimeTranslation();
-                }} 
-              />
-            </div>
-            <Select value={translationLanguage} onValueChange={onTranslationLanguageChange}>
-              <SelectTrigger><SelectValue placeholder="Idioma de destino" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pt">Português</SelectItem>
-                <SelectItem value="en">Inglês</SelectItem>
-                <SelectItem value="es">Espanhol</SelectItem>
-                <SelectItem value="fr">Francês</SelectItem>
-                <SelectItem value="de">Alemão</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {isRealTimeTranslationActive 
-                ? "As mensagens do cliente serão traduzidas automaticamente" 
-                : "Ative para traduzir mensagens do cliente"}
-            </p>
-          </div>
-        </PopoverContent>
-      </Popover>
+            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Tradução em Tempo Real</Label>
+                  <Switch 
+                    checked={isRealTimeTranslationActive} 
+                    onCheckedChange={() => {
+                      onToggleRealTimeTranslation();
+                    }} 
+                  />
+                </div>
+                <Select value={translationLanguage} onValueChange={onTranslationLanguageChange}>
+                  <SelectTrigger><SelectValue placeholder="Idioma de destino" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pt">Português</SelectItem>
+                    <SelectItem value="en">Inglês</SelectItem>
+                    <SelectItem value="es">Espanhol</SelectItem>
+                    <SelectItem value="fr">Francês</SelectItem>
+                    <SelectItem value="de">Alemão</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {isRealTimeTranslationActive 
+                    ? "As mensagens do cliente serão traduzidas automaticamente" 
+                    : "Ative para traduzir mensagens do cliente"}
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <TooltipContent side="top"><p>Tradução em Tempo Real</p></TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   }
 
