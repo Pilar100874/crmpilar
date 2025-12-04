@@ -2264,53 +2264,66 @@ ${recentMessages}
       }`}>
         {showConversationsList && (
           <>
-            {/* Modern Header */}
-            <div className="px-4 py-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b border-border/30 flex-shrink-0">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  Painel de Atendimento
-                </h2>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShowConversationsList(false)}
-                  className="h-7 w-7 p-0"
-                  title="Ocultar painel"
-                >
-                  <PanelLeftClose className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar..."
-                  className="pl-10 h-9 rounded-full text-sm bg-white/70 border-border/50 focus:bg-white transition-colors"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              {!globalFilter && (
-                <div className="mt-2">
-                  <GlobalClientFilter 
-                    activeFilter={globalFilter} 
-                    onFilterChange={setGlobalFilter} 
+            {/* Modern Header with Gradient */}
+            <div className="flex-shrink-0">
+              {/* Header Title Section */}
+              <div className="px-4 pt-4 pb-3 bg-gradient-to-br from-primary/15 via-primary/8 to-transparent">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+                      <MessageSquare className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-bold text-foreground">Atendimento</h2>
+                      <p className="text-[10px] text-muted-foreground">Gerencie suas conversas</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowConversationsList(false)}
+                    className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10"
+                    title="Ocultar painel"
+                  >
+                    <PanelLeftClose className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {/* Search Input */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar conversas..."
+                    className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40 focus:bg-white focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
+                
+                {/* Global Filter Button */}
+                {!globalFilter && (
+                  <div className="mt-3">
+                    <GlobalClientFilter 
+                      activeFilter={globalFilter} 
+                      onFilterChange={setGlobalFilter} 
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Global Filter Active Indicator */}
+              {globalFilter && (
+                <GlobalClientFilter 
+                  activeFilter={globalFilter} 
+                  onFilterChange={setGlobalFilter} 
+                />
               )}
             </div>
-
-            {/* Global Filter Active Indicator */}
-            {globalFilter && (
-              <GlobalClientFilter 
-                activeFilter={globalFilter} 
-                onFilterChange={setGlobalFilter} 
-              />
-            )}
 
         {/* Tabs - Modern Design with ExpandableTabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 overflow-hidden">
           {/* Tab Navigation - Expandable Icons */}
-          <div className="px-3 py-3 bg-slate-50/50 border-b border-border/30 flex justify-center">
+          <div className="px-3 py-2.5 bg-gradient-to-b from-slate-50/80 to-white border-b border-border/20">
             <ExpandableTabs
               tabs={[
                 { title: "Chats", icon: MessageSquare, badge: activeConversationsCount },
@@ -2331,7 +2344,7 @@ ${recentMessages}
           </div>
 
             {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2">
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2 bg-gradient-to-b from-slate-50/30 to-white">
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
