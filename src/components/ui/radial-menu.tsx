@@ -334,16 +334,6 @@ export function RadialMenu({
                 )}
               </AnimatePresence>
               
-              {/* Submenu title */}
-              {activeSubMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="absolute left-1/2 -translate-x-1/2 -top-8 px-3 py-1.5 bg-primary text-primary-foreground text-sm font-medium rounded-md shadow-lg whitespace-nowrap"
-                >
-                  {activeSubMenu.label}
-                </motion.div>
-              )}
             </motion.div>
           </>
         )}
