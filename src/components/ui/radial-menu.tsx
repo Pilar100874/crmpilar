@@ -186,15 +186,15 @@ export function RadialMenu({
                 viewBox={`0 0 ${size} ${size}`}
                 className="pointer-events-auto"
               >
-                {/* Outer ring - different color for submenu */}
+                {/* Outer ring */}
                 <circle
                   cx={size / 2}
                   cy={size / 2}
                   r={size / 2 - outerGap}
                   fill="none"
-                  stroke={activeSubMenu ? "hsl(var(--primary))" : "hsl(var(--border))"}
+                  stroke="hsl(var(--border))"
                   strokeWidth={outerRingWidth}
-                  opacity={activeSubMenu ? 0.7 : 0.5}
+                  opacity={0.5}
                 />
                 
                 {/* Menu segments */}
@@ -219,10 +219,8 @@ export function RadialMenu({
                     >
                       <motion.path
                         d={createArcPath(startAngle, endAngle)}
-                        fill={isHovered 
-                          ? (activeSubMenu ? "hsl(var(--primary)/0.3)" : "hsl(var(--accent))") 
-                          : (activeSubMenu ? "hsl(var(--primary)/0.1)" : "hsl(var(--card))")}
-                        stroke={activeSubMenu ? "hsl(var(--primary)/0.5)" : "hsl(var(--border))"}
+                        fill={isHovered ? "hsl(var(--accent))" : "hsl(var(--card))"}
+                        stroke="hsl(var(--border))"
                         strokeWidth={1}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -245,8 +243,7 @@ export function RadialMenu({
                               size={iconSize}
                               className={cn(
                                 "transition-colors",
-                                isHovered ? "text-accent-foreground" : "text-foreground",
-                                activeSubMenu && "text-primary"
+                                isHovered ? "text-accent-foreground" : "text-foreground"
                               )}
                             />
                           </div>
@@ -299,7 +296,7 @@ export function RadialMenu({
                     cx={size / 2}
                     cy={size / 2}
                     r={innerRadius - innerGap}
-                    fill={activeSubMenu ? "hsl(var(--secondary))" : "hsl(var(--primary))"}
+                    fill="hsl(var(--primary))"
                     className="hover:opacity-90 transition-opacity"
                   />
                   <foreignObject
@@ -310,7 +307,7 @@ export function RadialMenu({
                   >
                     <div className="flex items-center justify-center w-full h-full">
                       {activeSubMenu ? (
-                        <ChevronLeft size={20} className="text-secondary-foreground" />
+                        <ChevronLeft size={20} className="text-primary-foreground" />
                       ) : (
                         <X size={20} className="text-primary-foreground" />
                       )}
