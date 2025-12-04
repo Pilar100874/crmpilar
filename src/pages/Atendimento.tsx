@@ -2254,8 +2254,8 @@ ${recentMessages}
       size={260}
       className="h-screen min-h-0"
     >
-      {/* ========== MOBILE LAYOUT ========== */}
-      {isMobile ? (
+      {/* ========== MOBILE/TABLET LAYOUT ========== */}
+      {(isMobile || isTablet) ? (
         <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
           {/* Mobile Header - Mostra quando não está na lista */}
           {mobileView !== "list" && (
@@ -4127,7 +4127,7 @@ interface MobileMainContentProps {
   messages: any[];
   isRealTimeTranslationActive: boolean;
   messageTranslations: Record<string, string>;
-  handleSendMessage: (content: string, contentType: "text" | "image" | "file" | "audio" | "variable", fileUrl?: string, fileName?: string) => void;
+  handleSendMessage: (content: string, contentType: "text" | "image" | "file" | "audio" | "variable", fileUrl?: string, fileName?: string, variables?: Record<string, string>) => void;
   lastUserMessage: string | null;
   availableBots: any[];
   selectedBotRedirect: string | null;
