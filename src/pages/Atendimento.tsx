@@ -340,10 +340,15 @@ export default function Atendimento() {
   
   // Update counters when data changes
   useEffect(() => {
-    // Conta apenas chats não atendidos (novo ou em fila)
-    const unattendedCount = conversations.filter(c => 
-      c.chat_status === 'novo' || c.chat_status === 'em_fila'
-    ).length;
+    // Conta apenas chats não atendidos (novo ou em fila) dos últimos 7 dias
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const unattendedCount = conversations.filter(c => {
+      const isUnattended = c.chat_status === 'novo' || c.chat_status === 'em_fila';
+      const isRecent = new Date(c.updated_at) >= sevenDaysAgo;
+      return isUnattended && isRecent;
+    }).length;
     setActiveConversationsCount(unattendedCount);
   }, [conversations]);
   
@@ -1344,7 +1349,7 @@ ${recentMessages}
         query = query.eq("estabelecimento_id", estabId);
       }
 
-      const { data, error } = await query.order("updated_at", { ascending: false });
+      const { data, error } = await query.order("updated_at", { ascending: false }).limit(200);
 
       if (error) throw error;
 
