@@ -2177,13 +2177,15 @@ ${recentMessages}
       className="h-screen min-h-0"
     >
       <div className="h-full flex bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden relative">
-      {/* Botão para reabrir painel quando colapsado - esconde quando orçamento está aberto */}
-      {!isMobile && !showConversationsList && !orcamentoSheetOpen && (
+      {/* Botão para reabrir painel quando colapsado */}
+      {!isMobile && !showConversationsList && (
         <Button
           size="sm"
           variant="ghost"
           onClick={() => setShowConversationsList(true)}
-          className="absolute top-3 left-3 z-20 h-9 w-9 p-0 rounded-full bg-white/90 shadow-md hover:bg-white border border-border/50"
+          className={`absolute z-20 h-9 w-9 p-0 rounded-full bg-white/90 shadow-md hover:bg-white border border-border/50 ${
+            orcamentoSheetOpen ? 'top-[76px] left-3' : 'top-3 left-3'
+          }`}
           title="Abrir painel"
         >
           <PanelLeft className="h-4 w-4" />
