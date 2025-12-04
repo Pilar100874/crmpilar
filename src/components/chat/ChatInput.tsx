@@ -566,11 +566,11 @@ export default function ChatInput({
     }
     setIsGeneratingContextResponse(true);
     try {
-      const response = await supabase.functions.invoke("ai-agent-assist", {
-        body: { action: "suggest_response", conversationId, messages: conversationMessages.slice(-10) }
+      const response = await supabase.functions.invoke("agent-assist-suggest-response", {
+        body: { conversationId, messages: conversationMessages.slice(-10) }
       });
       if (response.error) throw response.error;
-      const suggestion = response.data?.suggestion || response.data?.response;
+      const suggestion = response.data?.suggestion;
       if (suggestion) {
         setMessage(suggestion);
         toast.success("Sugestão gerada!");
@@ -592,8 +592,8 @@ export default function ChatInput({
     }
     setIsGeneratingSummary(true);
     try {
-      const response = await supabase.functions.invoke("ai-agent-assist", {
-        body: { action: "summarize", conversationId, messages: conversationMessages }
+      const response = await supabase.functions.invoke("agent-assist-summarize", {
+        body: { conversationId, messages: conversationMessages }
       });
       if (response.error) throw response.error;
       const summary = response.data?.summary;
@@ -618,13 +618,15 @@ export default function ChatInput({
     }
     setIsSuggestingKBArticles(true);
     try {
-      const response = await supabase.functions.invoke("ai-agent-assist", {
-        body: { action: "kb_articles", conversationId, messages: conversationMessages.slice(-5) }
+      const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+      const lastUserMessage = conversationMessages.filter(m => m.sender === 'customer').slice(-1)[0]?.text || '';
+      const response = await supabase.functions.invoke("agent-assist-suggest-kb", {
+        body: { conversationId, lastUserMessage, estabelecimentoId }
       });
       if (response.error) throw response.error;
       const articles = response.data?.articles;
       if (articles && articles.length > 0) {
-        const articleText = articles.map((a: any) => `• ${a.title}`).join("\n");
+        const articleText = articles.map((a: any) => `• ${a.titulo}`).join("\n");
         setMessage(articleText);
         toast.success("Artigos sugeridos!");
       } else {
