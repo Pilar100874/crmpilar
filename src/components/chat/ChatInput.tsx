@@ -112,11 +112,9 @@ export default function ChatInput({
   const [isRecording, setIsRecording] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
-  const [showAIMenu, setShowAIMenu] = useState(false);
   const [quickReplies, setQuickReplies] = useState<Array<{content: string, shortcut: string}>>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const aiMenuRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showBotPopover, setShowBotPopover] = useState(false);
@@ -161,15 +159,12 @@ export default function ChatInput({
       if (menuRef.current && !menuRef.current.contains(target)) {
         setShowToolsMenu(false);
       }
-      if (aiMenuRef.current && !aiMenuRef.current.contains(target)) {
-        setShowAIMenu(false);
-      }
     };
-    if (showToolsMenu || showAIMenu) {
+    if (showToolsMenu) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showToolsMenu, showAIMenu]);
+  }, [showToolsMenu]);
 
   // Handle external tool triggers
   useEffect(() => {
@@ -706,19 +701,19 @@ export default function ChatInput({
 
   // === BASIC TOOLS ===
   allItems.push(
-    <ToolbarBtn key="image" icon={Image} title="Imagem" onClick={() => { imageInputRef.current?.click(); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={disabled} />
+    <ToolbarBtn key="image" icon={Image} title="Imagem" onClick={() => { imageInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
   );
   allItems.push(
-    <ToolbarBtn key="file" icon={Paperclip} title="Arquivo" onClick={() => { fileInputRef.current?.click(); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={disabled} />
+    <ToolbarBtn key="file" icon={Paperclip} title="Arquivo" onClick={() => { fileInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
   );
   allItems.push(
-    <ToolbarBtn key="variables" icon={Variable} title="Variáveis" onClick={() => { setShowVariables(true); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={disabled} />
+    <ToolbarBtn key="variables" icon={Variable} title="Variáveis" onClick={() => { setShowVariables(true); setShowToolsMenu(false); }} disabled={disabled} />
   );
   allItems.push(
-    <QuickRepliesSelector key="quick-replies" onSelect={(content) => { handleQuickReplySelect(content); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={disabled} />
+    <QuickRepliesSelector key="quick-replies" onSelect={(content) => { handleQuickReplySelect(content); setShowToolsMenu(false); }} disabled={disabled} />
   );
   allItems.push(
-    <QuickAttachmentsSelector key="quick-attachments" onSelect={(attachment) => { handleQuickAttachmentSelect(attachment); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={disabled} />
+    <QuickAttachmentsSelector key="quick-attachments" onSelect={(attachment) => { handleQuickAttachmentSelect(attachment); setShowToolsMenu(false); }} disabled={disabled} />
   );
 
   // Translate
@@ -782,7 +777,7 @@ export default function ChatInput({
                     ))}
                   </SelectContent>
                 </Select>
-                <Button size="sm" onClick={() => { onBotRedirect(); setShowBotPopover(false); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={!selectedBotRedirect} className="w-full">
+                <Button size="sm" onClick={() => { onBotRedirect(); setShowBotPopover(false); setShowToolsMenu(false); }} disabled={!selectedBotRedirect} className="w-full">
                   <Zap className="h-4 w-4 mr-2" /> Redirecionar
                 </Button>
               </div>
@@ -854,7 +849,7 @@ export default function ChatInput({
                     ))}
                   </SelectContent>
                 </Select>
-                <Button size="sm" onClick={() => { onTransferUser(); setShowTransferPopover(false); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={!selectedTransferUser} className="w-full">
+                <Button size="sm" onClick={() => { onTransferUser(); setShowTransferPopover(false); setShowToolsMenu(false); }} disabled={!selectedTransferUser} className="w-full">
                   <UserPlus className="h-4 w-4 mr-2" /> Transferir
                 </Button>
               </div>
@@ -978,12 +973,6 @@ export default function ChatInput({
     );
   }
 
-  // Both menus show ALL items
-  const generalItems = allItems;
-  const chatItems = allItems;
-
-  // Check if we have items
-  const hasChatItems = allItems.length > 0;
   
   return (
     <>
@@ -1009,16 +998,16 @@ export default function ChatInput({
         <div className="relative z-50 bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2">
           {/* Input row */}
           <div className="flex items-end gap-2 overflow-visible">
-            {/* Expandable Tools Menu - positioned to expand upward (left side) */}
+            {/* Expandable Tools Menu - positioned to expand upward */}
             <div ref={menuRef} className="relative">
-              {/* General items ring */}
+              {/* All items */}
               {showToolsMenu && (
                 <div 
                   className="absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5 z-[9999]"
                 >
-                  {generalItems.map((item, index) => (
+                  {allItems.map((item, index) => (
                     <div 
-                      key={`general-${index}`}
+                      key={`tool-${index}`}
                       className="transform transition-all duration-200 flex-shrink-0"
                       style={{
                         transitionDelay: `${index * 30}ms`,
@@ -1042,7 +1031,7 @@ export default function ChatInput({
                   "text-muted-foreground hover:text-foreground",
                   showToolsMenu && "bg-primary text-primary-foreground rotate-45 shadow-md"
                 )}
-                onClick={() => { setShowToolsMenu(!showToolsMenu); setShowAIMenu(false); }}
+                onClick={() => setShowToolsMenu(!showToolsMenu)}
                 title={showToolsMenu ? "Fechar menu" : "Abrir ferramentas"}
               >
                 <Plus className="h-5 w-5" />
@@ -1074,49 +1063,6 @@ export default function ChatInput({
             
             {/* Audio recorder */}
             <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={disabled} />
-
-            {/* AI Menu Button - positioned to expand upward (right side) */}
-            <div ref={aiMenuRef} className="relative">
-              {/* Chat/AI items ring */}
-              {chatItems.length > 0 && showAIMenu && (
-                <div 
-                  className="absolute bottom-full right-0 mb-2 flex flex-col-reverse gap-1.5 z-[9999]"
-                >
-                  {chatItems.map((item, index) => (
-                    <div 
-                      key={`ai-${index}`}
-                      className="transform transition-all duration-200 flex-shrink-0"
-                      style={{
-                        transitionDelay: `${index * 30}ms`,
-                        animation: 'fadeInUp 0.2s ease-out forwards',
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* AI trigger button - always visible */}
-              <button 
-                className={cn(
-                  "relative w-10 h-10 rounded-full cursor-pointer",
-                  "bg-muted/50 hover:bg-muted",
-                  "flex items-center justify-center",
-                  "transition-all duration-300 ease-out",
-                  "text-muted-foreground hover:text-foreground",
-                  showAIMenu && "bg-primary text-primary-foreground shadow-md"
-                )}
-                onClick={() => { 
-                  setShowAIMenu(!showAIMenu); 
-                  setShowToolsMenu(false);
-                }}
-                title={showAIMenu ? "Fechar IA" : "Recursos de IA"}
-              >
-                <Sparkles className="h-5 w-5" />
-              </button>
-            </div>
             
             {/* Send button */}
             <Button 
