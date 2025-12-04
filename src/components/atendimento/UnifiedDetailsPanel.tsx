@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
+import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { useState } from "react";
 
 export type PanelType = "chat" | "agenda" | "email" | "orcamento";
@@ -15,6 +16,7 @@ interface UnifiedDetailsPanelProps {
   telefone?: string;
   whatsapp?: string;
   email?: string;
+  customerId?: string;
   // Dados específicos por tipo
   protocolo?: string;
   status?: string;
@@ -26,7 +28,7 @@ interface UnifiedDetailsPanelProps {
   descricao?: string;
   // Empresas vinculadas
   companies?: any[];
-  onAddCompany?: () => void;
+  onCompaniesUpdated?: () => void;
   // Ações
   onOpenOrcamento?: () => void;
   onOpenEmail?: () => void;
@@ -38,6 +40,7 @@ export function UnifiedDetailsPanel({
   telefone,
   whatsapp,
   email,
+  customerId,
   protocolo,
   status,
   valorTotal,
@@ -46,7 +49,7 @@ export function UnifiedDetailsPanel({
   titulo,
   descricao,
   companies = [],
-  onAddCompany,
+  onCompaniesUpdated,
   onOpenOrcamento,
   onOpenEmail
 }: UnifiedDetailsPanelProps) {
@@ -54,6 +57,7 @@ export function UnifiedDetailsPanel({
   const [dialNumber, setDialNumber] = useState("");
   const [empresasOpen, setEmpresasOpen] = useState(true);
   const [contatoOpen, setContatoOpen] = useState(true);
+  const [showVincularDialog, setShowVincularDialog] = useState(false);
 
   const getIcon = () => {
     switch (type) {
@@ -127,12 +131,12 @@ export function UnifiedDetailsPanel({
               <Card className="p-4 text-center rounded-2xl border-dashed">
                 <Building2 className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
                 <p className="text-xs text-muted-foreground">Nenhuma empresa vinculada</p>
-                {onAddCompany && (
+                {customerId && (
                   <Button
                     variant="ghost"
                     size="sm"
                     className="mt-2 text-xs text-primary"
-                    onClick={onAddCompany}
+                    onClick={() => setShowVincularDialog(true)}
                   >
                     <Plus className="w-3 h-3 mr-1" />
                     Vincular empresa
@@ -175,12 +179,12 @@ export function UnifiedDetailsPanel({
                     </Card>
                   );
                 })}
-                {onAddCompany && (
+                {customerId && (
                   <Button
                     variant="ghost"
                     size="sm"
                     className="w-full text-xs text-primary"
-                    onClick={onAddCompany}
+                    onClick={() => setShowVincularDialog(true)}
                   >
                     <Plus className="w-3 h-3 mr-1" />
                     Vincular outra empresa
@@ -311,6 +315,13 @@ export function UnifiedDetailsPanel({
         open={showSoftphone}
         onOpenChange={setShowSoftphone}
         initialNumber={dialNumber}
+      />
+
+      <VincularEmpresaDialog
+        open={showVincularDialog}
+        onOpenChange={setShowVincularDialog}
+        customerId={customerId}
+        onSuccess={onCompaniesUpdated}
       />
     </div>
   );
