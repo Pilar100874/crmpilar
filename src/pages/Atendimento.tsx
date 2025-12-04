@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2 } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck } from "lucide-react";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { PredictiveDialerDialog } from "@/components/atendimento/PredictiveDialerDialog";
@@ -1712,6 +1712,23 @@ ${recentMessages}
     { id: "orcamento", icon: Receipt, label: "Orçamentos", badge: orcamentosEmAndamentoCount },
     { id: "dialer", icon: PhoneCall, label: "Discador" },
     { 
+      id: "tools", 
+      icon: Plus, 
+      label: "Ferramentas",
+      subItems: [
+        { id: "tool-image", icon: Image, label: "Imagem" },
+        { id: "tool-file", icon: Paperclip, label: "Arquivo" },
+        { id: "tool-variables", icon: Variable, label: "Variáveis" },
+        { id: "tool-quick-replies", icon: Zap, label: "Respostas Rápidas" },
+        { id: "tool-attachments", icon: FileCheck, label: "Anexos Rápidos" },
+        { id: "tool-translate", icon: Languages, label: "Traduzir" },
+        { id: "tool-reports", icon: FileText, label: "Relatórios" },
+        { id: "tool-bot", icon: Bot, label: "Redirecionar Bot" },
+        { id: "tool-webhook", icon: Webhook, label: "Resposta Automática" },
+        { id: "tool-transfer", icon: UserPlus, label: "Transferir Usuário" },
+      ]
+    },
+    { 
       id: "ai", 
       icon: Sparkles, 
       label: "IA",
@@ -1721,8 +1738,6 @@ ${recentMessages}
         { id: "ai-summary", icon: FileText, label: "Gerar Resumo" },
         { id: "ai-kb", icon: BookOpen, label: "Artigos KB" },
         { id: "ai-translate", icon: Languages, label: "Tradução em Tempo Real" },
-        { id: "ai-bot", icon: Bot, label: "Redirecionar para Bot" },
-        { id: "ai-transfer", icon: UserPlus, label: "Transferir Usuário" },
       ]
     },
   ];
@@ -1748,6 +1763,19 @@ ${recentMessages}
       case "dialer":
         setShowPredictiveDialer(true);
         break;
+      // Tools submenu items
+      case "tool-image":
+      case "tool-file":
+      case "tool-variables":
+      case "tool-quick-replies":
+      case "tool-attachments":
+      case "tool-translate":
+      case "tool-reports":
+      case "tool-bot":
+      case "tool-webhook":
+      case "tool-transfer":
+        toast.info("Use o campo de mensagem para acessar esta ferramenta");
+        break;
       // AI submenu items
       case "ai-chat":
         setShowAIChat(!showAIChat);
@@ -1764,12 +1792,6 @@ ${recentMessages}
       case "ai-translate":
         setIsRealTimeTranslationActive(!isRealTimeTranslationActive);
         toast.success(isRealTimeTranslationActive ? "Tradução em tempo real desativada" : "Tradução em tempo real ativada");
-        break;
-      case "ai-bot":
-        toast.info("Use o campo de mensagem para redirecionar para bot");
-        break;
-      case "ai-transfer":
-        toast.info("Use o campo de mensagem para transferir usuário");
         break;
     }
   };
