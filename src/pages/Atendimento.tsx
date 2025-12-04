@@ -75,13 +75,25 @@ const normalizePhone = (phone: string | undefined | null): string => {
 export default function Atendimento() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const isTablet = !isMobile && window.innerWidth < 1280; // Considera tablet entre 768-1280px
-  const isSmallTablet = !isMobile && window.innerWidth >= 768 && window.innerWidth < 1024; // Tablet pequeno
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  
+  // Atualizar windowWidth no resize
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  const isTablet = !isMobile && windowWidth < 1280; // Considera tablet entre 768-1280px
+  const isSmallTablet = !isMobile && windowWidth >= 768 && windowWidth < 1024; // Tablet pequeno
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  
+  // Mobile view state: "list" | "main" | "details"
+  const [mobileView, setMobileView] = useState<"list" | "main" | "details">("list");
   
   // Estado do painel de conversas (expandido por padrão)
   const [showConversationsList, setShowConversationsList] = useState(true);
@@ -2242,20 +2254,343 @@ ${recentMessages}
       size={260}
       className="h-screen min-h-0"
     >
-      <div className="h-full flex bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden relative">
-      {/* Botão para reabrir painel quando colapsado - não mostra quando orçamento está aberto (botão fica no POSView) */}
-      {!isMobile && !showConversationsList && !orcamentoSheetOpen && (
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setShowConversationsList(true)}
-          className="absolute top-3 left-3 z-20 h-9 w-9 p-0 rounded-full bg-white/90 shadow-md hover:bg-white border border-border/50"
-          title="Abrir painel"
-        >
-          <PanelLeft className="h-4 w-4" />
-        </Button>
-      )}
-      {/* Conversation List */}
+      {/* ========== MOBILE LAYOUT ========== */}
+      {isMobile ? (
+        <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+          {/* Mobile Header - Mostra quando não está na lista */}
+          {mobileView !== "list" && (
+            <div className="flex-shrink-0 px-3 py-2.5 bg-card border-b border-border/50 flex items-center justify-between safe-area-top">
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    if (mobileView === "details") {
+                      setMobileView("main");
+                    } else {
+                      setMobileView("list");
+                      if (activeTab === "chat") setSelectedConversation(null);
+                      if (activeTab === "agenda") { setSelectedTaskId(null); setSelectedTaskData(null); }
+                      if (activeTab === "email") { setSelectedEmailId(null); setSelectedEmailData(null); }
+                      if (activeTab === "orcamento") { setOrcamentoSheetOpen(false); setSelectedOrcamentoId(null); }
+                    }
+                  }}
+                  className="h-8 w-8 p-0 rounded-full"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                {activeTab === "chat" && selectedConv && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center">
+                      <User className="w-4 h-4 text-primary" />
+                    </div>
+                    <span className="font-medium text-sm truncate max-w-[150px]">
+                      {selectedConv.customer?.nome || "Cliente"}
+                    </span>
+                  </div>
+                )}
+                {activeTab === "agenda" && selectedTaskData && (
+                  <span className="font-medium text-sm truncate max-w-[180px]">
+                    {selectedTaskData.contact_name}
+                  </span>
+                )}
+                {activeTab === "email" && selectedEmailData && (
+                  <span className="font-medium text-sm truncate max-w-[180px]">
+                    {selectedEmailData.subject}
+                  </span>
+                )}
+                {activeTab === "orcamento" && selectedOrcamentoData && (
+                  <span className="font-medium text-sm truncate max-w-[180px]">
+                    {selectedOrcamentoData.customers?.nome || "Orçamento"}
+                  </span>
+                )}
+              </div>
+              {mobileView === "main" && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setMobileView("details")}
+                  className="h-8 px-3 rounded-full text-xs"
+                >
+                  <Building2 className="h-4 w-4 mr-1" />
+                  Detalhes
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Mobile Content Area */}
+          <div className="flex-1 overflow-hidden relative">
+            {/* Lista */}
+            <div
+              className={`absolute inset-0 transition-transform duration-300 ease-out ${
+                mobileView === "list" ? "translate-x-0" : "-translate-x-full"
+              }`}
+            >
+              <MobileListContent
+                activeTab={activeTab}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                globalFilter={globalFilter}
+                setGlobalFilter={setGlobalFilter}
+                filteredConversations={filteredConversations}
+                selectedConversation={selectedConversation}
+                setSelectedConversation={(id) => {
+                  setSelectedConversation(id);
+                  if (id) setMobileView("main");
+                }}
+                filteredTasks={filteredTasks}
+                selectedTaskId={selectedTaskId}
+                setSelectedTaskId={(id) => {
+                  setSelectedTaskId(id);
+                  if (id) {
+                    const task = todayTasks.find(t => t.id === id);
+                    setSelectedTaskData(task);
+                    setMobileView("main");
+                  }
+                }}
+                agendaDate={agendaDate}
+                handlePreviousDay={handlePreviousDay}
+                handleNextDay={handleNextDay}
+                handleToday={handleToday}
+                filteredEmails={filteredEmails}
+                selectedEmailId={selectedEmailId}
+                setSelectedEmailId={(id) => {
+                  setSelectedEmailId(id);
+                  if (id) {
+                    const email = userEmails.find(e => e.id === id);
+                    setSelectedEmailData(email);
+                    setMobileView("main");
+                  }
+                }}
+                filteredOrcamentos={filteredOrcamentos}
+                orcamentosStatusFilter={orcamentosStatusFilter}
+                setOrcamentosStatusFilter={setOrcamentosStatusFilter}
+                selectedOrcamentoId={selectedOrcamentoId}
+                setSelectedOrcamentoId={(id) => {
+                  setSelectedOrcamentoId(id);
+                  if (id) {
+                    const orc = orcamentos.find(o => o.id === id);
+                    setSelectedOrcamentoData(orc);
+                    setOrcamentoSheetOpen(true);
+                    setMobileView("main");
+                  }
+                }}
+                showPredictiveDialer={() => setShowPredictiveDialer(true)}
+                atendente={atendente}
+                usuarioId={usuarioId}
+                loadAtendente={loadAtendente}
+                getTimeAgo={getTimeAgo}
+              />
+            </div>
+
+            {/* Conteúdo Principal */}
+            <div
+              className={`absolute inset-0 transition-transform duration-300 ease-out ${
+                mobileView === "main" ? "translate-x-0" : mobileView === "list" ? "translate-x-full" : "-translate-x-full"
+              }`}
+            >
+              <MobileMainContent
+                activeTab={activeTab}
+                selectedConversation={selectedConversation}
+                selectedConv={selectedConv}
+                messages={messages}
+                isRealTimeTranslationActive={isRealTimeTranslationActive}
+                messageTranslations={messageTranslations}
+                handleSendMessage={handleSendMessage}
+                lastUserMessage={lastUserMessage}
+                availableBots={availableBots}
+                selectedBotRedirect={selectedBotRedirect}
+                setSelectedBotRedirect={setSelectedBotRedirect}
+                handleRedirectToBot={handleRedirectToBot}
+                webhooksForAutoResponse={webhooksForAutoResponse}
+                selectedWebhookAutoResponse={selectedWebhookAutoResponse}
+                setSelectedWebhookAutoResponse={setSelectedWebhookAutoResponse}
+                webhookAutoResponseActive={webhookAutoResponseActive}
+                handleToggleWebhookAutoResponse={handleToggleWebhookAutoResponse}
+                conversations={conversations}
+                availableUsers={availableUsers}
+                selectedTransferUser={selectedTransferUser}
+                setSelectedTransferUser={setSelectedTransferUser}
+                handleTransferToUser={handleTransferToUser}
+                showAIChat={showAIChat}
+                setShowAIChat={setShowAIChat}
+                aiWebhooks={aiWebhooks}
+                handleToggleRealTimeTranslation={handleToggleRealTimeTranslation}
+                translationLanguage={translationLanguage}
+                setTranslationLanguage={setTranslationLanguage}
+                triggerTool={triggerTool}
+                setTriggerTool={setTriggerTool}
+                showSummaryPanel={showSummaryPanel}
+                conversationSummary={conversationSummary}
+                isSummaryLoading={isSummaryLoading}
+                setShowSummaryPanel={setShowSummaryPanel}
+                setConversationSummary={setConversationSummary}
+                setSummaryGeneratedAt={setSummaryGeneratedAt}
+                summaryGeneratedAt={summaryGeneratedAt}
+                setIsSummaryLoading={setIsSummaryLoading}
+                copyMessageToAI={copyMessageToAI}
+                handleReactivateBot={handleReactivateBot}
+                messagesEndRef={messagesEndRef}
+                selectedTaskData={selectedTaskData}
+                selectedEmailData={selectedEmailData}
+                orcamentoSheetOpen={orcamentoSheetOpen}
+                selectedOrcamentoId={selectedOrcamentoId}
+                estabelecimentoId={estabelecimentoId}
+                setOrcamentoSheetOpen={setOrcamentoSheetOpen}
+              />
+            </div>
+
+            {/* Detalhes */}
+            <div
+              className={`absolute inset-0 transition-transform duration-300 ease-out bg-card overflow-y-auto ${
+                mobileView === "details" ? "translate-x-0" : "translate-x-full"
+              }`}
+            >
+              {activeTab === "chat" && selectedConv && (
+                <UnifiedDetailsPanel
+                  type="chat"
+                  nome={selectedConv.customer?.nome || "Cliente"}
+                  telefone={selectedConv.customer?.telefone}
+                  whatsapp={selectedConv.customer?.telefone}
+                  email={selectedConv.customer?.email}
+                  customerId={selectedConv.customer?.id}
+                  protocolo={selectedConv.id.slice(0, 8).toUpperCase()}
+                  status={selectedConv.chat_status || selectedConv.status}
+                  canal={selectedConv.canal}
+                  dataHora={format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                  companies={customerCompanies}
+                  onCompaniesUpdated={loadConversations}
+                  onSetGlobalFilter={setGlobalFilter}
+                />
+              )}
+              {activeTab === "agenda" && selectedTaskData && (
+                <UnifiedDetailsPanel
+                  type="agenda"
+                  nome={selectedTaskData.contact_name}
+                  customerId={selectedTaskData.contact_id}
+                  protocolo={selectedTaskData.id?.slice(0, 8).toUpperCase()}
+                  status={selectedTaskData.status}
+                  titulo={selectedTaskData.title}
+                  dataHora={`${format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}${selectedTaskData.time ? ` às ${selectedTaskData.time}` : ""}`}
+                  companies={[]}
+                  onSetGlobalFilter={setGlobalFilter}
+                />
+              )}
+              {activeTab === "email" && selectedEmailData && (
+                <UnifiedDetailsPanel
+                  type="email"
+                  nome={selectedEmailData.customer?.nome || selectedEmailData.from_email}
+                  telefone={selectedEmailData.customer?.telefone}
+                  whatsapp={selectedEmailData.customer?.telefone}
+                  email={selectedEmailData.from_email}
+                  customerId={selectedEmailData.customer?.id}
+                  protocolo={selectedEmailData.id?.slice(0, 8).toUpperCase()}
+                  status={selectedEmailData.read ? "Lido" : "Não lido"}
+                  titulo={selectedEmailData.subject}
+                  dataHora={format(new Date(selectedEmailData.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                  companies={selectedEmailData.customer?.customer_empresas?.map((ce: any) => ({
+                    ...ce,
+                    empresas: ce.empresas
+                  })) || []}
+                  onSetGlobalFilter={setGlobalFilter}
+                />
+              )}
+              {activeTab === "orcamento" && selectedOrcamentoData && (
+                <UnifiedDetailsPanel
+                  type="orcamento"
+                  nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || "Cliente"}
+                  telefone={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
+                  whatsapp={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
+                  email={selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email}
+                  customerId={selectedOrcamentoData.customers?.id}
+                  protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
+                  status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
+                  valorTotal={selectedOrcamentoData.valor_total || 0}
+                  companies={
+                    selectedOrcamentoData.empresas 
+                      ? [{ empresas: selectedOrcamentoData.empresas, is_primary: true }]
+                      : []
+                  }
+                  onSetGlobalFilter={setGlobalFilter}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Navigation - Apenas na lista */}
+          {mobileView === "list" && (
+            <div className="flex-shrink-0 bg-card border-t border-border/50 px-2 py-1.5 pb-safe">
+              <div className="flex justify-around">
+                {[
+                  { id: "chat", label: "Chats", icon: MessageSquare, badge: activeConversationsCount },
+                  { id: "agenda", label: "Agenda", icon: Calendar, badge: todayTasksCount },
+                  { id: "email", label: "E-mails", icon: Mail, badge: unreadEmailsCount },
+                  { id: "orcamento", label: "Orçamentos", icon: Receipt, badge: orcamentosEmAndamentoCount },
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-xl transition-all relative ${
+                        isActive
+                          ? "text-primary bg-primary/10"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <div className="relative">
+                        <Icon className={`h-5 w-5 ${isActive ? "text-primary" : ""}`} />
+                        {tab.badge && tab.badge > 0 && (
+                          <Badge
+                            className="absolute -top-1.5 -right-2.5 h-4 min-w-[16px] px-1 text-[10px] bg-destructive text-destructive-foreground border-0"
+                          >
+                            {tab.badge > 99 ? "99+" : tab.badge}
+                          </Badge>
+                        )}
+                      </div>
+                      <span className={`text-[10px] mt-0.5 font-medium ${isActive ? "text-primary" : ""}`}>
+                        {tab.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Dialogs */}
+          <SoftphoneDialog 
+            open={showSoftphone}
+            onOpenChange={setShowSoftphone}
+            initialNumber={softphoneNumber}
+          />
+          <PredictiveDialerDialog 
+            open={showPredictiveDialer}
+            onOpenChange={setShowPredictiveDialer}
+          />
+          <NovoContatoDialog 
+            open={showNovoContatoDialog}
+            onOpenChange={setShowNovoContatoDialog}
+          />
+        </div>
+      ) : (
+        /* ========== DESKTOP/TABLET LAYOUT ========== */
+        <div className="h-full flex bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden relative">
+        {/* Botão para reabrir painel quando colapsado - não mostra quando orçamento está aberto (botão fica no POSView) */}
+        {!showConversationsList && !orcamentoSheetOpen && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setShowConversationsList(true)}
+            className="absolute top-3 left-3 z-20 h-9 w-9 p-0 rounded-full bg-white/90 shadow-md hover:bg-white border border-border/50"
+            title="Abrir painel"
+          >
+            <PanelLeft className="h-4 w-4" />
+          </Button>
+        )}
+        {/* Conversation List */}
       <div className={`border-r border-border/50 flex flex-col h-full min-h-0 transition-all duration-300 bg-white/80 backdrop-blur-sm shadow-lg ${
         isMobile 
           ? 'hidden' 
@@ -3502,7 +3837,549 @@ ${recentMessages}
         onOpenChange={setShowPredictiveDialer}
       />
       </div>
+      )}
     </RadialMenu>
     </>
+  );
+}
+
+// ============ Mobile Components ============
+
+interface MobileListContentProps {
+  activeTab: string;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  globalFilter: any;
+  setGlobalFilter: (filter: any) => void;
+  filteredConversations: any[];
+  selectedConversation: string | null;
+  setSelectedConversation: (id: string | null) => void;
+  filteredTasks: any[];
+  selectedTaskId: string | null;
+  setSelectedTaskId: (id: string | null) => void;
+  agendaDate: Date;
+  handlePreviousDay: () => void;
+  handleNextDay: () => void;
+  handleToday: () => void;
+  filteredEmails: any[];
+  selectedEmailId: string | null;
+  setSelectedEmailId: (id: string | null) => void;
+  filteredOrcamentos: any[];
+  orcamentosStatusFilter: string;
+  setOrcamentosStatusFilter: (filter: string) => void;
+  selectedOrcamentoId: string | null;
+  setSelectedOrcamentoId: (id: string | null) => void;
+  showPredictiveDialer: () => void;
+  atendente: any;
+  usuarioId: string;
+  loadAtendente: (id: string) => void;
+  getTimeAgo: (date: string) => string;
+}
+
+function MobileListContent({
+  activeTab,
+  searchTerm,
+  setSearchTerm,
+  globalFilter,
+  setGlobalFilter,
+  filteredConversations,
+  selectedConversation,
+  setSelectedConversation,
+  filteredTasks,
+  selectedTaskId,
+  setSelectedTaskId,
+  agendaDate,
+  handlePreviousDay,
+  handleNextDay,
+  handleToday,
+  filteredEmails,
+  selectedEmailId,
+  setSelectedEmailId,
+  filteredOrcamentos,
+  orcamentosStatusFilter,
+  setOrcamentosStatusFilter,
+  selectedOrcamentoId,
+  setSelectedOrcamentoId,
+  showPredictiveDialer,
+  atendente,
+  usuarioId,
+  loadAtendente,
+  getTimeAgo,
+}: MobileListContentProps) {
+  return (
+    <div className="h-full flex flex-col bg-white/80">
+      {/* Header */}
+      <div className="px-4 pt-4 pb-3 bg-gradient-to-br from-primary/15 via-primary/8 to-transparent safe-area-top">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+            {activeTab === "chat" && <MessageSquare className="h-5 w-5 text-white" />}
+            {activeTab === "agenda" && <Calendar className="h-5 w-5 text-white" />}
+            {activeTab === "email" && <Mail className="h-5 w-5 text-white" />}
+            {activeTab === "orcamento" && <Receipt className="h-5 w-5 text-white" />}
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-foreground">
+              {activeTab === "chat" && "Conversas"}
+              {activeTab === "agenda" && "Agenda"}
+              {activeTab === "email" && "E-mails"}
+              {activeTab === "orcamento" && "Orçamentos"}
+            </h2>
+            <p className="text-[10px] text-muted-foreground">
+              {activeTab === "chat" && `${filteredConversations.length} conversas`}
+              {activeTab === "agenda" && format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
+              {activeTab === "email" && `${filteredEmails.length} emails`}
+              {activeTab === "orcamento" && `${filteredOrcamentos.length} orçamentos`}
+            </p>
+          </div>
+        </div>
+
+        {/* Search/Filter */}
+        {activeTab === "chat" && (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar conversas..."
+              className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        )}
+
+        {activeTab === "agenda" && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handlePreviousDay} className="h-8 w-8 p-0 rounded-full">
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <div className="flex-1 text-center bg-white/70 rounded-xl py-1.5 px-3">
+              <p className="text-sm font-bold text-orange-700">
+                {format(agendaDate, "dd/MM/yyyy", { locale: ptBR })}
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleNextDay} className="h-8 w-8 p-0 rounded-full">
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button variant="secondary" size="sm" onClick={handleToday} className="h-8 w-8 p-0 rounded-full">
+              <CalendarDays className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={showPredictiveDialer} className="h-8 w-8 p-0 rounded-full">
+              <PhoneCall className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+
+        {activeTab === "orcamento" && (
+          <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
+            <SelectTrigger className="w-full h-9 bg-white/70 rounded-xl">
+              <SelectValue placeholder="Todos os status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="orcamento">Orçamento</SelectItem>
+              <SelectItem value="negociacao">Negociação</SelectItem>
+              <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+
+        {globalFilter && (
+          <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} />
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5">
+        {activeTab === "chat" && filteredConversations.map((conv) => (
+          <div
+            key={conv.id}
+            onClick={() => setSelectedConversation(conv.id)}
+            className={`px-3 py-3 rounded-xl cursor-pointer transition-all ${
+              selectedConversation === conv.id 
+                ? "bg-primary/10 border border-primary/30" 
+                : "bg-white/60 hover:bg-white border border-transparent"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                selectedConversation === conv.id ? "bg-primary text-primary-foreground" : "bg-gradient-to-br from-slate-100 to-slate-200"
+              }`}>
+                <User className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="font-semibold text-sm truncate">{conv.customer?.nome || "Cliente"}</span>
+                  <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                    {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground truncate">{conv.lastMessage?.text || "Sem mensagens"}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {activeTab === "agenda" && filteredTasks.map((task) => (
+          <div
+            key={task.id}
+            onClick={() => setSelectedTaskId(task.id)}
+            className={`p-3 rounded-xl cursor-pointer transition-all ${
+              selectedTaskId === task.id
+                ? "bg-orange-100 border border-orange-200"
+                : "bg-white/60 hover:bg-white border border-transparent"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                selectedTaskId === task.id ? "bg-orange-500 text-white" : "bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600"
+              }`}>
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm truncate">{task.contact_name}</p>
+                <p className="text-xs text-muted-foreground truncate">{task.title}</p>
+                {task.time && (
+                  <Badge className="mt-1 text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
+                    <Clock className="w-2.5 h-2.5 mr-0.5" />
+                    {task.time}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {activeTab === "email" && filteredEmails.map((email) => (
+          <div
+            key={email.id}
+            onClick={() => setSelectedEmailId(email.id)}
+            className={`p-3 rounded-xl cursor-pointer transition-all ${
+              selectedEmailId === email.id
+                ? "bg-blue-100 border border-blue-200"
+                : "bg-white/60 hover:bg-white border border-transparent"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                !email.read ? "bg-blue-500 text-white" : "bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600"
+              }`}>
+                {email.read ? <MailOpen className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm truncate ${!email.read ? 'font-bold' : 'font-medium text-muted-foreground'}`}>
+                  {email.from_email}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">{email.subject}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {activeTab === "orcamento" && filteredOrcamentos
+          .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
+          .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
+          .map((orc) => (
+            <div
+              key={orc.id}
+              onClick={() => setSelectedOrcamentoId(orc.id)}
+              className={`p-3 rounded-xl cursor-pointer transition-all ${
+                selectedOrcamentoId === orc.id
+                  ? "bg-emerald-100 border border-emerald-200"
+                  : "bg-white/60 hover:bg-white border border-transparent"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  selectedOrcamentoId === orc.id ? "bg-emerald-500 text-white" : "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600"
+                }`}>
+                  <Receipt className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate">
+                    {orc.customers?.nome || orc.empresas?.nome_fantasia || 'Cliente'}
+                  </p>
+                  <p className="text-sm font-bold text-emerald-600">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(orc.valor_total || 0)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+      </div>
+
+      {/* Footer - Status do Atendente */}
+      {atendente && (
+        <div className="border-t bg-gradient-to-r from-slate-50 to-white p-3 flex-shrink-0">
+          <AtendenteStatusSelector
+            atendenteId={atendente.id}
+            currentStatus={atendente.status}
+            onStatusChange={() => loadAtendente(usuarioId)}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface MobileMainContentProps {
+  activeTab: string;
+  selectedConversation: string | null;
+  selectedConv: any;
+  messages: any[];
+  isRealTimeTranslationActive: boolean;
+  messageTranslations: Record<string, string>;
+  handleSendMessage: (content: string, contentType: "text" | "image" | "file" | "audio" | "variable", fileUrl?: string, fileName?: string) => void;
+  lastUserMessage: string | null;
+  availableBots: any[];
+  selectedBotRedirect: string | null;
+  setSelectedBotRedirect: (id: string | null) => void;
+  handleRedirectToBot: () => void;
+  webhooksForAutoResponse: any[];
+  selectedWebhookAutoResponse: string | null;
+  setSelectedWebhookAutoResponse: (id: string | null) => void;
+  webhookAutoResponseActive: boolean;
+  handleToggleWebhookAutoResponse: () => void;
+  conversations: any[];
+  availableUsers: any[];
+  selectedTransferUser: string | null;
+  setSelectedTransferUser: (id: string | null) => void;
+  handleTransferToUser: () => void;
+  showAIChat: boolean;
+  setShowAIChat: (show: boolean) => void;
+  aiWebhooks: any[];
+  handleToggleRealTimeTranslation: () => void;
+  translationLanguage: string;
+  setTranslationLanguage: (lang: string) => void;
+  triggerTool: any;
+  setTriggerTool: (tool: any) => void;
+  showSummaryPanel: boolean;
+  conversationSummary: string | null;
+  isSummaryLoading: boolean;
+  setShowSummaryPanel: (show: boolean) => void;
+  setConversationSummary: (summary: string | null) => void;
+  setSummaryGeneratedAt: (date: Date | null) => void;
+  summaryGeneratedAt: Date | null;
+  setIsSummaryLoading: (loading: boolean) => void;
+  copyMessageToAI: (text: string) => void;
+  handleReactivateBot: () => void;
+  messagesEndRef: React.RefObject<HTMLDivElement>;
+  selectedTaskData: any;
+  selectedEmailData: any;
+  orcamentoSheetOpen: boolean;
+  selectedOrcamentoId: string | null;
+  estabelecimentoId: string;
+  setOrcamentoSheetOpen: (open: boolean) => void;
+}
+
+function MobileMainContent({
+  activeTab,
+  selectedConversation,
+  selectedConv,
+  messages,
+  isRealTimeTranslationActive,
+  messageTranslations,
+  handleSendMessage,
+  lastUserMessage,
+  availableBots,
+  selectedBotRedirect,
+  setSelectedBotRedirect,
+  handleRedirectToBot,
+  webhooksForAutoResponse,
+  selectedWebhookAutoResponse,
+  setSelectedWebhookAutoResponse,
+  webhookAutoResponseActive,
+  handleToggleWebhookAutoResponse,
+  conversations,
+  availableUsers,
+  selectedTransferUser,
+  setSelectedTransferUser,
+  handleTransferToUser,
+  showAIChat,
+  setShowAIChat,
+  aiWebhooks,
+  handleToggleRealTimeTranslation,
+  translationLanguage,
+  setTranslationLanguage,
+  triggerTool,
+  setTriggerTool,
+  showSummaryPanel,
+  conversationSummary,
+  isSummaryLoading,
+  setShowSummaryPanel,
+  setConversationSummary,
+  setSummaryGeneratedAt,
+  summaryGeneratedAt,
+  setIsSummaryLoading,
+  copyMessageToAI,
+  handleReactivateBot,
+  messagesEndRef,
+  selectedTaskData,
+  selectedEmailData,
+  orcamentoSheetOpen,
+  selectedOrcamentoId,
+  estabelecimentoId,
+  setOrcamentoSheetOpen,
+}: MobileMainContentProps) {
+  // Chat content
+  if (activeTab === "chat" && selectedConversation && selectedConv) {
+    return (
+      <div className="h-full flex flex-col">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-200">
+          {messages.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
+              <p className="text-sm">Nenhuma mensagem ainda</p>
+            </div>
+          ) : (
+            messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex gap-2 ${msg.sender === "agent" ? "justify-end" : "justify-start"}`}
+              >
+                {msg.sender !== "agent" && (
+                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <User className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                )}
+                <div className={`max-w-[75%] px-3 py-2 rounded-2xl ${
+                  msg.sender === "agent"
+                    ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white"
+                    : "bg-card border border-border"
+                }`}>
+                  <p className="text-[13px] whitespace-pre-wrap break-words">{msg.text}</p>
+                  <span className={`text-[10px] mt-1 block ${msg.sender === "agent" ? "text-white/70" : "text-muted-foreground"}`}>
+                    {format(new Date(msg.created_at), "HH:mm", { locale: ptBR })}
+                  </span>
+                </div>
+                {msg.sender === "agent" && (
+                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <User className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <div className="border-t bg-card p-3 pb-safe">
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            disabled={false}
+            lastUserMessage={lastUserMessage}
+            onSuggestionGenerated={(suggestion) => console.log("Suggestion:", suggestion)}
+            availableBots={availableBots}
+            selectedBotRedirect={selectedBotRedirect}
+            onBotRedirectChange={setSelectedBotRedirect}
+            onBotRedirect={handleRedirectToBot}
+            webhooksForAutoResponse={webhooksForAutoResponse}
+            selectedWebhookAutoResponse={selectedWebhookAutoResponse}
+            onWebhookChange={setSelectedWebhookAutoResponse}
+            webhookAutoResponseActive={webhookAutoResponseActive}
+            onWebhookToggle={handleToggleWebhookAutoResponse}
+            botVariables={selectedConversation ? conversations.find(c => c.id === selectedConversation)?.metadata?.vars || {} : {}}
+            availableUsers={availableUsers}
+            selectedTransferUser={selectedTransferUser}
+            onTransferUserChange={setSelectedTransferUser}
+            onTransferUser={handleTransferToUser}
+            showAIChat={showAIChat}
+            onToggleAIChat={() => setShowAIChat(!showAIChat)}
+            aiWebhooks={aiWebhooks}
+            conversationId={selectedConversation || undefined}
+            conversationMessages={messages}
+            onSummaryGenerated={(summary) => {
+              if (summary === "") {
+                setShowSummaryPanel(true);
+                setIsSummaryLoading(true);
+                setConversationSummary(null);
+              } else {
+                setConversationSummary(summary);
+                setSummaryGeneratedAt(new Date());
+                setIsSummaryLoading(false);
+                setShowSummaryPanel(true);
+              }
+            }}
+            isRealTimeTranslationActive={isRealTimeTranslationActive}
+            onToggleRealTimeTranslation={handleToggleRealTimeTranslation}
+            translationLanguage={translationLanguage}
+            onTranslationLanguageChange={setTranslationLanguage}
+            triggerTool={triggerTool}
+            onToolTriggered={() => setTriggerTool(null)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Agenda content
+  if (activeTab === "agenda" && selectedTaskData) {
+    return (
+      <div className="h-full flex flex-col bg-card p-4">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-orange-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold">{selectedTaskData.title}</h3>
+              <p className="text-sm text-muted-foreground">{selectedTaskData.contact_name}</p>
+            </div>
+          </div>
+          <div className="space-y-2 text-sm">
+            <p><strong>Data:</strong> {format(new Date(selectedTaskData.date), "dd/MM/yyyy", { locale: ptBR })}</p>
+            {selectedTaskData.time && <p><strong>Horário:</strong> {selectedTaskData.time}</p>}
+            {selectedTaskData.description && <p><strong>Descrição:</strong> {selectedTaskData.description}</p>}
+            <p><strong>Status:</strong> <Badge>{selectedTaskData.status}</Badge></p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Email content
+  if (activeTab === "email" && selectedEmailData) {
+    return (
+      <div className="h-full flex flex-col bg-card">
+        <div className="p-4 border-b">
+          <h3 className="font-semibold text-lg">{selectedEmailData.subject}</h3>
+          <p className="text-sm text-muted-foreground">De: {selectedEmailData.from_email}</p>
+          <p className="text-xs text-muted-foreground">
+            {format(new Date(selectedEmailData.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+          </p>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: selectedEmailData.body }} />
+        </div>
+      </div>
+    );
+  }
+
+  // Orçamento content
+  if (activeTab === "orcamento" && orcamentoSheetOpen && selectedOrcamentoId && estabelecimentoId) {
+    return (
+      <div className="h-full bg-gray-100">
+        <POSView 
+          estabelecimentoId={estabelecimentoId} 
+          orcamentoId={selectedOrcamentoId}
+          onClose={() => setOrcamentoSheetOpen(false)}
+          showClientDetails={false}
+          onToggleClientDetails={() => {}}
+          showPanelToggle={false}
+          onTogglePanel={() => {}}
+        />
+      </div>
+    );
+  }
+
+  // Empty state
+  return (
+    <div className="h-full flex items-center justify-center text-muted-foreground bg-muted/20">
+      <div className="text-center">
+        <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+        <p className="text-lg font-medium mb-2">Selecione um item</p>
+        <p className="text-sm">Escolha um item da lista</p>
+      </div>
+    </div>
   );
 }
