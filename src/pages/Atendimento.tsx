@@ -2626,13 +2626,13 @@ ${recentMessages}
                 telefone={selectedTaskData.customers?.telefone}
                 whatsapp={selectedTaskData.customers?.telefone}
                 email={selectedTaskData.customers?.email}
+                customerId={selectedTaskData.customers?.id}
                 protocolo={selectedTaskData.id?.slice(0, 8).toUpperCase()}
                 status={selectedTaskData.status}
                 titulo={selectedTaskData.title}
                 descricao={selectedTaskData.description}
                 dataHora={selectedTaskData.date ? format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : undefined}
                 companies={selectedTaskData.customers?.customer_empresas || []}
-                onAddCompany={() => setShowNovoContatoDialog(true)}
               />
             )}
           </TabsContent>
@@ -2731,6 +2731,7 @@ ${recentMessages}
                 telefone={selectedEmailData.customer?.telefone}
                 whatsapp={selectedEmailData.customer?.telefone}
                 email={selectedEmailData.from_email}
+                customerId={selectedEmailData.customer?.id}
                 protocolo={selectedEmailData.id?.slice(0, 8).toUpperCase()}
                 status={selectedEmailData.read ? "Lido" : "Não lido"}
                 titulo={selectedEmailData.subject}
@@ -2739,7 +2740,6 @@ ${recentMessages}
                   ...ce,
                   empresas: ce.empresas
                 })) || []}
-                onAddCompany={() => setShowNovoContatoDialog(true)}
               />
             )}
           </TabsContent>
@@ -3309,12 +3309,13 @@ ${recentMessages}
             telefone={selectedConv.customer?.telefone}
             whatsapp={selectedConv.customer?.telefone}
             email={selectedConv.customer?.email}
+            customerId={selectedConv.customer?.id}
             protocolo={selectedConv.id.slice(0, 8).toUpperCase()}
             status={selectedConv.chat_status || selectedConv.status}
             canal={selectedConv.canal}
             dataHora={format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
             companies={customerCompanies}
-            onAddCompany={() => setShowNovoContatoDialog(true)}
+            onCompaniesUpdated={loadConversations}
             onOpenOrcamento={() => {
               if (selectedConv.customer?.id) {
                 navigate(`/orcamentos?cliente_id=${selectedConv.customer.id}`);
@@ -3372,11 +3373,11 @@ ${recentMessages}
               telefone={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
               whatsapp={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
               email={selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email}
+              customerId={selectedOrcamentoData.customers?.id}
               protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
               status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
               valorTotal={selectedOrcamentoData.valor_total || 0}
               companies={[]}
-              onAddCompany={() => setShowNovoContatoDialog(true)}
             />
           )}
         </>
