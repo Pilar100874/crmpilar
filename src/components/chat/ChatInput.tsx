@@ -873,25 +873,52 @@ export default function ChatInput({
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
-          <PopoverContent className="w-72 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+          <PopoverContent className="w-72 p-3 rounded-xl shadow-xl border-border/50 bg-popover" align="start" sideOffset={8}>
             <div className="space-y-3">
               <Label className="text-sm font-medium">Relatórios Importados</Label>
               {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
               {importReports.length > 0 ? (
-                <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
-                  {importReports.map((report) => (
-                    <div key={report.id} className="flex items-center justify-between p-2 rounded-lg border hover:bg-muted/50">
-                      <span className="text-sm truncate flex-1">{report.nome}</span>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => handleImportReportSelect(report.id, 'pdf')} disabled={isProcessingReport}>
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => handleImportReportSelect(report.id, 'excel')} disabled={isProcessingReport}>
-                          <FileSpreadsheet className="h-4 w-4" />
-                        </Button>
-                      </div>
+                <div className="space-y-3">
+                  <Select 
+                    value={selectedImportReport || ""} 
+                    onValueChange={(value) => setSelectedImportReport(value)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Escolha um relatório..." />
+                    </SelectTrigger>
+                    <SelectContent position="popper" sideOffset={4}>
+                      {importReports.map((report) => (
+                        <SelectItem key={report.id} value={report.id}>
+                          {report.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {selectedImportReport && (
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => handleImportReportSelect(selectedImportReport, 'pdf')} 
+                        disabled={isProcessingReport}
+                      >
+                        <FileText className="h-4 w-4 mr-2 text-red-500" />
+                        PDF
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => handleImportReportSelect(selectedImportReport, 'excel')} 
+                        disabled={isProcessingReport}
+                      >
+                        <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+                        Excel
+                      </Button>
                     </div>
-                  ))}
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">Nenhum relatório disponível</p>
