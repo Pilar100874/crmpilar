@@ -2726,6 +2726,7 @@ ${recentMessages}
                 descricao={selectedTaskData.description}
                 dataHora={selectedTaskData.date ? format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : undefined}
                 companies={selectedTaskData.customers?.customer_empresas || []}
+                onSetGlobalFilter={setGlobalFilter}
               />
             )}
           </TabsContent>
@@ -2833,6 +2834,7 @@ ${recentMessages}
                   ...ce,
                   empresas: ce.empresas
                 })) || []}
+                onSetGlobalFilter={setGlobalFilter}
               />
             )}
           </TabsContent>
@@ -3409,16 +3411,7 @@ ${recentMessages}
             dataHora={format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
             companies={customerCompanies}
             onCompaniesUpdated={loadConversations}
-            onOpenOrcamento={() => {
-              if (selectedConv.customer?.id) {
-                navigate(`/orcamentos?cliente_id=${selectedConv.customer.id}`);
-              }
-            }}
-            onOpenEmail={() => {
-              if (selectedConv.customer?.email) {
-                navigate(`/email?filter=${encodeURIComponent(selectedConv.customer.email)}`);
-              }
-            }}
+            onSetGlobalFilter={setGlobalFilter}
           />
         </div>
       )}
@@ -3475,6 +3468,7 @@ ${recentMessages}
                   ? [{ empresas: selectedOrcamentoData.empresas, is_primary: true }]
                   : customerCompanies
               }
+              onSetGlobalFilter={setGlobalFilter}
             />
           )}
         </>
