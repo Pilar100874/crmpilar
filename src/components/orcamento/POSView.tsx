@@ -39,7 +39,8 @@ import {
   Eye,
   Truck,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  PanelLeft
 } from "lucide-react";
 import {
   Select,
@@ -88,6 +89,8 @@ interface POSViewProps {
   onClose?: () => void;
   showClientDetails?: boolean;
   onToggleClientDetails?: () => void;
+  showPanelToggle?: boolean;
+  onTogglePanel?: () => void;
 }
 
 export default function POSView({ 
@@ -95,7 +98,9 @@ export default function POSView({
   orcamentoId, 
   onClose,
   showClientDetails = false,
-  onToggleClientDetails
+  onToggleClientDetails,
+  showPanelToggle = false,
+  onTogglePanel
 }: POSViewProps) {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [grupos, setGrupos] = useState<any[]>([]);
@@ -804,6 +809,17 @@ export default function POSView({
         {/* Header de Busca e Filtros */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3 mb-3">
+            {showPanelToggle && onTogglePanel && (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={onTogglePanel}
+                className="h-12 w-12 p-0 rounded-full bg-white/90 shadow-md hover:bg-white border border-border/50 flex-shrink-0"
+                title="Abrir painel"
+              >
+                <PanelLeft className="h-5 w-5" />
+              </Button>
+            )}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
