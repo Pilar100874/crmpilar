@@ -67,6 +67,7 @@ import { cn } from "@/lib/utils";
 import ImageItemExtractor from "./ImageItemExtractor";
 import { ConjuntoSelectorDialog } from "./ConjuntoSelectorDialog";
 import { PedagioDetailsDialog } from "./PedagioDetailsDialog";
+import MobilePOSLayout from "./MobilePOSLayout";
 import FreteDetailsPanel from "./FreteDetailsPanel";
 import {
   Dialog,
@@ -812,6 +813,60 @@ export default function POSView({
       toast.error("Erro ao carregar itens do conjunto");
     }
   };
+
+  // Render mobile/tablet layout
+  if (isCompact) {
+    return (
+      <>
+        <MobilePOSLayout
+          produtos={produtos}
+          grupos={grupos}
+          empresas={empresas}
+          cartItems={cartItems}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedEmpresa={selectedEmpresa}
+          setSelectedEmpresa={setSelectedEmpresa}
+          selectedGrupo={selectedGrupo}
+          setSelectedGrupo={setSelectedGrupo}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          showFilters={showFilters}
+          setShowFilters={setShowFilters}
+          addToCart={addToCart}
+          removeFromCart={removeFromCart}
+          updateQuantity={updateQuantity}
+          setCartItems={setCartItems}
+          getTotal={getTotal}
+          valorComRegras={valorComRegras}
+          regrasAplicadas={regrasAplicadas}
+          selectedProduto={selectedProduto}
+          setSelectedProduto={setSelectedProduto}
+          handleSaveOrcamento={handleFinalize}
+          loading={loading}
+          onClose={onClose}
+          showPhotoModal={showPhotoModal}
+          setShowPhotoModal={setShowPhotoModal}
+          handleItemsExtracted={handleItemsExtracted}
+          autoRouteInfo={autoRouteInfo}
+          routeLoading={routeLoading}
+          freteIdaEVolta={freteIdaEVolta}
+          pedagioResult={pedagioResult}
+          freteResult={freteResult}
+          setShowConjuntoDialog={setShowConjuntoDialog}
+          gruposQuantities={gruposQuantities}
+          setGruposQuantities={setGruposQuantities}
+        />
+        
+        {/* Dialogs também para mobile */}
+        <ConjuntoSelectorDialog
+          open={showConjuntoDialog}
+          onClose={() => setShowConjuntoDialog(false)}
+          onConfirm={handleConjuntoConfirm}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
