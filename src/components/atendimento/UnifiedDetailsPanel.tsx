@@ -75,8 +75,8 @@ export function UnifiedDetailsPanel({
   };
 
   if (!nome && !protocolo && !titulo) {
-  return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+    return (
+      <div className="w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
         <div className="p-4 text-center text-muted-foreground flex-1 flex items-center justify-center">
           <div>
             {getIcon()}
@@ -88,7 +88,7 @@ export function UnifiedDetailsPanel({
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+    <div className="w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
       {/* Header com avatar e nome */}
       <div className="p-4 border-b flex-shrink-0">
         <div className="flex flex-col items-center">
