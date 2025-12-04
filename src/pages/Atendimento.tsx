@@ -3293,9 +3293,34 @@ ${recentMessages}
         ) : !orcamentoSheetOpen ? (
           <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
             <div className="text-center">
-              <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
-              <p className="text-lg font-medium mb-2">Selecione uma conversa</p>
-              <p className="text-sm">Escolha uma conversa da lista para começar o atendimento</p>
+              {activeTab === "chat" && (
+                <>
+                  <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+                  <p className="text-lg font-medium mb-2">Selecione uma conversa</p>
+                  <p className="text-sm">Escolha uma conversa da lista para começar o atendimento</p>
+                </>
+              )}
+              {activeTab === "agenda" && (
+                <>
+                  <Calendar className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+                  <p className="text-lg font-medium mb-2">Selecione uma tarefa</p>
+                  <p className="text-sm">Escolha uma tarefa da agenda para ver os detalhes</p>
+                </>
+              )}
+              {activeTab === "email" && (
+                <>
+                  <Inbox className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+                  <p className="text-lg font-medium mb-2">Selecione um email</p>
+                  <p className="text-sm">Escolha um email da lista para visualizar</p>
+                </>
+              )}
+              {activeTab === "orcamento" && (
+                <>
+                  <Receipt className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+                  <p className="text-lg font-medium mb-2">Selecione um orçamento</p>
+                  <p className="text-sm">Escolha um orçamento da lista para gerenciar</p>
+                </>
+              )}
             </div>
           </div>
         ) : null}
