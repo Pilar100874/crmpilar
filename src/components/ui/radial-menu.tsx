@@ -323,10 +323,11 @@ export function RadialMenu({
               <AnimatePresence>
                 {hoveredIndex !== null && (
                   <motion.div
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 5 }}
-                    className="absolute left-1/2 -translate-x-1/2 -bottom-8 px-3 py-1.5 bg-popover text-popover-foreground text-sm font-medium rounded-md shadow-lg border whitespace-nowrap"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-4 py-2.5 bg-primary text-primary-foreground text-sm font-medium rounded-xl shadow-xl shadow-primary/20 whitespace-nowrap"
                   >
                     {currentItems[hoveredIndex].label}
                   </motion.div>
