@@ -854,8 +854,6 @@ export default function ChatInput({
                 className={cn(
                   "absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5 z-[200]",
                   "transition-all duration-300 origin-bottom",
-                  "max-h-[60vh] overflow-y-auto overflow-x-visible",
-                  "scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent",
                   showToolsMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
                 )}
               >
