@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
+import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OmnichannelManager } from "@/components/atendimento/OmnichannelManager";
@@ -2618,35 +2619,19 @@ ${recentMessages}
             </div>
 
             {/* Client Details Panel - Agenda */}
-            {showClientDetailsAgenda && selectedTaskData?.customers && (
-              <ClientDetailsPanel
-                customer={{
-                  id: selectedTaskData.customers.id,
-                  nome: selectedTaskData.customers.nome,
-                  telefone: selectedTaskData.customers.telefone,
-                  email: selectedTaskData.customers.email,
-                  custom_fields: selectedTaskData.customers.custom_fields
-                }}
-                additionalInfo={
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Tarefa</p>
-                      <p className="text-sm font-medium">{selectedTaskData.title}</p>
-                    </div>
-                    {selectedTaskData.description && (
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Descrição</p>
-                        <p className="text-sm">{selectedTaskData.description}</p>
-                      </div>
-                    )}
-                    {selectedTaskData.date && (
-                      <div>
-                        <p className="text-xs text-muted-foreground mb-1">Data</p>
-                        <p className="text-sm">{format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</p>
-                      </div>
-                    )}
-                  </div>
-                }
+            {showClientDetailsAgenda && selectedTaskData && (
+              <UnifiedDetailsPanel
+                type="agenda"
+                nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
+                telefone={selectedTaskData.customers?.telefone}
+                email={selectedTaskData.customers?.email}
+                protocolo={selectedTaskData.id?.slice(0, 8).toUpperCase()}
+                status={selectedTaskData.status}
+                titulo={selectedTaskData.title}
+                descricao={selectedTaskData.description}
+                dataHora={selectedTaskData.date ? format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : undefined}
+                companies={selectedTaskData.customers?.customer_empresas || []}
+                onAddCompany={() => setShowNovoContatoDialog(true)}
               />
             )}
           </TabsContent>
@@ -2738,35 +2723,21 @@ ${recentMessages}
             </div>
 
             {/* Client Details Panel - Email */}
-            {showClientDetailsEmail && selectedEmailData?.customer && (
-              <ClientDetailsPanel
-                customer={{
-                  id: selectedEmailData.customer.id,
-                  nome: selectedEmailData.customer.nome,
-                  telefone: selectedEmailData.customer.telefone,
-                  email: selectedEmailData.customer.email,
-                  custom_fields: selectedEmailData.customer.custom_fields
-                }}
-                companies={selectedEmailData.customer.customer_empresas?.map((ce: any) => ({
+            {showClientDetailsEmail && selectedEmailData && (
+              <UnifiedDetailsPanel
+                type="email"
+                nome={selectedEmailData.customer?.nome || selectedEmailData.from_email}
+                telefone={selectedEmailData.customer?.telefone}
+                email={selectedEmailData.from_email}
+                protocolo={selectedEmailData.id?.slice(0, 8).toUpperCase()}
+                status={selectedEmailData.read ? "Lido" : "Não lido"}
+                titulo={selectedEmailData.subject}
+                dataHora={format(new Date(selectedEmailData.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                companies={selectedEmailData.customer?.customer_empresas?.map((ce: any) => ({
                   ...ce,
                   empresas: ce.empresas
                 })) || []}
-                additionalInfo={
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Assunto</p>
-                      <p className="text-sm font-medium">{selectedEmailData.subject}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">De</p>
-                      <p className="text-sm">{selectedEmailData.from_email}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1">Data</p>
-                      <p className="text-sm">{format(new Date(selectedEmailData.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}</p>
-                    </div>
-                  </div>
-                }
+                onAddCompany={() => setShowNovoContatoDialog(true)}
               />
             )}
           </TabsContent>
@@ -3340,170 +3311,28 @@ ${recentMessages}
             />
           </div>
 
-          {/* Header com nome do cliente */}
-          <div className="p-3 md:p-4 border-b flex-shrink-0">
-            <div className="flex flex-col items-center mb-3 md:mb-4">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-2">
-                <User className="w-8 h-8 md:w-10 md:h-10 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg">{selectedConv.customer?.nome || "Cliente"}</h3>
-              {selectedConv.customer?.telefone && (
-                <div className="flex gap-2 mt-2 text-xs">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-auto py-1 px-2 text-xs text-muted-foreground hover:text-primary"
-                    onClick={() => {
-                      setSoftphoneNumber(selectedConv.customer?.telefone || "");
-                      setShowSoftphone(true);
-                    }}
-                  >
-                    <Phone className="w-3 h-3 mr-1" />
-                    {selectedConv.customer?.telefone}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Resumo da Empresa */}
-          <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain p-4 space-y-4">
-            {/* Seção de Empresas */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-sm flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-primary" />
-                  Empresas Vinculadas
-                </h4>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 w-7 p-0 rounded-full"
-                  onClick={() => setShowNovoContatoDialog(true)}
-                >
-                  <Plus className="w-4 h-4 text-primary" />
-                </Button>
-              </div>
-
-              {customerCompanies.length > 0 ? (
-                <div className="space-y-2">
-                  {customerCompanies.map((companyRel: any) => {
-                    const empresa = companyRel.empresas;
-                    return (
-                      <Card key={companyRel.empresa_id} className="p-3 rounded-2xl">
-                        <div className="space-y-2">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <p className="font-medium text-sm truncate">
-                                  {empresa?.nome_fantasia || empresa?.nome}
-                                </p>
-                                {companyRel.is_primary && (
-                                  <Badge variant="secondary" className="text-xs h-5 bg-orange-500 text-white">
-                                    Principal
-                                  </Badge>
-                                )}
-                              </div>
-                              {empresa?.cnpj && (
-                                <p className="text-xs text-muted-foreground">
-                                  CNPJ: {empresa.cnpj}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
-                          {companyRel.cargo && (
-                            <div className="flex items-center gap-2 text-xs">
-                              <span className="text-muted-foreground">Cargo:</span>
-                              <span className="font-medium">{companyRel.cargo}</span>
-                            </div>
-                          )}
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              ) : (
-                <Card className="p-4 rounded-2xl">
-                  <div className="text-center">
-                    <Building2 className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
-                    <p className="text-xs text-muted-foreground">
-                      Nenhuma empresa vinculada
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="mt-2 h-7 text-xs"
-                      onClick={() => setShowNovoContatoDialog(true)}
-                    >
-                      Vincular empresa
-                    </Button>
-                  </div>
-                </Card>
-              )}
-            </div>
-
-            {/* Informações da Conversa */}
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm">Informações da Conversa</h4>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between py-2 border-b">
-                  <span className="text-muted-foreground text-xs">Protocolo</span>
-                  <span className="font-medium text-xs">{selectedConv.id.slice(0, 8).toUpperCase()}</span>
-                </div>
-
-                <div className="flex items-center justify-between py-2 border-b">
-                  <span className="text-muted-foreground text-xs">Canal</span>
-                  <Badge variant="secondary" className="bg-green-500 text-white text-xs h-5">
-                    {selectedConv.canal}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between py-2 border-b">
-                  <span className="text-muted-foreground text-xs">Data/Hora</span>
-                  <span className="text-xs">
-                    {format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between py-2 border-b">
-                  <span className="text-muted-foreground text-xs">Email</span>
-                  <span className="text-xs truncate max-w-[60%]">
-                    {selectedConv.customer?.email || "-"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Ações Rápidas */}
-          <div className="border-t p-4 flex-shrink-0 space-y-2">
-            <Button
-              className="w-full rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-              onClick={() => {
-                if (selectedConv.customer?.id) {
-                  navigate(`/orcamentos?cliente_id=${selectedConv.customer.id}`);
-                }
-              }}
-            >
-              <Receipt className="w-4 h-4 mr-2" />
-              Abrir Orçamento
-            </Button>
-            
-            <Button
-              className="w-full rounded-full"
-              variant="outline"
-              onClick={() => {
-                if (selectedConv.customer?.email) {
-                  navigate(`/email?filter=${encodeURIComponent(selectedConv.customer.email)}`);
-                }
-              }}
-            >
-              <Inbox className="w-4 h-4 mr-2" />
-              Ver Emails
-            </Button>
-          </div>
+          <UnifiedDetailsPanel
+            type="chat"
+            nome={selectedConv.customer?.nome || "Cliente"}
+            telefone={selectedConv.customer?.telefone}
+            email={selectedConv.customer?.email}
+            protocolo={selectedConv.id.slice(0, 8).toUpperCase()}
+            status={selectedConv.chat_status || selectedConv.status}
+            canal={selectedConv.canal}
+            dataHora={format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+            companies={customerCompanies}
+            onAddCompany={() => setShowNovoContatoDialog(true)}
+            onOpenOrcamento={() => {
+              if (selectedConv.customer?.id) {
+                navigate(`/orcamentos?cliente_id=${selectedConv.customer.id}`);
+              }
+            }}
+            onOpenEmail={() => {
+              if (selectedConv.customer?.email) {
+                navigate(`/email?filter=${encodeURIComponent(selectedConv.customer.email)}`);
+              }
+            }}
+          />
         </div>
       )}
       
@@ -3544,31 +3373,16 @@ ${recentMessages}
 
           {/* Client Details Panel - Orçamento */}
           {showClientDetailsOrcamento && selectedOrcamentoData && (
-            <ClientDetailsPanel
-              customer={{
-                id: selectedOrcamentoData.customers?.id || selectedOrcamentoData.empresas?.id,
-                nome: selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente",
-                telefone: selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone,
-                email: selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email
-              }}
-              additionalInfo={
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Protocolo</p>
-                    <p className="text-sm font-mono">{selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Status</p>
-                    <Badge variant="secondary">{selectedOrcamentoData.etapa || selectedOrcamentoData.status}</Badge>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Valor Total</p>
-                    <p className="text-sm font-semibold text-primary">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedOrcamentoData.valor_total || 0)}
-                    </p>
-                  </div>
-                </div>
-              }
+            <UnifiedDetailsPanel
+              type="orcamento"
+              nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente"}
+              telefone={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
+              email={selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email}
+              protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
+              status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
+              valorTotal={selectedOrcamentoData.valor_total || 0}
+              companies={[]}
+              onAddCompany={() => setShowNovoContatoDialog(true)}
             />
           )}
         </>
