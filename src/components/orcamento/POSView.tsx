@@ -7,6 +7,7 @@ import { usePedagioCalculation } from "@/hooks/usePedagioCalculation";
 import { useRouteCalculation } from "@/hooks/useRouteCalculation";
 import { useRouteAddresses } from "@/hooks/useRouteAddresses";
 import { calculateFreteCost, VeiculoConfig, ViagemInput, FreteResult } from "@/hooks/useFreteCalculation";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -102,6 +103,9 @@ export default function POSView({
   showPanelToggle = false,
   onTogglePanel
 }: POSViewProps) {
+  const isMobile = useIsMobile();
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const isCompact = isMobile || windowWidth < 1024;
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [grupos, setGrupos] = useState<any[]>([]);
   const [empresas, setEmpresas] = useState<any[]>([]);
@@ -159,6 +163,13 @@ export default function POSView({
   const [numAjudantes, setNumAjudantes] = useState(0);
   const [veiculoConfig, setVeiculoConfig] = useState<VeiculoConfig | null>(null);
   const [showFreteDetailedInTab, setShowFreteDetailedInTab] = useState(false);
+
+  // Resize handler for responsiveness
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Hook para buscar endereços automaticamente quando empresa muda
   const routeAddresses = useRouteAddresses(selectedEmpresa || null);
@@ -803,66 +814,69 @@ export default function POSView({
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
+    <div className="flex flex-col h-full bg-gray-100">
       <div className="flex flex-1 overflow-hidden">
         {/* Grade de Produtos - Lado Esquerdo */}
-        <div className="flex-1 flex flex-col bg-gray-100">
-        {/* Header de Busca e Filtros */}
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center gap-3 mb-3">
+        <div className="flex-1 flex flex-col bg-gray-100 min-w-0">
+        {/* Header de Busca e Filtros - Responsivo */}
+        <div className={`${isCompact ? 'p-2' : 'p-4'} border-b border-border bg-white/80`}>
+          {/* Primeira linha: Busca + Botões principais */}
+          <div className={`flex items-center gap-2 ${isCompact ? 'flex-wrap' : ''}`}>
             {showPanelToggle && onTogglePanel && (
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={onTogglePanel}
-                className="h-12 w-12 p-0 rounded-full bg-white/90 shadow-md hover:bg-white border border-border/50 flex-shrink-0"
+                className={`${isCompact ? 'h-10 w-10' : 'h-12 w-12'} p-0 rounded-full bg-white/90 shadow-md hover:bg-white border border-border/50 flex-shrink-0`}
                 title="Abrir painel"
               >
-                <PanelLeft className="h-5 w-5" />
+                <PanelLeft className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'}`} />
               </Button>
             )}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <div className={`relative ${isCompact ? 'flex-1 min-w-[150px]' : 'flex-1'}`}>
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${isCompact ? 'w-4 h-4' : 'w-5 h-5'} text-muted-foreground`} />
               <Input
                 placeholder="Buscar produtos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-background border-border placeholder:text-muted-foreground h-12 text-base"
+                className={`pl-10 bg-background border-border placeholder:text-muted-foreground ${isCompact ? 'h-10 text-sm' : 'h-12 text-base'}`}
               />
             </div>
-            <div className="flex gap-2">
+            
+            {/* Botões de ação - compactados em mobile */}
+            <div className={`flex gap-1.5 ${isCompact ? 'flex-shrink-0' : 'gap-2'}`}>
               <Button
                 variant="outline"
                 size="icon"
-                className="bg-background border-border hover:bg-muted"
+                className={`bg-background border-border hover:bg-muted ${isCompact ? 'h-10 w-10' : ''}`}
                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
               >
-                {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
+                {viewMode === 'grid' ? <List className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
               </Button>
               <Button
                 variant="outline"
-                className="bg-background border-border hover:bg-muted"
+                size="icon"
+                className={`bg-background border-border hover:bg-muted ${isCompact ? 'h-10 w-10' : ''}`}
                 onClick={() => setShowFilters(!showFilters)}
               >
-                Filtros {showFilters ? '▲' : '▼'}
+                <Filter className="w-4 h-4" />
               </Button>
-            </div>
-            <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="bg-background border-border hover:bg-muted"
+                size="icon"
+                className={`bg-background border-border hover:bg-muted ${isCompact ? 'h-10 w-10' : ''}`}
                 onClick={() => setShowConjuntoDialog(true)}
               >
-                <Package className="w-4 h-4 mr-2" />
-                Usar Conjunto
+                <Package className="w-4 h-4" />
               </Button>
               {onClose && (
                 <Button 
                   variant="outline" 
-                  className="bg-background border-border hover:bg-muted"
+                  size="icon"
+                  className={`bg-background border-border hover:bg-muted ${isCompact ? 'h-10 w-10' : ''}`}
                   onClick={onClose}
                 >
-                  Voltar
+                  <X className="w-4 h-4" />
                 </Button>
               )}
             </div>
@@ -1125,7 +1139,7 @@ export default function POSView({
         {conjuntoItens.length === 0 && (
         <ScrollArea className="flex-1 p-4">
           {viewMode === 'grid' ? (
-            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
+            <div className={`grid gap-2 ${isCompact ? 'grid-cols-2' : 'grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3'}`}>
               {filteredProdutos.map((produto) => {
                 const quantity = gruposQuantities.get(produto.id) || 1;
                 return (
