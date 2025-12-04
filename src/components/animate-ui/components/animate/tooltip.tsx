@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
-import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const TooltipProvider = TooltipPrimitive.Provider;
@@ -15,83 +14,28 @@ interface TooltipProps {
   delayDuration?: number;
 }
 
-interface TooltipContextValue {
-  open: boolean;
-  side: 'top' | 'bottom' | 'left' | 'right';
-  sideOffset: number;
-}
-
-const TooltipContext = React.createContext<TooltipContextValue>({
-  open: false,
-  side: 'top',
-  sideOffset: 4,
-});
-
 const Tooltip = ({ 
   children, 
-  open: controlledOpen,
-  defaultOpen = false,
+  open,
+  defaultOpen,
   onOpenChange,
   delayDuration,
 }: TooltipProps) => {
-  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen);
-  
-  const isControlled = controlledOpen !== undefined;
-  const open = isControlled ? controlledOpen : uncontrolledOpen;
-  
-  const handleOpenChange = React.useCallback((newOpen: boolean) => {
-    if (!isControlled) {
-      setUncontrolledOpen(newOpen);
-    }
-    onOpenChange?.(newOpen);
-  }, [isControlled, onOpenChange]);
-
   return (
-    <TooltipContext.Provider value={{ open, side: 'top', sideOffset: 4 }}>
-      <TooltipPrimitive.Root 
-        open={open} 
-        onOpenChange={handleOpenChange}
-        delayDuration={delayDuration}
-      >
-        {children}
-      </TooltipPrimitive.Root>
-    </TooltipContext.Provider>
+    <TooltipPrimitive.Root 
+      open={open} 
+      defaultOpen={defaultOpen} 
+      onOpenChange={onOpenChange}
+      delayDuration={delayDuration}
+    >
+      {children}
+    </TooltipPrimitive.Root>
   );
 };
 
 const TooltipTrigger = TooltipPrimitive.Trigger;
 
-const getAnimationVariants = (side: 'top' | 'bottom' | 'left' | 'right' = 'top') => {
-  const offset = 6;
-  switch (side) {
-    case 'top':
-      return {
-        initial: { opacity: 0, y: offset, scale: 0.96 },
-        animate: { opacity: 1, y: 0, scale: 1 },
-        exit: { opacity: 0, y: offset, scale: 0.96 },
-      };
-    case 'bottom':
-      return {
-        initial: { opacity: 0, y: -offset, scale: 0.96 },
-        animate: { opacity: 1, y: 0, scale: 1 },
-        exit: { opacity: 0, y: -offset, scale: 0.96 },
-      };
-    case 'left':
-      return {
-        initial: { opacity: 0, x: offset, scale: 0.96 },
-        animate: { opacity: 1, x: 0, scale: 1 },
-        exit: { opacity: 0, x: offset, scale: 0.96 },
-      };
-    case 'right':
-      return {
-        initial: { opacity: 0, x: -offset, scale: 0.96 },
-        animate: { opacity: 1, x: 0, scale: 1 },
-        exit: { opacity: 0, x: -offset, scale: 0.96 },
-      };
-  }
-};
-
-interface TooltipContentProps extends Omit<React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>, 'children'> {
+interface TooltipContentProps extends React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content> {
   className?: string;
   children?: React.ReactNode;
 }
@@ -100,42 +44,29 @@ const TooltipContent = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,
   TooltipContentProps
 >(({ className, children, side = 'top', sideOffset = 4, ...props }, ref) => {
-  const { open } = React.useContext(TooltipContext);
-  const variants = getAnimationVariants(side);
-
   return (
-    <AnimatePresence>
-      {open && (
-        <TooltipPrimitive.Portal forceMount>
-          <TooltipPrimitive.Content
-            ref={ref}
-            side={side}
-            sideOffset={sideOffset}
-            forceMount
-            asChild
-            {...props}
-          >
-            <motion.div
-              initial={variants.initial}
-              animate={variants.animate}
-              exit={variants.exit}
-              transition={{
-                type: 'spring',
-                stiffness: 400,
-                damping: 25,
-                mass: 0.5,
-              }}
-              className={cn(
-                'z-[9999] overflow-hidden rounded-lg border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-lg',
-                className
-              )}
-            >
-              {children}
-            </motion.div>
-          </TooltipPrimitive.Content>
-        </TooltipPrimitive.Portal>
-      )}
-    </AnimatePresence>
+    <TooltipPrimitive.Portal>
+      <TooltipPrimitive.Content
+        ref={ref}
+        side={side}
+        sideOffset={sideOffset}
+        className={cn(
+          'z-[9999] overflow-hidden rounded-lg border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-lg',
+          // Animation classes
+          'animate-in fade-in-0 zoom-in-95',
+          'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
+          // Side-specific slide animations
+          'data-[side=top]:slide-in-from-bottom-2',
+          'data-[side=bottom]:slide-in-from-top-2',
+          'data-[side=left]:slide-in-from-right-2',
+          'data-[side=right]:slide-in-from-left-2',
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </TooltipPrimitive.Content>
+    </TooltipPrimitive.Portal>
   );
 });
 TooltipContent.displayName = 'TooltipContent';
