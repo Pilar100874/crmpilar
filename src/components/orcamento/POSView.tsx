@@ -1850,34 +1850,6 @@ export default function POSView({
                       </Button>
                     </div>
                   )}
-
-                  {/* Regras Aplicadas */}
-                  {regrasAplicadas.length > 0 && (
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-lg p-3 border border-green-200/50 dark:border-green-800/50">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-semibold text-green-700 dark:text-green-300 flex items-center gap-2">
-                          <Tag className="w-3.5 h-3.5" />
-                          Regras Aplicadas
-                        </h4>
-                        <Badge variant="secondary" className="text-[10px] bg-green-100 text-green-700">
-                          {regrasAplicadas.length}
-                        </Badge>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full h-7 text-xs text-primary mt-2"
-                        onClick={() => {
-                          setSelectedProduto(null);
-                          setShowFreteInDetails(false);
-                          setShowRegrasInDetails(true);
-                          setActiveTab("details");
-                        }}
-                      >
-                        Ver regras
-                      </Button>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground">
