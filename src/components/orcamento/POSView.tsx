@@ -158,6 +158,7 @@ export default function POSView({
   const [freteResult, setFreteResult] = useState<FreteResult | null>(null);
   const [numAjudantes, setNumAjudantes] = useState(0);
   const [veiculoConfig, setVeiculoConfig] = useState<VeiculoConfig | null>(null);
+  const [showFreteDetailedInTab, setShowFreteDetailedInTab] = useState(false);
 
   // Hook para buscar endereços automaticamente quando empresa muda
   const routeAddresses = useRouteAddresses(selectedEmpresa || null);
@@ -1724,7 +1725,20 @@ export default function POSView({
           {/* Aba Frete */}
           <TabsContent value="frete" className="flex-1 m-0 overflow-hidden">
             <ScrollArea className="h-[calc(100vh-280px)] p-2">
-              {selectedEmpresa ? (
+              {showFreteDetailedInTab && freteResult ? (
+                <div className="space-y-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs mb-2 -ml-1"
+                    onClick={() => setShowFreteDetailedInTab(false)}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
+                    Voltar
+                  </Button>
+                  <FreteDetailsPanel freteResult={freteResult} />
+                </div>
+              ) : selectedEmpresa ? (
                 <div className="space-y-3">
                   {/* Opções de Frete */}
                   <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
@@ -1839,12 +1853,7 @@ export default function POSView({
                         variant="ghost"
                         size="sm"
                         className="w-full h-7 text-xs text-primary"
-                        onClick={() => {
-                          setSelectedProduto(null);
-                          setShowRegrasInDetails(false);
-                          setShowFreteInDetails(true);
-                          setActiveTab("details");
-                        }}
+                        onClick={() => setShowFreteDetailedInTab(true)}
                       >
                         Ver composição detalhada
                       </Button>
