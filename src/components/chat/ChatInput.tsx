@@ -878,7 +878,7 @@ export default function ChatInput({
               <Label className="text-sm font-medium">Relatórios Importados</Label>
               {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
               {importReports.length > 0 ? (
-                <div className="max-h-48 overflow-y-auto space-y-2">
+                <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
                   {importReports.map((report) => (
                     <div key={report.id} className="flex items-center justify-between p-2 rounded-lg border hover:bg-muted/50">
                       <span className="text-sm truncate flex-1">{report.nome}</span>
