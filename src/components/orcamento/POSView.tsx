@@ -1336,13 +1336,17 @@ export default function POSView({
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
           <div className="border-b border-border flex items-center justify-between px-2 py-1">
             <TabsList className="bg-transparent h-10 rounded-none flex-1">
-              <TabsTrigger value="cart" className="data-[state=active]:bg-muted text-xs flex-1">
-                <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
-                Carrinho
-              </TabsTrigger>
               <TabsTrigger value="details" className="data-[state=active]:bg-muted text-xs flex-1">
                 <Tag className="w-3.5 h-3.5 mr-1.5" />
                 Detalhes
+              </TabsTrigger>
+              <TabsTrigger value="frete" className="data-[state=active]:bg-muted text-xs flex-1">
+                <Truck className="w-3.5 h-3.5 mr-1.5" />
+                Frete
+              </TabsTrigger>
+              <TabsTrigger value="cart" className="data-[state=active]:bg-muted text-xs flex-1">
+                <ShoppingCart className="w-3.5 h-3.5 mr-1.5" />
+                Carrinho
               </TabsTrigger>
             </TabsList>
             {onToggleClientDetails && (
@@ -1716,6 +1720,174 @@ export default function POSView({
               )}
             </ScrollArea>
           </TabsContent>
+
+          {/* Aba Frete */}
+          <TabsContent value="frete" className="flex-1 m-0 overflow-hidden">
+            <ScrollArea className="h-[calc(100vh-280px)] p-2">
+              {selectedEmpresa ? (
+                <div className="space-y-3">
+                  {/* Opções de Frete */}
+                  <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-xs font-semibold text-foreground flex items-center gap-2">
+                        <Truck className="w-4 h-4 text-primary" />
+                        Configurações
+                      </h4>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={freteIdaEVolta}
+                        onChange={(e) => setFreteIdaEVolta(e.target.checked)}
+                        className="w-4 h-4 rounded accent-primary"
+                      />
+                      <span className="text-xs text-foreground">Calcular ida e volta</span>
+                    </label>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Ajudantes:</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="10"
+                        value={numAjudantes}
+                        onChange={(e) => setNumAjudantes(parseInt(e.target.value) || 0)}
+                        className="w-16 h-7 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Distância e Tempo */}
+                  <div className="bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-950/30 dark:to-slate-950/30 rounded-lg p-3 border border-blue-200/50 dark:border-blue-800/50">
+                    <h4 className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-2">Rota</h4>
+                    {(routeAddresses.loading || routeLoading) ? (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Calculando rota...</span>
+                      </div>
+                    ) : autoRouteInfo ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">Distância</p>
+                          <p className="text-lg font-bold text-foreground">{autoRouteInfo.distance.toFixed(0)} km</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">Tempo estimado</p>
+                          <p className="text-lg font-bold text-foreground">
+                            {Math.floor(autoRouteInfo.duration / 60)}h {Math.round(autoRouteInfo.duration % 60)}min
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">Selecione uma empresa para calcular a rota</p>
+                    )}
+                  </div>
+
+                  {/* Pedágio */}
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-lg p-3 border border-amber-200/50 dark:border-amber-800/50">
+                    <h4 className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-2">Pedágio</h4>
+                    {!pedagioResult.calculated ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full h-8 text-xs"
+                        onClick={() => pedagioResult.calculate()}
+                        disabled={pedagioResult.loading || !autoRouteInfo}
+                      >
+                        {pedagioResult.loading ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
+                            Calculando...
+                          </>
+                        ) : 'Calcular Pedágios'}
+                      </Button>
+                    ) : pedagioResult.error ? (
+                      <p className="text-xs text-destructive">{pedagioResult.error}</p>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Total</span>
+                          <span className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pedagioResult.total)}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full h-7 text-xs text-primary"
+                          onClick={() => {
+                            setPedagioDialogDefaultTab("map");
+                            setShowPedagioDetailsDialog(true);
+                          }}
+                        >
+                          Ver detalhes
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Custo do Frete */}
+                  {freteResult && (
+                    <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 rounded-lg p-3 border border-emerald-200/50 dark:border-emerald-800/50">
+                      <h4 className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 mb-2">Custo do Frete</h4>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-muted-foreground">Total</span>
+                        <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(freteResult.custoTotal)}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full h-7 text-xs text-primary"
+                        onClick={() => {
+                          setSelectedProduto(null);
+                          setShowRegrasInDetails(false);
+                          setShowFreteInDetails(true);
+                          setActiveTab("details");
+                        }}
+                      >
+                        Ver composição detalhada
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Regras Aplicadas */}
+                  {regrasAplicadas.length > 0 && (
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-lg p-3 border border-green-200/50 dark:border-green-800/50">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-semibold text-green-700 dark:text-green-300 flex items-center gap-2">
+                          <Tag className="w-3.5 h-3.5" />
+                          Regras Aplicadas
+                        </h4>
+                        <Badge variant="secondary" className="text-[10px] bg-green-100 text-green-700">
+                          {regrasAplicadas.length}
+                        </Badge>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full h-7 text-xs text-primary mt-2"
+                        onClick={() => {
+                          setSelectedProduto(null);
+                          setShowFreteInDetails(false);
+                          setShowRegrasInDetails(true);
+                          setActiveTab("details");
+                        }}
+                      >
+                        Ver regras
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground">
+                  <Truck className="w-12 h-12 mb-3 opacity-20" />
+                  <p className="text-xs text-center">Selecione uma empresa</p>
+                  <p className="text-xs text-center mt-1">para calcular o frete</p>
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
         </Tabs>
 
         {/* Empresa e Botões de Ação */}
@@ -1920,141 +2092,41 @@ export default function POSView({
         </div>
       </div>
 
-      {/* Barra de Total Inferior */}
-      <div className="bg-gradient-to-r from-card to-slate-50/80 border-t border-border/50 px-4 py-3 flex items-center justify-between gap-4 shadow-lg">
-        {/* Total e Rota lado a lado */}
-        <div className="flex items-center gap-4 flex-1 min-w-0 overflow-x-auto">
-          {/* Total */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="text-muted-foreground text-xs uppercase tracking-wide font-medium">Total</div>
-            {regrasAplicadas.length > 0 ? (
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground/60 font-medium text-base line-through">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(getTotal())}
-                </span>
-                <span className="text-emerald-600 font-bold text-xl flex items-center gap-1.5">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorComRegras)}
-                  <span 
-                    className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white text-[11px] font-bold flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
-                    onClick={() => {
-                      setSelectedProduto(null);
-                      setShowFreteInDetails(false);
-                      setShowRegrasInDetails(true);
-                      setActiveTab("details");
-                    }}
-                    title={`${regrasAplicadas.length} regra(s) aplicada(s)`}
-                  >
-                    {regrasAplicadas.length}
-                  </span>
-                </span>
-              </div>
-            ) : (
-              <span className="text-foreground font-bold text-xl">
+      {/* Barra de Total Inferior - Simplificada */}
+      <div className="bg-gradient-to-r from-card via-slate-50/80 to-card border-t border-border/50 px-4 py-3 flex items-center justify-between gap-4 shadow-lg">
+        {/* Total */}
+        <div className="flex items-center gap-3">
+          <div className="text-muted-foreground text-xs uppercase tracking-wide font-medium">Total do Pedido</div>
+          {regrasAplicadas.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground/60 font-medium text-base line-through">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(getTotal())}
               </span>
-            )}
-          </div>
-
-          {/* Rota & Pedágio */}
-          {selectedEmpresa && (
-            <>
-              <div className="h-8 w-px bg-border/40 flex-shrink-0" />
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <Truck className="w-4 h-4 text-primary" />
-                <label className="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
-                  <input
-                    type="checkbox"
-                    checked={freteIdaEVolta}
-                    onChange={(e) => setFreteIdaEVolta(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded accent-primary"
-                  />
-                  <span>Ida e volta</span>
-                </label>
-              </div>
-
-              {/* Distância e tempo */}
-              {(routeAddresses.loading || routeLoading) ? (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Calculando...</span>
-                </div>
-              ) : autoRouteInfo && (
-                <div className="flex items-center gap-3 text-xs flex-shrink-0 bg-slate-100/80 px-2.5 py-1 rounded-md">
-                  <span className="font-semibold text-foreground">{autoRouteInfo.distance.toFixed(0)} km</span>
-                  <span className="text-muted-foreground">
-                    {Math.floor(autoRouteInfo.duration / 60)}h {Math.round(autoRouteInfo.duration % 60)}min
-                  </span>
-                </div>
-              )}
-
-              {/* Pedágio */}
-              {!pedagioResult.calculated ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs px-3 flex-shrink-0"
-                  onClick={() => pedagioResult.calculate()}
-                  disabled={pedagioResult.loading}
+              <span className="text-emerald-600 font-bold text-2xl flex items-center gap-1.5">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorComRegras)}
+                <span 
+                  className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white text-[11px] font-bold flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+                  onClick={() => setActiveTab("frete")}
+                  title={`${regrasAplicadas.length} regra(s) aplicada(s)`}
                 >
-                  {pedagioResult.loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Ver Pedágios'}
-                </Button>
-              ) : pedagioResult.total > 0 && !pedagioResult.error && (
-                <div 
-                  className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 flex-shrink-0 bg-primary/5 px-2.5 py-1 rounded-md"
-                  onClick={() => {
-                    setPedagioDialogDefaultTab("map");
-                    setShowPedagioDetailsDialog(true);
-                  }}
-                >
-                  <span className="text-xs text-muted-foreground">Pedágio:</span>
-                  <span className="text-sm font-semibold text-primary">
-                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pedagioResult.total)}
-                  </span>
-                </div>
-              )}
-
-              {/* Frete */}
-              {freteResult && (
-                <>
-                  <div className="h-6 w-px bg-border/40 flex-shrink-0" />
-                  <div 
-                    className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 flex-shrink-0 bg-emerald-50/80 px-2.5 py-1 rounded-md"
-                    onClick={() => {
-                      setSelectedProduto(null);
-                      setShowRegrasInDetails(false);
-                      setShowFreteInDetails(true);
-                      setActiveTab("details");
-                    }}
-                  >
-                    <span className="text-xs text-muted-foreground">Frete:</span>
-                    <span className="text-sm font-semibold text-emerald-600">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(freteResult.custoTotal)}
-                    </span>
-                  </div>
-                  <label className="flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">
-                    <span>Ajudantes:</span>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="10"
-                      value={numAjudantes}
-                      onChange={(e) => setNumAjudantes(parseInt(e.target.value) || 0)}
-                      className="w-12 h-6 text-xs p-1"
-                    />
-                  </label>
-                </>
-              )}
-            </>
+                  {regrasAplicadas.length}
+                </span>
+              </span>
+            </div>
+          ) : (
+            <span className="text-foreground font-bold text-2xl">
+              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(getTotal())}
+            </span>
           )}
         </div>
         
         <Button 
-          className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary h-10 px-5 text-sm font-semibold shadow-lg shadow-primary/25 rounded-lg flex-shrink-0"
+          className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary h-11 px-6 text-sm font-semibold shadow-lg shadow-primary/25 rounded-lg"
           onClick={handleFinalize}
           disabled={loading || cartArray.length === 0 || !selectedEmpresa}
         >
-          {loading ? 'Processando...' : 'Finalizar'}
-          <span className="ml-1.5">→</span>
+          {loading ? 'Processando...' : 'Finalizar Orçamento'}
+          <span className="ml-2">→</span>
         </Button>
       </div>
 
