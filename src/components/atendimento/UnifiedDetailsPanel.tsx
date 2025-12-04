@@ -285,31 +285,6 @@ export function UnifiedDetailsPanel({
         </Collapsible>
       </div>
 
-      {/* Ações Rápidas */}
-      {(onOpenOrcamento || onOpenEmail) && (
-        <div className="border-t p-4 flex-shrink-0 space-y-2">
-          {onOpenOrcamento && (
-            <Button
-              className="w-full rounded-full bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 text-primary-foreground"
-              onClick={onOpenOrcamento}
-            >
-              <Receipt className="w-4 h-4 mr-2" />
-              Abrir Orçamento
-            </Button>
-          )}
-          
-          {onOpenEmail && (
-            <Button
-              className="w-full rounded-full"
-              variant="outline"
-              onClick={onOpenEmail}
-            >
-              <Inbox className="w-4 h-4 mr-2" />
-              Ver Emails
-            </Button>
-          )}
-        </div>
-      )}
 
       <SoftphoneDialog 
         open={showSoftphone}
