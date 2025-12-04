@@ -37,6 +37,7 @@ interface Conversation {
   customer_id: string;
   canal: string;
   status: string;
+  chat_status?: string;
   updated_at: string;
   metadata: any;
   bot_active?: boolean;
@@ -339,8 +340,11 @@ export default function Atendimento() {
   
   // Update counters when data changes
   useEffect(() => {
-    const activeCount = conversations.filter(c => c.status === 'open').length;
-    setActiveConversationsCount(activeCount);
+    // Conta apenas chats não atendidos (novo ou em fila)
+    const unattendedCount = conversations.filter(c => 
+      c.chat_status === 'novo' || c.chat_status === 'em_fila'
+    ).length;
+    setActiveConversationsCount(unattendedCount);
   }, [conversations]);
   
   useEffect(() => {
