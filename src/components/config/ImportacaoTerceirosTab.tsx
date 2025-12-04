@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { 
   ArrowLeft, ArrowRight, CheckCircle2, Plus, Pencil, Trash2, FileSpreadsheet,
-  Calendar, Globe, MoreVertical, Edit, CheckCircle, XCircle
+  Calendar, Globe, MoreVertical, Edit, CheckCircle, XCircle, FileText
 } from "lucide-react";
 import { ImportWizardStep0 } from "@/components/importacao/ImportWizardStep0";
 import { ImportWizardStep1 } from "@/components/importacao/ImportWizardStep1";
@@ -354,6 +354,131 @@ export function ImportacaoTerceirosTab({ estabelecimentoId }: ImportacaoTerceiro
     } catch (error: any) {
       console.error("Erro ao gerar Excel:", error);
       toast.error("Erro ao gerar Excel: " + (error.message || "desconhecido"));
+    }
+  };
+
+  const handleGeneratePDF = async (apiEndpoint: string, relatorioId: string) => {
+    try {
+      toast.info("Gerando PDF...");
+      
+      const { data: modelo } = await supabase
+        .from("relatorios")
+        .select("id, layout_json")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("nome", "Modelo para Produtos Importados")
+        .maybeSingle();
+
+      if (!modelo) {
+        toast.error("Modelo para produtos importados não encontrado. Crie o modelo primeiro.");
+        return;
+      }
+
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api-produtos-importados?estabelecimento_id=${estabelecimentoId}&relatorio_id=${relatorioId}`;
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao buscar dados: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data) {
+        toast.error("API retornou dados vazios");
+        return;
+      }
+
+      let records = [];
+      if (Array.isArray(data)) {
+        records = data;
+      } else if (data.data && Array.isArray(data.data)) {
+        records = data.data;
+      } else if (typeof data === 'object') {
+        records = [data];
+      }
+      
+      if (records.length === 0) {
+        toast.error("Nenhum dado encontrado na API");
+        return;
+      }
+
+      // Gerar PDF usando jsPDF
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF();
+      
+      const layoutJsonObj = typeof modelo.layout_json === 'string' 
+        ? JSON.parse(modelo.layout_json)
+        : modelo.layout_json;
+
+      const parameters = layoutJsonObj?.parameters || [];
+      const apiParam = parameters.find((p: any) => p.name === 'api_data');
+      const columnNames: string[] = [];
+
+      if (apiParam && Array.isArray(apiParam.children)) {
+        apiParam.children.forEach((child: any) => {
+          if (child.name) {
+            columnNames.push(child.name);
+          }
+        });
+      }
+
+      if (columnNames.length === 0) {
+        const firstRecord = records[0];
+        if (firstRecord) {
+          columnNames.push(...Object.keys(firstRecord));
+        }
+      }
+
+      // Configurar PDF
+      doc.setFontSize(16);
+      doc.text("Produtos Importados", 14, 20);
+      doc.setFontSize(10);
+      doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 14, 28);
+      
+      let yPosition = 40;
+      const lineHeight = 7;
+      const pageHeight = 280;
+      const margin = 14;
+      
+      // Cabeçalho da tabela
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'bold');
+      let xPosition = margin;
+      const colWidth = Math.min(40, (190 - margin) / Math.min(columnNames.length, 5));
+      
+      columnNames.slice(0, 5).forEach((col) => {
+        doc.text(col.substring(0, 15), xPosition, yPosition);
+        xPosition += colWidth;
+      });
+      
+      yPosition += lineHeight;
+      doc.setFont(undefined, 'normal');
+      
+      // Dados
+      records.forEach((record: any) => {
+        if (yPosition > pageHeight) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        xPosition = margin;
+        columnNames.slice(0, 5).forEach((col) => {
+          let value = record[col];
+          if (value !== null && typeof value === 'object') {
+            value = JSON.stringify(value);
+          }
+          const text = String(value || '').substring(0, 20);
+          doc.text(text, xPosition, yPosition);
+          xPosition += colWidth;
+        });
+        
+        yPosition += lineHeight;
+      });
+      
+      doc.save(`produtos-importados-${new Date().toISOString().split('T')[0]}.pdf`);
+      toast.success(`PDF gerado com ${records.length} registro(s)!`);
+    } catch (error: any) {
+      console.error("Erro ao gerar PDF:", error);
+      toast.error("Erro ao gerar PDF: " + (error.message || "desconhecido"));
     }
   };
 
@@ -721,6 +846,13 @@ export function ImportacaoTerceirosTab({ estabelecimentoId }: ImportacaoTerceiro
                         }}>
                           <FileSpreadsheet className="h-4 w-4 mr-2" />
                           Gerar Excel
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleGeneratePDF(relatorio.api_endpoint!, relatorio.id);
+                        }}>
+                          <FileText className="h-4 w-4 mr-2" />
+                          Gerar PDF
                         </DropdownMenuItem>
                       </>
                     )}
