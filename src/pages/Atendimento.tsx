@@ -2177,8 +2177,8 @@ ${recentMessages}
       className="h-screen min-h-0"
     >
       <div className="h-full flex bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden relative">
-      {/* Botão para reabrir painel quando colapsado */}
-      {!isMobile && !showConversationsList && (
+      {/* Botão para reabrir painel quando colapsado - esconde quando orçamento está aberto */}
+      {!isMobile && !showConversationsList && !orcamentoSheetOpen && (
         <Button
           size="sm"
           variant="ghost"
