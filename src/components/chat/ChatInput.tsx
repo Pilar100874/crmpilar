@@ -23,6 +23,11 @@ import { toast } from "@/lib/toast-config";
 const toolbarBtnClass = "h-9 w-9 rounded-xl bg-card border border-border/30 shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted hover:border-border/50 hover:shadow-md transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
 const toolbarBtnActiveClass = "h-9 w-9 rounded-xl bg-primary/15 border border-primary/40 shadow-sm flex items-center justify-center text-primary hover:bg-primary/20 transition-all duration-200";
 
+export type ChatToolTrigger = 
+  | 'image' | 'file' | 'variables' | 'quick-replies' | 'quick-attachments' 
+  | 'translate' | 'bot' | 'webhook' | 'transfer' | 'reports'
+  | 'context' | 'summary' | 'kb' | 'realtime-translate' | null;
+
 interface ChatInputProps {
   onSendMessage: (
     content: string,
@@ -65,6 +70,9 @@ interface ChatInputProps {
   onToggleRealTimeTranslation?: () => void;
   translationLanguage?: string;
   onTranslationLanguageChange?: (language: string) => void;
+  // External tool trigger
+  triggerTool?: ChatToolTrigger;
+  onToolTriggered?: () => void;
 }
 
 export default function ChatInput({ 
@@ -95,7 +103,9 @@ export default function ChatInput({
   isRealTimeTranslationActive = false,
   onToggleRealTimeTranslation,
   translationLanguage = "pt",
-  onTranslationLanguageChange
+  onTranslationLanguageChange,
+  triggerTool,
+  onToolTriggered
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -134,13 +144,22 @@ export default function ChatInput({
     el.style.height = `${el.scrollHeight}px`;
   }, [message]);
 
-  // Close menus when clicking outside
+  // Close menus when clicking outside (but not on popover content)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as HTMLElement;
+      
+      // Don't close if clicking inside a popover content (rendered in portal)
+      if (target.closest('[data-radix-popper-content-wrapper]') || 
+          target.closest('[role="dialog"]') ||
+          target.closest('[data-state="open"]')) {
+        return;
+      }
+      
+      if (menuRef.current && !menuRef.current.contains(target)) {
         setShowToolsMenu(false);
       }
-      if (aiMenuRef.current && !aiMenuRef.current.contains(event.target as Node)) {
+      if (aiMenuRef.current && !aiMenuRef.current.contains(target)) {
         setShowAIMenu(false);
       }
     };
@@ -149,6 +168,60 @@ export default function ChatInput({
     }
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showToolsMenu, showAIMenu]);
+
+  // Handle external tool triggers
+  useEffect(() => {
+    if (!triggerTool) return;
+    
+    switch (triggerTool) {
+      case 'image':
+        imageInputRef.current?.click();
+        break;
+      case 'file':
+        fileInputRef.current?.click();
+        break;
+      case 'variables':
+        setShowVariables(true);
+        break;
+      case 'quick-replies':
+        // The QuickRepliesSelector handles its own popover
+        setShowToolsMenu(true);
+        break;
+      case 'quick-attachments':
+        // The QuickAttachmentsSelector handles its own popover
+        setShowToolsMenu(true);
+        break;
+      case 'translate':
+        setShowTranslatePopover(true);
+        break;
+      case 'bot':
+        setShowBotPopover(true);
+        break;
+      case 'webhook':
+        setShowWebhookPopover(true);
+        break;
+      case 'transfer':
+        setShowTransferPopover(true);
+        break;
+      case 'reports':
+        setShowImportReportsPopover(true);
+        break;
+      case 'context':
+        handleGenerateContextResponse();
+        break;
+      case 'summary':
+        handleGenerateSummary();
+        break;
+      case 'kb':
+        handleSuggestKBArticles();
+        break;
+      case 'realtime-translate':
+        onToggleRealTimeTranslation?.();
+        break;
+    }
+    
+    onToolTriggered?.();
+  }, [triggerTool]);
   
   // Auto-suggestion states
   const [autoSuggestionEnabled, setAutoSuggestionEnabled] = useState(false);

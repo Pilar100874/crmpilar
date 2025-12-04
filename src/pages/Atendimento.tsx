@@ -125,6 +125,9 @@ export default function Atendimento() {
   // Predictive Dialer state
   const [showPredictiveDialer, setShowPredictiveDialer] = useState(false);
   
+  // Tool trigger state (for radial menu -> ChatInput communication)
+  const [triggerTool, setTriggerTool] = useState<import("@/components/chat/ChatInput").ChatToolTrigger>(null);
+  
   // Bot redirect states
   const [availableBots, setAvailableBots] = useState<any[]>([]);
   const [selectedBotRedirect, setSelectedBotRedirect] = useState<string | null>(null);
@@ -1765,33 +1768,50 @@ ${recentMessages}
         break;
       // Tools submenu items
       case "tool-image":
+        setTriggerTool('image');
+        break;
       case "tool-file":
+        setTriggerTool('file');
+        break;
       case "tool-variables":
+        setTriggerTool('variables');
+        break;
       case "tool-quick-replies":
+        setTriggerTool('quick-replies');
+        break;
       case "tool-attachments":
+        setTriggerTool('quick-attachments');
+        break;
       case "tool-translate":
+        setTriggerTool('translate');
+        break;
       case "tool-reports":
+        setTriggerTool('reports');
+        break;
       case "tool-bot":
+        setTriggerTool('bot');
+        break;
       case "tool-webhook":
+        setTriggerTool('webhook');
+        break;
       case "tool-transfer":
-        toast.info("Use o campo de mensagem para acessar esta ferramenta");
+        setTriggerTool('transfer');
         break;
       // AI submenu items
       case "ai-chat":
         setShowAIChat(!showAIChat);
         break;
       case "ai-suggestion":
-        toast.info("Use o campo de mensagem para sugestões contextuais");
+        setTriggerTool('context');
         break;
       case "ai-summary":
-        toast.info("Use o campo de mensagem para gerar resumo");
+        setTriggerTool('summary');
         break;
       case "ai-kb":
-        toast.info("Use o campo de mensagem para artigos KB");
+        setTriggerTool('kb');
         break;
       case "ai-translate":
-        setIsRealTimeTranslationActive(!isRealTimeTranslationActive);
-        toast.success(isRealTimeTranslationActive ? "Tradução em tempo real desativada" : "Tradução em tempo real ativada");
+        setTriggerTool('realtime-translate');
         break;
     }
   };
@@ -2910,6 +2930,8 @@ ${recentMessages}
                   onToggleRealTimeTranslation={handleToggleRealTimeTranslation}
                   translationLanguage={translationLanguage}
                   onTranslationLanguageChange={setTranslationLanguage}
+                  triggerTool={triggerTool}
+                  onToolTriggered={() => setTriggerTool(null)}
                 />
               </div>
             </div>
