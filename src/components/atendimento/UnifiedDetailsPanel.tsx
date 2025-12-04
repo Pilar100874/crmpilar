@@ -1,4 +1,4 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { useState } from "react";
+import { GlobalFilter } from "./GlobalClientFilter";
 
 export type PanelType = "chat" | "agenda" | "email" | "orcamento";
 
@@ -29,9 +30,8 @@ interface UnifiedDetailsPanelProps {
   // Empresas vinculadas
   companies?: any[];
   onCompaniesUpdated?: () => void;
-  // Ações
-  onOpenOrcamento?: () => void;
-  onOpenEmail?: () => void;
+  // Filtro global
+  onSetGlobalFilter?: (filter: GlobalFilter) => void;
 }
 
 export function UnifiedDetailsPanel({ 
@@ -50,8 +50,7 @@ export function UnifiedDetailsPanel({
   descricao,
   companies = [],
   onCompaniesUpdated,
-  onOpenOrcamento,
-  onOpenEmail
+  onSetGlobalFilter
 }: UnifiedDetailsPanelProps) {
   const [showSoftphone, setShowSoftphone] = useState(false);
   const [dialNumber, setDialNumber] = useState("");
@@ -160,11 +159,28 @@ export function UnifiedDetailsPanel({
                             </p>
                           )}
                         </div>
-                        {company.is_primary && (
-                          <Badge className="text-[10px] bg-primary text-primary-foreground">
-                            Principal
-                          </Badge>
-                        )}
+                        <div className="flex items-center gap-1">
+                          {company.is_primary && (
+                            <Badge className="text-[10px] bg-primary text-primary-foreground">
+                              Principal
+                            </Badge>
+                          )}
+                          {onSetGlobalFilter && empresa?.id && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 hover:bg-emerald-100 hover:text-emerald-600"
+                              title="Filtrar por esta empresa"
+                              onClick={() => onSetGlobalFilter({
+                                type: 'empresa',
+                                id: empresa.id,
+                                nome: empresa.nome_fantasia || empresa.nome || 'Empresa'
+                              })}
+                            >
+                              <Filter className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       {(company.cargo || company.departamento) && (
                         <div className="flex gap-2 flex-wrap">
