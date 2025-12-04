@@ -134,6 +134,7 @@ export default function ChatInput({
   const [isSuggestingKBArticles, setIsSuggestingKBArticles] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslatePopover, setShowTranslatePopover] = useState(false);
+  const [showRealTimeTranslatePopover, setShowRealTimeTranslatePopover] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState<string>("en");
   
   // Auto-resize textarea to avoid inner scrollbars
@@ -216,7 +217,7 @@ export default function ChatInput({
         handleSuggestKBArticles();
         break;
       case 'realtime-translate':
-        onToggleRealTimeTranslation?.();
+        setShowRealTimeTranslatePopover(true);
         break;
     }
     
@@ -634,8 +635,8 @@ export default function ChatInput({
     }
     setIsTranslating(true);
     try {
-      const response = await supabase.functions.invoke("ai-agent-assist", {
-        body: { action: "translate", text: message, targetLanguage }
+      const response = await supabase.functions.invoke("agent-assist-translate", {
+        body: { text: message, targetLanguage }
       });
       if (response.error) throw response.error;
       const translation = response.data?.translation;
@@ -648,6 +649,7 @@ export default function ChatInput({
       toast.error("Erro ao traduzir");
     } finally {
       setIsTranslating(false);
+      setShowTranslatePopover(false);
       setShowToolsMenu(false);
     }
   };
@@ -819,19 +821,19 @@ export default function ChatInput({
     );
   }
 
-  // Import reports
-  if (importReports.length > 0) {
-    allItems.push(
-      <Popover key="reports" open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>
-        <PopoverTrigger asChild>
-          <button className={showImportReportsPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Relatórios">
-            <FileCheck size={18} />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-72 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Relatórios Importados</Label>
-            {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
+  // Import reports - always render to allow external trigger
+  allItems.push(
+    <Popover key="reports" open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>
+      <PopoverTrigger asChild>
+        <button className={showImportReportsPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Relatórios">
+          <FileCheck size={18} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Relatórios Importados</Label>
+          {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
+          {importReports.length > 0 ? (
             <div className="max-h-48 overflow-y-auto space-y-2">
               {importReports.map((report) => (
                 <div key={report.id} className="flex items-center justify-between p-2 rounded-lg border hover:bg-muted/50">
@@ -847,11 +849,13 @@ export default function ChatInput({
                 </div>
               ))}
             </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-    );
-  }
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">Nenhum relatório disponível</p>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 
   // Agent Assist - Context Response
   if (conversationId) {
@@ -874,10 +878,44 @@ export default function ChatInput({
     );
   }
 
-  // Real-time translation toggle
-  if (onToggleRealTimeTranslation) {
+  // Real-time translation with popover
+  if (onToggleRealTimeTranslation && onTranslationLanguageChange) {
     allItems.push(
-      <ToolbarBtn key="realtime-translate" icon={Languages} title="Tradução em Tempo Real" onClick={() => { onToggleRealTimeTranslation(); setShowToolsMenu(false); setShowAIMenu(false); }} isActive={isRealTimeTranslationActive} disabled={disabled} />
+      <Popover key="realtime-translate" open={showRealTimeTranslatePopover} onOpenChange={setShowRealTimeTranslatePopover}>
+        <PopoverTrigger asChild>
+          <button className={isRealTimeTranslationActive ? toolbarBtnActiveClass : toolbarBtnClass} title="Tradução em Tempo Real">
+            <Languages size={18} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Tradução em Tempo Real</Label>
+              <Switch 
+                checked={isRealTimeTranslationActive} 
+                onCheckedChange={() => {
+                  onToggleRealTimeTranslation();
+                }} 
+              />
+            </div>
+            <Select value={translationLanguage} onValueChange={onTranslationLanguageChange}>
+              <SelectTrigger><SelectValue placeholder="Idioma de destino" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pt">Português</SelectItem>
+                <SelectItem value="en">Inglês</SelectItem>
+                <SelectItem value="es">Espanhol</SelectItem>
+                <SelectItem value="fr">Francês</SelectItem>
+                <SelectItem value="de">Alemão</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {isRealTimeTranslationActive 
+                ? "As mensagens do cliente serão traduzidas automaticamente" 
+                : "Ative para traduzir mensagens do cliente"}
+            </p>
+          </div>
+        </PopoverContent>
+      </Popover>
     );
   }
 
