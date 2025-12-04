@@ -3289,7 +3289,7 @@ ${recentMessages}
               </div>
             </div>
           </>
-        ) : (
+        ) : !orcamentoSheetOpen ? (
           <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
             <div className="text-center">
               <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
@@ -3297,7 +3297,7 @@ ${recentMessages}
               <p className="text-sm">Escolha uma conversa da lista para começar o atendimento</p>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Right Sidebar - Company Details Panel */}
