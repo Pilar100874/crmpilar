@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import AudioRecorder from "./AudioRecorder";
 import FileUploader from "./FileUploader";
@@ -474,7 +475,7 @@ export default function ChatInput({
     );
   };
 
-  // Simple Toolbar Button Component
+  // Simple Toolbar Button Component with animated tooltip
   const ToolbarBtn = ({ 
     icon: Icon, 
     title, 
@@ -490,21 +491,29 @@ export default function ChatInput({
     isActive?: boolean;
     isLoading?: boolean;
   }) => (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      className={isActive ? toolbarBtnActiveClass : toolbarBtnClass}
-    >
-      {isLoading ? (
-        <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      ) : (
-        <Icon size={20} />
-      )}
-    </button>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={onClick}
+            disabled={disabled}
+            className={isActive ? toolbarBtnActiveClass : toolbarBtnClass}
+          >
+            {isLoading ? (
+              <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Icon size={20} />
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p>{title}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 
-  // Simple Popover Trigger Button
+  // Simple Popover Trigger Button with animated tooltip
   const PopoverBtn = ({ 
     icon: Icon, 
     title, 
@@ -516,13 +525,21 @@ export default function ChatInput({
     isOpen: boolean;
     disabled?: boolean;
   }) => (
-    <button
-      disabled={disabled}
-      title={title}
-      className={isOpen ? toolbarBtnActiveClass : toolbarBtnClass}
-    >
-      <Icon size={20} />
-    </button>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            disabled={disabled}
+            className={isOpen ? toolbarBtnActiveClass : toolbarBtnClass}
+          >
+            <Icon size={20} />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p>{title}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 
   // File input handlers
@@ -707,11 +724,18 @@ export default function ChatInput({
   // Translate
   allItems.push(
     <Popover key="translate" open={showTranslatePopover} onOpenChange={setShowTranslatePopover}>
-      <PopoverTrigger asChild>
-        <button className={isTranslating ? toolbarBtnActiveClass : toolbarBtnClass} title="Traduzir" disabled={disabled}>
-          {isTranslating ? <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Languages size={18} />}
-        </button>
-      </PopoverTrigger>
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <button className={isTranslating ? toolbarBtnActiveClass : toolbarBtnClass} disabled={disabled}>
+                {isTranslating ? <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" /> : <Languages size={18} />}
+              </button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top"><p>Traduzir</p></TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent className="w-56 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
         <div className="space-y-3">
           <Label className="text-sm font-medium">Traduzir para</Label>
@@ -738,11 +762,18 @@ export default function ChatInput({
   if (availableBots.length > 0 && onBotRedirectChange && onBotRedirect) {
     allItems.push(
       <Popover key="bot" open={showBotPopover} onOpenChange={setShowBotPopover}>
-        <PopoverTrigger asChild>
-          <button className={showBotPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Redirecionar para Bot">
-            <Bot size={18} />
-          </button>
-        </PopoverTrigger>
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <button className={showBotPopover ? toolbarBtnActiveClass : toolbarBtnClass}>
+                  <Bot size={18} />
+                </button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="top"><p>Redirecionar para Bot</p></TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
           <div className="space-y-3">
             <Label className="text-sm font-medium">Redirecionar para Bot</Label>
@@ -767,11 +798,18 @@ export default function ChatInput({
   if (webhooksForAutoResponse.length > 0 && onWebhookChange && onWebhookToggle) {
     allItems.push(
       <Popover key="webhook" open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
-        <PopoverTrigger asChild>
-          <button className={webhookAutoResponseActive ? toolbarBtnActiveClass : toolbarBtnClass} title="Resposta Automática">
-            <Webhook size={18} />
-          </button>
-        </PopoverTrigger>
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <button className={webhookAutoResponseActive ? toolbarBtnActiveClass : toolbarBtnClass}>
+                  <Webhook size={18} />
+                </button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="top"><p>Resposta Automática</p></TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -796,11 +834,18 @@ export default function ChatInput({
   if (availableUsers.length > 0 && onTransferUserChange && onTransferUser) {
     allItems.push(
       <Popover key="transfer" open={showTransferPopover} onOpenChange={setShowTransferPopover}>
-        <PopoverTrigger asChild>
-          <button className={showTransferPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Transferir para Usuário">
-            <UserPlus size={18} />
-          </button>
-        </PopoverTrigger>
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <button className={showTransferPopover ? toolbarBtnActiveClass : toolbarBtnClass}>
+                  <UserPlus size={18} />
+                </button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="top"><p>Transferir para Usuário</p></TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
           <div className="space-y-3">
             <Label className="text-sm font-medium">Transferir para</Label>
@@ -824,11 +869,18 @@ export default function ChatInput({
   // Import reports - always render to allow external trigger
   allItems.push(
     <Popover key="reports" open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>
-      <PopoverTrigger asChild>
-        <button className={showImportReportsPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Relatórios">
-          <FileCheck size={18} />
-        </button>
-      </PopoverTrigger>
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <button className={showImportReportsPopover ? toolbarBtnActiveClass : toolbarBtnClass}>
+                <FileCheck size={18} />
+              </button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="top"><p>Relatórios</p></TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent className="w-72 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
         <div className="space-y-3">
           <Label className="text-sm font-medium">Relatórios Importados</Label>
@@ -882,11 +934,18 @@ export default function ChatInput({
   if (onToggleRealTimeTranslation && onTranslationLanguageChange) {
     allItems.push(
       <Popover key="realtime-translate" open={showRealTimeTranslatePopover} onOpenChange={setShowRealTimeTranslatePopover}>
-        <PopoverTrigger asChild>
-          <button className={isRealTimeTranslationActive ? toolbarBtnActiveClass : toolbarBtnClass} title="Tradução em Tempo Real">
-            <Languages size={18} />
-          </button>
-        </PopoverTrigger>
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <button className={isRealTimeTranslationActive ? toolbarBtnActiveClass : toolbarBtnClass}>
+                  <Languages size={18} />
+                </button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="top"><p>Tradução em Tempo Real</p></TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
