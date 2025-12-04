@@ -886,7 +886,7 @@ export default function ChatInput({
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Escolha um relatório..." />
                     </SelectTrigger>
-                    <SelectContent position="popper" sideOffset={4}>
+                    <SelectContent position="popper" side="bottom" align="start" sideOffset={4}>
                       {importReports.map((report) => (
                         <SelectItem key={report.id} value={report.id}>
                           {report.nome}

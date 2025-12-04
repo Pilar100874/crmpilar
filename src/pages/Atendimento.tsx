@@ -2084,8 +2084,9 @@ ${recentMessages}
                     <SelectValue placeholder="Escolha um relatório..." />
                   </SelectTrigger>
                   <SelectContent 
-                    className="bg-popover border shadow-lg" 
                     position="popper"
+                    side="bottom"
+                    align="start"
                     sideOffset={4}
                   >
                     {radialImportReports.map((report) => (
