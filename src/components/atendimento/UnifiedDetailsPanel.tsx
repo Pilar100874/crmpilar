@@ -82,7 +82,7 @@ export function UnifiedDetailsPanel({
 
   if (!nome && !protocolo && !titulo) {
     return (
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card">
         <div className="p-4 text-center text-muted-foreground flex-1 flex items-center justify-center">
           <div>
             {getIcon()}
@@ -94,7 +94,7 @@ export function UnifiedDetailsPanel({
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card">
       {/* PARTE 1 - Nome da Empresa/Cliente */}
       <div className="p-4 border-b flex-shrink-0">
         <div className="flex flex-col items-center">
