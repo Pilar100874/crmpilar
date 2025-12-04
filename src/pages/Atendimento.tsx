@@ -3303,16 +3303,6 @@ ${recentMessages}
       {/* Right Sidebar - Company Details Panel */}
       {selectedConversation && selectedConv && showClientDetailsChat && (
         <div className="w-80 md:w-64 lg:w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
-          {/* Omnichannel Manager */}
-          <div className="p-4 border-b bg-muted/20">
-            <OmnichannelManager
-              conversationId={selectedConversation}
-              estabelecimentoId={estabelecimentoId}
-              usuarioId={usuarioId}
-              onUpdate={loadConversations}
-            />
-          </div>
-
           <UnifiedDetailsPanel
             type="chat"
             nome={selectedConv.customer?.nome || "Cliente"}
