@@ -609,29 +609,28 @@ export default function ChatInput({
     }, 2000);
   };
 
-  // Build toolbar items - separated into general and chat-specific
-  const generalItems: React.ReactNode[] = [];
-  const chatItems: React.ReactNode[] = [];
+  // Build toolbar items - ALL items appear in BOTH menus
+  const allItems: React.ReactNode[] = [];
 
-  // === GENERAL ITEMS (always visible) ===
-  generalItems.push(
-    <ToolbarBtn key="image" icon={Image} title="Imagem" onClick={() => { imageInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
+  // === BASIC TOOLS ===
+  allItems.push(
+    <ToolbarBtn key="image" icon={Image} title="Imagem" onClick={() => { imageInputRef.current?.click(); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={disabled} />
   );
-  generalItems.push(
-    <ToolbarBtn key="file" icon={Paperclip} title="Arquivo" onClick={() => { fileInputRef.current?.click(); setShowToolsMenu(false); }} disabled={disabled} />
+  allItems.push(
+    <ToolbarBtn key="file" icon={Paperclip} title="Arquivo" onClick={() => { fileInputRef.current?.click(); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={disabled} />
   );
-  generalItems.push(
-    <ToolbarBtn key="variables" icon={Variable} title="Variáveis" onClick={() => { setShowVariables(true); setShowToolsMenu(false); }} disabled={disabled} />
+  allItems.push(
+    <ToolbarBtn key="variables" icon={Variable} title="Variáveis" onClick={() => { setShowVariables(true); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={disabled} />
   );
-  generalItems.push(
-    <QuickRepliesSelector key="quick-replies" onSelect={(content) => { handleQuickReplySelect(content); setShowToolsMenu(false); }} disabled={disabled} />
+  allItems.push(
+    <QuickRepliesSelector key="quick-replies" onSelect={(content) => { handleQuickReplySelect(content); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={disabled} />
   );
-  generalItems.push(
-    <QuickAttachmentsSelector key="quick-attachments" onSelect={(attachment) => { handleQuickAttachmentSelect(attachment); setShowToolsMenu(false); }} disabled={disabled} />
+  allItems.push(
+    <QuickAttachmentsSelector key="quick-attachments" onSelect={(attachment) => { handleQuickAttachmentSelect(attachment); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={disabled} />
   );
 
-  // Translate (general)
-  generalItems.push(
+  // Translate
+  allItems.push(
     <Popover key="translate" open={showTranslatePopover} onOpenChange={setShowTranslatePopover}>
       <PopoverTrigger asChild>
         <button className={isTranslating ? toolbarBtnActiveClass : toolbarBtnClass} title="Traduzir" disabled={disabled}>
@@ -659,10 +658,10 @@ export default function ChatInput({
     </Popover>
   );
 
-  // === CHAT-SPECIFIC ITEMS (only when in chat) ===
+  // === CHAT/AI TOOLS ===
   // Bot redirect
   if (availableBots.length > 0 && onBotRedirectChange && onBotRedirect) {
-    chatItems.push(
+    allItems.push(
       <Popover key="bot" open={showBotPopover} onOpenChange={setShowBotPopover}>
         <PopoverTrigger asChild>
           <button className={showBotPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Redirecionar para Bot">
@@ -680,7 +679,7 @@ export default function ChatInput({
                 ))}
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => { onBotRedirect(); setShowBotPopover(false); setShowAIMenu(false); }} disabled={!selectedBotRedirect} className="w-full">
+            <Button size="sm" onClick={() => { onBotRedirect(); setShowBotPopover(false); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={!selectedBotRedirect} className="w-full">
               <Zap className="h-4 w-4 mr-2" /> Redirecionar
             </Button>
           </div>
@@ -691,7 +690,7 @@ export default function ChatInput({
 
   // Webhook auto-response
   if (webhooksForAutoResponse.length > 0 && onWebhookChange && onWebhookToggle) {
-    chatItems.push(
+    allItems.push(
       <Popover key="webhook" open={showWebhookPopover} onOpenChange={setShowWebhookPopover}>
         <PopoverTrigger asChild>
           <button className={webhookAutoResponseActive ? toolbarBtnActiveClass : toolbarBtnClass} title="Resposta Automática">
@@ -720,7 +719,7 @@ export default function ChatInput({
 
   // Transfer to user
   if (availableUsers.length > 0 && onTransferUserChange && onTransferUser) {
-    chatItems.push(
+    allItems.push(
       <Popover key="transfer" open={showTransferPopover} onOpenChange={setShowTransferPopover}>
         <PopoverTrigger asChild>
           <button className={showTransferPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Transferir para Usuário">
@@ -738,7 +737,7 @@ export default function ChatInput({
                 ))}
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => { onTransferUser(); setShowTransferPopover(false); setShowAIMenu(false); }} disabled={!selectedTransferUser} className="w-full">
+            <Button size="sm" onClick={() => { onTransferUser(); setShowTransferPopover(false); setShowToolsMenu(false); setShowAIMenu(false); }} disabled={!selectedTransferUser} className="w-full">
               <UserPlus className="h-4 w-4 mr-2" /> Transferir
             </Button>
           </div>
@@ -747,11 +746,9 @@ export default function ChatInput({
     );
   }
 
-  // AI Chat toggle - removed from menu, now handled by main AI button in parent
-
   // Import reports
   if (importReports.length > 0) {
-    chatItems.push(
+    allItems.push(
       <Popover key="reports" open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover}>
         <PopoverTrigger asChild>
           <button className={showImportReportsPopover ? toolbarBtnActiveClass : toolbarBtnClass} title="Relatórios">
@@ -785,34 +782,38 @@ export default function ChatInput({
 
   // Agent Assist - Context Response
   if (conversationId) {
-    chatItems.push(
-      <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" onClick={handleGenerateContextResponse} isLoading={isGeneratingContextResponse} disabled={disabled || conversationMessages.length === 0} />
+    allItems.push(
+      <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" onClick={() => { handleGenerateContextResponse(); }} isLoading={isGeneratingContextResponse} disabled={disabled || conversationMessages.length === 0} />
     );
   }
 
   // Agent Assist - Summary
   if (conversationId && onSummaryGenerated) {
-    chatItems.push(
-      <ToolbarBtn key="summary" icon={FileText} title="Gerar Resumo" onClick={handleGenerateSummary} isLoading={isGeneratingSummary} disabled={disabled || conversationMessages.length === 0} />
+    allItems.push(
+      <ToolbarBtn key="summary" icon={FileText} title="Gerar Resumo" onClick={() => { handleGenerateSummary(); }} isLoading={isGeneratingSummary} disabled={disabled || conversationMessages.length === 0} />
     );
   }
 
   // Agent Assist - KB Articles
   if (conversationId) {
-    chatItems.push(
-      <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" onClick={handleSuggestKBArticles} isLoading={isSuggestingKBArticles} disabled={disabled || conversationMessages.length === 0} />
+    allItems.push(
+      <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" onClick={() => { handleSuggestKBArticles(); }} isLoading={isSuggestingKBArticles} disabled={disabled || conversationMessages.length === 0} />
     );
   }
 
   // Real-time translation toggle
   if (onToggleRealTimeTranslation) {
-    chatItems.push(
-      <ToolbarBtn key="realtime-translate" icon={Languages} title="Tradução em Tempo Real" onClick={() => { onToggleRealTimeTranslation(); setShowAIMenu(false); }} isActive={isRealTimeTranslationActive} disabled={disabled} />
+    allItems.push(
+      <ToolbarBtn key="realtime-translate" icon={Languages} title="Tradução em Tempo Real" onClick={() => { onToggleRealTimeTranslation(); setShowToolsMenu(false); setShowAIMenu(false); }} isActive={isRealTimeTranslationActive} disabled={disabled} />
     );
   }
 
-  // Check if we have chat-specific items
-  const hasChatItems = chatItems.length > 0;
+  // Both menus show ALL items
+  const generalItems = allItems;
+  const chatItems = allItems;
+
+  // Check if we have items
+  const hasChatItems = allItems.length > 0;
   
   return (
     <>
