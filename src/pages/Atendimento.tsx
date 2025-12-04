@@ -981,7 +981,9 @@ export default function Atendimento() {
             id,
             nome_fantasia,
             nome,
-            cnpj
+            cnpj,
+            telefone,
+            email
           )
         `)
         .eq('id', orcamentoId)
