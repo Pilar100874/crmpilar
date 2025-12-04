@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet } from "lucide-react";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { PredictiveDialerDialog } from "@/components/atendimento/PredictiveDialerDialog";
@@ -142,6 +142,7 @@ export default function Atendimento() {
   const [radialImportReports, setRadialImportReports] = useState<any[]>([]);
   const [isRadialProcessingReport, setIsRadialProcessingReport] = useState(false);
   const [radialReportProgress, setRadialReportProgress] = useState(0);
+  const [selectedRadialReport, setSelectedRadialReport] = useState<string | null>(null);
   
   // Bot redirect states
   const [availableBots, setAvailableBots] = useState<any[]>([]);
@@ -2047,7 +2048,7 @@ ${recentMessages}
     </Dialog>
 
     <Dialog open={showRadialReportsDialog} onOpenChange={setShowRadialReportsDialog}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileCheck className="h-5 w-5" />
@@ -2069,37 +2070,48 @@ ${recentMessages}
             </div>
           )}
           {radialImportReports.length > 0 ? (
-            <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
-              {radialImportReports.map((report) => (
-                <div key={report.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                  <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium truncate block">{report.nome}</span>
-                    {report.descricao && (
-                      <span className="text-xs text-muted-foreground truncate block">{report.descricao}</span>
-                    )}
-                  </div>
-                  <div className="flex gap-1 ml-2 flex-shrink-0">
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleRadialReportSelect(report.id, 'pdf')} 
-                      disabled={isRadialProcessingReport}
-                      title="Enviar como PDF"
-                    >
-                      <FileText className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleRadialReportSelect(report.id, 'excel')} 
-                      disabled={isRadialProcessingReport}
-                      title="Enviar como Excel"
-                    >
-                      <File className="h-4 w-4" />
-                    </Button>
-                  </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Selecione o relatório</Label>
+                <Select 
+                  value={selectedRadialReport || ""} 
+                  onValueChange={setSelectedRadialReport}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Escolha um relatório..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover border shadow-lg z-[100]">
+                    {radialImportReports.map((report) => (
+                      <SelectItem key={report.id} value={report.id}>
+                        {report.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {selectedRadialReport && (
+                <div className="flex gap-2">
+                  <Button 
+                    className="flex-1"
+                    variant="outline"
+                    onClick={() => handleRadialReportSelect(selectedRadialReport, 'pdf')} 
+                    disabled={isRadialProcessingReport}
+                  >
+                    <FileText className="h-4 w-4 mr-2 text-red-500" />
+                    Gerar PDF
+                  </Button>
+                  <Button 
+                    className="flex-1"
+                    variant="outline"
+                    onClick={() => handleRadialReportSelect(selectedRadialReport, 'excel')} 
+                    disabled={isRadialProcessingReport}
+                  >
+                    <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+                    Gerar Excel
+                  </Button>
                 </div>
-              ))}
+              )}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-8">
