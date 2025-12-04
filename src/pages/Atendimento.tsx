@@ -3402,7 +3402,7 @@ ${recentMessages}
 
       {/* Right Sidebar - Company Details Panel */}
       {selectedConversation && selectedConv && showClientDetailsChat && (
-        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+        <div className={`${isSmallTablet ? 'w-72' : isTablet ? 'w-80' : 'w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="chat"
             nome={selectedConv.customer?.nome || "Cliente"}
@@ -3434,15 +3434,15 @@ ${recentMessages}
             showConversationsList 
               ? (showClientDetailsOrcamento && selectedOrcamentoData 
                   ? isSmallTablet 
-                    ? 'w-[calc(100%-200px-180px)]' 
-                    : 'w-[calc(100%-280px-280px)]' 
+                    ? 'w-[calc(100%-200px-256px)]' 
+                    : 'w-[calc(100%-280px-288px)]' 
                   : isSmallTablet 
                     ? 'w-[calc(100%-200px)]' 
                     : 'w-[calc(100%-280px)]')
               : (showClientDetailsOrcamento && selectedOrcamentoData 
                   ? isSmallTablet 
-                    ? 'w-[calc(100%-180px)]' 
-                    : 'w-[calc(100%-280px)]' 
+                    ? 'w-[calc(100%-256px)]' 
+                    : 'w-[calc(100%-288px)]' 
                   : 'w-full')
           } h-screen bg-gray-100 border-l shadow-lg overflow-hidden`}>
             <POSView 
@@ -3468,7 +3468,7 @@ ${recentMessages}
 
           {/* Client Details Panel - Orçamento */}
           {showClientDetailsOrcamento && selectedOrcamentoData && (
-            <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+            <div className={`${isSmallTablet ? 'w-64' : isTablet ? 'w-72' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
               <UnifiedDetailsPanel
                 type="orcamento"
                 nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente"}
