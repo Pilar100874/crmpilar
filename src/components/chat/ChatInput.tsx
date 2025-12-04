@@ -835,14 +835,6 @@ export default function ChatInput({
       
       {/* Main container with elegant styling */}
       <div className="relative">
-        {/* Expandable menu backdrop blur when open */}
-        {(showToolsMenu || showAIMenu) && (
-          <div 
-            className="fixed inset-0 bg-background/20 backdrop-blur-[2px] z-40"
-            onClick={() => { setShowToolsMenu(false); setShowAIMenu(false); }}
-          />
-        )}
-        
         {/* Main input container */}
         <div className="relative z-50 bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2">
           {/* Input row */}
@@ -850,27 +842,25 @@ export default function ChatInput({
             {/* Expandable Tools Menu - positioned to expand upward (left side) */}
             <div ref={menuRef} className="relative">
               {/* General items ring */}
-              <div 
-                className={cn(
-                  "absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5 z-[200]",
-                  "transition-all duration-300 origin-bottom",
-                  showToolsMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-                )}
-              >
-                {generalItems.map((item, index) => (
-                  <div 
-                    key={`general-${index}`}
-                    className="transform transition-all duration-200 flex-shrink-0"
-                    style={{
-                      transitionDelay: showToolsMenu ? `${index * 30}ms` : '0ms',
-                      transform: showToolsMenu ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.9)',
-                      opacity: showToolsMenu ? 1 : 0,
-                    }}
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
+              {showToolsMenu && (
+                <div 
+                  className="absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5 z-[9999]"
+                >
+                  {generalItems.map((item, index) => (
+                    <div 
+                      key={`general-${index}`}
+                      className="transform transition-all duration-200 flex-shrink-0"
+                      style={{
+                        transitionDelay: `${index * 30}ms`,
+                        animation: 'fadeInUp 0.2s ease-out forwards',
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Main trigger button */}
               <button 
@@ -918,25 +908,19 @@ export default function ChatInput({
             {/* AI Menu Button - positioned to expand upward (right side) */}
             <div ref={aiMenuRef} className="relative">
               {/* Chat/AI items ring */}
-              {chatItems.length > 0 && (
+              {chatItems.length > 0 && showAIMenu && (
                 <div 
-                  className={cn(
-                    "absolute bottom-full right-0 mb-2 flex flex-col-reverse gap-1.5 z-[200]",
-                    "transition-all duration-300 origin-bottom",
-                    "max-h-[60vh] overflow-y-auto overflow-x-visible",
-                    "scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent",
-                    showAIMenu ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-                  )}
+                  className="absolute bottom-full right-0 mb-2 flex flex-col-reverse gap-1.5 z-[9999]"
                 >
                   {chatItems.map((item, index) => (
                     <div 
                       key={`ai-${index}`}
                       className="transform transition-all duration-200 flex-shrink-0"
                       style={{
-                        transitionDelay: showAIMenu ? `${index * 30}ms` : '0ms',
-                        transform: showAIMenu ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.9)',
-                        opacity: showAIMenu ? 1 : 0,
+                        transitionDelay: `${index * 30}ms`,
+                        animation: 'fadeInUp 0.2s ease-out forwards',
                       }}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {item}
                     </div>
