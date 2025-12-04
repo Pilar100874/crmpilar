@@ -3300,40 +3300,28 @@ ${recentMessages}
 
       {/* Right Sidebar - Company Details Panel */}
       {selectedConversation && selectedConv && showClientDetailsChat && (
-        <div className="w-80 md:w-64 lg:w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
-          {/* Omnichannel Manager */}
-          <div className="p-4 border-b bg-muted/20">
-            <OmnichannelManager
-              conversationId={selectedConversation}
-              estabelecimentoId={estabelecimentoId}
-              usuarioId={usuarioId}
-              onUpdate={loadConversations}
-            />
-          </div>
-
-          <UnifiedDetailsPanel
-            type="chat"
-            nome={selectedConv.customer?.nome || "Cliente"}
-            telefone={selectedConv.customer?.telefone}
-            email={selectedConv.customer?.email}
-            protocolo={selectedConv.id.slice(0, 8).toUpperCase()}
-            status={selectedConv.chat_status || selectedConv.status}
-            canal={selectedConv.canal}
-            dataHora={format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-            companies={customerCompanies}
-            onAddCompany={() => setShowNovoContatoDialog(true)}
-            onOpenOrcamento={() => {
-              if (selectedConv.customer?.id) {
-                navigate(`/orcamentos?cliente_id=${selectedConv.customer.id}`);
-              }
-            }}
-            onOpenEmail={() => {
-              if (selectedConv.customer?.email) {
-                navigate(`/email?filter=${encodeURIComponent(selectedConv.customer.email)}`);
-              }
-            }}
-          />
-        </div>
+        <UnifiedDetailsPanel
+          type="chat"
+          nome={selectedConv.customer?.nome || "Cliente"}
+          telefone={selectedConv.customer?.telefone}
+          email={selectedConv.customer?.email}
+          protocolo={selectedConv.id.slice(0, 8).toUpperCase()}
+          status={selectedConv.chat_status || selectedConv.status}
+          canal={selectedConv.canal}
+          dataHora={format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+          companies={customerCompanies}
+          onAddCompany={() => setShowNovoContatoDialog(true)}
+          onOpenOrcamento={() => {
+            if (selectedConv.customer?.id) {
+              navigate(`/orcamentos?cliente_id=${selectedConv.customer.id}`);
+            }
+          }}
+          onOpenEmail={() => {
+            if (selectedConv.customer?.email) {
+              navigate(`/email?filter=${encodeURIComponent(selectedConv.customer.email)}`);
+            }
+          }}
+        />
       )}
       
       {/* Novo Contato Dialog */}
