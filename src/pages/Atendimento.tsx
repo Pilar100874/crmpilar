@@ -1719,6 +1719,7 @@ ${recentMessages}
       icon: Plus, 
       label: "Ferramentas",
       subItems: [
+        // Ferramentas básicas
         { id: "tool-image", icon: Image, label: "Imagem" },
         { id: "tool-file", icon: Paperclip, label: "Arquivo" },
         { id: "tool-variables", icon: Variable, label: "Variáveis" },
@@ -1729,13 +1730,7 @@ ${recentMessages}
         { id: "tool-bot", icon: Bot, label: "Redirecionar Bot" },
         { id: "tool-webhook", icon: Webhook, label: "Resposta Automática" },
         { id: "tool-transfer", icon: UserPlus, label: "Transferir Usuário" },
-      ]
-    },
-    { 
-      id: "ai", 
-      icon: Sparkles, 
-      label: "IA",
-      subItems: [
+        // Ferramentas de IA
         { id: "ai-chat", icon: Wand2, label: "Chat IA" },
         { id: "ai-suggestion", icon: Sparkles, label: "Sugestão Contextual" },
         { id: "ai-summary", icon: FileText, label: "Gerar Resumo" },
