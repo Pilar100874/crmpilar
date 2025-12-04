@@ -2047,8 +2047,8 @@ ${recentMessages}
       </DialogContent>
     </Dialog>
 
-    <Dialog open={showRadialReportsDialog} onOpenChange={setShowRadialReportsDialog}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={showRadialReportsDialog} onOpenChange={setShowRadialReportsDialog} modal={false}>
+      <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileCheck className="h-5 w-5" />
@@ -2075,12 +2075,19 @@ ${recentMessages}
                 <Label className="text-sm font-medium">Selecione o relatório</Label>
                 <Select 
                   value={selectedRadialReport || ""} 
-                  onValueChange={setSelectedRadialReport}
+                  onValueChange={(value) => {
+                    console.log('Selected report:', value);
+                    setSelectedRadialReport(value);
+                  }}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Escolha um relatório..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover border shadow-lg z-[100]">
+                  <SelectContent 
+                    className="bg-popover border shadow-lg" 
+                    position="popper"
+                    sideOffset={4}
+                  >
                     {radialImportReports.map((report) => (
                       <SelectItem key={report.id} value={report.id}>
                         {report.nome}
