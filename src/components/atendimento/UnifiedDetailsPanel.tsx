@@ -1,4 +1,4 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -13,6 +13,7 @@ interface UnifiedDetailsPanelProps {
   // Dados do cliente/empresa
   nome?: string;
   telefone?: string;
+  whatsapp?: string;
   email?: string;
   // Dados específicos por tipo
   protocolo?: string;
@@ -35,6 +36,7 @@ export function UnifiedDetailsPanel({
   type,
   nome,
   telefone,
+  whatsapp,
   email,
   protocolo,
   status,
@@ -50,8 +52,8 @@ export function UnifiedDetailsPanel({
 }: UnifiedDetailsPanelProps) {
   const [showSoftphone, setShowSoftphone] = useState(false);
   const [dialNumber, setDialNumber] = useState("");
-  const [infoOpen, setInfoOpen] = useState(true);
   const [empresasOpen, setEmpresasOpen] = useState(true);
+  const [contatoOpen, setContatoOpen] = useState(true);
 
   const getIcon = () => {
     switch (type) {
@@ -75,8 +77,8 @@ export function UnifiedDetailsPanel({
   };
 
   if (!nome && !protocolo && !titulo) {
-  return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+    return (
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <div className="p-4 text-center text-muted-foreground flex-1 flex items-center justify-center">
           <div>
             {getIcon()}
@@ -89,89 +91,37 @@ export function UnifiedDetailsPanel({
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-      {/* Header com avatar e nome */}
+      {/* PARTE 1 - Nome da Empresa/Cliente */}
       <div className="p-4 border-b flex-shrink-0">
         <div className="flex flex-col items-center">
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center mb-3">
             {getIcon()}
           </div>
           <h3 className="font-semibold text-lg text-center">{getTitle()}</h3>
-          {telefone && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto py-1 px-2 text-xs text-muted-foreground hover:text-primary mt-2"
-              onClick={() => {
-                setDialNumber(telefone);
-                setShowSoftphone(true);
-              }}
-            >
-              <Phone className="w-3 h-3 mr-1" />
-              {telefone}
-            </Button>
-          )}
+          
+          {/* Info básica */}
+          <div className="mt-2 space-y-1 text-center">
+            {protocolo && (
+              <p className="text-xs text-muted-foreground">
+                Protocolo: <span className="font-mono font-medium">{protocolo}</span>
+              </p>
+            )}
+            {status && (
+              <Badge variant="secondary" className="text-xs">{status}</Badge>
+            )}
+            {valorTotal !== undefined && valorTotal !== null && (
+              <p className="text-sm font-semibold text-primary">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotal)}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Conteúdo Principal */}
       <div className="flex-1 overflow-y-auto min-h-0 overscroll-contain p-4 space-y-4">
-        {/* Informações principais - sempre visíveis sem collapsible */}
-        <div className="space-y-2">
-          {protocolo && (
-            <div className="py-2 border-b">
-              <p className="text-xs text-muted-foreground mb-1">Protocolo</p>
-              <p className="text-sm font-mono font-medium">{protocolo}</p>
-            </div>
-          )}
-
-          {status && (
-            <div className="py-2 border-b">
-              <p className="text-xs text-muted-foreground mb-1">Status</p>
-              <Badge variant="secondary" className="text-xs">{status}</Badge>
-            </div>
-          )}
-
-          {valorTotal !== undefined && valorTotal !== null && (
-            <div className="py-2 border-b">
-              <p className="text-xs text-muted-foreground mb-1">Valor Total</p>
-              <p className="text-sm font-semibold text-primary">
-                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTotal)}
-              </p>
-            </div>
-          )}
-
-          {canal && (
-            <div className="py-2 border-b">
-              <p className="text-xs text-muted-foreground mb-1">Canal</p>
-              <Badge variant="secondary" className="bg-green-500 text-white text-xs h-5">
-                {canal}
-              </Badge>
-            </div>
-          )}
-
-          {dataHora && (
-            <div className="py-2 border-b">
-              <p className="text-xs text-muted-foreground mb-1">Data/Hora</p>
-              <p className="text-xs">{dataHora}</p>
-            </div>
-          )}
-
-          {email && (
-            <div className="py-2 border-b">
-              <p className="text-xs text-muted-foreground mb-1">Email</p>
-              <p className="text-xs truncate">{email}</p>
-            </div>
-          )}
-
-          {descricao && (
-            <div className="py-2 border-b">
-              <p className="text-xs text-muted-foreground mb-1">Descrição</p>
-              <p className="text-xs">{descricao}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Seção de Empresas - Colapsável */}
+        
+        {/* PARTE 2 - Empresa Vinculada - Colapsável */}
         <Collapsible open={empresasOpen} onOpenChange={setEmpresasOpen}>
           <CollapsibleTrigger asChild>
             <Button
@@ -180,7 +130,7 @@ export function UnifiedDetailsPanel({
             >
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-primary" />
-                <span className="font-semibold text-sm">Empresas Vinculadas</span>
+                <span className="font-semibold text-sm">Empresa Vinculada</span>
               </div>
               {empresasOpen ? (
                 <ChevronUp className="w-4 h-4 text-muted-foreground" />
@@ -255,6 +205,95 @@ export function UnifiedDetailsPanel({
                 )}
               </div>
             )}
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* PARTE 3 - Contato - Colapsável */}
+        <Collapsible open={contatoOpen} onOpenChange={setContatoOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-between p-0 h-auto hover:bg-transparent"
+            >
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-primary" />
+                <span className="font-semibold text-sm">Contato</span>
+              </div>
+              {contatoOpen ? (
+                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              )}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-3">
+            <Card className="p-3 rounded-2xl space-y-3">
+              {/* Telefone */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Telefone</span>
+                </div>
+                {telefone ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto py-1 px-2 text-xs hover:text-primary"
+                    onClick={() => {
+                      setDialNumber(telefone);
+                      setShowSoftphone(true);
+                    }}
+                  >
+                    {telefone}
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">-</span>
+                )}
+              </div>
+
+              {/* WhatsApp */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">WhatsApp</span>
+                </div>
+                {whatsapp || telefone ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto py-1 px-2 text-xs hover:text-green-500"
+                    onClick={() => {
+                      const number = (whatsapp || telefone || "").replace(/\D/g, '');
+                      window.open(`https://wa.me/55${number}`, '_blank');
+                    }}
+                  >
+                    {whatsapp || telefone}
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">-</span>
+                )}
+              </div>
+
+              {/* Email */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Email</span>
+                </div>
+                {email ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto py-1 px-2 text-xs hover:text-primary truncate max-w-[150px]"
+                    onClick={() => window.open(`mailto:${email}`, '_blank')}
+                  >
+                    {email}
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">-</span>
+                )}
+              </div>
+            </Card>
           </CollapsibleContent>
         </Collapsible>
       </div>
