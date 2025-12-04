@@ -2261,8 +2261,10 @@ ${recentMessages}
           ? 'hidden' 
           : showConversationsList 
             ? isSmallTablet 
-              ? 'w-52' 
-              : 'w-72 lg:w-80' 
+              ? 'w-40' 
+              : isTablet 
+                ? 'w-48'
+                : 'w-72 lg:w-80' 
             : 'w-0 border-r-0'
       }`}>
         {showConversationsList && (
@@ -3466,7 +3468,7 @@ ${recentMessages}
 
           {/* Client Details Panel - Orçamento */}
           {showClientDetailsOrcamento && selectedOrcamentoData && (
-            <div className={`${isSmallTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+            <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
               <UnifiedDetailsPanel
                 type="orcamento"
                 nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente"}
