@@ -76,6 +76,7 @@ export default function Atendimento() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const isTablet = !isMobile && window.innerWidth < 1280; // Considera tablet entre 768-1280px
+  const isSmallTablet = !isMobile && window.innerWidth >= 768 && window.innerWidth < 1024; // Tablet pequeno
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -2259,7 +2260,9 @@ ${recentMessages}
         isMobile 
           ? 'hidden' 
           : showConversationsList 
-            ? 'w-80 md:w-72 lg:w-80' 
+            ? isSmallTablet 
+              ? 'w-64' 
+              : 'w-80 md:w-72 lg:w-80' 
             : 'w-0 border-r-0'
       }`}>
         {showConversationsList && (
@@ -3397,7 +3400,7 @@ ${recentMessages}
 
       {/* Right Sidebar - Company Details Panel */}
       {selectedConversation && selectedConv && showClientDetailsChat && (
-        <div className="w-80 md:w-64 lg:w-80 bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border">
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="chat"
             nome={selectedConv.customer?.nome || "Cliente"}
@@ -3427,8 +3430,18 @@ ${recentMessages}
         <>
           <div className={`transition-all duration-300 ${
             showConversationsList 
-              ? (showClientDetailsOrcamento && selectedOrcamentoData ? 'w-[calc(100%-320px-320px)]' : 'w-[calc(100%-320px)]')
-              : (showClientDetailsOrcamento && selectedOrcamentoData ? 'w-[calc(100%-320px)]' : 'w-full')
+              ? (showClientDetailsOrcamento && selectedOrcamentoData 
+                  ? isSmallTablet 
+                    ? 'w-[calc(100%-256px-224px)]' 
+                    : 'w-[calc(100%-320px-320px)]' 
+                  : isSmallTablet 
+                    ? 'w-[calc(100%-256px)]' 
+                    : 'w-[calc(100%-320px)]')
+              : (showClientDetailsOrcamento && selectedOrcamentoData 
+                  ? isSmallTablet 
+                    ? 'w-[calc(100%-224px)]' 
+                    : 'w-[calc(100%-320px)]' 
+                  : 'w-full')
           } h-screen bg-gray-100 border-l shadow-lg overflow-hidden`}>
             <POSView 
               estabelecimentoId={estabelecimentoId} 
@@ -3453,23 +3466,25 @@ ${recentMessages}
 
           {/* Client Details Panel - Orçamento */}
           {showClientDetailsOrcamento && selectedOrcamentoData && (
-            <UnifiedDetailsPanel
-              type="orcamento"
-              nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente"}
-              telefone={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
-              whatsapp={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
-              email={selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email}
-              customerId={selectedOrcamentoData.customers?.id}
-              protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
-              status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
-              valorTotal={selectedOrcamentoData.valor_total || 0}
-              companies={
-                selectedOrcamentoData.empresas 
-                  ? [{ empresas: selectedOrcamentoData.empresas, is_primary: true }]
-                  : customerCompanies
-              }
-              onSetGlobalFilter={setGlobalFilter}
-            />
+            <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+              <UnifiedDetailsPanel
+                type="orcamento"
+                nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente"}
+                telefone={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
+                whatsapp={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
+                email={selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email}
+                customerId={selectedOrcamentoData.customers?.id}
+                protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
+                status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
+                valorTotal={selectedOrcamentoData.valor_total || 0}
+                companies={
+                  selectedOrcamentoData.empresas 
+                    ? [{ empresas: selectedOrcamentoData.empresas, is_primary: true }]
+                    : customerCompanies
+                }
+                onSetGlobalFilter={setGlobalFilter}
+              />
+            </div>
           )}
         </>
       )}

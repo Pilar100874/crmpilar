@@ -1920,36 +1920,43 @@ export default function POSView({
         </div>
       </div>
 
-      {/* Barra de Total Inferior */}
-      <div className="bg-card border-t border-border px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-        <div className="flex items-center gap-2 text-muted-foreground">
-            <User className="w-5 h-5" />
-            <span className="text-sm">
+      {/* Barra de Total Inferior - Design Moderno */}
+      <div className="bg-gradient-to-r from-card via-card to-slate-50/50 border-t border-border/50 px-3 md:px-6 py-3 md:py-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 md:gap-0 shadow-lg">
+        {/* Linha superior em mobile / lado esquerdo em desktop */}
+        <div className="flex items-center gap-3 md:gap-6 flex-wrap">
+          {/* Empresa selecionada */}
+          <div className="flex items-center gap-2 text-muted-foreground bg-slate-100/80 px-3 py-1.5 rounded-lg">
+            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+              <User className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-xs md:text-sm font-medium truncate max-w-[150px] md:max-w-[200px]">
               {selectedEmpresa 
                 ? empresas.find(e => e.id === selectedEmpresa)?.nome_fantasia 
                 : 'Nenhuma empresa selecionada'}
             </span>
           </div>
-          <div className="h-8 w-px bg-border" />
-          <div>
-            <div className="text-muted-foreground text-xs mb-1">Total</div>
-            <div className="flex items-baseline gap-3">
+          
+          <div className="hidden md:block h-10 w-px bg-border/50" />
+          
+          {/* Total */}
+          <div className="flex-1 md:flex-none">
+            <div className="text-muted-foreground text-[10px] md:text-xs uppercase tracking-wide font-medium mb-0.5">Total do Orçamento</div>
+            <div className="flex items-baseline gap-2 md:gap-3">
               {regrasAplicadas.length > 0 ? (
                 <>
-                  <div className="text-muted-foreground font-semibold text-xl line-through">
+                  <div className="text-muted-foreground/70 font-medium text-base md:text-lg line-through">
                     {new Intl.NumberFormat('pt-BR', {
                       style: 'currency',
                       currency: 'BRL'
                     }).format(getTotal())}
                   </div>
-                  <div className="text-foreground font-bold text-3xl flex items-center gap-2">
+                  <div className="text-emerald-600 font-bold text-xl md:text-2xl lg:text-3xl flex items-center gap-2">
                     {new Intl.NumberFormat('pt-BR', {
                       style: 'currency',
                       currency: 'BRL'
                     }).format(valorComRegras)}
                     <span 
-                      className="w-6 h-6 rounded-full bg-green-500 text-white text-xs font-bold flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors"
+                      className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white text-[10px] md:text-xs font-bold flex items-center justify-center cursor-pointer hover:scale-110 transition-transform shadow-md"
                       onClick={() => {
                         setSelectedProduto(null);
                         setShowFreteInDetails(false);
@@ -1963,7 +1970,7 @@ export default function POSView({
                   </div>
                 </>
               ) : (
-                <div className="text-foreground font-bold text-3xl">
+                <div className="text-foreground font-bold text-xl md:text-2xl lg:text-3xl">
                   {new Intl.NumberFormat('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
@@ -1976,19 +1983,21 @@ export default function POSView({
           {/* Valor de Pedágio */}
           {selectedEmpresa && (
             <>
-              <div className="h-8 w-px bg-border" />
-              <div>
-                <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-                  <Truck className="w-3 h-3" />
-                  <span>Rota & Pedágio</span>
-                  <label className="flex items-center gap-1 ml-2 cursor-pointer">
+              <div className="hidden md:block h-10 w-px bg-border/50" />
+              <div className="bg-slate-50/80 rounded-lg px-3 py-2 border border-border/30">
+                <div className="flex items-center gap-2 text-muted-foreground text-[10px] md:text-xs mb-1">
+                  <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Truck className="w-3 h-3 text-primary" />
+                  </div>
+                  <span className="font-medium">Rota & Pedágio</span>
+                  <label className="flex items-center gap-1.5 ml-auto cursor-pointer bg-white px-2 py-0.5 rounded-full border border-border/50">
                     <input
                       type="checkbox"
                       checked={freteIdaEVolta}
                       onChange={(e) => setFreteIdaEVolta(e.target.checked)}
-                      className="w-3 h-3 rounded border-muted-foreground"
+                      className="w-3 h-3 rounded border-muted-foreground accent-primary"
                     />
-                    <span className="text-[10px]">Ida e volta</span>
+                    <span className="text-[10px] font-medium">Ida e volta</span>
                   </label>
                 </div>
                 {/* Mostrar distância e tempo da rota automaticamente */}
@@ -2172,7 +2181,7 @@ export default function POSView({
         </div>
         
         <Button 
-          className="bg-primary hover:bg-primary/90 h-14 px-8 text-base font-semibold"
+          className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary h-10 md:h-12 lg:h-14 px-4 md:px-6 lg:px-8 text-sm md:text-base font-semibold shadow-lg shadow-primary/25 rounded-xl w-full md:w-auto"
           onClick={handleFinalize}
           disabled={loading || cartArray.length === 0 || !selectedEmpresa}
         >
