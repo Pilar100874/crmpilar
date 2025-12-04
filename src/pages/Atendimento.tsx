@@ -138,6 +138,11 @@ export default function Atendimento() {
   const [radialTargetLanguage, setRadialTargetLanguage] = useState("en");
   const [radialTranslateText, setRadialTranslateText] = useState("");
   
+  // Import Reports states for RadialMenu
+  const [radialImportReports, setRadialImportReports] = useState<any[]>([]);
+  const [isRadialProcessingReport, setIsRadialProcessingReport] = useState(false);
+  const [radialReportProgress, setRadialReportProgress] = useState(0);
+  
   // Bot redirect states
   const [availableBots, setAvailableBots] = useState<any[]>([]);
   const [selectedBotRedirect, setSelectedBotRedirect] = useState<string | null>(null);
@@ -311,6 +316,7 @@ export default function Atendimento() {
     loadTodayTasks();
     loadUserEmails();
     loadOrcamentos();
+    loadRadialImportReports();
   }, []);
 
 
@@ -496,6 +502,56 @@ export default function Atendimento() {
         setSelectedTransferUser(usersData[0].id);
       }
     }
+  };
+
+  // Load import reports for RadialMenu
+  const loadRadialImportReports = async () => {
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+
+      const hoje = new Date().toISOString().split('T')[0];
+
+      const { data, error } = await supabase
+        .from("relatorios_importacao")
+        .select("*")
+        .eq("estabelecimento_id", estabId)
+        .eq("ativo", true)
+        .or(`data_validade.is.null,data_validade.gte.${hoje}`)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setRadialImportReports(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar relatórios de importação:", error);
+    }
+  };
+
+  const handleRadialReportSelect = async (reportId: string, fileType: 'pdf' | 'excel') => {
+    if (!selectedConversation) {
+      toast.error("Selecione uma conversa primeiro");
+      return;
+    }
+
+    setIsRadialProcessingReport(true);
+    setRadialReportProgress(0);
+
+    const interval = setInterval(() => {
+      setRadialReportProgress(prev => Math.min(prev + 10, 90));
+    }, 200);
+
+    setTimeout(() => {
+      clearInterval(interval);
+      setRadialReportProgress(100);
+      const report = radialImportReports.find(r => r.id === reportId);
+      if (report) {
+        handleSendMessage(`Relatório: ${report.nome}`, "file", report.url_arquivo, report.nome);
+        toast.success(`Relatório "${report.nome}" enviado`);
+      }
+      setIsRadialProcessingReport(false);
+      setShowRadialReportsDialog(false);
+    }, 2000);
   };
 
   const handleTransferToUser = async () => {
@@ -1991,17 +2047,65 @@ ${recentMessages}
     </Dialog>
 
     <Dialog open={showRadialReportsDialog} onOpenChange={setShowRadialReportsDialog}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+            <FileCheck className="h-5 w-5" />
             Relatórios Importados
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground text-center py-4">
-            Nenhum relatório disponível no momento.
-          </p>
+          {isRadialProcessingReport && (
+            <div className="space-y-2">
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary transition-all duration-200" 
+                  style={{ width: `${radialReportProgress}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Processando relatório... {radialReportProgress}%
+              </p>
+            </div>
+          )}
+          {radialImportReports.length > 0 ? (
+            <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
+              {radialImportReports.map((report) => (
+                <div key={report.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium truncate block">{report.nome}</span>
+                    {report.descricao && (
+                      <span className="text-xs text-muted-foreground truncate block">{report.descricao}</span>
+                    )}
+                  </div>
+                  <div className="flex gap-1 ml-2 flex-shrink-0">
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={() => handleRadialReportSelect(report.id, 'pdf')} 
+                      disabled={isRadialProcessingReport}
+                      title="Enviar como PDF"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={() => handleRadialReportSelect(report.id, 'excel')} 
+                      disabled={isRadialProcessingReport}
+                      title="Enviar como Excel"
+                    >
+                      <File className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Nenhum relatório disponível no momento.
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
