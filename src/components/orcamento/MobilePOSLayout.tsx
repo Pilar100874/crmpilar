@@ -1,0 +1,694 @@
+import { useState } from "react";
+import { Produto } from "@/types/orcamento";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Search,
+  Plus,
+  Minus,
+  Trash2,
+  ShoppingCart,
+  Package,
+  Filter,
+  Grid,
+  List,
+  Eye,
+  ChevronLeft,
+  X,
+  Camera,
+  Truck,
+  Tag,
+  Check
+} from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import ImageItemExtractor from "./ImageItemExtractor";
+
+interface MobilePOSLayoutProps {
+  produtos: Produto[];
+  grupos: any[];
+  empresas: any[];
+  cartItems: Map<string, { produto: Produto; quantity: number; preco: number }>;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  selectedEmpresa: string;
+  setSelectedEmpresa: (id: string) => void;
+  selectedGrupo: string;
+  setSelectedGrupo: (id: string) => void;
+  viewMode: 'grid' | 'list';
+  setViewMode: (mode: 'grid' | 'list') => void;
+  showFilters: boolean;
+  setShowFilters: (show: boolean) => void;
+  addToCart: (produto: Produto) => void;
+  removeFromCart: (produtoId: string) => void;
+  updateQuantity: (produtoId: string, delta: number) => void;
+  setCartItems: React.Dispatch<React.SetStateAction<Map<string, { produto: Produto; quantity: number; preco: number }>>>;
+  getTotal: () => number;
+  valorComRegras: number;
+  regrasAplicadas: Array<{ nome: string; detalhes: string; desconto?: number; percentual?: number }>;
+  selectedProduto: Produto | null;
+  setSelectedProduto: (produto: Produto | null) => void;
+  handleSaveOrcamento: () => void;
+  loading: boolean;
+  onClose?: () => void;
+  showPhotoModal: boolean;
+  setShowPhotoModal: (show: boolean) => void;
+  handleItemsExtracted: (items: any[]) => void;
+  autoRouteInfo: { distance: number; duration: number } | null;
+  routeLoading: boolean;
+  freteIdaEVolta: boolean;
+  pedagioResult: any;
+  freteResult: any;
+  setShowConjuntoDialog: (show: boolean) => void;
+  gruposQuantities: Map<string, number>;
+  setGruposQuantities: React.Dispatch<React.SetStateAction<Map<string, number>>>;
+}
+
+type MobileView = 'produtos' | 'carrinho' | 'detalhes';
+
+export default function MobilePOSLayout({
+  produtos,
+  grupos,
+  empresas,
+  cartItems,
+  searchQuery,
+  setSearchQuery,
+  selectedEmpresa,
+  setSelectedEmpresa,
+  selectedGrupo,
+  setSelectedGrupo,
+  viewMode,
+  setViewMode,
+  showFilters,
+  setShowFilters,
+  addToCart,
+  removeFromCart,
+  updateQuantity,
+  setCartItems,
+  getTotal,
+  valorComRegras,
+  regrasAplicadas,
+  selectedProduto,
+  setSelectedProduto,
+  handleSaveOrcamento,
+  loading,
+  onClose,
+  showPhotoModal,
+  setShowPhotoModal,
+  handleItemsExtracted,
+  autoRouteInfo,
+  routeLoading,
+  freteIdaEVolta,
+  pedagioResult,
+  freteResult,
+  setShowConjuntoDialog,
+  gruposQuantities,
+  setGruposQuantities
+}: MobilePOSLayoutProps) {
+  const [activeView, setActiveView] = useState<MobileView>('produtos');
+  
+  const cartArray = Array.from(cartItems.entries()).map(([_, item]) => item);
+  const cartCount = cartArray.reduce((sum, item) => sum + item.quantity, 0);
+  
+  const filteredProdutos = produtos.filter(produto => {
+    const matchesSearch = produto.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      produto.codigo?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesGrupo = !selectedGrupo || produto.grupo_id === selectedGrupo;
+    return matchesSearch && matchesGrupo;
+  });
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-background">
+      {/* Header */}
+      <div className="bg-card border-b border-border p-3">
+        <div className="flex items-center gap-2 mb-3">
+          {onClose && (
+            <Button variant="ghost" size="icon" onClick={onClose} className="h-9 w-9">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          )}
+          <h1 className="text-lg font-semibold flex-1">
+            {activeView === 'produtos' ? 'Produtos' : activeView === 'carrinho' ? 'Carrinho' : 'Detalhes'}
+          </h1>
+          {activeView === 'produtos' && (
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => setShowPhotoModal(true)}
+              >
+                <Camera className="h-5 w-5" />
+              </Button>
+              <Button
+                variant={showFilters ? "secondary" : "ghost"}
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Empresa Selector */}
+        <Select value={selectedEmpresa} onValueChange={setSelectedEmpresa}>
+          <SelectTrigger className="h-10 bg-background">
+            <SelectValue placeholder="Selecione a empresa" />
+          </SelectTrigger>
+          <SelectContent>
+            {empresas.map((empresa) => (
+              <SelectItem key={empresa.id} value={empresa.id}>
+                {empresa.nome_fantasia}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Search & Filters (only on produtos view) */}
+        {activeView === 'produtos' && (
+          <div className="mt-3 space-y-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar produtos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-10 bg-background"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {showFilters && (
+              <div className="flex gap-2">
+                <Select value={selectedGrupo} onValueChange={setSelectedGrupo}>
+                  <SelectTrigger className="h-9 flex-1 bg-background text-sm">
+                    <SelectValue placeholder="Grupo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    {grupos.map((grupo) => (
+                      <SelectItem key={grupo.id} value={grupo.id}>
+                        {grupo.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex border rounded-md">
+                  <Button
+                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-9 w-9 rounded-r-none"
+                    onClick={() => setViewMode('grid')}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-9 w-9 rounded-l-none"
+                    onClick={() => setViewMode('list')}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden">
+        {/* Produtos View */}
+        {activeView === 'produtos' && (
+          <ScrollArea className="h-full">
+            <div className="p-3">
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {filteredProdutos.map((produto) => {
+                    const inCart = cartItems.get(produto.id);
+                    const quantity = gruposQuantities.get(produto.id) || 1;
+                    return (
+                      <Card
+                        key={produto.id}
+                        className={cn(
+                          "overflow-hidden transition-all",
+                          inCart && "ring-2 ring-primary"
+                        )}
+                        onClick={() => {
+                          for (let i = 0; i < quantity; i++) {
+                            addToCart(produto);
+                          }
+                          setGruposQuantities(prev => {
+                            const next = new Map(prev);
+                            next.set(produto.id, 1);
+                            return next;
+                          });
+                        }}
+                      >
+                        <div className="aspect-square bg-muted relative">
+                          {produto.foto_url ? (
+                            <img
+                              src={produto.foto_url}
+                              alt={produto.nome}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="h-12 w-12 text-muted-foreground/30" />
+                            </div>
+                          )}
+                          {inCart && (
+                            <Badge className="absolute top-1 right-1 bg-primary text-primary-foreground text-xs">
+                              {inCart.quantity}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="p-2">
+                          <p className="text-xs font-medium line-clamp-2 min-h-[2rem]">
+                            {produto.nome}
+                          </p>
+                          <p className="text-sm font-bold text-primary mt-1">
+                            R$ 10,00
+                          </p>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredProdutos.map((produto) => {
+                    const inCart = cartItems.get(produto.id);
+                    return (
+                      <Card
+                        key={produto.id}
+                        className={cn(
+                          "p-3 transition-all",
+                          inCart && "ring-2 ring-primary"
+                        )}
+                        onClick={() => addToCart(produto)}
+                      >
+                        <div className="flex gap-3">
+                          <div className="w-16 h-16 bg-muted rounded flex-shrink-0 overflow-hidden">
+                            {produto.foto_url ? (
+                              <img
+                                src={produto.foto_url}
+                                alt={produto.nome}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Package className="h-8 w-8 text-muted-foreground/30" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{produto.nome}</p>
+                            <p className="text-xs text-muted-foreground">{produto.codigo}</p>
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="text-base font-bold text-primary">R$ 10,00</p>
+                              {inCart && (
+                                <Badge className="bg-primary text-primary-foreground">
+                                  {inCart.quantity} no carrinho
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+
+              {filteredProdutos.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <Search className="w-12 h-12 mb-3 opacity-20" />
+                  <p className="text-sm">Nenhum produto encontrado</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        )}
+
+        {/* Carrinho View */}
+        {activeView === 'carrinho' && (
+          <ScrollArea className="h-full">
+            <div className="p-3">
+              {cartArray.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
+                  <p className="text-sm">Carrinho vazio</p>
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => setActiveView('produtos')}
+                  >
+                    Adicionar produtos
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {cartArray.map(({ produto, quantity, preco }) => (
+                    <Card key={produto.id} className="p-3">
+                      <div className="flex gap-3">
+                        <div className="w-16 h-16 bg-muted rounded flex-shrink-0 overflow-hidden">
+                          {produto.foto_url ? (
+                            <img src={produto.foto_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="h-8 w-8 text-muted-foreground/30" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm font-medium truncate flex-1">{produto.nome}</p>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 -mt-1 -mr-1 text-destructive"
+                              onClick={() => removeFromCart(produto.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{formatCurrency(preco)} cada</p>
+                          
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center gap-1 border rounded-md">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => updateQuantity(produto.id, -1)}
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={quantity}
+                                onChange={(e) => {
+                                  const newQty = parseInt(e.target.value) || 1;
+                                  setCartItems(prev => {
+                                    const newCart = new Map(prev);
+                                    const item = newCart.get(produto.id);
+                                    if (item) {
+                                      newCart.set(produto.id, { ...item, quantity: newQty });
+                                    }
+                                    return newCart;
+                                  });
+                                }}
+                                className="w-14 h-8 text-center text-sm border-0 bg-transparent"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => updateQuantity(produto.id, 1)}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <p className="text-base font-bold">
+                              {formatCurrency(quantity * preco)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+
+                  {/* Resumo */}
+                  <Card className="p-4 bg-muted/50">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Subtotal ({cartCount} itens)</span>
+                        <span>{formatCurrency(getTotal())}</span>
+                      </div>
+                      
+                      {autoRouteInfo && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Truck className="h-3.5 w-3.5" />
+                            Rota ({freteIdaEVolta ? 'ida+volta' : 'só ida'})
+                          </span>
+                          <span>{(autoRouteInfo.distance / 1000).toFixed(0)} km</span>
+                        </div>
+                      )}
+                      
+                      {freteResult && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Frete</span>
+                          <span>{formatCurrency(freteResult.totalCustoViagem)}</span>
+                        </div>
+                      )}
+
+                      {regrasAplicadas.length > 0 && (
+                        <div className="flex justify-between text-sm text-green-600">
+                          <span className="flex items-center gap-1">
+                            <Tag className="h-3.5 w-3.5" />
+                            Desconto ({regrasAplicadas.length} regras)
+                          </span>
+                          <span>-{formatCurrency(getTotal() - valorComRegras)}</span>
+                        </div>
+                      )}
+
+                      <div className="border-t pt-2 mt-2">
+                        <div className="flex justify-between text-lg font-bold">
+                          <span>Total</span>
+                          <span className="text-primary">{formatCurrency(valorComRegras || getTotal())}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        )}
+
+        {/* Detalhes View */}
+        {activeView === 'detalhes' && (
+          <ScrollArea className="h-full">
+            <div className="p-3 space-y-3">
+              {/* Rota Info */}
+              {autoRouteInfo && (
+                <Card className="p-4">
+                  <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                    <Truck className="h-4 w-4" />
+                    Informações da Rota
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Distância</p>
+                      <p className="text-lg font-bold">{(autoRouteInfo.distance / 1000).toFixed(0)} km</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tempo estimado</p>
+                      <p className="text-lg font-bold">
+                        {Math.floor(autoRouteInfo.duration / 60)}h {Math.round(autoRouteInfo.duration % 60)}min
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Frete */}
+              {freteResult && (
+                <Card className="p-4">
+                  <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                    <Truck className="h-4 w-4" />
+                    Custo do Frete
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Combustível</span>
+                      <span>{formatCurrency(freteResult.custosCombustivel)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Custos Fixos</span>
+                      <span>{formatCurrency(freteResult.custosFixos)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Mão de Obra</span>
+                      <span>{formatCurrency(freteResult.custosHorasNormais + freteResult.custosHorasExtras)}</span>
+                    </div>
+                    <div className="border-t pt-2 flex justify-between font-bold">
+                      <span>Total Frete</span>
+                      <span>{formatCurrency(freteResult.totalCustoViagem)}</span>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Regras Aplicadas */}
+              {regrasAplicadas.length > 0 && (
+                <Card className="p-4">
+                  <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                    <Tag className="h-4 w-4" />
+                    Regras Aplicadas ({regrasAplicadas.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {regrasAplicadas.map((regra, index) => (
+                      <div key={index} className="flex items-start gap-2 text-sm">
+                        <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="font-medium">{regra.nome}</p>
+                          <p className="text-xs text-muted-foreground">{regra.detalhes}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+              {/* Produto Selecionado */}
+              {selectedProduto && (
+                <Card className="p-4">
+                  <div className="flex gap-4">
+                    <div className="w-24 h-24 bg-muted rounded overflow-hidden flex-shrink-0">
+                      {selectedProduto.foto_url ? (
+                        <img
+                          src={selectedProduto.foto_url}
+                          alt={selectedProduto.nome}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="h-10 w-10 text-muted-foreground/30" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium">{selectedProduto.nome}</h3>
+                      <p className="text-sm text-muted-foreground">{selectedProduto.codigo}</p>
+                      <p className="text-lg font-bold text-primary mt-2">R$ 10,00</p>
+                      <Button
+                        className="mt-3 w-full"
+                        onClick={() => {
+                          addToCart(selectedProduto);
+                          setActiveView('carrinho');
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar ao Carrinho
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {!autoRouteInfo && !freteResult && regrasAplicadas.length === 0 && !selectedProduto && (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <Eye className="w-12 h-12 mb-3 opacity-20" />
+                  <p className="text-sm">Selecione uma empresa para ver detalhes</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        )}
+      </div>
+
+      {/* Bottom Action Bar */}
+      {activeView === 'carrinho' && cartArray.length > 0 && (
+        <div className="border-t bg-card p-3">
+          <Button
+            className="w-full h-12 text-base"
+            onClick={handleSaveOrcamento}
+            disabled={loading || !selectedEmpresa}
+          >
+            {loading ? "Salvando..." : `Salvar Orçamento - ${formatCurrency(valorComRegras || getTotal())}`}
+          </Button>
+        </div>
+      )}
+
+      {/* Bottom Navigation */}
+      <div className="border-t bg-card">
+        <div className="flex">
+          <Button
+            variant="ghost"
+            className={cn(
+              "flex-1 h-14 rounded-none flex-col gap-1",
+              activeView === 'produtos' && "bg-primary/10 text-primary"
+            )}
+            onClick={() => setActiveView('produtos')}
+          >
+            <Package className="h-5 w-5" />
+            <span className="text-xs">Produtos</span>
+          </Button>
+          <Button
+            variant="ghost"
+            className={cn(
+              "flex-1 h-14 rounded-none flex-col gap-1 relative",
+              activeView === 'carrinho' && "bg-primary/10 text-primary"
+            )}
+            onClick={() => setActiveView('carrinho')}
+          >
+            <div className="relative">
+              <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-4 min-w-4 text-[10px] p-0 flex items-center justify-center bg-primary text-primary-foreground">
+                  {cartCount}
+                </Badge>
+              )}
+            </div>
+            <span className="text-xs">Carrinho</span>
+          </Button>
+          <Button
+            variant="ghost"
+            className={cn(
+              "flex-1 h-14 rounded-none flex-col gap-1",
+              activeView === 'detalhes' && "bg-primary/10 text-primary"
+            )}
+            onClick={() => setActiveView('detalhes')}
+          >
+            <Eye className="h-5 w-5" />
+            <span className="text-xs">Detalhes</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Photo Modal */}
+      {showPhotoModal && (
+        <div className="fixed inset-0 z-50 bg-background/95 flex flex-col">
+          <div className="flex items-center justify-between p-3 border-b">
+            <h2 className="text-lg font-semibold">Extrair itens de foto</h2>
+            <Button variant="ghost" size="icon" onClick={() => setShowPhotoModal(false)}>
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
+          <div className="flex-1 overflow-auto p-4">
+            <ImageItemExtractor onItemsExtracted={handleItemsExtracted} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
