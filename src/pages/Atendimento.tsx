@@ -2624,6 +2624,7 @@ ${recentMessages}
                 type="agenda"
                 nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
                 telefone={selectedTaskData.customers?.telefone}
+                whatsapp={selectedTaskData.customers?.telefone}
                 email={selectedTaskData.customers?.email}
                 protocolo={selectedTaskData.id?.slice(0, 8).toUpperCase()}
                 status={selectedTaskData.status}
@@ -2728,6 +2729,7 @@ ${recentMessages}
                 type="email"
                 nome={selectedEmailData.customer?.nome || selectedEmailData.from_email}
                 telefone={selectedEmailData.customer?.telefone}
+                whatsapp={selectedEmailData.customer?.telefone}
                 email={selectedEmailData.from_email}
                 protocolo={selectedEmailData.id?.slice(0, 8).toUpperCase()}
                 status={selectedEmailData.read ? "Lido" : "Não lido"}
@@ -3315,6 +3317,7 @@ ${recentMessages}
             type="chat"
             nome={selectedConv.customer?.nome || "Cliente"}
             telefone={selectedConv.customer?.telefone}
+            whatsapp={selectedConv.customer?.telefone}
             email={selectedConv.customer?.email}
             protocolo={selectedConv.id.slice(0, 8).toUpperCase()}
             status={selectedConv.chat_status || selectedConv.status}
@@ -3377,6 +3380,7 @@ ${recentMessages}
               type="orcamento"
               nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente"}
               telefone={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
+              whatsapp={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
               email={selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email}
               protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
               status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
