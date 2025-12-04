@@ -31,6 +31,7 @@ interface TooltipContextValue {
   sideOffset?: number;
   align?: 'start' | 'center' | 'end';
   alignOffset?: number;
+  isOpen?: boolean;
 }
 
 const TooltipContext = React.createContext<TooltipContextValue>({});
@@ -52,13 +53,29 @@ const Tooltip = ({
   sideOffset = 4, 
   align = 'center', 
   alignOffset = 0,
-  open,
+  open: controlledOpen,
   defaultOpen,
   onOpenChange
 }: TooltipProps) => {
+  const [internalOpen, setInternalOpen] = React.useState(defaultOpen ?? false);
+  
+  const isControlled = controlledOpen !== undefined;
+  const isOpen = isControlled ? controlledOpen : internalOpen;
+  
+  const handleOpenChange = (open: boolean) => {
+    if (!isControlled) {
+      setInternalOpen(open);
+    }
+    onOpenChange?.(open);
+  };
+
   return (
-    <TooltipContext.Provider value={{ side, sideOffset, align, alignOffset }}>
-      <TooltipPrimitive.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+    <TooltipContext.Provider value={{ side, sideOffset, align, alignOffset, isOpen }}>
+      <TooltipPrimitive.Root 
+        open={isOpen} 
+        defaultOpen={defaultOpen} 
+        onOpenChange={handleOpenChange}
+      >
         {children}
       </TooltipPrimitive.Root>
     </TooltipContext.Provider>
@@ -112,40 +129,44 @@ const TooltipContent = React.forwardRef<
   const sideOffset = sideOffsetProp ?? context.sideOffset ?? 4;
   const align = alignProp ?? context.align ?? 'center';
   const alignOffset = alignOffsetProp ?? context.alignOffset ?? 0;
+  const isOpen = context.isOpen ?? false;
   
   const variants = getAnimationVariants(side);
 
   return (
-    <AnimatePresence>
-      <TooltipPrimitive.Portal>
-        <TooltipPrimitive.Content
-          ref={ref}
-          side={side}
-          sideOffset={sideOffset}
-          align={align}
-          alignOffset={alignOffset}
-          asChild
-          {...props}
-        >
-          <motion.div
-            initial={variants.initial}
-            animate={variants.animate}
-            exit={variants.exit}
-            transition={{
-              type: 'spring',
-              stiffness: 400,
-              damping: 25,
-              mass: 0.5,
-            }}
-            className={cn(
-              'z-[9999] overflow-hidden rounded-lg border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-lg',
-              className
-            )}
+    <AnimatePresence mode="wait">
+      {isOpen && (
+        <TooltipPrimitive.Portal forceMount>
+          <TooltipPrimitive.Content
+            ref={ref}
+            side={side}
+            sideOffset={sideOffset}
+            align={align}
+            alignOffset={alignOffset}
+            asChild
+            forceMount
+            {...props}
           >
-            {children}
-          </motion.div>
-        </TooltipPrimitive.Content>
-      </TooltipPrimitive.Portal>
+            <motion.div
+              initial={variants.initial}
+              animate={variants.animate}
+              exit={variants.exit}
+              transition={{
+                type: 'spring',
+                stiffness: 400,
+                damping: 25,
+                mass: 0.5,
+              }}
+              className={cn(
+                'z-[9999] overflow-hidden rounded-lg border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-lg',
+                className
+              )}
+            >
+              {children}
+            </motion.div>
+          </TooltipPrimitive.Content>
+        </TooltipPrimitive.Portal>
+      )}
     </AnimatePresence>
   );
 });
