@@ -3377,7 +3377,11 @@ ${recentMessages}
               protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
               status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
               valorTotal={selectedOrcamentoData.valor_total || 0}
-              companies={[]}
+              companies={
+                selectedOrcamentoData.empresas 
+                  ? [{ empresas: selectedOrcamentoData.empresas, is_primary: true }]
+                  : customerCompanies
+              }
             />
           )}
         </>
