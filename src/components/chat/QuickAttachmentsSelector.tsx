@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/lib/toast-config";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const toolbarBtnClass = "h-9 w-9 rounded-xl bg-card border border-border/30 shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted hover:border-border/50 hover:shadow-md transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
 const toolbarBtnActiveClass = "h-9 w-9 rounded-xl bg-primary/15 border border-primary/40 shadow-sm flex items-center justify-center text-primary hover:bg-primary/20 transition-all duration-200";
@@ -101,15 +102,21 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
   return (
     <>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            disabled={disabled}
-            title="Anexos rápidos"
-            className={open ? toolbarBtnActiveClass : toolbarBtnClass}
-          >
-            <LinkIcon size={20} />
-          </button>
-        </PopoverTrigger>
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <button
+                  disabled={disabled}
+                  className={open ? toolbarBtnActiveClass : toolbarBtnClass}
+                >
+                  <LinkIcon size={20} />
+                </button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent>Anexos rápidos</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <PopoverContent className="w-[500px] p-0 rounded-2xl" align="end">
           <div className="p-4 border-b bg-muted/30 space-y-3">
             <div>
