@@ -148,43 +148,41 @@ export function MobileAtendimentoLayout({
         )}
       </div>
 
-      {/* Bottom Navigation - Apenas na view de lista */}
-      {mobileView === "list" && (
-        <div className="flex-shrink-0 bg-card border-t border-border/50 px-2 py-1.5 safe-area-bottom">
-          <div className="flex justify-around">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => onTabChange(tab.id)}
-                  className={cn(
-                    "flex flex-col items-center justify-center py-1.5 px-3 rounded-xl transition-all relative",
-                    isActive
-                      ? "text-primary bg-primary/10"
-                      : "text-muted-foreground hover:text-foreground"
+      {/* Bottom Navigation - Sempre visível */}
+      <div className="flex-shrink-0 bg-card border-t border-border/50 px-2 py-1.5 safe-area-bottom">
+        <div className="flex justify-around">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={cn(
+                  "flex flex-col items-center justify-center py-1.5 px-3 rounded-xl transition-all relative",
+                  isActive
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <div className="relative">
+                  <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
+                  {tab.badge && tab.badge > 0 && (
+                    <Badge
+                      className="absolute -top-1.5 -right-2.5 h-4 min-w-[16px] px-1 text-[10px] bg-destructive text-destructive-foreground border-0"
+                    >
+                      {tab.badge > 99 ? "99+" : tab.badge}
+                    </Badge>
                   )}
-                >
-                  <div className="relative">
-                    <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
-                    {tab.badge && tab.badge > 0 && (
-                      <Badge
-                        className="absolute -top-1.5 -right-2.5 h-4 min-w-[16px] px-1 text-[10px] bg-destructive text-destructive-foreground border-0"
-                      >
-                        {tab.badge > 99 ? "99+" : tab.badge}
-                      </Badge>
-                    )}
-                  </div>
-                  <span className={cn("text-[10px] mt-0.5 font-medium", isActive && "text-primary")}>
-                    {tab.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+                </div>
+                <span className={cn("text-[10px] mt-0.5 font-medium", isActive && "text-primary")}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }
