@@ -2273,8 +2273,8 @@ ${recentMessages}
       {/* ========== MOBILE/TABLET LAYOUT ========== */}
       {(isMobile || isTablet) ? (
         <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
-          {/* Mobile Header - Mostra quando não está na lista */}
-          {mobileView !== "list" && (
+          {/* Mobile Header - Mostra quando não está na lista e NÃO está no orçamento aberto */}
+          {mobileView !== "list" && !(activeTab === "orcamento" && orcamentoSheetOpen) && (
             <div className="flex-shrink-0 px-3 py-2.5 bg-card border-b border-border/50 flex items-center justify-between safe-area-top">
               <div className="flex items-center gap-2">
                 <Button
@@ -2469,6 +2469,11 @@ ${recentMessages}
                 estabelecimentoId={estabelecimentoId}
                 setOrcamentoSheetOpen={setOrcamentoSheetOpen}
                 initialEmpresaForOrcamento={initialEmpresaForOrcamento}
+                onOrcamentoClose={() => {
+                  setOrcamentoSheetOpen(false);
+                  setSelectedOrcamentoId(null);
+                  setMobileView("list");
+                }}
               />
             </div>
 
@@ -4250,6 +4255,7 @@ interface MobileMainContentProps {
   estabelecimentoId: string;
   setOrcamentoSheetOpen: (open: boolean) => void;
   initialEmpresaForOrcamento?: string | null;
+  onOrcamentoClose?: () => void;
 }
 
 function MobileMainContent({
@@ -4301,6 +4307,7 @@ function MobileMainContent({
   estabelecimentoId,
   setOrcamentoSheetOpen,
   initialEmpresaForOrcamento,
+  onOrcamentoClose,
 }: MobileMainContentProps) {
   // Chat content
   if (activeTab === "chat" && selectedConversation && selectedConv) {
@@ -4445,7 +4452,7 @@ function MobileMainContent({
         <POSView 
           estabelecimentoId={estabelecimentoId} 
           orcamentoId={selectedOrcamentoId || undefined}
-          onClose={() => setOrcamentoSheetOpen(false)}
+          onClose={onOrcamentoClose}
           showClientDetails={false}
           onToggleClientDetails={() => {}}
           showPanelToggle={false}
