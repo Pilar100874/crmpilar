@@ -138,15 +138,32 @@ export default function POSView({
     produto?: { id: string; nome: string };
   }>>([]);
   
-  // Filtros avançados
-  const [gramaturaMin, setGramaturaMin] = useState<string>("");
-  const [gramaturaMax, setGramaturaMax] = useState<string>("");
-  const [larguraMin, setLarguraMin] = useState<string>("");
-  const [larguraMax, setLarguraMax] = useState<string>("");
-  const [comprimentoMin, setComprimentoMin] = useState<string>("");
-  const [comprimentoMax, setComprimentoMax] = useState<string>("");
+  // Filtros avançados - Dynamic custom fields
   const [selectedGrupo, setSelectedGrupo] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
+  const [camposCustomizados, setCamposCustomizados] = useState<Array<{
+    id: string;
+    campo_key: string;
+    nome: string;
+    tipo: string;
+    unidade?: string;
+    opcoes?: any;
+    pesquisa_faixa?: boolean;
+  }>>([]);
+  const [customFieldFilters, setCustomFieldFilters] = useState<{
+    range: Record<string, { min: string; max: string }>;
+    text: Record<string, string>;
+    select: Record<string, string>;
+    checkbox: Record<string, boolean | null>;
+    number: Record<string, string>;
+  }>({
+    range: {},
+    text: {},
+    select: {},
+    checkbox: {},
+    number: {}
+  });
+  
   const primeiroInputRef = useRef<HTMLInputElement>(null);
   const [showCartDialog, setShowCartDialog] = useState(false);
   const [cartSearchQuery, setCartSearchQuery] = useState("");
@@ -164,6 +181,79 @@ export default function POSView({
   const [numAjudantes, setNumAjudantes] = useState(0);
   const [veiculoConfig, setVeiculoConfig] = useState<VeiculoConfig | null>(null);
   const [showFreteDetailedInTab, setShowFreteDetailedInTab] = useState(false);
+
+  // Load custom fields when group changes
+  useEffect(() => {
+    if (selectedGrupo && selectedGrupo !== "" && selectedGrupo !== "all") {
+      loadCamposCustomizados(selectedGrupo);
+    } else {
+      setCamposCustomizados([]);
+      setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
+    }
+  }, [selectedGrupo]);
+
+  const loadCamposCustomizados = async (grupoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('produto_campos_customizados')
+        .select('*')
+        .eq('grupo_id', grupoId)
+        .eq('ativo', true)
+        .order('ordem');
+
+      if (error) throw error;
+      setCamposCustomizados(data || []);
+      
+      const newFilters: typeof customFieldFilters = { range: {}, text: {}, select: {}, checkbox: {}, number: {} };
+      (data || []).forEach(campo => {
+        if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+          newFilters.range[campo.campo_key] = { min: "", max: "" };
+        } else if (campo.tipo === 'numero') {
+          newFilters.number[campo.campo_key] = "";
+        } else if (campo.tipo === 'texto') {
+          newFilters.text[campo.campo_key] = "";
+        } else if (campo.tipo === 'selecao') {
+          newFilters.select[campo.campo_key] = "";
+        } else if (campo.tipo === 'checkbox') {
+          newFilters.checkbox[campo.campo_key] = null;
+        }
+      });
+      setCustomFieldFilters(newFilters);
+    } catch (error) {
+      console.error('Erro ao carregar campos customizados:', error);
+      setCamposCustomizados([]);
+    }
+  };
+
+  const updateCustomFilter = (type: keyof typeof customFieldFilters, campoKey: string, value: any) => {
+    setCustomFieldFilters(prev => ({
+      ...prev,
+      [type]: { ...prev[type], [campoKey]: value }
+    }));
+  };
+
+  const updateRangeFilter = (campoKey: string, field: "min" | "max", value: string) => {
+    setCustomFieldFilters(prev => ({
+      ...prev,
+      range: {
+        ...prev.range,
+        [campoKey]: { ...prev.range[campoKey], [field]: value }
+      }
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setSelectedGrupo("");
+    setCamposCustomizados([]);
+    setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
+  };
+
+  const hasActiveFilters = selectedGrupo && selectedGrupo !== "all" || 
+    Object.values(customFieldFilters.range).some(rf => rf?.min || rf?.max) ||
+    Object.values(customFieldFilters.text).some(v => v) ||
+    Object.values(customFieldFilters.select).some(v => v) ||
+    Object.values(customFieldFilters.checkbox).some(v => v !== null) ||
+    Object.values(customFieldFilters.number).some(v => v);
 
   // Resize handler for responsiveness
   useEffect(() => {
@@ -511,32 +601,58 @@ export default function POSView({
     }
     
     // Filtro de grupo
-    if (selectedGrupo && selectedGrupo !== 'all' && p.grupo_id !== selectedGrupo) {
+    if (selectedGrupo && selectedGrupo !== 'all' && selectedGrupo !== '' && p.grupo_id !== selectedGrupo) {
       return false;
     }
     
-    // Filtro de gramatura
-    if (gramaturaMin && p.gramatura && p.gramatura < Number(gramaturaMin)) {
-      return false;
-    }
-    if (gramaturaMax && p.gramatura && p.gramatura > Number(gramaturaMax)) {
-      return false;
+    // Filtros de campos customizados
+    const produtoCustomFields = (p as any).campos_customizados || {};
+    
+    // Range filters
+    for (const [key, range] of Object.entries(customFieldFilters.range)) {
+      if (range?.min || range?.max) {
+        const value = produtoCustomFields[key];
+        if (value !== undefined && value !== null) {
+          if (range.min && Number(value) < Number(range.min)) return false;
+          if (range.max && Number(value) > Number(range.max)) return false;
+        }
+      }
     }
     
-    // Filtro de largura
-    if (larguraMin && p.largura && p.largura < Number(larguraMin)) {
-      return false;
-    }
-    if (larguraMax && p.largura && p.largura > Number(larguraMax)) {
-      return false;
+    // Number filters
+    for (const [key, filterValue] of Object.entries(customFieldFilters.number)) {
+      if (filterValue) {
+        const value = produtoCustomFields[key];
+        if (value !== undefined && value !== null && Number(value) !== Number(filterValue)) {
+          return false;
+        }
+      }
     }
     
-    // Filtro de comprimento
-    if (comprimentoMin && p.comprimento && p.comprimento < Number(comprimentoMin)) {
-      return false;
+    // Text filters
+    for (const [key, filterValue] of Object.entries(customFieldFilters.text)) {
+      if (filterValue) {
+        const value = produtoCustomFields[key];
+        if (!value || !String(value).toLowerCase().includes(filterValue.toLowerCase())) {
+          return false;
+        }
+      }
     }
-    if (comprimentoMax && p.comprimento && p.comprimento > Number(comprimentoMax)) {
-      return false;
+    
+    // Select filters
+    for (const [key, filterValue] of Object.entries(customFieldFilters.select)) {
+      if (filterValue) {
+        const value = produtoCustomFields[key];
+        if (value !== filterValue) return false;
+      }
+    }
+    
+    // Checkbox filters
+    for (const [key, filterValue] of Object.entries(customFieldFilters.checkbox)) {
+      if (filterValue !== null) {
+        const value = produtoCustomFields[key];
+        if (Boolean(value) !== filterValue) return false;
+      }
     }
     
     return true;
@@ -951,11 +1067,21 @@ export default function POSView({
 
           {/* Filtros Avançados */}
           {showFilters && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-muted rounded-lg border border-border">
+            <div className="p-4 bg-muted rounded-lg border border-border space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Filtros</span>
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-7 text-xs">
+                    <X className="w-3 h-3 mr-1" />
+                    Limpar filtros
+                  </Button>
+                )}
+              </div>
+              
               {/* Grupo */}
-              <div className="col-span-2">
+              <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Grupo</label>
-                <Select value={selectedGrupo} onValueChange={setSelectedGrupo}>
+                <Select value={selectedGrupo || "all"} onValueChange={(value) => setSelectedGrupo(value === "all" ? "" : value)}>
                   <SelectTrigger className="bg-background border-border">
                     <SelectValue placeholder="Todos os grupos" />
                   </SelectTrigger>
@@ -970,91 +1096,128 @@ export default function POSView({
                 </Select>
               </div>
 
-              {/* Gramatura */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Gramatura Mín</label>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  value={gramaturaMin}
-                  onChange={(e) => setGramaturaMin(e.target.value)}
-                  className="bg-background border-border h-10"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Gramatura Máx</label>
-                <Input
-                  type="number"
-                  placeholder="999"
-                  value={gramaturaMax}
-                  onChange={(e) => setGramaturaMax(e.target.value)}
-                  className="bg-background border-border h-10"
-                />
-              </div>
-
-              {/* Largura */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Largura Mín</label>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  value={larguraMin}
-                  onChange={(e) => setLarguraMin(e.target.value)}
-                  className="bg-background border-border h-10"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Largura Máx</label>
-                <Input
-                  type="number"
-                  placeholder="999"
-                  value={larguraMax}
-                  onChange={(e) => setLarguraMax(e.target.value)}
-                  className="bg-background border-border h-10"
-                />
-              </div>
-
-              {/* Comprimento */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Comprimento Mín</label>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  value={comprimentoMin}
-                  onChange={(e) => setComprimentoMin(e.target.value)}
-                  className="bg-background border-border h-10"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Comprimento Máx</label>
-                <Input
-                  type="number"
-                  placeholder="999"
-                  value={comprimentoMax}
-                  onChange={(e) => setComprimentoMax(e.target.value)}
-                  className="bg-background border-border h-10"
-                />
-              </div>
-
-              {/* Botão Limpar Filtros */}
-              <div className="col-span-2 md:col-span-4 flex justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-background border-border hover:bg-muted"
-                  onClick={() => {
-                    setSelectedGrupo("all");
-                    setGramaturaMin("");
-                    setGramaturaMax("");
-                    setLarguraMin("");
-                    setLarguraMax("");
-                    setComprimentoMin("");
-                    setComprimentoMax("");
-                  }}
-                >
-                  Limpar Filtros
-                </Button>
-              </div>
+              {/* Campos Customizados Dinâmicos */}
+              {camposCustomizados.length > 0 && (
+                <div className="border-t pt-3 space-y-3">
+                  <span className="text-xs font-medium text-muted-foreground block">
+                    Filtros de campos customizados
+                  </span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {camposCustomizados.map(campo => {
+                      const opcoes = Array.isArray(campo.opcoes) ? campo.opcoes : [];
+                      
+                      // Range filter for numeric fields with pesquisa_faixa
+                      if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+                        return (
+                          <div key={campo.id} className="bg-background rounded-md p-3 border">
+                            <label className="text-xs font-medium mb-2 block">
+                              {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                placeholder="De"
+                                value={customFieldFilters.range[campo.campo_key]?.min || ""}
+                                onChange={(e) => updateRangeFilter(campo.campo_key, "min", e.target.value)}
+                                className="h-8 text-sm"
+                              />
+                              <span className="text-xs text-muted-foreground">até</span>
+                              <Input
+                                type="number"
+                                placeholder="Até"
+                                value={customFieldFilters.range[campo.campo_key]?.max || ""}
+                                onChange={(e) => updateRangeFilter(campo.campo_key, "max", e.target.value)}
+                                className="h-8 text-sm"
+                              />
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // Simple number filter
+                      if (campo.tipo === 'numero') {
+                        return (
+                          <div key={campo.id} className="bg-background rounded-md p-3 border">
+                            <label className="text-xs font-medium mb-2 block">
+                              {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                            </label>
+                            <Input
+                              type="number"
+                              placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                              value={customFieldFilters.number[campo.campo_key] || ""}
+                              onChange={(e) => updateCustomFilter('number', campo.campo_key, e.target.value)}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                        );
+                      }
+                      
+                      // Text filter
+                      if (campo.tipo === 'texto') {
+                        return (
+                          <div key={campo.id} className="bg-background rounded-md p-3 border">
+                            <label className="text-xs font-medium mb-2 block">{campo.nome}</label>
+                            <Input
+                              type="text"
+                              placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                              value={customFieldFilters.text[campo.campo_key] || ""}
+                              onChange={(e) => updateCustomFilter('text', campo.campo_key, e.target.value)}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                        );
+                      }
+                      
+                      // Selection filter
+                      if (campo.tipo === 'selecao' && opcoes.length > 0) {
+                        return (
+                          <div key={campo.id} className="bg-background rounded-md p-3 border">
+                            <label className="text-xs font-medium mb-2 block">{campo.nome}</label>
+                            <Select 
+                              value={customFieldFilters.select[campo.campo_key] || "all"} 
+                              onValueChange={(val) => updateCustomFilter('select', campo.campo_key, val === "all" ? "" : val)}
+                            >
+                              <SelectTrigger className="h-8 text-sm">
+                                <SelectValue placeholder={`Selecione ${campo.nome.toLowerCase()}`} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">Todos</SelectItem>
+                                {opcoes.map((opcao: string, idx: number) => (
+                                  <SelectItem key={idx} value={opcao}>{opcao}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        );
+                      }
+                      
+                      // Checkbox filter
+                      if (campo.tipo === 'checkbox') {
+                        return (
+                          <div key={campo.id} className="bg-background rounded-md p-3 border">
+                            <label className="text-xs font-medium mb-2 block">{campo.nome}</label>
+                            <Select 
+                              value={customFieldFilters.checkbox[campo.campo_key] === null ? "all" : customFieldFilters.checkbox[campo.campo_key] ? "true" : "false"} 
+                              onValueChange={(val) => updateCustomFilter('checkbox', campo.campo_key, val === "all" ? null : val === "true")}
+                            >
+                              <SelectTrigger className="h-8 text-sm">
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">Todos</SelectItem>
+                                <SelectItem value="true">Sim</SelectItem>
+                                <SelectItem value="false">Não</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        );
+                      }
+                      
+                      return null;
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
