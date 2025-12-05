@@ -2,7 +2,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { PredictiveDialerDialog } from "@/components/atendimento/PredictiveDialerDialog";
@@ -981,6 +982,100 @@ export default function Atendimento() {
       setOrcamentos(orcamentosComTotalReal);
     } catch (error) {
       console.error("Erro ao carregar orçamentos:", error);
+    }
+  };
+
+  // Duplicar orçamento
+  const duplicateOrcamento = async (orcamentoId: string) => {
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+
+      // Buscar orçamento original com itens
+      const { data: original, error: fetchError } = await supabase
+        .from('orcamentos')
+        .select('*, itens:orcamento_itens(*)')
+        .eq('id', orcamentoId)
+        .single();
+
+      if (fetchError || !original) {
+        toast.error("Erro ao buscar orçamento");
+        return;
+      }
+
+      // Criar novo orçamento
+      const { data: newOrcamento, error: insertError } = await supabase
+        .from('orcamentos')
+        .insert({
+          estabelecimento_id: estabId,
+          cliente_id: original.cliente_id,
+          empresa_id: original.empresa_id,
+          status: 'orcamento',
+          etapa: 'orcamento',
+          valor_total: original.valor_total,
+          observacoes: original.observacoes,
+          condicao_pagamento_id: original.condicao_pagamento_id,
+        })
+        .select()
+        .single();
+
+      if (insertError || !newOrcamento) {
+        toast.error("Erro ao duplicar orçamento");
+        return;
+      }
+
+      // Duplicar itens
+      if (original.itens && original.itens.length > 0) {
+        const itensParaDuplicar = original.itens.map((item: any) => ({
+          orcamento_id: newOrcamento.id,
+          produto_id: item.produto_id,
+          quantidade: item.quantidade,
+          preco_unitario: item.preco_unitario,
+          preco_original: item.preco_original || item.preco_unitario,
+          subtotal: item.subtotal,
+          desconto: item.desconto || 0,
+        }));
+
+        await supabase.from('orcamento_itens').insert(itensParaDuplicar);
+      }
+
+      toast.success("Orçamento duplicado com sucesso!");
+      loadOrcamentos();
+    } catch (error) {
+      console.error("Erro ao duplicar orçamento:", error);
+      toast.error("Erro ao duplicar orçamento");
+    }
+  };
+
+  // Excluir orçamento
+  const deleteOrcamento = async (orcamentoId: string) => {
+    try {
+      // Primeiro excluir os itens
+      await supabase.from('orcamento_itens').delete().eq('orcamento_id', orcamentoId);
+      
+      // Depois excluir o orçamento
+      const { error } = await supabase
+        .from('orcamentos')
+        .delete()
+        .eq('id', orcamentoId);
+
+      if (error) {
+        toast.error("Erro ao excluir orçamento");
+        return;
+      }
+
+      toast.success("Orçamento excluído com sucesso!");
+      
+      // Limpar seleção se necessário
+      if (selectedOrcamentoId === orcamentoId) {
+        setSelectedOrcamentoId(null);
+        setOrcamentoSheetOpen(false);
+      }
+      
+      loadOrcamentos();
+    } catch (error) {
+      console.error("Erro ao excluir orçamento:", error);
+      toast.error("Erro ao excluir orçamento");
     }
   };
 
@@ -3305,7 +3400,7 @@ ${recentMessages}
                 .map((orc) => (
                   <div 
                     key={orc.id} 
-                    className={`p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                    className={`p-3 rounded-xl cursor-pointer transition-all duration-200 group ${
                       selectedOrcamentoId === orc.id
                         ? "bg-emerald-100 border border-emerald-200 shadow-sm"
                         : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
@@ -3328,9 +3423,37 @@ ${recentMessages}
                           <p className="font-semibold text-sm truncate">
                             {orc.customers?.nome || orc.empresas?.nome_fantasia || orc.empresas?.nome || 'Cliente'}
                           </p>
-                          <span className="text-[10px] text-muted-foreground ml-2 flex-shrink-0 bg-slate-100 px-1.5 py-0.5 rounded-full">
-                            {format(new Date(orc.created_at), 'dd/MM', { locale: ptBR })}
-                          </span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-muted-foreground flex-shrink-0 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                              {format(new Date(orc.created_at), 'dd/MM', { locale: ptBR })}
+                            </span>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation();
+                                  duplicateOrcamento(orc.id);
+                                }}>
+                                  <Copy className="h-4 w-4 mr-2" />
+                                  Duplicar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteOrcamento(orc.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Excluir
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-sm font-bold text-emerald-600">
