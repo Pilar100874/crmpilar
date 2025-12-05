@@ -203,6 +203,7 @@ export default function MobilePOSLayout({
 
   const loadCamposCustomizados = async (grupoId: string) => {
     try {
+      console.log('[MobilePOS] Carregando campos customizados para grupo:', grupoId);
       const { data, error } = await supabase
         .from('produto_campos_customizados')
         .select('*')
@@ -211,6 +212,7 @@ export default function MobilePOSLayout({
         .order('ordem');
 
       if (error) throw error;
+      console.log('[MobilePOS] Campos customizados encontrados:', data?.length || 0, data);
       setCamposCustomizados(data || []);
       
       const newFilters: CustomFieldFilters = { range: {}, text: {}, select: {}, checkbox: {}, number: {} };
@@ -229,7 +231,7 @@ export default function MobilePOSLayout({
       });
       setCustomFieldFilters(newFilters);
     } catch (error) {
-      console.error('Erro ao carregar campos customizados:', error);
+      console.error('[MobilePOS] Erro ao carregar campos customizados:', error);
       setCamposCustomizados([]);
     }
   };
