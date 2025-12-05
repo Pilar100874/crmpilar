@@ -4409,9 +4409,8 @@ function MobileListContent({
           </div>
         )}
 
-        {globalFilter && (
-          <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} />
-        )}
+        {/* Global Client Filter - Always visible on mobile/tablet */}
+        <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} />
       </div>
 
       {/* Content */}
