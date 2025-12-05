@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { Checkbox } from "@/components/ui/checkbox";
+import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
 import {
   Search,
   Plus,
@@ -1101,103 +1102,33 @@ export default function MobilePOSLayout({
 
         {/* Empresa View - Dados da Empresa */}
         {activeView === 'empresa' && (
-          <ScrollArea className="h-full">
-            <div className="p-3 space-y-3">
-              {/* Header */}
-              <div className="mb-2">
-                <h3 className="text-sm font-semibold">Dados da Empresa</h3>
-              </div>
-              
-              {selectedEmpresa ? (
-                <>
-                  {(() => {
-                    const empresa = empresas.find(e => e.id === selectedEmpresa);
-                    if (!empresa) return null;
-                    return (
-                      <Card className="p-4 space-y-4">
-                        {/* Nome e CNPJ */}
-                        <div className="space-y-2">
-                          <div>
-                            <p className="text-xs text-muted-foreground">Nome Fantasia</p>
-                            <p className="font-medium">{empresa.nome_fantasia || '-'}</p>
-                          </div>
-                          {empresa.nome && empresa.nome !== empresa.nome_fantasia && (
-                            <div>
-                              <p className="text-xs text-muted-foreground">Razão Social</p>
-                              <p className="font-medium">{empresa.nome}</p>
-                            </div>
-                          )}
-                          {empresa.cnpj && (
-                            <div>
-                              <p className="text-xs text-muted-foreground">CNPJ</p>
-                              <p className="font-medium">{empresa.cnpj}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Contato */}
-                        {(empresa.telefone || empresa.email) && (
-                          <div className="border-t pt-3 space-y-2">
-                            <h4 className="text-xs font-semibold text-muted-foreground">Contato</h4>
-                            {empresa.telefone && (
-                              <div>
-                                <p className="text-xs text-muted-foreground">Telefone</p>
-                                <p className="font-medium">{empresa.telefone}</p>
-                              </div>
-                            )}
-                            {empresa.email && (
-                              <div>
-                                <p className="text-xs text-muted-foreground">E-mail</p>
-                                <p className="font-medium">{empresa.email}</p>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Endereço */}
-                        {(empresa.endereco || empresa.cidade || empresa.estado || empresa.cep) && (
-                          <div className="border-t pt-3 space-y-2">
-                            <h4 className="text-xs font-semibold text-muted-foreground">Endereço</h4>
-                            {empresa.endereco && (
-                              <div>
-                                <p className="text-xs text-muted-foreground">Logradouro</p>
-                                <p className="font-medium">{empresa.endereco}</p>
-                              </div>
-                            )}
-                            {empresa.bairro && (
-                              <div>
-                                <p className="text-xs text-muted-foreground">Bairro</p>
-                                <p className="font-medium">{empresa.bairro}</p>
-                              </div>
-                            )}
-                            {(empresa.cidade || empresa.estado) && (
-                              <div>
-                                <p className="text-xs text-muted-foreground">Cidade/UF</p>
-                                <p className="font-medium">
-                                  {empresa.cidade}{empresa.estado ? ` - ${empresa.estado}` : ''}
-                                </p>
-                              </div>
-                            )}
-                            {empresa.cep && (
-                              <div>
-                                <p className="text-xs text-muted-foreground">CEP</p>
-                                <p className="font-medium">{empresa.cep}</p>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </Card>
-                    );
-                  })()}
-                </>
-              ) : (
-                <Card className="p-6 text-center">
+          <div className="h-full">
+            {selectedEmpresa ? (
+              (() => {
+                const empresa = empresas.find(e => e.id === selectedEmpresa);
+                if (!empresa) return null;
+                return (
+                  <UnifiedDetailsPanel
+                    type="orcamento"
+                    nome={empresa.nome_fantasia || empresa.nome || "Empresa"}
+                    telefone={empresa.telefone}
+                    whatsapp={empresa.telefone}
+                    email={empresa.email}
+                    protocolo={empresa.cnpj}
+                    status={empresa.ativo !== false ? "Ativo" : "Inativo"}
+                    companies={[{ empresas: empresa, is_primary: true }]}
+                  />
+                );
+              })()
+            ) : (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center p-6">
                   <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
                   <p className="text-muted-foreground">Selecione uma empresa para ver os dados</p>
-                </Card>
-              )}
-            </div>
-          </ScrollArea>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Detalhes View - Detalhes do Pedido */}
