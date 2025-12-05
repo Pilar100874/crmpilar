@@ -856,6 +856,8 @@ export default function POSView({
           setShowConjuntoDialog={setShowConjuntoDialog}
           gruposQuantities={gruposQuantities}
           setGruposQuantities={setGruposQuantities}
+          shareLink={shareLink}
+          onCopyLink={handleCopyLink}
         />
         
         {/* Dialogs também para mobile */}

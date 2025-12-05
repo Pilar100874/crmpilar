@@ -21,7 +21,12 @@ import {
   Camera,
   Truck,
   Tag,
-  Check
+  Check,
+  ChevronsUpDown,
+  Share2,
+  Lightbulb,
+  History,
+  Building2
 } from "lucide-react";
 import {
   Select,
@@ -30,6 +35,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import ImageItemExtractor from "./ImageItemExtractor";
 
@@ -71,6 +89,8 @@ interface MobilePOSLayoutProps {
   setShowConjuntoDialog: (show: boolean) => void;
   gruposQuantities: Map<string, number>;
   setGruposQuantities: React.Dispatch<React.SetStateAction<Map<string, number>>>;
+  shareLink?: string;
+  onCopyLink?: () => void;
 }
 
 type MobileView = 'produtos' | 'carrinho' | 'detalhes';
@@ -112,9 +132,15 @@ export default function MobilePOSLayout({
   freteResult,
   setShowConjuntoDialog,
   gruposQuantities,
-  setGruposQuantities
+  setGruposQuantities,
+  shareLink,
+  onCopyLink
 }: MobilePOSLayoutProps) {
   const [activeView, setActiveView] = useState<MobileView>('produtos');
+  const [openEmpresaCombobox, setOpenEmpresaCombobox] = useState(false);
+  const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   
   const cartArray = Array.from(cartItems.entries()).map(([_, item]) => item);
   const cartCount = cartArray.reduce((sum, item) => sum + item.quantity, 0);
@@ -144,40 +170,115 @@ export default function MobilePOSLayout({
             {activeView === 'produtos' ? 'Produtos' : activeView === 'carrinho' ? 'Carrinho' : 'Detalhes'}
           </h1>
           {activeView === 'produtos' && (
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => setShowPhotoModal(true)}
-              >
-                <Camera className="h-5 w-5" />
-              </Button>
-              <Button
-                variant={showFilters ? "secondary" : "ghost"}
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="h-5 w-5" />
-              </Button>
-            </div>
+            <Button
+              variant={showFilters ? "secondary" : "ghost"}
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="h-5 w-5" />
+            </Button>
           )}
         </div>
 
-        {/* Empresa Selector */}
-        <Select value={selectedEmpresa} onValueChange={setSelectedEmpresa}>
-          <SelectTrigger className="h-10 bg-background">
-            <SelectValue placeholder="Selecione a empresa" />
-          </SelectTrigger>
-          <SelectContent>
-            {empresas.map((empresa) => (
-              <SelectItem key={empresa.id} value={empresa.id}>
-                {empresa.nome_fantasia}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Empresa Selector - Com busca */}
+        <Popover open={openEmpresaCombobox} onOpenChange={setOpenEmpresaCombobox}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={openEmpresaCombobox}
+              className="w-full justify-between bg-background h-10"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                {selectedEmpresa
+                  ? empresas.find((empresa) => empresa.id === selectedEmpresa)?.nome_fantasia
+                  : "Selecionar cliente/empresa..."}
+              </div>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[calc(100vw-24px)] p-0 bg-card border-border z-50">
+            <Command className="bg-card">
+              <CommandInput 
+                placeholder="Buscar empresa..." 
+                className="bg-card border-border"
+              />
+              <CommandList>
+                <CommandEmpty className="text-muted-foreground py-4 text-center text-sm">
+                  Nenhuma empresa encontrada.
+                </CommandEmpty>
+                <CommandGroup>
+                  {empresas.map((empresa) => (
+                    <CommandItem
+                      key={empresa.id}
+                      value={`${empresa.nome_fantasia} ${empresa.cnpj || ''}`}
+                      onSelect={() => {
+                        setSelectedEmpresa(empresa.id);
+                        setOpenEmpresaCombobox(false);
+                      }}
+                      className="hover:bg-muted cursor-pointer"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedEmpresa === empresa.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex flex-col">
+                        <span>{empresa.nome_fantasia}</span>
+                        {empresa.cnpj && (
+                          <span className="text-xs text-muted-foreground">{empresa.cnpj}</span>
+                        )}
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        {/* Botões de Ação Rápida */}
+        <div className="flex gap-2 mt-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 h-9"
+            onClick={() => setShowPhotoModal(true)}
+          >
+            <Camera className="h-4 w-4 mr-2" />
+            Foto
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 h-9"
+            onClick={() => setShowSuggestionsModal(true)}
+          >
+            <Lightbulb className="h-4 w-4 mr-2" />
+            Sugestões
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 h-9"
+            onClick={() => setShowShareModal(true)}
+            disabled={!shareLink}
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Compartilhar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 w-9 p-0"
+            onClick={() => setShowHistoryModal(true)}
+          >
+            <History className="h-4 w-4" />
+          </Button>
+        </div>
 
         {/* Search & Filters (only on produtos view) */}
         {activeView === 'produtos' && (
@@ -686,6 +787,101 @@ export default function MobilePOSLayout({
           </div>
           <div className="flex-1 overflow-auto p-4">
             <ImageItemExtractor onItemsExtracted={handleItemsExtracted} />
+          </div>
+        </div>
+      )}
+
+      {/* Suggestions Modal */}
+      {showSuggestionsModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-lg p-6 w-full max-w-md border border-border">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-foreground">Sugestões de Produtos</h3>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setShowSuggestionsModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <Lightbulb className="w-12 h-12 mb-3 opacity-20" />
+              <p className="text-sm text-center">Sugestões de produtos</p>
+              <p className="text-xs text-center mt-1">Baseadas no histórico do cliente</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && shareLink && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-lg p-6 w-full max-w-md border border-border">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-foreground">Compartilhar Orçamento</h3>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setShowShareModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            <div className="space-y-4">
+              <div className="flex flex-col items-center py-4">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-3">
+                  <Share2 className="w-8 h-8 text-primary-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  Link de compartilhamento criado!
+                </p>
+              </div>
+              <div className="bg-muted rounded-lg p-4 border border-border">
+                <div className="flex gap-2">
+                  <Input
+                    value={shareLink}
+                    readOnly
+                    className="bg-background border-border text-sm"
+                  />
+                  <Button
+                    onClick={() => {
+                      onCopyLink?.();
+                      setShowShareModal(false);
+                    }}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    Copiar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* History Modal */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-lg p-6 w-full max-w-md border border-border">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-foreground">Status do Orçamento</h3>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setShowHistoryModal(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+              <History className="w-12 h-12 mb-3 opacity-20" />
+              <p className="text-sm text-center">Histórico e status</p>
+              <p className="text-xs text-center mt-1">do orçamento atual</p>
+            </div>
           </div>
         </div>
       )}
