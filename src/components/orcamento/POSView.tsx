@@ -1224,6 +1224,19 @@ export default function POSView({
                   </div>
                 </div>
               )}
+              
+              {/* Botão OK para fechar filtros */}
+              <div className="flex justify-end pt-3 border-t">
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={() => setShowFilters(false)}
+                  className="h-8"
+                >
+                  <Check className="w-4 h-4 mr-1" />
+                  OK
+                </Button>
+              </div>
             </div>
           )}
         </div>

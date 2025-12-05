@@ -677,6 +677,19 @@ export default function MobilePOSLayout({
                     </div>
                   </div>
                 )}
+                
+                {/* Botão OK para fechar filtros */}
+                <div className="flex justify-end pt-3 border-t mt-3">
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => setShowFilters(false)}
+                    className="h-8"
+                  >
+                    <Check className="w-3 h-3 mr-1" />
+                    OK
+                  </Button>
+                </div>
               </div>
             )}
           </div>
