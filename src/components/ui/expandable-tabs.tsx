@@ -8,11 +8,12 @@ import { LucideIcon } from "lucide-react";
 
 interface Tab {
   title: string;
-  icon: LucideIcon;
+  icon: LucideIcon | React.ComponentType<{ size?: number; className?: string }>;
   badge?: number;
   type?: never;
   disabled?: boolean;
   onClick?: () => void;
+  statusColor?: string; // Optional status indicator color
 }
 
 interface Separator {
@@ -122,7 +123,12 @@ export function ExpandableTabs({
               tabItem.disabled && "opacity-50 cursor-not-allowed"
             )}
           >
-            <Icon size={20} />
+            <div className="relative">
+              <Icon size={20} />
+              {tabItem.statusColor && (
+                <span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${tabItem.statusColor}`} />
+              )}
+            </div>
             <AnimatePresence initial={false}>
               {selected === index && (
                 <motion.span

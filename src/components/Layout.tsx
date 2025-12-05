@@ -165,68 +165,6 @@ export default function Layout({ children }: LayoutProps) {
   const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { atalhos } = useAtalhos();
   const { avisosPendentes } = useAvisosSistema();
-  const [atendenteStatus, setAtendenteStatus] = useState<string | null>(null);
-  
-  // Fetch atendente status for menu indicator
-  useEffect(() => {
-    const fetchAtendenteStatus = async () => {
-      if (!user?.id) return;
-      
-      try {
-        // Buscar usuario
-        const { data: userData } = await supabase
-          .from("usuarios")
-          .select("id")
-          .eq("auth_user_id", user.id)
-          .maybeSingle();
-        
-        if (!userData?.id) return;
-        
-        const estabId = await getEstabelecimentoId();
-        if (!estabId) return;
-        
-        // Buscar atendente
-        const { data: atendenteData } = await supabase
-          .from("atendentes")
-          .select("status")
-          .eq("usuario_id", userData.id)
-          .eq("estabelecimento_id", estabId)
-          .maybeSingle();
-        
-        if (atendenteData?.status) {
-          setAtendenteStatus(atendenteData.status);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar status do atendente:", error);
-      }
-    };
-    
-    fetchAtendenteStatus();
-    
-    // Subscribe to changes
-    const channel = supabase
-      .channel('atendente-status-layout')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'atendentes' }, () => {
-        fetchAtendenteStatus();
-      })
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
-  
-  // Helper to get status color
-  const getStatusColor = (status: string | null) => {
-    switch (status) {
-      case 'disponivel': return 'bg-emerald-500';
-      case 'ocupado': return 'bg-amber-500';
-      case 'pausa': return 'bg-orange-500';
-      case 'ausente': return 'bg-red-500';
-      case 'offline': return 'bg-gray-400';
-      default: return 'bg-gray-400';
-    }
-  };
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -743,10 +681,6 @@ export default function Layout({ children }: LayoutProps) {
                           title={item.title}
                         >
                           <item.icon className="w-6 h-6" />
-                          {/* Status indicator for Atendimento menu */}
-                          {item.id === "Atendimento" && atendenteStatus && (
-                            <span className={`absolute top-1 right-1 w-2.5 h-2.5 rounded-full ${getStatusColor(atendenteStatus)} ring-2 ring-sidebar`} />
-                          )}
                         </button>
                         
                         {isMenuOpen && (
@@ -816,13 +750,7 @@ export default function Layout({ children }: LayoutProps) {
                         }`}
                         title={item.title}
                       >
-                        <div className="relative">
-                          <item.icon className="w-5 h-5 flex-shrink-0" />
-                          {/* Status indicator for Atendimento menu */}
-                          {item.id === "Atendimento" && atendenteStatus && (
-                            <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${getStatusColor(atendenteStatus)}`} />
-                          )}
-                        </div>
+                        <item.icon className="w-5 h-5 flex-shrink-0" />
                         <span className="text-sm font-medium flex-1 text-left">{item.title}</span>
                         <ChevronDown className={`w-4 h-4 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
                       </button>
