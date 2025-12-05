@@ -2775,35 +2775,24 @@ ${recentMessages}
                   </Button>
                 </div>
                 
-                {/* Search Input */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar conversas..."
-                    className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40 focus:bg-white focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                
-                {/* Global Filter Button */}
-                {!globalFilter && (
-                  <div className="mt-3">
-                    <GlobalClientFilter 
-                      activeFilter={globalFilter} 
-                      onFilterChange={setGlobalFilter} 
+                {/* Search Input + Global Filter */}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar conversas..."
+                      className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40 focus:bg-white focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                )}
+                  <GlobalClientFilter 
+                    activeFilter={globalFilter} 
+                    onFilterChange={setGlobalFilter}
+                    compact
+                  />
+                </div>
               </div>
-
-              {/* Global Filter Active Indicator */}
-              {globalFilter && (
-                <GlobalClientFilter 
-                  activeFilter={globalFilter} 
-                  onFilterChange={setGlobalFilter} 
-                />
-              )}
             </div>
 
         {/* Tabs - Modern Design with ExpandableTabs */}
