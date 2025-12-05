@@ -128,7 +128,7 @@ interface MobilePOSLayoutProps {
   setConjuntoItens: React.Dispatch<React.SetStateAction<ConjuntoItem[]>>;
 }
 
-type MobileView = 'produtos' | 'carrinho' | 'detalhes';
+type MobileView = 'produtos' | 'carrinho' | 'detalhes' | 'orcamento';
 
 export default function MobilePOSLayout({
   produtos,
@@ -344,7 +344,36 @@ export default function MobilePOSLayout({
     <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Header */}
       <div className="bg-card border-b border-border p-3 flex-shrink-0">
-        {/* Empresa Selector - Com busca e botão fechar */}
+        {/* Top row: Voltar + Título + Detalhes */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            {onClose && (
+              <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            )}
+            <span className="font-medium text-foreground">Orçamento</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "gap-1.5 text-sm",
+              activeView === 'detalhes' && "bg-primary/10 text-primary"
+            )}
+            onClick={() => setActiveView('detalhes')}
+          >
+            <Eye className="h-4 w-4" />
+            Detalhes
+            {regrasAplicadas.length > 0 && (
+              <Badge className="h-4 min-w-4 text-[10px] px-1 bg-emerald-500 text-white">
+                {regrasAplicadas.length}
+              </Badge>
+            )}
+          </Button>
+        </div>
+        
+        {/* Empresa Selector */}
         <div className="flex items-center gap-2">
           <Popover open={openEmpresaCombobox} onOpenChange={setOpenEmpresaCombobox}>
             <PopoverTrigger asChild>
@@ -1284,10 +1313,85 @@ export default function MobilePOSLayout({
             </div>
           </ScrollArea>
         )}
+
+        {/* Orçamento View - Summary and Save */}
+        {activeView === 'orcamento' && (
+          <ScrollArea className="h-full">
+            <div className="p-3 space-y-3">
+              {/* Resumo */}
+              <Card className="p-4">
+                <h3 className="text-sm font-medium mb-3">Resumo do Orçamento</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Cliente/Empresa</span>
+                    <span className="font-medium">
+                      {selectedEmpresa 
+                        ? empresas.find((e) => e.id === selectedEmpresa)?.nome_fantasia || "-"
+                        : "Não selecionado"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Itens no carrinho</span>
+                    <span className="font-medium">{cartCount}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="font-medium">{formatCurrency(getTotal())}</span>
+                  </div>
+                  {regrasAplicadas.length > 0 && valorComRegras < getTotal() && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Descontos aplicados</span>
+                      <span className="font-medium">-{formatCurrency(getTotal() - valorComRegras)}</span>
+                    </div>
+                  )}
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between text-lg font-bold">
+                      <span>Total</span>
+                      <span className="text-primary">{formatCurrency(valorComRegras || getTotal())}</span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Regras Aplicadas */}
+              {regrasAplicadas.length > 0 && (
+                <Card className="p-4 border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/30">
+                  <h3 className="text-sm font-medium mb-2 flex items-center gap-2 text-green-700 dark:text-green-300">
+                    <Tag className="h-4 w-4" />
+                    Regras Aplicadas ({regrasAplicadas.length})
+                  </h3>
+                  <div className="space-y-1">
+                    {regrasAplicadas.map((regra, index) => (
+                      <div key={index} className="flex items-center gap-2 text-sm">
+                        <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
+                        <span>{regra.nome}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
+              {/* Empty State */}
+              {cartCount === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <ShoppingCart className="w-12 h-12 mb-3 opacity-20" />
+                  <p className="text-sm">Adicione itens ao carrinho</p>
+                  <Button 
+                    variant="link" 
+                    className="mt-2"
+                    onClick={() => setActiveView('produtos')}
+                  >
+                    Ver produtos
+                  </Button>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        )}
       </div>
 
       {/* Bottom Action Bar */}
-      {activeView === 'carrinho' && cartArray.length > 0 && (
+      {(activeView === 'carrinho' || activeView === 'orcamento') && cartArray.length > 0 && (
         <div className="border-t bg-card p-3">
           <Button
             className="w-full h-12 text-base"
@@ -1305,7 +1409,7 @@ export default function MobilePOSLayout({
           {[
             { id: 'produtos', label: 'Produtos', icon: Package, badge: null },
             { id: 'carrinho', label: 'Carrinho', icon: ShoppingCart, badge: cartCount > 0 ? cartCount : null },
-            { id: 'detalhes', label: 'Detalhes', icon: Eye, badge: regrasAplicadas.length > 0 ? regrasAplicadas.length : null, badgeColor: 'bg-success' },
+            { id: 'orcamento', label: 'Orçamento', icon: Tag, badge: null },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeView === tab.id;
@@ -1331,10 +1435,7 @@ export default function MobilePOSLayout({
                     <Icon className="h-5 w-5" />
                   </div>
                   {tab.badge && (
-                    <Badge className={cn(
-                      "absolute -top-1 -right-1 h-4 min-w-4 text-[10px] px-1 flex items-center justify-center border-2 border-card",
-                      tab.badgeColor || "bg-primary text-primary-foreground"
-                    )}>
+                    <Badge className="absolute -top-1 -right-1 h-4 min-w-4 text-[10px] px-1 flex items-center justify-center border-2 border-card bg-primary text-primary-foreground">
                       {tab.badge > 99 ? "99+" : tab.badge}
                     </Badge>
                   )}
