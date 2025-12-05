@@ -2663,9 +2663,9 @@ ${recentMessages}
               <div className="flex justify-around">
                 {[
                   { id: "chat", label: "Chats", icon: MessageSquare, badge: activeConversationsCount },
-                  { id: "agenda", label: "Agenda", icon: Calendar, badge: todayTasksCount },
-                  { id: "email", label: "E-mails", icon: Mail, badge: unreadEmailsCount },
-                  { id: "orcamento", label: "Orçamentos", icon: Receipt, badge: orcamentosEmAndamentoCount },
+                  { id: "agenda", label: "Agenda", icon: CalendarDays, badge: todayTasksCount },
+                  { id: "email", label: "E-mails", icon: Inbox, badge: unreadEmailsCount },
+                  { id: "orcamento", label: "Orçamentos", icon: FileText, badge: orcamentosEmAndamentoCount },
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
