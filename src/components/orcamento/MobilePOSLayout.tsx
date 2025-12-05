@@ -344,75 +344,73 @@ export default function MobilePOSLayout({
     <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border p-3">
-        <div className="flex items-center gap-2 mb-3">
+        {/* Empresa Selector - Com busca e botão fechar */}
+        <div className="flex items-center gap-2">
+          <Popover open={openEmpresaCombobox} onOpenChange={setOpenEmpresaCombobox}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={openEmpresaCombobox}
+                className="flex-1 justify-between bg-background h-10"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  {selectedEmpresa
+                    ? empresas.find((empresa) => empresa.id === selectedEmpresa)?.nome_fantasia
+                    : "Selecionar cliente/empresa..."}
+                </div>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[calc(100vw-24px)] p-0 bg-card border-border z-50">
+              <Command className="bg-card">
+                <CommandInput 
+                  placeholder="Buscar empresa..." 
+                  className="bg-card border-border"
+                />
+                <CommandList>
+                  <CommandEmpty className="text-muted-foreground py-4 text-center text-sm">
+                    Nenhuma empresa encontrada.
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {empresas.map((empresa) => (
+                      <CommandItem
+                        key={empresa.id}
+                        value={`${empresa.nome_fantasia} ${empresa.cnpj || ''}`}
+                        onSelect={() => {
+                          setSelectedEmpresa(empresa.id);
+                          setOpenEmpresaCombobox(false);
+                        }}
+                        className="hover:bg-muted cursor-pointer"
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedEmpresa === empresa.id ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        <div className="flex flex-col">
+                          <span>{empresa.nome_fantasia}</span>
+                          {empresa.cnpj && (
+                            <span className="text-xs text-muted-foreground">{empresa.cnpj}</span>
+                          )}
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          
+          {/* Botão Fechar */}
           {onClose && (
-            <Button variant="ghost" size="icon" onClick={onClose} className="h-9 w-9">
-              <ChevronLeft className="h-5 w-5" />
+            <Button variant="outline" size="icon" onClick={onClose} className="h-10 w-10 flex-shrink-0">
+              <X className="h-5 w-5" />
             </Button>
           )}
-          <h1 className="text-lg font-semibold flex-1">
-            {activeView === 'produtos' ? 'Produtos' : activeView === 'carrinho' ? 'Carrinho' : 'Detalhes'}
-          </h1>
         </div>
-
-        {/* Empresa Selector - Com busca */}
-        <Popover open={openEmpresaCombobox} onOpenChange={setOpenEmpresaCombobox}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={openEmpresaCombobox}
-              className="w-full justify-between bg-background h-10"
-            >
-              <div className="flex items-center gap-2 truncate">
-                <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                {selectedEmpresa
-                  ? empresas.find((empresa) => empresa.id === selectedEmpresa)?.nome_fantasia
-                  : "Selecionar cliente/empresa..."}
-              </div>
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[calc(100vw-24px)] p-0 bg-card border-border z-50">
-            <Command className="bg-card">
-              <CommandInput 
-                placeholder="Buscar empresa..." 
-                className="bg-card border-border"
-              />
-              <CommandList>
-                <CommandEmpty className="text-muted-foreground py-4 text-center text-sm">
-                  Nenhuma empresa encontrada.
-                </CommandEmpty>
-                <CommandGroup>
-                  {empresas.map((empresa) => (
-                    <CommandItem
-                      key={empresa.id}
-                      value={`${empresa.nome_fantasia} ${empresa.cnpj || ''}`}
-                      onSelect={() => {
-                        setSelectedEmpresa(empresa.id);
-                        setOpenEmpresaCombobox(false);
-                      }}
-                      className="hover:bg-muted cursor-pointer"
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedEmpresa === empresa.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <div className="flex flex-col">
-                        <span>{empresa.nome_fantasia}</span>
-                        {empresa.cnpj && (
-                          <span className="text-xs text-muted-foreground">{empresa.cnpj}</span>
-                        )}
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
 
         {/* Botões de Ação Rápida - Linha 1 */}
         <div className="flex gap-2 mt-3">
