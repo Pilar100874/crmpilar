@@ -827,10 +827,10 @@ export default function POSView({
         orcamento_id: orcamento.id,
         produto_id: item.produto.id,
         quantidade: item.quantity,
-        preco_unitario: 10, // Preço fixo de exemplo
-        preco_original: 10,
+        preco_unitario: item.preco,
+        preco_original: item.preco,
         desconto: 0,
-        subtotal: item.quantity * 10,
+        subtotal: item.quantity * item.preco,
       }));
 
       const { error: itensError } = await supabase
