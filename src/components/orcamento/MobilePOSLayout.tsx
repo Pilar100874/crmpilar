@@ -162,7 +162,9 @@ export default function MobilePOSLayout({
 
   // Quando um conjunto é selecionado, mudar para aba de produtos automaticamente
   useEffect(() => {
+    console.log("MobilePOSLayout useEffect - conjuntoSelecionado:", conjuntoSelecionado, "conjuntoItens.length:", conjuntoItens.length);
     if (conjuntoSelecionado && conjuntoItens.length > 0) {
+      console.log("Mudando para aba produtos");
       setActiveView('produtos');
     }
   }, [conjuntoSelecionado, conjuntoItens]);
