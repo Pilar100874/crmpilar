@@ -344,18 +344,8 @@ export default function MobilePOSLayout({
     <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Header */}
       <div className="bg-card border-b border-border p-3 flex-shrink-0">
-        {/* Linha 1: Voltar + Empresa + Histórico */}
+        {/* Empresa Selector - Com busca e botão fechar */}
         <div className="flex items-center gap-2">
-          {onClose && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 flex-shrink-0"
-              onClick={onClose}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-          )}
           <Popover open={openEmpresaCombobox} onOpenChange={setOpenEmpresaCombobox}>
             <PopoverTrigger asChild>
               <Button
@@ -368,7 +358,7 @@ export default function MobilePOSLayout({
                   <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   {selectedEmpresa
                     ? empresas.find((empresa) => empresa.id === selectedEmpresa)?.nome_fantasia
-                    : "Selecionar cliente..."}
+                    : "Selecionar cliente/empresa..."}
                 </div>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -413,75 +403,77 @@ export default function MobilePOSLayout({
               </Command>
             </PopoverContent>
           </Popover>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 flex-shrink-0 hover:bg-primary/10 hover:text-primary"
-            onClick={() => setShowHistoryModal(true)}
-            title="Histórico"
-          >
-            <History className="h-5 w-5" />
-          </Button>
         </div>
 
-        {/* Linha 2: Ações + Grid/List */}
-        <div className="flex items-center justify-between mt-2 gap-2">
-          <div className="flex items-center gap-0.5">
+        {/* Barra de Ações Compacta */}
+        <div className="flex items-center justify-between mt-3 gap-2">
+          {/* Ícones de ação */}
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+              className="h-9 w-9 hover:bg-primary/10 hover:text-primary"
               onClick={() => setShowConjuntoDialog(true)}
               title="Conjunto de Itens"
             >
-              <Package className="h-4 w-4" />
+              <Package className="h-4.5 w-4.5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+              className="h-9 w-9 hover:bg-primary/10 hover:text-primary"
               onClick={() => setShowPhotoModal(true)}
               title="Extrair de Foto"
             >
-              <Camera className="h-4 w-4" />
+              <Camera className="h-4.5 w-4.5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+              className="h-9 w-9 hover:bg-primary/10 hover:text-primary"
               onClick={() => setShowSuggestionsModal(true)}
               title="Sugestões"
             >
-              <Lightbulb className="h-4 w-4" />
+              <Lightbulb className="h-4.5 w-4.5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+              className="h-9 w-9 hover:bg-primary/10 hover:text-primary"
               onClick={() => setShowShareModal(true)}
               disabled={!shareLink}
               title="Compartilhar"
             >
-              <Share2 className="h-4 w-4" />
+              <Share2 className="h-4.5 w-4.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 hover:bg-primary/10 hover:text-primary"
+              onClick={() => setShowHistoryModal(true)}
+              title="Histórico"
+            >
+              <History className="h-4.5 w-4.5" />
             </Button>
           </div>
 
+          {/* Toggle Grid/List */}
           <div className="flex bg-muted/50 rounded-lg p-0.5">
             <Button
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
               size="icon"
-              className="h-7 w-7 rounded-md"
+              className="h-8 w-8 rounded-md"
               onClick={() => setViewMode('grid')}
             >
-              <Grid className="h-3.5 w-3.5" />
+              <Grid className="h-4 w-4" />
             </Button>
             <Button
               variant={viewMode === 'list' ? 'secondary' : 'ghost'}
               size="icon"
-              className="h-7 w-7 rounded-md"
+              className="h-8 w-8 rounded-md"
               onClick={() => setViewMode('list')}
             >
-              <List className="h-3.5 w-3.5" />
+              <List className="h-4 w-4" />
             </Button>
           </div>
         </div>
