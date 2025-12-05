@@ -3362,10 +3362,11 @@ ${recentMessages}
         )}
       </div>
 
-      {/* Chat Area - Esconde quando orçamento está aberto */}
+      {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
       <div className="flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border">
-        {selectedConversation && selectedConv ? (
+        {/* Chat Content */}
+        {activeTab === "chat" && selectedConversation && selectedConv ? (
           <>
             <div className="px-3 md:px-4 py-2.5 md:py-3 border-b bg-card shadow-sm flex-shrink-0">
               <div className="flex items-center justify-between">
@@ -3784,7 +3785,114 @@ ${recentMessages}
               </div>
             </div>
           </>
-        ) : !orcamentoSheetOpen ? (
+        ) : activeTab === "agenda" && selectedTaskId && selectedTaskData ? (
+          /* Agenda Task Content */
+          <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
+            <div className="px-4 py-3 border-b bg-gradient-to-r from-orange-50 to-transparent">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm">{selectedTaskData.title}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedTaskData.contact_name} • {selectedTaskData.time || "Dia todo"}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setShowClientDetailsAgenda(!showClientDetailsAgenda);
+                  }}
+                  className="h-8 w-8 p-0"
+                >
+                  {showClientDetailsAgenda ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <Card className="p-4">
+                <h4 className="font-medium text-sm mb-2">Detalhes da Tarefa</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Data:</span>
+                    <span>{format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Horário:</span>
+                    <span>{selectedTaskData.time || "Dia todo"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Status:</span>
+                    <Badge variant={selectedTaskData.status === "concluido" ? "default" : "secondary"}>
+                      {selectedTaskData.status === "concluido" ? "Concluído" : "Pendente"}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Origem:</span>
+                    <span>{selectedTaskData.origem}</span>
+                  </div>
+                </div>
+              </Card>
+              {selectedTaskData.description && (
+                <Card className="p-4">
+                  <h4 className="font-medium text-sm mb-2">Descrição</h4>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{selectedTaskData.description}</p>
+                </Card>
+              )}
+            </div>
+          </div>
+        ) : activeTab === "email" && selectedEmailId && selectedEmailData ? (
+          /* Email Content */
+          <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
+            <div className="px-4 py-3 border-b bg-gradient-to-r from-blue-50 to-transparent">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-sm truncate">{selectedEmailData.subject}</h3>
+                    <p className="text-xs text-muted-foreground truncate">
+                      De: {selectedEmailData.from_email}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setShowClientDetailsEmail(!showClientDetailsEmail);
+                  }}
+                  className="h-8 w-8 p-0"
+                >
+                  {showClientDetailsEmail ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <Card className="p-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Para:</span>
+                    <span>{selectedEmailData.to_email}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Data:</span>
+                    <span>{format(new Date(selectedEmailData.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-4">
+                <h4 className="font-medium text-sm mb-3">Conteúdo</h4>
+                <div className="prose prose-sm max-w-none text-sm" dangerouslySetInnerHTML={{ __html: selectedEmailData.body }} />
+              </Card>
+            </div>
+          </div>
+        ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
             <div className="text-center">
               {activeTab === "chat" && (
@@ -3817,12 +3925,12 @@ ${recentMessages}
               )}
             </div>
           </div>
-        ) : null}
+        )}
       </div>
       )}
 
       {/* Right Sidebar - Company Details Panel - Esconde quando orçamento está aberto */}
-      {!orcamentoSheetOpen && selectedConversation && selectedConv && showClientDetailsChat && (
+      {!orcamentoSheetOpen && activeTab === "chat" && selectedConversation && selectedConv && showClientDetailsChat && (
         <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="chat"
@@ -3837,6 +3945,46 @@ ${recentMessages}
             dataHora={format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
             companies={customerCompanies}
             onCompaniesUpdated={loadConversations}
+            onSetGlobalFilter={setGlobalFilter}
+          />
+        </div>
+      )}
+
+      {/* Right Sidebar - Agenda Details Panel */}
+      {!orcamentoSheetOpen && activeTab === "agenda" && selectedTaskId && selectedTaskData && showClientDetailsAgenda && (
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+          <UnifiedDetailsPanel
+            type="agenda"
+            nome={selectedTaskData.contact_name}
+            customerId={selectedTaskData.contact_id}
+            protocolo={selectedTaskData.id?.slice(0, 8).toUpperCase()}
+            status={selectedTaskData.status === "concluido" ? "Concluído" : "Pendente"}
+            titulo={selectedTaskData.title}
+            dataHora={format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) + (selectedTaskData.time ? ` às ${selectedTaskData.time}` : "")}
+            companies={[]}
+            onSetGlobalFilter={setGlobalFilter}
+          />
+        </div>
+      )}
+
+      {/* Right Sidebar - Email Details Panel */}
+      {!orcamentoSheetOpen && activeTab === "email" && selectedEmailId && selectedEmailData && showClientDetailsEmail && (
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+          <UnifiedDetailsPanel
+            type="email"
+            nome={selectedEmailData.customer?.nome || selectedEmailData.from_email}
+            telefone={selectedEmailData.customer?.telefone}
+            whatsapp={selectedEmailData.customer?.telefone}
+            email={selectedEmailData.from_email}
+            customerId={selectedEmailData.customer?.id}
+            protocolo={selectedEmailData.id?.slice(0, 8).toUpperCase()}
+            status={selectedEmailData.read ? "Lido" : "Não lido"}
+            titulo={selectedEmailData.subject}
+            dataHora={format(new Date(selectedEmailData.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+            companies={selectedEmailData.customer?.customer_empresas?.map((ce: any) => ({
+              ...ce,
+              empresas: ce.empresas
+            })) || []}
             onSetGlobalFilter={setGlobalFilter}
           />
         </div>
