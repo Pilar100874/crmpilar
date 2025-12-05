@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Search,
   Plus,
@@ -51,6 +53,24 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import ImageItemExtractor from "./ImageItemExtractor";
+
+interface CampoCustomizado {
+  id: string;
+  campo_key: string;
+  nome: string;
+  tipo: string;
+  unidade?: string;
+  opcoes?: any;
+  pesquisa_faixa?: boolean;
+}
+
+interface CustomFieldFilters {
+  range: Record<string, { min: string; max: string }>;
+  text: Record<string, string>;
+  select: Record<string, string>;
+  checkbox: Record<string, boolean | null>;
+  number: Record<string, string>;
+}
 
 interface ConjuntoItem {
   id: string;
@@ -106,19 +126,6 @@ interface MobilePOSLayoutProps {
   conjuntoItens: ConjuntoItem[];
   setConjuntoSelecionado: (id: string | null) => void;
   setConjuntoItens: React.Dispatch<React.SetStateAction<ConjuntoItem[]>>;
-  // Filtros avançados
-  gramaturaMin?: string;
-  setGramaturaMin?: (value: string) => void;
-  gramaturaMax?: string;
-  setGramaturaMax?: (value: string) => void;
-  larguraMin?: string;
-  setLarguraMin?: (value: string) => void;
-  larguraMax?: string;
-  setLarguraMax?: (value: string) => void;
-  comprimentoMin?: string;
-  setComprimentoMin?: (value: string) => void;
-  comprimentoMax?: string;
-  setComprimentoMax?: (value: string) => void;
 }
 
 type MobileView = 'produtos' | 'carrinho' | 'detalhes';
@@ -166,25 +173,96 @@ export default function MobilePOSLayout({
   conjuntoSelecionado,
   conjuntoItens,
   setConjuntoSelecionado,
-  setConjuntoItens,
-  gramaturaMin = "",
-  setGramaturaMin,
-  gramaturaMax = "",
-  setGramaturaMax,
-  larguraMin = "",
-  setLarguraMin,
-  larguraMax = "",
-  setLarguraMax,
-  comprimentoMin = "",
-  setComprimentoMin,
-  comprimentoMax = "",
-  setComprimentoMax
+  setConjuntoItens
 }: MobilePOSLayoutProps) {
   const [activeView, setActiveView] = useState<MobileView>('produtos');
   const [openEmpresaCombobox, setOpenEmpresaCombobox] = useState(false);
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  
+  // Custom field filters state
+  const [camposCustomizados, setCamposCustomizados] = useState<CampoCustomizado[]>([]);
+  const [customFieldFilters, setCustomFieldFilters] = useState<CustomFieldFilters>({
+    range: {},
+    text: {},
+    select: {},
+    checkbox: {},
+    number: {}
+  });
+
+  // Load custom fields when group changes
+  useEffect(() => {
+    if (selectedGrupo && selectedGrupo !== "") {
+      loadCamposCustomizados(selectedGrupo);
+    } else {
+      setCamposCustomizados([]);
+      setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
+    }
+  }, [selectedGrupo]);
+
+  const loadCamposCustomizados = async (grupoId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('produto_campos_customizados')
+        .select('*')
+        .eq('grupo_id', grupoId)
+        .eq('ativo', true)
+        .order('ordem');
+
+      if (error) throw error;
+      setCamposCustomizados(data || []);
+      
+      const newFilters: CustomFieldFilters = { range: {}, text: {}, select: {}, checkbox: {}, number: {} };
+      (data || []).forEach(campo => {
+        if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+          newFilters.range[campo.campo_key] = { min: "", max: "" };
+        } else if (campo.tipo === 'numero') {
+          newFilters.number[campo.campo_key] = "";
+        } else if (campo.tipo === 'texto') {
+          newFilters.text[campo.campo_key] = "";
+        } else if (campo.tipo === 'selecao') {
+          newFilters.select[campo.campo_key] = "";
+        } else if (campo.tipo === 'checkbox') {
+          newFilters.checkbox[campo.campo_key] = null;
+        }
+      });
+      setCustomFieldFilters(newFilters);
+    } catch (error) {
+      console.error('Erro ao carregar campos customizados:', error);
+      setCamposCustomizados([]);
+    }
+  };
+
+  const updateCustomFilter = (type: keyof CustomFieldFilters, campoKey: string, value: any) => {
+    setCustomFieldFilters(prev => ({
+      ...prev,
+      [type]: { ...prev[type], [campoKey]: value }
+    }));
+  };
+
+  const updateRangeFilter = (campoKey: string, field: "min" | "max", value: string) => {
+    setCustomFieldFilters(prev => ({
+      ...prev,
+      range: {
+        ...prev.range,
+        [campoKey]: { ...prev.range[campoKey], [field]: value }
+      }
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setSelectedGrupo("");
+    setCamposCustomizados([]);
+    setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
+  };
+
+  const hasActiveFilters = selectedGrupo || 
+    Object.values(customFieldFilters.range).some(rf => rf?.min || rf?.max) ||
+    Object.values(customFieldFilters.text).some(v => v) ||
+    Object.values(customFieldFilters.select).some(v => v) ||
+    Object.values(customFieldFilters.checkbox).some(v => v !== null) ||
+    Object.values(customFieldFilters.number).some(v => v);
 
   // Quando um conjunto é selecionado, mudar para aba de produtos automaticamente
   useEffect(() => {
@@ -201,22 +279,58 @@ export default function MobilePOSLayout({
       produto.codigo?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesGrupo = !selectedGrupo || produto.grupo_id === selectedGrupo;
     
-    // Filtros avançados
-    const gramaturaMinNum = gramaturaMin ? Number(gramaturaMin) : undefined;
-    const gramaturaMaxNum = gramaturaMax ? Number(gramaturaMax) : undefined;
-    const larguraMinNum = larguraMin ? Number(larguraMin) : undefined;
-    const larguraMaxNum = larguraMax ? Number(larguraMax) : undefined;
-    const comprimentoMinNum = comprimentoMin ? Number(comprimentoMin) : undefined;
-    const comprimentoMaxNum = comprimentoMax ? Number(comprimentoMax) : undefined;
+    // Filtros de campos customizados
+    let matchesCustomFields = true;
+    const produtoCustomFields = (produto as any).campos_customizados || {};
     
-    const matchesGramatura = (!gramaturaMinNum || (produto.gramatura && produto.gramatura >= gramaturaMinNum)) &&
-      (!gramaturaMaxNum || (produto.gramatura && produto.gramatura <= gramaturaMaxNum));
-    const matchesLargura = (!larguraMinNum || (produto.largura && produto.largura >= larguraMinNum)) &&
-      (!larguraMaxNum || (produto.largura && produto.largura <= larguraMaxNum));
-    const matchesComprimento = (!comprimentoMinNum || (produto.comprimento && produto.comprimento >= comprimentoMinNum)) &&
-      (!comprimentoMaxNum || (produto.comprimento && produto.comprimento <= comprimentoMaxNum));
+    // Range filters
+    for (const [key, range] of Object.entries(customFieldFilters.range)) {
+      if (range?.min || range?.max) {
+        const value = produtoCustomFields[key];
+        if (value !== undefined && value !== null) {
+          if (range.min && Number(value) < Number(range.min)) matchesCustomFields = false;
+          if (range.max && Number(value) > Number(range.max)) matchesCustomFields = false;
+        }
+      }
+    }
     
-    return matchesSearch && matchesGrupo && matchesGramatura && matchesLargura && matchesComprimento;
+    // Number filters
+    for (const [key, filterValue] of Object.entries(customFieldFilters.number)) {
+      if (filterValue) {
+        const value = produtoCustomFields[key];
+        if (value !== undefined && value !== null && Number(value) !== Number(filterValue)) {
+          matchesCustomFields = false;
+        }
+      }
+    }
+    
+    // Text filters
+    for (const [key, filterValue] of Object.entries(customFieldFilters.text)) {
+      if (filterValue) {
+        const value = produtoCustomFields[key];
+        if (!value || !String(value).toLowerCase().includes(filterValue.toLowerCase())) {
+          matchesCustomFields = false;
+        }
+      }
+    }
+    
+    // Select filters
+    for (const [key, filterValue] of Object.entries(customFieldFilters.select)) {
+      if (filterValue) {
+        const value = produtoCustomFields[key];
+        if (value !== filterValue) matchesCustomFields = false;
+      }
+    }
+    
+    // Checkbox filters
+    for (const [key, filterValue] of Object.entries(customFieldFilters.checkbox)) {
+      if (filterValue !== null) {
+        const value = produtoCustomFields[key];
+        if (Boolean(value) !== filterValue) matchesCustomFields = false;
+      }
+    }
+    
+    return matchesSearch && matchesGrupo && matchesCustomFields;
   });
 
   const formatCurrency = (value: number) => {
@@ -400,18 +514,12 @@ export default function MobilePOSLayout({
                   setShowFilters(newShowFilters);
                   // Limpar filtros ao fechar
                   if (!newShowFilters) {
-                    setSelectedGrupo("");
-                    setGramaturaMin?.("");
-                    setGramaturaMax?.("");
-                    setLarguraMin?.("");
-                    setLarguraMax?.("");
-                    setComprimentoMin?.("");
-                    setComprimentoMax?.("");
+                    clearAllFilters();
                   }
                 }}
               >
                 <Filter className="h-4 w-4" />
-                {(selectedGrupo || gramaturaMin || gramaturaMax || larguraMin || larguraMax || comprimentoMin || comprimentoMax) && (
+                {hasActiveFilters && (
                   <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
                     !
                   </span>
@@ -429,15 +537,7 @@ export default function MobilePOSLayout({
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => {
-                      setSelectedGrupo("");
-                      setGramaturaMin?.("");
-                      setGramaturaMax?.("");
-                      setLarguraMin?.("");
-                      setLarguraMax?.("");
-                      setComprimentoMin?.("");
-                      setComprimentoMax?.("");
-                    }}
+                    onClick={clearAllFilters}
                     className="h-6 text-[10px] px-2"
                   >
                     <X className="w-3 h-3 mr-1" />
@@ -463,68 +563,129 @@ export default function MobilePOSLayout({
                   </Select>
                 </div>
 
-                {/* Gramatura */}
-                <div className="space-y-1">
-                  <Label className="text-[10px]">Gramatura (g/m²)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Min"
-                      value={gramaturaMin}
-                      onChange={(e) => setGramaturaMin?.(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Max"
-                      value={gramaturaMax}
-                      onChange={(e) => setGramaturaMax?.(e.target.value)}
-                      className="h-8 text-xs"
-                    />
+                {/* Campos Customizados Dinâmicos */}
+                {camposCustomizados.length > 0 && (
+                  <div className="space-y-2 pt-2 border-t border-border/50">
+                    <Label className="text-[10px] text-muted-foreground">Filtros do Grupo</Label>
+                    {camposCustomizados.map(campo => {
+                      const opcoes = Array.isArray(campo.opcoes) ? campo.opcoes : [];
+                      
+                      // Range filter for numeric fields with pesquisa_faixa
+                      if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+                        return (
+                          <div key={campo.id} className="space-y-1">
+                            <Label className="text-[10px]">
+                              {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                            </Label>
+                            <div className="flex gap-2">
+                              <Input
+                                type="number"
+                                placeholder="Min"
+                                value={customFieldFilters.range[campo.campo_key]?.min || ""}
+                                onChange={(e) => updateRangeFilter(campo.campo_key, "min", e.target.value)}
+                                className="h-8 text-xs"
+                              />
+                              <Input
+                                type="number"
+                                placeholder="Max"
+                                value={customFieldFilters.range[campo.campo_key]?.max || ""}
+                                onChange={(e) => updateRangeFilter(campo.campo_key, "max", e.target.value)}
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                          </div>
+                        );
+                      }
+                      
+                      // Simple number filter
+                      if (campo.tipo === 'numero') {
+                        return (
+                          <div key={campo.id} className="space-y-1">
+                            <Label className="text-[10px]">
+                              {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                            </Label>
+                            <Input
+                              type="number"
+                              placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                              value={customFieldFilters.number[campo.campo_key] || ""}
+                              onChange={(e) => updateCustomFilter('number', campo.campo_key, e.target.value)}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                        );
+                      }
+                      
+                      // Text filter
+                      if (campo.tipo === 'texto') {
+                        return (
+                          <div key={campo.id} className="space-y-1">
+                            <Label className="text-[10px]">{campo.nome}</Label>
+                            <Input
+                              type="text"
+                              placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                              value={customFieldFilters.text[campo.campo_key] || ""}
+                              onChange={(e) => updateCustomFilter('text', campo.campo_key, e.target.value)}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                        );
+                      }
+                      
+                      // Selection filter
+                      if (campo.tipo === 'selecao' && opcoes.length > 0) {
+                        return (
+                          <div key={campo.id} className="space-y-1">
+                            <Label className="text-[10px]">{campo.nome}</Label>
+                            <Select 
+                              value={customFieldFilters.select[campo.campo_key] || "all"} 
+                              onValueChange={(val) => updateCustomFilter('select', campo.campo_key, val === "all" ? "" : val)}
+                            >
+                              <SelectTrigger className="h-8 bg-background text-xs">
+                                <SelectValue placeholder={`Selecione ${campo.nome.toLowerCase()}`} />
+                              </SelectTrigger>
+                              <SelectContent className="bg-card border-border z-50">
+                                <SelectItem value="all">Todos</SelectItem>
+                                {opcoes.map((opcao: string, idx: number) => (
+                                  <SelectItem key={idx} value={opcao}>{opcao}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        );
+                      }
+                      
+                      // Checkbox filter
+                      if (campo.tipo === 'checkbox') {
+                        return (
+                          <div key={campo.id} className="space-y-1">
+                            <Label className="text-[10px]">{campo.nome}</Label>
+                            <Select 
+                              value={customFieldFilters.checkbox[campo.campo_key] === null ? "all" : customFieldFilters.checkbox[campo.campo_key] ? "true" : "false"} 
+                              onValueChange={(val) => updateCustomFilter('checkbox', campo.campo_key, val === "all" ? null : val === "true")}
+                            >
+                              <SelectTrigger className="h-8 bg-background text-xs">
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-card border-border z-50">
+                                <SelectItem value="all">Todos</SelectItem>
+                                <SelectItem value="true">Sim</SelectItem>
+                                <SelectItem value="false">Não</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        );
+                      }
+                      
+                      return null;
+                    })}
                   </div>
-                </div>
+                )}
 
-                {/* Largura */}
-                <div className="space-y-1">
-                  <Label className="text-[10px]">Largura (cm)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Min"
-                      value={larguraMin}
-                      onChange={(e) => setLarguraMin?.(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Max"
-                      value={larguraMax}
-                      onChange={(e) => setLarguraMax?.(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                  </div>
-                </div>
-
-                {/* Comprimento */}
-                <div className="space-y-1">
-                  <Label className="text-[10px]">Comprimento (cm)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      placeholder="Min"
-                      value={comprimentoMin}
-                      onChange={(e) => setComprimentoMin?.(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Max"
-                      value={comprimentoMax}
-                      onChange={(e) => setComprimentoMax?.(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                  </div>
-                </div>
+                {selectedGrupo && camposCustomizados.length === 0 && (
+                  <p className="text-[10px] text-muted-foreground text-center py-2">
+                    Nenhum campo de filtro configurado para este grupo.
+                  </p>
+                )}
               </div>
             )}
           </div>

@@ -868,18 +868,6 @@ export default function POSView({
           conjuntoItens={conjuntoItens}
           setConjuntoSelecionado={setConjuntoSelecionado}
           setConjuntoItens={setConjuntoItens}
-          gramaturaMin={gramaturaMin}
-          setGramaturaMin={setGramaturaMin}
-          gramaturaMax={gramaturaMax}
-          setGramaturaMax={setGramaturaMax}
-          larguraMin={larguraMin}
-          setLarguraMin={setLarguraMin}
-          larguraMax={larguraMax}
-          setLarguraMax={setLarguraMax}
-          comprimentoMin={comprimentoMin}
-          setComprimentoMin={setComprimentoMin}
-          comprimentoMax={comprimentoMax}
-          setComprimentoMax={setComprimentoMax}
         />
         
         {/* Dialogs também para mobile */}
