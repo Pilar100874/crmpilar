@@ -366,14 +366,6 @@ export default function Atendimento() {
       setMessages([]);
     }
     
-    // Limpar orçamento quando não estiver na aba orçamento
-    if (activeTab !== 'orcamento') {
-      console.log('Resetting orcamentoSheetOpen because activeTab is:', activeTab);
-      setOrcamentoSheetOpen(false);
-      setSelectedOrcamentoId(null);
-      setSelectedOrcamentoData(null);
-    }
-    
     // Limpar agenda quando não estiver na aba agenda
     if (activeTab !== 'agenda') {
       setSelectedTaskId(null);
@@ -385,6 +377,8 @@ export default function Atendimento() {
       setSelectedEmailId(null);
       setSelectedEmailData(null);
     }
+    
+    // NÃO resetar orçamento aqui - o POSView é controlado separadamente
   }, [activeTab]);
 
 
@@ -3203,10 +3197,8 @@ ${recentMessages}
                 <Button 
                   size="sm" 
                   onClick={() => {
-                    console.log('Novo clicked - estabelecimentoId:', estabelecimentoId, 'activeTab:', activeTab);
                     setSelectedOrcamentoId(null);
                     setOrcamentoSheetOpen(true);
-                    console.log('orcamentoSheetOpen set to true');
                   }}
                   className="h-9 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700"
                 >
@@ -3784,7 +3776,7 @@ ${recentMessages}
 
       {/* Orçamento Panel Lateral - Ao lado do painel */}
       {orcamentoSheetOpen && estabelecimentoId ? (
-        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full bg-red-500">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full bg-background">
           <POSView
             estabelecimentoId={estabelecimentoId} 
             orcamentoId={selectedOrcamentoId || undefined}
