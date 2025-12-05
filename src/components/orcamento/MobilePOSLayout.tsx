@@ -28,6 +28,7 @@ import {
   History,
   Building2
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -105,6 +106,19 @@ interface MobilePOSLayoutProps {
   conjuntoItens: ConjuntoItem[];
   setConjuntoSelecionado: (id: string | null) => void;
   setConjuntoItens: React.Dispatch<React.SetStateAction<ConjuntoItem[]>>;
+  // Filtros avançados
+  gramaturaMin?: string;
+  setGramaturaMin?: (value: string) => void;
+  gramaturaMax?: string;
+  setGramaturaMax?: (value: string) => void;
+  larguraMin?: string;
+  setLarguraMin?: (value: string) => void;
+  larguraMax?: string;
+  setLarguraMax?: (value: string) => void;
+  comprimentoMin?: string;
+  setComprimentoMin?: (value: string) => void;
+  comprimentoMax?: string;
+  setComprimentoMax?: (value: string) => void;
 }
 
 type MobileView = 'produtos' | 'carrinho' | 'detalhes';
@@ -152,7 +166,19 @@ export default function MobilePOSLayout({
   conjuntoSelecionado,
   conjuntoItens,
   setConjuntoSelecionado,
-  setConjuntoItens
+  setConjuntoItens,
+  gramaturaMin = "",
+  setGramaturaMin,
+  gramaturaMax = "",
+  setGramaturaMax,
+  larguraMin = "",
+  setLarguraMin,
+  larguraMax = "",
+  setLarguraMax,
+  comprimentoMin = "",
+  setComprimentoMin,
+  comprimentoMax = "",
+  setComprimentoMax
 }: MobilePOSLayoutProps) {
   const [activeView, setActiveView] = useState<MobileView>('produtos');
   const [openEmpresaCombobox, setOpenEmpresaCombobox] = useState(false);
@@ -360,19 +386,112 @@ export default function MobilePOSLayout({
             </div>
 
             {showFilters && (
-              <Select value={selectedGrupo || "all"} onValueChange={(value) => setSelectedGrupo(value === "all" ? "" : value)}>
-                <SelectTrigger className="h-9 bg-background text-sm">
-                  <SelectValue placeholder="Filtrar por grupo" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border z-50">
-                  <SelectItem value="all">Todos os grupos</SelectItem>
-                  {grupos.map((grupo) => (
-                    <SelectItem key={grupo.id} value={grupo.id}>
-                      {grupo.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold flex items-center gap-2">
+                    <Filter className="w-3 h-3" />
+                    Filtros de Busca
+                  </h3>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setSelectedGrupo("");
+                      setGramaturaMin?.("");
+                      setGramaturaMax?.("");
+                      setLarguraMin?.("");
+                      setLarguraMax?.("");
+                      setComprimentoMin?.("");
+                      setComprimentoMax?.("");
+                    }}
+                    className="h-6 text-[10px] px-2"
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    Limpar
+                  </Button>
+                </div>
+
+                {/* Grupo */}
+                <div className="space-y-1">
+                  <Label className="text-[10px]">Grupo</Label>
+                  <Select value={selectedGrupo || "all"} onValueChange={(value) => setSelectedGrupo(value === "all" ? "" : value)}>
+                    <SelectTrigger className="h-8 bg-background text-xs">
+                      <SelectValue placeholder="Todos os grupos" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border z-50">
+                      <SelectItem value="all">Todos os grupos</SelectItem>
+                      {grupos.map((grupo) => (
+                        <SelectItem key={grupo.id} value={grupo.id}>
+                          {grupo.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Gramatura */}
+                <div className="space-y-1">
+                  <Label className="text-[10px]">Gramatura (g/m²)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Min"
+                      value={gramaturaMin}
+                      onChange={(e) => setGramaturaMin?.(e.target.value)}
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Max"
+                      value={gramaturaMax}
+                      onChange={(e) => setGramaturaMax?.(e.target.value)}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Largura */}
+                <div className="space-y-1">
+                  <Label className="text-[10px]">Largura (cm)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Min"
+                      value={larguraMin}
+                      onChange={(e) => setLarguraMin?.(e.target.value)}
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Max"
+                      value={larguraMax}
+                      onChange={(e) => setLarguraMax?.(e.target.value)}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Comprimento */}
+                <div className="space-y-1">
+                  <Label className="text-[10px]">Comprimento (cm)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Min"
+                      value={comprimentoMin}
+                      onChange={(e) => setComprimentoMin?.(e.target.value)}
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Max"
+                      value={comprimentoMax}
+                      onChange={(e) => setComprimentoMax?.(e.target.value)}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         )}
