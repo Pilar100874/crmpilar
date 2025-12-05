@@ -3753,8 +3753,8 @@ ${recentMessages}
       </div>
       )}
 
-      {/* Right Sidebar - Company Details Panel */}
-      {selectedConversation && selectedConv && showClientDetailsChat && (
+      {/* Right Sidebar - Company Details Panel - Esconde quando orçamento está aberto */}
+      {!orcamentoSheetOpen && selectedConversation && selectedConv && showClientDetailsChat && (
         <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="chat"
