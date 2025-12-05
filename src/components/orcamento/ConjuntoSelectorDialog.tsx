@@ -200,9 +200,9 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-4xl max-h-[85vh] overflow-y-auto sm:w-auto">
         <DialogHeader>
-          <DialogTitle>Selecionar Conjunto de Itens</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Selecionar Conjunto de Itens</DialogTitle>
         </DialogHeader>
 
         {showNewForm ? (
@@ -254,32 +254,35 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Pesquisar conjuntos..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-10"
                 />
               </div>
-              <Select value={sortBy} onValueChange={(value: "nome" | "created_at") => setSortBy(value)}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="nome">Nome (A-Z)</SelectItem>
-                  <SelectItem value="created_at">Mais recentes</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                size="sm"
-                onClick={() => setShowNewForm(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Novo
-              </Button>
+              <div className="flex items-center gap-2">
+                <Select value={sortBy} onValueChange={(value: "nome" | "created_at") => setSortBy(value)}>
+                  <SelectTrigger className="w-full sm:w-[140px] h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nome">Nome (A-Z)</SelectItem>
+                    <SelectItem value="created_at">Mais recentes</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  onClick={() => setShowNewForm(true)}
+                  className="h-10 whitespace-nowrap"
+                >
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Novo</span>
+                </Button>
+              </div>
             </div>
             
             {(() => {
@@ -296,42 +299,44 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
                   {filteredConjuntos.map((conjunto) => (
                     <div
                       key={conjunto.id}
-                      className="flex gap-2"
+                      className="flex flex-col sm:flex-row gap-2"
                     >
                       <Button
                         variant="outline"
-                        className="flex-1 justify-start h-auto py-4"
+                        className="flex-1 justify-start h-auto py-3 sm:py-4 text-left"
                         onClick={() => handleSelectConjunto(conjunto.id)}
                       >
-                        {conjunto.nome}
+                        <span className="truncate">{conjunto.nome}</span>
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-auto"
-                        onClick={() => handleEditClick(conjunto)}
-                        title="Editar conjunto"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-auto"
-                        onClick={() => setShowItemsEditor(conjunto.id)}
-                        title="Gerenciar itens"
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-auto text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteConjunto(conjunto.id)}
-                        title="Excluir conjunto"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-2 justify-end sm:justify-start">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 sm:h-auto sm:w-auto sm:aspect-square"
+                          onClick={() => handleEditClick(conjunto)}
+                          title="Editar conjunto"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 sm:h-auto sm:w-auto sm:aspect-square"
+                          onClick={() => setShowItemsEditor(conjunto.id)}
+                          title="Gerenciar itens"
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 sm:h-auto sm:w-auto sm:aspect-square text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteConjunto(conjunto.id)}
+                          title="Excluir conjunto"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

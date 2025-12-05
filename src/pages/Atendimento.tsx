@@ -162,6 +162,10 @@ export default function Atendimento() {
   const [radialReportProgress, setRadialReportProgress] = useState(0);
   const [selectedRadialReport, setSelectedRadialReport] = useState<string | null>(null);
   
+  // Confirmation dialogs for orcamento actions
+  const [confirmDeleteOrcamento, setConfirmDeleteOrcamento] = useState<string | null>(null);
+  const [confirmDuplicateOrcamento, setConfirmDuplicateOrcamento] = useState<string | null>(null);
+  
   // Bot redirect states
   const [availableBots, setAvailableBots] = useState<any[]>([]);
   const [selectedBotRedirect, setSelectedBotRedirect] = useState<string | null>(null);
@@ -3436,7 +3440,7 @@ ${recentMessages}
                               <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                                 <DropdownMenuItem onClick={(e) => {
                                   e.stopPropagation();
-                                  duplicateOrcamento(orc.id);
+                                  setConfirmDuplicateOrcamento(orc.id);
                                 }}>
                                   <Copy className="h-4 w-4 mr-2" />
                                   Duplicar
@@ -3445,7 +3449,7 @@ ${recentMessages}
                                   className="text-destructive focus:text-destructive"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    deleteOrcamento(orc.id);
+                                    setConfirmDeleteOrcamento(orc.id);
                                   }}
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
@@ -4183,6 +4187,56 @@ ${recentMessages}
         open={showPredictiveDialer}
         onOpenChange={setShowPredictiveDialer}
       />
+
+      {/* Confirmation Dialogs for Orçamento */}
+      <AlertDialog open={!!confirmDeleteOrcamento} onOpenChange={(open) => !open && setConfirmDeleteOrcamento(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este orçamento? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmDeleteOrcamento) {
+                  deleteOrcamento(confirmDeleteOrcamento);
+                  setConfirmDeleteOrcamento(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!confirmDuplicateOrcamento} onOpenChange={(open) => !open && setConfirmDuplicateOrcamento(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar duplicação</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja duplicar este orçamento? Será criada uma cópia com todos os itens.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmDuplicateOrcamento) {
+                  duplicateOrcamento(confirmDuplicateOrcamento);
+                  setConfirmDuplicateOrcamento(null);
+                }
+              }}
+            >
+              Duplicar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
       )}
     </RadialMenu>
