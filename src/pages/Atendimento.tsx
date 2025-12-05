@@ -3782,52 +3782,50 @@ ${recentMessages}
 
       {/* Orçamento Panel Lateral - Ao lado do painel */}
       {orcamentoSheetOpen && estabelecimentoId && (
-        <>
-          <div className="flex-1 min-w-0 h-full overflow-hidden">
-            <POSView 
-              estabelecimentoId={estabelecimentoId} 
-              orcamentoId={selectedOrcamentoId || undefined}
-              onClose={() => {
-                setOrcamentoSheetOpen(false);
-                setSelectedOrcamentoId(null);
-              }}
-              showClientDetails={showClientDetailsOrcamento}
-              onToggleClientDetails={() => {
-                const newState = !showClientDetailsOrcamento;
-                setShowClientDetailsOrcamento(newState);
-                // Em tablets, coordenar com o painel de conversas
-                if (isTablet && newState && showConversationsList) {
-                  setShowConversationsList(false);
-                }
-              }}
-              showPanelToggle={!showConversationsList}
-              onTogglePanel={() => setShowConversationsList(true)}
-            />
-          </div>
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full">
+          <POSView 
+            estabelecimentoId={estabelecimentoId} 
+            orcamentoId={selectedOrcamentoId || undefined}
+            onClose={() => {
+              setOrcamentoSheetOpen(false);
+              setSelectedOrcamentoId(null);
+            }}
+            showClientDetails={showClientDetailsOrcamento}
+            onToggleClientDetails={() => {
+              const newState = !showClientDetailsOrcamento;
+              setShowClientDetailsOrcamento(newState);
+              // Em tablets, coordenar com o painel de conversas
+              if (isTablet && newState && showConversationsList) {
+                setShowConversationsList(false);
+              }
+            }}
+            showPanelToggle={!showConversationsList}
+            onTogglePanel={() => setShowConversationsList(true)}
+          />
+        </div>
+      )}
 
-          {/* Client Details Panel - Orçamento */}
-          {showClientDetailsOrcamento && selectedOrcamentoData && (
-            <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
-              <UnifiedDetailsPanel
-                type="orcamento"
-                nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente"}
-                telefone={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
-                whatsapp={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
-                email={selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email}
-                customerId={selectedOrcamentoData.customers?.id}
-                protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
-                status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
-                valorTotal={selectedOrcamentoData.valor_total || 0}
-                companies={
-                  selectedOrcamentoData.empresas 
-                    ? [{ empresas: selectedOrcamentoData.empresas, is_primary: true }]
-                    : customerCompanies
-                }
-                onSetGlobalFilter={setGlobalFilter}
-              />
-            </div>
-          )}
-        </>
+      {/* Client Details Panel - Orçamento */}
+      {orcamentoSheetOpen && showClientDetailsOrcamento && selectedOrcamentoData && (
+        <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+          <UnifiedDetailsPanel
+            type="orcamento"
+            nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente"}
+            telefone={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
+            whatsapp={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
+            email={selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email}
+            customerId={selectedOrcamentoData.customers?.id}
+            protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
+            status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
+            valorTotal={selectedOrcamentoData.valor_total || 0}
+            companies={
+              selectedOrcamentoData.empresas 
+                ? [{ empresas: selectedOrcamentoData.empresas, is_primary: true }]
+                : customerCompanies
+            }
+            onSetGlobalFilter={setGlobalFilter}
+          />
+        </div>
       )}
 
       <SoftphoneDialog 
