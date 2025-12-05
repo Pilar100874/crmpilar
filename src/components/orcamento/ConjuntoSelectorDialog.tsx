@@ -30,7 +30,7 @@ interface ConjuntoPreenchido extends ConjuntoItem {
 interface ConjuntoSelectorDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (conjuntoId: string) => void;
+  onConfirm: (conjuntoId: string) => void | Promise<void>;
 }
 
 export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSelectorDialogProps) {
@@ -90,8 +90,8 @@ export function ConjuntoSelectorDialog({ open, onClose, onConfirm }: ConjuntoSel
     onClose();
   };
 
-  const handleSelectConjunto = (conjuntoId: string) => {
-    onConfirm(conjuntoId);
+  const handleSelectConjunto = async (conjuntoId: string) => {
+    await onConfirm(conjuntoId);
     handleClose();
   };
 
