@@ -405,62 +405,64 @@ export default function MobilePOSLayout({
           </Popover>
         </div>
 
-        {/* Botões de Ação Rápida - Linha 1 */}
-        <div className="flex gap-2 mt-3">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 h-9"
-            onClick={() => setShowPhotoModal(true)}
-          >
-            <Camera className="h-4 w-4 mr-2" />
-            Foto
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 h-9"
-            onClick={() => setShowSuggestionsModal(true)}
-          >
-            <Lightbulb className="h-4 w-4 mr-2" />
-            Sugestões
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 h-9"
-            onClick={() => setShowShareModal(true)}
-            disabled={!shareLink}
-          >
-            <Share2 className="h-4 w-4 mr-2" />
-            Compartilhar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 w-9 p-0"
-            onClick={() => setShowHistoryModal(true)}
-          >
-            <History className="h-4 w-4" />
-          </Button>
-        </div>
+        {/* Barra de Ações Compacta */}
+        <div className="flex items-center justify-between mt-3 gap-2">
+          {/* Ícones de ação */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 hover:bg-primary/10 hover:text-primary"
+              onClick={() => setShowConjuntoDialog(true)}
+              title="Conjunto de Itens"
+            >
+              <Package className="h-4.5 w-4.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 hover:bg-primary/10 hover:text-primary"
+              onClick={() => setShowPhotoModal(true)}
+              title="Extrair de Foto"
+            >
+              <Camera className="h-4.5 w-4.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 hover:bg-primary/10 hover:text-primary"
+              onClick={() => setShowSuggestionsModal(true)}
+              title="Sugestões"
+            >
+              <Lightbulb className="h-4.5 w-4.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 hover:bg-primary/10 hover:text-primary"
+              onClick={() => setShowShareModal(true)}
+              disabled={!shareLink}
+              title="Compartilhar"
+            >
+              <Share2 className="h-4.5 w-4.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 hover:bg-primary/10 hover:text-primary"
+              onClick={() => setShowHistoryModal(true)}
+              title="Histórico"
+            >
+              <History className="h-4.5 w-4.5" />
+            </Button>
+          </div>
 
-        {/* Botões de Ação Rápida - Linha 2 */}
-        <div className="flex gap-2 mt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 h-9"
-            onClick={() => setShowConjuntoDialog(true)}
-          >
-            <Package className="h-4 w-4 mr-2" />
-            Conjunto de Itens
-          </Button>
-          <div className="flex border rounded-md">
+          {/* Toggle Grid/List */}
+          <div className="flex bg-muted/50 rounded-lg p-0.5">
             <Button
               variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
               size="icon"
-              className="h-9 w-9 rounded-r-none"
+              className="h-8 w-8 rounded-md"
               onClick={() => setViewMode('grid')}
             >
               <Grid className="h-4 w-4" />
@@ -468,7 +470,7 @@ export default function MobilePOSLayout({
             <Button
               variant={viewMode === 'list' ? 'secondary' : 'ghost'}
               size="icon"
-              className="h-9 w-9 rounded-l-none"
+              className="h-8 w-8 rounded-md"
               onClick={() => setViewMode('list')}
             >
               <List className="h-4 w-4" />
@@ -1298,55 +1300,54 @@ export default function MobilePOSLayout({
       )}
 
       {/* Bottom Navigation */}
-      <div className="border-t bg-card flex-shrink-0 safe-area-bottom">
+      <div className="border-t border-border/50 bg-card/95 backdrop-blur-sm flex-shrink-0 safe-area-bottom">
         <div className="flex">
-          <Button
-            variant="ghost"
-            className={cn(
-              "flex-1 h-14 rounded-none flex-col gap-1",
-              activeView === 'produtos' && "bg-primary/10 text-primary"
-            )}
-            onClick={() => setActiveView('produtos')}
-          >
-            <Package className="h-5 w-5" />
-            <span className="text-xs">Produtos</span>
-          </Button>
-          <Button
-            variant="ghost"
-            className={cn(
-              "flex-1 h-14 rounded-none flex-col gap-1 relative",
-              activeView === 'carrinho' && "bg-primary/10 text-primary"
-            )}
-            onClick={() => setActiveView('carrinho')}
-          >
-            <div className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              {cartCount > 0 && (
-                <Badge className="absolute -top-2 -right-2 h-4 min-w-4 text-[10px] p-0 flex items-center justify-center bg-primary text-primary-foreground">
-                  {cartCount}
-                </Badge>
-              )}
-            </div>
-            <span className="text-xs">Carrinho</span>
-          </Button>
-          <Button
-            variant="ghost"
-            className={cn(
-              "flex-1 h-14 rounded-none flex-col gap-1 relative",
-              activeView === 'detalhes' && "bg-primary/10 text-primary"
-            )}
-            onClick={() => setActiveView('detalhes')}
-          >
-            <div className="relative">
-              <Eye className="h-5 w-5" />
-              {regrasAplicadas.length > 0 && (
-                <Badge className="absolute -top-2 -right-2 h-4 min-w-4 text-[10px] p-0 flex items-center justify-center bg-green-500 text-white">
-                  {regrasAplicadas.length}
-                </Badge>
-              )}
-            </div>
-            <span className="text-xs">Detalhes</span>
-          </Button>
+          {[
+            { id: 'produtos', label: 'Produtos', icon: Package, badge: null },
+            { id: 'carrinho', label: 'Carrinho', icon: ShoppingCart, badge: cartCount > 0 ? cartCount : null },
+            { id: 'detalhes', label: 'Detalhes', icon: Eye, badge: regrasAplicadas.length > 0 ? regrasAplicadas.length : null, badgeColor: 'bg-success' },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeView === tab.id;
+            return (
+              <button
+                key={tab.id}
+                className={cn(
+                  "flex-1 h-14 flex flex-col items-center justify-center gap-0.5 transition-all relative",
+                  isActive 
+                    ? "text-primary" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setActiveView(tab.id as MobileView)}
+              >
+                {isActive && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-primary rounded-full" />
+                )}
+                <div className="relative">
+                  <div className={cn(
+                    "p-1.5 rounded-lg transition-colors",
+                    isActive && "bg-primary/10"
+                  )}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  {tab.badge && (
+                    <Badge className={cn(
+                      "absolute -top-1 -right-1 h-4 min-w-4 text-[10px] px-1 flex items-center justify-center border-2 border-card",
+                      tab.badgeColor || "bg-primary text-primary-foreground"
+                    )}>
+                      {tab.badge > 99 ? "99+" : tab.badge}
+                    </Badge>
+                  )}
+                </div>
+                <span className={cn(
+                  "text-[10px] font-medium",
+                  isActive && "text-primary"
+                )}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
