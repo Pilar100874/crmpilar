@@ -162,9 +162,7 @@ export default function MobilePOSLayout({
 
   // Quando um conjunto é selecionado, mudar para aba de produtos automaticamente
   useEffect(() => {
-    console.log("MobilePOSLayout useEffect - conjuntoSelecionado:", conjuntoSelecionado, "conjuntoItens.length:", conjuntoItens.length);
     if (conjuntoSelecionado && conjuntoItens.length > 0) {
-      console.log("Mudando para aba produtos");
       setActiveView('produtos');
     }
   }, [conjuntoSelecionado, conjuntoItens]);
@@ -505,21 +503,23 @@ export default function MobilePOSLayout({
                       <Card
                         key={produto.id}
                         className={cn(
-                          "overflow-hidden transition-all",
+                          "overflow-hidden transition-all group",
                           inCart && "ring-2 ring-primary"
                         )}
-                        onClick={() => {
-                          for (let i = 0; i < quantity; i++) {
-                            addToCart(produto);
-                          }
-                          setGruposQuantities(prev => {
-                            const next = new Map(prev);
-                            next.set(produto.id, 1);
-                            return next;
-                          });
-                        }}
                       >
-                        <div className="aspect-square bg-muted relative">
+                        <div 
+                          className="aspect-square bg-muted relative"
+                          onClick={() => {
+                            for (let i = 0; i < quantity; i++) {
+                              addToCart(produto);
+                            }
+                            setGruposQuantities(prev => {
+                              const next = new Map(prev);
+                              next.set(produto.id, 1);
+                              return next;
+                            });
+                          }}
+                        >
                           {produto.foto_url ? (
                             <img
                               src={produto.foto_url}
@@ -536,6 +536,19 @@ export default function MobilePOSLayout({
                               {inCart.quantity}
                             </Badge>
                           )}
+                          {/* Eye button for product details */}
+                          <Button
+                            size="icon"
+                            variant="secondary"
+                            className="absolute top-1 left-1 h-7 w-7 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedProduto(produto);
+                              setActiveView('detalhes');
+                            }}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
                         </div>
                         <div className="p-2">
                           <p className="text-xs font-medium line-clamp-2 min-h-[2rem]">
@@ -560,10 +573,12 @@ export default function MobilePOSLayout({
                           "p-3 transition-all",
                           inCart && "ring-2 ring-primary"
                         )}
-                        onClick={() => addToCart(produto)}
                       >
                         <div className="flex gap-3">
-                          <div className="w-16 h-16 bg-muted rounded flex-shrink-0 overflow-hidden">
+                          <div 
+                            className="w-16 h-16 bg-muted rounded flex-shrink-0 overflow-hidden cursor-pointer"
+                            onClick={() => addToCart(produto)}
+                          >
                             {produto.foto_url ? (
                               <img
                                 src={produto.foto_url}
@@ -576,7 +591,7 @@ export default function MobilePOSLayout({
                               </div>
                             )}
                           </div>
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0" onClick={() => addToCart(produto)}>
                             <p className="text-sm font-medium truncate">{produto.nome}</p>
                             <p className="text-xs text-muted-foreground">{produto.codigo}</p>
                             <div className="flex items-center justify-between mt-1">
@@ -588,6 +603,18 @@ export default function MobilePOSLayout({
                               )}
                             </div>
                           </div>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-8 w-8 flex-shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedProduto(produto);
+                              setActiveView('detalhes');
+                            }}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
                         </div>
                       </Card>
                     );
@@ -915,12 +942,19 @@ export default function MobilePOSLayout({
           <Button
             variant="ghost"
             className={cn(
-              "flex-1 h-14 rounded-none flex-col gap-1",
+              "flex-1 h-14 rounded-none flex-col gap-1 relative",
               activeView === 'detalhes' && "bg-primary/10 text-primary"
             )}
             onClick={() => setActiveView('detalhes')}
           >
-            <Eye className="h-5 w-5" />
+            <div className="relative">
+              <Eye className="h-5 w-5" />
+              {regrasAplicadas.length > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-4 min-w-4 text-[10px] p-0 flex items-center justify-center bg-green-500 text-white">
+                  {regrasAplicadas.length}
+                </Badge>
+              )}
+            </div>
             <span className="text-xs">Detalhes</span>
           </Button>
         </div>
