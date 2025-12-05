@@ -3491,8 +3491,8 @@ ${recentMessages}
           </TabsContent>
         </Tabs>
         
-        {/* Status do Atendente - Footer */}
-        {atendente && (
+        {/* Status do Atendente - Footer - Apenas no Chat */}
+        {atendente && activeTab === "chat" && (
           <div className="border-t bg-gradient-to-r from-slate-50 to-white p-3 flex-shrink-0">
             <AtendenteStatusSelector
               atendenteId={atendente.id}
@@ -4533,8 +4533,8 @@ function MobileListContent({
           ))}
       </div>
 
-      {/* Footer - Status do Atendente */}
-      {atendente && (
+      {/* Footer - Status do Atendente - Apenas no Chat */}
+      {atendente && activeTab === "chat" && (
         <div className="border-t bg-gradient-to-r from-slate-50 to-white p-3 flex-shrink-0">
           <AtendenteStatusSelector
             atendenteId={atendente.id}
