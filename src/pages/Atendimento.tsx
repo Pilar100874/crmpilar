@@ -2669,36 +2669,38 @@ ${recentMessages}
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex flex-col items-center justify-center py-1 px-3 transition-all relative ${
-                        isActive
-                          ? "text-primary"
-                          : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {isActive && (
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-primary rounded-full" />
-                      )}
-                      <div className="relative">
-                        <div className={`p-1.5 rounded-lg transition-colors ${isActive ? "bg-primary/10" : ""}`}>
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex flex-col items-center justify-center py-1.5 px-4 transition-all relative ${
+                          isActive
+                            ? "text-primary"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {isActive && (
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
+                        )}
+                        <div className={`p-2 rounded-xl transition-colors ${isActive ? "bg-primary/10" : ""}`}>
                           <Icon className="h-5 w-5" />
                         </div>
-                        {tab.badge && tab.badge > 0 && (
-                          <Badge
-                            className="absolute -top-0.5 -right-1 h-4 min-w-[16px] px-1 text-[10px] bg-destructive text-destructive-foreground border-2 border-card"
-                          >
-                            {tab.badge > 99 ? "99+" : tab.badge}
-                          </Badge>
-                        )}
-                      </div>
-                      <span className={`text-[10px] font-medium ${isActive ? "text-primary" : ""}`}>
-                        {tab.label}
-                      </span>
-                    </button>
-                  );
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className={`text-[10px] font-medium ${isActive ? "text-primary" : ""}`}>
+                            {tab.label}
+                          </span>
+                          {tab.badge && tab.badge > 0 && (
+                            <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
+                              isActive 
+                                ? "bg-primary text-primary-foreground" 
+                                : "bg-muted-foreground/20 text-muted-foreground"
+                            }`}>
+                              {tab.badge > 99 ? "99+" : tab.badge}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
                 })}
               </div>
             </div>
