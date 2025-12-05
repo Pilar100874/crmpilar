@@ -341,9 +341,9 @@ export default function MobilePOSLayout({
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Header */}
-      <div className="bg-card border-b border-border p-3">
+      <div className="bg-card border-b border-border p-3 flex-shrink-0">
         {/* Empresa Selector - Com busca e botão fechar */}
         <div className="flex items-center gap-2">
           <Popover open={openEmpresaCombobox} onOpenChange={setOpenEmpresaCombobox}>
@@ -363,13 +363,13 @@ export default function MobilePOSLayout({
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[calc(100vw-24px)] p-0 bg-card border-border z-50">
+            <PopoverContent className="w-[calc(100vw-24px)] p-0 bg-card border-border z-[100]" sideOffset={5}>
               <Command className="bg-card">
                 <CommandInput 
                   placeholder="Buscar empresa..." 
                   className="bg-card border-border"
                 />
-                <CommandList>
+                <CommandList className="max-h-[300px]">
                   <CommandEmpty className="text-muted-foreground py-4 text-center text-sm">
                     Nenhuma empresa encontrada.
                   </CommandEmpty>
@@ -535,7 +535,7 @@ export default function MobilePOSLayout({
                     <SelectTrigger className="h-9 bg-background text-sm">
                       <SelectValue placeholder="Todos os grupos" />
                     </SelectTrigger>
-                    <SelectContent className="bg-card border-border z-50">
+                    <SelectContent className="bg-card border-border z-[100] max-h-[250px]">
                       <SelectItem value="all">Todos os grupos</SelectItem>
                       {grupos.map((grupo) => (
                         <SelectItem key={grupo.id} value={grupo.id}>
@@ -1298,7 +1298,7 @@ export default function MobilePOSLayout({
       )}
 
       {/* Bottom Navigation */}
-      <div className="border-t bg-card">
+      <div className="border-t bg-card flex-shrink-0 safe-area-bottom">
         <div className="flex">
           <Button
             variant="ghost"

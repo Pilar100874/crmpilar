@@ -3767,7 +3767,7 @@ ${recentMessages}
       />
 
       {/* Orçamento Panel Lateral - Ao lado do painel */}
-      {orcamentoSheetOpen && selectedOrcamentoId && estabelecimentoId && (
+      {orcamentoSheetOpen && estabelecimentoId && (
         <>
           <div className={`transition-all duration-300 ${
             showConversationsList 
@@ -3786,7 +3786,7 @@ ${recentMessages}
           } h-screen bg-gray-100 border-l shadow-lg overflow-hidden`}>
             <POSView 
               estabelecimentoId={estabelecimentoId} 
-              orcamentoId={selectedOrcamentoId}
+              orcamentoId={selectedOrcamentoId || undefined}
               onClose={() => {
                 setOrcamentoSheetOpen(false);
                 setSelectedOrcamentoId(null);
@@ -4372,12 +4372,12 @@ function MobileMainContent({
   }
 
   // Orçamento content
-  if (activeTab === "orcamento" && orcamentoSheetOpen && selectedOrcamentoId && estabelecimentoId) {
+  if (activeTab === "orcamento" && orcamentoSheetOpen && estabelecimentoId) {
     return (
       <div className="h-full bg-gray-100">
         <POSView 
           estabelecimentoId={estabelecimentoId} 
-          orcamentoId={selectedOrcamentoId}
+          orcamentoId={selectedOrcamentoId || undefined}
           onClose={() => setOrcamentoSheetOpen(false)}
           showClientDetails={false}
           onToggleClientDetails={() => {}}
