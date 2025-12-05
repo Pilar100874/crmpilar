@@ -2551,7 +2551,7 @@ ${recentMessages}
 
           {/* Bottom Navigation - Apenas na lista */}
           {mobileView === "list" && (
-            <div className="flex-shrink-0 bg-card border-t border-border/50 px-2 py-1.5 pb-safe">
+            <div className="flex-shrink-0 bg-card/95 backdrop-blur-sm border-t border-border/50 px-1 py-1 pb-safe">
               <div className="flex justify-around">
                 {[
                   { id: "chat", label: "Chats", icon: MessageSquare, badge: activeConversationsCount },
@@ -2565,23 +2565,28 @@ ${recentMessages}
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-xl transition-all relative ${
+                      className={`flex flex-col items-center justify-center py-1 px-3 transition-all relative ${
                         isActive
-                          ? "text-primary bg-primary/10"
+                          ? "text-primary"
                           : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
+                      {isActive && (
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-primary rounded-full" />
+                      )}
                       <div className="relative">
-                        <Icon className={`h-5 w-5 ${isActive ? "text-primary" : ""}`} />
+                        <div className={`p-1.5 rounded-lg transition-colors ${isActive ? "bg-primary/10" : ""}`}>
+                          <Icon className="h-5 w-5" />
+                        </div>
                         {tab.badge && tab.badge > 0 && (
                           <Badge
-                            className="absolute -top-1.5 -right-2.5 h-4 min-w-[16px] px-1 text-[10px] bg-destructive text-destructive-foreground border-0"
+                            className="absolute -top-0.5 -right-1 h-4 min-w-[16px] px-1 text-[10px] bg-destructive text-destructive-foreground border-2 border-card"
                           >
                             {tab.badge > 99 ? "99+" : tab.badge}
                           </Badge>
                         )}
                       </div>
-                      <span className={`text-[10px] mt-0.5 font-medium ${isActive ? "text-primary" : ""}`}>
+                      <span className={`text-[10px] font-medium ${isActive ? "text-primary" : ""}`}>
                         {tab.label}
                       </span>
                     </button>
