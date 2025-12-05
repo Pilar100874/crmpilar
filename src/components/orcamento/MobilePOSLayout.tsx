@@ -344,18 +344,8 @@ export default function MobilePOSLayout({
     <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Header */}
       <div className="bg-card border-b border-border p-3 flex-shrink-0">
-        {/* Empresa Selector - Com voltar e detalhe */}
+        {/* Empresa Selector - Com busca e botão fechar */}
         <div className="flex items-center gap-2">
-          {onClose && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-10 w-10 flex-shrink-0"
-              onClick={onClose}
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-          )}
           <Popover open={openEmpresaCombobox} onOpenChange={setOpenEmpresaCombobox}>
             <PopoverTrigger asChild>
               <Button
@@ -413,15 +403,6 @@ export default function MobilePOSLayout({
               </Command>
             </PopoverContent>
           </Popover>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-10 flex-shrink-0"
-            onClick={() => setActiveView('detalhes')}
-          >
-            <Eye className="h-4 w-4 mr-1" />
-            Detalhe
-          </Button>
         </div>
 
         {/* Botões de Ação Rápida - Linha 1 */}
@@ -1347,6 +1328,24 @@ export default function MobilePOSLayout({
               )}
             </div>
             <span className="text-xs">Carrinho</span>
+          </Button>
+          <Button
+            variant="ghost"
+            className={cn(
+              "flex-1 h-14 rounded-none flex-col gap-1 relative",
+              activeView === 'detalhes' && "bg-primary/10 text-primary"
+            )}
+            onClick={() => setActiveView('detalhes')}
+          >
+            <div className="relative">
+              <Eye className="h-5 w-5" />
+              {regrasAplicadas.length > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-4 min-w-4 text-[10px] p-0 flex items-center justify-center bg-green-500 text-white">
+                  {regrasAplicadas.length}
+                </Badge>
+              )}
+            </div>
+            <span className="text-xs">Detalhes</span>
           </Button>
         </div>
       </div>
