@@ -2810,10 +2810,20 @@ ${recentMessages}
           <div className="px-3 py-2.5 bg-gradient-to-b from-slate-50/80 to-white border-b border-border/20">
             <ExpandableTabs
               tabs={[
-                { title: "Chats", icon: MessageSquare, badge: activeConversationsCount },
-                { title: "Agenda", icon: Calendar, badge: todayTasksCount },
-                { title: "E-mails", icon: Mail, badge: unreadEmailsCount },
-                { title: "Orçamentos", icon: Receipt, badge: orcamentosEmAndamentoCount },
+                { 
+                  title: "Chats", 
+                  icon: MessageSquare, 
+                  badge: activeConversationsCount,
+                  statusColor: atendente?.status ? (
+                    atendente.status === 'disponivel' ? 'bg-emerald-500' :
+                    atendente.status === 'ocupado' ? 'bg-amber-500' :
+                    atendente.status === 'pausa' ? 'bg-orange-500' :
+                    atendente.status === 'ausente' ? 'bg-red-500' : 'bg-gray-400'
+                  ) : undefined
+                },
+                { title: "Agenda", icon: CalendarDays, badge: todayTasksCount },
+                { title: "E-mails", icon: Inbox, badge: unreadEmailsCount },
+                { title: "Orçamentos", icon: FileText, badge: orcamentosEmAndamentoCount },
               ]}
               activeIndex={activeTab === "chat" ? 0 : activeTab === "agenda" ? 1 : activeTab === "email" ? 2 : activeTab === "orcamento" ? 3 : null}
               onChange={(index) => {
