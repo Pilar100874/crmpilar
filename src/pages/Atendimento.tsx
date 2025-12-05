@@ -3783,8 +3783,7 @@ ${recentMessages}
       {/* Orçamento Panel Lateral - Ao lado do painel */}
       {orcamentoSheetOpen && estabelecimentoId && (
         <>
-          {console.log('Rendering POSView container - selectedOrcamentoId:', selectedOrcamentoId)}
-          <div className="flex-1 min-w-0 h-full bg-red-500 border-4 border-blue-500">
+          <div className="flex-1 min-w-0 flex flex-col" style={{ minHeight: '100%' }}>
             <POSView 
               estabelecimentoId={estabelecimentoId} 
               orcamentoId={selectedOrcamentoId || undefined}
