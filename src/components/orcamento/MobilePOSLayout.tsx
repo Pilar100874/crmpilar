@@ -240,7 +240,7 @@ export default function MobilePOSLayout({
           </PopoverContent>
         </Popover>
 
-        {/* Botões de Ação Rápida */}
+        {/* Botões de Ação Rápida - Linha 1 */}
         <div className="flex gap-2 mt-3">
           <Button
             variant="outline"
@@ -280,6 +280,37 @@ export default function MobilePOSLayout({
           </Button>
         </div>
 
+        {/* Botões de Ação Rápida - Linha 2 */}
+        <div className="flex gap-2 mt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 h-9"
+            onClick={() => setShowConjuntoDialog(true)}
+          >
+            <Package className="h-4 w-4 mr-2" />
+            Conjunto de Itens
+          </Button>
+          <div className="flex border rounded-md">
+            <Button
+              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-9 w-9 rounded-r-none"
+              onClick={() => setViewMode('grid')}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-9 w-9 rounded-l-none"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
         {/* Search & Filters (only on produtos view) */}
         {activeView === 'produtos' && (
           <div className="mt-3 space-y-2">
@@ -304,39 +335,19 @@ export default function MobilePOSLayout({
             </div>
 
             {showFilters && (
-              <div className="flex gap-2">
-                <Select value={selectedGrupo} onValueChange={setSelectedGrupo}>
-                  <SelectTrigger className="h-9 flex-1 bg-background text-sm">
-                    <SelectValue placeholder="Grupo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
-                    {grupos.map((grupo) => (
-                      <SelectItem key={grupo.id} value={grupo.id}>
-                        {grupo.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="flex border rounded-md">
-                  <Button
-                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                    size="icon"
-                    className="h-9 w-9 rounded-r-none"
-                    onClick={() => setViewMode('grid')}
-                  >
-                    <Grid className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                    size="icon"
-                    className="h-9 w-9 rounded-l-none"
-                    onClick={() => setViewMode('list')}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              <Select value={selectedGrupo} onValueChange={setSelectedGrupo}>
+                <SelectTrigger className="h-9 bg-background text-sm">
+                  <SelectValue placeholder="Filtrar por grupo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todos os grupos</SelectItem>
+                  {grupos.map((grupo) => (
+                    <SelectItem key={grupo.id} value={grupo.id}>
+                      {grupo.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           </div>
         )}
@@ -349,7 +360,7 @@ export default function MobilePOSLayout({
           <ScrollArea className="h-full">
             <div className="p-3">
               {viewMode === 'grid' ? (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {filteredProdutos.map((produto) => {
                     const inCart = cartItems.get(produto.id);
                     const quantity = gruposQuantities.get(produto.id) || 1;
