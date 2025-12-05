@@ -828,18 +828,33 @@ export default function MobilePOSLayout({
 
               {/* Regras Aplicadas */}
               {regrasAplicadas.length > 0 && (
-                <Card className="p-4">
-                  <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    Regras Aplicadas ({regrasAplicadas.length})
-                  </h3>
+                <Card className="p-4 border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-medium flex items-center gap-2 text-green-700 dark:text-green-300">
+                      <Tag className="h-4 w-4" />
+                      Regras Aplicadas ({regrasAplicadas.length})
+                    </h3>
+                    {getTotal() > valorComRegras && (
+                      <Badge className="bg-green-500 text-white">
+                        -{formatCurrency(getTotal() - valorComRegras)}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="space-y-2">
                     {regrasAplicadas.map((regra, index) => (
-                      <div key={index} className="flex items-start gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <p className="font-medium">{regra.nome}</p>
-                          <p className="text-xs text-muted-foreground">{regra.detalhes}</p>
+                      <div key={index} className="bg-background/80 rounded p-2 border border-border/50">
+                        <div className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{regra.nome}</p>
+                            <p className="text-xs text-muted-foreground">{regra.detalhes}</p>
+                            {regra.desconto !== undefined && regra.desconto > 0 && (
+                              <p className="text-xs text-green-600 mt-1">
+                                Desconto: {formatCurrency(regra.desconto)}
+                                {regra.percentual ? ` (${regra.percentual}%)` : ''}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -847,9 +862,10 @@ export default function MobilePOSLayout({
                 </Card>
               )}
 
-              {/* Produto Selecionado */}
+              {/* Produto Selecionado - Dados Técnicos Completos */}
               {selectedProduto && (
-                <Card className="p-4">
+                <Card className="p-4 space-y-4">
+                  {/* Header com imagem e nome */}
                   <div className="flex gap-4">
                     <div className="w-24 h-24 bg-muted rounded overflow-hidden flex-shrink-0">
                       {selectedProduto.foto_url ? (
@@ -866,20 +882,80 @@ export default function MobilePOSLayout({
                     </div>
                     <div className="flex-1">
                       <h3 className="font-medium">{selectedProduto.nome}</h3>
-                      <p className="text-sm text-muted-foreground">{selectedProduto.codigo}</p>
-                      <p className="text-lg font-bold text-primary mt-2">R$ 10,00</p>
-                      <Button
-                        className="mt-3 w-full"
-                        onClick={() => {
-                          addToCart(selectedProduto);
-                          setActiveView('carrinho');
-                        }}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Adicionar ao Carrinho
-                      </Button>
+                      {selectedProduto.codigo && (
+                        <p className="text-sm text-muted-foreground">Cód: {selectedProduto.codigo}</p>
+                      )}
+                      <Badge variant={selectedProduto.ativo ? "default" : "secondary"} className="mt-2">
+                        {selectedProduto.ativo ? "Ativo" : "Inativo"}
+                      </Badge>
                     </div>
                   </div>
+
+                  {/* Classificação */}
+                  {(selectedProduto.categoria || selectedProduto.grupo) && (
+                    <div className="bg-muted/50 rounded p-3 border border-border/50">
+                      <h4 className="text-xs font-medium text-muted-foreground mb-2">Classificação</h4>
+                      <div className="space-y-1.5 text-sm">
+                        {selectedProduto.categoria && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Categoria:</span>
+                            <span className="font-medium">{selectedProduto.categoria.nome}</span>
+                          </div>
+                        )}
+                        {selectedProduto.grupo && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Grupo:</span>
+                            <span className="font-medium">{selectedProduto.grupo.nome}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Especificações Técnicas */}
+                  {(selectedProduto.largura || selectedProduto.comprimento || selectedProduto.gramatura || selectedProduto.peso_unitario) && (
+                    <div className="bg-muted/50 rounded p-3 border border-border/50">
+                      <h4 className="text-xs font-medium text-muted-foreground mb-2">Especificações Técnicas</h4>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        {selectedProduto.largura && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Largura:</span>
+                            <span className="font-medium">{selectedProduto.largura} cm</span>
+                          </div>
+                        )}
+                        {selectedProduto.comprimento && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Comprimento:</span>
+                            <span className="font-medium">{selectedProduto.comprimento} cm</span>
+                          </div>
+                        )}
+                        {selectedProduto.gramatura && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Gramatura:</span>
+                            <span className="font-medium">{selectedProduto.gramatura} g/m²</span>
+                          </div>
+                        )}
+                        {selectedProduto.peso_unitario && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Peso:</span>
+                            <span className="font-medium">{selectedProduto.peso_unitario} kg</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Botão de adicionar */}
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      addToCart(selectedProduto);
+                      setActiveView('carrinho');
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar ao Carrinho
+                  </Button>
                 </Card>
               )}
 
