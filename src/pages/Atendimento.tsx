@@ -368,6 +368,7 @@ export default function Atendimento() {
     
     // Limpar orçamento quando não estiver na aba orçamento
     if (activeTab !== 'orcamento') {
+      console.log('Resetting orcamentoSheetOpen because activeTab is:', activeTab);
       setOrcamentoSheetOpen(false);
       setSelectedOrcamentoId(null);
       setSelectedOrcamentoData(null);
@@ -3202,9 +3203,10 @@ ${recentMessages}
                 <Button 
                   size="sm" 
                   onClick={() => {
-                    console.log('Novo clicked - estabelecimentoId:', estabelecimentoId);
+                    console.log('Novo clicked - estabelecimentoId:', estabelecimentoId, 'activeTab:', activeTab);
                     setSelectedOrcamentoId(null);
                     setOrcamentoSheetOpen(true);
+                    console.log('orcamentoSheetOpen set to true');
                   }}
                   className="h-9 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700"
                 >
