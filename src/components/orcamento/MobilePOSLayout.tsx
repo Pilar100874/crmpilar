@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
+import { GlobalClientFilter, GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
 import {
   Search,
   Plus,
@@ -184,6 +185,7 @@ export default function MobilePOSLayout({
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showExitConfirmDialog, setShowExitConfirmDialog] = useState(false);
+  const [globalFilter, setGlobalFilter] = useState<GlobalFilter | null>(null);
   
   // Custom field filters state
   const [camposCustomizados, setCamposCustomizados] = useState<CampoCustomizado[]>([]);
@@ -1102,32 +1104,48 @@ export default function MobilePOSLayout({
 
         {/* Empresa View - Dados da Empresa */}
         {activeView === 'empresa' && (
-          <div className="h-full">
-            {selectedEmpresa ? (
-              (() => {
-                const empresa = empresas.find(e => e.id === selectedEmpresa);
-                if (!empresa) return null;
-                return (
-                  <UnifiedDetailsPanel
-                    type="orcamento"
-                    nome={empresa.nome_fantasia || empresa.nome || "Empresa"}
-                    telefone={empresa.telefone}
-                    whatsapp={empresa.telefone}
-                    email={empresa.email}
-                    protocolo={empresa.cnpj}
-                    status={empresa.ativo !== false ? "Ativo" : "Inativo"}
-                    companies={[{ empresas: empresa, is_primary: true }]}
-                  />
-                );
-              })()
-            ) : (
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center p-6">
-                  <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                  <p className="text-muted-foreground">Selecione uma empresa para ver os dados</p>
+          <div className="h-full flex flex-col">
+            {/* Global Client Filter */}
+            <div className="p-3 border-b">
+              <GlobalClientFilter
+                activeFilter={globalFilter}
+                onFilterChange={(filter) => {
+                  setGlobalFilter(filter);
+                  // Ao selecionar uma empresa pelo filtro, atualiza selectedEmpresa
+                  if (filter?.type === 'empresa' && filter.id) {
+                    setSelectedEmpresa(filter.id);
+                  }
+                }}
+              />
+            </div>
+            
+            <div className="flex-1 overflow-auto">
+              {selectedEmpresa ? (
+                (() => {
+                  const empresa = empresas.find(e => e.id === selectedEmpresa);
+                  if (!empresa) return null;
+                  return (
+                    <UnifiedDetailsPanel
+                      type="orcamento"
+                      nome={empresa.nome_fantasia || empresa.nome || "Empresa"}
+                      telefone={empresa.telefone}
+                      whatsapp={empresa.telefone}
+                      email={empresa.email}
+                      protocolo={empresa.cnpj}
+                      status={empresa.ativo !== false ? "Ativo" : "Inativo"}
+                      companies={[{ empresas: empresa, is_primary: true }]}
+                    />
+                  );
+                })()
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-center p-6">
+                    <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                    <p className="text-muted-foreground">Selecione uma empresa para ver os dados</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
