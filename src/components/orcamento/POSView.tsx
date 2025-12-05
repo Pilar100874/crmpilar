@@ -595,9 +595,15 @@ export default function POSView({
   };
 
   const filteredProdutos = produtos.filter(p => {
-    // Filtro de nome
-    if (searchQuery && !p.nome.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
+    // Filtro por nome, EAN ou código
+    if (searchQuery) {
+      const term = searchQuery.toLowerCase();
+      const matchNome = p.nome?.toLowerCase().includes(term);
+      const matchEan = p.ean_13?.toLowerCase().includes(term);
+      const matchCodigo = p.codigo?.toLowerCase().includes(term);
+      if (!matchNome && !matchEan && !matchCodigo) {
+        return false;
+      }
     }
     
     // Filtro de grupo
@@ -1019,7 +1025,7 @@ export default function POSView({
             <div className={`relative ${isCompact ? 'flex-1 min-w-[150px]' : 'flex-1'}`}>
               <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${isCompact ? 'w-4 h-4' : 'w-5 h-5'} text-muted-foreground`} />
               <Input
-                placeholder="Buscar produtos..."
+                placeholder="Buscar por nome, EAN ou código..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`pl-10 bg-background border-border placeholder:text-muted-foreground ${isCompact ? 'h-10 text-sm' : 'h-12 text-base'}`}
