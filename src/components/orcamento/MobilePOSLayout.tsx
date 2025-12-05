@@ -1094,6 +1094,20 @@ export default function MobilePOSLayout({
         {activeView === 'detalhes' && (
           <ScrollArea className="h-full">
             <div className="p-3 space-y-3">
+              {/* Header com botão voltar */}
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold">Detalhes do Orçamento</h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setActiveView('produtos')}
+                  className="h-8"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Voltar
+                </Button>
+              </div>
+              
               {/* Rota Info */}
               {autoRouteInfo && (
                 <Card className="p-4">
