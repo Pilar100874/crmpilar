@@ -200,7 +200,23 @@ export default function MobilePOSLayout({
     const matchesSearch = produto.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
       produto.codigo?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesGrupo = !selectedGrupo || produto.grupo_id === selectedGrupo;
-    return matchesSearch && matchesGrupo;
+    
+    // Filtros avançados
+    const gramaturaMinNum = gramaturaMin ? Number(gramaturaMin) : undefined;
+    const gramaturaMaxNum = gramaturaMax ? Number(gramaturaMax) : undefined;
+    const larguraMinNum = larguraMin ? Number(larguraMin) : undefined;
+    const larguraMaxNum = larguraMax ? Number(larguraMax) : undefined;
+    const comprimentoMinNum = comprimentoMin ? Number(comprimentoMin) : undefined;
+    const comprimentoMaxNum = comprimentoMax ? Number(comprimentoMax) : undefined;
+    
+    const matchesGramatura = (!gramaturaMinNum || (produto.gramatura && produto.gramatura >= gramaturaMinNum)) &&
+      (!gramaturaMaxNum || (produto.gramatura && produto.gramatura <= gramaturaMaxNum));
+    const matchesLargura = (!larguraMinNum || (produto.largura && produto.largura >= larguraMinNum)) &&
+      (!larguraMaxNum || (produto.largura && produto.largura <= larguraMaxNum));
+    const matchesComprimento = (!comprimentoMinNum || (produto.comprimento && produto.comprimento >= comprimentoMinNum)) &&
+      (!comprimentoMaxNum || (produto.comprimento && produto.comprimento <= comprimentoMaxNum));
+    
+    return matchesSearch && matchesGrupo && matchesGramatura && matchesLargura && matchesComprimento;
   });
 
   const formatCurrency = (value: number) => {
