@@ -7,6 +7,7 @@ import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { useState } from "react";
 import { GlobalFilter } from "./GlobalClientFilter";
+import { toast } from "@/lib/toast-config";
 
 export type PanelType = "chat" | "agenda" | "email" | "orcamento";
 
@@ -171,11 +172,15 @@ export function UnifiedDetailsPanel({
                               size="sm"
                               className="h-7 w-7 p-0 hover:bg-emerald-100 hover:text-emerald-600"
                               title="Filtrar por esta empresa"
-                              onClick={() => onSetGlobalFilter({
-                                type: 'empresa',
-                                id: empresa.id,
-                                nome: empresa.nome_fantasia || empresa.nome || 'Empresa'
-                              })}
+                              onClick={() => {
+                                const empresaNome = empresa.nome_fantasia || empresa.nome || 'Empresa';
+                                onSetGlobalFilter({
+                                  type: 'empresa',
+                                  id: empresa.id,
+                                  nome: empresaNome
+                                });
+                                toast.info(`Filtro aplicado: ${empresaNome}`);
+                              }}
                             >
                               <Filter className="w-3.5 h-3.5" />
                             </Button>

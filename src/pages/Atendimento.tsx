@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, MessageCircle, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CalendarCheck, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Wallet } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet } from "lucide-react";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { PredictiveDialerDialog } from "@/components/atendimento/PredictiveDialerDialog";
@@ -945,6 +945,12 @@ export default function Atendimento() {
           empresas:empresa_id (
             nome_fantasia,
             nome
+          ),
+          itens:orcamento_itens (
+            id,
+            quantidade,
+            preco_unitario,
+            subtotal
           )
         `)
         .eq('estabelecimento_id', estabelecimentoId)
@@ -956,7 +962,19 @@ export default function Atendimento() {
         return;
       }
 
-      setOrcamentos(orcamentosData || []);
+      // Calcular valor_total real a partir dos itens
+      const orcamentosComTotalReal = (orcamentosData || []).map(orc => {
+        const totalCalculado = orc.itens?.reduce((sum: number, item: any) => {
+          return sum + (item.quantidade * item.preco_unitario);
+        }, 0) || 0;
+        
+        return {
+          ...orc,
+          valor_total: totalCalculado > 0 ? totalCalculado : orc.valor_total
+        };
+      });
+
+      setOrcamentos(orcamentosComTotalReal);
     } catch (error) {
       console.error("Erro ao carregar orçamentos:", error);
     }
@@ -2536,10 +2554,10 @@ ${recentMessages}
             <div className="flex-shrink-0 bg-card border-t border-border/50 px-2 py-1.5 pb-safe">
               <div className="flex justify-around">
                 {[
-                  { id: "chat", label: "Chats", icon: MessageCircle, badge: activeConversationsCount },
-                  { id: "agenda", label: "Agenda", icon: CalendarCheck, badge: todayTasksCount },
-                  { id: "email", label: "E-mails", icon: Inbox, badge: unreadEmailsCount },
-                  { id: "orcamento", label: "Orçamentos", icon: Wallet, badge: orcamentosEmAndamentoCount },
+                  { id: "chat", label: "Chats", icon: MessageSquare, badge: activeConversationsCount },
+                  { id: "agenda", label: "Agenda", icon: Calendar, badge: todayTasksCount },
+                  { id: "email", label: "E-mails", icon: Mail, badge: unreadEmailsCount },
+                  { id: "orcamento", label: "Orçamentos", icon: Receipt, badge: orcamentosEmAndamentoCount },
                 ].map((tab) => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -2679,10 +2697,10 @@ ${recentMessages}
           <div className="px-3 py-2.5 bg-gradient-to-b from-slate-50/80 to-white border-b border-border/20">
             <ExpandableTabs
               tabs={[
-                { title: "Chats", icon: MessageCircle, badge: activeConversationsCount },
-                { title: "Agenda", icon: CalendarCheck, badge: todayTasksCount },
-                { title: "E-mails", icon: Inbox, badge: unreadEmailsCount },
-                { title: "Orçamentos", icon: Wallet, badge: orcamentosEmAndamentoCount },
+                { title: "Chats", icon: MessageSquare, badge: activeConversationsCount },
+                { title: "Agenda", icon: Calendar, badge: todayTasksCount },
+                { title: "E-mails", icon: Mail, badge: unreadEmailsCount },
+                { title: "Orçamentos", icon: Receipt, badge: orcamentosEmAndamentoCount },
               ]}
               activeIndex={activeTab === "chat" ? 0 : activeTab === "agenda" ? 1 : activeTab === "email" ? 2 : activeTab === "orcamento" ? 3 : null}
               onChange={(index) => {
