@@ -105,28 +105,26 @@ export function GlobalClientFilter({ activeFilter, onFilterChange }: GlobalClien
 
   if (activeFilter) {
     return (
-      <div className="flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-primary/15 via-primary/10 to-transparent border-b border-primary/20 backdrop-blur-sm">
-        <div className="flex items-center gap-2 flex-1">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${
-            activeFilter.type === 'customer' 
-              ? 'bg-gradient-to-br from-primary to-primary/80' 
-              : 'bg-gradient-to-br from-emerald-500 to-emerald-600'
-          }`}>
-            {activeFilter.type === 'customer' ? (
-              <User className="h-4 w-4 text-white" />
-            ) : (
-              <Building2 className="h-4 w-4 text-white" />
-            )}
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground leading-tight">Filtrando por</span>
-            <span className="font-semibold text-sm text-foreground leading-tight">{activeFilter.nome}</span>
-          </div>
+      <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl border border-primary/20 mx-2 sm:mx-0">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ${
+          activeFilter.type === 'customer' 
+            ? 'bg-gradient-to-br from-primary to-primary/80' 
+            : 'bg-gradient-to-br from-emerald-500 to-emerald-600'
+        }`}>
+          {activeFilter.type === 'customer' ? (
+            <User className="h-4 w-4 text-white" />
+          ) : (
+            <Building2 className="h-4 w-4 text-white" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="text-[10px] text-muted-foreground block leading-tight">Filtrando</span>
+          <span className="font-semibold text-xs text-foreground truncate block">{activeFilter.nome}</span>
         </div>
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 w-7 p-0 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
+          className="h-7 w-7 p-0 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors flex-shrink-0"
           onClick={clearFilter}
         >
           <X className="h-4 w-4" />
@@ -139,18 +137,19 @@ export function GlobalClientFilter({ activeFilter, onFilterChange }: GlobalClien
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className="w-full h-9 gap-2 text-xs text-muted-foreground hover:text-foreground justify-start px-3 bg-white/50 hover:bg-white border border-border/40 rounded-lg transition-all hover:shadow-sm hover:border-primary/30"
+          className="h-10 gap-2 text-xs text-muted-foreground hover:text-foreground justify-start px-3 bg-white/80 hover:bg-white border border-border/50 rounded-xl transition-all hover:shadow-md hover:border-primary/30 w-[calc(100%-16px)] mx-2 sm:w-full sm:mx-0"
         >
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-            <UserSearch className="h-3.5 w-3.5 text-slate-500" />
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center border border-primary/20 flex-shrink-0">
+            <UserSearch className="h-4 w-4 text-primary" />
           </div>
-          <span>Filtrar por cliente ou empresa...</span>
+          <span className="flex-1 text-left truncate">Filtrar por cliente ou empresa...</span>
+          <Filter className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0 shadow-xl border-border/50" align="start">
-        <div className="bg-gradient-to-r from-primary/10 to-transparent p-3 border-b border-border/30">
+      <PopoverContent className="w-[calc(100vw-32px)] sm:w-80 p-0 shadow-xl border-border/50 rounded-xl" align="center" sideOffset={8}>
+        <div className="bg-gradient-to-r from-primary/10 to-transparent p-3 border-b border-border/30 rounded-t-xl">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
               <Search className="h-4 w-4 text-primary" />
@@ -166,29 +165,29 @@ export function GlobalClientFilter({ activeFilter, onFilterChange }: GlobalClien
             placeholder="Nome, telefone, email ou CNPJ..." 
             value={searchTerm}
             onValueChange={setSearchTerm}
-            className="border-0"
+            className="border-0 h-11"
           />
-          <CommandList className="max-h-[300px]">
+          <CommandList className="max-h-[50vh] sm:max-h-[300px]">
             {searchTerm.length < 2 && (
-              <div className="py-8 text-center">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
-                  <UserSearch className="w-6 h-6 text-slate-400" />
+              <div className="py-6 text-center">
+                <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-slate-100 flex items-center justify-center">
+                  <UserSearch className="w-5 h-5 text-slate-400" />
                 </div>
-                <p className="text-sm text-muted-foreground">Digite ao menos 2 caracteres</p>
+                <p className="text-xs text-muted-foreground">Digite ao menos 2 caracteres</p>
               </div>
             )}
             {searchTerm.length >= 2 && loading && (
-              <div className="py-8 text-center">
-                <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Buscando...</p>
+              <div className="py-6 text-center">
+                <Loader2 className="w-5 h-5 mx-auto mb-2 animate-spin text-primary" />
+                <p className="text-xs text-muted-foreground">Buscando...</p>
               </div>
             )}
             {searchTerm.length >= 2 && !loading && customers.length === 0 && empresas.length === 0 && (
-              <div className="py-8 text-center">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
-                  <Search className="w-6 h-6 text-slate-400" />
+              <div className="py-6 text-center">
+                <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-slate-100 flex items-center justify-center">
+                  <Search className="w-5 h-5 text-slate-400" />
                 </div>
-                <p className="text-sm text-muted-foreground">Nenhum resultado encontrado</p>
+                <p className="text-xs text-muted-foreground">Nenhum resultado encontrado</p>
               </div>
             )}
             {customers.length > 0 && (
@@ -203,10 +202,10 @@ export function GlobalClientFilter({ activeFilter, onFilterChange }: GlobalClien
                     key={customer.id}
                     value={customer.id}
                     onSelect={() => handleSelectCustomer(customer)}
-                    className="flex items-center gap-3 cursor-pointer py-2.5 px-2 rounded-lg mx-1 hover:bg-primary/5"
+                    className="flex items-center gap-3 cursor-pointer py-3 px-2 rounded-xl mx-1 hover:bg-primary/5 active:bg-primary/10"
                   >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-sm">
-                      <User className="h-4 w-4 text-primary" />
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-sm flex-shrink-0">
+                      <User className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate text-foreground">{customer.nome}</p>
@@ -230,10 +229,10 @@ export function GlobalClientFilter({ activeFilter, onFilterChange }: GlobalClien
                     key={empresa.id}
                     value={empresa.id}
                     onSelect={() => handleSelectEmpresa(empresa)}
-                    className="flex items-center gap-3 cursor-pointer py-2.5 px-2 rounded-lg mx-1 hover:bg-emerald-50"
+                    className="flex items-center gap-3 cursor-pointer py-3 px-2 rounded-xl mx-1 hover:bg-emerald-50 active:bg-emerald-100"
                   >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center shadow-sm">
-                      <Building2 className="h-4 w-4 text-emerald-600" />
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center shadow-sm flex-shrink-0">
+                      <Building2 className="h-5 w-5 text-emerald-600" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate text-foreground">
