@@ -29,7 +29,8 @@ import {
   Lightbulb,
   History,
   Building2,
-  LogOut
+  LogOut,
+  Receipt
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {
@@ -129,7 +130,7 @@ interface MobilePOSLayoutProps {
   setConjuntoItens: React.Dispatch<React.SetStateAction<ConjuntoItem[]>>;
 }
 
-type MobileView = 'produtos' | 'carrinho' | 'detalhes';
+type MobileView = 'produtos' | 'carrinho' | 'detalhes' | 'empresa';
 
 export default function MobilePOSLayout({
   produtos,
@@ -406,24 +407,17 @@ export default function MobilePOSLayout({
             </PopoverContent>
           </Popover>
           
-          {/* Botão Detalhes - só ícone */}
+          {/* Botão Dados da Empresa - só ícone */}
           <Button
-            variant={activeView === 'detalhes' ? 'secondary' : 'outline'}
+            variant={activeView === 'empresa' ? 'secondary' : 'outline'}
             size="icon"
             className={cn(
               "h-10 w-10 flex-shrink-0",
-              activeView === 'detalhes' && "bg-primary/10 text-primary border-primary/30"
+              activeView === 'empresa' && "bg-primary/10 text-primary border-primary/30"
             )}
-            onClick={() => setActiveView('detalhes')}
+            onClick={() => setActiveView('empresa')}
           >
-            <div className="relative">
-              <Eye className="h-4 w-4" />
-              {regrasAplicadas.length > 0 && (
-                <Badge className="absolute -top-2 -right-2 h-4 min-w-4 text-[10px] px-1 bg-emerald-500 text-white">
-                  {regrasAplicadas.length}
-                </Badge>
-              )}
-            </div>
+            <Eye className="h-4 w-4" />
           </Button>
         </div>
 
@@ -1105,13 +1099,114 @@ export default function MobilePOSLayout({
           </ScrollArea>
         )}
 
-        {/* Detalhes View */}
+        {/* Empresa View - Dados da Empresa */}
+        {activeView === 'empresa' && (
+          <ScrollArea className="h-full">
+            <div className="p-3 space-y-3">
+              {/* Header */}
+              <div className="mb-2">
+                <h3 className="text-sm font-semibold">Dados da Empresa</h3>
+              </div>
+              
+              {selectedEmpresa ? (
+                <>
+                  {(() => {
+                    const empresa = empresas.find(e => e.id === selectedEmpresa);
+                    if (!empresa) return null;
+                    return (
+                      <Card className="p-4 space-y-4">
+                        {/* Nome e CNPJ */}
+                        <div className="space-y-2">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Nome Fantasia</p>
+                            <p className="font-medium">{empresa.nome_fantasia || '-'}</p>
+                          </div>
+                          {empresa.nome && empresa.nome !== empresa.nome_fantasia && (
+                            <div>
+                              <p className="text-xs text-muted-foreground">Razão Social</p>
+                              <p className="font-medium">{empresa.nome}</p>
+                            </div>
+                          )}
+                          {empresa.cnpj && (
+                            <div>
+                              <p className="text-xs text-muted-foreground">CNPJ</p>
+                              <p className="font-medium">{empresa.cnpj}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Contato */}
+                        {(empresa.telefone || empresa.email) && (
+                          <div className="border-t pt-3 space-y-2">
+                            <h4 className="text-xs font-semibold text-muted-foreground">Contato</h4>
+                            {empresa.telefone && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">Telefone</p>
+                                <p className="font-medium">{empresa.telefone}</p>
+                              </div>
+                            )}
+                            {empresa.email && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">E-mail</p>
+                                <p className="font-medium">{empresa.email}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Endereço */}
+                        {(empresa.endereco || empresa.cidade || empresa.estado || empresa.cep) && (
+                          <div className="border-t pt-3 space-y-2">
+                            <h4 className="text-xs font-semibold text-muted-foreground">Endereço</h4>
+                            {empresa.endereco && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">Logradouro</p>
+                                <p className="font-medium">{empresa.endereco}</p>
+                              </div>
+                            )}
+                            {empresa.bairro && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">Bairro</p>
+                                <p className="font-medium">{empresa.bairro}</p>
+                              </div>
+                            )}
+                            {(empresa.cidade || empresa.estado) && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">Cidade/UF</p>
+                                <p className="font-medium">
+                                  {empresa.cidade}{empresa.estado ? ` - ${empresa.estado}` : ''}
+                                </p>
+                              </div>
+                            )}
+                            {empresa.cep && (
+                              <div>
+                                <p className="text-xs text-muted-foreground">CEP</p>
+                                <p className="font-medium">{empresa.cep}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </Card>
+                    );
+                  })()}
+                </>
+              ) : (
+                <Card className="p-6 text-center">
+                  <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                  <p className="text-muted-foreground">Selecione uma empresa para ver os dados</p>
+                </Card>
+              )}
+            </div>
+          </ScrollArea>
+        )}
+
+        {/* Detalhes View - Detalhes do Pedido */}
         {activeView === 'detalhes' && (
           <ScrollArea className="h-full">
             <div className="p-3 space-y-3">
               {/* Header */}
               <div className="mb-2">
-                <h3 className="text-sm font-semibold">Dados do Cliente</h3>
+                <h3 className="text-sm font-semibold">Detalhes do Pedido</h3>
               </div>
               
               {/* Rota Info */}
@@ -1327,7 +1422,7 @@ export default function MobilePOSLayout({
           {[
             { id: 'produtos', label: 'Produtos', icon: Package, badge: null, action: 'view' },
             { id: 'carrinho', label: 'Carrinho', icon: ShoppingCart, badge: cartCount > 0 ? cartCount : null, action: 'view' },
-            { id: 'detalhes', label: 'Detalhes', icon: Eye, badge: regrasAplicadas.length > 0 ? regrasAplicadas.length : null, action: 'view' },
+            { id: 'detalhes', label: 'Detalhes', icon: Receipt, badge: regrasAplicadas.length > 0 ? regrasAplicadas.length : null, action: 'view' },
             { id: 'sair', label: 'Sair', icon: LogOut, badge: null, action: 'close' },
           ].map((tab) => {
             const Icon = tab.icon;
