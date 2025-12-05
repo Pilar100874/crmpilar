@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
@@ -188,6 +189,7 @@ export default function Atendimento() {
   const [selectedOrcamentoId, setSelectedOrcamentoId] = useState<string | null>(null);
   const [selectedOrcamentoData, setSelectedOrcamentoData] = useState<any | null>(null);
   const [orcamentoSheetOpen, setOrcamentoSheetOpen] = useState(false);
+  const [showNovoOrcamentoConfirm, setShowNovoOrcamentoConfirm] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   
   // Agenda states
@@ -3194,8 +3196,49 @@ ${recentMessages}
                     <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
                   </SelectContent>
                 </Select>
+                <Button 
+                  size="sm" 
+                  onClick={() => {
+                    if (orcamentoSheetOpen) {
+                      setShowNovoOrcamentoConfirm(true);
+                    } else {
+                      setSelectedOrcamentoId(null);
+                      setOrcamentoSheetOpen(true);
+                    }
+                  }}
+                  className="h-9 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Novo
+                </Button>
               </div>
             </div>
+
+            {/* Alert Dialog para confirmar novo orçamento */}
+            <AlertDialog open={showNovoOrcamentoConfirm} onOpenChange={setShowNovoOrcamentoConfirm}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Criar novo orçamento?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Você tem um orçamento aberto. Deseja fechar o atual e criar um novo?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      setOrcamentoSheetOpen(false);
+                      setSelectedOrcamentoId(null);
+                      setTimeout(() => {
+                        setOrcamentoSheetOpen(true);
+                      }, 100);
+                    }}
+                  >
+                    Criar Novo
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             <div className="px-2 py-2 space-y-1.5">
             {filteredOrcamentos
