@@ -51,6 +51,16 @@ import {
 import { cn } from "@/lib/utils";
 import ImageItemExtractor from "./ImageItemExtractor";
 
+interface ConjuntoItem {
+  id: string;
+  produto_id: string;
+  quantidade_padrao: number;
+  preco_padrao?: number;
+  quantidade: number;
+  preco: number;
+  produto?: { id: string; nome: string };
+}
+
 interface MobilePOSLayoutProps {
   produtos: Produto[];
   grupos: any[];
@@ -91,6 +101,10 @@ interface MobilePOSLayoutProps {
   setGruposQuantities: React.Dispatch<React.SetStateAction<Map<string, number>>>;
   shareLink?: string;
   onCopyLink?: () => void;
+  conjuntoSelecionado: string | null;
+  conjuntoItens: ConjuntoItem[];
+  setConjuntoSelecionado: (id: string | null) => void;
+  setConjuntoItens: React.Dispatch<React.SetStateAction<ConjuntoItem[]>>;
 }
 
 type MobileView = 'produtos' | 'carrinho' | 'detalhes';
@@ -134,7 +148,11 @@ export default function MobilePOSLayout({
   gruposQuantities,
   setGruposQuantities,
   shareLink,
-  onCopyLink
+  onCopyLink,
+  conjuntoSelecionado,
+  conjuntoItens,
+  setConjuntoSelecionado,
+  setConjuntoItens
 }: MobilePOSLayoutProps) {
   const [activeView, setActiveView] = useState<MobileView>('produtos');
   const [openEmpresaCombobox, setOpenEmpresaCombobox] = useState(false);
@@ -359,12 +377,122 @@ export default function MobilePOSLayout({
         {activeView === 'produtos' && (
           <ScrollArea className="h-full">
             <div className="p-3">
-              {viewMode === 'grid' ? (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {filteredProdutos.map((produto) => {
-                    const inCart = cartItems.get(produto.id);
-                    const quantity = gruposQuantities.get(produto.id) || 1;
-                    return (
+              {/* Itens do Conjunto Selecionado */}
+              {conjuntoSelecionado && conjuntoItens.length > 0 ? (
+                <Card className="bg-card border-border">
+                  <div className="p-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-foreground text-sm">Itens do Conjunto</h3>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => {
+                            const itensComQuantidade = conjuntoItens.filter(item => item.quantidade > 0 && item.preco > 0);
+                            if (itensComQuantidade.length === 0) {
+                              return;
+                            }
+                            
+                            itensComQuantidade.forEach(item => {
+                              const produto = produtos.find(p => p.id === item.produto_id);
+                              if (produto) {
+                                setCartItems(prev => {
+                                  const newCart = new Map(prev);
+                                  const existing = newCart.get(produto.id);
+                                  if (existing) {
+                                    newCart.set(produto.id, {
+                                      ...existing,
+                                      quantity: existing.quantity + item.quantidade,
+                                      preco: item.preco
+                                    });
+                                  } else {
+                                    newCart.set(produto.id, {
+                                      produto,
+                                      quantity: item.quantidade,
+                                      preco: item.preco
+                                    });
+                                  }
+                                  return newCart;
+                                });
+                              }
+                            });
+                            
+                            setConjuntoSelecionado(null);
+                            setConjuntoItens([]);
+                          }}
+                        >
+                          <ShoppingCart className="h-3 w-3 mr-1" />
+                          Adicionar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => {
+                            setConjuntoSelecionado(null);
+                            setConjuntoItens([]);
+                          }}
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Fechar
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {conjuntoItens.map((item) => (
+                        <div key={item.id} className="flex items-center gap-2 p-2 bg-muted/50 rounded border border-border/50">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium truncate">{item.produto?.nome}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground">Qtd</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={item.quantidade}
+                                onChange={(e) => {
+                                  const newValue = parseFloat(e.target.value) || 0;
+                                  setConjuntoItens(prev => prev.map(i =>
+                                    i.id === item.id ? { ...i, quantidade: newValue } : i
+                                  ));
+                                }}
+                                className="w-16 h-7 text-center text-xs"
+                              />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground">Preço</span>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={item.preco}
+                                onChange={(e) => {
+                                  const newValue = parseFloat(e.target.value) || 0;
+                                  setConjuntoItens(prev => prev.map(i =>
+                                    i.id === item.id ? { ...i, preco: newValue } : i
+                                  ));
+                                }}
+                                className="w-20 h-7 text-center text-xs"
+                                placeholder="0,00"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              ) : (
+                <>
+                  {viewMode === 'grid' ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {filteredProdutos.map((produto) => {
+                        const inCart = cartItems.get(produto.id);
+                        const quantity = gruposQuantities.get(produto.id) || 1;
+                        return (
                       <Card
                         key={produto.id}
                         className={cn(
@@ -463,6 +591,8 @@ export default function MobilePOSLayout({
                   <Search className="w-12 h-12 mb-3 opacity-20" />
                   <p className="text-sm">Nenhum produto encontrado</p>
                 </div>
+              )}
+                </>
               )}
             </div>
           </ScrollArea>
