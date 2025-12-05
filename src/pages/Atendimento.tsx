@@ -4352,43 +4352,63 @@ function MobileListContent({
 
         {/* Search/Filter */}
         {activeTab === "chat" && (
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar conversas..."
-              className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar conversas..."
+                className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
           </div>
         )}
 
         {activeTab === "agenda" && (
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handlePreviousDay} className="h-8 w-8 p-0 rounded-full">
+            <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
+            <Button variant="outline" size="sm" onClick={handlePreviousDay} className="h-10 w-10 p-0 rounded-xl">
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <div className="flex-1 text-center bg-white/70 rounded-xl py-1.5 px-3">
+            <div className="flex-1 text-center bg-white/70 rounded-xl py-2 px-3">
               <p className="text-sm font-bold text-orange-700">
                 {format(agendaDate, "dd/MM/yyyy", { locale: ptBR })}
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={handleNextDay} className="h-8 w-8 p-0 rounded-full">
+            <Button variant="outline" size="sm" onClick={handleNextDay} className="h-10 w-10 p-0 rounded-xl">
               <ChevronRight className="w-4 h-4" />
             </Button>
-            <Button variant="secondary" size="sm" onClick={handleToday} className="h-8 w-8 p-0 rounded-full">
+            <Button variant="secondary" size="sm" onClick={handleToday} className="h-10 w-10 p-0 rounded-xl">
               <CalendarDays className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={showPredictiveDialer} className="h-8 w-8 p-0 rounded-full">
+            <Button variant="outline" size="sm" onClick={showPredictiveDialer} className="h-10 w-10 p-0 rounded-xl">
               <PhoneCall className="w-4 h-4" />
             </Button>
           </div>
         )}
 
+        {activeTab === "email" && (
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar emails..."
+                className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
+          </div>
+        )}
+
         {activeTab === "orcamento" && (
           <div className="flex gap-2">
+            <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
             <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
-              <SelectTrigger className="flex-1 h-9 bg-white/70 rounded-xl">
+              <SelectTrigger className="flex-1 h-10 bg-white/70 rounded-xl">
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
@@ -4401,16 +4421,13 @@ function MobileListContent({
             <Button 
               size="sm" 
               onClick={() => onNovoOrcamentoClick?.()}
-              className="h-9 px-3 rounded-xl"
+              className="h-10 px-3 rounded-xl"
             >
               <Plus className="w-4 h-4 mr-1" />
               Novo
             </Button>
           </div>
         )}
-
-        {/* Global Client Filter - Always visible on mobile/tablet */}
-        <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} />
       </div>
 
       {/* Content */}
