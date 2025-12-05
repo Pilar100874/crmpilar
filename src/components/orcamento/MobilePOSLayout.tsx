@@ -1515,6 +1515,10 @@ export default function MobilePOSLayout({
                 onClick={() => {
                   handleSaveOrcamento();
                   setShowExitConfirmDialog(false);
+                  // Pequeno delay para garantir que o salvamento iniciou
+                  setTimeout(() => {
+                    onClose?.();
+                  }, 500);
                 }}
                 disabled={loading || !selectedEmpresa}
               >
