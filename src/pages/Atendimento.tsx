@@ -3783,21 +3783,7 @@ ${recentMessages}
       {/* Orçamento Panel Lateral - Ao lado do painel */}
       {orcamentoSheetOpen && estabelecimentoId && (
         <>
-          <div className={`transition-all duration-300 ${
-            showConversationsList 
-              ? (showClientDetailsOrcamento && selectedOrcamentoData 
-                  ? isSmallTablet 
-                    ? 'w-[calc(100%-200px-180px)]' 
-                    : 'w-[calc(100%-280px-280px)]' 
-                  : isSmallTablet 
-                    ? 'w-[calc(100%-200px)]' 
-                    : 'w-[calc(100%-280px)]')
-              : (showClientDetailsOrcamento && selectedOrcamentoData 
-                  ? isSmallTablet 
-                    ? 'w-[calc(100%-180px)]' 
-                    : 'w-[calc(100%-280px)]' 
-                  : 'w-full')
-          } h-screen bg-gray-100 border-l shadow-lg overflow-hidden`}>
+          <div className="flex-1 h-full bg-gray-100 border-l shadow-lg overflow-hidden">
             <POSView 
               estabelecimentoId={estabelecimentoId} 
               orcamentoId={selectedOrcamentoId || undefined}
