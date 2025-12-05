@@ -2584,7 +2584,7 @@ ${recentMessages}
         <div className="h-full flex bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden relative">
         {/* DEBUG: Show orcamentoSheetOpen state */}
         <div className="absolute top-2 right-2 z-50 bg-red-500 text-white px-2 py-1 rounded text-xs">
-          orcamentoSheetOpen: {orcamentoSheetOpen ? 'TRUE' : 'FALSE'}
+          sheet: {orcamentoSheetOpen ? 'T' : 'F'} | estab: {estabelecimentoId ? 'T' : 'F'}
         </div>
         {/* Botão para reabrir painel quando colapsado - não mostra quando orçamento está aberto (botão fica no POSView) */}
         {!showConversationsList && !orcamentoSheetOpen && (
