@@ -781,6 +781,8 @@ export default function POSView({
 
   const handleConjuntoConfirm = async (conjuntoId: string) => {
     try {
+      console.log("handleConjuntoConfirm chamado com conjuntoId:", conjuntoId);
+      
       const { data, error } = await supabase
         .from("orcamento_conjuntos_itens")
         .select(`
@@ -792,6 +794,8 @@ export default function POSView({
 
       if (error) throw error;
 
+      console.log("Dados retornados do Supabase:", data);
+
       // Inicializar itens com valores padrão
       const itemsPreenchidos = data?.map(item => ({
         ...item,
@@ -799,10 +803,18 @@ export default function POSView({
         preco: item.preco_padrao || 0
       })) || [];
 
+      console.log("Itens preenchidos:", itemsPreenchidos);
+
+      if (itemsPreenchidos.length === 0) {
+        toast.error("Este conjunto não possui itens cadastrados.");
+        setShowConjuntoDialog(false);
+        return;
+      }
+
       setConjuntoSelecionado(conjuntoId);
       setConjuntoItens(itemsPreenchidos);
       setShowConjuntoDialog(false);
-      toast.success("Conjunto carregado! Preencha as quantidades e preços.");
+      toast.success(`Conjunto carregado com ${itemsPreenchidos.length} itens!`);
       
       // Focar no primeiro input após um pequeno delay para garantir que o componente foi renderizado
       setTimeout(() => {
