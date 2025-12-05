@@ -2376,6 +2376,10 @@ ${recentMessages}
                     setMobileView("main");
                   }
                 }}
+                setOrcamentoSheetOpen={(open) => {
+                  setOrcamentoSheetOpen(open);
+                  if (open) setMobileView("main");
+                }}
                 showPredictiveDialer={() => setShowPredictiveDialer(true)}
                 atendente={atendente}
                 usuarioId={usuarioId}
@@ -3869,6 +3873,7 @@ interface MobileListContentProps {
   setOrcamentosStatusFilter: (filter: string) => void;
   selectedOrcamentoId: string | null;
   setSelectedOrcamentoId: (id: string | null) => void;
+  setOrcamentoSheetOpen: (open: boolean) => void;
   showPredictiveDialer: () => void;
   atendente: any;
   usuarioId: string;
@@ -3900,6 +3905,7 @@ function MobileListContent({
   setOrcamentosStatusFilter,
   selectedOrcamentoId,
   setSelectedOrcamentoId,
+  setOrcamentoSheetOpen,
   showPredictiveDialer,
   atendente,
   usuarioId,
@@ -3969,17 +3975,27 @@ function MobileListContent({
         )}
 
         {activeTab === "orcamento" && (
-          <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
-            <SelectTrigger className="w-full h-9 bg-white/70 rounded-xl">
-              <SelectValue placeholder="Todos os status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="orcamento">Orçamento</SelectItem>
-              <SelectItem value="negociacao">Negociação</SelectItem>
-              <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
+              <SelectTrigger className="flex-1 h-9 bg-white/70 rounded-xl">
+                <SelectValue placeholder="Todos os status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="orcamento">Orçamento</SelectItem>
+                <SelectItem value="negociacao">Negociação</SelectItem>
+                <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button 
+              size="sm" 
+              onClick={() => setOrcamentoSheetOpen(true)}
+              className="h-9 px-3 rounded-xl"
+            >
+              <Plus className="w-4 h-4 mr-1" />
+              Novo
+            </Button>
+          </div>
         )}
 
         {globalFilter && (

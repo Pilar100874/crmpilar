@@ -403,13 +403,6 @@ export default function MobilePOSLayout({
               </Command>
             </PopoverContent>
           </Popover>
-          
-          {/* Botão Fechar */}
-          {onClose && (
-            <Button variant="outline" size="icon" onClick={onClose} className="h-10 w-10 flex-shrink-0">
-              <X className="h-5 w-5" />
-            </Button>
-          )}
         </div>
 
         {/* Botões de Ação Rápida - Linha 1 */}
