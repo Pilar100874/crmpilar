@@ -3782,7 +3782,7 @@ ${recentMessages}
 
       {/* Orçamento Panel Lateral - Ao lado do painel */}
       {orcamentoSheetOpen && estabelecimentoId && (
-        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full bg-background">
           <POSView 
             estabelecimentoId={estabelecimentoId} 
             orcamentoId={selectedOrcamentoId || undefined}
