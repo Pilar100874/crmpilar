@@ -4357,7 +4357,6 @@ function MobileListContent({
 
         {activeTab === "agenda" && (
           <div className="flex items-center gap-2">
-            <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
             <Button variant="outline" size="sm" onClick={handlePreviousDay} className="h-10 w-10 p-0 rounded-xl">
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -4375,6 +4374,7 @@ function MobileListContent({
             <Button variant="outline" size="sm" onClick={showPredictiveDialer} className="h-10 w-10 p-0 rounded-xl">
               <PhoneCall className="w-4 h-4" />
             </Button>
+            <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
           </div>
         )}
 
@@ -4395,7 +4395,6 @@ function MobileListContent({
 
         {activeTab === "orcamento" && (
           <div className="flex gap-2">
-            <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
             <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
               <SelectTrigger className="flex-1 h-10 bg-white/70 rounded-xl">
                 <SelectValue placeholder="Todos os status" />
@@ -4415,6 +4414,7 @@ function MobileListContent({
               <Plus className="w-4 h-4 mr-1" />
               Novo
             </Button>
+            <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
           </div>
         )}
       </div>
