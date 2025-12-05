@@ -194,16 +194,6 @@ export default function MobilePOSLayout({
           <h1 className="text-lg font-semibold flex-1">
             {activeView === 'produtos' ? 'Produtos' : activeView === 'carrinho' ? 'Carrinho' : 'Detalhes'}
           </h1>
-          {activeView === 'produtos' && (
-            <Button
-              variant={showFilters ? "secondary" : "ghost"}
-              size="icon"
-              className="h-9 w-9"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-5 w-5" />
-            </Button>
-          )}
         </div>
 
         {/* Empresa Selector - Com busca */}
@@ -339,33 +329,43 @@ export default function MobilePOSLayout({
         {/* Search & Filters (only on produtos view) */}
         {activeView === 'produtos' && (
           <div className="mt-3 space-y-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar produtos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-10 bg-background"
-              />
-              {searchQuery && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                  onClick={() => setSearchQuery("")}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar produtos..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 pr-8 h-10 bg-background"
+                />
+                {searchQuery && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                    onClick={() => setSearchQuery("")}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <Button
+                variant={showFilters ? "secondary" : "outline"}
+                size="icon"
+                className="h-10 w-10 flex-shrink-0"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4" />
+              </Button>
             </div>
 
             {showFilters && (
-              <Select value={selectedGrupo} onValueChange={setSelectedGrupo}>
+              <Select value={selectedGrupo || "all"} onValueChange={(value) => setSelectedGrupo(value === "all" ? "" : value)}>
                 <SelectTrigger className="h-9 bg-background text-sm">
                   <SelectValue placeholder="Filtrar por grupo" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Todos os grupos</SelectItem>
+                <SelectContent className="bg-card border-border z-50">
+                  <SelectItem value="all">Todos os grupos</SelectItem>
                   {grupos.map((grupo) => (
                     <SelectItem key={grupo.id} value={grupo.id}>
                       {grupo.nome}
