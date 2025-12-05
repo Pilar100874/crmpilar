@@ -394,10 +394,28 @@ export default function MobilePOSLayout({
               <Button
                 variant={showFilters ? "secondary" : "outline"}
                 size="icon"
-                className="h-10 w-10 flex-shrink-0"
-                onClick={() => setShowFilters(!showFilters)}
+                className="h-10 w-10 flex-shrink-0 relative"
+                onClick={() => {
+                  const newShowFilters = !showFilters;
+                  setShowFilters(newShowFilters);
+                  // Limpar filtros ao fechar
+                  if (!newShowFilters) {
+                    setSelectedGrupo("");
+                    setGramaturaMin?.("");
+                    setGramaturaMax?.("");
+                    setLarguraMin?.("");
+                    setLarguraMax?.("");
+                    setComprimentoMin?.("");
+                    setComprimentoMax?.("");
+                  }
+                }}
               >
                 <Filter className="h-4 w-4" />
+                {(selectedGrupo || gramaturaMin || gramaturaMax || larguraMin || larguraMax || comprimentoMin || comprimentoMax) && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
+                    !
+                  </span>
+                )}
               </Button>
             </div>
 
