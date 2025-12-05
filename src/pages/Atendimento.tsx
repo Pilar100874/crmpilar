@@ -356,6 +356,11 @@ export default function Atendimento() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   
+  // Debug: monitor orcamentoSheetOpen changes
+  useEffect(() => {
+    console.log('orcamentoSheetOpen changed to:', orcamentoSheetOpen, 'estabelecimentoId:', estabelecimentoId);
+  }, [orcamentoSheetOpen, estabelecimentoId]);
+  
   // Note: Counter updates moved after useMemos to avoid using variables before declaration
 
   // Fechar POSView e limpar conteúdo ao trocar de aba
@@ -3197,6 +3202,7 @@ ${recentMessages}
                 <Button 
                   size="sm" 
                   onClick={() => {
+                    console.log('Novo clicked - orcamentoSheetOpen antes:', orcamentoSheetOpen);
                     setSelectedOrcamentoId(null);
                     setOrcamentoSheetOpen(true);
                   }}
