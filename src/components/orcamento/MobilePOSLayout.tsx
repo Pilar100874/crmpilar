@@ -485,176 +485,195 @@ export default function MobilePOSLayout({
         {/* Search & Filters (only on produtos view) */}
         {activeView === 'produtos' && (
           <div className="mt-3 space-y-2">
-            {/* Grupo Selector - Sempre visível */}
-            <Select value={selectedGrupo || "all"} onValueChange={(value) => {
-              const newGrupo = value === "all" ? "" : value;
-              setSelectedGrupo(newGrupo);
-            }}>
-              <SelectTrigger className="h-10 bg-background text-sm">
-                <SelectValue placeholder="Todos os grupos" />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-border z-50">
-                <SelectItem value="all">Todos os grupos</SelectItem>
-                {grupos.map((grupo) => (
-                  <SelectItem key={grupo.id} value={grupo.id}>
-                    {grupo.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar produtos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-8 h-10 bg-background"
-              />
-              {searchQuery && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                  onClick={() => setSearchQuery("")}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
+            {/* Header com botão de filtros */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar produtos..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 pr-8 h-10 bg-background"
+                />
+                {searchQuery && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                    onClick={() => setSearchQuery("")}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <Button
+                variant={showFilters ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className={cn("h-10 px-3", hasActiveFilters && !showFilters && "border-primary text-primary")}
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                Filtros
+                {hasActiveFilters && <span className="ml-1 text-xs">•</span>}
+              </Button>
             </div>
 
-            {/* Campos Customizados Dinâmicos - Aparecem automaticamente quando há grupo selecionado com campos */}
-            {camposCustomizados.length > 0 && (
-              <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
+            {/* Painel de Filtros - Igual ao cadastro de produtos */}
+            {showFilters && (
+              <div className="border rounded-lg p-3 bg-muted/30 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-semibold flex items-center gap-2">
-                    <Filter className="w-3 h-3" />
-                    Filtros do Grupo
-                  </h3>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => {
-                      setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
-                    }}
-                    className="h-6 text-[10px] px-2"
-                  >
-                    <X className="w-3 h-3 mr-1" />
-                    Limpar
-                  </Button>
+                  <span className="text-xs font-medium">Filtros</span>
+                  {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-6 text-[10px] px-2">
+                      <X className="w-3 h-3 mr-1" />
+                      Limpar filtros
+                    </Button>
+                  )}
+                </div>
+                
+                {/* Grupo Selector */}
+                <div className="space-y-1">
+                  <Label className="text-xs">Grupo</Label>
+                  <Select value={selectedGrupo || "all"} onValueChange={(value) => {
+                    const newGrupo = value === "all" ? "" : value;
+                    setSelectedGrupo(newGrupo);
+                  }}>
+                    <SelectTrigger className="h-9 bg-background text-sm">
+                      <SelectValue placeholder="Todos os grupos" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-border z-50">
+                      <SelectItem value="all">Todos os grupos</SelectItem>
+                      {grupos.map((grupo) => (
+                        <SelectItem key={grupo.id} value={grupo.id}>
+                          {grupo.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                {camposCustomizados.map(campo => {
-                  const opcoes = Array.isArray(campo.opcoes) ? campo.opcoes : [];
-                  
-                  // Range filter for numeric fields with pesquisa_faixa
-                  if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
-                    return (
-                      <div key={campo.id} className="space-y-1">
-                        <Label className="text-[10px]">
-                          {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
-                        </Label>
-                        <div className="flex gap-2">
-                          <Input
-                            type="number"
-                            placeholder="Min"
-                            value={customFieldFilters.range[campo.campo_key]?.min || ""}
-                            onChange={(e) => updateRangeFilter(campo.campo_key, "min", e.target.value)}
-                            className="h-8 text-xs"
-                          />
-                          <Input
-                            type="number"
-                            placeholder="Max"
-                            value={customFieldFilters.range[campo.campo_key]?.max || ""}
-                            onChange={(e) => updateRangeFilter(campo.campo_key, "max", e.target.value)}
-                            className="h-8 text-xs"
-                          />
-                        </div>
-                      </div>
-                    );
-                  }
-                  
-                  // Simple number filter
-                  if (campo.tipo === 'numero') {
-                    return (
-                      <div key={campo.id} className="space-y-1">
-                        <Label className="text-[10px]">
-                          {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
-                        </Label>
-                        <Input
-                          type="number"
-                          placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
-                          value={customFieldFilters.number[campo.campo_key] || ""}
-                          onChange={(e) => updateCustomFilter('number', campo.campo_key, e.target.value)}
-                          className="h-8 text-xs"
-                        />
-                      </div>
-                    );
-                  }
-                  
-                  // Text filter
-                  if (campo.tipo === 'texto') {
-                    return (
-                      <div key={campo.id} className="space-y-1">
-                        <Label className="text-[10px]">{campo.nome}</Label>
-                        <Input
-                          type="text"
-                          placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
-                          value={customFieldFilters.text[campo.campo_key] || ""}
-                          onChange={(e) => updateCustomFilter('text', campo.campo_key, e.target.value)}
-                          className="h-8 text-xs"
-                        />
-                      </div>
-                    );
-                  }
-                  
-                  // Selection filter
-                  if (campo.tipo === 'selecao' && opcoes.length > 0) {
-                    return (
-                      <div key={campo.id} className="space-y-1">
-                        <Label className="text-[10px]">{campo.nome}</Label>
-                        <Select 
-                          value={customFieldFilters.select[campo.campo_key] || "all"} 
-                          onValueChange={(val) => updateCustomFilter('select', campo.campo_key, val === "all" ? "" : val)}
-                        >
-                          <SelectTrigger className="h-8 bg-background text-xs">
-                            <SelectValue placeholder={`Selecione ${campo.nome.toLowerCase()}`} />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card border-border z-50">
-                            <SelectItem value="all">Todos</SelectItem>
-                            {opcoes.map((opcao: string, idx: number) => (
-                              <SelectItem key={idx} value={opcao}>{opcao}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    );
-                  }
-                  
-                  // Checkbox filter
-                  if (campo.tipo === 'checkbox') {
-                    return (
-                      <div key={campo.id} className="space-y-1">
-                        <Label className="text-[10px]">{campo.nome}</Label>
-                        <Select 
-                          value={customFieldFilters.checkbox[campo.campo_key] === null ? "all" : customFieldFilters.checkbox[campo.campo_key] ? "true" : "false"} 
-                          onValueChange={(val) => updateCustomFilter('checkbox', campo.campo_key, val === "all" ? null : val === "true")}
-                        >
-                          <SelectTrigger className="h-8 bg-background text-xs">
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card border-border z-50">
-                            <SelectItem value="all">Todos</SelectItem>
-                            <SelectItem value="true">Sim</SelectItem>
-                            <SelectItem value="false">Não</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    );
-                  }
-                  
-                  return null;
-                })}
+                {/* Campos Customizados Dinâmicos - Aparecem quando grupo é selecionado */}
+                {camposCustomizados.length > 0 && (
+                  <div className="border-t pt-3 mt-3 space-y-3">
+                    <span className="text-xs font-medium text-muted-foreground block">
+                      Filtros de campos customizados
+                    </span>
+                    <div className="grid grid-cols-1 gap-3">
+                      {camposCustomizados.map(campo => {
+                        const opcoes = Array.isArray(campo.opcoes) ? campo.opcoes : [];
+                        
+                        // Range filter for numeric fields with pesquisa_faixa
+                        if (campo.tipo === 'numero' && campo.pesquisa_faixa) {
+                          return (
+                            <div key={campo.id} className="bg-background rounded-md p-2 border">
+                              <Label className="text-xs font-medium mb-1.5 block">
+                                {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                              </Label>
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  placeholder="De"
+                                  value={customFieldFilters.range[campo.campo_key]?.min || ""}
+                                  onChange={(e) => updateRangeFilter(campo.campo_key, "min", e.target.value)}
+                                  className="h-8 text-xs"
+                                />
+                                <span className="text-xs text-muted-foreground">até</span>
+                                <Input
+                                  type="number"
+                                  placeholder="Até"
+                                  value={customFieldFilters.range[campo.campo_key]?.max || ""}
+                                  onChange={(e) => updateRangeFilter(campo.campo_key, "max", e.target.value)}
+                                  className="h-8 text-xs"
+                                />
+                              </div>
+                            </div>
+                          );
+                        }
+                        
+                        // Simple number filter
+                        if (campo.tipo === 'numero') {
+                          return (
+                            <div key={campo.id} className="bg-background rounded-md p-2 border">
+                              <Label className="text-xs font-medium mb-1.5 block">
+                                {campo.nome} {campo.unidade && <span className="text-muted-foreground">({campo.unidade})</span>}
+                              </Label>
+                              <Input
+                                type="number"
+                                placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                                value={customFieldFilters.number[campo.campo_key] || ""}
+                                onChange={(e) => updateCustomFilter('number', campo.campo_key, e.target.value)}
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                          );
+                        }
+                        
+                        // Text filter
+                        if (campo.tipo === 'texto') {
+                          return (
+                            <div key={campo.id} className="bg-background rounded-md p-2 border">
+                              <Label className="text-xs font-medium mb-1.5 block">{campo.nome}</Label>
+                              <Input
+                                type="text"
+                                placeholder={`Filtrar ${campo.nome.toLowerCase()}...`}
+                                value={customFieldFilters.text[campo.campo_key] || ""}
+                                onChange={(e) => updateCustomFilter('text', campo.campo_key, e.target.value)}
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                          );
+                        }
+                        
+                        // Selection filter
+                        if (campo.tipo === 'selecao' && opcoes.length > 0) {
+                          return (
+                            <div key={campo.id} className="bg-background rounded-md p-2 border">
+                              <Label className="text-xs font-medium mb-1.5 block">{campo.nome}</Label>
+                              <Select 
+                                value={customFieldFilters.select[campo.campo_key] || "all"} 
+                                onValueChange={(val) => updateCustomFilter('select', campo.campo_key, val === "all" ? "" : val)}
+                              >
+                                <SelectTrigger className="h-8 bg-background text-xs">
+                                  <SelectValue placeholder={`Selecione ${campo.nome.toLowerCase()}`} />
+                                </SelectTrigger>
+                                <SelectContent className="bg-card border-border z-50">
+                                  <SelectItem value="all">Todos</SelectItem>
+                                  {opcoes.map((opcao: string, idx: number) => (
+                                    <SelectItem key={idx} value={opcao}>{opcao}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          );
+                        }
+                        
+                        // Checkbox filter
+                        if (campo.tipo === 'checkbox') {
+                          return (
+                            <div key={campo.id} className="bg-background rounded-md p-2 border">
+                              <Label className="text-xs font-medium mb-1.5 block">{campo.nome}</Label>
+                              <Select 
+                                value={customFieldFilters.checkbox[campo.campo_key] === null ? "all" : customFieldFilters.checkbox[campo.campo_key] ? "true" : "false"} 
+                                onValueChange={(val) => updateCustomFilter('checkbox', campo.campo_key, val === "all" ? null : val === "true")}
+                              >
+                                <SelectTrigger className="h-8 bg-background text-xs">
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-card border-border z-50">
+                                  <SelectItem value="all">Todos</SelectItem>
+                                  <SelectItem value="true">Sim</SelectItem>
+                                  <SelectItem value="false">Não</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          );
+                        }
+                        
+                        return null;
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
