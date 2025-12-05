@@ -858,6 +858,10 @@ export default function POSView({
           setGruposQuantities={setGruposQuantities}
           shareLink={shareLink}
           onCopyLink={handleCopyLink}
+          conjuntoSelecionado={conjuntoSelecionado}
+          conjuntoItens={conjuntoItens}
+          setConjuntoSelecionado={setConjuntoSelecionado}
+          setConjuntoItens={setConjuntoItens}
         />
         
         {/* Dialogs também para mobile */}
