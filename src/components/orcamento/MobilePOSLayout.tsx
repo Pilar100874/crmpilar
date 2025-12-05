@@ -181,6 +181,7 @@ export default function MobilePOSLayout({
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showExitConfirmDialog, setShowExitConfirmDialog] = useState(false);
   
   // Custom field filters state
   const [camposCustomizados, setCamposCustomizados] = useState<CampoCustomizado[]>([]);
@@ -405,23 +406,24 @@ export default function MobilePOSLayout({
             </PopoverContent>
           </Popover>
           
-          {/* Botão Detalhes */}
+          {/* Botão Detalhes - só ícone */}
           <Button
             variant={activeView === 'detalhes' ? 'secondary' : 'outline'}
-            size="sm"
+            size="icon"
             className={cn(
-              "gap-1.5 h-10 px-3 flex-shrink-0",
+              "h-10 w-10 flex-shrink-0",
               activeView === 'detalhes' && "bg-primary/10 text-primary border-primary/30"
             )}
             onClick={() => setActiveView('detalhes')}
           >
-            <Eye className="h-4 w-4" />
-            Detalhes
-            {regrasAplicadas.length > 0 && (
-              <Badge className="h-4 min-w-4 text-[10px] px-1 bg-emerald-500 text-white ml-1">
-                {regrasAplicadas.length}
-              </Badge>
-            )}
+            <div className="relative">
+              <Eye className="h-4 w-4" />
+              {regrasAplicadas.length > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-4 min-w-4 text-[10px] px-1 bg-emerald-500 text-white">
+                  {regrasAplicadas.length}
+                </Badge>
+              )}
+            </div>
           </Button>
         </div>
 
@@ -1325,6 +1327,7 @@ export default function MobilePOSLayout({
           {[
             { id: 'produtos', label: 'Produtos', icon: Package, badge: null, action: 'view' },
             { id: 'carrinho', label: 'Carrinho', icon: ShoppingCart, badge: cartCount > 0 ? cartCount : null, action: 'view' },
+            { id: 'detalhes', label: 'Detalhes', icon: Eye, badge: regrasAplicadas.length > 0 ? regrasAplicadas.length : null, action: 'view' },
             { id: 'sair', label: 'Sair', icon: LogOut, badge: null, action: 'close' },
           ].map((tab) => {
             const Icon = tab.icon;
@@ -1339,8 +1342,12 @@ export default function MobilePOSLayout({
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 onClick={() => {
-                  if (tab.action === 'close' && onClose) {
-                    onClose();
+                  if (tab.action === 'close') {
+                    if (cartArray.length > 0) {
+                      setShowExitConfirmDialog(true);
+                    } else if (onClose) {
+                      onClose();
+                    }
                   } else if (tab.action === 'view') {
                     setActiveView(tab.id as MobileView);
                   }
@@ -1479,6 +1486,57 @@ export default function MobilePOSLayout({
               <History className="w-12 h-12 mb-3 opacity-20" />
               <p className="text-sm text-center">Histórico e status</p>
               <p className="text-xs text-center mt-1">do orçamento atual</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Exit Confirmation Dialog */}
+      {showExitConfirmDialog && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-lg p-6 w-full max-w-sm border border-border">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-foreground">Sair do Orçamento</h3>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setShowExitConfirmDialog(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              Você tem itens no carrinho. Deseja salvar o orçamento antes de sair?
+            </p>
+            <div className="flex flex-col gap-2">
+              <Button
+                className="w-full"
+                onClick={() => {
+                  handleSaveOrcamento();
+                  setShowExitConfirmDialog(false);
+                }}
+                disabled={loading || !selectedEmpresa}
+              >
+                Salvar e Sair
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setShowExitConfirmDialog(false);
+                  onClose?.();
+                }}
+              >
+                Sair sem Salvar
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => setShowExitConfirmDialog(false)}
+              >
+                Cancelar
+              </Button>
             </div>
           </div>
         </div>
