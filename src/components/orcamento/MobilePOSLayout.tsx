@@ -198,7 +198,6 @@ export default function MobilePOSLayout({
     } else {
       setCamposCustomizados([]);
       setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
-      setShowFilters(false);
     }
   }, [selectedGrupo]);
 
@@ -213,11 +212,6 @@ export default function MobilePOSLayout({
 
       if (error) throw error;
       setCamposCustomizados(data || []);
-      
-      // Abrir filtros automaticamente se houver campos
-      if (data && data.length > 0) {
-        setShowFilters(true);
-      }
       
       const newFilters: CustomFieldFilters = { range: {}, text: {}, select: {}, checkbox: {}, number: {} };
       (data || []).forEach(campo => {
@@ -261,7 +255,6 @@ export default function MobilePOSLayout({
     setSelectedGrupo("");
     setCamposCustomizados([]);
     setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
-    setShowFilters(false);
   };
 
   const hasActiveFilters = selectedGrupo || 
@@ -496,10 +489,6 @@ export default function MobilePOSLayout({
             <Select value={selectedGrupo || "all"} onValueChange={(value) => {
               const newGrupo = value === "all" ? "" : value;
               setSelectedGrupo(newGrupo);
-              // Abrir filtros automaticamente quando selecionar um grupo
-              if (newGrupo) {
-                setShowFilters(true);
-              }
             }}>
               <SelectTrigger className="h-10 bg-background text-sm">
                 <SelectValue placeholder="Todos os grupos" />
@@ -514,52 +503,28 @@ export default function MobilePOSLayout({
               </SelectContent>
             </Select>
 
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar produtos..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-8 h-10 bg-background"
-                />
-                {searchQuery && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                    onClick={() => setSearchQuery("")}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              {camposCustomizados.length > 0 && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar produtos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-8 h-10 bg-background"
+              />
+              {searchQuery && (
                 <Button
-                  variant={showFilters ? "secondary" : "outline"}
+                  variant="ghost"
                   size="icon"
-                  className="h-10 w-10 flex-shrink-0 relative"
-                  onClick={() => {
-                    const newShowFilters = !showFilters;
-                    setShowFilters(newShowFilters);
-                    // Limpar filtros customizados ao fechar (mas manter o grupo)
-                    if (!newShowFilters) {
-                      setCustomFieldFilters({ range: {}, text: {}, select: {}, checkbox: {}, number: {} });
-                    }
-                  }}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => setSearchQuery("")}
                 >
-                  <Filter className="h-4 w-4" />
-                  {hasActiveFilters && !selectedGrupo && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
-                      !
-                    </span>
-                  )}
+                  <X className="h-4 w-4" />
                 </Button>
               )}
             </div>
 
-            {/* Campos Customizados Dinâmicos - Aparecem quando há grupo selecionado */}
-            {showFilters && camposCustomizados.length > 0 && (
+            {/* Campos Customizados Dinâmicos - Aparecem automaticamente quando há grupo selecionado com campos */}
+            {camposCustomizados.length > 0 && (
               <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-semibold flex items-center gap-2">
