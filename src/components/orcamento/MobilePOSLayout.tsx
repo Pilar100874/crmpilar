@@ -275,8 +275,11 @@ export default function MobilePOSLayout({
   const cartCount = cartArray.reduce((sum, item) => sum + item.quantity, 0);
   
   const filteredProdutos = produtos.filter(produto => {
-    const matchesSearch = produto.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      produto.codigo?.toLowerCase().includes(searchQuery.toLowerCase());
+    const term = searchQuery.toLowerCase();
+    const matchesSearch = !searchQuery || 
+      produto.nome?.toLowerCase().includes(term) ||
+      produto.ean_13?.toLowerCase().includes(term) ||
+      produto.codigo?.toLowerCase().includes(term);
     const matchesGrupo = !selectedGrupo || produto.grupo_id === selectedGrupo;
     
     // Filtros de campos customizados
@@ -490,7 +493,7 @@ export default function MobilePOSLayout({
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar produtos..."
+                  placeholder="Buscar por nome, EAN ou código..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9 pr-8 h-10 bg-background"

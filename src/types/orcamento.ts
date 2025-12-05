@@ -29,6 +29,7 @@ export interface Produto {
   grupo_id?: string;
   ncm_id?: string;
   ncm?: string;
+  ean_13?: string;
   ativo: boolean;
   created_at: string;
   updated_at: string;
