@@ -3187,17 +3187,30 @@ ${recentMessages}
           <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0">
             {/* Header with Filter */}
             <div className="px-3 py-3 bg-gradient-to-r from-emerald-50 to-transparent border-b border-emerald-100/50">
-              <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
-                <SelectTrigger className="w-full h-9 bg-white/70 border-emerald-200 rounded-xl">
-                  <SelectValue placeholder="Todos os status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="orcamento">Orçamento</SelectItem>
-                  <SelectItem value="negociacao">Negociação</SelectItem>
-                  <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
+                  <SelectTrigger className="flex-1 h-9 bg-white/70 border-emerald-200 rounded-xl">
+                    <SelectValue placeholder="Todos os status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="orcamento">Orçamento</SelectItem>
+                    <SelectItem value="negociacao">Negociação</SelectItem>
+                    <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button 
+                  size="sm" 
+                  onClick={() => {
+                    setSelectedOrcamentoId(null);
+                    setOrcamentoSheetOpen(true);
+                  }}
+                  className="h-9 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Novo
+                </Button>
+              </div>
             </div>
 
             <div className="px-2 py-2 space-y-1.5">
