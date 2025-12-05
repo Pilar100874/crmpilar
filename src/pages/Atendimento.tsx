@@ -381,7 +381,11 @@ export default function Atendimento() {
       setSelectedEmailData(null);
     }
     
-    // NÃO resetar orçamento aqui - o POSView é controlado separadamente
+    // Fechar orçamento quando não estiver na aba orçamento
+    if (activeTab !== 'orcamento') {
+      setOrcamentoSheetOpen(false);
+      setSelectedOrcamentoId(null);
+    }
   }, [activeTab]);
 
 
