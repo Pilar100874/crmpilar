@@ -93,6 +93,7 @@ interface POSViewProps {
   onToggleClientDetails?: () => void;
   showPanelToggle?: boolean;
   onTogglePanel?: () => void;
+  initialEmpresaId?: string | null;
 }
 
 export default function POSView({ 
@@ -102,7 +103,8 @@ export default function POSView({
   showClientDetails = false,
   onToggleClientDetails,
   showPanelToggle = false,
-  onTogglePanel
+  onTogglePanel,
+  initialEmpresaId
 }: POSViewProps) {
   const isMobile = useIsMobile();
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -111,7 +113,7 @@ export default function POSView({
   const [grupos, setGrupos] = useState<any[]>([]);
   const [empresas, setEmpresas] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedEmpresa, setSelectedEmpresa] = useState<string>("");
+  const [selectedEmpresa, setSelectedEmpresa] = useState<string>(initialEmpresaId || "");
   const [openEmpresaCombobox, setOpenEmpresaCombobox] = useState(false);
   const [cartItems, setCartItems] = useState<Map<string, { produto: Produto; quantity: number; preco: number }>>(new Map());
   const [loading, setLoading] = useState(false);

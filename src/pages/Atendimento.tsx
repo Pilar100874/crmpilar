@@ -190,6 +190,7 @@ export default function Atendimento() {
   const [selectedOrcamentoData, setSelectedOrcamentoData] = useState<any | null>(null);
   const [orcamentoSheetOpen, setOrcamentoSheetOpen] = useState(false);
   const [showNovoOrcamentoConfirm, setShowNovoOrcamentoConfirm] = useState(false);
+  const [initialEmpresaForOrcamento, setInitialEmpresaForOrcamento] = useState<string | null>(null);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   
   // Agenda states
@@ -2377,6 +2378,16 @@ ${recentMessages}
                   setOrcamentoSheetOpen(open);
                   if (open) setMobileView("main");
                 }}
+                onNovoOrcamentoClick={() => {
+                  if (orcamentoSheetOpen) {
+                    setShowNovoOrcamentoConfirm(true);
+                  } else {
+                    setSelectedOrcamentoId(null);
+                    setInitialEmpresaForOrcamento(globalFilter?.type === 'empresa' ? globalFilter.id : null);
+                    setOrcamentoSheetOpen(true);
+                    setMobileView("main");
+                  }
+                }}
                 showPredictiveDialer={() => setShowPredictiveDialer(true)}
                 atendente={atendente}
                 usuarioId={usuarioId}
@@ -2439,6 +2450,7 @@ ${recentMessages}
                 selectedOrcamentoId={selectedOrcamentoId}
                 estabelecimentoId={estabelecimentoId}
                 setOrcamentoSheetOpen={setOrcamentoSheetOpen}
+                initialEmpresaForOrcamento={initialEmpresaForOrcamento}
               />
             </div>
 
@@ -3203,6 +3215,7 @@ ${recentMessages}
                       setShowNovoOrcamentoConfirm(true);
                     } else {
                       setSelectedOrcamentoId(null);
+                      setInitialEmpresaForOrcamento(globalFilter?.type === 'empresa' ? globalFilter.id : null);
                       setOrcamentoSheetOpen(true);
                     }
                   }}
@@ -3229,6 +3242,7 @@ ${recentMessages}
                     onClick={() => {
                       setOrcamentoSheetOpen(false);
                       setSelectedOrcamentoId(null);
+                      setInitialEmpresaForOrcamento(globalFilter?.type === 'empresa' ? globalFilter.id : null);
                       setTimeout(() => {
                         setOrcamentoSheetOpen(true);
                       }, 100);
@@ -3815,6 +3829,7 @@ ${recentMessages}
             onClose={() => {
               setOrcamentoSheetOpen(false);
               setSelectedOrcamentoId(null);
+              setInitialEmpresaForOrcamento(null);
             }}
             showClientDetails={showClientDetailsOrcamento}
             onToggleClientDetails={() => {
@@ -3827,6 +3842,7 @@ ${recentMessages}
             }}
             showPanelToggle={!showConversationsList}
             onTogglePanel={() => setShowConversationsList(true)}
+            initialEmpresaId={!selectedOrcamentoId ? initialEmpresaForOrcamento : null}
           />
         </div>
       ) : null}
@@ -3898,6 +3914,7 @@ interface MobileListContentProps {
   selectedOrcamentoId: string | null;
   setSelectedOrcamentoId: (id: string | null) => void;
   setOrcamentoSheetOpen: (open: boolean) => void;
+  onNovoOrcamentoClick?: () => void;
   showPredictiveDialer: () => void;
   atendente: any;
   usuarioId: string;
@@ -3930,6 +3947,7 @@ function MobileListContent({
   selectedOrcamentoId,
   setSelectedOrcamentoId,
   setOrcamentoSheetOpen,
+  onNovoOrcamentoClick,
   showPredictiveDialer,
   atendente,
   usuarioId,
@@ -4013,7 +4031,7 @@ function MobileListContent({
             </Select>
             <Button 
               size="sm" 
-              onClick={() => setOrcamentoSheetOpen(true)}
+              onClick={() => onNovoOrcamentoClick?.()}
               className="h-9 px-3 rounded-xl"
             >
               <Plus className="w-4 h-4 mr-1" />
@@ -4208,6 +4226,7 @@ interface MobileMainContentProps {
   selectedOrcamentoId: string | null;
   estabelecimentoId: string;
   setOrcamentoSheetOpen: (open: boolean) => void;
+  initialEmpresaForOrcamento?: string | null;
 }
 
 function MobileMainContent({
@@ -4258,6 +4277,7 @@ function MobileMainContent({
   selectedOrcamentoId,
   estabelecimentoId,
   setOrcamentoSheetOpen,
+  initialEmpresaForOrcamento,
 }: MobileMainContentProps) {
   // Chat content
   if (activeTab === "chat" && selectedConversation && selectedConv) {
@@ -4407,6 +4427,7 @@ function MobileMainContent({
           onToggleClientDetails={() => {}}
           showPanelToggle={false}
           onTogglePanel={() => {}}
+          initialEmpresaId={!selectedOrcamentoId ? initialEmpresaForOrcamento : null}
         />
       </div>
     );
