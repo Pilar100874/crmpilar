@@ -3202,6 +3202,7 @@ ${recentMessages}
                 <Button 
                   size="sm" 
                   onClick={() => {
+                    console.log('Novo clicked - estabelecimentoId:', estabelecimentoId);
                     setSelectedOrcamentoId(null);
                     setOrcamentoSheetOpen(true);
                   }}
