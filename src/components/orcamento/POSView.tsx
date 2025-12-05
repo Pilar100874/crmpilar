@@ -107,9 +107,6 @@ export default function POSView({
   const isMobile = useIsMobile();
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const isCompact = isMobile || windowWidth < 1024;
-  
-  // DEBUG
-  console.log('POSView render - isMobile:', isMobile, 'windowWidth:', windowWidth, 'isCompact:', isCompact);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [grupos, setGrupos] = useState<any[]>([]);
   const [empresas, setEmpresas] = useState<any[]>([]);
