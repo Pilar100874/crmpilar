@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Produto } from "@/types/orcamento";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -159,6 +159,13 @@ export default function MobilePOSLayout({
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+
+  // Quando um conjunto é selecionado, mudar para aba de produtos automaticamente
+  useEffect(() => {
+    if (conjuntoSelecionado && conjuntoItens.length > 0) {
+      setActiveView('produtos');
+    }
+  }, [conjuntoSelecionado, conjuntoItens]);
   
   const cartArray = Array.from(cartItems.entries()).map(([_, item]) => item);
   const cartCount = cartArray.reduce((sum, item) => sum + item.quantity, 0);
