@@ -356,11 +356,6 @@ export default function Atendimento() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   
-  // Debug: monitor orcamentoSheetOpen changes
-  useEffect(() => {
-    console.log('orcamentoSheetOpen changed to:', orcamentoSheetOpen, 'estabelecimentoId:', estabelecimentoId);
-  }, [orcamentoSheetOpen, estabelecimentoId]);
-  
   // Note: Counter updates moved after useMemos to avoid using variables before declaration
 
   // Fechar POSView e limpar conteúdo ao trocar de aba
@@ -2582,10 +2577,6 @@ ${recentMessages}
       ) : (
         /* ========== DESKTOP/TABLET LAYOUT ========== */
         <div className="h-full flex bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden relative">
-        {/* DEBUG: Show orcamentoSheetOpen state */}
-        <div className="absolute top-2 right-2 z-50 bg-red-500 text-white px-2 py-1 rounded text-xs">
-          sheet: {orcamentoSheetOpen ? 'T' : 'F'} | estab: {estabelecimentoId ? 'T' : 'F'}
-        </div>
         {/* Botão para reabrir painel quando colapsado - não mostra quando orçamento está aberto (botão fica no POSView) */}
         {!showConversationsList && !orcamentoSheetOpen && (
           <Button
@@ -3203,18 +3194,6 @@ ${recentMessages}
                     <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button 
-                  size="sm" 
-                  onClick={() => {
-                    console.log('Novo clicked - orcamentoSheetOpen antes:', orcamentoSheetOpen);
-                    setSelectedOrcamentoId(null);
-                    setOrcamentoSheetOpen(true);
-                  }}
-                  className="h-9 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Novo
-                </Button>
               </div>
             </div>
 
@@ -3786,8 +3765,7 @@ ${recentMessages}
 
       {/* Orçamento Panel Lateral - Ao lado do painel */}
       {orcamentoSheetOpen && estabelecimentoId ? (
-        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full bg-red-500">
-          <div className="p-4 text-white">DEBUG: POSView container está visível</div>
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full bg-background">
           <POSView
             estabelecimentoId={estabelecimentoId} 
             orcamentoId={selectedOrcamentoId || undefined}
