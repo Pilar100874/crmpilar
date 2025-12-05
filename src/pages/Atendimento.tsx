@@ -3781,9 +3781,9 @@ ${recentMessages}
       />
 
       {/* Orçamento Panel Lateral - Ao lado do painel */}
-      {orcamentoSheetOpen && estabelecimentoId && (
-        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full bg-background">
-          <POSView 
+      {orcamentoSheetOpen && estabelecimentoId ? (
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full bg-red-500">
+          <POSView
             estabelecimentoId={estabelecimentoId} 
             orcamentoId={selectedOrcamentoId || undefined}
             onClose={() => {
@@ -3803,7 +3803,7 @@ ${recentMessages}
             onTogglePanel={() => setShowConversationsList(true)}
           />
         </div>
-      )}
+      ) : null}
 
       {/* Client Details Panel - Orçamento */}
       {orcamentoSheetOpen && showClientDetailsOrcamento && selectedOrcamentoData && (
