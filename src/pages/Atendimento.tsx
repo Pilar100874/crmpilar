@@ -3786,7 +3786,8 @@ ${recentMessages}
 
       {/* Orçamento Panel Lateral - Ao lado do painel */}
       {orcamentoSheetOpen && estabelecimentoId ? (
-        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full bg-background">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 h-full bg-red-500">
+          <div className="p-4 text-white">DEBUG: POSView container está visível</div>
           <POSView
             estabelecimentoId={estabelecimentoId} 
             orcamentoId={selectedOrcamentoId || undefined}
