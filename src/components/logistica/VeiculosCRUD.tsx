@@ -17,7 +17,8 @@ interface VeiculosCRUDProps {
   estabelecimentoId: string;
 }
 
-const tiposVeiculo = [
+const tipos = [
+  'Celular',
   'Carro',
   'Van',
   'Caminhão Leve',
@@ -280,7 +281,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
             </div>
 
             <div>
-              <Label>Tipo de Veículo</Label>
+              <Label>Tipo</Label>
               <Select
                 value={formData.tipo_veiculo}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, tipo_veiculo: value }))}
@@ -289,7 +290,7 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  {tiposVeiculo.map(tipo => (
+                  {tipos.map(tipo => (
                     <SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>
                   ))}
                 </SelectContent>
