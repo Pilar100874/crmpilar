@@ -50,6 +50,7 @@ import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import { UsuarioSelector } from "@/components/UsuarioSelector";
 import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
 import { ChatAvisosFloatingButton } from "@/components/chat-interno/ChatAvisosFloatingButton";
+import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { MENUS_DISPONIVEIS } from "@/lib/menus";
 import { LayoutContext } from "@/contexts/LayoutContext";
@@ -1050,7 +1051,9 @@ export default function Layout({ children }: LayoutProps) {
       />
 
       <IncomingCallNotification />
-      <ChatAvisosFloatingButton />
+      <ChatInternoProvider>
+        <ChatAvisosFloatingButton />
+      </ChatInternoProvider>
       
       <ChangePasswordDialog
         open={showChangePasswordDialog}

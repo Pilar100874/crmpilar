@@ -15,7 +15,7 @@ import {
   Check,
   Video
 } from 'lucide-react';
-import { useChatInterno } from '@/hooks/useChatInterno';
+import { useChatInternoContext } from '@/contexts/ChatInternoContext';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -47,7 +47,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     enviarMensagem,
     criarConversa,
     carregarConversas,
-  } = useChatInterno();
+  } = useChatInternoContext();
 
   const [mensagemInput, setMensagemInput] = useState('');
   const [busca, setBusca] = useState('');
@@ -112,11 +112,17 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     }
   }, [conversaAtual, carregarMensagens]);
 
+  // Scroll para o final quando mensagens mudam ou quando abre uma conversa
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (scrollRef.current && mensagens.length > 0) {
+      // Usar setTimeout para garantir que o DOM foi atualizado
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+      }, 100);
     }
-  }, [mensagens]);
+  }, [mensagens, conversaAtual]);
 
   useEffect(() => {
     if (showNovaConversa) {

@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { ChatInternoPanel } from './ChatInternoPanel';
-import { useChatInterno } from '@/hooks/useChatInterno';
+import { useChatInternoContext } from '@/contexts/ChatInternoContext';
 import { cn } from '@/lib/utils';
 
 export function ChatAvisosFloatingButton() {
   const [chatOpen, setChatOpen] = useState(false);
-  const { totalNaoLidas } = useChatInterno();
+  const { totalNaoLidas } = useChatInternoContext();
 
   const handleChatClick = () => {
     setChatOpen(!chatOpen);
