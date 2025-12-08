@@ -212,3 +212,12 @@ verify_jwt = true
 
 [functions.test-scraping-config]
 verify_jwt = true
+
+[functions.gmail-auth-start]
+verify_jwt = true
+
+[functions.gmail-auth-callback]
+verify_jwt = false
+
+[functions.gmail-fetch-emails]
+verify_jwt = true

@@ -66,6 +66,8 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
   // Emails data
   const [emails, setEmails] = useState<Email[]>([]);
+  const [useOAuth, setUseOAuth] = useState(false);
+  const [oauthConnected, setOauthConnected] = useState(false);
 
   // Verificar configuração de email do usuário
   useEffect(() => {
@@ -122,6 +124,21 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
         if (oauthConfig?.enabled) {
           setHasEmailConfig(true);
+          setUseOAuth(true);
+          
+          // Verificar se já tem tokens OAuth
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) {
+            const { data: tokenData } = await supabase
+              .from('email_oauth_tokens')
+              .select('id')
+              .eq('user_id', authUser.id)
+              .eq('provider', 'google')
+              .maybeSingle();
+            
+            setOauthConnected(!!tokenData);
+          }
+          
           setCheckingConfig(false);
           return;
         }
@@ -143,12 +160,16 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
     }
   }, [folder]);
 
-  // Carregar emails do banco
+  // Carregar emails do banco ou via OAuth
   useEffect(() => {
     if (hasEmailConfig !== null) {
-      loadEmails();
+      if (useOAuth && oauthConnected) {
+        fetchNewEmails();
+      } else if (!useOAuth) {
+        loadEmails();
+      }
     }
-  }, [selectedFolder, hasEmailConfig]);
+  }, [selectedFolder, hasEmailConfig, oauthConnected]);
 
   const loadEmails = async () => {
     try {
@@ -173,20 +194,53 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
     }
   };
 
+  const connectGmailOAuth = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('gmail-auth-start');
+      
+      if (error) throw error;
+      
+      if (data?.auth_url) {
+        // Open OAuth popup
+        const popup = window.open(data.auth_url, 'gmail-oauth', 'width=600,height=700');
+        
+        // Listen for OAuth completion
+        const handleMessage = (event: MessageEvent) => {
+          if (event.data?.type === 'gmail-oauth-success') {
+            toast.success('Gmail conectado com sucesso!');
+            setOauthConnected(true);
+            fetchNewEmails();
+          } else if (event.data?.type === 'gmail-oauth-error') {
+            toast.error(event.data.message || 'Erro ao conectar Gmail');
+          }
+          window.removeEventListener('message', handleMessage);
+        };
+        window.addEventListener('message', handleMessage);
+      }
+    } catch (error: any) {
+      console.error('Erro ao iniciar OAuth:', error);
+      toast.error(error.message || 'Erro ao conectar Gmail');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchNewEmails = async () => {
     setLoading(true);
     try {
-      // Buscar emails via IMAP do servidor pessoal do usuário
-      const { data, error } = await supabase.functions.invoke('fetch-emails-imap', {
-        body: { folder: 'INBOX', limit: 50 }
+      // Usar função correta baseado no tipo de autenticação
+      const functionName = useOAuth ? 'gmail-fetch-emails' : 'fetch-emails-imap';
+      
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: { folder: selectedFolder.toUpperCase(), maxResults: 50 }
       });
       
       if (error) throw error;
       
       if (data?.emails) {
-        // Converter emails do IMAP para o formato local
-        const imapEmails = data.emails.map((email: any, index: number) => ({
-          id: `imap-${Date.now()}-${index}`,
+        const fetchedEmails = data.emails.map((email: any, index: number) => ({
+          id: email.id || `email-${Date.now()}-${index}`,
           from_email: email.from_email,
           to_email: email.to_email,
           subject: email.subject,
@@ -194,11 +248,11 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
           date: email.date,
           read: email.read,
           starred: email.starred,
-          folder: 'inbox' as const,
+          folder: selectedFolder,
         }));
         
-        setEmails(imapEmails);
-        toast.success(`${imapEmails.length} emails carregados do servidor`);
+        setEmails(fetchedEmails);
+        toast.success(data.message || `${fetchedEmails.length} emails carregados`);
       }
     } catch (error: any) {
       console.error('Erro ao buscar emails:', error);
@@ -344,6 +398,53 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
               </div>
             </AlertDescription>
           </Alert>
+        </Card>
+      </div>
+    );
+  }
+
+  // Mostrar tela para conectar Gmail via OAuth
+  if (useOAuth && !oauthConnected) {
+    return (
+      <div className="flex h-screen items-center justify-center p-4">
+        <Card className="max-w-md w-full p-8 text-center">
+          <div className="mb-6">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Conectar Gmail</h2>
+            <p className="text-muted-foreground">
+              Clique no botão abaixo para autorizar o acesso ao seu Gmail via API do Google.
+            </p>
+          </div>
+          
+          <Button 
+            onClick={connectGmailOAuth}
+            disabled={loading}
+            className="w-full gap-2"
+            size="lg"
+          >
+            {loading ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+            )}
+            Conectar com Google
+          </Button>
+          
+          <p className="text-xs text-muted-foreground mt-4">
+            Isso abrirá uma janela para você autorizar o acesso de leitura e envio de emails.
+          </p>
         </Card>
       </div>
     );
