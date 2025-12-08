@@ -407,8 +407,10 @@ export function useChatInterno() {
     const estabelecimentoId = localStorage.getItem('estabelecimentoId');
     if (!estabelecimentoId) return;
 
+    console.log('[ChatInterno] Configurando subscription global para:', usuarioAtualId);
+
     const globalChannel = supabase
-      .channel(`chat-interno-global-${usuarioAtualId}`)
+      .channel(`chat-interno-global-${usuarioAtualId}-${Date.now()}`)
       .on(
         'postgres_changes',
         {
@@ -417,6 +419,7 @@ export function useChatInterno() {
           table: 'chat_interno_mensagens',
         },
         async (payload) => {
+          console.log('[ChatInterno] Nova mensagem detectada:', payload);
           const novaMensagem = payload.new as Mensagem;
           
           // Verificar se o usuário é participante dessa conversa
@@ -427,9 +430,16 @@ export function useChatInterno() {
             .eq('usuario_id', usuarioAtualId)
             .single();
 
+          console.log('[ChatInterno] Participante?', participante, 'Remetente:', novaMensagem.remetente_id, 'Atual:', usuarioAtualId);
+
           if (participante && novaMensagem.remetente_id !== usuarioAtualId) {
+            console.log('[ChatInterno] Incrementando contador de não lidas');
             // Nova mensagem em uma conversa do usuário, de outro remetente
-            setTotalNaoLidas(prev => prev + 1);
+            setTotalNaoLidas(prev => {
+              const novo = prev + 1;
+              console.log('[ChatInterno] Total não lidas:', novo);
+              return novo;
+            });
             setNaoLidasPorConversa(prev => ({
               ...prev,
               [novaMensagem.conversa_id]: (prev[novaMensagem.conversa_id] || 0) + 1
@@ -437,34 +447,47 @@ export function useChatInterno() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[ChatInterno] Status da subscription global:', status);
+      });
 
     return () => {
+      console.log('[ChatInterno] Removendo subscription global');
       supabase.removeChannel(globalChannel);
     };
   }, [usuarioAtualId]);
 
+  // Marcar conversa como lida
+  const marcarComoLida = useCallback(async (conversaId: string) => {
+    if (!usuarioAtualId) return;
+    
+    // Imediatamente zera os contadores locais
+    setNaoLidasPorConversa(prev => {
+      const countAnterior = prev[conversaId] || 0;
+      if (countAnterior > 0) {
+        setTotalNaoLidas(t => Math.max(0, t - countAnterior));
+      }
+      const novo = { ...prev };
+      delete novo[conversaId];
+      return novo;
+    });
+
+    // Atualiza no banco
+    await supabase
+      .from('chat_interno_participantes')
+      .update({ ultima_leitura: new Date().toISOString() })
+      .eq('conversa_id', conversaId)
+      .eq('usuario_id', usuarioAtualId);
+  }, [usuarioAtualId]);
+
   // Recalcular contador quando abrir uma conversa (após marcar como lida)
   const handleSetConversaAtual = useCallback((conversa: Conversa | null) => {
-    setConversaAtual(conversa);
     if (conversa) {
-      // Imediatamente zera o contador dessa conversa para parar a animação
-      const countAnterior = naoLidasPorConversa[conversa.id] || 0;
-      if (countAnterior > 0) {
-        setNaoLidasPorConversa(prev => {
-          const novo = { ...prev };
-          delete novo[conversa.id];
-          return novo;
-        });
-        setTotalNaoLidas(prev => Math.max(0, prev - countAnterior));
-      }
-      
-      // Recalcular após marcar como lida (para confirmar)
-      setTimeout(() => {
-        carregarNaoLidas();
-      }, 1000);
+      // Marca como lida imediatamente
+      marcarComoLida(conversa.id);
     }
-  }, [carregarNaoLidas, naoLidasPorConversa]);
+    setConversaAtual(conversa);
+  }, [marcarComoLida]);
 
   return {
     conversas,
