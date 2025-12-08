@@ -54,6 +54,7 @@ export function useChatInterno() {
   const [usuarioAtualId, setUsuarioAtualId] = useState<string | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [presenceChannel, setPresenceChannel] = useState<RealtimeChannel | null>(null);
+  const [totalNaoLidas, setTotalNaoLidas] = useState(0);
 
   // Fetch atual usuario id from auth + usuarios table
   useEffect(() => {
@@ -350,14 +351,64 @@ export function useChatInterno() {
     carregarConversas();
   }, [carregarConversas]);
 
+  // Subscription global para detectar novas mensagens em qualquer conversa
+  useEffect(() => {
+    if (!usuarioAtualId) return;
+
+    const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+    if (!estabelecimentoId) return;
+
+    const globalChannel = supabase
+      .channel(`chat-interno-global-${usuarioAtualId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_interno_mensagens',
+        },
+        async (payload) => {
+          const novaMensagem = payload.new as Mensagem;
+          
+          // Verificar se o usuário é participante dessa conversa
+          const { data: participante } = await supabase
+            .from('chat_interno_participantes')
+            .select('id')
+            .eq('conversa_id', novaMensagem.conversa_id)
+            .eq('usuario_id', usuarioAtualId)
+            .single();
+
+          if (participante && novaMensagem.remetente_id !== usuarioAtualId) {
+            // Nova mensagem em uma conversa do usuário, de outro remetente
+            setTotalNaoLidas(prev => prev + 1);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(globalChannel);
+    };
+  }, [usuarioAtualId]);
+
+  // Reset contador quando abrir uma conversa
+  const handleSetConversaAtual = useCallback((conversa: Conversa | null) => {
+    setConversaAtual(conversa);
+    if (conversa) {
+      // Reseta contador quando abre uma conversa
+      setTotalNaoLidas(0);
+    }
+  }, []);
+
   return {
     conversas,
     conversaAtual,
-    setConversaAtual,
+    setConversaAtual: handleSetConversaAtual,
     mensagens,
     loading,
     usuarioAtualId,
     onlineUsers,
+    totalNaoLidas,
     carregarConversas,
     carregarMensagens,
     criarConversa,
