@@ -87,7 +87,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         .from('usuarios')
         .select('smtp, porta_smtp, imap, porta_imap, senha_email')
         .ilike('email', user.email || '')
-        .maybeSingle();
+        .maybeSingle() as { data: { smtp: string | null; porta_smtp: number | null; imap: string | null; porta_imap: number | null; senha_email: string | null } | null; error: any };
 
       if (error) {
         console.error('Erro ao verificar configuração:', error);
