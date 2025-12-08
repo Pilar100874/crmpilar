@@ -1,21 +1,20 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, 
   Search, Link2, File, Bell, ShieldCheck, ChevronRight, ArrowLeft,
-  Settings, X
+  Settings, Check
 } from "lucide-react";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { WhatsAppConfigCRUD } from "@/components/config/WhatsAppConfigCRUD";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
@@ -24,50 +23,55 @@ interface ConfigSection {
   title: string;
   description: string;
   icon: React.ElementType;
-  color: string;
+  bgColor: string;
+  iconColor: string;
 }
 
 const CONFIG_SECTIONS: ConfigSection[] = [
   {
     id: "notificacoes-sistema",
-    title: "Notificações",
-    description: "Mensagens de confirmação",
+    title: "Notificações do Sistema",
+    description: "Configure mensagens de confirmação e alertas",
     icon: Bell,
-    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    iconColor: "text-blue-500",
   },
   {
     id: "cadastro-estabelecimentos",
     title: "Estabelecimento",
-    description: "Gerenciar estabelecimentos",
+    description: "Gerencie seus estabelecimentos e configurações",
     icon: Store,
-    color: "text-green-500",
+    bgColor: "bg-green-500/10",
+    iconColor: "text-green-500",
   },
   {
     id: "recuperar-senha",
-    title: "Recuperar Senha",
-    description: "Configurar via WhatsApp",
+    title: "Recuperação de Senha",
+    description: "Configure envio de códigos via WhatsApp",
     icon: ShieldCheck,
-    color: "text-purple-500",
+    bgColor: "bg-purple-500/10",
+    iconColor: "text-purple-500",
   },
   {
     id: "campanhas",
     title: "Campanhas",
-    description: "Mensagens em massa",
+    description: "Gerencie campanhas de mensagens em massa",
     icon: Megaphone,
-    color: "text-orange-500",
+    bgColor: "bg-orange-500/10",
+    iconColor: "text-orange-500",
   },
   {
     id: "conteudos",
     title: "Conteúdos",
-    description: "Base de conhecimento",
+    description: "Base de conhecimento e materiais de apoio",
     icon: FileText,
-    color: "text-cyan-500",
+    bgColor: "bg-cyan-500/10",
+    iconColor: "text-cyan-500",
   },
 ];
 
 export default function Config() {
   const { openSubmenu } = useLayout();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const secaoParam = searchParams.get('secao');
   
@@ -127,213 +131,94 @@ export default function Config() {
     }
   };
 
-  return (
-    <div className="min-h-full bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b">
-        <div className="flex items-center gap-3 p-3 sm:p-4">
-          {activeSection ? (
-            <>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={handleBack}
-                className="shrink-0"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                {activeSectionData && (
-                  <activeSectionData.icon className={cn("w-5 h-5 shrink-0", activeSectionData.color)} />
-                )}
-                <h1 className="font-semibold text-base sm:text-lg truncate">
-                  {activeSectionData?.title}
-                </h1>
-              </div>
-            </>
-          ) : (
-            <>
-              <SubMenuHeader 
-                title="Configurações"
-                onOpenSubmenu={() => openSubmenu("Configurações")}
-              />
-              <div className="flex items-center gap-2">
-                <Settings className="w-5 h-5 text-primary" />
-                <h1 className="font-semibold text-base sm:text-lg">Configurações</h1>
-              </div>
-            </>
-          )}
+  // Se há uma seção ativa, mostra o conteúdo dela
+  if (activeSection && activeSectionData) {
+    return (
+      <div className="min-h-full bg-muted/30">
+        {/* Header com botão voltar */}
+        <div className="sticky top-0 z-10 bg-background border-b shadow-sm">
+          <div className="flex items-center gap-3 p-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleBack}
+              className="shrink-0 -ml-2"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", activeSectionData.bgColor)}>
+              <activeSectionData.icon className={cn("w-5 h-5", activeSectionData.iconColor)} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="font-bold text-base truncate">{activeSectionData.title}</h1>
+              <p className="text-xs text-muted-foreground truncate">{activeSectionData.description}</p>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Content */}
-      {activeSection ? (
-        // Seção ativa - mostra o conteúdo
-        <ScrollArea className="h-[calc(100vh-60px)]">
-          <div className="p-3 sm:p-4 md:p-6">
+        {/* Conteúdo da seção */}
+        <ScrollArea className="h-[calc(100vh-80px)]">
+          <div className="p-4">
             {renderSectionContent()}
           </div>
         </ScrollArea>
-      ) : (
-        // Lista de seções
-        <div className="p-3 sm:p-4 md:p-6">
-          <p className="text-sm text-muted-foreground mb-4">
-            Selecione uma opção para configurar
-          </p>
-          
-          {/* Grid para desktop, lista para mobile */}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {CONFIG_SECTIONS.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => handleSectionClick(section.id)}
-                className="flex items-center gap-3 p-4 bg-card border rounded-xl hover:bg-muted/50 hover:border-primary/30 transition-all text-left group"
-              >
-                <div className={cn(
-                  "w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shrink-0",
-                  "bg-muted/50 group-hover:bg-primary/10 transition-colors"
-                )}>
-                  <section.icon className={cn("w-5 h-5 sm:w-6 sm:h-6", section.color)} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm sm:text-base">{section.title}</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground truncate">
-                    {section.description}
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+      </div>
+    );
+  }
 
-// Componente de Notificações
-function NotificacoesContent({ 
-  showConfirmationMessages, 
-  onToggle 
-}: { 
-  showConfirmationMessages: boolean;
-  onToggle: (checked: boolean) => void;
-}) {
+  // Menu principal com cards
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="show-confirmations" className="text-sm font-medium">
-                Mostrar mensagens de confirmação
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                Exibe notificações como "Bot ativado", "Mensagem enviada", etc.
-              </p>
-            </div>
-            <Switch
-              id="show-confirmations"
-              checked={showConfirmationMessages}
-              onCheckedChange={onToggle}
-            />
-          </div>
-        </CardContent>
-      </Card>
-      <p className="text-xs text-muted-foreground px-1">
-        Mensagens de erro sempre serão exibidas, independente desta configuração.
-      </p>
-    </div>
-  );
-}
-
-// Componente de Campanhas
-function CampanhasContent() {
-  return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="min-h-full bg-muted/30">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h3 className="font-semibold text-base sm:text-lg">Suas Campanhas</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Acompanhe o status das suas campanhas
-          </p>
+      <div className="bg-background border-b">
+        <div className="p-4">
+          <div className="flex items-center gap-3 mb-1">
+            <SubMenuHeader 
+              title="Configurações"
+              onOpenSubmenu={() => openSubmenu("Configurações")}
+            />
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Settings className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h1 className="font-bold text-lg">Configurações</h1>
+                <p className="text-xs text-muted-foreground">Gerencie a plataforma</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <Button size="sm" className="w-full sm:w-auto">
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Campanha
-        </Button>
       </div>
 
-      {/* Stats Cards - Horizontal scroll no mobile */}
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3">
-        <Card className="min-w-[140px] sm:min-w-0 flex-shrink-0">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">Total</span>
-              <Send className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div className="text-xl sm:text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">Este mês</p>
-          </CardContent>
-        </Card>
-
-        <Card className="min-w-[140px] sm:min-w-0 flex-shrink-0">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">Alcançados</span>
-              <Users className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div className="text-xl sm:text-2xl font-bold">1.120</div>
-            <p className="text-xs text-muted-foreground">+18% vs anterior</p>
-          </CardContent>
-        </Card>
-
-        <Card className="min-w-[140px] sm:min-w-0 flex-shrink-0">
-          <CardContent className="p-3 sm:p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">Engajamento</span>
-              <TrendingUp className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div className="text-xl sm:text-2xl font-bold">87%</div>
-            <p className="text-xs text-muted-foreground">+5% esta semana</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Campaign List */}
-      <div className="space-y-3">
-        {[
-          { id: 1, name: "Promoção Black Friday", status: "scheduled", recipients: 1250, sent: 0 },
-          { id: 2, name: "Follow-up Abandonos", status: "running", recipients: 450, sent: 320 },
-          { id: 3, name: "Pesquisa Satisfação", status: "completed", recipients: 800, sent: 800 },
-        ].map((campaign) => (
-          <Card key={campaign.id} className="overflow-hidden">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-2">
-                    <h4 className="font-medium text-sm truncate">{campaign.name}</h4>
-                    <Badge 
-                      variant={campaign.status === "completed" ? "default" : "secondary"}
-                      className="text-xs shrink-0"
-                    >
-                      {campaign.status === "completed" ? "Concluída" : campaign.status === "running" ? "Enviando" : "Agendada"}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    <span>Dest: <strong className="text-foreground">{campaign.recipients}</strong></span>
-                    <span>Enviadas: <strong className="text-foreground">{campaign.sent}</strong></span>
-                    {campaign.sent > 0 && (
-                      <span>Progresso: <strong className="text-foreground">
-                        {Math.round((campaign.sent / campaign.recipients) * 100)}%
-                      </strong></span>
-                    )}
-                  </div>
+      {/* Cards de navegação */}
+      <div className="p-4 space-y-3">
+        {CONFIG_SECTIONS.map((section) => (
+          <Card 
+            key={section.id}
+            className="overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all border-l-4"
+            style={{ borderLeftColor: section.iconColor.replace('text-', '').includes('500') ? `var(--${section.iconColor.replace('text-', '').replace('-500', '')})` : undefined }}
+            onClick={() => handleSectionClick(section.id)}
+          >
+            <CardContent className="p-0">
+              <div className="flex items-center gap-4 p-4">
+                {/* Ícone */}
+                <div className={cn(
+                  "w-14 h-14 rounded-xl flex items-center justify-center shrink-0",
+                  section.bgColor
+                )}>
+                  <section.icon className={cn("w-7 h-7", section.iconColor)} />
                 </div>
-                <Button variant="outline" size="sm" className="w-full sm:w-auto shrink-0">
-                  Detalhes
-                </Button>
+                
+                {/* Texto */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-base mb-0.5">{section.title}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {section.description}
+                  </p>
+                </div>
+                
+                {/* Seta */}
+                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -343,60 +228,235 @@ function CampanhasContent() {
   );
 }
 
-// Componente de Conteúdos
-function ConteudosContent() {
+// ============================================
+// Componente de Notificações
+// ============================================
+function NotificacoesContent({ 
+  showConfirmationMessages, 
+  onToggle 
+}: { 
+  showConfirmationMessages: boolean;
+  onToggle: (checked: boolean) => void;
+}) {
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h3 className="font-semibold text-base sm:text-lg">Seus Conteúdos</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Materiais de apoio e documentação
+    <div className="space-y-4">
+      {/* Card principal */}
+      <Card>
+        <CardContent className="p-0">
+          <div 
+            className="flex items-center justify-between gap-4 p-4 cursor-pointer"
+            onClick={() => onToggle(!showConfirmationMessages)}
+          >
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className={cn(
+                "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+                showConfirmationMessages ? "bg-green-500/10" : "bg-muted"
+              )}>
+                {showConfirmationMessages ? (
+                  <Check className="w-6 h-6 text-green-500" />
+                ) : (
+                  <Bell className="w-6 h-6 text-muted-foreground" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <h4 className="font-medium text-sm">Mensagens de confirmação</h4>
+                <p className="text-xs text-muted-foreground">
+                  "Bot ativado", "Mensagem enviada", etc.
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={showConfirmationMessages}
+              onCheckedChange={onToggle}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Info card */}
+      <Card className="bg-muted/50 border-dashed">
+        <CardContent className="p-4">
+          <p className="text-xs text-muted-foreground">
+            ℹ️ Mensagens de erro sempre serão exibidas, independente desta configuração.
           </p>
-        </div>
-        <Button size="sm" className="w-full sm:w-auto">
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Conteúdo
-        </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================
+// Componente de Campanhas
+// ============================================
+function CampanhasContent() {
+  const campaigns = [
+    { id: 1, name: "Promoção Black Friday", status: "scheduled", recipients: 1250, sent: 0 },
+    { id: 2, name: "Follow-up Abandonos", status: "running", recipients: 450, sent: 320 },
+    { id: 3, name: "Pesquisa Satisfação", status: "completed", recipients: 800, sent: 800 },
+  ];
+
+  const stats = [
+    { label: "Total", value: "3", subtitle: "Este mês", icon: Send, color: "text-blue-500", bg: "bg-blue-500/10" },
+    { label: "Alcançados", value: "1.120", subtitle: "+18%", icon: Users, color: "text-green-500", bg: "bg-green-500/10" },
+    { label: "Engajamento", value: "87%", subtitle: "+5%", icon: TrendingUp, color: "text-purple-500", bg: "bg-purple-500/10" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {/* Botão nova campanha */}
+      <Button className="w-full" size="lg">
+        <Plus className="w-5 h-5 mr-2" />
+        Nova Campanha
+      </Button>
+
+      {/* Stats em cards */}
+      <div className="grid grid-cols-3 gap-2">
+        {stats.map((stat) => (
+          <Card key={stat.label}>
+            <CardContent className="p-3 text-center">
+              <div className={cn("w-10 h-10 rounded-lg mx-auto mb-2 flex items-center justify-center", stat.bg)}>
+                <stat.icon className={cn("w-5 h-5", stat.color)} />
+              </div>
+              <div className="text-lg font-bold">{stat.value}</div>
+              <div className="text-xs text-muted-foreground">{stat.label}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Search */}
+      {/* Lista de campanhas */}
+      <div className="space-y-3">
+        <h3 className="font-semibold text-sm text-muted-foreground px-1">CAMPANHAS</h3>
+        
+        {campaigns.map((campaign) => {
+          const progress = campaign.recipients > 0 ? Math.round((campaign.sent / campaign.recipients) * 100) : 0;
+          const statusConfig = {
+            completed: { label: "Concluída", color: "bg-green-500" },
+            running: { label: "Enviando", color: "bg-blue-500" },
+            scheduled: { label: "Agendada", color: "bg-orange-500" },
+          }[campaign.status] || { label: campaign.status, color: "bg-gray-500" };
+
+          return (
+            <Card key={campaign.id} className="overflow-hidden">
+              <CardContent className="p-0">
+                {/* Progress bar no topo */}
+                {campaign.status === "running" && (
+                  <div className="h-1 bg-muted">
+                    <div 
+                      className="h-full bg-blue-500 transition-all" 
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                )}
+                
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <h4 className="font-medium text-sm flex-1">{campaign.name}</h4>
+                    <Badge 
+                      className={cn("text-xs text-white shrink-0", statusConfig.color)}
+                    >
+                      {statusConfig.label}
+                    </Badge>
+                  </div>
+                  
+                  {/* Stats da campanha */}
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="p-2 bg-muted/50 rounded-lg">
+                      <div className="text-sm font-semibold">{campaign.recipients}</div>
+                      <div className="text-xs text-muted-foreground">Destino</div>
+                    </div>
+                    <div className="p-2 bg-muted/50 rounded-lg">
+                      <div className="text-sm font-semibold">{campaign.sent}</div>
+                      <div className="text-xs text-muted-foreground">Enviadas</div>
+                    </div>
+                    <div className="p-2 bg-muted/50 rounded-lg">
+                      <div className="text-sm font-semibold">{progress}%</div>
+                      <div className="text-xs text-muted-foreground">Progresso</div>
+                    </div>
+                  </div>
+                  
+                  <Button variant="outline" className="w-full mt-3" size="sm">
+                    Ver Detalhes
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// Componente de Conteúdos
+// ============================================
+function ConteudosContent() {
+  const contents = [
+    { id: 1, titulo: "Política de Trocas", tipo: "faq", tags: ["Vendas", "Pós-venda"], url: null },
+    { id: 2, titulo: "Manual do Produto", tipo: "pdf", tags: ["Suporte", "Documentação"], url: "/docs/manual.pdf" },
+    { id: 3, titulo: "Script de Atendimento", tipo: "script", tags: ["Treinamento"], url: null },
+  ];
+
+  const getTypeConfig = (tipo: string) => {
+    switch (tipo) {
+      case "pdf": return { icon: File, label: "PDF", color: "text-red-500", bg: "bg-red-500/10" };
+      case "link": return { icon: Link2, label: "Link", color: "text-blue-500", bg: "bg-blue-500/10" };
+      case "script": return { icon: FileText, label: "Script", color: "text-purple-500", bg: "bg-purple-500/10" };
+      default: return { icon: FileText, label: "FAQ", color: "text-cyan-500", bg: "bg-cyan-500/10" };
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Botão novo conteúdo */}
+      <Button className="w-full" size="lg">
+        <Plus className="w-5 h-5 mr-2" />
+        Novo Conteúdo
+      </Button>
+
+      {/* Busca */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input placeholder="Buscar conteúdos..." className="pl-10" />
       </div>
 
-      {/* Content Grid */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {[
-          { id: 1, titulo: "Política de Trocas", tipo: "faq", tags: ["Vendas", "Pós-venda"], url: null },
-          { id: 2, titulo: "Manual do Produto", tipo: "pdf", tags: ["Suporte", "Documentação"], url: "/docs/manual.pdf" },
-          { id: 3, titulo: "Script de Atendimento", tipo: "script", tags: ["Treinamento"], url: null },
-        ].map((content) => {
-          const TypeIcon = content.tipo === "pdf" ? File : content.tipo === "link" ? Link2 : FileText;
-          const typeLabel = content.tipo === "pdf" ? "PDF" : content.tipo === "link" ? "Link" : content.tipo === "script" ? "Script" : "FAQ";
+      {/* Lista de conteúdos */}
+      <div className="space-y-3">
+        {contents.map((content) => {
+          const typeConfig = getTypeConfig(content.tipo);
+          const TypeIcon = typeConfig.icon;
+
           return (
             <Card key={content.id} className="overflow-hidden">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
-                    <TypeIcon className="w-4 h-4" />
+              <CardContent className="p-0">
+                <div className="flex items-start gap-3 p-4">
+                  {/* Ícone do tipo */}
+                  <div className={cn(
+                    "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
+                    typeConfig.bg
+                  )}>
+                    <TypeIcon className={cn("w-6 h-6", typeConfig.color)} />
                   </div>
+                  
+                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-medium text-sm truncate">{content.titulo}</h4>
                       <Badge variant="secondary" className="text-xs shrink-0">
-                        {typeLabel}
+                        {typeConfig.label}
                       </Badge>
                     </div>
+                    
                     {content.url ? (
                       <a href={content.url} className="text-xs text-primary hover:underline">
-                        Ver documento
+                        Ver documento →
                       </a>
                     ) : (
                       <span className="text-xs text-muted-foreground">Conteúdo interno</span>
                     )}
+                    
+                    {/* Tags */}
                     <div className="flex flex-wrap gap-1 mt-2">
                       {content.tags.map((tag) => (
                         <Badge key={tag} variant="outline" className="text-xs">
@@ -406,9 +466,13 @@ function ConteudosContent() {
                     </div>
                   </div>
                 </div>
-                <Button variant="outline" className="w-full mt-3" size="sm">
-                  Editar
-                </Button>
+                
+                {/* Botão editar */}
+                <div className="px-4 pb-4">
+                  <Button variant="outline" className="w-full" size="sm">
+                    Editar Conteúdo
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );
