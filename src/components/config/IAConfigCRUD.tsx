@@ -261,58 +261,59 @@ export default function IAConfigCRUD({ estabelecimentoId }: IAConfigCRUDProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5" />
-              Configurações de IA
-            </CardTitle>
-            <CardDescription>
-              Configure qual provedor de IA usar em cada contexto do sistema
-            </CardDescription>
+    <div className="space-y-4">
+      {/* Header com botão */}
+      <Card className="p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+              <Brain className="h-5 w-5 text-purple-500" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm">Configurações de IA</h3>
+              <p className="text-xs text-muted-foreground">Configure provedores por contexto</p>
+            </div>
           </div>
           <Dialog open={dialogOpen} onOpenChange={(open) => {
             setDialogOpen(open);
             if (!open) resetForm();
           }}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Configuração
+              <Button size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Nova
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
-                  {editingConfig ? "Editar" : "Nova"} Configuração de IA
+                  {editingConfig ? "Editar" : "Nova"} Configuração
                 </DialogTitle>
               </DialogHeader>
 
               <div className="space-y-4">
                 <Alert>
                   <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    Por padrão, o sistema usa Lovable AI (sem necessidade de chave API). Configure apenas se desejar usar outro provedor.
+                  <AlertDescription className="text-xs">
+                    Por padrão, usa Lovable AI sem necessidade de chave API.
                   </AlertDescription>
                 </Alert>
 
                 <div className="space-y-2">
-                  <Label>Contexto de Uso *</Label>
+                  <Label className="text-sm">Contexto *</Label>
                   <Select
                     value={formData.contexto}
                     onValueChange={(value) => setFormData({ ...formData, contexto: value })}
                     disabled={!!editingConfig}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione o contexto" />
+                      <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
                       {CONTEXTOS.map(ctx => (
                         <SelectItem key={ctx.value} value={ctx.value}>
                           <div>
-                            <div className="font-medium">{ctx.label}</div>
+                            <div className="font-medium text-sm">{ctx.label}</div>
                             <div className="text-xs text-muted-foreground">{ctx.description}</div>
                           </div>
                         </SelectItem>
@@ -321,70 +322,69 @@ export default function IAConfigCRUD({ estabelecimentoId }: IAConfigCRUDProps) {
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Provedor de IA *</Label>
-                  <Select
-                    value={formData.provider}
-                    onValueChange={(value) => {
-                      const models = MODELS_BY_PROVIDER[value];
-                      setFormData({ 
-                        ...formData, 
-                        provider: value,
-                        model: models?.[0]?.value || "",
-                        api_key: value === "lovable" ? "" : formData.api_key
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o provedor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PROVIDERS.map(provider => (
-                        <SelectItem key={provider.value} value={provider.value}>
-                          {provider.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-sm">Provedor *</Label>
+                    <Select
+                      value={formData.provider}
+                      onValueChange={(value) => {
+                        const models = MODELS_BY_PROVIDER[value];
+                        setFormData({ 
+                          ...formData, 
+                          provider: value,
+                          model: models?.[0]?.value || "",
+                          api_key: value === "lovable" ? "" : formData.api_key
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROVIDERS.map(provider => (
+                          <SelectItem key={provider.value} value={provider.value}>
+                            {provider.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Modelo *</Label>
-                  <Select
-                    value={formData.model}
-                    onValueChange={(value) => setFormData({ ...formData, model: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o modelo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(MODELS_BY_PROVIDER[formData.provider] || []).map(model => (
-                        <SelectItem key={model.value} value={model.value}>
-                          {model.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <Label className="text-sm">Modelo *</Label>
+                    <Select
+                      value={formData.model}
+                      onValueChange={(value) => setFormData({ ...formData, model: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(MODELS_BY_PROVIDER[formData.provider] || []).map(model => (
+                          <SelectItem key={model.value} value={model.value}>
+                            {model.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {selectedProvider?.requiresKey && (
                   <div className="space-y-2">
-                    <Label>API Key *</Label>
+                    <Label className="text-sm">API Key *</Label>
                     <Textarea
                       value={formData.api_key}
                       onChange={(e) => setFormData({ ...formData, api_key: e.target.value })}
                       placeholder="Insira sua API key"
-                      className="font-mono text-sm"
+                      className="font-mono text-xs h-16"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      A chave será armazenada de forma segura no banco de dados
-                    </p>
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Temperature</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-sm">Temperature</Label>
                     <Input
                       type="number"
                       step="0.1"
@@ -392,14 +392,13 @@ export default function IAConfigCRUD({ estabelecimentoId }: IAConfigCRUDProps) {
                       max="2"
                       value={formData.temperature}
                       onChange={(e) => setFormData({ ...formData, temperature: e.target.value })}
+                      className="h-9"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      0 = mais preciso, 2 = mais criativo
-                    </p>
+                    <p className="text-[10px] text-muted-foreground">0=preciso, 2=criativo</p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Max Tokens</Label>
+                  <div className="space-y-1">
+                    <Label className="text-sm">Max Tokens</Label>
                     <Input
                       type="number"
                       step="100"
@@ -407,15 +406,14 @@ export default function IAConfigCRUD({ estabelecimentoId }: IAConfigCRUDProps) {
                       max="10000"
                       value={formData.max_tokens}
                       onChange={(e) => setFormData({ ...formData, max_tokens: e.target.value })}
+                      className="h-9"
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Limite de resposta
-                    </p>
+                    <p className="text-[10px] text-muted-foreground">Limite de resposta</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="ativo">Configuração Ativa</Label>
+                <div className="flex items-center justify-between py-2 border-t">
+                  <Label htmlFor="ativo" className="text-sm">Ativa</Label>
                   <Switch
                     id="ativo"
                     checked={formData.ativo}
@@ -424,78 +422,72 @@ export default function IAConfigCRUD({ estabelecimentoId }: IAConfigCRUDProps) {
                 </div>
               </div>
 
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+              <DialogFooter className="gap-2">
+                <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSubmit}>
+                <Button size="sm" onClick={handleSubmit}>
                   {editingConfig ? "Atualizar" : "Criar"}
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
-      </CardHeader>
+      </Card>
 
-      <CardContent>
-        {configs.length === 0 ? (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Nenhuma configuração personalizada. O sistema está usando Lovable AI como padrão em todos os contextos.
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Contexto</TableHead>
-                <TableHead>Provedor</TableHead>
-                <TableHead>Modelo</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {configs.map((config) => (
-                <TableRow key={config.id}>
-                  <TableCell className="font-medium">
-                    {getContextoLabel(config.contexto)}
-                  </TableCell>
-                  <TableCell>
-                    {PROVIDERS.find(p => p.value === config.provider)?.label}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {config.model || "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={config.ativo}
-                      onCheckedChange={() => toggleAtivo(config)}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(config)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(config.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+      {/* Lista de Configurações */}
+      {configs.length === 0 ? (
+        <Card className="p-6">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium">Nenhuma configuração personalizada</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                O sistema está usando Lovable AI como padrão em todos os contextos.
+              </p>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {configs.map((config) => (
+            <Card key={config.id} className="p-3 hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-sm">{getContextoLabel(config.contexto)}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded ${
+                      config.ativo 
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {config.ativo ? 'Ativo' : 'Inativo'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    <span>{PROVIDERS.find(p => p.value === config.provider)?.label}</span>
+                    {config.model && <span className="ml-2">• {config.model}</span>}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-1 shrink-0">
+                  <Switch
+                    checked={config.ativo}
+                    onCheckedChange={() => toggleAtivo(config)}
+                    className="scale-75"
+                  />
+                  <Button variant="ghost" size="icon" onClick={() => handleEdit(config)} className="h-8 w-8">
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(config.id)} className="h-8 w-8">
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
