@@ -98,22 +98,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         return;
       }
 
-      // Verifica se SMTP/IMAP está configurado
-      const isImapConfigured = !!(
-        usuario?.smtp && 
-        usuario?.porta_smtp && 
-        usuario?.imap && 
-        usuario?.porta_imap && 
-        usuario?.senha_email
-      );
-
-      if (isImapConfigured) {
-        setHasEmailConfig(true);
-        setCheckingConfig(false);
-        return;
-      }
-
-      // Se não tiver IMAP, verifica se tem OAuth configurado (com client_id configurado)
+      // Primeiro verificar se tem OAuth configurado (prioridade)
       if (usuario?.estabelecimento_id) {
         const { data: oauthConfig } = await supabase
           .from('email_oauth_config')
@@ -122,7 +107,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
           .eq('provider', 'google')
           .maybeSingle();
 
-        // Se tem client_id configurado, permite usar OAuth
+        // Se tem client_id configurado, usar OAuth
         if (oauthConfig?.client_id) {
           setHasEmailConfig(true);
           setUseOAuth(true);
@@ -143,6 +128,21 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
           setCheckingConfig(false);
           return;
         }
+      }
+
+      // Se não tiver OAuth, verificar IMAP/SMTP
+      const isImapConfigured = !!(
+        usuario?.smtp && 
+        usuario?.porta_smtp && 
+        usuario?.imap && 
+        usuario?.porta_imap && 
+        usuario?.senha_email
+      );
+
+      if (isImapConfigured) {
+        setHasEmailConfig(true);
+        setCheckingConfig(false);
+        return;
       }
 
       setHasEmailConfig(false);
