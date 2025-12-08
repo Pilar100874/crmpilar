@@ -114,13 +114,14 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
 
   // Scroll para o final quando mensagens mudam ou quando abre uma conversa
   useEffect(() => {
-    if (scrollRef.current && mensagens.length > 0) {
+    if (mensagens.length > 0 && conversaAtual) {
       // Usar setTimeout para garantir que o DOM foi atualizado
       setTimeout(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        const scrollContainer = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
         }
-      }, 100);
+      }, 150);
     }
   }, [mensagens, conversaAtual]);
 
