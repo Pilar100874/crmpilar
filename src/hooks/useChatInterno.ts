@@ -347,9 +347,48 @@ export function useChatInterno() {
     };
   }, [conversaAtual]);
 
+  // Carregar contador inicial de mensagens não lidas
+  const carregarNaoLidas = useCallback(async () => {
+    if (!usuarioAtualId) return;
+
+    try {
+      // Buscar todas as participações do usuário
+      const { data: participacoes } = await supabase
+        .from('chat_interno_participantes')
+        .select('conversa_id, ultima_leitura')
+        .eq('usuario_id', usuarioAtualId);
+
+      if (!participacoes || participacoes.length === 0) {
+        setTotalNaoLidas(0);
+        return;
+      }
+
+      let total = 0;
+      for (const p of participacoes) {
+        const query = supabase
+          .from('chat_interno_mensagens')
+          .select('id', { count: 'exact', head: true })
+          .eq('conversa_id', p.conversa_id)
+          .neq('remetente_id', usuarioAtualId);
+
+        if (p.ultima_leitura) {
+          query.gt('created_at', p.ultima_leitura);
+        }
+
+        const { count } = await query;
+        total += count || 0;
+      }
+
+      setTotalNaoLidas(total);
+    } catch (error) {
+      console.error('Erro ao carregar mensagens não lidas:', error);
+    }
+  }, [usuarioAtualId]);
+
   useEffect(() => {
     carregarConversas();
-  }, [carregarConversas]);
+    carregarNaoLidas();
+  }, [carregarConversas, carregarNaoLidas]);
 
   // Subscription global para detectar novas mensagens em qualquer conversa
   useEffect(() => {
@@ -391,14 +430,16 @@ export function useChatInterno() {
     };
   }, [usuarioAtualId]);
 
-  // Reset contador quando abrir uma conversa
+  // Recalcular contador quando abrir uma conversa (após marcar como lida)
   const handleSetConversaAtual = useCallback((conversa: Conversa | null) => {
     setConversaAtual(conversa);
     if (conversa) {
-      // Reseta contador quando abre uma conversa
-      setTotalNaoLidas(0);
+      // Aguardar um pouco para a marcação de leitura ser processada, depois recalcular
+      setTimeout(() => {
+        carregarNaoLidas();
+      }, 500);
     }
-  }, []);
+  }, [carregarNaoLidas]);
 
   return {
     conversas,
