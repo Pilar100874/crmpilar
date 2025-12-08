@@ -164,12 +164,30 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
   const fetchNewEmails = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('fetch-emails');
+      // Buscar emails via IMAP do servidor pessoal do usuário
+      const { data, error } = await supabase.functions.invoke('fetch-emails-imap', {
+        body: { folder: 'INBOX', limit: 50 }
+      });
       
       if (error) throw error;
       
-      toast.success('Emails atualizados com sucesso!');
-      await loadEmails();
+      if (data?.emails) {
+        // Converter emails do IMAP para o formato local
+        const imapEmails = data.emails.map((email: any, index: number) => ({
+          id: `imap-${Date.now()}-${index}`,
+          from_email: email.from_email,
+          to_email: email.to_email,
+          subject: email.subject,
+          body: email.body,
+          date: email.date,
+          read: email.read,
+          starred: email.starred,
+          folder: 'inbox' as const,
+        }));
+        
+        setEmails(imapEmails);
+        toast.success(`${imapEmails.length} emails carregados do servidor`);
+      }
     } catch (error: any) {
       console.error('Erro ao buscar emails:', error);
       toast.error(error.message || 'Erro ao buscar emails');
@@ -200,7 +218,8 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('send-email', {
+      // Enviar via SMTP do servidor pessoal do usuário
+      const { data, error } = await supabase.functions.invoke('send-email-smtp', {
         body: {
           to: newEmailTo,
           subject: newEmailSubject,
@@ -210,7 +229,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
       if (error) throw error;
 
-      toast.success("Email enviado com sucesso!");
+      toast.success("Email enviado do seu email pessoal!");
       setComposing(false);
       setNewEmailTo("");
       setNewEmailSubject("");
