@@ -216,17 +216,19 @@ All colors MUST be HSL.
 
   /* Animação de piscar para novas mensagens */
   .chat-tab-pulse {
-    animation: chat-pulse 1s ease-in-out infinite;
+    animation: chat-pulse 0.8s ease-in-out infinite;
   }
 
   @keyframes chat-pulse {
     0%, 100% {
       background: hsl(25 95% 53%);
       box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+      transform: scale(1);
     }
     50% {
-      background: hsl(25 95% 65%);
-      box-shadow: -2px 0 15px hsl(25 95% 53% / 0.5);
+      background: hsl(45 100% 55%);
+      box-shadow: -2px 0 20px hsl(25 95% 53% / 0.7), 0 0 10px hsl(45 100% 55% / 0.5);
+      transform: scale(1.1);
     }
   }
 
