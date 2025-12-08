@@ -527,5 +527,6 @@ export function useChatInterno() {
     carregarMensagens,
     criarConversa,
     enviarMensagem,
+    marcarComoLida,
   };
 }

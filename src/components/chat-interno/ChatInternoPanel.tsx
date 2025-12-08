@@ -47,6 +47,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     enviarMensagem,
     criarConversa,
     carregarConversas,
+    marcarComoLida,
   } = useChatInternoContext();
 
   const [mensagemInput, setMensagemInput] = useState('');
@@ -62,13 +63,18 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Sempre abrir na lista de conversas/usuários ao abrir o painel (apenas quando muda de fechado para aberto)
+  // Também marca como lida ao fechar se estava numa conversa
   useEffect(() => {
     if (isOpen && !wasOpen) {
       setConversaAtual(null);
       setShowNovaConversa(false);
     }
+    // Ao fechar o painel, se estava numa conversa, marca como lida
+    if (!isOpen && wasOpen && conversaAtual) {
+      marcarComoLida(conversaAtual.id);
+    }
     setWasOpen(isOpen);
-  }, [isOpen]);
+  }, [isOpen, conversaAtual, marcarComoLida]);
 
   const isUserOnline = (userId: string) => {
     return onlineUsers.some(u => u.id === userId);
