@@ -127,9 +127,13 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
   const loadEmails = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { data, error } = await supabase
         .from('emails')
         .select('*')
+        .eq('user_id', user.id)
         .eq('folder', selectedFolder)
         .order('date', { ascending: false });
 
