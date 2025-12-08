@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { ChatInternoPanel } from './ChatInternoPanel';
 import { useChatInterno } from '@/hooks/useChatInterno';
@@ -8,24 +8,40 @@ export function ChatAvisosFloatingButton() {
   const [chatOpen, setChatOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(false);
   const { conversas, mensagens } = useChatInterno();
+  const lastMessageCountRef = useRef(0);
+  const lastReadTimestampRef = useRef<string | null>(null);
 
   // Detecta novas mensagens quando o chat está fechado
   useEffect(() => {
-    if (!chatOpen && mensagens.length > 0) {
-      // Verifica se há mensagens não lidas (simplificado)
+    if (mensagens.length > 0) {
       const ultimaMensagem = mensagens[mensagens.length - 1];
-      if (ultimaMensagem) {
-        setHasUnread(true);
+      
+      // Se o chat está fechado e temos uma nova mensagem
+      if (!chatOpen) {
+        // Verifica se é uma mensagem nova (comparando timestamp ou contagem)
+        if (mensagens.length > lastMessageCountRef.current) {
+          // Nova mensagem recebida enquanto chat fechado
+          setHasUnread(true);
+        } else if (lastReadTimestampRef.current && ultimaMensagem.created_at > lastReadTimestampRef.current) {
+          // Mensagem mais recente que a última leitura
+          setHasUnread(true);
+        }
       }
+      
+      lastMessageCountRef.current = mensagens.length;
     }
   }, [mensagens, chatOpen]);
 
-  // Limpa notificação ao abrir o chat
+  // Limpa notificação ao abrir o chat e marca timestamp de leitura
   useEffect(() => {
     if (chatOpen) {
       setHasUnread(false);
+      if (mensagens.length > 0) {
+        const ultimaMensagem = mensagens[mensagens.length - 1];
+        lastReadTimestampRef.current = ultimaMensagem.created_at;
+      }
     }
-  }, [chatOpen]);
+  }, [chatOpen, mensagens]);
 
   const handleChatClick = () => {
     setChatOpen(!chatOpen);
