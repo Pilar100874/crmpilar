@@ -85,24 +85,49 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
       // Verificar configuração de email do usuário (SMTP e IMAP)
       const { data: usuario, error } = await supabase
         .from('usuarios')
-        .select('smtp, porta_smtp, imap, porta_imap, senha_email')
+        .select('smtp, porta_smtp, imap, porta_imap, senha_email, estabelecimento_id')
         .ilike('email', user.email || '')
-        .maybeSingle() as { data: { smtp: string | null; porta_smtp: number | null; imap: string | null; porta_imap: number | null; senha_email: string | null } | null; error: any };
+        .maybeSingle() as { data: { smtp: string | null; porta_smtp: number | null; imap: string | null; porta_imap: number | null; senha_email: string | null; estabelecimento_id: string | null } | null; error: any };
 
       if (error) {
         console.error('Erro ao verificar configuração:', error);
         setHasEmailConfig(false);
-      } else {
-        // Verifica se todos os campos necessários estão preenchidos
-        const isEmailConfigured = !!(
-          usuario?.smtp && 
-          usuario?.porta_smtp && 
-          usuario?.imap && 
-          usuario?.porta_imap && 
-          usuario?.senha_email
-        );
-        setHasEmailConfig(isEmailConfigured);
+        setCheckingConfig(false);
+        return;
       }
+
+      // Verifica se SMTP/IMAP está configurado
+      const isImapConfigured = !!(
+        usuario?.smtp && 
+        usuario?.porta_smtp && 
+        usuario?.imap && 
+        usuario?.porta_imap && 
+        usuario?.senha_email
+      );
+
+      if (isImapConfigured) {
+        setHasEmailConfig(true);
+        setCheckingConfig(false);
+        return;
+      }
+
+      // Se não tiver IMAP, verifica se tem OAuth configurado
+      if (usuario?.estabelecimento_id) {
+        const { data: oauthConfig } = await supabase
+          .from('email_oauth_config')
+          .select('enabled, provider')
+          .eq('estabelecimento_id', usuario.estabelecimento_id)
+          .eq('enabled', true)
+          .maybeSingle();
+
+        if (oauthConfig?.enabled) {
+          setHasEmailConfig(true);
+          setCheckingConfig(false);
+          return;
+        }
+      }
+
+      setHasEmailConfig(false);
     } catch (error) {
       console.error('Erro ao verificar configuração:', error);
       setHasEmailConfig(false);
