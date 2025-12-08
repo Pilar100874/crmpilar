@@ -233,7 +233,7 @@ export function EmailOAuthConfig({ estabelecimentoId: propEstabelecimentoId }: E
                         rel="noopener noreferrer"
                         className="text-primary hover:underline flex items-center gap-1"
                       >
-                        console.cloud.google.com <ExternalLink className="h-3 w-3" />
+                        Abrir Google Cloud Console <ExternalLink className="h-3 w-3" />
                       </a>
                     </div>
                   </div>
@@ -243,6 +243,14 @@ export function EmailOAuthConfig({ estabelecimentoId: propEstabelecimentoId }: E
                     <div>
                       <p className="font-medium">Crie ou selecione um projeto</p>
                       <p className="text-muted-foreground">No topo da página, clique no nome do projeto atual → "Novo Projeto" → Dê um nome e clique "Criar"</p>
+                      <a 
+                        href="https://console.cloud.google.com/projectcreate" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline flex items-center gap-1 mt-1"
+                      >
+                        Criar novo projeto <ExternalLink className="h-3 w-3" />
+                      </a>
                     </div>
                   </div>
 
@@ -250,7 +258,15 @@ export function EmailOAuthConfig({ estabelecimentoId: propEstabelecimentoId }: E
                     <span className="flex-shrink-0 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">3</span>
                     <div>
                       <p className="font-medium">Ative a Gmail API</p>
-                      <p className="text-muted-foreground">No menu lateral esquerdo: "APIs e serviços" → "Biblioteca" → Pesquise "Gmail API" → Clique nela → "Ativar"</p>
+                      <p className="text-muted-foreground">Pesquise "Gmail API" e clique em "Ativar"</p>
+                      <a 
+                        href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline flex items-center gap-1 mt-1"
+                      >
+                        Abrir Gmail API <ExternalLink className="h-3 w-3" />
+                      </a>
                     </div>
                   </div>
 
@@ -258,12 +274,19 @@ export function EmailOAuthConfig({ estabelecimentoId: propEstabelecimentoId }: E
                     <span className="flex-shrink-0 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">4</span>
                     <div>
                       <p className="font-medium">Configure a Tela de Consentimento</p>
-                      <p className="text-muted-foreground">Menu lateral: "APIs e serviços" → "Tela de permissão OAuth"</p>
                       <ul className="list-disc list-inside text-muted-foreground ml-2 mt-1">
                         <li>Selecione "Externo" e clique "Criar"</li>
                         <li>Preencha: Nome do app, Email de suporte, Email do desenvolvedor</li>
                         <li>Clique "Salvar e continuar"</li>
                       </ul>
+                      <a 
+                        href="https://console.cloud.google.com/apis/credentials/consent" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline flex items-center gap-1 mt-1"
+                      >
+                        Configurar Tela de Consentimento <ExternalLink className="h-3 w-3" />
+                      </a>
                     </div>
                   </div>
 
@@ -271,8 +294,7 @@ export function EmailOAuthConfig({ estabelecimentoId: propEstabelecimentoId }: E
                     <span className="flex-shrink-0 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">5</span>
                     <div>
                       <p className="font-medium">Adicione os escopos (Permissões)</p>
-                      <p className="text-muted-foreground">Na etapa "Escopos", clique "Adicionar ou remover escopos"</p>
-                      <p className="text-muted-foreground mt-1">Pesquise e marque:</p>
+                      <p className="text-muted-foreground">Na etapa "Escopos", clique "Adicionar ou remover escopos" e marque:</p>
                       <ul className="list-disc list-inside text-muted-foreground ml-2">
                         <li><code className="text-xs bg-background px-1 rounded">.../auth/gmail.readonly</code></li>
                         <li><code className="text-xs bg-background px-1 rounded">.../auth/gmail.send</code></li>
@@ -295,11 +317,19 @@ export function EmailOAuthConfig({ estabelecimentoId: propEstabelecimentoId }: E
                     <span className="flex-shrink-0 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">7</span>
                     <div>
                       <p className="font-medium">Crie as credenciais OAuth</p>
-                      <p className="text-muted-foreground">Menu lateral: "APIs e serviços" → "Credenciais" → Botão "+ Criar credenciais" → "ID do cliente OAuth"</p>
+                      <p className="text-muted-foreground">Clique em "+ Criar credenciais" → "ID do cliente OAuth"</p>
                       <ul className="list-disc list-inside text-muted-foreground ml-2 mt-1">
                         <li>Tipo de aplicativo: <strong>Aplicativo da Web</strong></li>
                         <li>Nome: (qualquer nome)</li>
                       </ul>
+                      <a 
+                        href="https://console.cloud.google.com/apis/credentials/oauthclient" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline flex items-center gap-1 mt-1"
+                      >
+                        Criar credenciais OAuth <ExternalLink className="h-3 w-3" />
+                      </a>
                     </div>
                   </div>
 
@@ -308,7 +338,7 @@ export function EmailOAuthConfig({ estabelecimentoId: propEstabelecimentoId }: E
                     <div>
                       <p className="font-medium">Configure os URIs de redirecionamento</p>
                       <p className="text-muted-foreground">Em "URIs de redirecionamento autorizados", clique "+ Adicionar URI" e cole:</p>
-                      <code className="block bg-background px-2 py-1 rounded mt-1 text-xs break-all">
+                      <code className="block bg-background px-2 py-1 rounded mt-1 text-xs break-all select-all">
                         https://ioxugupvxlcdweldocmq.supabase.co/functions/v1/gmail-auth-callback
                       </code>
                       <p className="text-muted-foreground mt-1">Clique "Criar"</p>
@@ -320,6 +350,14 @@ export function EmailOAuthConfig({ estabelecimentoId: propEstabelecimentoId }: E
                     <div>
                       <p className="font-medium">Copie as credenciais</p>
                       <p className="text-muted-foreground">Na janela que aparecer, copie o <strong>"ID do cliente"</strong> e a <strong>"Chave secreta do cliente"</strong> e cole nos campos acima</p>
+                      <a 
+                        href="https://console.cloud.google.com/apis/credentials" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline flex items-center gap-1 mt-1"
+                      >
+                        Ver todas as credenciais <ExternalLink className="h-3 w-3" />
+                      </a>
                     </div>
                   </div>
                 </div>
