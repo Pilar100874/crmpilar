@@ -2172,6 +2172,47 @@ export type Database = {
           },
         ]
       }
+      email_oauth_config: {
+        Row: {
+          client_id: string | null
+          client_secret: string | null
+          created_at: string
+          enabled: boolean | null
+          estabelecimento_id: string
+          id: string
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          client_secret?: string | null
+          created_at?: string
+          enabled?: boolean | null
+          estabelecimento_id: string
+          id?: string
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          client_secret?: string | null
+          created_at?: string
+          enabled?: boolean | null
+          estabelecimento_id?: string
+          id?: string
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_oauth_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emails: {
         Row: {
           body: string

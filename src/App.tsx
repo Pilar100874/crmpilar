@@ -91,6 +91,7 @@ import RoboPrecos from "./pages/RoboPrecos";
 import AtendimentoConfig from "./pages/AtendimentoConfig";
 import LandingPage from "./pages/LandingPage";
 import Avisos from "./pages/Avisos";
+import EmailConfig from "./pages/EmailConfig";
 
 const queryClient = new QueryClient();
 
@@ -115,6 +116,7 @@ const App = () => (
             <Route path="/atendimento" element={<Atendimento />} />
             <Route path="/email" element={<EmailHub />} />
             <Route path="/email/:folder" element={<Email />} />
+            <Route path="/email-config" element={<EmailConfig />} />
             <Route path="/listas" element={<ListasHub />} />
             <Route path="/bot-builder" element={<BotBuilder />} />
             <Route path="/bot-test" element={<BotTest />} />

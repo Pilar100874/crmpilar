@@ -293,13 +293,21 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
                 Você só precisa informar a senha do email.
               </p>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col sm:flex-row gap-3 pt-4">
                 <Button 
                   onClick={() => navigate('/config')}
                   className="flex-1"
                 >
                   <Settings className="mr-2 h-4 w-4" />
-                  Ir para Configurações
+                  Configurar SMTP/IMAP
+                </Button>
+                <Button 
+                  onClick={() => navigate('/email-config')}
+                  variant="secondary"
+                  className="flex-1"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Configurar Gmail/Outlook API
                 </Button>
                 <Button 
                   variant="outline"
