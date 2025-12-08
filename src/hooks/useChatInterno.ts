@@ -242,7 +242,7 @@ export function useChatInterno() {
                   .single();
                 
                 if (conversaExistente) {
-                  toast.info('Conversa já existe');
+                  // Retorna a conversa existente sem criar nova
                   return {
                     ...conversaExistente,
                     tipo: conversaExistente.tipo as 'direto' | 'grupo'
