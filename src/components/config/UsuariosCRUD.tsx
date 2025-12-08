@@ -964,28 +964,135 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                       <HelpCircle className="h-4 w-4" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+                  <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Senha de App</DialogTitle>
-                      <DialogDescription>Como configurar para Gmail/Hotmail</DialogDescription>
+                      <DialogTitle className="flex items-center gap-2">
+                        <span>📧</span> Como Configurar Email
+                      </DialogTitle>
+                      <DialogDescription>
+                        Passo a passo para Gmail, Hotmail e Outlook
+                      </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 text-sm">
-                      <div>
-                        <h4 className="font-semibold mb-2">Gmail:</h4>
-                        <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                          <li>Acesse myaccount.google.com</li>
-                          <li>Ative verificação em 2 etapas</li>
-                          <li>Vá em "Senhas de app"</li>
-                          <li>Gere uma senha e use aqui</li>
-                        </ol>
+                    <div className="space-y-6 text-sm">
+                      {/* Gmail Section */}
+                      <div className="border rounded-lg p-4 bg-muted/30">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white font-bold text-xs">G</div>
+                          <h4 className="font-semibold text-base">Gmail</h4>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <p className="text-muted-foreground">
+                            O Gmail exige uma <strong>"Senha de App"</strong> (16 caracteres) em vez da senha normal.
+                          </p>
+                          
+                          <div className="bg-background border rounded-md p-3">
+                            <p className="font-medium mb-2">Passo a Passo:</p>
+                            <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                              <li>
+                                <strong>Ative a Verificação em 2 Etapas:</strong><br/>
+                                <a 
+                                  href="https://myaccount.google.com/security" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline inline-flex items-center gap-1"
+                                >
+                                  Acessar Segurança da Conta Google <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </li>
+                              <li>
+                                <strong>Gere uma Senha de App:</strong><br/>
+                                <a 
+                                  href="https://myaccount.google.com/apppasswords" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline inline-flex items-center gap-1"
+                                >
+                                  Acessar Senhas de App <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </li>
+                              <li>Selecione "Email" e "Outro (nome personalizado)"</li>
+                              <li>Clique em "Gerar" e copie a senha de 16 caracteres</li>
+                              <li>Cole essa senha no campo "Senha do E-mail" acima</li>
+                            </ol>
+                          </div>
+
+                          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-md p-3">
+                            <p className="text-yellow-700 dark:text-yellow-400 text-xs">
+                              ⚠️ <strong>Importante:</strong> Se não aparecer "Senhas de app", verifique se a Verificação em 2 Etapas está ativada.
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold mb-2">Hotmail/Outlook:</h4>
-                        <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                          <li>Acesse account.live.com</li>
-                          <li>Vá em Segurança → Senha de app</li>
-                          <li>Gere uma senha e use aqui</li>
-                        </ol>
+
+                      {/* Hotmail/Outlook Section */}
+                      <div className="border rounded-lg p-4 bg-muted/30">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">M</div>
+                          <h4 className="font-semibold text-base">Hotmail / Outlook / Live</h4>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <p className="text-muted-foreground">
+                            Contas Microsoft também exigem <strong>"Senha de App"</strong> quando a verificação em duas etapas está ativa.
+                          </p>
+                          
+                          <div className="bg-background border rounded-md p-3">
+                            <p className="font-medium mb-2">Passo a Passo:</p>
+                            <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                              <li>
+                                <strong>Ative a Verificação em 2 Etapas:</strong><br/>
+                                <a 
+                                  href="https://account.live.com/proofs/manage/additional" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline inline-flex items-center gap-1"
+                                >
+                                  Acessar Segurança Microsoft <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </li>
+                              <li>
+                                <strong>Gere uma Senha de App:</strong><br/>
+                                <a 
+                                  href="https://account.live.com/proofs/AppPassword" 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline inline-flex items-center gap-1"
+                                >
+                                  Criar Senha de App <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </li>
+                              <li>Clique em "Criar nova senha de aplicativo"</li>
+                              <li>Copie a senha gerada e cole no campo "Senha do E-mail" acima</li>
+                            </ol>
+                          </div>
+
+                          <div className="bg-blue-500/10 border border-blue-500/30 rounded-md p-3">
+                            <p className="text-blue-700 dark:text-blue-400 text-xs">
+                              💡 <strong>Dica:</strong> Se usar autenticador Microsoft (sem senha), vá em "Opções de segurança avançadas" para habilitar senhas de app.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quick Reference */}
+                      <div className="border rounded-lg p-4">
+                        <h4 className="font-semibold mb-3">📋 Configurações Automáticas</h4>
+                        <p className="text-muted-foreground text-xs mb-3">
+                          Ao digitar seu email, os servidores são configurados automaticamente:
+                        </p>
+                        <div className="grid grid-cols-2 gap-4 text-xs">
+                          <div>
+                            <p className="font-medium">Gmail:</p>
+                            <p className="text-muted-foreground">SMTP: smtp.gmail.com:587</p>
+                            <p className="text-muted-foreground">IMAP: imap.gmail.com:993</p>
+                          </div>
+                          <div>
+                            <p className="font-medium">Hotmail/Outlook:</p>
+                            <p className="text-muted-foreground">SMTP: smtp-mail.outlook.com:587</p>
+                            <p className="text-muted-foreground">IMAP: outlook.office365.com:993</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </DialogContent>
