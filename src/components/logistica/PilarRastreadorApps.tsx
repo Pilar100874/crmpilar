@@ -23,10 +23,12 @@ const PilarRastreadorApps: React.FC = () => {
   // URL base do app PWA
   const APP_URL = `${window.location.origin}/pilar-rastreador`;
   
+  const NATIVE_APP_URL = `${window.location.origin}/pilar-rastreador-nativo`;
+  
   const apps = [
     {
       id: 'pwa',
-      name: 'Pilar Rastreador',
+      name: 'Pilar Rastreador PWA',
       description: 'App PWA instalável para Android e iOS. Rastreia localização GPS e envia dados para o sistema de logística.',
       icon: Navigation,
       platforms: ['Android', 'iOS'],
@@ -38,6 +40,22 @@ const PilarRastreadorApps: React.FC = () => {
         'Instalável na tela inicial',
         'Baixo consumo de bateria',
         'Intervalo de envio configurável'
+      ]
+    },
+    {
+      id: 'nativo',
+      name: 'Pilar Rastreador Nativo',
+      description: 'App nativo para Android e iOS com GPS nativo do dispositivo. Melhor desempenho em segundo plano.',
+      icon: Smartphone,
+      platforms: ['Android', 'iOS'],
+      type: 'Nativo',
+      url: NATIVE_APP_URL,
+      features: [
+        'GPS nativo do dispositivo',
+        'Rastreamento em segundo plano confiável',
+        'Melhor precisão e performance',
+        'Indicador de bateria',
+        'Publicável nas lojas de apps'
       ]
     },
     {
@@ -128,8 +146,8 @@ const PilarRastreadorApps: React.FC = () => {
                   </ul>
                 </div>
 
-                {/* QR Code for PWA */}
-                {app.id === 'pwa' && (
+                {/* QR Code for PWA and Nativo */}
+                {(app.id === 'pwa' || app.id === 'nativo') && (
                   <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
                     <div className="bg-white p-2 rounded-lg">
                       <QRCodeSVG value={app.url} size={80} level="M" />
@@ -137,7 +155,10 @@ const PilarRastreadorApps: React.FC = () => {
                     <div className="flex-1">
                       <p className="text-sm font-medium">Escaneie para abrir</p>
                       <p className="text-xs text-muted-foreground">
-                        Abra no celular e instale na tela inicial
+                        {app.id === 'nativo' 
+                          ? 'Use para desenvolvimento ou compile como app nativo'
+                          : 'Abra no celular e instale na tela inicial'
+                        }
                       </p>
                     </div>
                   </div>
@@ -145,7 +166,7 @@ const PilarRastreadorApps: React.FC = () => {
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2">
-                  {app.id === 'pwa' ? (
+                  {(app.id === 'pwa' || app.id === 'nativo') ? (
                     <>
                       <Button 
                         className="flex-1"

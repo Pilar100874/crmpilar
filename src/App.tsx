@@ -75,6 +75,7 @@ import LogisticaRotas from "./pages/LogisticaRotas";
 import LogisticaConfig from "./pages/LogisticaConfig";
 import LogisticaAutomacoes from "./pages/LogisticaAutomacoes";
 import PilarRastreador from "./pages/PilarRastreador";
+import PilarRastreadorNativo from "./pages/PilarRastreadorNativo";
 import WhatsAppCatalogo from "./pages/WhatsAppCatalogo";
 import MarketplacesHubPage from "./pages/MarketplacesHubPage";
 import AdsDashboard from "./pages/ads/AdsDashboard";
@@ -201,6 +202,7 @@ const App = () => (
           <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
           <Route path="/webchat" element={<WebChat />} />
           <Route path="/pilar-rastreador" element={<PilarRastreador />} />
+          <Route path="/pilar-rastreador-nativo" element={<PilarRastreadorNativo />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
