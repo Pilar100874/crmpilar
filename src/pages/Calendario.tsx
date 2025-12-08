@@ -2548,7 +2548,7 @@ export default function Calendario() {
     });
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4">
         <div>
           <div className="mb-3 sm:mb-4 pb-2 border-b border-border sticky top-0 bg-background z-10">
             <h3 className="font-semibold text-xs sm:text-sm uppercase">HOJE</h3>
