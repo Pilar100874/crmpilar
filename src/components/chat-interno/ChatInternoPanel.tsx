@@ -166,6 +166,22 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     }
   };
 
+  // Para conversa direta 1:1, ao clicar no usuário já abre/cria a conversa
+  const handleSelecionarUsuario = async (userId: string) => {
+    const novaConversa = await criarConversa([userId]);
+    if (novaConversa) {
+      setShowNovaConversa(false);
+      setUsuariosSelecionados([]);
+      setConversaAtual({
+        ...novaConversa,
+        tipo: novaConversa.tipo as 'direto' | 'grupo'
+      });
+      // Recarregar conversas para atualizar lista se for nova
+      carregarConversas();
+    }
+  };
+
+  // Toggle para grupos (múltipla seleção)
   const toggleUsuario = (userId: string) => {
     if (usuariosSelecionados.includes(userId)) {
       setUsuariosSelecionados(usuariosSelecionados.filter(id => id !== userId));
@@ -323,7 +339,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                   return (
                     <button
                       key={usuario.id}
-                      onClick={() => toggleUsuario(usuario.id)}
+                      onClick={() => handleSelecionarUsuario(usuario.id)}
                       className={cn(
                         "w-full p-3 hover:bg-muted/50 transition-colors flex items-center gap-3 text-left",
                         isSelected && "bg-primary/10"
