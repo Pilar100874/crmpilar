@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
@@ -709,189 +710,186 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   return (
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="usuario-nome">Nome *</Label>
-            <Input
-              id="usuario-nome"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              placeholder="Nome completo"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="usuario-email">
-              Email *
-              <span className="text-xs text-muted-foreground ml-2 font-normal">
-                (Gmail, Hotmail e Outlook são configurados automaticamente)
-              </span>
-            </Label>
-            <Input
-              id="usuario-email"
-              type="email"
-              value={email}
-              onChange={(e) => handleEmailChange(e.target.value)}
-              placeholder="usuario@gmail.com"
-            />
-            {email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Digite um email válido para configuração automática
-              </p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="usuario-telefone">Telefone</Label>
-            <Input
-              id="usuario-telefone"
-              value={telefone}
-              onChange={(e) => setTelefone(e.target.value)}
-              placeholder="(00) 00000-0000"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="usuario-senha">Senha {!editingId && "*"} (mínimo 6 caracteres)</Label>
-            <Input
-              id="usuario-senha"
-              type="password"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              placeholder={editingId ? "Deixe vazio para manter" : "Mínimo 6 caracteres"}
-              minLength={6}
-            />
-            {senha && senha.length < 6 && (
-              <p className="text-xs text-destructive mt-1">
-                A senha deve ter no mínimo 6 caracteres
-              </p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="usuario-hora-inicial">Hora Inicial (Jornada) *</Label>
-            <Input
-              id="usuario-hora-inicial"
-              type="time"
-              value={horaInicial}
-              onChange={(e) => setHoraInicial(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="usuario-hora-final">Hora Final (Jornada) *</Label>
-            <Input
-              id="usuario-hora-final"
-              type="time"
-              value={horaFinal}
-              onChange={(e) => setHoraFinal(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* Seção de Telefonia */}
-          <div className="col-span-3 pt-4 border-t">
-            <h3 className="font-semibold text-base mb-4">📞 Configurações de Telefonia (Central UCM)</h3>
+        {/* Dados Básicos */}
+        <Card className="p-4">
+          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">Dados Básicos</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="usuario-nome">Nome *</Label>
+              <Input
+                id="usuario-nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Nome completo"
+              />
+            </div>
             
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="usuario-ramal">Ramal</Label>
-                <Input
-                  id="usuario-ramal"
-                  placeholder="Ex: 1001"
-                  value={ramal}
-                  onChange={(e) => setRamal(e.target.value)}
-                />
-              </div>
+            <div>
+              <Label htmlFor="usuario-email" className="flex flex-col sm:flex-row sm:items-center gap-1">
+                <span>Email *</span>
+                <span className="text-xs text-muted-foreground font-normal">
+                  (Gmail, Hotmail configurados automaticamente)
+                </span>
+              </Label>
+              <Input
+                id="usuario-email"
+                type="email"
+                value={email}
+                onChange={(e) => handleEmailChange(e.target.value)}
+                placeholder="usuario@gmail.com"
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="usuario-senha-sip">Senha SIP</Label>
-                <Input
-                  id="usuario-senha-sip"
-                  type="password"
-                  placeholder="Senha do ramal"
-                  value={senhaSip}
-                  onChange={(e) => setSenhaSip(e.target.value)}
-                />
-              </div>
+            <div>
+              <Label htmlFor="usuario-telefone">Telefone</Label>
+              <Input
+                id="usuario-telefone"
+                value={telefone}
+                onChange={(e) => setTelefone(e.target.value)}
+                placeholder="(00) 00000-0000"
+              />
+            </div>
 
-              <div>
-                <Label htmlFor="usuario-sip">Usuário SIP (opcional)</Label>
-                <Input
-                  id="usuario-sip"
-                  placeholder="Se diferente do ramal"
-                  value={usuarioSip}
-                  onChange={(e) => setUsuarioSip(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Deixe vazio se for igual ao ramal
-                </p>
-              </div>
+            <div>
+              <Label htmlFor="usuario-senha">Senha {!editingId && "*"}</Label>
+              <Input
+                id="usuario-senha"
+                type="password"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                placeholder={editingId ? "Deixe vazio para manter" : "Mínimo 6 caracteres"}
+                minLength={6}
+              />
+              {senha && senha.length < 6 && (
+                <p className="text-xs text-destructive mt-1">Mínimo 6 caracteres</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="usuario-hora-inicial">Hora Inicial *</Label>
+              <Input
+                id="usuario-hora-inicial"
+                type="time"
+                value={horaInicial}
+                onChange={(e) => setHoraInicial(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="usuario-hora-final">Hora Final *</Label>
+              <Input
+                id="usuario-hora-final"
+                type="time"
+                value={horaFinal}
+                onChange={(e) => setHoraFinal(e.target.value)}
+                required
+              />
             </div>
           </div>
+        </Card>
 
-          <div>
-            <Label htmlFor="usuario-unidade">Unidade *</Label>
-            <Select value={unidadeId} onValueChange={setUnidadeId}>
-              <SelectTrigger id="usuario-unidade">
-                <SelectValue placeholder="Selecione a unidade" />
-              </SelectTrigger>
-              <SelectContent>
-                {unidades.map((unidade) => (
-                  <SelectItem key={unidade.id} value={unidade.id}>
-                    {unidade.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="usuario-grupo">Grupo de Acesso</Label>
-            <Select value={grupoAcessoId} onValueChange={setGrupoAcessoId}>
-              <SelectTrigger id="usuario-grupo">
-                <SelectValue placeholder="Selecione o grupo" />
-              </SelectTrigger>
-              <SelectContent>
-                {grupos.map((grupo) => (
-                  <SelectItem key={grupo.id} value={grupo.id}>
-                    {grupo.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {!estabelecimentoId && (
+        {/* Telefonia */}
+        <Card className="p-4">
+          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">📞 Telefonia (UCM)</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="usuario-estabelecimento">Estabelecimento *</Label>
-              <Select value={selectedEstabelecimentoId} onValueChange={setSelectedEstabelecimentoId}>
-                <SelectTrigger id="usuario-estabelecimento">
-                  <SelectValue placeholder="Selecione o estabelecimento" />
+              <Label htmlFor="usuario-ramal">Ramal</Label>
+              <Input
+                id="usuario-ramal"
+                placeholder="Ex: 1001"
+                value={ramal}
+                onChange={(e) => setRamal(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="usuario-senha-sip">Senha SIP</Label>
+              <Input
+                id="usuario-senha-sip"
+                type="password"
+                placeholder="Senha do ramal"
+                value={senhaSip}
+                onChange={(e) => setSenhaSip(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="usuario-sip">Usuário SIP</Label>
+              <Input
+                id="usuario-sip"
+                placeholder="Se diferente do ramal"
+                value={usuarioSip}
+                onChange={(e) => setUsuarioSip(e.target.value)}
+              />
+            </div>
+          </div>
+        </Card>
+
+        {/* Vinculações */}
+        <Card className="p-4">
+          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">Vinculações</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="usuario-unidade">Unidade *</Label>
+              <Select value={unidadeId} onValueChange={setUnidadeId}>
+                <SelectTrigger id="usuario-unidade">
+                  <SelectValue placeholder="Selecione a unidade" />
                 </SelectTrigger>
                 <SelectContent>
-                  {estabelecimentos.map((est) => (
-                    <SelectItem key={est.id} value={est.id}>
-                      {est.nome}
+                  {unidades.map((unidade) => (
+                    <SelectItem key={unidade.id} value={unidade.id}>
+                      {unidade.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          )}
-        </div>
 
-        <div className="space-y-4">
-          <div className="text-sm font-semibold text-muted-foreground border-b pb-2">
-            Configurações de E-mail
+            <div>
+              <Label htmlFor="usuario-grupo">Grupo de Acesso</Label>
+              <Select value={grupoAcessoId} onValueChange={setGrupoAcessoId}>
+                <SelectTrigger id="usuario-grupo">
+                  <SelectValue placeholder="Selecione o grupo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {grupos.map((grupo) => (
+                    <SelectItem key={grupo.id} value={grupo.id}>
+                      {grupo.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {!estabelecimentoId && (
+              <div>
+                <Label htmlFor="usuario-estabelecimento">Estabelecimento *</Label>
+                <Select value={selectedEstabelecimentoId} onValueChange={setSelectedEstabelecimentoId}>
+                  <SelectTrigger id="usuario-estabelecimento">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {estabelecimentos.map((est) => (
+                      <SelectItem key={est.id} value={est.id}>
+                        {est.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
+        </Card>
+
+        {/* Configurações de E-mail */}
+        <Card className="p-4">
+          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">📧 Configurações de E-mail</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="usuario-smtp">
                 Servidor SMTP
-                {smtp && <span className="text-xs text-green-600 ml-2">✓ Configurado</span>}
+                {smtp && <span className="text-xs text-green-600 ml-2">✓</span>}
               </Label>
               <Input
                 id="usuario-smtp"
@@ -905,7 +903,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             <div>
               <Label htmlFor="usuario-porta-smtp">
                 Porta SMTP
-                {portaSmtp && <span className="text-xs text-green-600 ml-2">✓ Configurado</span>}
+                {portaSmtp && <span className="text-xs text-green-600 ml-2">✓</span>}
               </Label>
               <Input
                 id="usuario-porta-smtp"
@@ -920,7 +918,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             <div>
               <Label htmlFor="usuario-pop">
                 Servidor IMAP/POP
-                {pop && <span className="text-xs text-green-600 ml-2">✓ Configurado</span>}
+                {pop && <span className="text-xs text-green-600 ml-2">✓</span>}
               </Label>
               <Input
                 id="usuario-pop"
@@ -934,7 +932,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             <div>
               <Label htmlFor="usuario-porta-pop">
                 Porta IMAP/POP
-                {portaPop && <span className="text-xs text-green-600 ml-2">✓ Configurado</span>}
+                {portaPop && <span className="text-xs text-green-600 ml-2">✓</span>}
               </Label>
               <Input
                 id="usuario-porta-pop"
@@ -946,12 +944,10 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               />
             </div>
 
-            <div className="relative">
-              <Label htmlFor="usuario-senha-email">
-                Senha do E-mail *
-                <span className="text-xs text-muted-foreground ml-2 font-normal">
-                  (Para Gmail, use Senha de App)
-                </span>
+            <div className="sm:col-span-2">
+              <Label htmlFor="usuario-senha-email" className="flex flex-col sm:flex-row sm:items-center gap-1">
+                <span>Senha do E-mail *</span>
+                <span className="text-xs text-muted-foreground font-normal">(Gmail: use Senha de App)</span>
               </Label>
               <div className="flex gap-2">
                 <Input
@@ -964,104 +960,32 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
                 />
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="icon"
-                      className="shrink-0"
-                    >
+                    <Button type="button" variant="outline" size="icon" className="shrink-0">
                       <HelpCircle className="h-4 w-4" />
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Como usar Senha de App</DialogTitle>
-                      <DialogDescription>
-                        Instruções para configurar a senha do email
-                      </DialogDescription>
+                      <DialogTitle>Senha de App</DialogTitle>
+                      <DialogDescription>Como configurar para Gmail/Hotmail</DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-6 text-sm">
+                    <div className="space-y-4 text-sm">
                       <div>
-                        <h3 className="font-semibold text-base mb-2">🔐 Por que preciso de Senha de App?</h3>
-                        <p className="text-muted-foreground">
-                          O Google não permite usar sua senha normal em aplicativos de terceiros. 
-                          Você precisa gerar uma senha específica para este sistema.
-                        </p>
-                      </div>
-
-                      <div>
-                        <h3 className="font-semibold text-base mb-3">📧 Como gerar a Senha de App (Gmail):</h3>
-                        <ol className="space-y-3 list-decimal list-inside text-muted-foreground">
-                          <li>
-                            <strong>Acesse sua conta Google</strong>
-                            <a 
-                              href="https://myaccount.google.com/" 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 ml-2 text-primary hover:underline"
-                            >
-                              myaccount.google.com
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          </li>
-                          <li>
-                            <strong>Ative a verificação em 2 etapas</strong> (se não estiver ativa):
-                            <ul className="ml-6 mt-1 list-disc">
-                              <li>Vá em "Segurança" → "Verificação em duas etapas"</li>
-                            </ul>
-                          </li>
-                          <li>
-                            <strong>Gere a Senha de App</strong>:
-                            <ul className="ml-6 mt-1 list-disc space-y-1">
-                              <li>
-                                Acesse: 
-                                <a 
-                                  href="https://myaccount.google.com/apppasswords" 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 ml-1 text-primary hover:underline"
-                                >
-                                  myaccount.google.com/apppasswords
-                                  <ExternalLink className="h-3 w-3" />
-                                </a>
-                              </li>
-                              <li>Escolha "App": selecione "E-mail"</li>
-                              <li>Escolha "Dispositivo": selecione "Outro" e digite um nome (ex: "Sistema Atendimento")</li>
-                              <li>Clique em "Gerar"</li>
-                            </ul>
-                          </li>
-                          <li>
-                            <strong>Copie a senha gerada</strong> (16 caracteres sem espaços)
-                            <div className="ml-6 mt-2 p-2 bg-muted rounded font-mono text-xs">
-                              Exemplo: abcd efgh ijkl mnop
-                            </div>
-                          </li>
+                        <h4 className="font-semibold mb-2">Gmail:</h4>
+                        <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                          <li>Acesse myaccount.google.com</li>
+                          <li>Ative verificação em 2 etapas</li>
+                          <li>Vá em "Senhas de app"</li>
+                          <li>Gere uma senha e use aqui</li>
                         </ol>
                       </div>
-
                       <div>
-                        <h3 className="font-semibold text-base mb-3">✅ Como usar no sistema:</h3>
-                        <ol className="space-y-2 list-decimal list-inside text-muted-foreground">
-                          <li>Preencha seu <strong>email</strong> completo (ex: seuemail@gmail.com)</li>
-                          <li>Os servidores serão <strong>configurados automaticamente</strong></li>
-                          <li>No campo <strong>"Senha do E-mail"</strong>, cole a senha de app que você gerou</li>
-                          <li>Salve o usuário</li>
+                        <h4 className="font-semibold mb-2">Hotmail/Outlook:</h4>
+                        <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                          <li>Acesse account.live.com</li>
+                          <li>Vá em Segurança → Senha de app</li>
+                          <li>Gere uma senha e use aqui</li>
                         </ol>
-                      </div>
-
-                      <div className="border-t pt-4">
-                        <p className="text-xs text-muted-foreground">
-                          <strong>Nota:</strong> Para Hotmail/Outlook, você também precisa gerar uma senha de app em{" "}
-                          <a 
-                            href="https://account.live.com/proofs/AppPassword" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-primary hover:underline"
-                          >
-                            account.live.com/proofs/AppPassword
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </p>
                       </div>
                     </div>
                   </DialogContent>
@@ -1069,132 +993,128 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 pt-6">
+            <div className="flex items-center space-x-2">
               <Switch
                 id="usar-autenticacao"
                 checked={usarAutenticacao}
                 onCheckedChange={setUsarAutenticacao}
               />
-              <Label htmlFor="usar-autenticacao" className="cursor-pointer">
+              <Label htmlFor="usar-autenticacao" className="cursor-pointer text-sm">
                 Usar Autenticação
               </Label>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="flex gap-6">
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="is-admin"
-              checked={isAdmin}
-              onCheckedChange={setIsAdmin}
-            />
-            <Label htmlFor="is-admin" className="cursor-pointer">
-              Admin
-            </Label>
+        {/* Permissões e Segmentos */}
+        <Card className="p-4">
+          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">Permissões</h3>
+          
+          <div className="flex flex-wrap gap-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <Switch id="is-admin" checked={isAdmin} onCheckedChange={setIsAdmin} />
+              <Label htmlFor="is-admin" className="cursor-pointer text-sm">Admin</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="is-atendente" checked={isAtendente} onCheckedChange={setIsAtendente} />
+              <Label htmlFor="is-atendente" className="cursor-pointer text-sm">Atendente</Label>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="is-atendente"
-              checked={isAtendente}
-              onCheckedChange={setIsAtendente}
-            />
-            <Label htmlFor="is-atendente" className="cursor-pointer">
-              Atendente
-            </Label>
-          </div>
-        </div>
-
-        <div>
-          <Label>Segmentos</Label>
-          <div className="grid grid-cols-3 gap-3 mt-2">
-            {segmentos.map((segmento) => (
-              <div key={segmento.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`segmento-${segmento.id}`}
-                  checked={segmentosSelecionados.includes(segmento.id)}
-                  onCheckedChange={() => toggleSegmento(segmento.id)}
-                />
-                <label
-                  htmlFor={`segmento-${segmento.id}`}
-                  className="text-sm cursor-pointer"
-                >
-                  {segmento.nome}
-                </label>
+          {segmentos.length > 0 && (
+            <div>
+              <Label className="text-sm">Segmentos</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
+                {segmentos.map((segmento) => (
+                  <div key={segmento.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`segmento-${segmento.id}`}
+                      checked={segmentosSelecionados.includes(segmento.id)}
+                      onCheckedChange={() => toggleSegmento(segmento.id)}
+                    />
+                    <label htmlFor={`segmento-${segmento.id}`} className="text-sm cursor-pointer truncate">
+                      {segmento.nome}
+                    </label>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          )}
+        </Card>
 
-        <Button type="submit">
-          {editingId ? "Atualizar" : <><Plus className="w-4 h-4 mr-2" /> Adicionar</>}
-        </Button>
-        {editingId && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={resetForm}
-            className="ml-2"
-          >
-            Cancelar
+        {/* Botões de Ação */}
+        <div className="flex gap-2">
+          <Button type="submit" className="flex-1 sm:flex-none">
+            {editingId ? "Atualizar" : <><Plus className="w-4 h-4 mr-2" /> Adicionar</>}
           </Button>
-        )}
+          {editingId && (
+            <Button type="button" variant="outline" onClick={resetForm}>
+              Cancelar
+            </Button>
+          )}
+        </div>
       </form>
 
-      <div className="space-y-2">
-        {usuarios.map((usuario) => (
-          <div
-            key={usuario.id}
-            className="flex items-start justify-between p-3 border rounded-md"
-          >
-            <div>
-              <div className="font-semibold">{usuario.nome}</div>
-               <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
-                <span>{usuario.email}</span>
-                {usuario.telefone && <span>• {usuario.telefone}</span>}
-                {usuario.is_admin && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Admin</span>}
-                {usuario.is_atendente && <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded">Atendente</span>}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {usuario.estabelecimentos?.nome && `Estabelecimento: ${usuario.estabelecimentos.nome}`}
-                {usuario.unidades?.nome && ` • Unidade: ${usuario.unidades.nome}`}
-                {usuario.grupos_acesso?.nome && ` • Grupo: ${usuario.grupos_acesso.nome}`}
-              </div>
+      {/* Lista de Usuários */}
+      <Card className="p-4">
+        <h3 className="font-semibold text-base mb-4">Usuários Cadastrados</h3>
+        <div className="space-y-3">
+          {usuarios.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              Nenhum usuário cadastrado ainda
             </div>
-            <div className="flex gap-2">
-              {usuario.is_atendente && usuario.atendente_id && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedUsuarioForSkills(usuario);
-                    setSkillsDialogOpen(true);
-                  }}
-                  title="Gerenciar habilidades do atendente"
-                >
-                  <Award className="w-4 h-4 mr-1" />
-                  Skills
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleEdit(usuario)}
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDeleteClick(usuario)}
-              >
-                <Trash2 className="w-4 h-4 text-destructive" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ) : (
+            usuarios.map((usuario) => (
+              <Card key={usuario.id} className="p-3 hover:shadow-md transition-shadow">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="font-semibold text-sm truncate">{usuario.nome}</span>
+                      {usuario.is_admin && (
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Admin</span>
+                      )}
+                      {usuario.is_atendente && (
+                        <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded">Atendente</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">{usuario.email}</div>
+                    {usuario.telefone && (
+                      <div className="text-xs text-muted-foreground">{usuario.telefone}</div>
+                    )}
+                    <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-1">
+                      {usuario.unidades?.nome && <span>📍 {usuario.unidades.nome}</span>}
+                      {usuario.grupos_acesso?.nome && <span>• 🔐 {usuario.grupos_acesso.nome}</span>}
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-1 flex-shrink-0">
+                    {usuario.is_atendente && usuario.atendente_id && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedUsuarioForSkills(usuario);
+                          setSkillsDialogOpen(true);
+                        }}
+                        className="h-8 text-xs"
+                      >
+                        <Award className="w-3 h-3 mr-1" />
+                        Skills
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(usuario)} className="h-8 w-8">
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(usuario)} className="h-8 w-8">
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
+        </div>
+      </Card>
 
       <DeleteConfirmDialog
         open={deleteDialogOpen}
