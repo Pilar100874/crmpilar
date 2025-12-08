@@ -4,10 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/lib/toast-config";
-import { Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Pencil, Trash2, ChevronRight, Plus, Building2, Users, X, ArrowLeft } from "lucide-react";
 import { EstabelecimentoDetalhes } from "./EstabelecimentoDetalhes";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Estabelecimento {
   id: string;
@@ -18,15 +28,16 @@ interface Estabelecimento {
 }
 
 export function EstabelecimentosCRUD() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [estabelecimentos, setEstabelecimentos] = useState<Estabelecimento[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedEstabelecimento, setSelectedEstabelecimento] = useState<Estabelecimento | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [estabelecimentoToDelete, setEstabelecimentoToDelete] = useState<Estabelecimento | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSystemAdmin, setIsSystemAdmin] = useState(false);
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     cnpj: "",
     nome: "",
@@ -38,22 +49,21 @@ export function EstabelecimentosCRUD() {
     fetchEstabelecimentos();
   }, []);
 
-  // Auto-expandir primeiro estabelecimento se houver parâmetros de subsecao na URL
+  // Auto-selecionar primeiro estabelecimento se houver parâmetros na URL
   useEffect(() => {
     const subsecao = searchParams.get('subsecao');
     const subsubsecao = searchParams.get('subsubsecao');
     
-    if ((subsecao || subsubsecao) && estabelecimentos.length > 0 && !expandedId) {
-      setExpandedId(estabelecimentos[0].id);
+    if ((subsecao || subsubsecao) && estabelecimentos.length > 0 && !selectedEstabelecimento) {
+      setSelectedEstabelecimento(estabelecimentos[0]);
     }
-  }, [searchParams, estabelecimentos, expandedId]);
+  }, [searchParams, estabelecimentos, selectedEstabelecimento]);
 
   const checkUserType = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Buscar o usuário na tabela usuarios
       const { data: usuario } = await supabase
         .from("usuarios")
         .select("id")
@@ -62,7 +72,6 @@ export function EstabelecimentosCRUD() {
 
       if (!usuario) return;
 
-      // Verifica se o usuário tem role admin na tabela user_roles
       const { data: userRole } = await supabase
         .from("user_roles")
         .select("role")
@@ -71,7 +80,6 @@ export function EstabelecimentosCRUD() {
         .maybeSingle();
 
       if (userRole) {
-        // Usuário com role admin tem acesso total
         setIsSystemAdmin(true);
         setIsUserAdmin(true);
       }
@@ -115,7 +123,6 @@ export function EstabelecimentosCRUD() {
       return;
     }
 
-    // Usuários admin não podem criar estabelecimentos
     if (isUserAdmin && !editingId) {
       toast.error("Apenas administradores do sistema podem criar estabelecimentos");
       return;
@@ -124,7 +131,6 @@ export function EstabelecimentosCRUD() {
     const cleanCNPJ = formData.cnpj.replace(/\D/g, "");
 
     if (editingId) {
-      // Usuários admin não podem editar campos restritos
       if (isUserAdmin) {
         toast.error("Usuários admin não podem modificar CNPJ, nome ou número de usuários do estabelecimento");
         return;
@@ -177,6 +183,7 @@ export function EstabelecimentosCRUD() {
       numero_usuarios_permitidos: 5,
     });
     setEditingId(null);
+    setShowForm(false);
   };
 
   const handleEdit = (estabelecimento: Estabelecimento) => {
@@ -186,9 +193,11 @@ export function EstabelecimentosCRUD() {
       numero_usuarios_permitidos: estabelecimento.numero_usuarios_permitidos,
     });
     setEditingId(estabelecimento.id);
+    setShowForm(true);
   };
 
-  const handleDeleteClick = (estabelecimento: Estabelecimento) => {
+  const handleDeleteClick = (estabelecimento: Estabelecimento, e: React.MouseEvent) => {
+    e.stopPropagation();
     setEstabelecimentoToDelete(estabelecimento);
     setDeleteDialogOpen(true);
   };
@@ -198,7 +207,6 @@ export function EstabelecimentosCRUD() {
 
     setIsDeleting(true);
 
-    // Verificar vínculos com usuarios
     const { data: usuarios, error: checkError } = await supabase
       .from("usuarios")
       .select("id")
@@ -239,15 +247,148 @@ export function EstabelecimentosCRUD() {
     setEstabelecimentoToDelete(null);
   };
 
-  return (
-    <div className="space-y-6">
-      {isSystemAdmin && (
-        <form onSubmit={handleSubmit} className="space-y-4 border p-4 rounded-lg">
-          <h3 className="font-semibold text-lg">
-            {editingId ? "Editar Estabelecimento" : "Novo Estabelecimento"}
-          </h3>
+  const handleSelectEstabelecimento = (estabelecimento: Estabelecimento) => {
+    setSelectedEstabelecimento(estabelecimento);
+  };
 
-          <div className="grid gap-4 md:grid-cols-2">
+  const handleBackToList = () => {
+    setSelectedEstabelecimento(null);
+    setSearchParams({});
+  };
+
+  // Se um estabelecimento está selecionado, mostra os detalhes
+  if (selectedEstabelecimento) {
+    return (
+      <div className="space-y-4">
+        {/* Header com botão voltar */}
+        <div className="flex items-center gap-3 pb-3 border-b">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleBackToList}
+            className="shrink-0 -ml-2"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
+              <Building2 className="w-5 h-5 text-green-500" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="font-bold text-base truncate">{selectedEstabelecimento.nome}</h2>
+              <p className="text-xs text-muted-foreground">
+                CNPJ: {formatCNPJ(selectedEstabelecimento.cnpj)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Detalhes do estabelecimento */}
+        <EstabelecimentoDetalhes 
+          estabelecimentoId={selectedEstabelecimento.id}
+          estabelecimentoNome={selectedEstabelecimento.nome}
+        />
+      </div>
+    );
+  }
+
+  // Lista de estabelecimentos
+  return (
+    <div className="space-y-4">
+      {/* Botão adicionar (apenas para admin do sistema) */}
+      {isSystemAdmin && (
+        <Button 
+          className="w-full" 
+          size="lg"
+          onClick={() => setShowForm(true)}
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Novo Estabelecimento
+        </Button>
+      )}
+
+      {/* Lista de estabelecimentos em cards */}
+      <div className="space-y-3">
+        {estabelecimentos.length === 0 ? (
+          <Card className="bg-muted/50 border-dashed">
+            <CardContent className="p-6 text-center text-muted-foreground">
+              Nenhum estabelecimento cadastrado
+            </CardContent>
+          </Card>
+        ) : (
+          estabelecimentos.map((estabelecimento) => (
+            <Card 
+              key={estabelecimento.id}
+              className="overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all"
+              onClick={() => handleSelectEstabelecimento(estabelecimento)}
+            >
+              <CardContent className="p-0">
+                <div className="flex items-center gap-4 p-4">
+                  {/* Ícone */}
+                  <div className="w-14 h-14 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
+                    <Building2 className="w-7 h-7 text-green-500" />
+                  </div>
+                  
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-base mb-0.5 truncate">
+                      {estabelecimento.nome}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      CNPJ: {formatCNPJ(estabelecimento.cnpj)}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        <Users className="w-3 h-3 mr-1" />
+                        {estabelecimento.numero_usuarios_permitidos} usuários
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Ações */}
+                  <div className="flex items-center gap-1">
+                    {isSystemAdmin && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(estabelecimento);
+                          }}
+                          className="h-9 w-9"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => handleDeleteClick(estabelecimento, e)}
+                          className="h-9 w-9 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                    <ChevronRight className="w-5 h-5 text-muted-foreground ml-1" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+
+      {/* Dialog para formulário */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingId ? "Editar Estabelecimento" : "Novo Estabelecimento"}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="cnpj">CNPJ *</Label>
               <Input
@@ -291,85 +432,18 @@ export function EstabelecimentosCRUD() {
                 required
               />
             </div>
-          </div>
 
-          <div className="flex gap-2">
-            <Button type="submit">
-              {editingId ? "Atualizar" : "Criar"}
-            </Button>
-            {editingId && (
+            <div className="flex gap-2 pt-2">
+              <Button type="submit" className="flex-1">
+                {editingId ? "Atualizar" : "Criar"}
+              </Button>
               <Button type="button" variant="outline" onClick={resetForm}>
                 Cancelar
               </Button>
-            )}
-          </div>
-        </form>
-      )}
-
-      <div className="space-y-2">
-        <h3 className="font-semibold text-lg">Estabelecimentos Cadastrados</h3>
-        <div className="space-y-4">
-          {estabelecimentos.map((estabelecimento) => (
-            <div
-              key={estabelecimento.id}
-              className="border rounded-lg overflow-hidden"
-            >
-              <div className="flex items-center justify-between p-4 bg-muted/30">
-                <div className="flex-1">
-                  <p className="font-medium">{estabelecimento.nome}</p>
-                  <p className="text-sm text-muted-foreground">
-                    CNPJ: {formatCNPJ(estabelecimento.cnpj)} | Usuários permitidos:{" "}
-                    {estabelecimento.numero_usuarios_permitidos}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setExpandedId(expandedId === estabelecimento.id ? null : estabelecimento.id)}
-                    title={expandedId === estabelecimento.id ? "Ocultar detalhes" : "Gerenciar dados"}
-                  >
-                    {expandedId === estabelecimento.id ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </Button>
-                  {isSystemAdmin && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(estabelecimento)}
-                        title="Editar"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteClick(estabelecimento)}
-                        title="Excluir"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              {expandedId === estabelecimento.id && (
-                <div className="p-4 bg-background">
-                  <EstabelecimentoDetalhes 
-                    estabelecimentoId={estabelecimento.id}
-                    estabelecimentoNome={estabelecimento.nome}
-                  />
-                </div>
-              )}
             </div>
-          ))}
-        </div>
-      </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <DeleteConfirmDialog
         open={deleteDialogOpen}
