@@ -137,10 +137,10 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
   // Carregar emails do banco
   useEffect(() => {
-    if (hasEmailConfig && hasResendConfig) {
+    if (hasEmailConfig !== null) {
       loadEmails();
     }
-  }, [selectedFolder, hasEmailConfig, hasResendConfig]);
+  }, [selectedFolder, hasEmailConfig]);
 
   const loadEmails = async () => {
     try {
@@ -277,8 +277,8 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
     );
   }
 
-  // Mostrar aviso se não tiver configuração de email ou Resend
-  if (!hasEmailConfig || !hasResendConfig) {
+  // Mostrar aviso se não tiver configuração de email
+  if (!hasEmailConfig) {
     return (
       <div className="flex h-screen items-center justify-center p-4">
         <Card className="max-w-2xl w-full p-8">
