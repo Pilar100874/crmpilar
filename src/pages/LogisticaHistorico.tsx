@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format, startOfDay, endOfDay, differenceInMinutes, subDays, setHours, setMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowLeft, Calendar, Car, Route, Clock, Gauge, Activity, MapPin, Check, X } from 'lucide-react';
+import { ArrowLeft, Calendar, Car, Route, Clock, Gauge, Activity, MapPin, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
 
@@ -60,6 +61,7 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
   const [endTime, setEndTime] = useState<string>('23:59');
   const [loading, setLoading] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false); // Mobile stats panel collapsed by default
 
   // Helper to combine date and time
   const combineDateAndTime = (date: Date, time: string): Date => {
@@ -529,10 +531,10 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
         )}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Map */}
-        <div className="flex-1 relative min-h-[250px] md:min-h-0">
+      {/* Content - Mobile optimized layout */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        {/* Map - Takes full height on mobile */}
+        <div className="flex-1 relative h-full min-h-0">
           {selectedVeiculoIds.length === 0 ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
               <div className="text-center p-4">
@@ -553,7 +555,7 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
             </div>
           ) : (
             <div className="h-full flex flex-col">
-              <div className="flex-1 relative">
+              <div className="flex-1 relative min-h-0">
                 <LazyLogisticaMap
                   routes={routes}
                   fullRouteBounds={fullRouteBounds}
@@ -564,14 +566,14 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
                     color: currentMarkers[0].color,
                     label: currentMarkers[0].label
                   } : undefined}
-                  className="h-full w-full"
+                  className="h-full w-full absolute inset-0"
                   fitBounds={currentMarkerIndex === -1}
                 />
               </div>
               
               {/* Timeline - only show when single vehicle is selected */}
               {timelinePosicoes.length > 1 && (
-                <div className="p-3 border-t">
+                <div className="p-2 sm:p-3 border-t bg-background/95 backdrop-blur-sm">
                   <HistoricoTimeline
                     posicoes={timelinePosicoes}
                     onTimeChange={handleTimelineChange}
@@ -582,25 +584,121 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
           )}
         </div>
 
-        {/* Statistics Panel */}
-        <div className="w-full md:w-72 lg:w-80 flex-shrink-0 border-t md:border-t-0 md:border-l bg-background p-3 sm:p-4 overflow-auto max-h-[40vh] md:max-h-none">
-          <h2 className="font-semibold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
-            <Activity className="h-4 w-4 sm:h-5 sm:w-5" />
+        {/* Statistics Panel - Collapsible on mobile, side panel on desktop */}
+        {/* Mobile: Bottom sheet style */}
+        <div className="md:hidden absolute bottom-0 left-0 right-0 z-10">
+          <Collapsible open={statsOpen} onOpenChange={setStatsOpen}>
+            <CollapsibleTrigger asChild>
+              <Button 
+                variant="secondary" 
+                className="w-full rounded-none rounded-t-xl h-10 gap-2 bg-background/95 backdrop-blur-sm border-t shadow-lg"
+              >
+                <Activity className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  {displayData.length > 0 && displayData[0].estatisticas 
+                    ? `${displayData[0].estatisticas.distancia_total_km} km • ${formatMinutes(displayData[0].estatisticas.tempo_movimento_minutos)}`
+                    : 'Estatísticas'
+                  }
+                </span>
+                {statsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="bg-background/95 backdrop-blur-sm p-3 max-h-[50vh] overflow-auto border-t">
+                {selectedVeiculoIds.length === 0 ? (
+                  <p className="text-muted-foreground text-xs text-center py-4">
+                    Selecione veículos para ver as estatísticas.
+                  </p>
+                ) : displayData.length === 0 ? (
+                  <p className="text-muted-foreground text-xs text-center py-4">
+                    Carregando...
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {displayData.map((vh) => (
+                      <div key={vh.veiculo.id} className="space-y-2">
+                        <div 
+                          className="flex items-center gap-2 pb-1 border-b"
+                          style={{ borderBottomColor: vh.color }}
+                        >
+                          <div 
+                            className="w-2 h-2 rounded-full flex-shrink-0" 
+                            style={{ backgroundColor: vh.color }}
+                          />
+                          <span className="font-medium text-xs">{vh.veiculo.placa}</span>
+                          {vh.veiculo.descricao && (
+                            <span className="text-[10px] text-muted-foreground truncate">
+                              {vh.veiculo.descricao}
+                            </span>
+                          )}
+                        </div>
+
+                        {!vh.estatisticas ? (
+                          <p className="text-muted-foreground text-xs">
+                            Nenhum registro para esta data
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="bg-muted/50 rounded-lg p-2 text-center">
+                              <Route className="h-3 w-3 mx-auto mb-1 text-muted-foreground" />
+                              <p className="text-sm font-bold">{vh.estatisticas.distancia_total_km}</p>
+                              <p className="text-[10px] text-muted-foreground">km</p>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-2 text-center">
+                              <Gauge className="h-3 w-3 mx-auto mb-1 text-muted-foreground" />
+                              <p className="text-sm font-bold">{vh.estatisticas.velocidade_maxima}</p>
+                              <p className="text-[10px] text-muted-foreground">km/h máx</p>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-2 text-center">
+                              <Clock className="h-3 w-3 mx-auto mb-1 text-muted-foreground" />
+                              <p className="text-sm font-bold">{formatMinutes(vh.estatisticas.tempo_movimento_minutos)}</p>
+                              <p className="text-[10px] text-muted-foreground">mov.</p>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-2 text-center">
+                              <Gauge className="h-3 w-3 mx-auto mb-1 text-muted-foreground" />
+                              <p className="text-sm font-bold">{vh.estatisticas.velocidade_media}</p>
+                              <p className="text-[10px] text-muted-foreground">km/h méd</p>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-2 text-center">
+                              <Clock className="h-3 w-3 mx-auto mb-1 text-muted-foreground" />
+                              <p className="text-sm font-bold">{formatMinutes(vh.estatisticas.tempo_parado_minutos)}</p>
+                              <p className="text-[10px] text-muted-foreground">parado</p>
+                            </div>
+                            <div className="bg-muted/50 rounded-lg p-2 text-center">
+                              <MapPin className="h-3 w-3 mx-auto mb-1 text-muted-foreground" />
+                              <p className="text-sm font-bold">{vh.estatisticas.pontos_total}</p>
+                              <p className="text-[10px] text-muted-foreground">pontos</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+
+        {/* Desktop: Side panel (unchanged) */}
+        <div className="hidden md:block w-72 lg:w-80 flex-shrink-0 border-l bg-background p-4 overflow-auto">
+          <h2 className="font-semibold text-lg mb-4 flex items-center gap-2">
+            <Activity className="h-5 w-5" />
             {timelinePosicoes.length > 1 ? 'Estatísticas (até momento selecionado)' : 'Estatísticas do Dia'}
           </h2>
 
           {selectedVeiculoIds.length === 0 ? (
-            <p className="text-muted-foreground text-xs sm:text-sm">
+            <p className="text-muted-foreground text-sm">
               Selecione veículos para ver as estatísticas.
             </p>
           ) : displayData.length === 0 ? (
-            <p className="text-muted-foreground text-xs sm:text-sm">
+            <p className="text-muted-foreground text-sm">
               Carregando...
             </p>
           ) : (
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-6">
               {displayData.map((vh) => (
-                <div key={vh.veiculo.id} className="space-y-2 sm:space-y-3">
+                <div key={vh.veiculo.id} className="space-y-3">
                   <div 
                     className="flex items-center gap-2 pb-2 border-b"
                     style={{ borderBottomColor: vh.color }}
@@ -618,82 +716,82 @@ const LogisticaHistorico: React.FC<LogisticaHistoricoProps> = ({ embedded = fals
                   </div>
 
                   {!vh.estatisticas ? (
-                    <p className="text-muted-foreground text-xs sm:text-sm">
+                    <p className="text-muted-foreground text-sm">
                       Nenhum registro para esta data
                     </p>
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
                       <Card className="col-span-2">
-                        <CardHeader className="p-2 sm:p-3 pb-1">
-                          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <Route className="h-3 w-3" />
                             Distância
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-2 sm:p-3 pt-0">
-                          <p className="text-base sm:text-lg font-bold">{vh.estatisticas.distancia_total_km} km</p>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-lg font-bold">{vh.estatisticas.distancia_total_km} km</p>
                         </CardContent>
                       </Card>
 
                       <Card>
-                        <CardHeader className="p-2 sm:p-3 pb-1">
-                          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <Gauge className="h-3 w-3" />
                             Vel. Máx
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-2 sm:p-3 pt-0">
-                          <p className="text-base sm:text-lg font-bold">{vh.estatisticas.velocidade_maxima}</p>
-                          <p className="text-[10px] sm:text-xs text-muted-foreground">km/h</p>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-lg font-bold">{vh.estatisticas.velocidade_maxima}</p>
+                          <p className="text-xs text-muted-foreground">km/h</p>
                         </CardContent>
                       </Card>
 
                       <Card>
-                        <CardHeader className="p-2 sm:p-3 pb-1">
-                          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <Gauge className="h-3 w-3" />
                             Vel. Média
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-2 sm:p-3 pt-0">
-                          <p className="text-base sm:text-lg font-bold">{vh.estatisticas.velocidade_media}</p>
-                          <p className="text-[10px] sm:text-xs text-muted-foreground">km/h</p>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-lg font-bold">{vh.estatisticas.velocidade_media}</p>
+                          <p className="text-xs text-muted-foreground">km/h</p>
                         </CardContent>
                       </Card>
 
                       <Card>
-                        <CardHeader className="p-2 sm:p-3 pb-1">
-                          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             Movimento
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-2 sm:p-3 pt-0">
-                          <p className="text-xs sm:text-sm font-bold">{formatMinutes(vh.estatisticas.tempo_movimento_minutos)}</p>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-sm font-bold">{formatMinutes(vh.estatisticas.tempo_movimento_minutos)}</p>
                         </CardContent>
                       </Card>
 
                       <Card>
-                        <CardHeader className="p-2 sm:p-3 pb-1">
-                          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             Parado
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-2 sm:p-3 pt-0">
-                          <p className="text-xs sm:text-sm font-bold">{formatMinutes(vh.estatisticas.tempo_parado_minutos)}</p>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-sm font-bold">{formatMinutes(vh.estatisticas.tempo_parado_minutos)}</p>
                         </CardContent>
                       </Card>
 
                       <Card className="col-span-2">
-                        <CardHeader className="p-2 sm:p-3 pb-1">
-                          <CardTitle className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <CardHeader className="p-3 pb-1">
+                          <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             Pontos Registrados
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-2 sm:p-3 pt-0">
-                          <p className="text-base sm:text-lg font-bold">{vh.estatisticas.pontos_total}</p>
+                        <CardContent className="p-3 pt-0">
+                          <p className="text-lg font-bold">{vh.estatisticas.pontos_total}</p>
                         </CardContent>
                       </Card>
                     </div>
