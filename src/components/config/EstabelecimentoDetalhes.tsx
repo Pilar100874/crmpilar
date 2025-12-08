@@ -223,29 +223,6 @@ const getConfigCategories = (): ConfigCategory[] => [
     ],
   },
   {
-    id: "logistica",
-    title: "Logística e Frete",
-    icon: Truck,
-    color: "text-cyan-500",
-    bgColor: "bg-cyan-500/10",
-    items: [
-      {
-        id: "pedagio-api",
-        title: "API de Pedágio",
-        description: "Cálculo de custos de pedágio",
-        icon: Navigation,
-        component: PedagioAPIConfigCRUD,
-      },
-      {
-        id: "custos-veiculos",
-        title: "Custos de Veículos",
-        description: "Combustível e operação",
-        icon: Fuel,
-        component: CustosVeiculosCRUD,
-      },
-    ],
-  },
-  {
     id: "integrações",
     title: "Integrações",
     icon: Webhook,
