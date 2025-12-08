@@ -49,13 +49,6 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     carregarConversas,
   } = useChatInterno();
 
-  // Sempre abrir na lista de conversas/usuários ao abrir o painel
-  useEffect(() => {
-    if (isOpen) {
-      setConversaAtual(null);
-    }
-  }, [isOpen, setConversaAtual]);
-
   const [mensagemInput, setMensagemInput] = useState('');
   const [busca, setBusca] = useState('');
   const [showNovaConversa, setShowNovaConversa] = useState(false);
@@ -65,7 +58,17 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   const [participantesConversa, setParticipantesConversa] = useState<{[key: string]: Usuario[]}>({});
   const [showVideoChamada, setShowVideoChamada] = useState(false);
+  const [wasOpen, setWasOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Sempre abrir na lista de conversas/usuários ao abrir o painel (apenas quando muda de fechado para aberto)
+  useEffect(() => {
+    if (isOpen && !wasOpen) {
+      setConversaAtual(null);
+      setShowNovaConversa(false);
+    }
+    setWasOpen(isOpen);
+  }, [isOpen]);
 
   const isUserOnline = (userId: string) => {
     return onlineUsers.some(u => u.id === userId);

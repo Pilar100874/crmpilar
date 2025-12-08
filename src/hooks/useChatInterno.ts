@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -401,16 +401,25 @@ export function useChatInterno() {
   }, [carregarConversas, carregarNaoLidas]);
 
   // Subscription global para detectar novas mensagens em qualquer conversa
+  // Usar useRef para garantir apenas uma subscription
+  const globalChannelRef = useRef<RealtimeChannel | null>(null);
+  
   useEffect(() => {
     if (!usuarioAtualId) return;
 
     const estabelecimentoId = localStorage.getItem('estabelecimentoId');
     if (!estabelecimentoId) return;
 
+    // Se já existe uma subscription, não criar outra
+    if (globalChannelRef.current) {
+      console.log('[ChatInterno] Subscription global já existe, ignorando');
+      return;
+    }
+
     console.log('[ChatInterno] Configurando subscription global para:', usuarioAtualId);
 
     const globalChannel = supabase
-      .channel(`chat-interno-global-${usuarioAtualId}-${Date.now()}`)
+      .channel(`chat-interno-global-${usuarioAtualId}`)
       .on(
         'postgres_changes',
         {
@@ -451,9 +460,14 @@ export function useChatInterno() {
         console.log('[ChatInterno] Status da subscription global:', status);
       });
 
+    globalChannelRef.current = globalChannel;
+
     return () => {
       console.log('[ChatInterno] Removendo subscription global');
-      supabase.removeChannel(globalChannel);
+      if (globalChannelRef.current) {
+        supabase.removeChannel(globalChannelRef.current);
+        globalChannelRef.current = null;
+      }
     };
   }, [usuarioAtualId]);
 
