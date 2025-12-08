@@ -113,16 +113,17 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         return;
       }
 
-      // Se não tiver IMAP, verifica se tem OAuth configurado
+      // Se não tiver IMAP, verifica se tem OAuth configurado (com client_id configurado)
       if (usuario?.estabelecimento_id) {
         const { data: oauthConfig } = await supabase
           .from('email_oauth_config')
-          .select('enabled, provider')
+          .select('enabled, provider, client_id')
           .eq('estabelecimento_id', usuario.estabelecimento_id)
-          .eq('enabled', true)
+          .eq('provider', 'google')
           .maybeSingle();
 
-        if (oauthConfig?.enabled) {
+        // Se tem client_id configurado, permite usar OAuth
+        if (oauthConfig?.client_id) {
           setHasEmailConfig(true);
           setUseOAuth(true);
           
