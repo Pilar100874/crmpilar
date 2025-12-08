@@ -448,12 +448,23 @@ export function useChatInterno() {
   const handleSetConversaAtual = useCallback((conversa: Conversa | null) => {
     setConversaAtual(conversa);
     if (conversa) {
-      // Aguardar um pouco para a marcação de leitura ser processada, depois recalcular
+      // Imediatamente zera o contador dessa conversa para parar a animação
+      const countAnterior = naoLidasPorConversa[conversa.id] || 0;
+      if (countAnterior > 0) {
+        setNaoLidasPorConversa(prev => {
+          const novo = { ...prev };
+          delete novo[conversa.id];
+          return novo;
+        });
+        setTotalNaoLidas(prev => Math.max(0, prev - countAnterior));
+      }
+      
+      // Recalcular após marcar como lida (para confirmar)
       setTimeout(() => {
         carregarNaoLidas();
-      }, 500);
+      }, 1000);
     }
-  }, [carregarNaoLidas]);
+  }, [carregarNaoLidas, naoLidasPorConversa]);
 
   return {
     conversas,
