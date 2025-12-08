@@ -471,28 +471,38 @@ export function useChatInterno() {
     };
   }, [usuarioAtualId]);
 
-  // Marcar conversa como lida
+  // Marcar conversa como lida - FORÇAR reset do contador
   const marcarComoLida = useCallback(async (conversaId: string) => {
     if (!usuarioAtualId) return;
     
-    // Imediatamente zera os contadores locais
+    console.log('[ChatInterno] Marcando conversa como lida:', conversaId);
+    
+    // FORÇA zerar o contador desta conversa
+    const countAnterior = naoLidasPorConversa[conversaId] || 0;
+    if (countAnterior > 0) {
+      setTotalNaoLidas(prev => Math.max(0, prev - countAnterior));
+    }
+    
+    // Remove a conversa do mapa de não lidas
     setNaoLidasPorConversa(prev => {
-      const countAnterior = prev[conversaId] || 0;
-      if (countAnterior > 0) {
-        setTotalNaoLidas(t => Math.max(0, t - countAnterior));
-      }
       const novo = { ...prev };
       delete novo[conversaId];
       return novo;
     });
 
     // Atualiza no banco
-    await supabase
-      .from('chat_interno_participantes')
-      .update({ ultima_leitura: new Date().toISOString() })
-      .eq('conversa_id', conversaId)
-      .eq('usuario_id', usuarioAtualId);
-  }, [usuarioAtualId]);
+    try {
+      await supabase
+        .from('chat_interno_participantes')
+        .update({ ultima_leitura: new Date().toISOString() })
+        .eq('conversa_id', conversaId)
+        .eq('usuario_id', usuarioAtualId);
+      
+      console.log('[ChatInterno] Conversa marcada como lida no banco');
+    } catch (error) {
+      console.error('[ChatInterno] Erro ao marcar como lida:', error);
+    }
+  }, [usuarioAtualId, naoLidasPorConversa]);
 
   // Recalcular contador quando abrir uma conversa (após marcar como lida)
   const handleSetConversaAtual = useCallback((conversa: Conversa | null) => {
