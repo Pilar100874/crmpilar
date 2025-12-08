@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, HelpCircle, ChevronDown, ChevronUp, ExternalLink, Save, Eye, EyeOff } from "lucide-react";
-import { useEstabelecimento } from "@/contexts/EstabelecimentoContext";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface OAuthConfig {
   id?: string;
@@ -18,8 +18,12 @@ interface OAuthConfig {
   enabled: boolean;
 }
 
-export function EmailOAuthConfig() {
-  const { estabelecimentoId } = useEstabelecimento();
+interface EmailOAuthConfigProps {
+  estabelecimentoId?: string;
+}
+
+export function EmailOAuthConfig({ estabelecimentoId: propEstabelecimentoId }: EmailOAuthConfigProps) {
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [googleConfig, setGoogleConfig] = useState<OAuthConfig>({
     provider: 'google',
     client_id: '',
@@ -39,21 +43,31 @@ export function EmailOAuthConfig() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    const loadEstabelecimento = async () => {
+      const id = await getEstabelecimentoId(propEstabelecimentoId);
+      setEstabelecimentoId(id);
+    };
+    loadEstabelecimento();
+  }, [propEstabelecimentoId]);
+
+  useEffect(() => {
     if (estabelecimentoId) {
       loadConfigs();
     }
   }, [estabelecimentoId]);
 
   const loadConfigs = async () => {
+    if (!estabelecimentoId) return;
+    
     try {
       const { data, error } = await supabase
-        .from('email_oauth_config')
+        .from('email_oauth_config' as any)
         .select('*')
         .eq('estabelecimento_id', estabelecimentoId);
 
       if (error) throw error;
 
-      data?.forEach(config => {
+      (data as any[])?.forEach((config: any) => {
         if (config.provider === 'google') {
           setGoogleConfig({
             id: config.id,
@@ -96,13 +110,13 @@ export function EmailOAuthConfig() {
 
       if (config.id) {
         const { error } = await supabase
-          .from('email_oauth_config')
+          .from('email_oauth_config' as any)
           .update(payload)
           .eq('id', config.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('email_oauth_config')
+          .from('email_oauth_config' as any)
           .insert(payload);
         if (error) throw error;
       }
@@ -275,7 +289,7 @@ export function EmailOAuthConfig() {
                       <p className="font-medium">Selecione "Aplicativo da Web"</p>
                       <p className="text-muted-foreground">Adicione a URI de redirecionamento autorizada:</p>
                       <code className="block bg-background px-2 py-1 rounded mt-1 text-xs">
-                        {window.location.origin}/auth/google/callback
+                        {typeof window !== 'undefined' ? window.location.origin : ''}/auth/google/callback
                       </code>
                     </div>
                   </div>
@@ -421,7 +435,7 @@ export function EmailOAuthConfig() {
                         <li>URI de redirecionamento: Selecione "Web" e adicione:</li>
                       </ul>
                       <code className="block bg-background px-2 py-1 rounded mt-1 text-xs">
-                        {window.location.origin}/auth/microsoft/callback
+                        {typeof window !== 'undefined' ? window.location.origin : ''}/auth/microsoft/callback
                       </code>
                     </div>
                   </div>
