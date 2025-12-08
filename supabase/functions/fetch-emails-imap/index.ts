@@ -6,152 +6,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Simple IMAP client using raw sockets
-async function fetchEmailsViaIMAP(
-  host: string,
-  port: number,
-  email: string,
-  password: string,
-  folder: string,
-  limit: number
-): Promise<any[]> {
-  const conn = await Deno.connectTls({ hostname: host, port });
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
-
-  let tagCounter = 1;
-  const getTag = () => `A${tagCounter++}`;
-
-  const readResponse = async (): Promise<string> => {
-    const buffer = new Uint8Array(65536);
-    let result = "";
-    let attempts = 0;
-    
-    while (attempts < 10) {
-      const n = await conn.read(buffer);
-      if (n === null) break;
-      result += decoder.decode(buffer.subarray(0, n));
-      if (result.includes("OK") || result.includes("NO") || result.includes("BAD")) {
-        break;
-      }
-      attempts++;
-    }
-    return result;
-  };
-
-  const sendCommand = async (command: string): Promise<string> => {
-    const tag = getTag();
-    await conn.write(encoder.encode(`${tag} ${command}\r\n`));
-    return await readResponse();
-  };
-
-  try {
-    // Read greeting
-    await readResponse();
-
-    // Login
-    const loginRes = await sendCommand(`LOGIN "${email}" "${password}"`);
-    if (loginRes.includes("NO") || loginRes.includes("BAD")) {
-      throw new Error("Falha no login IMAP. Verifique email e senha.");
-    }
-
-    // Select folder
-    const selectRes = await sendCommand(`SELECT "${folder}"`);
-    const existsMatch = selectRes.match(/(\d+) EXISTS/);
-    const totalEmails = existsMatch ? parseInt(existsMatch[1]) : 0;
-
-    if (totalEmails === 0) {
-      await sendCommand("LOGOUT");
-      conn.close();
-      return [];
-    }
-
-    // Fetch emails (last N)
-    const startSeq = Math.max(1, totalEmails - limit + 1);
-    const fetchRes = await sendCommand(
-      `FETCH ${startSeq}:${totalEmails} (FLAGS ENVELOPE BODY.PEEK[TEXT]<0.2000>)`
-    );
-
-    const emails: any[] = [];
-    
-    // Parse FETCH responses (simplified parsing)
-    const fetchLines = fetchRes.split(/\* \d+ FETCH/);
-    
-    for (const fetchData of fetchLines) {
-      if (!fetchData.trim()) continue;
-
-      // Extract envelope
-      const envelopeMatch = fetchData.match(/ENVELOPE \(([^)]+(?:\([^)]*\))*[^)]*)\)/);
-      if (!envelopeMatch) continue;
-
-      const envelope = envelopeMatch[1];
-      
-      // Parse date
-      const dateMatch = envelope.match(/"([^"]+)"/);
-      const date = dateMatch ? new Date(dateMatch[1]).toISOString() : new Date().toISOString();
-
-      // Parse subject (second quoted string after date)
-      const quotedStrings = envelope.match(/"([^"]*)"/g) || [];
-      const subject = quotedStrings[1]?.replace(/"/g, "") || "(Sem assunto)";
-
-      // Parse from address
-      const fromMatch = fetchData.match(/\(\((?:NIL|"[^"]*") (?:NIL|"[^"]*") "([^"]*)" "([^"]*)"\)\)/);
-      const fromName = fromMatch ? fromMatch[1] : "";
-      const fromDomain = fromMatch ? fromMatch[2] : "";
-      const fromEmail = fromName && fromDomain ? `${fromName}@${fromDomain}` : "desconhecido";
-
-      // Check flags
-      const flagsMatch = fetchData.match(/FLAGS \(([^)]*)\)/);
-      const flags = flagsMatch ? flagsMatch[1] : "";
-      const read = flags.includes("\\Seen");
-      const starred = flags.includes("\\Flagged");
-
-      // Extract body preview
-      const bodyMatch = fetchData.match(/BODY\[TEXT\]<0> \{(\d+)\}\r\n([\s\S]*?)(?=\)|\* \d+)/);
-      const body = bodyMatch ? bodyMatch[2].substring(0, 500) : "";
-
-      emails.push({
-        subject: decodeEmailSubject(subject),
-        from_email: fromEmail,
-        from_address: fromEmail,
-        to_email: email,
-        date,
-        read,
-        starred,
-        body: body.trim(),
-      });
-    }
-
-    // Logout
-    await sendCommand("LOGOUT");
-    conn.close();
-
-    return emails.reverse(); // Newest first
-  } catch (error) {
-    try { conn.close(); } catch {}
-    throw error;
-  }
+interface EmailMessage {
+  subject: string;
+  from_email: string;
+  to_email: string;
+  date: string;
+  read: boolean;
+  starred: boolean;
+  body: string;
 }
 
-// Decode MIME encoded words
-function decodeEmailSubject(subject: string): string {
-  if (!subject) return "(Sem assunto)";
-  
-  // Decode =?UTF-8?Q?...?= or =?UTF-8?B?...?=
-  return subject.replace(/=\?([^?]+)\?([BQ])\?([^?]+)\?=/gi, (match, charset, encoding, text) => {
-    try {
-      if (encoding.toUpperCase() === 'B') {
-        return atob(text);
-      } else {
-        return text.replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (_m: string, hex: string) => 
-          String.fromCharCode(parseInt(hex, 16))
-        );
-      }
-    } catch {
-      return text;
-    }
-  });
-}
+// Note: Direct IMAP connections are not supported in Edge Functions
+// This version uses the Supabase database to store/sync emails
+// For real IMAP sync, you would need an external service like Nylas, Mailchimp, or a custom server
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -178,40 +45,68 @@ serve(async (req) => {
     // Get user email config
     const { data: usuario, error: userError } = await supabaseClient
       .from("usuarios")
-      .select("email, pop, porta_pop, senha_email")
+      .select("id, email, pop, porta_pop, senha_email")
       .eq("auth_user_id", user.id)
       .single();
 
     if (userError || !usuario) {
-      throw new Error("Configuração de email não encontrada");
+      console.error("User config error:", userError);
+      throw new Error("Configuração de email não encontrada. Verifique suas configurações de usuário.");
     }
 
     if (!usuario.pop || !usuario.senha_email) {
       throw new Error("Configure o servidor IMAP e senha do email nas configurações do usuário");
     }
 
-    const { folder = "INBOX", limit = 30 } = await req.json().catch(() => ({}));
+    const { folder = "INBOX", limit = 50 } = await req.json().catch(() => ({}));
 
-    console.log(`Connecting to IMAP: ${usuario.pop}:${usuario.porta_pop}`);
+    console.log(`Checking emails for user ${usuario.email}, folder: ${folder}`);
 
-    const emails = await fetchEmailsViaIMAP(
-      usuario.pop,
-      usuario.porta_pop || 993,
-      usuario.email,
-      usuario.senha_email,
-      folder,
-      limit
-    );
+    // Fetch emails already stored in the database for this user
+    const { data: storedEmails, error: emailsError } = await supabaseClient
+      .from("emails")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("folder", folder.toLowerCase())
+      .order("date", { ascending: false })
+      .limit(limit);
 
-    console.log(`Fetched ${emails.length} emails`);
+    if (emailsError) {
+      console.error("Error fetching stored emails:", emailsError);
+      throw new Error("Erro ao buscar emails armazenados");
+    }
 
-    return new Response(JSON.stringify({ emails }), {
+    const emails: EmailMessage[] = (storedEmails || []).map(email => ({
+      subject: email.subject,
+      from_email: email.from_email,
+      to_email: email.to_email,
+      date: email.date,
+      read: email.read || false,
+      starred: email.starred || false,
+      body: email.body,
+    }));
+
+    console.log(`Found ${emails.length} stored emails for user`);
+
+    // Return stored emails with a note about IMAP limitations
+    return new Response(JSON.stringify({ 
+      emails, 
+      success: true,
+      message: emails.length > 0 
+        ? `${emails.length} emails encontrados` 
+        : "Nenhum email encontrado. Edge Functions não suportam conexões IMAP diretas. Use o envio de emails para testar.",
+      imap_note: "Conexões IMAP diretas não são suportadas em Edge Functions do Supabase. Para sincronização real, considere usar um serviço como Nylas ou um webhook de recebimento."
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
-    console.error("Error fetching emails:", error);
+    console.error("Error:", error.message);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        success: false,
+        hint: "Verifique suas configurações de email. Para Gmail, use uma Senha de App."
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
