@@ -1,98 +1,68 @@
 // Definição centralizada de todos os menus disponíveis no sistema
 // Este arquivo é usado para sincronizar os menus do Layout.tsx com as permissões do GruposAcessoCRUD
 
-export const MENU_CONFIG = [
-  { id: "Dashboards", label: "Dashboards" },
-  { id: "Dashboard", label: "Painel" },
-  { id: "Avisos", label: "Avisos" },
-  { id: "Chat Interno", label: "Chat Interno" },
-  { id: "Teste Roteamento", label: "Teste de Roteamento" },
-  { id: "Clientes", label: "Leads" },
-  { id: "Atendimento", label: "Chats" },
-  { id: "Painel Chats", label: "Painel" },
-  { id: "Config Atendimento", label: "Configurações de Atendimento" },
-  { id: "Dashboard Atendente", label: "Dashboard Atendente" },
-  { id: "Dashboard Supervisor", label: "Dashboard Supervisor" },
-  { id: "SLA Dashboard", label: "Dashboard SLA" },
-  { id: "Analytics Dashboard", label: "Analytics Avançado" },
-  { id: "Dashboard CSAT/NPS", label: "Pesquisas de Satisfação" },
-  { id: "Dashboard Gastos IA", label: "Gastos com IA" },
-  { id: "CSAT/NPS", label: "Pesquisas de Satisfação (Config)" },
-  { id: "Base de Conhecimento", label: "Base de Conhecimento" },
-  { id: "Quality Assurance", label: "Quality Assurance" },
-  { id: "Campanhas", label: "Calendário" },
-  { id: "Vendas", label: "Vendas" },
-  { id: "Orçamento", label: "Orçamento" },
-  { id: "Config Vendas", label: "Configuração de Vendas" },
-  { id: "Importação Produtos Sub", label: "Importação de Produtos de Terceiro" },
-  { id: "Conteúdos", label: "Listas" },
-  { id: "Contatos", label: "Contatos" },
-  { id: "Empresas", label: "Empresas" },
-  { id: "Todos", label: "Todos" },
-  { id: "Vínculos Empresas", label: "Vínculo Empresas X Usuário / Segmento" },
-  { id: "Vínculos Contatos", label: "Vínculo Contatos X Usuário / Segmento" },
-  { id: "Email", label: "E-mail" },
-  { id: "Caixa de Entrada", label: "Caixa de Entrada" },
-  { id: "Enviados", label: "Enviados" },
-  { id: "Arquivados", label: "Arquivados" },
-  { id: "Lixeira", label: "Lixeira" },
-  { id: "Bot Test", label: "Bot" },
-  { id: "Criar Bot", label: "Criar / Editar Bot" },
-  { id: "Testar", label: "Testar Bot" },
-  { id: "Desenho", label: "Marketing" },
-  { id: "Canvas", label: "Canvas" },
-  { id: "Automações", label: "Automações" },
-  { id: "Campanhas Marketing", label: "Campanhas" },
-  { id: "Relatórios", label: "Relatórios" },
-  { id: "Meus Conjuntos", label: "Meus Conjuntos de Itens" },
-  { id: "Telefonia", label: "Telefonia" },
-  { id: "Softphone", label: "Softphone" },
-  { id: "Videochamada", label: "Videochamada" },
-  { id: "Minha Conta", label: "Minha Conta" },
-  { id: "Perfil", label: "Perfil" },
-  { id: "Alterar Senha", label: "Alterar Senha" },
-  { id: "Configurações", label: "Configurações" },
-  { id: "Config Filas", label: "Filas de Atendimento" },
-  { id: "Config Skills", label: "Skills de Atendimento" },
-  { id: "Monitor de Filas", label: "Monitor de Filas" },
-  { id: "Omnichannel Builder", label: "Workflow Builder Omnichannel" },
-  { id: "Teste de Webhooks", label: "Teste de Webhooks" },
-  { id: "Variáveis Globais", label: "Variáveis Globais" },
-  { id: "Teste Campanhas", label: "Teste Campanhas" },
-  { id: "Gerenciar Atalhos", label: "Gerenciar Atalhos" },
-  { id: "SLA Config", label: "SLA" },
-  { id: "Análise de Sentimento", label: "Análise de Sentimento" },
-  { id: "Automação de Vendas", label: "Regras para o Orçamento" },
-  { id: "Editor de Regras", label: "Editor de Regras" },
-  { id: "Base de Conhecimento", label: "Base de Conhecimento" },
-  { id: "Logística", label: "Logística" },
-  { id: "Logística Dashboard", label: "Dashboard Logística" },
-  { id: "Logística Veículos", label: "Veículos" },
-  { id: "Logística Histórico", label: "Histórico" },
-  { id: "Logística Roteirização", label: "Roteirização" },
-  { id: "Logística Rotas", label: "Rotas Salvas" },
-  { id: "Logística Automações", label: "Automações" },
-  { id: "Logística Config", label: "Configuração" },
-  { id: "Logística Monitoramento", label: "Monitoramento" },
-  { id: "Marketplaces", label: "Marketplaces" },
-  { id: "Marketplace Hub", label: "Hub de Marketplaces" },
-  { id: "Marketplace Produtos", label: "Produtos x Canais" },
-  { id: "Marketplace Pedidos", label: "Pedidos" },
-  { id: "Ads", label: "Ads" },
-  { id: "Ads Campaigns", label: "Campanhas Ads" },
-  { id: "Ads Reports", label: "Relatórios Ads" },
-  { id: "Ads Alerts", label: "Alertas Ads" },
-  { id: "Ads Dashboard", label: "Dashboard Geral Ads" },
-  { id: "Ads Google", label: "Google Ads" },
-  { id: "Ads Meta", label: "Meta Ads" },
-  { id: "Ads TikTok", label: "TikTok Ads" },
-  { id: "Ads MercadoLivre", label: "Mercado Livre Ads" },
-  { id: "Ads Amazon", label: "Amazon Ads" },
-  { id: "Ads Credentials", label: "Credenciais Ads" },
-  { id: "Ads Logs", label: "Logs de Coleta Ads" },
-  { id: "Ads Automation", label: "Automações Ads" },
-  { id: "Robô de Preços", label: "Robô de Preços" },
-] as const;
+export interface MenuConfigItem {
+  id: string;
+  label: string;
+  category?: string;
+}
+
+export const MENU_CONFIG: MenuConfigItem[] = [
+  // Dashboards
+  { id: "Dashboards", label: "Dashboards (Categoria)", category: "Dashboards" },
+  { id: "Dashboard", label: "Painel Principal", category: "Dashboards" },
+  { id: "Dashboard Atendente", label: "Dashboard Atendente", category: "Dashboards" },
+  { id: "Dashboard Supervisor", label: "Dashboard Supervisor", category: "Dashboards" },
+  { id: "SLA Dashboard", label: "Dashboard SLA", category: "Dashboards" },
+  { id: "Analytics Dashboard", label: "Analytics Avançado", category: "Dashboards" },
+  { id: "Dashboard CSAT/NPS", label: "Pesquisas de Satisfação", category: "Dashboards" },
+  { id: "Dashboard Gastos IA", label: "Gastos com IA", category: "Dashboards" },
+  
+  // Chats / Atendimento
+  { id: "Atendimento", label: "Chats (Categoria)", category: "Chats" },
+  { id: "Painel Chats", label: "Painel de Chats", category: "Chats" },
+  { id: "Chat Interno", label: "Chat Interno", category: "Chats" },
+  { id: "Monitor de Filas", label: "Monitor de Filas", category: "Chats" },
+  { id: "Teste Roteamento", label: "Teste de Roteamento", category: "Chats" },
+  { id: "Config Atendimento", label: "Configurações de Atendimento", category: "Chats" },
+  
+  // Vendas
+  { id: "Vendas", label: "Vendas (Categoria)", category: "Vendas" },
+  { id: "Orçamento", label: "Orçamento", category: "Vendas" },
+  { id: "Config Vendas", label: "Configuração de Vendas", category: "Vendas" },
+  
+  // Outros menus principais
+  { id: "Clientes", label: "Funil de Leads", category: "Principal" },
+  { id: "Campanhas", label: "Calendário", category: "Principal" },
+  { id: "Conteúdos", label: "Listas", category: "Principal" },
+  { id: "Email", label: "E-mail", category: "Principal" },
+  { id: "Desenho", label: "Marketing", category: "Principal" },
+  { id: "Relatórios", label: "Relatórios", category: "Principal" },
+  { id: "Logística", label: "Logística", category: "Principal" },
+  { id: "Marketplaces", label: "Marketplaces", category: "Principal" },
+  { id: "Ads", label: "Ads", category: "Principal" },
+  { id: "Robô de Preços", label: "Robô de Preços", category: "Principal" },
+  { id: "Configurações", label: "Configurações", category: "Sistema" },
+  { id: "Avisos", label: "Avisos", category: "Sistema" },
+];
 
 // Lista apenas dos IDs dos menus (para compatibilidade com código existente)
 export const MENUS_DISPONIVEIS = MENU_CONFIG.map(menu => menu.id);
+
+// Agrupar menus por categoria para exibição organizada
+export const getMenusByCategory = () => {
+  const categories: Record<string, MenuConfigItem[]> = {};
+  
+  MENU_CONFIG.forEach(menu => {
+    const category = menu.category || 'Outros';
+    if (!categories[category]) {
+      categories[category] = [];
+    }
+    categories[category].push(menu);
+  });
+  
+  return categories;
+};
+
+// Ordem das categorias para exibição
+export const CATEGORY_ORDER = ['Dashboards', 'Chats', 'Vendas', 'Principal', 'Sistema'];
