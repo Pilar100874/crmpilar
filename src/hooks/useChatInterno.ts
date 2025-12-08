@@ -55,6 +55,7 @@ export function useChatInterno() {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [presenceChannel, setPresenceChannel] = useState<RealtimeChannel | null>(null);
   const [totalNaoLidas, setTotalNaoLidas] = useState(0);
+  const [naoLidasPorConversa, setNaoLidasPorConversa] = useState<Record<string, number>>({});
 
   // Fetch atual usuario id from auth + usuarios table
   useEffect(() => {
@@ -360,10 +361,13 @@ export function useChatInterno() {
 
       if (!participacoes || participacoes.length === 0) {
         setTotalNaoLidas(0);
+        setNaoLidasPorConversa({});
         return;
       }
 
       let total = 0;
+      const porConversa: Record<string, number> = {};
+      
       for (const p of participacoes) {
         const query = supabase
           .from('chat_interno_mensagens')
@@ -376,10 +380,16 @@ export function useChatInterno() {
         }
 
         const { count } = await query;
-        total += count || 0;
+        const countValue = count || 0;
+        total += countValue;
+        
+        if (countValue > 0) {
+          porConversa[p.conversa_id] = countValue;
+        }
       }
 
       setTotalNaoLidas(total);
+      setNaoLidasPorConversa(porConversa);
     } catch (error) {
       console.error('Erro ao carregar mensagens não lidas:', error);
     }
@@ -420,6 +430,10 @@ export function useChatInterno() {
           if (participante && novaMensagem.remetente_id !== usuarioAtualId) {
             // Nova mensagem em uma conversa do usuário, de outro remetente
             setTotalNaoLidas(prev => prev + 1);
+            setNaoLidasPorConversa(prev => ({
+              ...prev,
+              [novaMensagem.conversa_id]: (prev[novaMensagem.conversa_id] || 0) + 1
+            }));
           }
         }
       )
@@ -450,6 +464,7 @@ export function useChatInterno() {
     usuarioAtualId,
     onlineUsers,
     totalNaoLidas,
+    naoLidasPorConversa,
     carregarConversas,
     carregarMensagens,
     criarConversa,

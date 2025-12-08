@@ -12,13 +12,15 @@ import {
   Search,
   ArrowLeft,
   User,
-  Check
+  Check,
+  Video
 } from 'lucide-react';
 import { useChatInterno } from '@/hooks/useChatInterno';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { VideoChamadaDialog } from './VideoChamadaDialog';
 
 interface ChatInternoPanelProps {
   isOpen: boolean;
@@ -40,6 +42,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     loading,
     usuarioAtualId,
     onlineUsers,
+    naoLidasPorConversa,
     carregarMensagens,
     enviarMensagem,
     criarConversa,
@@ -54,6 +57,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   const [tituloNovaConversa, setTituloNovaConversa] = useState('');
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   const [participantesConversa, setParticipantesConversa] = useState<{[key: string]: Usuario[]}>({});
+  const [showVideoChamada, setShowVideoChamada] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const isUserOnline = (userId: string) => {
@@ -214,6 +218,17 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
               <span className="font-semibold flex-1 text-center">
                 {getConversaNome(conversaAtual)}
               </span>
+              {/* Botão de videochamada - apenas para conversas diretas */}
+              {conversaAtual.tipo === 'direto' && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowVideoChamada(true)}
+                  title="Iniciar videochamada"
+                >
+                  <Video className="h-4 w-4" />
+                </Button>
+              )}
             </>
           ) : showNovaConversa ? (
             <>
@@ -434,42 +449,76 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
               </div>
             ) : (
               <div className="divide-y">
-                {conversasFiltradas.map((conversa) => (
-                  <button
-                    key={conversa.id}
-                    onClick={() => setConversaAtual(conversa)}
-                    className="w-full p-3 hover:bg-muted/50 transition-colors flex items-center gap-3 text-left"
-                  >
-                    <Avatar>
-                      <AvatarFallback>
-                        {conversa.tipo === 'grupo' ? (
-                          <Users className="h-4 w-4" />
-                        ) : (
-                          getConversaNome(conversa)?.[0]?.toUpperCase() || 'C'
+                {conversasFiltradas.map((conversa) => {
+                  const naoLidas = naoLidasPorConversa[conversa.id] || 0;
+                  return (
+                    <button
+                      key={conversa.id}
+                      onClick={() => setConversaAtual(conversa)}
+                      className={cn(
+                        "w-full p-3 hover:bg-muted/50 transition-colors flex items-center gap-3 text-left",
+                        naoLidas > 0 && "animate-pulse bg-primary/5"
+                      )}
+                    >
+                      <div className="relative">
+                        <Avatar>
+                          <AvatarFallback>
+                            {conversa.tipo === 'grupo' ? (
+                              <Users className="h-4 w-4" />
+                            ) : (
+                              getConversaNome(conversa)?.[0]?.toUpperCase() || 'C'
+                            )}
+                          </AvatarFallback>
+                        </Avatar>
+                        {naoLidas > 0 && (
+                          <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs font-bold rounded-full flex items-center justify-center">
+                            {naoLidas > 9 ? '9+' : naoLidas}
+                          </span>
                         )}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
-                        {getConversaNome(conversa)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(conversa.updated_at), 'dd/MM HH:mm', { locale: ptBR })}
-                      </p>
-                    </div>
-                    {conversa.tipo === 'grupo' && (
-                      <Badge variant="secondary" className="text-xs">
-                        Grupo
-                      </Badge>
-                    )}
-                  </button>
-                ))}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={cn(
+                          "truncate",
+                          naoLidas > 0 ? "font-bold" : "font-medium"
+                        )}>
+                          {getConversaNome(conversa)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(conversa.updated_at), 'dd/MM HH:mm', { locale: ptBR })}
+                        </p>
+                      </div>
+                      {conversa.tipo === 'grupo' && (
+                        <Badge variant="secondary" className="text-xs">
+                          Grupo
+                        </Badge>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </ScrollArea>
         </>
       )}
       </div>
+
+      {/* Dialog de Videochamada */}
+      {conversaAtual && conversaAtual.tipo === 'direto' && usuarioAtualId && (
+        <VideoChamadaDialog
+          isOpen={showVideoChamada}
+          onClose={() => setShowVideoChamada(false)}
+          usuarioRemotoId={
+            (participantesConversa[conversaAtual.id] || [])
+              .find(p => p.id !== usuarioAtualId)?.id || ''
+          }
+          usuarioRemotoNome={
+            (participantesConversa[conversaAtual.id] || [])
+              .find(p => p.id !== usuarioAtualId)?.nome || 'Usuário'
+          }
+          usuarioAtualId={usuarioAtualId}
+          conversaId={conversaAtual.id}
+        />
+      )}
     </div>
   );
 }
