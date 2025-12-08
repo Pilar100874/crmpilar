@@ -128,7 +128,7 @@ export function VideoChamadaDialog({
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      // Enviar oferta via Supabase Realtime
+      // Enviar oferta via Supabase Realtime - canal da conversa
       if (channelRef.current) {
         channelRef.current.send({
           type: 'broadcast',
@@ -141,6 +141,20 @@ export function VideoChamadaDialog({
           }
         });
       }
+
+      // Também notificar no canal global do usuário remoto para que o ícone pisque
+      const globalChannel = supabase.channel(`videochamada-${usuarioRemotoId}`);
+      await globalChannel.subscribe();
+      await globalChannel.send({
+        type: 'broadcast',
+        event: 'call-offer',
+        payload: {
+          from: usuarioAtualId,
+          to: usuarioRemotoId,
+          conversaId
+        }
+      });
+      supabase.removeChannel(globalChannel);
 
       toast.info(`Chamando ${usuarioRemotoNome}...`);
     } catch (error) {
@@ -199,7 +213,7 @@ export function VideoChamadaDialog({
     }
   }, []);
 
-  const handleEndCall = useCallback(() => {
+  const handleEndCall = useCallback(async () => {
     // Parar streams locais
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track => track.stop());
@@ -212,7 +226,7 @@ export function VideoChamadaDialog({
       peerConnectionRef.current = null;
     }
 
-    // Notificar o outro usuário
+    // Notificar o outro usuário - canal da conversa
     if (channelRef.current) {
       channelRef.current.send({
         type: 'broadcast',
@@ -222,6 +236,23 @@ export function VideoChamadaDialog({
           to: usuarioRemotoId
         }
       });
+    }
+
+    // Também notificar no canal global do usuário remoto para limpar o indicador
+    try {
+      const globalChannel = supabase.channel(`videochamada-${usuarioRemotoId}`);
+      await globalChannel.subscribe();
+      await globalChannel.send({
+        type: 'broadcast',
+        event: 'call-end',
+        payload: {
+          from: usuarioAtualId,
+          to: usuarioRemotoId
+        }
+      });
+      supabase.removeChannel(globalChannel);
+    } catch (e) {
+      console.error('Erro ao notificar encerramento:', e);
     }
 
     setCallStatus('ended');
