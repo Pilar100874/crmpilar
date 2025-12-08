@@ -7754,8 +7754,10 @@ export type Database = {
           hora_final: string
           hora_inicial: string
           id: string
+          imap: string | null
           nome: string
           pop: string | null
+          porta_imap: number | null
           porta_pop: number | null
           porta_smtp: number | null
           ramal: string | null
@@ -7779,8 +7781,10 @@ export type Database = {
           hora_final?: string
           hora_inicial?: string
           id?: string
+          imap?: string | null
           nome: string
           pop?: string | null
+          porta_imap?: number | null
           porta_pop?: number | null
           porta_smtp?: number | null
           ramal?: string | null
@@ -7804,8 +7808,10 @@ export type Database = {
           hora_final?: string
           hora_inicial?: string
           id?: string
+          imap?: string | null
           nome?: string
           pop?: string | null
+          porta_imap?: number | null
           porta_pop?: number | null
           porta_smtp?: number | null
           ramal?: string | null

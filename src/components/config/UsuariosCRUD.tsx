@@ -30,8 +30,8 @@ interface Usuario {
   estabelecimento_id: string | null;
   smtp: string | null;
   porta_smtp: number | null;
-  pop: string | null;
-  porta_pop: number | null;
+  imap: string | null;
+  porta_imap: number | null;
   senha_email: string | null;
   usar_autenticacao: boolean | null;
   hora_inicial: string;
@@ -85,8 +85,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [senha, setSenha] = useState("");
   const [smtp, setSmtp] = useState("");
   const [portaSmtp, setPortaSmtp] = useState("");
-  const [pop, setPop] = useState("");
-  const [portaPop, setPortaPop] = useState("");
+  const [imap, setImap] = useState("");
+  const [portaImap, setPortaImap] = useState("");
   const [senhaEmail, setSenhaEmail] = useState("");
   const [usarAutenticacao, setUsarAutenticacao] = useState(true);
   const [unidadeId, setUnidadeId] = useState("");
@@ -300,8 +300,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
       senha_hash: senha || undefined,
       smtp: smtp || null,
       porta_smtp: portaSmtp ? parseInt(portaSmtp) : null,
-      pop: pop || null,
-      porta_pop: portaPop ? parseInt(portaPop) : null,
+      imap: imap || null,
+      porta_imap: portaImap ? parseInt(portaImap) : null,
       senha_email: senhaEmail || null,
       usar_autenticacao: usarAutenticacao,
       hora_inicial: horaInicial,
@@ -505,36 +505,36 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     const configs: Record<string, {
       smtp: string;
       portaSmtp: string;
-      pop: string;
-      portaPop: string;
+      imap: string;
+      portaImap: string;
       providerName: string;
     }> = {
       'gmail.com': {
         smtp: 'smtp.gmail.com',
         portaSmtp: '587',
-        pop: 'imap.gmail.com',
-        portaPop: '993',
+        imap: 'imap.gmail.com',
+        portaImap: '993',
         providerName: 'Gmail'
       },
       'hotmail.com': {
         smtp: 'smtp-mail.outlook.com',
         portaSmtp: '587',
-        pop: 'outlook.office365.com',
-        portaPop: '993',
+        imap: 'outlook.office365.com',
+        portaImap: '993',
         providerName: 'Hotmail'
       },
       'outlook.com': {
         smtp: 'smtp-mail.outlook.com',
         portaSmtp: '587',
-        pop: 'outlook.office365.com',
-        portaPop: '993',
+        imap: 'outlook.office365.com',
+        portaImap: '993',
         providerName: 'Outlook'
       },
       'live.com': {
         smtp: 'smtp-mail.outlook.com',
         portaSmtp: '587',
-        pop: 'outlook.office365.com',
-        portaPop: '993',
+        imap: 'outlook.office365.com',
+        portaImap: '993',
         providerName: 'Live'
       },
     };
@@ -544,8 +544,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     if (config) {
       setSmtp(config.smtp);
       setPortaSmtp(config.portaSmtp);
-      setPop(config.pop);
-      setPortaPop(config.portaPop);
+      setImap(config.imap);
+      setPortaImap(config.portaImap);
       setUsarAutenticacao(true);
       
       toast({
@@ -572,8 +572,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setSenha("");
     setSmtp("");
     setPortaSmtp("");
-    setPop("");
-    setPortaPop("");
+    setImap("");
+    setPortaImap("");
     setSenhaEmail("");
     setUsarAutenticacao(true);
     setUnidadeId("");
@@ -596,8 +596,8 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     setTelefone(usuario.telefone || "");
     setSmtp(usuario.smtp || "");
     setPortaSmtp(usuario.porta_smtp?.toString() || "");
-    setPop(usuario.pop || "");
-    setPortaPop(usuario.porta_pop?.toString() || "");
+    setImap(usuario.imap || "");
+    setPortaImap(usuario.porta_imap?.toString() || "");
     setSenhaEmail(usuario.senha_email || "");
     setUsarAutenticacao(usuario.usar_autenticacao ?? true);
     setUnidadeId(usuario.unidade_id || "");
@@ -916,31 +916,31 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
             </div>
 
             <div>
-              <Label htmlFor="usuario-pop">
-                Servidor IMAP/POP
-                {pop && <span className="text-xs text-green-600 ml-2">✓</span>}
+              <Label htmlFor="usuario-imap">
+                Servidor IMAP
+                {imap && <span className="text-xs text-green-600 ml-2">✓</span>}
               </Label>
               <Input
-                id="usuario-pop"
-                value={pop}
-                onChange={(e) => setPop(e.target.value)}
+                id="usuario-imap"
+                value={imap}
+                onChange={(e) => setImap(e.target.value)}
                 placeholder="imap.exemplo.com"
-                className={pop ? "border-green-500/50" : ""}
+                className={imap ? "border-green-500/50" : ""}
               />
             </div>
 
             <div>
-              <Label htmlFor="usuario-porta-pop">
-                Porta IMAP/POP
-                {portaPop && <span className="text-xs text-green-600 ml-2">✓</span>}
+              <Label htmlFor="usuario-porta-imap">
+                Porta IMAP
+                {portaImap && <span className="text-xs text-green-600 ml-2">✓</span>}
               </Label>
               <Input
-                id="usuario-porta-pop"
+                id="usuario-porta-imap"
                 type="number"
-                value={portaPop}
-                onChange={(e) => setPortaPop(e.target.value)}
+                value={portaImap}
+                onChange={(e) => setPortaImap(e.target.value)}
                 placeholder="993"
-                className={portaPop ? "border-green-500/50" : ""}
+                className={portaImap ? "border-green-500/50" : ""}
               />
             </div>
 
