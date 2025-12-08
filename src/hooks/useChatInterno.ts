@@ -55,9 +55,25 @@ export function useChatInterno() {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [presenceChannel, setPresenceChannel] = useState<RealtimeChannel | null>(null);
 
+  // Fetch atual usuario id from auth + usuarios table
   useEffect(() => {
-    const userId = localStorage.getItem('userId');
-    setUsuarioAtualId(userId);
+    const fetchUsuarioAtualId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single();
+
+      if (usuario) {
+        setUsuarioAtualId(usuario.id);
+        localStorage.setItem('userId', usuario.id);
+      }
+    };
+
+    fetchUsuarioAtualId();
   }, []);
 
   // Setup presence tracking
