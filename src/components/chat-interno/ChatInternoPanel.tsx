@@ -49,6 +49,13 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     carregarConversas,
   } = useChatInterno();
 
+  // Sempre abrir na lista de conversas/usuários ao abrir o painel
+  useEffect(() => {
+    if (isOpen) {
+      setConversaAtual(null);
+    }
+  }, [isOpen, setConversaAtual]);
+
   const [mensagemInput, setMensagemInput] = useState('');
   const [busca, setBusca] = useState('');
   const [showNovaConversa, setShowNovaConversa] = useState(false);
