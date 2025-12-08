@@ -1751,8 +1751,9 @@ export default function Calendario() {
     const weekDays = [];
     for (let i = 0; i < 7; i++) {
       weekDays.push(
-        <div key={i} className="text-center py-3 font-medium text-sm text-muted-foreground uppercase border-b border-border">
-          {format(addDays(startDate, i), dateFormat, { locale: ptBR })}
+        <div key={i} className="text-center py-2 sm:py-3 font-medium text-[10px] sm:text-sm text-muted-foreground uppercase border-b border-border">
+          <span className="hidden sm:inline">{format(addDays(startDate, i), dateFormat, { locale: ptBR })}</span>
+          <span className="sm:hidden">{format(addDays(startDate, i), "EEEEE", { locale: ptBR })}</span>
         </div>
       );
     }
@@ -1771,14 +1772,14 @@ export default function Calendario() {
           <DroppableDay
             key={day.toString()}
             date={currentDay}
-            className={`min-h-[140px] border-r border-b border-border hover:bg-muted/50 transition-colors flex flex-col ${
+            className={`min-h-[60px] sm:min-h-[100px] md:min-h-[140px] border-r border-b border-border hover:bg-muted/50 transition-colors flex flex-col ${
               !isCurrentMonth ? "bg-muted/20 text-muted-foreground" : ""
             } ${isTodayDate ? "bg-primary/5" : ""}`}
           >
-            <div className="flex items-center justify-between px-2 py-1 border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-[5]">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center justify-between px-1 sm:px-2 py-0.5 sm:py-1 border-b border-border/50 bg-background/50 backdrop-blur-sm sticky top-0 z-[5]">
+              <div className="flex items-center gap-0.5 sm:gap-1">
                 <span 
-                  className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm cursor-pointer hover:bg-primary/20 transition-colors ${
+                  className={`inline-flex items-center justify-center w-5 h-5 sm:w-7 sm:h-7 rounded-full text-xs sm:text-sm cursor-pointer hover:bg-primary/20 transition-colors ${
                     isTodayDate ? "bg-primary text-primary-foreground font-bold" : ""
                   }`}
                   onClick={(e) => {
@@ -1794,44 +1795,75 @@ export default function Calendario() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 hover:bg-primary/20"
+                    className="h-5 w-5 sm:h-6 sm:w-6 hover:bg-primary/20 hidden sm:flex"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleOpenNewTask(currentDay);
                     }}
                     title="Nova tarefa"
                   >
-                    <Plus className="w-3 h-3" />
+                    <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   </Button>
                 )}
               </div>
               {dayTasks.length > 0 && (
-                <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                <span className="text-[10px] sm:text-xs text-muted-foreground bg-muted px-1 sm:px-1.5 py-0.5 rounded">
                   {dayTasks.length}
                 </span>
               )}
             </div>
-            <div className="flex-1 p-2 space-y-1 overflow-y-auto max-h-[100px]">
-              {dayTasks.slice(0, 5).map(task => (
-                <DraggableTask
-                  key={task.id}
-                  task={task}
-                  onClick={(e) => {
-                    e?.stopPropagation();
-                    handleToggleTaskStatus(task.id);
-                  }}
-                  onEdit={() => handleEditTask(task)}
-                  onDelete={() => handleDeleteTask(task.id)}
-                  userColor={task.userId ? userColors[task.userId] : undefined}
-                />
-              ))}
-              {dayTasks.length > 5 && (
-                <div 
-                  className="text-xs text-muted-foreground px-2 w-full text-left"
-                >
-                  +{dayTasks.length - 5} mais tarefas
-                </div>
-              )}
+            {/* Mobile: mostrar apenas indicadores coloridos */}
+            <div className="flex-1 p-0.5 sm:p-2 overflow-hidden">
+              {/* Mobile: pontos coloridos indicando tarefas */}
+              <div className="sm:hidden flex flex-wrap gap-0.5 p-1">
+                {dayTasks.slice(0, 4).map(task => (
+                  <div
+                    key={task.id}
+                    className={`w-2 h-2 rounded-full ${
+                      task.status === "completed" ? "bg-muted-foreground" : "bg-primary"
+                    }`}
+                    style={task.userId && userColors[task.userId] && task.status !== "completed" ? {
+                      backgroundColor: userColors[task.userId]
+                    } : {}}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentDate(currentDay);
+                      setViewMode("day");
+                    }}
+                  />
+                ))}
+                {dayTasks.length > 4 && (
+                  <span className="text-[8px] text-muted-foreground">+{dayTasks.length - 4}</span>
+                )}
+              </div>
+              {/* Desktop: lista de tarefas */}
+              <div className="hidden sm:block space-y-1 max-h-[80px] md:max-h-[100px] overflow-y-auto">
+                {dayTasks.slice(0, 3).map(task => (
+                  <DraggableTask
+                    key={task.id}
+                    task={task}
+                    onClick={(e) => {
+                      e?.stopPropagation();
+                      handleToggleTaskStatus(task.id);
+                    }}
+                    onEdit={() => handleEditTask(task)}
+                    onDelete={() => handleDeleteTask(task.id)}
+                    userColor={task.userId ? userColors[task.userId] : undefined}
+                  />
+                ))}
+                {dayTasks.length > 3 && (
+                  <div 
+                    className="text-xs text-muted-foreground px-2 w-full text-left cursor-pointer hover:text-primary"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentDate(currentDay);
+                      setViewMode("day");
+                    }}
+                  >
+                    +{dayTasks.length - 3} mais
+                  </div>
+                )}
+              </div>
             </div>
           </DroppableDay>
         );
@@ -1846,8 +1878,8 @@ export default function Calendario() {
     }
 
     return (
-      <div className="border-l border-t border-border">
-        <div className="grid grid-cols-7">{weekDays}</div>
+      <div className="border-l border-t border-border overflow-x-auto">
+        <div className="grid grid-cols-7 min-w-0">{weekDays}</div>
         {rows}
       </div>
     );
@@ -1867,7 +1899,7 @@ export default function Calendario() {
         <DroppableDay 
           key={i} 
           date={day}
-          className="flex-1 border-r border-b border-border"
+          className="flex-1 min-w-[120px] md:min-w-0 border-r border-b border-border"
         >
           <div 
             className={`p-2 sm:p-3 border-b border-border flex flex-col items-center ${isTodayDate ? "bg-primary/5" : ""}`}
@@ -1903,7 +1935,7 @@ export default function Calendario() {
               )}
             </div>
           </div>
-          <div className="p-1 sm:p-2 space-y-1 sm:space-y-2 min-h-[200px] sm:min-h-[300px] md:min-h-[400px]">
+          <div className="p-1 sm:p-2 space-y-1 sm:space-y-2 min-h-[150px] sm:min-h-[300px] md:min-h-[400px]">
             {dayTasks.map(task => (
               <DraggableTask
                 key={task.id}
@@ -1920,8 +1952,8 @@ export default function Calendario() {
     }
 
     return (
-      <div className="border-l border-t border-border">
-        <div className="flex overflow-x-auto">{days}</div>
+      <div className="border-l border-t border-border overflow-x-auto">
+        <div className="flex min-w-[840px] md:min-w-0">{days}</div>
       </div>
     );
   };
@@ -1949,21 +1981,21 @@ export default function Calendario() {
           backgroundColor: toAlpha(userColors[task.userId], 0.12)
         } : {}}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div 
-            className="flex-1 cursor-pointer"
+            className="flex-1 min-w-0 cursor-pointer"
             onClick={() => handleToggleTaskStatus(task.id)}
           >
-            <div className="font-medium text-sm">{task.title}</div>
+            <div className="font-medium text-sm truncate">{task.title}</div>
             {task.userName && (
               <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                <User className="w-3 h-3" />
-                {task.userName}
+                <User className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate">{task.userName}</span>
               </div>
             )}
-            {task.description && <div className="text-xs text-muted-foreground mt-1">{task.description}</div>}
+            {task.description && <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{task.description}</div>}
           </div>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -1987,20 +2019,20 @@ export default function Calendario() {
 
     return (
       <div className="border border-border rounded">
-        <div className="p-4 border-b border-border bg-muted/30">
-          <h3 className="font-semibold">
-            {format(currentDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
+        <div className="p-3 sm:p-4 border-b border-border bg-muted/30">
+          <h3 className="font-semibold text-sm sm:text-base">
+            {format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
           </h3>
         </div>
-        <div className="max-h-[600px] overflow-y-auto">
+        <div className="max-h-[calc(100vh-280px)] md:max-h-[600px] overflow-y-auto">
           {/* Seção: Tarefas Dia Todo */}
           {allDayTasks.length > 0 && (
             <div className="border-b-2 border-border bg-accent/5">
               <div className="flex">
-                <div className="w-20 p-2 text-sm font-semibold text-foreground border-r border-border">
+                <div className="w-16 sm:w-20 p-2 text-xs sm:text-sm font-semibold text-foreground border-r border-border flex-shrink-0">
                   Dia Todo
                 </div>
-                <div className="flex-1 p-2 space-y-1">
+                <div className="flex-1 p-2 space-y-1 min-w-0">
                   {allDayTasks.map(renderTaskCard)}
                 </div>
               </div>
@@ -2011,10 +2043,10 @@ export default function Calendario() {
           {noTimeTasks.length > 0 && (
             <div className="border-b-2 border-border bg-muted/10">
               <div className="flex">
-                <div className="w-20 p-2 text-sm font-semibold text-foreground border-r border-border">
-                  Sem Horário
+                <div className="w-16 sm:w-20 p-2 text-xs sm:text-sm font-semibold text-foreground border-r border-border flex-shrink-0">
+                  Sem Hora
                 </div>
-                <div className="flex-1 p-2 space-y-1">
+                <div className="flex-1 p-2 space-y-1 min-w-0">
                   {noTimeTasks.map(renderTaskCard)}
                 </div>
               </div>
@@ -2026,10 +2058,10 @@ export default function Calendario() {
             const hourTasks = timedTasks.filter(task => task.time?.startsWith(String(hour).padStart(2, '0')));
             return (
               <div key={hour} className="flex border-b border-border hover:bg-muted/30">
-                <div className="w-20 p-2 text-sm text-muted-foreground border-r border-border">
+                <div className="w-16 sm:w-20 p-2 text-xs sm:text-sm text-muted-foreground border-r border-border flex-shrink-0">
                   {String(hour).padStart(2, '0')}:00
                 </div>
-                <div className="flex-1 p-2 space-y-1">
+                <div className="flex-1 p-2 space-y-1 min-w-0">
                   {hourTasks.map(renderTaskCard)}
                 </div>
               </div>
@@ -2451,73 +2483,93 @@ export default function Calendario() {
     });
 
     return (
-      <div className="grid grid-cols-4 gap-4 p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div>
-          <div className="mb-4 pb-2 border-b border-border">
-            <h3 className="font-semibold text-sm uppercase">TAREFAS DE HOJE</h3>
-            <p className="text-xs text-muted-foreground">{todayTasks.length} tarefas</p>
+          <div className="mb-3 sm:mb-4 pb-2 border-b border-border sticky top-0 bg-background z-10">
+            <h3 className="font-semibold text-xs sm:text-sm uppercase">HOJE</h3>
+            <p className="text-xs text-muted-foreground">{todayTasks.length} tarefa{todayTasks.length !== 1 ? 's' : ''}</p>
           </div>
-          {todayTasks.map(task => 
-            <DraggableTaskCard 
-              key={task.id} 
-              task={task} 
-              onToggle={() => handleToggleTaskStatus(task.id)}
-              onEdit={() => handleEditTask(task)}
-              onDelete={() => handleDeleteTask(task.id)}
-              userColor={task.userId ? userColors[task.userId] : undefined}
-            />
-          )}
+          <div className="space-y-2">
+            {todayTasks.map(task => 
+              <DraggableTaskCard 
+                key={task.id} 
+                task={task} 
+                onToggle={() => handleToggleTaskStatus(task.id)}
+                onEdit={() => handleEditTask(task)}
+                onDelete={() => handleDeleteTask(task.id)}
+                userColor={task.userId ? userColors[task.userId] : undefined}
+              />
+            )}
+            {todayTasks.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-4">Nenhuma tarefa</p>
+            )}
+          </div>
         </div>
 
         <div>
-          <div className="mb-4 pb-2 border-b border-border">
-            <h3 className="font-semibold text-sm uppercase">TAREFAS DE AMANHÃ</h3>
-            <p className="text-xs text-muted-foreground">{tomorrowTasks.length} tarefas</p>
+          <div className="mb-3 sm:mb-4 pb-2 border-b border-border sticky top-0 bg-background z-10">
+            <h3 className="font-semibold text-xs sm:text-sm uppercase">AMANHÃ</h3>
+            <p className="text-xs text-muted-foreground">{tomorrowTasks.length} tarefa{tomorrowTasks.length !== 1 ? 's' : ''}</p>
           </div>
-          {tomorrowTasks.map(task => 
-            <DraggableTaskCard 
-              key={task.id} 
-              task={task} 
-              onToggle={() => handleToggleTaskStatus(task.id)}
-              onEdit={() => handleEditTask(task)}
-              onDelete={() => handleDeleteTask(task.id)}
-              userColor={task.userId ? userColors[task.userId] : undefined}
-            />
-          )}
+          <div className="space-y-2">
+            {tomorrowTasks.map(task => 
+              <DraggableTaskCard 
+                key={task.id} 
+                task={task} 
+                onToggle={() => handleToggleTaskStatus(task.id)}
+                onEdit={() => handleEditTask(task)}
+                onDelete={() => handleDeleteTask(task.id)}
+                userColor={task.userId ? userColors[task.userId] : undefined}
+              />
+            )}
+            {tomorrowTasks.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-4">Nenhuma tarefa</p>
+            )}
+          </div>
         </div>
 
         <div>
-          <div className="mb-4 pb-2 border-b border-border">
-            <h3 className="font-semibold text-sm uppercase">TAREFAS DA PRÓXIMA SEMANA</h3>
+          <div className="mb-3 sm:mb-4 pb-2 border-b border-border sticky top-0 bg-background z-10">
+            <h3 className="font-semibold text-xs sm:text-sm uppercase">PRÓXIMA SEMANA</h3>
             <p className="text-xs text-muted-foreground">{nextWeekTasks.length} tarefa{nextWeekTasks.length !== 1 ? 's' : ''}</p>
           </div>
-          {nextWeekTasks.map(task => 
-            <DraggableTaskCard 
-              key={task.id} 
-              task={task} 
-              onToggle={() => handleToggleTaskStatus(task.id)}
-              onEdit={() => handleEditTask(task)}
-              onDelete={() => handleDeleteTask(task.id)}
-              userColor={task.userId ? userColors[task.userId] : undefined}
-            />
-          )}
+          <div className="space-y-2">
+            {nextWeekTasks.map(task => 
+              <DraggableTaskCard 
+                key={task.id} 
+                task={task} 
+                onToggle={() => handleToggleTaskStatus(task.id)}
+                onEdit={() => handleEditTask(task)}
+                onDelete={() => handleDeleteTask(task.id)}
+                userColor={task.userId ? userColors[task.userId] : undefined}
+              />
+            )}
+            {nextWeekTasks.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-4">Nenhuma tarefa</p>
+            )}
+          </div>
         </div>
 
         <div>
-          <div className="mb-4 pb-2 border-b border-border">
-            <h3 className="font-semibold text-sm uppercase">TAREFAS PARA O FUTURO</h3>
+          <div className="mb-3 sm:mb-4 pb-2 border-b border-border sticky top-0 bg-background z-10">
+            <h3 className="font-semibold text-xs sm:text-sm uppercase">FUTURO</h3>
             <p className="text-xs text-muted-foreground">{futureTasks.length} tarefa{futureTasks.length !== 1 ? 's' : ''}</p>
           </div>
-          {futureTasks.map(task => 
-            <DraggableTaskCard 
-              key={task.id} 
-              task={task} 
-              onToggle={() => handleToggleTaskStatus(task.id)}
-              onEdit={() => handleEditTask(task)}
-              onDelete={() => handleDeleteTask(task.id)}
-              userColor={task.userId ? userColors[task.userId] : undefined}
-            />
-          )}
+          <div className="space-y-2">
+            {futureTasks.map(task => 
+              <DraggableTaskCard 
+                key={task.id} 
+                task={task} 
+                onToggle={() => handleToggleTaskStatus(task.id)}
+                onEdit={() => handleEditTask(task)}
+                onDelete={() => handleDeleteTask(task.id)}
+                userColor={task.userId ? userColors[task.userId] : undefined}
+              />
+            )}
+            {futureTasks.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-4">Nenhuma tarefa</p>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -2986,7 +3038,7 @@ export default function Calendario() {
       })()}
 
       {/* Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto px-2 sm:px-4 md:px-6 py-2 sm:py-4">
         {viewMode === "month" && renderMonthView()}
         {viewMode === "week" && renderWeekView()}
         {viewMode === "day" && renderDayView()}
