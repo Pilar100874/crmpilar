@@ -48,6 +48,8 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
     criarConversa,
     carregarConversas,
     marcarComoLida,
+    videoChamadaPendente,
+    limparVideoChamadaPendente,
   } = useChatInternoContext();
 
   const [mensagemInput, setMensagemInput] = useState('');
@@ -59,8 +61,22 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   const [loadingUsuarios, setLoadingUsuarios] = useState(false);
   const [participantesConversa, setParticipantesConversa] = useState<{[key: string]: Usuario[]}>({});
   const [showVideoChamada, setShowVideoChamada] = useState(false);
+  const [isIncomingCall, setIsIncomingCall] = useState(false);
   const [wasOpen, setWasOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Quando receber uma videochamada pendente, abrir automaticamente o diálogo
+  useEffect(() => {
+    if (videoChamadaPendente) {
+      // Encontrar a conversa correspondente
+      const conversa = conversas.find(c => c.id === videoChamadaPendente.conversaId);
+      if (conversa) {
+        setConversaAtual(conversa);
+        setIsIncomingCall(true);
+        setShowVideoChamada(true);
+      }
+    }
+  }, [videoChamadaPendente, conversas, setConversaAtual]);
 
   // Sempre abrir na lista de conversas/usuários ao abrir o painel (apenas quando muda de fechado para aberto)
   // Também marca como lida ao fechar se estava numa conversa
@@ -246,10 +262,19 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setShowVideoChamada(true)}
+                  onClick={() => {
+                    setIsIncomingCall(false);
+                    setShowVideoChamada(true);
+                  }}
                   title="Iniciar videochamada"
+                  className={cn(
+                    videoChamadaPendente?.conversaId === conversaAtual.id && "animate-pulse"
+                  )}
                 >
-                  <Video className="h-4 w-4" />
+                  <Video className={cn(
+                    "h-4 w-4",
+                    videoChamadaPendente?.conversaId === conversaAtual.id && "text-green-500"
+                  )} />
                 </Button>
               )}
             </>
@@ -474,13 +499,15 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
               <div className="divide-y">
                 {conversasFiltradas.map((conversa) => {
                   const naoLidas = naoLidasPorConversa[conversa.id] || 0;
+                  const temChamadaPendente = videoChamadaPendente?.conversaId === conversa.id;
                   return (
                     <button
                       key={conversa.id}
                       onClick={() => setConversaAtual(conversa)}
                       className={cn(
                         "w-full p-3 hover:bg-muted/50 transition-colors flex items-center gap-3 text-left",
-                        naoLidas > 0 && "animate-pulse bg-primary/5"
+                        naoLidas > 0 && "animate-pulse bg-primary/5",
+                        temChamadaPendente && "bg-green-500/10"
                       )}
                     >
                       <div className="relative">
@@ -510,6 +537,12 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                           {format(new Date(conversa.updated_at), 'dd/MM HH:mm', { locale: ptBR })}
                         </p>
                       </div>
+                      {/* Indicador de videochamada pendente */}
+                      {temChamadaPendente && (
+                        <div className="animate-pulse">
+                          <Video className="h-5 w-5 text-green-500" />
+                        </div>
+                      )}
                       {conversa.tipo === 'grupo' && (
                         <Badge variant="secondary" className="text-xs">
                           Grupo
@@ -529,7 +562,11 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
       {conversaAtual && conversaAtual.tipo === 'direto' && usuarioAtualId && (
         <VideoChamadaDialog
           isOpen={showVideoChamada}
-          onClose={() => setShowVideoChamada(false)}
+          onClose={() => {
+            setShowVideoChamada(false);
+            setIsIncomingCall(false);
+            limparVideoChamadaPendente();
+          }}
           usuarioRemotoId={
             (participantesConversa[conversaAtual.id] || [])
               .find(p => p.id !== usuarioAtualId)?.id || ''
@@ -540,6 +577,7 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
           }
           usuarioAtualId={usuarioAtualId}
           conversaId={conversaAtual.id}
+          isIncoming={isIncomingCall}
         />
       )}
     </div>

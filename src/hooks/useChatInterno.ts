@@ -46,6 +46,13 @@ interface OnlineUser {
   online_at: string;
 }
 
+interface VideoChamadaPendente {
+  conversaId: string;
+  fromUserId: string;
+  fromUserNome: string;
+  timestamp: string;
+}
+
 export function useChatInterno() {
   const [conversas, setConversas] = useState<Conversa[]>([]);
   const [conversaAtual, setConversaAtual] = useState<Conversa | null>(null);
@@ -56,6 +63,7 @@ export function useChatInterno() {
   const [presenceChannel, setPresenceChannel] = useState<RealtimeChannel | null>(null);
   const [totalNaoLidas, setTotalNaoLidas] = useState(0);
   const [naoLidasPorConversa, setNaoLidasPorConversa] = useState<Record<string, number>>({});
+  const [videoChamadaPendente, setVideoChamadaPendente] = useState<VideoChamadaPendente | null>(null);
 
   // Fetch atual usuario id from auth + usuarios table
   useEffect(() => {
@@ -471,6 +479,68 @@ export function useChatInterno() {
     };
   }, [usuarioAtualId]);
 
+  // Subscription para detectar solicitações de videochamada
+  const videoChamadaChannelRef = useRef<RealtimeChannel | null>(null);
+  
+  useEffect(() => {
+    if (!usuarioAtualId) return;
+
+    const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+    if (!estabelecimentoId) return;
+
+    // Se já existe uma subscription, não criar outra
+    if (videoChamadaChannelRef.current) {
+      return;
+    }
+
+    console.log('[ChatInterno] Configurando subscription de videochamada');
+
+    const videoChamadaChannel = supabase
+      .channel(`videochamada-${usuarioAtualId}`)
+      .on('broadcast', { event: 'call-offer' }, async (payload) => {
+        console.log('[ChatInterno] Oferta de videochamada recebida:', payload);
+        
+        const { from, conversaId } = payload.payload;
+        
+        if (from !== usuarioAtualId) {
+          // Buscar nome do usuário que está chamando
+          const { data: usuario } = await supabase
+            .from('usuarios')
+            .select('nome')
+            .eq('id', from)
+            .single();
+
+          setVideoChamadaPendente({
+            conversaId,
+            fromUserId: from,
+            fromUserNome: usuario?.nome || 'Usuário',
+            timestamp: new Date().toISOString()
+          });
+        }
+      })
+      .on('broadcast', { event: 'call-end' }, (payload) => {
+        console.log('[ChatInterno] Chamada encerrada:', payload);
+        setVideoChamadaPendente(null);
+      })
+      .subscribe((status) => {
+        console.log('[ChatInterno] Status da subscription videochamada:', status);
+      });
+
+    videoChamadaChannelRef.current = videoChamadaChannel;
+
+    return () => {
+      console.log('[ChatInterno] Removendo subscription videochamada');
+      if (videoChamadaChannelRef.current) {
+        supabase.removeChannel(videoChamadaChannelRef.current);
+        videoChamadaChannelRef.current = null;
+      }
+    };
+  }, [usuarioAtualId]);
+
+  const limparVideoChamadaPendente = useCallback(() => {
+    setVideoChamadaPendente(null);
+  }, []);
+
   // Marcar conversa como lida - FORÇAR reset do contador
   const marcarComoLida = useCallback(async (conversaId: string) => {
     if (!usuarioAtualId) return;
@@ -523,6 +593,8 @@ export function useChatInterno() {
     onlineUsers,
     totalNaoLidas,
     naoLidasPorConversa,
+    videoChamadaPendente,
+    limparVideoChamadaPendente,
     carregarConversas,
     carregarMensagens,
     criarConversa,
