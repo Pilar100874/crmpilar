@@ -416,193 +416,38 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-        {/* Nome do Grupo */}
-        <Card className="p-4 sm:p-6">
-          <div className="space-y-3">
-            <Label htmlFor="grupo-nome" className="text-sm sm:text-base font-medium">
-              Nome do Grupo *
-            </Label>
-            <Input
-              id="grupo-nome"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              placeholder="Digite o nome do grupo"
-              className="max-w-md"
-              required
-            />
-          </div>
-        </Card>
-
-        {/* Permissões por Menu */}
-        <Card className="p-4 sm:p-6">
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <Label className="text-sm sm:text-base font-medium">Permissões por Menu</Label>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Selecione as permissões para cada menu do sistema
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={selectAll}
-                  className="text-xs"
-                >
-                  Todos
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={clearAll}
-                  disabled={!hasAnyPermission}
-                  className="text-xs"
-                >
-                  Limpar
-                </Button>
-              </div>
-            </div>
-
-            {/* Legenda Mobile */}
-            <div className="flex sm:hidden items-center gap-2 text-xs text-muted-foreground border-b pb-2">
-              <span className="font-medium">Legenda:</span>
-              <span className="px-1.5 py-0.5 bg-muted rounded">V</span>
-              <span>Ver</span>
-              <span className="px-1.5 py-0.5 bg-muted rounded">C</span>
-              <span>Criar</span>
-              <span className="px-1.5 py-0.5 bg-muted rounded">E</span>
-              <span>Editar</span>
-              <span className="px-1.5 py-0.5 bg-muted rounded">X</span>
-              <span>Excluir</span>
-            </div>
-            
-            <ScrollArea className="max-h-[60vh]">
-              <div className="space-y-3 pr-2">
-                {CATEGORY_ORDER.map((category) => {
-                  const menus = menusByCategory[category];
-                  if (!menus || menus.length === 0) return null;
-
-                  const isExpanded = expandedCategories[category] !== false;
-                  const permissionCount = countPermissionsInCategory(category);
-
-                  return (
-                    <Collapsible
-                      key={category}
-                      open={isExpanded}
-                      onOpenChange={(open) => 
-                        setExpandedCategories(prev => ({ ...prev, [category]: open }))
-                      }
-                    >
-                      <div className="border rounded-lg overflow-hidden">
-                        {/* Category Header */}
-                        <CollapsibleTrigger asChild>
-                          <button
-                            type="button"
-                            className="w-full flex items-center justify-between p-3 bg-muted/50 hover:bg-muted/70 transition-colors"
-                          >
-                            <div className="flex items-center gap-2">
-                              {isExpanded ? (
-                                <ChevronDown className="w-4 h-4" />
-                              ) : (
-                                <ChevronRight className="w-4 h-4" />
-                              )}
-                              <span className="font-semibold text-sm">{category}</span>
-                              {permissionCount > 0 && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {permissionCount}/{menus.length}
-                                </Badge>
-                              )}
-                            </div>
-                            
-                            {/* Quick Category Toggle - Desktop */}
-                            <div className="hidden sm:flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                              {PERMISSION_KEYS.map((perm) => {
-                                const allHave = menus.every(m => menusPermitidos[m.id]?.[perm]);
-                                return (
-                                  <button
-                                    key={perm}
-                                    type="button"
-                                    onClick={() => toggleCategoryPermissions(category, perm)}
-                                    className={`px-2 py-0.5 text-xs rounded transition-colors ${
-                                      allHave 
-                                        ? 'bg-primary/20 text-primary' 
-                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                                    }`}
-                                  >
-                                    {PERMISSION_LABELS[perm]}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </button>
-                        </CollapsibleTrigger>
-
-                        {/* Category Content */}
-                        <CollapsibleContent>
-                          <div className="p-2 space-y-2 bg-background">
-                            {menus.map(renderMenuRow)}
-                          </div>
-                        </CollapsibleContent>
-                      </div>
-                    </Collapsible>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-          </div>
-        </Card>
-
-        {/* Botões de Ação */}
-        <div className="flex gap-2">
-          <Button type="submit" className="flex-1 sm:flex-none">
-            {editingId ? "Atualizar" : <><Plus className="w-4 h-4 mr-2" /> Adicionar</>}
-          </Button>
-          {editingId && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={resetForm}
-            >
-              Cancelar
-            </Button>
-          )}
-        </div>
-      </form>
-
-      {/* Lista de Grupos Cadastrados */}
-      <Card className="p-4 sm:p-6">
-        <h3 className="text-base sm:text-lg font-semibold mb-4">Grupos Cadastrados</h3>
-        <div className="space-y-3">
+    <div className="space-y-6">
+      {/* Lista de Grupos Cadastrados - Primeiro */}
+      <Card className="p-4">
+        <h3 className="text-base font-semibold mb-4">Grupos Cadastrados</h3>
+        <div className="space-y-2">
           {grupos.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground text-sm">
+            <div className="text-center py-6 text-muted-foreground text-sm">
               Nenhum grupo cadastrado ainda
             </div>
           ) : (
             grupos.map((grupo) => (
               <Card
                 key={grupo.id}
-                className="p-3 sm:p-4 hover:shadow-md transition-shadow"
+                className={`p-3 hover:shadow-md transition-shadow cursor-pointer ${
+                  editingId === grupo.id ? 'ring-2 ring-primary' : ''
+                }`}
+                onClick={() => handleEdit(grupo)}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm sm:text-base mb-1">{grupo.nome}</div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">
+                    <div className="font-semibold text-sm">{grupo.nome}</div>
+                    <div className="text-xs text-muted-foreground">
                       {Object.keys(grupo.menus_permitidos || {}).length > 0 
                         ? formatPermissionsCompact(grupo.menus_permitidos)
                         : "Nenhuma permissão definida"}
                     </div>
                   </div>
-                  <div className="flex gap-1 flex-shrink-0">
+                  <div className="flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleEdit(grupo)}
-                      title="Editar"
                       className="h-8 w-8"
                     >
                       <Edit className="w-4 h-4" />
@@ -611,7 +456,6 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteClick(grupo)}
-                      title="Excluir"
                       className="h-8 w-8"
                     >
                       <Trash2 className="w-4 h-4 text-destructive" />
@@ -623,6 +467,187 @@ export const GruposAcessoCRUD = ({ estabelecimentoId }: GruposAcessoCRUDProps) =
           )}
         </div>
       </Card>
+
+      {/* Formulário */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Nome do Grupo */}
+        <Card className="p-4">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div className="flex-1">
+              <Label htmlFor="grupo-nome" className="text-sm font-medium">
+                {editingId ? 'Editando Grupo' : 'Novo Grupo'} *
+              </Label>
+              <Input
+                id="grupo-nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                placeholder="Digite o nome do grupo"
+                className="mt-1"
+                required
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" size="sm">
+                {editingId ? "Salvar" : <><Plus className="w-4 h-4 mr-1" /> Criar</>}
+              </Button>
+              {editingId && (
+                <Button type="button" variant="outline" size="sm" onClick={resetForm}>
+                  Cancelar
+                </Button>
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Permissões por Menu */}
+        <Card className="p-4">
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <Label className="text-sm font-medium">Permissões por Menu</Label>
+                <p className="text-xs text-muted-foreground">
+                  Selecione as permissões para cada menu
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={selectAll} className="text-xs h-7">
+                  Marcar Todos
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={clearAll} disabled={!hasAnyPermission} className="text-xs h-7">
+                  Limpar
+                </Button>
+              </div>
+            </div>
+
+            {/* Legenda */}
+            <div className="flex items-center gap-3 text-xs text-muted-foreground border-b pb-2 flex-wrap">
+              <span className="font-medium">Legenda:</span>
+              <span className="flex items-center gap-1"><span className="px-1.5 py-0.5 bg-muted rounded text-[10px]">V</span> Ver</span>
+              <span className="flex items-center gap-1"><span className="px-1.5 py-0.5 bg-muted rounded text-[10px]">C</span> Criar</span>
+              <span className="flex items-center gap-1"><span className="px-1.5 py-0.5 bg-muted rounded text-[10px]">E</span> Editar</span>
+              <span className="flex items-center gap-1"><span className="px-1.5 py-0.5 bg-muted rounded text-[10px]">X</span> Excluir</span>
+            </div>
+            
+            {/* Categorias e Menus */}
+            <div className="space-y-3">
+              {CATEGORY_ORDER.map((category) => {
+                const menus = menusByCategory[category];
+                if (!menus || menus.length === 0) return null;
+
+                const isExpanded = expandedCategories[category] !== false;
+                const permissionCount = countPermissionsInCategory(category);
+
+                return (
+                  <Collapsible
+                    key={category}
+                    open={isExpanded}
+                    onOpenChange={(open) => 
+                      setExpandedCategories(prev => ({ ...prev, [category]: open }))
+                    }
+                  >
+                    <div className="border rounded-lg overflow-hidden">
+                      {/* Category Header */}
+                      <CollapsibleTrigger asChild>
+                        <button
+                          type="button"
+                          className="w-full flex items-center justify-between p-2.5 bg-muted/50 hover:bg-muted/70 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            {isExpanded ? (
+                              <ChevronDown className="w-4 h-4" />
+                            ) : (
+                              <ChevronRight className="w-4 h-4" />
+                            )}
+                            <span className="font-semibold text-sm">{category}</span>
+                            {permissionCount > 0 && (
+                              <Badge variant="secondary" className="text-xs h-5">
+                                {permissionCount}/{menus.length}
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          {/* Quick Category Toggle */}
+                          <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                            {PERMISSION_KEYS.map((perm) => {
+                              const allHave = menus.every(m => menusPermitidos[m.id]?.[perm]);
+                              return (
+                                <button
+                                  key={perm}
+                                  type="button"
+                                  onClick={() => toggleCategoryPermissions(category, perm)}
+                                  className={`px-1.5 py-0.5 text-[10px] rounded transition-colors ${
+                                    allHave 
+                                      ? 'bg-primary text-primary-foreground' 
+                                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                  }`}
+                                >
+                                  {PERMISSION_LABELS_SHORT[perm]}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </button>
+                      </CollapsibleTrigger>
+
+                      {/* Category Content */}
+                      <CollapsibleContent>
+                        <div className="p-2 space-y-1.5 bg-background">
+                          {menus.map((menu) => {
+                            const permissions = menusPermitidos[menu.id] || { view: false, create: false, edit: false, delete: false };
+                            const hasAnyMenuPermission = Object.values(permissions).some(p => p);
+                            const allChecked = PERMISSION_KEYS.every(k => permissions[k]);
+
+                            return (
+                              <div 
+                                key={menu.id} 
+                                className={`flex items-center justify-between gap-2 p-2 rounded-md border transition-all ${
+                                  hasAnyMenuPermission ? 'border-primary/30 bg-primary/5' : 'border-border/50 bg-background'
+                                }`}
+                              >
+                                {/* Menu Name with toggle all */}
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleAllPermissionsForMenu(menu.id)}
+                                    className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
+                                      allChecked ? 'bg-primary border-primary' : 'border-muted-foreground/30 hover:border-primary/50'
+                                    }`}
+                                  >
+                                    {allChecked && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
+                                  </button>
+                                  <span className="text-xs font-medium truncate">{menu.label}</span>
+                                </div>
+
+                                {/* Permissions Buttons */}
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {PERMISSION_KEYS.map((perm) => (
+                                    <button
+                                      key={perm}
+                                      type="button"
+                                      onClick={() => togglePermission(menu.id, perm)}
+                                      className={`w-6 h-6 text-[10px] rounded border transition-colors ${
+                                        permissions[perm] 
+                                          ? 'bg-primary text-primary-foreground border-primary' 
+                                          : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/50'
+                                      }`}
+                                    >
+                                      {PERMISSION_LABELS_SHORT[perm]}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </CollapsibleContent>
+                    </div>
+                  </Collapsible>
+                );
+              })}
+            </div>
+          </div>
+        </Card>
+      </form>
 
       <DeleteConfirmDialog
         open={deleteDialogOpen}
