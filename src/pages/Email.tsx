@@ -57,7 +57,6 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [hasEmailConfig, setHasEmailConfig] = useState<boolean | null>(null);
-  const [hasResendConfig, setHasResendConfig] = useState<boolean | null>(null);
   const [checkingConfig, setCheckingConfig] = useState(true);
   
   // Compose email states
@@ -79,50 +78,34 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
       
       if (!user) {
         setHasEmailConfig(false);
-        setHasResendConfig(false);
         setCheckingConfig(false);
         return;
       }
 
-      // Verificar configuração de email do usuário
+      // Verificar configuração de email do usuário (SMTP e IMAP)
       const { data: usuario, error } = await supabase
         .from('usuarios')
-        .select('smtp, porta_smtp, pop, porta_pop, senha_email, estabelecimento_id')
+        .select('smtp, porta_smtp, imap, porta_imap, senha_email')
         .ilike('email', user.email || '')
         .maybeSingle();
 
       if (error) {
         console.error('Erro ao verificar configuração:', error);
         setHasEmailConfig(false);
-        setHasResendConfig(false);
       } else {
         // Verifica se todos os campos necessários estão preenchidos
         const isEmailConfigured = !!(
           usuario?.smtp && 
           usuario?.porta_smtp && 
-          usuario?.pop && 
-          usuario?.porta_pop && 
+          usuario?.imap && 
+          usuario?.porta_imap && 
           usuario?.senha_email
         );
         setHasEmailConfig(isEmailConfigured);
-
-        // Verificar configuração Resend do estabelecimento
-        if (usuario?.estabelecimento_id) {
-          const { data: resendConfig } = await supabase
-            .from('resend_config')
-            .select('*')
-            .eq('estabelecimento_id', usuario.estabelecimento_id)
-            .maybeSingle();
-          
-          setHasResendConfig(!!resendConfig);
-        } else {
-          setHasResendConfig(false);
-        }
       }
     } catch (error) {
       console.error('Erro ao verificar configuração:', error);
       setHasEmailConfig(false);
-      setHasResendConfig(false);
     } finally {
       setCheckingConfig(false);
     }
@@ -285,55 +268,26 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
           <Alert>
             <AlertCircle className="h-5 w-5" />
             <AlertTitle className="text-lg mb-2">
-              {!hasEmailConfig && !hasResendConfig 
-                ? "Configurações de Email Necessárias" 
-                : !hasEmailConfig 
-                  ? "Configuração de Email do Usuário Necessária"
-                  : "Configuração Resend Necessária"}
+              Configuração de Email Necessária
             </AlertTitle>
             <AlertDescription className="space-y-4">
-              {!hasEmailConfig && (
-                <>
-                  <p className="text-base">
-                    Para utilizar o sistema de email, você precisa configurar seus dados pessoais de acesso ao servidor de email.
-                  </p>
-                  
-                  <div className="bg-muted p-4 rounded-lg space-y-2">
-                    <p className="font-semibold">Informações necessárias do usuário:</p>
-                    <ul className="list-disc list-inside space-y-1 text-sm">
-                      <li>Servidor SMTP e porta</li>
-                      <li>Servidor IMAP/POP e porta</li>
-                      <li>Senha do email (Senha de App para Gmail)</li>
-                    </ul>
-                  </div>
+              <p className="text-base">
+                Para utilizar o sistema de email, você precisa configurar seus dados pessoais de acesso ao servidor de email.
+              </p>
+              
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <p className="font-semibold">Informações necessárias:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Servidor SMTP e porta (para envio)</li>
+                  <li>Servidor IMAP e porta (para recebimento)</li>
+                  <li>Senha do email (Senha de App para Gmail/Hotmail)</li>
+                </ul>
+              </div>
 
-                  <p className="text-sm text-muted-foreground">
-                    As configurações são preenchidas automaticamente para Gmail, Hotmail e Outlook. 
-                    Você só precisa informar a senha do email.
-                  </p>
-                </>
-              )}
-
-              {!hasResendConfig && (
-                <>
-                  <p className="text-base">
-                    Além disso, o estabelecimento precisa ter o serviço <strong>Resend</strong> configurado para envio de emails.
-                  </p>
-                  
-                  <div className="bg-muted p-4 rounded-lg space-y-2">
-                    <p className="font-semibold">Configuração Resend necessária:</p>
-                    <ul className="list-disc list-inside space-y-1 text-sm">
-                      <li>API Key do Resend</li>
-                      <li>Email remetente verificado</li>
-                      <li>Nome do remetente</li>
-                    </ul>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground">
-                    A configuração do Resend é feita por estabelecimento e permite o envio real de emails profissionais.
-                  </p>
-                </>
-              )}
+              <p className="text-sm text-muted-foreground">
+                As configurações são preenchidas automaticamente para Gmail, Hotmail e Outlook. 
+                Você só precisa informar a senha do email.
+              </p>
 
               <div className="flex gap-3 pt-4">
                 <Button 
