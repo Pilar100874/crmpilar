@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { 
   ArrowLeft, Car, Gauge, Clock, MapPin, AlertTriangle, 
   Wifi, WifiOff, Activity, ChevronDown, ChevronUp, 
-  Bell, BellOff, Volume2, RefreshCw, Eye, Maximize2, Minimize2
+  Bell, BellOff, Volume2, RefreshCw, Eye, Maximize2, Minimize2, List
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -18,6 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { executarAutomacoesLogistica, limparParadasAntigas } from '@/services/logisticaAutomacaoExecutor';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
@@ -59,6 +61,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [mapFullscreen, setMapFullscreen] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [mobileVehicleListOpen, setMobileVehicleListOpen] = useState(false);
+  const [mobileAlertsOpen, setMobileAlertsOpen] = useState(false);
   
   const alertConfig: AlertConfig = {
     speedLimit: 120,
@@ -427,10 +431,116 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Vehicle List */}
-        <div className="w-full md:w-64 lg:w-72 flex-shrink-0 border-b md:border-b-0 md:border-r bg-background overflow-hidden flex flex-col max-h-[30vh] md:max-h-none">
+      {/* Content - Mobile optimized */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        {/* Mobile floating buttons */}
+        <div className="md:hidden absolute top-2 left-2 right-2 z-10 flex justify-between">
+          <Sheet open={mobileVehicleListOpen} onOpenChange={setMobileVehicleListOpen}>
+            <SheetTrigger asChild>
+              <Button variant="secondary" size="sm" className="shadow-lg">
+                <List className="h-4 w-4 mr-2" />
+                Veículos ({stats.total})
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[85vw] sm:w-[320px] p-0">
+              <div className="h-full flex flex-col">
+                <div className="p-3 border-b">
+                  <h3 className="font-medium flex items-center gap-2">
+                    <Car className="h-4 w-4" />
+                    Veículos
+                  </h3>
+                </div>
+                <ScrollArea className="flex-1">
+                  <div className="p-2 space-y-1">
+                    {veiculos.map(v => {
+                      const config = statusConfig[v.status];
+                      const isSelected = selectedVeiculoId === v.id;
+                      return (
+                        <div
+                          key={v.id}
+                          onClick={() => {
+                            setSelectedVeiculoId(isSelected ? null : v.id);
+                            setMobileVehicleListOpen(false);
+                          }}
+                          className={cn(
+                            "p-2 rounded-lg cursor-pointer transition-all",
+                            isSelected 
+                              ? "bg-primary/10 border-2 border-primary" 
+                              : `bg-card hover:bg-accent border ${config.borderColor} border-l-4`
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {v.status !== 'offline' ? (
+                                <Wifi className="h-3 w-3 text-green-500" />
+                              ) : (
+                                <WifiOff className="h-3 w-3 text-destructive" />
+                              )}
+                              <span className="font-medium text-sm">{v.placa}</span>
+                            </div>
+                            <Badge variant="outline" className={cn("text-[10px]", config.textColor)}>
+                              {v.ultima_posicao ? `${Math.round(v.ultima_posicao.velocidade)} km/h` : '-'}
+                            </Badge>
+                          </div>
+                          {v.motorista && (
+                            <p className="text-xs text-muted-foreground mt-1 truncate">{v.motorista}</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {alerts.length > 0 && (
+            <Sheet open={mobileAlertsOpen} onOpenChange={setMobileAlertsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="secondary" size="sm" className="shadow-lg">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Alertas ({alerts.length})
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[85vw] sm:w-[320px] p-0">
+                <div className="h-full flex flex-col">
+                  <div className="p-3 border-b">
+                    <h3 className="font-medium flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Alertas
+                    </h3>
+                  </div>
+                  <ScrollArea className="flex-1">
+                    <div className="p-2 space-y-2">
+                      {alerts.map((alert, index) => (
+                        <div 
+                          key={`${alert.veiculoId}-${alert.type}-${index}`}
+                          className="p-2 rounded-lg bg-card border text-xs cursor-pointer hover:bg-accent"
+                          onClick={() => {
+                            setSelectedVeiculoId(alert.veiculoId);
+                            setMobileAlertsOpen(false);
+                          }}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            {getAlertIcon(alert.type)}
+                            <span className="font-medium">{alert.placa}</span>
+                          </div>
+                          <p className="text-muted-foreground">{alert.message}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {format(alert.timestamp, "HH:mm:ss", { locale: ptBR })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
+        </div>
+
+        {/* Desktop Vehicle List */}
+        <div className="hidden md:flex w-64 lg:w-72 flex-shrink-0 border-r bg-background overflow-hidden flex-col">
           <div className="p-2 sm:p-3 border-b flex items-center justify-between">
             <h3 className="font-medium text-sm flex items-center gap-2">
               <Car className="h-4 w-4" />
@@ -477,8 +587,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           </ScrollArea>
         </div>
 
-        {/* Map */}
-        <div className="flex-1 relative">
+        {/* Map - Full height on mobile */}
+        <div className="flex-1 relative h-full min-h-0">
           {loading ? (
             <div className="h-full flex items-center justify-center bg-muted/50">
               <div className="text-muted-foreground">Carregando...</div>
@@ -495,16 +605,16 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
               veiculos={veiculosComPosicao}
               paradasMarcadas={paradasMarcadas}
               onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
-              className="h-full w-full"
+              className="h-full w-full absolute inset-0"
               fitBounds
             />
           )}
           
-          {/* Fullscreen toggle button - positioned below map zoom controls */}
+          {/* Fullscreen toggle button */}
           <Button
             variant="outline"
             size="icon"
-            className="absolute left-[10px] top-[82px] z-[400] h-[30px] w-[30px] bg-background border-2 border-[rgba(0,0,0,0.2)] shadow-none hover:bg-accent rounded-sm"
+            className="absolute left-[10px] top-[82px] z-[400] h-[30px] w-[30px] bg-background border-2 border-[rgba(0,0,0,0.2)] shadow-none hover:bg-accent rounded-sm md:flex hidden"
             onClick={() => setMapFullscreen(true)}
             title="Expandir mapa"
           >
@@ -512,8 +622,8 @@ const LogisticaMonitoramento: React.FC<LogisticaMonitoramentoProps> = ({ embedde
           </Button>
         </div>
 
-        {/* Alerts Panel */}
-        <div className="w-full md:w-64 lg:w-72 flex-shrink-0 border-t md:border-t-0 md:border-l bg-background overflow-hidden flex flex-col max-h-[25vh] md:max-h-none">
+        {/* Desktop Alerts Panel */}
+        <div className="hidden md:flex w-64 lg:w-72 flex-shrink-0 border-l bg-background overflow-hidden flex-col">
           <div 
             className="p-2 sm:p-3 border-b flex items-center justify-between cursor-pointer"
             onClick={() => setShowAlerts(!showAlerts)}

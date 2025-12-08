@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Route, Clock, Navigation, Save, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Route, Clock, Navigation, Save, Loader2, MapPin, ChevronUp, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
 
 interface Waypoint {
   id: string;
@@ -42,6 +44,7 @@ const LogisticaRoteirizacao: React.FC<LogisticaRoteirizacaoProps> = ({ embedded 
   const [routeName, setRouteName] = useState('');
   const [routeDescription, setRouteDescription] = useState('');
   const [saving, setSaving] = useState(false);
+  const [mobileFormOpen, setMobileFormOpen] = useState(true);
 
   const addWaypoint = () => {
     setWaypoints(prev => [
@@ -332,9 +335,118 @@ const LogisticaRoteirizacao: React.FC<LogisticaRoteirizacaoProps> = ({ embedded 
     .map(w => ({ lat: w.lat!, lng: w.lng! }));
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col md:flex-row">
-      {/* Sidebar - becomes bottom sheet on mobile */}
-      <div className="w-full md:w-80 lg:w-96 flex-shrink-0 border-b md:border-b-0 md:border-r bg-background flex flex-col max-h-[50vh] md:max-h-none">
+    <div className="h-[calc(100vh-64px)] flex flex-col md:flex-row relative">
+      {/* Map - Full screen on mobile, takes priority */}
+      <div className="flex-1 relative h-full min-h-0 order-first md:order-last">
+        <LazyLogisticaMap
+          routes={route ? [{
+            coordinates: route.coordinates,
+            color: '#3b82f6',
+            distance: route.distance,
+            duration: route.duration
+          }] : []}
+          className="h-full w-full absolute inset-0"
+          fitBounds={route !== null || waypointMarkers.length > 0}
+        />
+      </div>
+
+      {/* Mobile: Collapsible bottom panel */}
+      <div className="md:hidden absolute bottom-0 left-0 right-0 z-10">
+        <Collapsible open={mobileFormOpen} onOpenChange={setMobileFormOpen}>
+          <CollapsibleTrigger asChild>
+            <Button 
+              variant="secondary" 
+              className="w-full rounded-none rounded-t-xl h-10 gap-2 bg-background/95 backdrop-blur-sm border-t shadow-lg"
+            >
+              <Route className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                {route 
+                  ? `${formatDistance(route.distance)} • ${formatDuration(route.duration)}`
+                  : `${waypoints.length} pontos`
+                }
+              </span>
+              {mobileFormOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="bg-background/95 backdrop-blur-sm max-h-[60vh] overflow-auto">
+              <div className="p-3 space-y-3">
+                {waypoints.map((waypoint, index) => (
+                  <div key={waypoint.id} className="flex items-start gap-2">
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold mt-2">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <AddressAutocomplete
+                        value={waypoint.endereco}
+                        onChange={(value) => updateWaypoint(waypoint.id, value)}
+                        onSelect={(address, lat, lng) => updateWaypointWithCoords(waypoint.id, address, lat, lng)}
+                        placeholder={index === 0 ? 'Origem' : index === waypoints.length - 1 ? 'Destino' : `Parada ${index}`}
+                        hasError={!!waypoint.error}
+                        hasCoordinates={!!(waypoint.lat && waypoint.lng)}
+                      />
+                      {waypoint.error && (
+                        <p className="text-[10px] text-destructive mt-1">{waypoint.error}</p>
+                      )}
+                    </div>
+                    {waypoints.length > 2 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeWaypoint(waypoint.id)}
+                        className="mt-1 h-8 w-8"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={addWaypoint}
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Parada
+                </Button>
+
+                <div className="flex gap-2">
+                  <Button 
+                    className="flex-1" 
+                    onClick={calculateRoute}
+                    disabled={calculating}
+                    size="sm"
+                  >
+                    {calculating ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Route className="h-4 w-4 mr-2" />
+                        Calcular
+                      </>
+                    )}
+                  </Button>
+                  
+                  {route && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => setSaveDialogOpen(true)}
+                      size="sm"
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+
+      {/* Desktop: Sidebar */}
+      <div className="hidden md:flex w-80 lg:w-96 flex-shrink-0 border-r bg-background flex-col order-first">
         <div className="p-3 sm:p-4 border-b">
           <h2 className="font-semibold text-base sm:text-lg flex items-center gap-2">
             <Route className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -451,20 +563,6 @@ const LogisticaRoteirizacao: React.FC<LogisticaRoteirizacaoProps> = ({ embedded 
             </Button>
           )}
         </div>
-      </div>
-
-      {/* Map */}
-      <div className="flex-1 min-h-[250px]">
-        <LazyLogisticaMap
-          routes={route ? [{
-            coordinates: route.coordinates,
-            color: '#3b82f6',
-            distance: route.distance,
-            duration: route.duration
-          }] : []}
-          className="h-full w-full"
-          fitBounds={route !== null || waypointMarkers.length > 0}
-        />
       </div>
 
       {/* Save Dialog */}
