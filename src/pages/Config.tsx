@@ -3,8 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, Search, Link2, File, Bell, Star, ShieldCheck } from "lucide-react";
+import { 
+  Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, 
+  Search, Link2, File, Bell, ShieldCheck, ChevronRight, ArrowLeft,
+  Settings, X
+} from "lucide-react";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { WhatsAppConfigCRUD } from "@/components/config/WhatsAppConfigCRUD";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
@@ -13,24 +16,81 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+
+interface ConfigSection {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ElementType;
+  color: string;
+}
+
+const CONFIG_SECTIONS: ConfigSection[] = [
+  {
+    id: "notificacoes-sistema",
+    title: "Notificações",
+    description: "Mensagens de confirmação",
+    icon: Bell,
+    color: "text-blue-500",
+  },
+  {
+    id: "cadastro-estabelecimentos",
+    title: "Estabelecimento",
+    description: "Gerenciar estabelecimentos",
+    icon: Store,
+    color: "text-green-500",
+  },
+  {
+    id: "recuperar-senha",
+    title: "Recuperar Senha",
+    description: "Configurar via WhatsApp",
+    icon: ShieldCheck,
+    color: "text-purple-500",
+  },
+  {
+    id: "campanhas",
+    title: "Campanhas",
+    description: "Mensagens em massa",
+    icon: Megaphone,
+    color: "text-orange-500",
+  },
+  {
+    id: "conteudos",
+    title: "Conteúdos",
+    description: "Base de conhecimento",
+    icon: FileText,
+    color: "text-cyan-500",
+  },
+];
 
 export default function Config() {
   const { openSubmenu } = useLayout();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const secaoParam = searchParams.get('secao');
   
+  const [activeSection, setActiveSection] = useState<string | null>(secaoParam);
   const [showConfirmationMessages, setShowConfirmationMessages] = useState(
     localStorage.getItem('showConfirmationMessages') !== 'false'
   );
-  const [accordionValue, setAccordionValue] = useState<string | undefined>(secaoParam || undefined);
 
-  // Atualiza o accordion quando o parâmetro da URL muda
   useEffect(() => {
     if (secaoParam) {
-      setAccordionValue(secaoParam);
+      setActiveSection(secaoParam);
     }
   }, [secaoParam]);
+
+  const handleSectionClick = (sectionId: string) => {
+    setActiveSection(sectionId);
+    setSearchParams({ secao: sectionId });
+  };
+
+  const handleBack = () => {
+    setActiveSection(null);
+    setSearchParams({});
+  };
 
   const handleToggleConfirmationMessages = (checked: boolean) => {
     setShowConfirmationMessages(checked);
@@ -44,299 +104,316 @@ export default function Config() {
     }
   };
 
+  const activeSectionData = CONFIG_SECTIONS.find(s => s.id === activeSection);
+
+  // Renderiza o conteúdo de cada seção
+  const renderSectionContent = () => {
+    switch (activeSection) {
+      case "notificacoes-sistema":
+        return <NotificacoesContent 
+          showConfirmationMessages={showConfirmationMessages}
+          onToggle={handleToggleConfirmationMessages}
+        />;
+      case "cadastro-estabelecimentos":
+        return <EstabelecimentosCRUD />;
+      case "recuperar-senha":
+        return <WhatsAppConfigCRUD />;
+      case "campanhas":
+        return <CampanhasContent />;
+      case "conteudos":
+        return <ConteudosContent />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="p-3 sm:p-6 md:p-8 space-y-4 sm:space-y-6 md:space-y-8 animate-fade-in bg-background min-h-full">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-          <SubMenuHeader 
-            title="Configurações"
-            onOpenSubmenu={() => openSubmenu("Configurações")}
-          />
-          <h1 className="text-base sm:text-lg font-bold text-foreground">Configurações Gerais</h1>
+    <div className="min-h-full bg-background">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b">
+        <div className="flex items-center gap-3 p-3 sm:p-4">
+          {activeSection ? (
+            <>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleBack}
+                className="shrink-0"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {activeSectionData && (
+                  <activeSectionData.icon className={cn("w-5 h-5 shrink-0", activeSectionData.color)} />
+                )}
+                <h1 className="font-semibold text-base sm:text-lg truncate">
+                  {activeSectionData?.title}
+                </h1>
+              </div>
+            </>
+          ) : (
+            <>
+              <SubMenuHeader 
+                title="Configurações"
+                onOpenSubmenu={() => openSubmenu("Configurações")}
+              />
+              <div className="flex items-center gap-2">
+                <Settings className="w-5 h-5 text-primary" />
+                <h1 className="font-semibold text-base sm:text-lg">Configurações</h1>
+              </div>
+            </>
+          )}
         </div>
-        
-        <p className="text-xs sm:text-sm text-muted-foreground">
-          Gerencie as configurações da plataforma
-        </p>
+      </div>
 
-        <Accordion 
-          type="single" 
-          collapsible 
-          className="space-y-3 sm:space-y-4 w-full max-w-5xl"
-          value={accordionValue}
-          onValueChange={setAccordionValue}
-        >
-          <AccordionItem value="notificacoes-sistema" className="border rounded-lg bg-card shadow-sm">
-            <AccordionTrigger className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                <div className="text-left">
-                  <div className="text-sm sm:text-base font-semibold">Notificações do Sistema</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground font-normal hidden sm:block">
-                    Configure a exibição de mensagens de confirmação
+      {/* Content */}
+      {activeSection ? (
+        // Seção ativa - mostra o conteúdo
+        <ScrollArea className="h-[calc(100vh-60px)]">
+          <div className="p-3 sm:p-4 md:p-6">
+            {renderSectionContent()}
+          </div>
+        </ScrollArea>
+      ) : (
+        // Lista de seções
+        <div className="p-3 sm:p-4 md:p-6">
+          <p className="text-sm text-muted-foreground mb-4">
+            Selecione uma opção para configurar
+          </p>
+          
+          {/* Grid para desktop, lista para mobile */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {CONFIG_SECTIONS.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => handleSectionClick(section.id)}
+                className="flex items-center gap-3 p-4 bg-card border rounded-xl hover:bg-muted/50 hover:border-primary/30 transition-all text-left group"
+              >
+                <div className={cn(
+                  "w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center shrink-0",
+                  "bg-muted/50 group-hover:bg-primary/10 transition-colors"
+                )}>
+                  <section.icon className={cn("w-5 h-5 sm:w-6 sm:h-6", section.color)} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm sm:text-base">{section.title}</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground truncate">
+                    {section.description}
                   </div>
                 </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
-              <div className="space-y-3 sm:space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 border rounded-lg">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="show-confirmations" className="text-sm sm:text-base font-medium">
-                      Mostrar mensagens de confirmação
-                    </Label>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      Exibe notificações como "Bot ativado", "Mensagem enviada", etc.
-                    </p>
-                  </div>
-                  <Switch
-                    id="show-confirmations"
-                    checked={showConfirmationMessages}
-                    onCheckedChange={handleToggleConfirmationMessages}
-                    className="shrink-0"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Mensagens de erro sempre serão exibidas, independente desta configuração.
-                </p>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
-          <AccordionItem value="cadastro-estabelecimentos" className="border rounded-lg bg-card shadow-sm">
-            <AccordionTrigger className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Store className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                <div className="text-left">
-                  <div className="text-sm sm:text-base font-semibold">Estabelecimento Cadastrado</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground font-normal hidden sm:block">
-                    Gerencie estabelecimentos e configurações relacionadas
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
-              <EstabelecimentosCRUD />
-            </AccordionContent>
-          </AccordionItem>
+// Componente de Notificações
+function NotificacoesContent({ 
+  showConfirmationMessages, 
+  onToggle 
+}: { 
+  showConfirmationMessages: boolean;
+  onToggle: (checked: boolean) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-1">
+              <Label htmlFor="show-confirmations" className="text-sm font-medium">
+                Mostrar mensagens de confirmação
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Exibe notificações como "Bot ativado", "Mensagem enviada", etc.
+              </p>
+            </div>
+            <Switch
+              id="show-confirmations"
+              checked={showConfirmationMessages}
+              onCheckedChange={onToggle}
+            />
+          </div>
+        </CardContent>
+      </Card>
+      <p className="text-xs text-muted-foreground px-1">
+        Mensagens de erro sempre serão exibidas, independente desta configuração.
+      </p>
+    </div>
+  );
+}
 
-          <AccordionItem value="recuperar-senha" className="border rounded-lg bg-card shadow-sm">
-            <AccordionTrigger className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                <div className="text-left">
-                  <div className="text-sm sm:text-base font-semibold">Recuperar Senha</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground font-normal hidden sm:block">
-                    Configure o envio de códigos via WhatsApp
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
-              <WhatsAppConfigCRUD />
-            </AccordionContent>
-          </AccordionItem>
+// Componente de Campanhas
+function CampanhasContent() {
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h3 className="font-semibold text-base sm:text-lg">Suas Campanhas</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Acompanhe o status das suas campanhas
+          </p>
+        </div>
+        <Button size="sm" className="w-full sm:w-auto">
+          <Plus className="w-4 h-4 mr-2" />
+          Nova Campanha
+        </Button>
+      </div>
 
-          <AccordionItem value="campanhas" className="border rounded-lg bg-card shadow-sm">
-            <AccordionTrigger className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Megaphone className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                <div className="text-left">
-                  <div className="text-sm sm:text-base font-semibold">Campanhas</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground font-normal hidden sm:block">
-                    Gerencie suas campanhas de mensagens em massa
-                  </div>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
-              <div className="space-y-4 sm:space-y-6 md:space-y-8">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    <h3 className="text-sm sm:text-base md:text-lg font-semibold text-foreground">Suas Campanhas</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      Acompanhe o status e desempenho de suas campanhas
-                    </p>
-                  </div>
-                  <Button className="gap-2 w-full sm:w-auto" size="sm">
-                    <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="text-xs sm:text-sm">Nova Campanha</span>
-                  </Button>
-                </div>
+      {/* Stats Cards - Horizontal scroll no mobile */}
+      <div className="flex gap-3 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3">
+        <Card className="min-w-[140px] sm:min-w-0 flex-shrink-0">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">Total</span>
+              <Send className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div className="text-xl sm:text-2xl font-bold">3</div>
+            <p className="text-xs text-muted-foreground">Este mês</p>
+          </CardContent>
+        </Card>
 
-                <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Total de Campanhas
-                      </CardTitle>
-                      <Send className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-foreground">3</div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Este mês
-                      </p>
-                    </CardContent>
-                  </Card>
+        <Card className="min-w-[140px] sm:min-w-0 flex-shrink-0">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">Alcançados</span>
+              <Users className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div className="text-xl sm:text-2xl font-bold">1.120</div>
+            <p className="text-xs text-muted-foreground">+18% vs anterior</p>
+          </CardContent>
+        </Card>
 
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Destinatários Alcançados
-                      </CardTitle>
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-foreground">1120</div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        +18% vs mês anterior
-                      </p>
-                    </CardContent>
-                  </Card>
+        <Card className="min-w-[140px] sm:min-w-0 flex-shrink-0">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-muted-foreground">Engajamento</span>
+              <TrendingUp className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div className="text-xl sm:text-2xl font-bold">87%</div>
+            <p className="text-xs text-muted-foreground">+5% esta semana</p>
+          </CardContent>
+        </Card>
+      </div>
 
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Taxa de Engajamento
-                      </CardTitle>
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-foreground">87%</div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        +5% esta semana
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="space-y-4">
-                  {[
-                    { id: 1, name: "Promoção Black Friday", status: "scheduled", recipients: 1250, sent: 0 },
-                    { id: 2, name: "Follow-up Abandonos", status: "running", recipients: 450, sent: 320 },
-                    { id: 3, name: "Pesquisa Satisfação", status: "completed", recipients: 800, sent: 800 },
-                  ].map((campaign) => (
-                    <div
-                      key={campaign.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+      {/* Campaign List */}
+      <div className="space-y-3">
+        {[
+          { id: 1, name: "Promoção Black Friday", status: "scheduled", recipients: 1250, sent: 0 },
+          { id: 2, name: "Follow-up Abandonos", status: "running", recipients: 450, sent: 320 },
+          { id: 3, name: "Pesquisa Satisfação", status: "completed", recipients: 800, sent: 800 },
+        ].map((campaign) => (
+          <Card key={campaign.id} className="overflow-hidden">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <h4 className="font-medium text-sm truncate">{campaign.name}</h4>
+                    <Badge 
+                      variant={campaign.status === "completed" ? "default" : "secondary"}
+                      className="text-xs shrink-0"
                     >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-medium text-foreground">{campaign.name}</h3>
-                          <Badge variant={campaign.status === "completed" ? "default" : "secondary"}>
-                            {campaign.status === "completed" ? "Concluída" : campaign.status === "running" ? "Enviando" : "Agendada"}
-                          </Badge>
-                        </div>
-                        <div className="flex gap-6 text-sm text-muted-foreground">
-                          <span>
-                            Destinatários: <strong className="text-foreground">{campaign.recipients}</strong>
-                          </span>
-                          <span>
-                            Enviadas: <strong className="text-foreground">{campaign.sent}</strong>
-                          </span>
-                          {campaign.sent > 0 && (
-                            <span>
-                              Progresso: <strong className="text-foreground">
-                                {Math.round((campaign.sent / campaign.recipients) * 100)}%
-                              </strong>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Ver Detalhes
-                      </Button>
+                      {campaign.status === "completed" ? "Concluída" : campaign.status === "running" ? "Enviando" : "Agendada"}
+                    </Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span>Dest: <strong className="text-foreground">{campaign.recipients}</strong></span>
+                    <span>Enviadas: <strong className="text-foreground">{campaign.sent}</strong></span>
+                    {campaign.sent > 0 && (
+                      <span>Progresso: <strong className="text-foreground">
+                        {Math.round((campaign.sent / campaign.recipients) * 100)}%
+                      </strong></span>
+                    )}
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" className="w-full sm:w-auto shrink-0">
+                  Detalhes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Componente de Conteúdos
+function ConteudosContent() {
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h3 className="font-semibold text-base sm:text-lg">Seus Conteúdos</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Materiais de apoio e documentação
+          </p>
+        </div>
+        <Button size="sm" className="w-full sm:w-auto">
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Conteúdo
+        </Button>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input placeholder="Buscar conteúdos..." className="pl-10" />
+      </div>
+
+      {/* Content Grid */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {[
+          { id: 1, titulo: "Política de Trocas", tipo: "faq", tags: ["Vendas", "Pós-venda"], url: null },
+          { id: 2, titulo: "Manual do Produto", tipo: "pdf", tags: ["Suporte", "Documentação"], url: "/docs/manual.pdf" },
+          { id: 3, titulo: "Script de Atendimento", tipo: "script", tags: ["Treinamento"], url: null },
+        ].map((content) => {
+          const TypeIcon = content.tipo === "pdf" ? File : content.tipo === "link" ? Link2 : FileText;
+          const typeLabel = content.tipo === "pdf" ? "PDF" : content.tipo === "link" ? "Link" : content.tipo === "script" ? "Script" : "FAQ";
+          return (
+            <Card key={content.id} className="overflow-hidden">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+                    <TypeIcon className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-medium text-sm truncate">{content.titulo}</h4>
+                      <Badge variant="secondary" className="text-xs shrink-0">
+                        {typeLabel}
+                      </Badge>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="conteudos" className="border rounded-lg bg-card shadow-sm">
-            <AccordionTrigger className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 hover:no-underline hover:bg-muted/30">
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
-                <div className="text-left">
-                  <div className="text-sm sm:text-base font-semibold">Conteúdos</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground font-normal hidden sm:block">
-                    Base de conhecimento e materiais de apoio
+                    {content.url ? (
+                      <a href={content.url} className="text-xs text-primary hover:underline">
+                        Ver documento
+                      </a>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Conteúdo interno</span>
+                    )}
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {content.tags.map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
-              <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">Seus Conteúdos</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Materiais de apoio e documentação
-                    </p>
-                  </div>
-                  <Button className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    Novo Conteúdo
-                  </Button>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Buscar conteúdos..." className="pl-10" />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {[
-                    { id: 1, titulo: "Política de Trocas", tipo: "faq", tags: ["Vendas", "Pós-venda"], url: null },
-                    { id: 2, titulo: "Manual do Produto", tipo: "pdf", tags: ["Suporte", "Documentação"], url: "/docs/manual.pdf" },
-                    { id: 3, titulo: "Script de Atendimento", tipo: "script", tags: ["Treinamento"], url: null },
-                  ].map((content) => {
-                    const TypeIcon = content.tipo === "pdf" ? File : content.tipo === "link" ? Link2 : FileText;
-                    const typeLabel = content.tipo === "pdf" ? "PDF" : content.tipo === "link" ? "Link" : content.tipo === "script" ? "Script" : "FAQ";
-                    return (
-                      <Card key={content.id} className="hover:shadow-md transition-shadow">
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div className="p-3 rounded-lg bg-gradient-primary/10 text-primary">
-                              <TypeIcon className="w-5 h-5" />
-                            </div>
-                            <Badge variant="secondary" className="text-xs">
-                              {typeLabel}
-                            </Badge>
-                          </div>
-                          <CardTitle className="text-lg mt-4">{content.titulo}</CardTitle>
-                          <CardDescription>
-                            {content.url ? (
-                              <a href={content.url} className="text-primary hover:underline text-xs">
-                                Ver documento
-                              </a>
-                            ) : (
-                              <span className="text-xs">Conteúdo interno</span>
-                            )}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="flex flex-wrap gap-2">
-                            {content.tags.map((tag) => (
-                              <Badge key={tag} variant="outline" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                          <Button variant="outline" className="w-full mt-4" size="sm">
-                            Editar
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+                <Button variant="outline" className="w-full mt-3" size="sm">
+                  Editar
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }
