@@ -13,7 +13,11 @@ import {
   ArrowLeft,
   User,
   Check,
-  Video
+  Video,
+  Paperclip,
+  FileText,
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
 import { useChatInternoContext } from '@/contexts/ChatInternoContext';
 import { cn } from '@/lib/utils';
@@ -63,7 +67,10 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   const [showVideoChamada, setShowVideoChamada] = useState(false);
   const [isIncomingCall, setIsIncomingCall] = useState(false);
   const [wasOpen, setWasOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [anexoPreview, setAnexoPreview] = useState<{url: string; name: string; type: string} | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Quando receber uma videochamada pendente, abrir automaticamente o diálogo
   useEffect(() => {
@@ -184,10 +191,65 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
   };
 
   const handleEnviar = async () => {
-    if (!mensagemInput.trim() || !conversaAtual) return;
+    if ((!mensagemInput.trim() && !anexoPreview) || !conversaAtual) return;
     
-    await enviarMensagem(conversaAtual.id, mensagemInput.trim());
-    setMensagemInput('');
+    // Se tiver anexo, enviar como arquivo
+    if (anexoPreview) {
+      await enviarMensagem(conversaAtual.id, anexoPreview.url, 'arquivo');
+      setAnexoPreview(null);
+    }
+    
+    // Se tiver texto, enviar também
+    if (mensagemInput.trim()) {
+      await enviarMensagem(conversaAtual.id, mensagemInput.trim());
+      setMensagemInput('');
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !conversaAtual) return;
+
+    // Limite de 10MB
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Arquivo muito grande. Limite de 10MB.');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `chat-interno/${conversaAtual.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('chat-attachments')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('chat-attachments')
+        .getPublicUrl(filePath);
+
+      setAnexoPreview({
+        url: urlData.publicUrl,
+        name: file.name,
+        type: file.type
+      });
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      alert('Erro ao fazer upload do arquivo');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const cancelarAnexo = () => {
+    setAnexoPreview(null);
   };
 
   const handleCriarConversa = async () => {
@@ -319,6 +381,9 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
             <div className="space-y-4">
               {mensagens.map((msg) => {
                 const isOwn = msg.remetente_id === usuarioAtualId;
+                const isFile = msg.tipo === 'arquivo';
+                const isImage = isFile && (msg.conteudo.includes('.jpg') || msg.conteudo.includes('.jpeg') || msg.conteudo.includes('.png') || msg.conteudo.includes('.gif') || msg.conteudo.includes('.webp'));
+                
                 return (
                   <div
                     key={msg.id}
@@ -340,7 +405,34 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                           {msg.remetente.nome}
                         </p>
                       )}
-                      <p className="text-sm whitespace-pre-wrap">{msg.conteudo}</p>
+                      
+                      {isFile ? (
+                        isImage ? (
+                          <a href={msg.conteudo} target="_blank" rel="noopener noreferrer">
+                            <img 
+                              src={msg.conteudo} 
+                              alt="Imagem" 
+                              className="max-w-full max-h-48 rounded cursor-pointer hover:opacity-80"
+                            />
+                          </a>
+                        ) : (
+                          <a 
+                            href={msg.conteudo} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className={cn(
+                              "flex items-center gap-2 p-2 rounded border",
+                              isOwn ? "border-primary-foreground/30 hover:bg-primary-foreground/10" : "border-border hover:bg-muted-foreground/10"
+                            )}
+                          >
+                            <FileText className="h-5 w-5" />
+                            <span className="text-sm truncate">Arquivo anexado</span>
+                          </a>
+                        )
+                      ) : (
+                        <p className="text-sm whitespace-pre-wrap">{msg.conteudo}</p>
+                      )}
+                      
                       <p className={cn(
                         'text-xs mt-1',
                         isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground'
@@ -354,16 +446,55 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
             </div>
           </ScrollArea>
 
+          {/* Preview de anexo */}
+          {anexoPreview && (
+            <div className="px-4 py-2 border-t bg-muted/50">
+              <div className="flex items-center gap-2">
+                {anexoPreview.type.startsWith('image/') ? (
+                  <img src={anexoPreview.url} alt="Preview" className="h-12 w-12 object-cover rounded" />
+                ) : (
+                  <div className="h-12 w-12 bg-muted rounded flex items-center justify-center">
+                    <FileText className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{anexoPreview.name}</p>
+                  <p className="text-xs text-muted-foreground">Pronto para enviar</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={cancelarAnexo}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Input de mensagem */}
           <div className="p-4 border-t">
             <div className="flex gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                className="hidden"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+              />
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                title="Anexar arquivo"
+              >
+                <Paperclip className={cn("h-4 w-4", uploading && "animate-pulse")} />
+              </Button>
               <Input
                 placeholder="Digite sua mensagem..."
                 value={mensagemInput}
                 onChange={(e) => setMensagemInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleEnviar()}
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleEnviar()}
+                className="flex-1"
               />
-              <Button size="icon" onClick={handleEnviar}>
+              <Button size="icon" onClick={handleEnviar} disabled={uploading}>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
