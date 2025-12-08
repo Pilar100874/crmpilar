@@ -60,14 +60,6 @@ const CONFIG_SECTIONS: ConfigSection[] = [
     bgColor: "bg-orange-500/10",
     iconColor: "text-orange-500",
   },
-  {
-    id: "conteudos",
-    title: "Conteúdos",
-    description: "Base de conhecimento e materiais de apoio",
-    icon: FileText,
-    bgColor: "bg-cyan-500/10",
-    iconColor: "text-cyan-500",
-  },
 ];
 
 export default function Config() {
