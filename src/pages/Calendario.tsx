@@ -1899,61 +1899,126 @@ export default function Calendario() {
         <DroppableDay 
           key={i} 
           date={day}
-          className="flex-1 min-w-[120px] md:min-w-0 border-r border-b border-border"
+          className="md:flex-1 md:min-w-0 border-b md:border-r border-border"
         >
-          <div 
-            className={`p-2 sm:p-3 border-b border-border flex flex-col items-center ${isTodayDate ? "bg-primary/5" : ""}`}
-          >
-            <div className="text-xs text-muted-foreground uppercase">
-              {format(day, "EEE", { locale: ptBR })}
-            </div>
-            <div className="flex items-center gap-1">
-              <div 
-                className={`text-base sm:text-lg font-medium cursor-pointer hover:bg-primary/20 rounded px-1.5 sm:px-2 py-0.5 sm:py-1 transition-colors ${isTodayDate ? "text-primary" : ""}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentDate(day);
-                  setViewMode("day");
-                }}
-                title="Ver dia"
-              >
-                {format(day, "d")}
+          {/* Mobile/Tablet: Layout horizontal compacto */}
+          <div className="md:hidden">
+            <div 
+              className={`p-3 flex items-center justify-between ${isTodayDate ? "bg-primary/5" : ""}`}
+            >
+              <div className="flex items-center gap-3">
+                <div 
+                  className={`flex flex-col items-center min-w-[40px] cursor-pointer`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentDate(day);
+                    setViewMode("day");
+                  }}
+                >
+                  <span className="text-xs text-muted-foreground uppercase">
+                    {format(day, "EEE", { locale: ptBR })}
+                  </span>
+                  <span className={`text-lg font-medium ${isTodayDate ? "text-primary" : ""}`}>
+                    {format(day, "d")}
+                  </span>
+                </div>
+                <div className="flex-1 flex flex-wrap gap-1">
+                  {dayTasks.slice(0, 3).map(task => (
+                    <Badge 
+                      key={task.id}
+                      variant={task.status === "completed" ? "secondary" : "default"}
+                      className="text-[10px] px-1.5 py-0.5 cursor-pointer truncate max-w-[120px]"
+                      style={task.userId && userColors[task.userId] && task.status !== "completed" ? {
+                        backgroundColor: userColors[task.userId],
+                        color: 'hsl(var(--primary-foreground))'
+                      } : {}}
+                      onClick={() => handleToggleTaskStatus(task.id)}
+                    >
+                      {task.time && `${task.time} `}{task.title}
+                    </Badge>
+                  ))}
+                  {dayTasks.length > 3 && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0.5">
+                      +{dayTasks.length - 3}
+                    </Badge>
+                  )}
+                </div>
               </div>
               {!isBefore(startOfDay(day), startOfDay(new Date())) && (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-5 w-5 sm:h-6 sm:w-6 hover:bg-primary/20"
+                  className="h-8 w-8 hover:bg-primary/20 flex-shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleOpenNewTask(day);
                   }}
-                  title="Nova tarefa"
                 >
-                  <Plus className="w-3 h-3" />
+                  <Plus className="w-4 h-4" />
                 </Button>
               )}
             </div>
           </div>
-          <div className="p-1 sm:p-2 space-y-1 sm:space-y-2 min-h-[150px] sm:min-h-[300px] md:min-h-[400px]">
-            {dayTasks.map(task => (
-              <DraggableTask
-                key={task.id}
-                task={task}
-                onClick={() => handleToggleTaskStatus(task.id)}
-                onEdit={() => handleEditTask(task)}
-                onDelete={() => handleDeleteTask(task.id)}
-                userColor={task.userId ? userColors[task.userId] : undefined}
-              />
-            ))}
+
+          {/* Desktop: Layout vertical original */}
+          <div className="hidden md:block">
+            <div 
+              className={`p-2 sm:p-3 border-b border-border flex flex-col items-center ${isTodayDate ? "bg-primary/5" : ""}`}
+            >
+              <div className="text-xs text-muted-foreground uppercase">
+                {format(day, "EEE", { locale: ptBR })}
+              </div>
+              <div className="flex items-center gap-1">
+                <div 
+                  className={`text-base sm:text-lg font-medium cursor-pointer hover:bg-primary/20 rounded px-1.5 sm:px-2 py-0.5 sm:py-1 transition-colors ${isTodayDate ? "text-primary" : ""}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentDate(day);
+                    setViewMode("day");
+                  }}
+                  title="Ver dia"
+                >
+                  {format(day, "d")}
+                </div>
+                {!isBefore(startOfDay(day), startOfDay(new Date())) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5 sm:h-6 sm:w-6 hover:bg-primary/20"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenNewTask(day);
+                    }}
+                    title="Nova tarefa"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="p-1 sm:p-2 space-y-1 sm:space-y-2 min-h-[150px] sm:min-h-[300px] md:min-h-[400px]">
+              {dayTasks.map(task => (
+                <DraggableTask
+                  key={task.id}
+                  task={task}
+                  onClick={() => handleToggleTaskStatus(task.id)}
+                  onEdit={() => handleEditTask(task)}
+                  onDelete={() => handleDeleteTask(task.id)}
+                  userColor={task.userId ? userColors[task.userId] : undefined}
+                />
+              ))}
+            </div>
           </div>
         </DroppableDay>
       );
     }
 
     return (
-      <div className="border-l border-t border-border overflow-x-auto">
-        <div className="flex min-w-[840px] md:min-w-0">{days}</div>
+      <div className="border-l border-t border-border">
+        {/* Mobile/Tablet: dias empilhados verticalmente */}
+        <div className="md:hidden flex flex-col">{days}</div>
+        {/* Desktop: dias lado a lado */}
+        <div className="hidden md:flex">{days}</div>
       </div>
     );
   };
