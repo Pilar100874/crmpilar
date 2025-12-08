@@ -144,17 +144,24 @@ export function VideoChamadaDialog({
 
       // Também notificar no canal global do usuário remoto para que o ícone pisque
       const globalChannel = supabase.channel(`videochamada-${usuarioRemotoId}`);
-      await globalChannel.subscribe();
-      await globalChannel.send({
-        type: 'broadcast',
-        event: 'call-offer',
-        payload: {
-          from: usuarioAtualId,
-          to: usuarioRemotoId,
-          conversaId
+      globalChannel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[VideoChamada] Canal global subscrito, enviando notificação');
+          await globalChannel.send({
+            type: 'broadcast',
+            event: 'call-offer',
+            payload: {
+              from: usuarioAtualId,
+              to: usuarioRemotoId,
+              conversaId
+            }
+          });
+          // Aguardar um pouco antes de remover o canal
+          setTimeout(() => {
+            supabase.removeChannel(globalChannel);
+          }, 1000);
         }
       });
-      supabase.removeChannel(globalChannel);
 
       toast.info(`Chamando ${usuarioRemotoNome}...`);
     } catch (error) {
@@ -241,16 +248,22 @@ export function VideoChamadaDialog({
     // Também notificar no canal global do usuário remoto para limpar o indicador
     try {
       const globalChannel = supabase.channel(`videochamada-${usuarioRemotoId}`);
-      await globalChannel.subscribe();
-      await globalChannel.send({
-        type: 'broadcast',
-        event: 'call-end',
-        payload: {
-          from: usuarioAtualId,
-          to: usuarioRemotoId
+      globalChannel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[VideoChamada] Canal global subscrito, enviando encerramento');
+          globalChannel.send({
+            type: 'broadcast',
+            event: 'call-end',
+            payload: {
+              from: usuarioAtualId,
+              to: usuarioRemotoId
+            }
+          });
+          setTimeout(() => {
+            supabase.removeChannel(globalChannel);
+          }, 1000);
         }
       });
-      supabase.removeChannel(globalChannel);
     } catch (e) {
       console.error('Erro ao notificar encerramento:', e);
     }
