@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { ChatInternoPanel } from './ChatInternoPanel';
 import { useChatInterno } from '@/hooks/useChatInterno';
@@ -6,46 +6,14 @@ import { cn } from '@/lib/utils';
 
 export function ChatAvisosFloatingButton() {
   const [chatOpen, setChatOpen] = useState(false);
-  const [hasUnread, setHasUnread] = useState(false);
-  const { conversas, mensagens } = useChatInterno();
-  const lastMessageCountRef = useRef(0);
-  const lastReadTimestampRef = useRef<string | null>(null);
-
-  // Detecta novas mensagens quando o chat está fechado
-  useEffect(() => {
-    if (mensagens.length > 0) {
-      const ultimaMensagem = mensagens[mensagens.length - 1];
-      
-      // Se o chat está fechado e temos uma nova mensagem
-      if (!chatOpen) {
-        // Verifica se é uma mensagem nova (comparando timestamp ou contagem)
-        if (mensagens.length > lastMessageCountRef.current) {
-          // Nova mensagem recebida enquanto chat fechado
-          setHasUnread(true);
-        } else if (lastReadTimestampRef.current && ultimaMensagem.created_at > lastReadTimestampRef.current) {
-          // Mensagem mais recente que a última leitura
-          setHasUnread(true);
-        }
-      }
-      
-      lastMessageCountRef.current = mensagens.length;
-    }
-  }, [mensagens, chatOpen]);
-
-  // Limpa notificação ao abrir o chat e marca timestamp de leitura
-  useEffect(() => {
-    if (chatOpen) {
-      setHasUnread(false);
-      if (mensagens.length > 0) {
-        const ultimaMensagem = mensagens[mensagens.length - 1];
-        lastReadTimestampRef.current = ultimaMensagem.created_at;
-      }
-    }
-  }, [chatOpen, mensagens]);
+  const { totalNaoLidas } = useChatInterno();
 
   const handleChatClick = () => {
     setChatOpen(!chatOpen);
   };
+
+  // Determina se deve pulsar: tem mensagens não lidas e chat está fechado
+  const shouldPulse = totalNaoLidas > 0 && !chatOpen;
 
   return (
     <>
@@ -54,11 +22,14 @@ export function ChatAvisosFloatingButton() {
         className={cn(
           "chat-tab", 
           chatOpen && "chat-open",
-          hasUnread && !chatOpen && "chat-tab-pulse"
+          shouldPulse && "chat-tab-pulse"
         )}
         onClick={handleChatClick}
       >
         <MessageCircle className="w-3 h-3" />
+        {shouldPulse && (
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" />
+        )}
       </div>
 
       {/* Panel - abre como menu lateral do lado direito */}
