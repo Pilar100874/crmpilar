@@ -50,6 +50,7 @@ import PesquisasSatisfacaoCRUD from "@/components/atendimento/PesquisasSatisfaca
 import KnowledgeBaseCRUD from "./KnowledgeBaseCRUD";
 import IAConfigCRUD from "./IAConfigCRUD";
 import { ResendConfigSection } from "./ResendConfigSection";
+import { EmailOAuthConfig } from "./EmailOAuthConfig";
 import {
   Dialog,
   DialogContent,
@@ -96,6 +97,13 @@ const getConfigCategories = (): ConfigCategory[] => [
         description: "Configure envio de emails",
         icon: Mail,
         component: ResendConfigSection,
+      },
+      {
+        id: "email-oauth",
+        title: "Email OAuth (Gmail/Outlook)",
+        description: "Integração com Gmail e Microsoft",
+        icon: Mail,
+        component: EmailOAuthConfig,
       },
       {
         id: "redes-sociais",
