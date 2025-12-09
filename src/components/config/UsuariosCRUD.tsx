@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award } from "lucide-react";
+import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2 } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
 import {
@@ -106,6 +106,7 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
   const [isAtendente, setIsAtendente] = useState(false);
   const [skillsDialogOpen, setSkillsDialogOpen] = useState(false);
   const [selectedUsuarioForSkills, setSelectedUsuarioForSkills] = useState<Usuario | null>(null);
+  const [testingEmail, setTestingEmail] = useState(false);
   
   const { toast } = useToast();
 
@@ -707,6 +708,93 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
     );
   };
 
+  const testEmailConnection = async () => {
+    if (!email || !senhaEmail) {
+      toast({
+        title: "Preencha os dados",
+        description: "Email e senha são necessários para testar a conexão",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!smtp || !imap) {
+      toast({
+        title: "Configuração incompleta",
+        description: "Configure os servidores SMTP e IMAP antes de testar",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setTestingEmail(true);
+    try {
+      // Buscar URL do servidor configurada no estabelecimento
+      const estabId = estabelecimentoId || selectedEstabelecimentoId;
+      let serverUrl = "https://mailcrm.pilar.com.br";
+      
+      if (estabId) {
+        const { data: configData } = await supabase
+          .from("email_oauth_config")
+          .select("client_id")
+          .eq("estabelecimento_id", estabId)
+          .eq("provider", "external_server")
+          .maybeSingle();
+        
+        if (configData?.client_id) {
+          serverUrl = configData.client_id;
+        }
+      }
+
+      const response = await fetch(`${serverUrl}/send-emails`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          accounts: [
+            {
+              user: email,
+              pass: senhaEmail,
+              smtp: smtp,
+              smtp_port: parseInt(portaSmtp) || 587,
+              imap: imap,
+              imap_port: parseInt(portaImap) || 993
+            }
+          ],
+          to: email,
+          subject: "Teste de conexão - Pilar CRM",
+          text: "Este é um email de teste para verificar a conexão."
+        })
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: "✅ Conexão testada com sucesso!",
+          description: "Verifique seu email para confirmar o recebimento."
+        });
+        console.log("Resultado do teste:", result);
+      } else {
+        toast({
+          title: "Erro na conexão",
+          description: result.error || "Falha desconhecida",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao testar conexão:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível conectar ao servidor de email",
+        variant: "destructive"
+      });
+    } finally {
+      setTestingEmail(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -1100,15 +1188,37 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="usar-autenticacao"
-                checked={usarAutenticacao}
-                onCheckedChange={setUsarAutenticacao}
-              />
-              <Label htmlFor="usar-autenticacao" className="cursor-pointer text-sm">
-                Usar Autenticação
-              </Label>
+            <div className="flex items-center justify-between sm:col-span-2">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="usar-autenticacao"
+                  checked={usarAutenticacao}
+                  onCheckedChange={setUsarAutenticacao}
+                />
+                <Label htmlFor="usar-autenticacao" className="cursor-pointer text-sm">
+                  Usar Autenticação
+                </Label>
+              </div>
+              
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={testEmailConnection}
+                disabled={testingEmail}
+              >
+                {testingEmail ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Testando...
+                  </>
+                ) : (
+                  <>
+                    <TestTube className="h-4 w-4 mr-2" />
+                    Testar Email
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </Card>
