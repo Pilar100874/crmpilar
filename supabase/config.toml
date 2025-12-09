@@ -224,3 +224,6 @@ verify_jwt = true
 
 [functions.gmail-send-email]
 verify_jwt = true
+
+[functions.test-email-connection]
+verify_jwt = false

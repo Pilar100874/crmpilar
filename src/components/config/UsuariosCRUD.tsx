@@ -746,12 +746,10 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
         }
       }
 
-      const response = await fetch(`${serverUrl}/send-emails`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
+      // Usar edge function para evitar problemas de CORS
+      const { data, error: fnError } = await supabase.functions.invoke('test-email-connection', {
+        body: {
+          serverUrl,
           accounts: [
             {
               user: email,
@@ -765,21 +763,23 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
           to: email,
           subject: "Teste de conexão - Pilar CRM",
           text: "Este é um email de teste para verificar a conexão."
-        })
+        }
       });
 
-      const result = await response.json();
-      
-      if (response.ok) {
+      if (fnError) {
+        throw fnError;
+      }
+
+      if (data?.success) {
         toast({
           title: "✅ Conexão testada com sucesso!",
           description: "Verifique seu email para confirmar o recebimento."
         });
-        console.log("Resultado do teste:", result);
+        console.log("Resultado do teste:", data);
       } else {
         toast({
           title: "Erro na conexão",
-          description: result.error || "Falha desconhecida",
+          description: data?.error || "Falha desconhecida",
           variant: "destructive"
         });
       }
