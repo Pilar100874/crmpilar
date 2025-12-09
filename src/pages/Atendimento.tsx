@@ -3360,25 +3360,6 @@ ${recentMessages}
             <div className={`flex flex-col transition-all duration-300 ${
               showClientDetailsEmail && selectedEmailData?.customer ? 'w-[calc(100%-280px)] md:w-[calc(100%-256px)] lg:w-[calc(100%-320px)]' : 'w-full'
             } overflow-y-auto min-h-0 overscroll-contain px-2 py-2 space-y-1.5`}>
-            {/* Header with Toggle */}
-            <div className="flex items-center justify-between px-2 py-2 bg-gradient-to-r from-blue-50 to-transparent rounded-xl mb-2">
-              <span className="text-xs font-medium text-blue-600">Caixa de Entrada</span>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  const newState = !showClientDetailsEmail;
-                  setShowClientDetailsEmail(newState);
-                  if (isTablet && newState && showConversationsList) {
-                    setShowConversationsList(false);
-                  }
-                }}
-                className="h-7 w-7 p-0 rounded-full hover:bg-blue-100"
-                title={showClientDetailsEmail ? "Ocultar detalhes" : "Mostrar detalhes"}
-              >
-                {showClientDetailsEmail ? <ChevronRight className="h-4 w-4 text-blue-600" /> : <ChevronLeft className="h-4 w-4 text-blue-600" />}
-              </Button>
-            </div>
             
             {filteredEmails.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
