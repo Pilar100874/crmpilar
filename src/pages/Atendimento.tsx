@@ -917,6 +917,32 @@ export default function Atendimento() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // First try to fetch fresh emails from IMAP server
+      try {
+        const { data: fetchedEmails, error: fetchError } = await supabase.functions.invoke('fetch-emails-imap', {
+          body: { folder: 'INBOX', maxResults: 20 }
+        });
+
+        if (!fetchError && fetchedEmails?.emails) {
+          const mappedEmails = fetchedEmails.emails.map((email: any, index: number) => ({
+            id: email.id || `email-${Date.now()}-${index}`,
+            from_email: email.from_email,
+            to_email: email.to_email,
+            subject: email.subject,
+            body: email.body,
+            date: email.date,
+            read: email.read ?? false,
+            starred: email.starred ?? false,
+            folder: 'inbox',
+          }));
+          setUserEmails(mappedEmails);
+          return;
+        }
+      } catch (imapError) {
+        console.log("IMAP fetch not available, falling back to local:", imapError);
+      }
+
+      // Fallback: load from local database
       const { data: emailsData, error } = await supabase
         .from('emails')
         .select('*')
