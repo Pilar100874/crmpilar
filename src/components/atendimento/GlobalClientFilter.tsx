@@ -19,12 +19,14 @@ interface Empresa {
   nome_fantasia: string | null;
   nome: string | null;
   cnpj: string | null;
+  email: string | null;
 }
 
 export interface GlobalFilter {
   type: 'customer' | 'empresa';
   id: string;
   nome: string;
+  email?: string;
 }
 
 interface GlobalClientFilterProps {
@@ -66,9 +68,9 @@ export function GlobalClientFilter({ activeFilter, onFilterChange, compact = fal
       // Search empresas
       const { data: empresasData } = await supabase
         .from('empresas')
-        .select('id, nome_fantasia, nome, cnpj')
+        .select('id, nome_fantasia, nome, cnpj, email')
         .eq('estabelecimento_id', estabId)
-        .or(`nome_fantasia.ilike.%${searchTerm}%,nome.ilike.%${searchTerm}%,cnpj.ilike.%${searchTerm}%`)
+        .or(`nome_fantasia.ilike.%${searchTerm}%,nome.ilike.%${searchTerm}%,cnpj.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
         .limit(5);
 
       setCustomers(customersData || []);
@@ -84,7 +86,8 @@ export function GlobalClientFilter({ activeFilter, onFilterChange, compact = fal
     onFilterChange({
       type: 'customer',
       id: customer.id,
-      nome: customer.nome
+      nome: customer.nome,
+      email: customer.email
     });
     setOpen(false);
     setSearchTerm("");
@@ -94,7 +97,8 @@ export function GlobalClientFilter({ activeFilter, onFilterChange, compact = fal
     onFilterChange({
       type: 'empresa',
       id: empresa.id,
-      nome: empresa.nome_fantasia || empresa.nome || 'Empresa'
+      nome: empresa.nome_fantasia || empresa.nome || 'Empresa',
+      email: empresa.email || undefined
     });
     setOpen(false);
     setSearchTerm("");

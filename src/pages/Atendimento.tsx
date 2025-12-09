@@ -1904,7 +1904,13 @@ ${recentMessages}
     if (!globalFilter) return userEmails;
     
     return userEmails.filter((email) => {
-      // Filter by matching email address or name
+      // If filter has email, match by email address
+      if (globalFilter.email) {
+        const filterEmail = globalFilter.email.toLowerCase();
+        return email.from_email?.toLowerCase().includes(filterEmail) ||
+               email.to_email?.toLowerCase().includes(filterEmail);
+      }
+      // Fallback: filter by matching name
       return email.from_email?.toLowerCase().includes(globalFilter.nome.toLowerCase()) ||
              email.to_email?.toLowerCase().includes(globalFilter.nome.toLowerCase());
     });
