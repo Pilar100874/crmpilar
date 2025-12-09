@@ -4117,11 +4117,71 @@ ${recentMessages}
                 </>
               )}
               {activeTab === "email" && (
-                <>
-                  <Inbox className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
-                  <p className="text-lg font-medium mb-2">Selecione um email</p>
-                  <p className="text-sm">Escolha um email da lista para visualizar</p>
-                </>
+                <div className="w-full max-w-2xl">
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <Mail className="w-6 h-6 text-blue-500" />
+                    <h3 className="text-lg font-medium">Caixa de Entrada</h3>
+                  </div>
+                  {filteredEmails.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Inbox className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+                      <p className="text-sm text-muted-foreground">
+                        {globalFilter ? 'Nenhum e-mail para este filtro' : 'Nenhum e-mail na caixa de entrada'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[60vh] overflow-y-auto px-4">
+                      {filteredEmails.map((email) => (
+                        <div 
+                          key={email.id} 
+                          className={`p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                            selectedEmailId === email.id
+                              ? "bg-blue-100 border border-blue-200 shadow-sm"
+                              : !email.read 
+                                ? 'bg-blue-50/80 border border-blue-100 hover:bg-blue-50 hover:shadow-sm' 
+                                : 'bg-white hover:bg-white/80 hover:shadow-sm border border-border/50'
+                          }`}
+                          onClick={() => {
+                            setSelectedEmailId(email.id);
+                            if (!showClientDetailsEmail) {
+                              setShowClientDetailsEmail(true);
+                            }
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              email.read ? 'bg-slate-100 text-slate-400' : 'bg-blue-500 text-white'
+                            }`}>
+                              {email.read ? (
+                                <MailOpen className="w-4 h-4" />
+                              ) : (
+                                <Mail className="w-4 h-4" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-0.5">
+                                <p className={`text-sm truncate ${!email.read ? 'font-bold text-foreground' : 'font-medium text-muted-foreground'}`}>
+                                  {email.from_email}
+                                </p>
+                                <span className="text-[10px] text-muted-foreground ml-2 flex-shrink-0 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                                  {format(new Date(email.date), 'dd/MM', { locale: ptBR })}
+                                </span>
+                              </div>
+                              <p className={`text-xs truncate ${!email.read ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+                                {email.subject}
+                              </p>
+                              {!email.read && (
+                                <Badge className="mt-1.5 text-[10px] px-1.5 py-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
+                                  Novo
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
               {activeTab === "orcamento" && (
                 <>
