@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 interface EmailMessage {
+  id?: string;
   subject: string;
   from_email: string;
   to_email: string;
@@ -15,10 +16,6 @@ interface EmailMessage {
   starred: boolean;
   body: string;
 }
-
-// Note: Direct IMAP connections are not supported in Edge Functions
-// This version uses the Supabase database to store/sync emails
-// For real IMAP sync, you would need an external service like Nylas, Mailchimp, or a custom server
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -45,7 +42,7 @@ serve(async (req) => {
     // Get user email config
     const { data: usuario, error: userError } = await supabaseClient
       .from("usuarios")
-      .select("id, email, pop, porta_pop, senha_email")
+      .select("id, email, smtp, porta_smtp, imap, porta_imap, senha_email, estabelecimento_id")
       .eq("auth_user_id", user.id)
       .single();
 
@@ -54,48 +51,140 @@ serve(async (req) => {
       throw new Error("Configuração de email não encontrada. Verifique suas configurações de usuário.");
     }
 
-    if (!usuario.pop || !usuario.senha_email) {
+    if (!usuario.imap || !usuario.senha_email) {
       throw new Error("Configure o servidor IMAP e senha do email nas configurações do usuário");
     }
 
-    const { folder = "INBOX", limit = 50 } = await req.json().catch(() => ({}));
+    const { folder = "INBOX", maxResults = 50 } = await req.json().catch(() => ({}));
 
-    console.log(`Checking emails for user ${usuario.email}, folder: ${folder}`);
+    console.log(`Fetching emails for user ${usuario.email}, folder: ${folder}`);
 
-    // Fetch emails already stored in the database for this user
-    const { data: storedEmails, error: emailsError } = await supabaseClient
-      .from("emails")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("folder", folder.toLowerCase())
-      .order("date", { ascending: false })
-      .limit(limit);
+    // Check if external server is configured
+    const { data: externalConfig } = await supabaseClient
+      .from("email_oauth_config")
+      .select("client_id, enabled")
+      .eq("estabelecimento_id", usuario.estabelecimento_id)
+      .eq("provider", "external_server")
+      .single();
 
-    if (emailsError) {
-      console.error("Error fetching stored emails:", emailsError);
-      throw new Error("Erro ao buscar emails armazenados");
+    let emails: EmailMessage[] = [];
+
+    // Try external server first if configured
+    if (externalConfig?.enabled && externalConfig?.client_id) {
+      const externalServerUrl = externalConfig.client_id;
+      console.log(`Using external server: ${externalServerUrl}`);
+
+      try {
+        const response = await fetch(`${externalServerUrl}/fetch-emails`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: usuario.email,
+            password: usuario.senha_email,
+            imap_host: usuario.imap,
+            imap_port: usuario.porta_imap,
+            folder: folder,
+            limit: maxResults
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          emails = (data.emails || []).map((email: any, index: number) => ({
+            id: email.id || email.messageId || `email-${Date.now()}-${index}`,
+            subject: email.subject || "(sem assunto)",
+            from_email: email.from || email.from_email || "",
+            to_email: email.to || email.to_email || usuario.email,
+            date: email.date || new Date().toISOString(),
+            read: email.read ?? email.seen ?? false,
+            starred: email.starred ?? email.flagged ?? false,
+            body: email.body || email.text || email.html || "",
+          }));
+          console.log(`Fetched ${emails.length} emails from external server`);
+        } else {
+          console.error("External server error:", await response.text());
+        }
+      } catch (externalError) {
+        console.error("External server connection error:", externalError);
+      }
     }
 
-    const emails: EmailMessage[] = (storedEmails || []).map(email => ({
-      subject: email.subject,
-      from_email: email.from_email,
-      to_email: email.to_email,
-      date: email.date,
-      read: email.read || false,
-      starred: email.starred || false,
-      body: email.body,
-    }));
+    // Fallback: try direct IMAP via external mail server
+    if (emails.length === 0) {
+      // Try the hardcoded external server as last resort
+      const fallbackUrl = "https://mailcrm.pilar.com.br";
+      console.log(`Trying fallback external server: ${fallbackUrl}`);
 
-    console.log(`Found ${emails.length} stored emails for user`);
+      try {
+        const response = await fetch(`${fallbackUrl}/fetch-emails`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: usuario.email,
+            password: usuario.senha_email,
+            imap_host: usuario.imap,
+            imap_port: usuario.porta_imap,
+            folder: folder,
+            limit: maxResults
+          })
+        });
 
-    // Return stored emails with a note about IMAP limitations
+        if (response.ok) {
+          const data = await response.json();
+          emails = (data.emails || []).map((email: any, index: number) => ({
+            id: email.id || email.messageId || `email-${Date.now()}-${index}`,
+            subject: email.subject || "(sem assunto)",
+            from_email: email.from || email.from_email || "",
+            to_email: email.to || email.to_email || usuario.email,
+            date: email.date || new Date().toISOString(),
+            read: email.read ?? email.seen ?? false,
+            starred: email.starred ?? email.flagged ?? false,
+            body: email.body || email.text || email.html || "",
+          }));
+          console.log(`Fetched ${emails.length} emails from fallback server`);
+        } else {
+          const errorText = await response.text();
+          console.error("Fallback server error:", errorText);
+        }
+      } catch (fallbackError) {
+        console.error("Fallback server connection error:", fallbackError);
+      }
+    }
+
+    // Final fallback: return stored emails from database
+    if (emails.length === 0) {
+      console.log("Fetching stored emails from database as final fallback");
+      const { data: storedEmails, error: emailsError } = await supabaseClient
+        .from("emails")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("folder", folder.toLowerCase())
+        .order("date", { ascending: false })
+        .limit(maxResults);
+
+      if (!emailsError && storedEmails) {
+        emails = storedEmails.map(email => ({
+          id: email.id,
+          subject: email.subject,
+          from_email: email.from_email,
+          to_email: email.to_email,
+          date: email.date,
+          read: email.read || false,
+          starred: email.starred || false,
+          body: email.body,
+        }));
+      }
+    }
+
+    console.log(`Returning ${emails.length} emails`);
+
     return new Response(JSON.stringify({ 
       emails, 
       success: true,
+      count: emails.length,
       message: emails.length > 0 
         ? `${emails.length} emails encontrados` 
-        : "Nenhum email encontrado. Edge Functions não suportam conexões IMAP diretas. Use o envio de emails para testar.",
-      imap_note: "Conexões IMAP diretas não são suportadas em Edge Functions do Supabase. Para sincronização real, considere usar um serviço como Nylas ou um webhook de recebimento."
+        : "Nenhum email encontrado"
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -105,6 +194,7 @@ serve(async (req) => {
       JSON.stringify({ 
         error: error.message,
         success: false,
+        emails: [],
         hint: "Verifique suas configurações de email. Para Gmail, use uma Senha de App."
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
