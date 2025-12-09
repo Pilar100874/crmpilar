@@ -221,3 +221,6 @@ verify_jwt = false
 
 [functions.gmail-fetch-emails]
 verify_jwt = true
+
+[functions.gmail-send-email]
+verify_jwt = true
