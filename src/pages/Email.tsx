@@ -430,12 +430,20 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
     }
   };
 
+  const handleComposeNew = () => {
+    setNewEmailTo("");
+    setNewEmailSubject("");
+    setNewEmailBody("");
+    setSelectedEmail(null);
+    setComposing(true);
+  };
+
   const handleReply = () => {
     if (!selectedEmail) return;
-    setComposing(true);
     setNewEmailTo(selectedEmail.from_email);
     setNewEmailSubject(`Re: ${selectedEmail.subject}`);
     setNewEmailBody(`\n\n--- Original ---\n${selectedEmail.body}`);
+    setComposing(true);
   };
 
   const handleForward = () => {
@@ -715,7 +723,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
           <EmailToolbar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            onCompose={() => setComposing(true)}
+            onCompose={handleComposeNew}
             onRefresh={fetchNewEmails}
             onSettings={() => navigate('/config')}
             loading={loading}
