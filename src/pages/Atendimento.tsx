@@ -2,8 +2,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { PredictiveDialerDialog } from "@/components/atendimento/PredictiveDialerDialog";
@@ -4073,156 +4074,187 @@ ${recentMessages}
             </div>
           </div>
         ) : activeTab === "email" ? (
-          /* Email Full Screen Layout */
-          <div className="flex-1 flex h-full min-h-0 bg-background">
-            {/* Email folders sidebar */}
-            <div className="w-48 border-r border-border bg-muted/30 flex flex-col p-3 shrink-0">
-              <Button 
-                onClick={() => setShowComposeEmail(true)}
-                className="w-full mb-4 gap-2"
-                size="sm"
-              >
-                <Edit3 className="w-4 h-4" />
-                Escrever
-              </Button>
-              
-              <div className="space-y-1">
+          /* Email Layout - Similar to Email page */
+          <div className="flex-1 flex flex-col h-full min-h-0 bg-background">
+            {/* Email folder tabs - horizontal below main tab */}
+            <div className="border-b border-border bg-card/50 px-2">
+              <div className="flex items-center gap-1 overflow-x-auto py-1">
+                <Button 
+                  onClick={() => setShowComposeEmail(true)}
+                  size="sm"
+                  className="gap-1.5 shrink-0"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  Escrever
+                </Button>
+                <Separator orientation="vertical" className="h-6 mx-2" />
                 {[
-                  { id: "inbox", label: "Caixa de Entrada", icon: Inbox },
-                  { id: "starred", label: "Com Estrela", icon: Star },
+                  { id: "inbox", label: "Entrada", icon: Inbox },
+                  { id: "starred", label: "Estrela", icon: Star },
                   { id: "sent", label: "Enviados", icon: Send },
                   { id: "drafts", label: "Rascunhos", icon: FileText },
                   { id: "archive", label: "Arquivo", icon: Archive },
                   { id: "trash", label: "Lixeira", icon: Trash2 },
                 ].map((folder) => (
-                  <button
+                  <Button
                     key={folder.id}
+                    variant={emailFolder === folder.id ? "secondary" : "ghost"}
+                    size="sm"
                     onClick={() => {
                       setEmailFolder(folder.id);
                       setSelectedEmailId(null);
                       setSelectedEmailData(null);
                     }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                      emailFolder === folder.id 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                    className={`gap-1.5 shrink-0 ${
+                      emailFolder === folder.id ? 'bg-secondary' : ''
                     }`}
                   >
-                    <folder.icon className="w-4 h-4" />
+                    <folder.icon className="w-3.5 h-3.5" />
                     {folder.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
             
-            {/* Email list */}
-            <div className="w-72 border-r border-border flex flex-col shrink-0">
-              <div className="p-3 border-b border-border">
-                <h3 className="font-medium text-sm">
-                  {emailFolder === "inbox" && "Caixa de Entrada"}
-                  {emailFolder === "starred" && "Com Estrela"}
-                  {emailFolder === "sent" && "Enviados"}
-                  {emailFolder === "drafts" && "Rascunhos"}
-                  {emailFolder === "archive" && "Arquivo"}
-                  {emailFolder === "trash" && "Lixeira"}
-                </h3>
-                <p className="text-xs text-muted-foreground">{filteredEmails.length} emails</p>
-              </div>
-              <div className="flex-1 overflow-y-auto">
-                {filteredEmails.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground">
-                    <Mail className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">Nenhum email</p>
-                  </div>
-                ) : (
-                  filteredEmails.map((email) => (
-                    <div 
-                      key={email.id} 
-                      className={`p-3 border-b border-border cursor-pointer transition-colors ${
-                        selectedEmailId === email.id
-                          ? "bg-blue-50 border-l-2 border-l-blue-500"
-                          : !email.read 
-                            ? 'bg-blue-50/50 hover:bg-blue-50' 
-                            : 'hover:bg-muted/50'
-                      }`}
-                      onClick={() => {
-                        setSelectedEmailId(email.id);
-                        setSelectedEmailData(email);
-                      }}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className={`text-sm truncate flex-1 ${!email.read ? 'font-semibold' : 'text-muted-foreground'}`}>
-                          {email.from_email}
-                        </p>
-                        <span className="text-[10px] text-muted-foreground shrink-0">
-                          {format(new Date(email.date), 'dd/MM', { locale: ptBR })}
-                        </span>
-                      </div>
-                      <p className={`text-xs truncate ${!email.read ? 'font-medium' : 'text-muted-foreground'}`}>
-                        {email.subject}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-            
-            {/* Email content */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-              {selectedEmailId && selectedEmailData ? (
+            {/* Email content area */}
+            <div className="flex-1 flex min-h-0 overflow-hidden">
+              {/* Email list - right side like Email page */}
+              {!selectedEmailId ? (
                 <div className="flex-1 flex flex-col overflow-hidden">
-                  {/* Email header */}
-                  <div className="p-4 border-b border-border bg-card">
-                    <h2 className="text-lg font-semibold mb-2">{selectedEmailData.subject}</h2>
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold shrink-0">
-                          {selectedEmailData.from_email?.charAt(0).toUpperCase() || 'E'}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-medium text-sm truncate">{selectedEmailData.from_email}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            Para: {selectedEmailData.to_email}
-                          </p>
-                        </div>
+                  {/* Toolbar */}
+                  <div className="p-2 border-b border-border flex items-center gap-2 bg-muted/30">
+                    <div className="relative flex-1 max-w-xs">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar emails..."
+                        className="pl-8 h-8 text-sm"
+                      />
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {filteredEmails.length} emails
+                    </Badge>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadUserEmails()}>
+                      <RefreshCw className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  {/* Email list */}
+                  <div className="flex-1 overflow-y-auto divide-y divide-border">
+                    {filteredEmails.length === 0 ? (
+                      <div className="p-12 text-center text-muted-foreground">
+                        <Mail className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                        <p className="font-medium">Nenhum email</p>
+                        <p className="text-sm mt-1">
+                          {emailFolder === "inbox" ? "Sua caixa de entrada está vazia" : `Nenhum email em ${emailFolder}`}
+                        </p>
                       </div>
-                      <span className="text-sm text-muted-foreground shrink-0">
-                        {format(new Date(selectedEmailData.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Email body */}
-                  <div className="flex-1 overflow-y-auto p-6 bg-background">
-                    <div className="prose prose-sm max-w-none">
-                      {selectedEmailData.body?.split('\n').map((line: string, i: number) => (
-                        <p key={i} className="mb-2">{line || <br />}</p>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Email actions */}
-                  <div className="p-3 border-t border-border bg-card flex gap-2">
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Send className="w-4 h-4" />
-                      Responder
-                    </Button>
-                    <Button variant="ghost" size="sm" className="gap-2">
-                      <Archive className="w-4 h-4" />
-                      Arquivar
-                    </Button>
-                    <Button variant="ghost" size="sm" className="gap-2 text-destructive hover:text-destructive">
-                      <Trash2 className="w-4 h-4" />
-                      Excluir
-                    </Button>
+                    ) : (
+                      filteredEmails.map((email) => (
+                        <div 
+                          key={email.id} 
+                          className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
+                            !email.read ? 'bg-blue-50/30' : ''
+                          }`}
+                          onClick={() => {
+                            setSelectedEmailId(email.id);
+                            setSelectedEmailData(email);
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                              email.read ? 'bg-muted text-muted-foreground' : 'bg-blue-500 text-white'
+                            }`}>
+                              {email.read ? (
+                                <MailOpen className="w-4 h-4" />
+                              ) : (
+                                <Mail className="w-4 h-4" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2 mb-0.5">
+                                <p className={`text-sm truncate ${!email.read ? 'font-semibold' : 'text-muted-foreground'}`}>
+                                  {email.from_email}
+                                </p>
+                                <span className="text-xs text-muted-foreground shrink-0">
+                                  {format(new Date(email.date), 'dd/MM HH:mm', { locale: ptBR })}
+                                </span>
+                              </div>
+                              <p className={`text-sm truncate ${!email.read ? 'font-medium' : 'text-muted-foreground'}`}>
+                                {email.subject}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                {email.body?.substring(0, 80)}...
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               ) : (
-                <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                  <div className="text-center">
-                    <Mail className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                    <p className="text-lg font-medium mb-2">Selecione um email</p>
-                    <p className="text-sm">Escolha um email da lista para visualizar</p>
+                /* Email detail view - when email is selected */
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  {/* Back button and actions */}
+                  <div className="p-2 border-b border-border flex items-center gap-2 bg-muted/30">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="gap-1.5"
+                      onClick={() => {
+                        setSelectedEmailId(null);
+                        setSelectedEmailData(null);
+                      }}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Voltar
+                    </Button>
+                    <div className="flex-1" />
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      <Send className="w-4 h-4" />
+                      Responder
+                    </Button>
+                    <Button variant="ghost" size="sm" className="gap-1.5">
+                      <Archive className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="gap-1.5 text-destructive hover:text-destructive">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  {/* Email content */}
+                  <div className="flex-1 overflow-y-auto">
+                    {selectedEmailData && (
+                      <>
+                        {/* Email header */}
+                        <div className="p-4 border-b border-border bg-card">
+                          <h2 className="text-lg font-semibold mb-3">{selectedEmailData.subject}</h2>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold shrink-0">
+                              {selectedEmailData.from_email?.charAt(0).toUpperCase() || 'E'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm">{selectedEmailData.from_email}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Para: {selectedEmailData.to_email}
+                              </p>
+                            </div>
+                            <span className="text-sm text-muted-foreground shrink-0">
+                              {format(new Date(selectedEmailData.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Email body */}
+                        <div className="p-6">
+                          <div className="prose prose-sm max-w-none">
+                            <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                              {selectedEmailData.body}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
