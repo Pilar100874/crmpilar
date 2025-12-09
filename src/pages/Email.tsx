@@ -72,8 +72,6 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState("");
-  const [loadedCount, setLoadedCount] = useState(0);
-  const [totalToLoad, setTotalToLoad] = useState(0);
   const [hasEmailConfig, setHasEmailConfig] = useState<boolean | null>(null);
   const [checkingConfig, setCheckingConfig] = useState(true);
   const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
@@ -272,8 +270,6 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
   const fetchNewEmails = async () => {
     setLoading(true);
     setLoadingProgress(0);
-    setLoadedCount(0);
-    setTotalToLoad(0);
     setLoadingMessage("Conectando ao servidor...");
     
     try {
@@ -283,49 +279,38 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
       
       const functionName = useOAuth ? 'gmail-fetch-emails' : 'fetch-emails-imap';
       
-      setLoadingProgress(25);
-      setLoadingMessage("Buscando lista de emails...");
+      setLoadingProgress(30);
+      setLoadingMessage("Buscando emails...");
       
       const { data, error } = await supabase.functions.invoke(functionName, {
         body: { folder: selectedFolder.toUpperCase(), maxResults: 50 }
       });
       
+      setLoadingProgress(70);
+      setLoadingMessage("Processando mensagens...");
+      
       if (error) throw error;
       
       if (data?.emails) {
-        const totalEmails = data.emails.length;
-        setTotalToLoad(totalEmails);
-        setLoadingProgress(50);
-        setLoadingMessage("Processando mensagens...");
+        const fetchedEmails = data.emails.map((email: any, index: number) => ({
+          id: email.id || `email-${Date.now()}-${index}`,
+          from_email: email.from_email,
+          to_email: email.to_email,
+          subject: email.subject,
+          body: email.body,
+          date: email.date,
+          read: email.read,
+          starred: email.starred,
+          folder: selectedFolder,
+          hasAttachment: email.body?.includes('attachment') || false,
+        }));
         
-        const fetchedEmails: Email[] = [];
-        
-        for (let i = 0; i < totalEmails; i++) {
-          const email = data.emails[i];
-          fetchedEmails.push({
-            id: email.id || `email-${Date.now()}-${i}`,
-            from_email: email.from_email,
-            to_email: email.to_email,
-            subject: email.subject,
-            body: email.body,
-            date: email.date,
-            read: email.read,
-            starred: email.starred,
-            folder: selectedFolder,
-            hasAttachment: email.body?.includes('attachment') || false,
-          });
-          
-          setLoadedCount(i + 1);
-          setLoadingProgress(50 + Math.round((i / totalEmails) * 40));
-        }
-        
-        setLoadingProgress(95);
-        setLoadingMessage("Organizando caixa de entrada...");
+        setLoadingProgress(90);
+        setLoadingMessage("Finalizando...");
         
         setEmails(fetchedEmails);
         
         setLoadingProgress(100);
-        setLoadingMessage("Concluído!");
         toast.success(`${fetchedEmails.length} emails carregados`);
       }
     } catch (error: any) {
@@ -336,9 +321,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         setLoading(false);
         setLoadingProgress(0);
         setLoadingMessage("");
-        setLoadedCount(0);
-        setTotalToLoad(0);
-      }, 800);
+      }, 500);
     }
   };
 
@@ -754,15 +737,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
           />
 
           <ScrollArea className="flex-1">
-            {loading ? (
-              <EmailLoadingBar 
-                isLoading={loading} 
-                progress={loadingProgress} 
-                message={loadingMessage}
-                currentCount={loadedCount}
-                totalCount={totalToLoad}
-              />
-            ) : filteredEmails.length === 0 ? (
+            {filteredEmails.length === 0 ? (
               <EmailEmptyState folder={selectedFolder} />
             ) : (
               <div className="divide-y">
