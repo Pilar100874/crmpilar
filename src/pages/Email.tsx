@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 import {
   Inbox,
   Send,
@@ -22,11 +23,23 @@ import {
   AlertCircle,
   Settings,
   ArrowLeft,
+  MoreVertical,
+  Clock,
+  Tag,
+  CheckCircle2,
+  Mail,
+  MailOpen,
+  X,
 } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { useNavigate, useParams } from "react-router-dom";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
+import { EmailLoadingBar } from "@/components/email/EmailLoadingBar";
+import { EmailToolbar } from "@/components/email/EmailToolbar";
+import { EmailListItem } from "@/components/email/EmailListItem";
+import { EmailEmptyState } from "@/components/email/EmailEmptyState";
+import { cn } from "@/lib/utils";
 
 interface Email {
   id: string;
@@ -38,6 +51,7 @@ interface Email {
   read: boolean;
   starred: boolean;
   folder: "inbox" | "sent" | "trash" | "archive";
+  hasAttachment?: boolean;
 }
 
 interface EmailProps {
@@ -56,8 +70,11 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
   const [composing, setComposing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState("");
   const [hasEmailConfig, setHasEmailConfig] = useState<boolean | null>(null);
   const [checkingConfig, setCheckingConfig] = useState(true);
+  const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
   
   // Compose email states
   const [newEmailTo, setNewEmailTo] = useState("");
@@ -116,7 +133,6 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
       // Se external_server está habilitado, usar servidor externo (SMTP/IMAP)
       if (externalConfig?.enabled) {
-        // Verificar se usuário tem IMAP/SMTP configurado
         const isImapConfigured = !!(
           usuario?.smtp && 
           usuario?.porta_smtp && 
@@ -229,10 +245,8 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
       if (error) throw error;
       
       if (data?.auth_url) {
-        // Open OAuth popup
         const popup = window.open(data.auth_url, 'gmail-oauth', 'width=600,height=700');
         
-        // Listen for OAuth completion
         const handleMessage = (event: MessageEvent) => {
           if (event.data?.type === 'gmail-oauth-success') {
             toast.success('Gmail conectado com sucesso!');
@@ -255,13 +269,25 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
   const fetchNewEmails = async () => {
     setLoading(true);
+    setLoadingProgress(0);
+    setLoadingMessage("Conectando ao servidor...");
+    
     try {
-      // Usar função correta baseado no tipo de autenticação
+      // Simular progresso inicial
+      setLoadingProgress(10);
+      setLoadingMessage("Autenticando...");
+      
       const functionName = useOAuth ? 'gmail-fetch-emails' : 'fetch-emails-imap';
+      
+      setLoadingProgress(30);
+      setLoadingMessage("Buscando emails...");
       
       const { data, error } = await supabase.functions.invoke(functionName, {
         body: { folder: selectedFolder.toUpperCase(), maxResults: 50 }
       });
+      
+      setLoadingProgress(70);
+      setLoadingMessage("Processando mensagens...");
       
       if (error) throw error;
       
@@ -276,32 +302,77 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
           read: email.read,
           starred: email.starred,
           folder: selectedFolder,
+          hasAttachment: email.body?.includes('attachment') || false,
         }));
         
+        setLoadingProgress(90);
+        setLoadingMessage("Finalizando...");
+        
         setEmails(fetchedEmails);
-        toast.success(data.message || `${fetchedEmails.length} emails carregados`);
+        
+        setLoadingProgress(100);
+        toast.success(`${fetchedEmails.length} emails carregados`);
       }
     } catch (error: any) {
       console.error('Erro ao buscar emails:', error);
       toast.error(error.message || 'Erro ao buscar emails');
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+        setLoadingProgress(0);
+        setLoadingMessage("");
+      }, 500);
     }
   };
 
-  const folders = [
-    { id: "inbox", name: "Caixa de Entrada", icon: Inbox, count: emails.filter(e => e.folder === "inbox" && !e.read).length },
-    { id: "sent", name: "Enviados", icon: Send, count: 0 },
-    { id: "archive", name: "Arquivados", icon: Archive, count: 0 },
-    { id: "trash", name: "Lixeira", icon: Trash2, count: 0 },
-  ];
-
   const filteredEmails = emails.filter(
     (email) =>
-      email.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      email.from_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      email.body.toLowerCase().includes(searchQuery.toLowerCase())
+      email.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      email.from_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      email.body?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const unreadCount = emails.filter(e => !e.read).length;
+
+  const handleSelectEmail = (emailId: string) => {
+    const newSelected = new Set(selectedEmails);
+    if (newSelected.has(emailId)) {
+      newSelected.delete(emailId);
+    } else {
+      newSelected.add(emailId);
+    }
+    setSelectedEmails(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    setSelectedEmails(new Set(filteredEmails.map(e => e.id)));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedEmails(new Set());
+  };
+
+  const handleStarEmail = (emailId: string) => {
+    setEmails(emails.map(e => 
+      e.id === emailId ? { ...e, starred: !e.starred } : e
+    ));
+  };
+
+  const handleMarkAsRead = () => {
+    setEmails(emails.map(e => 
+      selectedEmails.has(e.id) ? { ...e, read: true } : e
+    ));
+    setSelectedEmails(new Set());
+    toast.success('Emails marcados como lidos');
+  };
+
+  const handleMarkAsUnread = () => {
+    setEmails(emails.map(e => 
+      selectedEmails.has(e.id) ? { ...e, read: false } : e
+    ));
+    setSelectedEmails(new Set());
+    toast.success('Emails marcados como não lidos');
+  };
 
   const handleSendEmail = async () => {
     if (!newEmailTo || !newEmailSubject || !newEmailBody) {
@@ -310,8 +381,12 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
     }
 
     setLoading(true);
+    setLoadingProgress(0);
+    setLoadingMessage("Enviando email...");
+    
     try {
-      // Escolher função baseado no tipo de autenticação
+      setLoadingProgress(30);
+      
       const functionName = useOAuth && oauthConnected ? 'gmail-send-email' : 'send-email-smtp';
       
       const { data, error } = await supabase.functions.invoke(functionName, {
@@ -325,10 +400,11 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
       if (error) throw error;
 
-      // Exibir messageId se disponível
+      setLoadingProgress(100);
+      
       const messageId = data?.messageId;
       const successMessage = messageId 
-        ? `Email enviado com sucesso! ID: ${messageId}`
+        ? `Email enviado com sucesso!`
         : "Email enviado com sucesso!";
       
       toast.success(successMessage);
@@ -349,6 +425,8 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
       toast.error(error.message || 'Erro ao enviar email');
     } finally {
       setLoading(false);
+      setLoadingProgress(0);
+      setLoadingMessage("");
     }
   };
 
@@ -360,23 +438,22 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
     setNewEmailBody(`\n\n--- Original ---\n${selectedEmail.body}`);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const isToday = date.toDateString() === today.toDateString();
-    
-    if (isToday) {
-      return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-    }
-    return date.toLocaleDateString("pt-BR");
+  const handleForward = () => {
+    if (!selectedEmail) return;
+    setComposing(true);
+    setNewEmailTo("");
+    setNewEmailSubject(`Fwd: ${selectedEmail.subject}`);
+    setNewEmailBody(`\n\n--- Email encaminhado ---\nDe: ${selectedEmail.from_email}\nAssunto: ${selectedEmail.subject}\n\n${selectedEmail.body}`);
   };
 
   // Mostrar tela de carregamento
   if (checkingConfig) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-full items-center justify-center bg-background">
         <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+          </div>
           <p className="text-muted-foreground">Verificando configurações...</p>
         </div>
       </div>
@@ -386,57 +463,55 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
   // Mostrar aviso se não tiver configuração de email
   if (!hasEmailConfig) {
     return (
-      <div className="flex h-screen items-center justify-center p-4">
-        <Card className="max-w-2xl w-full p-8">
-          <Alert>
-            <AlertCircle className="h-5 w-5" />
-            <AlertTitle className="text-lg mb-2">
-              Configuração de Email Necessária
-            </AlertTitle>
-            <AlertDescription className="space-y-4">
-              <p className="text-base">
-                Para utilizar o sistema de email, você precisa configurar seus dados pessoais de acesso ao servidor de email.
-              </p>
-              
-              <div className="bg-muted p-4 rounded-lg space-y-2">
-                <p className="font-semibold">Informações necessárias:</p>
-                <ul className="list-disc list-inside space-y-1 text-sm">
-                  <li>Servidor SMTP e porta (para envio)</li>
-                  <li>Servidor IMAP e porta (para recebimento)</li>
-                  <li>Senha do email (Senha de App para Gmail/Hotmail)</li>
-                </ul>
+      <div className="flex h-full items-center justify-center p-4 bg-background">
+        <Card className="max-w-2xl w-full p-8 shadow-lg">
+          <Alert className="border-none bg-transparent">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center shrink-0">
+                <AlertCircle className="h-6 w-6 text-orange-500" />
               </div>
+              <div className="flex-1">
+                <AlertTitle className="text-lg font-semibold mb-2">
+                  Configuração de Email Necessária
+                </AlertTitle>
+                <AlertDescription className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Para utilizar o sistema de email, você precisa configurar seus dados pessoais de acesso ao servidor de email.
+                  </p>
+                  
+                  <div className="bg-muted p-4 rounded-lg space-y-2">
+                    <p className="font-medium text-sm">Informações necessárias:</p>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                      <li>Servidor SMTP e porta (para envio)</li>
+                      <li>Servidor IMAP e porta (para recebimento)</li>
+                      <li>Senha do email (Senha de App para Gmail/Hotmail)</li>
+                    </ul>
+                  </div>
 
-              <p className="text-sm text-muted-foreground">
-                As configurações são preenchidas automaticamente para Gmail, Hotmail e Outlook. 
-                Você só precisa informar a senha do email.
-              </p>
+                  <p className="text-xs text-muted-foreground">
+                    As configurações são preenchidas automaticamente para Gmail, Hotmail e Outlook.
+                  </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <Button 
-                  onClick={() => navigate('/config')}
-                  className="flex-1"
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Configurar SMTP/IMAP
-                </Button>
-                <Button 
-                  onClick={() => navigate('/email-config')}
-                  variant="secondary"
-                  className="flex-1"
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Configurar Gmail/Outlook API
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={() => navigate('/')}
-                  className="flex-1"
-                >
-                  Voltar ao Início
-                </Button>
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <Button 
+                      onClick={() => navigate('/config')}
+                      className="flex-1"
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      Configurar SMTP/IMAP
+                    </Button>
+                    <Button 
+                      onClick={() => navigate('/email-config')}
+                      variant="secondary"
+                      className="flex-1"
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      Configurar Gmail/Outlook API
+                    </Button>
+                  </div>
+                </AlertDescription>
               </div>
-            </AlertDescription>
+            </div>
           </Alert>
         </Card>
       </div>
@@ -446,19 +521,19 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
   // Mostrar tela para conectar Gmail via OAuth
   if (useOAuth && !oauthConnected) {
     return (
-      <div className="flex h-screen items-center justify-center p-4">
-        <Card className="max-w-md w-full p-8 text-center">
+      <div className="flex h-full items-center justify-center p-4 bg-background">
+        <Card className="max-w-md w-full p-8 text-center shadow-lg">
           <div className="mb-6">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-10 h-10" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <svg className="w-12 h-12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="white" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="white" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="white" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="white" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
             </div>
             <h2 className="text-xl font-semibold mb-2">Conectar Gmail</h2>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Clique no botão abaixo para autorizar o acesso ao seu Gmail via API do Google.
             </p>
           </div>
@@ -466,18 +541,13 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
           <Button 
             onClick={connectGmailOAuth}
             disabled={loading}
-            className="w-full gap-2"
+            className="w-full gap-2 h-12 text-base"
             size="lg"
           >
             {loading ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
+              <RefreshCw className="w-5 h-5 animate-spin" />
             ) : (
-              <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
+              <Mail className="w-5 h-5" />
             )}
             Conectar com Google
           </Button>
@@ -491,229 +561,199 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      {/* Header com botões - só aparece quando não está vendo um email */}
-      {!selectedEmail && !composing && (
-        <div className="border-b bg-card">
-          <div className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <SubMenuHeader 
-                title="E-mail"
-                onOpenSubmenu={() => openSubmenu("Email")}
-              />
-              <h2 className="text-lg font-semibold">
-                {folders.find(f => f.id === selectedFolder)?.name}
-              </h2>
-              
-              <div className="relative w-96">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+    <div className="h-full flex flex-col bg-background">
+      {/* Loading bar */}
+      <EmailLoadingBar 
+        isLoading={loading} 
+        progress={loadingProgress}
+        message={loadingMessage}
+      />
+
+      {/* Composing view */}
+      {composing ? (
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="border-b bg-card p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={() => setComposing(false)}>
+                <X className="w-5 h-5" />
+              </Button>
+              <h2 className="text-lg font-semibold">Novo E-mail</h2>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setComposing(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSendEmail} className="gap-2" disabled={loading}>
+                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                Enviar
+              </Button>
+            </div>
+          </div>
+
+          <ScrollArea className="flex-1">
+            <div className="max-w-4xl mx-auto p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Para:</label>
                 <Input
-                  placeholder="Busca e filtro"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  placeholder="destinatario@exemplo.com"
+                  value={newEmailTo}
+                  onChange={(e) => setNewEmailTo(e.target.value)}
+                  className="bg-background"
                 />
               </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline"
-                onClick={() => navigate('/config')}
-                className="gap-2"
-              >
-                <Settings className="w-4 h-4" />
-                CONFIGURAÇÕES
-              </Button>
-              <Button 
-                onClick={() => setComposing(true)}
-                className="gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                ESCREVER
-              </Button>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Assunto:</label>
+                <Input
+                  placeholder="Assunto do e-mail"
+                  value={newEmailSubject}
+                  onChange={(e) => setNewEmailSubject(e.target.value)}
+                  className="bg-background"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Mensagem:</label>
+                <Textarea
+                  placeholder="Digite sua mensagem..."
+                  value={newEmailBody}
+                  onChange={(e) => setNewEmailBody(e.target.value)}
+                  className="min-h-[400px] resize-none bg-background"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Paperclip className="w-4 h-4" />
+                  Anexar arquivo
+                </Button>
+              </div>
+            </div>
+          </ScrollArea>
+        </div>
+      ) : selectedEmail ? (
+        /* Email detail view */
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="border-b bg-card p-4">
+            <div className="flex items-center gap-3 mb-4">
               <Button 
                 variant="ghost" 
                 size="icon"
-                onClick={fetchNewEmails}
-                disabled={loading}
+                onClick={() => setSelectedEmail(null)}
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-semibold truncate">{selectedEmail.subject}</h2>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" className="gap-2" onClick={handleReply}>
+                <Reply className="w-4 h-4" />
+                Responder
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={handleForward}>
+                <Forward className="w-4 h-4" />
+                Encaminhar
+              </Button>
+              <Separator orientation="vertical" className="h-8 mx-1" />
+              <Button variant="outline" size="sm" className="gap-2">
+                <Archive className="w-4 h-4" />
+                Arquivar
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Trash2 className="w-4 h-4" />
+                Excluir
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Tag className="w-4 h-4" />
+                Etiqueta
               </Button>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Área principal de emails */}
-      <div className="flex-1 flex flex-col">
-        {composing ? (
-          <div className="flex-1 p-8 overflow-auto bg-background">
-            <Card className="max-w-4xl mx-auto">
-              <div className="p-6 border-b flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Novo E-mail</h2>
-                <div className="flex gap-2">
-                  <Button onClick={handleSendEmail} className="gap-2">
-                    <Send className="w-4 h-4" />
-                    Enviar
-                  </Button>
-                  <Button variant="outline" onClick={() => setComposing(false)}>
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Para:</label>
-                  <Input
-                    placeholder="destinatario@exemplo.com"
-                    value={newEmailTo}
-                    onChange={(e) => setNewEmailTo(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Assunto:</label>
-                  <Input
-                    placeholder="Assunto do e-mail"
-                    value={newEmailSubject}
-                    onChange={(e) => setNewEmailSubject(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Mensagem:</label>
-                  <Textarea
-                    placeholder="Digite sua mensagem..."
-                    value={newEmailBody}
-                    onChange={(e) => setNewEmailBody(e.target.value)}
-                    className="min-h-[400px] resize-none"
-                  />
-                </div>
-
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Paperclip className="w-4 h-4" />
-                    Anexar arquivo
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
-        ) : selectedEmail ? (
-          <div className="flex-1 p-8 overflow-auto bg-background">
-            <div className="max-w-4xl mx-auto">
-              <Button 
-                variant="ghost" 
-                className="mb-4 gap-2"
-                onClick={() => setSelectedEmail(null)}
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Voltar para lista
-              </Button>
-              
-              <Card>
+          <ScrollArea className="flex-1">
+            <div className="max-w-4xl mx-auto p-6">
+              <div className="bg-card rounded-lg border shadow-sm">
                 <div className="p-6 border-b">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h2 className="text-lg font-semibold mb-1">{selectedEmail.subject}</h2>
-                      <div className="text-sm text-muted-foreground">
-                        De: {selectedEmail.from_email}
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Mail className="w-6 h-6 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="font-medium">{selectedEmail.from_email}</div>
+                          <div className="text-sm text-muted-foreground">
+                            Para: {selectedEmail.to_email}
+                          </div>
+                        </div>
+                        <div className="text-sm text-muted-foreground shrink-0 flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          {new Date(selectedEmail.date).toLocaleString("pt-BR")}
+                        </div>
                       </div>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(selectedEmail.date).toLocaleString("pt-BR")}
-                    </span>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="gap-2" onClick={handleReply}>
-                      <Reply className="w-4 h-4" />
-                      Responder
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Forward className="w-4 h-4" />
-                      Encaminhar
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Archive className="w-4 h-4" />
-                      Arquivar
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Trash2 className="w-4 h-4" />
-                      Excluir
-                    </Button>
                   </div>
                 </div>
 
                 <div className="p-6">
-                  <div className="p-6 bg-muted/30 rounded-lg">
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
                     <div className="whitespace-pre-wrap text-sm leading-relaxed">
                       {selectedEmail.body}
                     </div>
                   </div>
                 </div>
-              </Card>
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 flex flex-col">
-            {/* Cabeçalho da tabela */}
-            <div className="border-b bg-muted/30">
-              <div className="grid grid-cols-12 gap-4 px-6 py-3 text-sm font-medium text-muted-foreground">
-                <div className="col-span-3">DE</div>
-                <div className="col-span-6">MENSAGEM E CONEXÃO DE LEAD</div>
-                <div className="col-span-3 text-right">DATA</div>
               </div>
             </div>
+          </ScrollArea>
+        </div>
+      ) : (
+        /* Email list view */
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <EmailToolbar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onCompose={() => setComposing(true)}
+            onRefresh={fetchNewEmails}
+            onSettings={() => navigate('/config')}
+            loading={loading}
+            unreadCount={unreadCount}
+            totalCount={filteredEmails.length}
+            selectedCount={selectedEmails.size}
+            onMarkAsRead={handleMarkAsRead}
+            onMarkAsUnread={handleMarkAsUnread}
+            onSelectAll={handleSelectAll}
+            onDeselectAll={handleDeselectAll}
+          />
 
-            {/* Lista de emails */}
-            <ScrollArea className="flex-1">
-              {filteredEmails.length === 0 ? (
-                <div className="p-16 text-center">
-                  <p className="text-red-500 text-sm">Desculpe, não há mensagens.</p>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {filteredEmails.map((email) => (
-                    <button
-                      key={email.id}
-                      onClick={() => setSelectedEmail(email)}
-                      className="w-full text-left px-6 py-4 hover:bg-muted/50 transition-colors relative"
-                    >
-                      <div className="grid grid-cols-12 gap-4 items-center">
-                        <div className="col-span-3 text-sm truncate">
-                          {email.from_email}
-                        </div>
-                        <div className="col-span-6">
-                          <div className="text-sm font-medium truncate mb-1">
-                            {email.subject}
-                          </div>
-                          <div className="text-xs text-muted-foreground truncate">
-                            {email.body}
-                          </div>
-                        </div>
-                        <div className="col-span-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {email.starred && <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />}
-                            <span className="text-xs text-muted-foreground">
-                              {formatDate(email.date)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      {!email.read && (
-                        <div className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </div>
-        )}
-      </div>
+          <ScrollArea className="flex-1">
+            {filteredEmails.length === 0 ? (
+              <EmailEmptyState folder={selectedFolder} />
+            ) : (
+              <div className="divide-y">
+                {filteredEmails.map((email) => (
+                  <EmailListItem
+                    key={email.id}
+                    email={email}
+                    isSelected={selectedEmails.has(email.id)}
+                    onSelect={() => handleSelectEmail(email.id)}
+                    onClick={() => {
+                      setSelectedEmail(email);
+                      // Mark as read
+                      setEmails(emails.map(e => 
+                        e.id === email.id ? { ...e, read: true } : e
+                      ));
+                    }}
+                    onStar={() => handleStarEmail(email.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </div>
+      )}
     </div>
   );
 }
