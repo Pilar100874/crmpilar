@@ -139,8 +139,9 @@ serve(async (req) => {
 function generateHTML(success: boolean, message: string): string {
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="pt-BR">
     <head>
+      <meta charset="UTF-8">
       <title>${success ? "Sucesso" : "Erro"} - Gmail OAuth</title>
       <style>
         body {
