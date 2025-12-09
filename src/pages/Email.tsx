@@ -98,49 +98,75 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         return;
       }
 
-      // Primeiro verificar se tem OAuth configurado (prioridade)
-      if (usuario?.estabelecimento_id) {
-        const { data: oauthConfig } = await supabase
-          .from('email_oauth_config')
-          .select('enabled, provider, client_id')
-          .eq('estabelecimento_id', usuario.estabelecimento_id)
-          .eq('provider', 'google')
-          .maybeSingle();
+      if (!usuario?.estabelecimento_id) {
+        setHasEmailConfig(false);
+        setCheckingConfig(false);
+        return;
+      }
 
-        // Se tem client_id configurado, usar OAuth
-        if (oauthConfig?.client_id) {
+      // Buscar todas as configurações de email do estabelecimento
+      const { data: emailConfigs } = await supabase
+        .from('email_oauth_config')
+        .select('provider, enabled, client_id')
+        .eq('estabelecimento_id', usuario.estabelecimento_id);
+
+      // Verificar qual modo está ativo
+      const externalConfig = (emailConfigs as any[])?.find((c: any) => c.provider === 'external_server');
+      const googleConfig = (emailConfigs as any[])?.find((c: any) => c.provider === 'google');
+
+      // Se external_server está habilitado, usar servidor externo (SMTP/IMAP)
+      if (externalConfig?.enabled) {
+        // Verificar se usuário tem IMAP/SMTP configurado
+        const isImapConfigured = !!(
+          usuario?.smtp && 
+          usuario?.porta_smtp && 
+          usuario?.senha_email
+        );
+
+        if (isImapConfigured) {
           setHasEmailConfig(true);
-          setUseOAuth(true);
-          
-          // Verificar se já tem tokens OAuth
-          const { data: { user: authUser } } = await supabase.auth.getUser();
-          if (authUser) {
-            const { data: tokenData } = await supabase
-              .from('email_oauth_tokens')
-              .select('id')
-              .eq('user_id', authUser.id)
-              .eq('provider', 'google')
-              .maybeSingle();
-            
-            setOauthConnected(!!tokenData);
-          }
-          
+          setUseOAuth(false);
           setCheckingConfig(false);
           return;
         }
+
+        setHasEmailConfig(false);
+        setCheckingConfig(false);
+        return;
       }
 
-      // Se não tiver OAuth, verificar IMAP/SMTP
+      // Se OAuth (Google) está habilitado e tem client_id
+      if (googleConfig?.enabled && googleConfig?.client_id) {
+        setHasEmailConfig(true);
+        setUseOAuth(true);
+        
+        // Verificar se já tem tokens OAuth
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          const { data: tokenData } = await supabase
+            .from('email_oauth_tokens')
+            .select('id')
+            .eq('user_id', authUser.id)
+            .eq('provider', 'google')
+            .maybeSingle();
+          
+          setOauthConnected(!!tokenData);
+        }
+        
+        setCheckingConfig(false);
+        return;
+      }
+
+      // Fallback: tentar IMAP/SMTP mesmo sem external_server explicitamente habilitado
       const isImapConfigured = !!(
         usuario?.smtp && 
         usuario?.porta_smtp && 
-        usuario?.imap && 
-        usuario?.porta_imap && 
         usuario?.senha_email
       );
 
       if (isImapConfigured) {
         setHasEmailConfig(true);
+        setUseOAuth(false);
         setCheckingConfig(false);
         return;
       }
