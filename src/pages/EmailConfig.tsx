@@ -76,22 +76,32 @@ export default function EmailConfig() {
     setSaving(true);
     try {
       // Get current configs
-      const { data: currentConfigs } = await supabase
+      const { data: currentConfigs, error: fetchError } = await supabase
         .from("email_oauth_config" as any)
         .select("*")
         .eq("estabelecimento_id", estabelecimentoId);
+
+      if (fetchError) {
+        console.error("Erro ao buscar configs:", fetchError);
+        throw fetchError;
+      }
 
       if (emailMode === "external") {
         // Enable external_server, disable google and microsoft
         const externalConfig = (currentConfigs as any[])?.find((c: any) => c.provider === "external_server");
         
         if (externalConfig) {
-          await supabase
+          const { error: updateError } = await supabase
             .from("email_oauth_config" as any)
             .update({ enabled: true, updated_at: new Date().toISOString() })
             .eq("id", externalConfig.id);
+          
+          if (updateError) {
+            console.error("Erro ao atualizar external_server:", updateError);
+            throw updateError;
+          }
         } else {
-          await supabase
+          const { error: insertError } = await supabase
             .from("email_oauth_config" as any)
             .insert({
               estabelecimento_id: estabelecimentoId,
@@ -99,6 +109,11 @@ export default function EmailConfig() {
               enabled: true,
               updated_at: new Date().toISOString()
             });
+          
+          if (insertError) {
+            console.error("Erro ao inserir external_server:", insertError);
+            throw insertError;
+          }
         }
 
         // Disable OAuth providers
@@ -106,29 +121,55 @@ export default function EmailConfig() {
         const microsoftConfig = (currentConfigs as any[])?.find((c: any) => c.provider === "microsoft");
 
         if (googleConfig) {
-          await supabase
+          const { error } = await supabase
             .from("email_oauth_config" as any)
             .update({ enabled: false, updated_at: new Date().toISOString() })
             .eq("id", googleConfig.id);
+          if (error) console.error("Erro ao desabilitar google:", error);
         }
         if (microsoftConfig) {
-          await supabase
+          const { error } = await supabase
             .from("email_oauth_config" as any)
             .update({ enabled: false, updated_at: new Date().toISOString() })
             .eq("id", microsoftConfig.id);
+          if (error) console.error("Erro ao desabilitar microsoft:", error);
         }
       } else {
-        // Disable external_server, keep OAuth as is (user will configure which one)
+        // OAuth mode - disable external_server
         const externalConfig = (currentConfigs as any[])?.find((c: any) => c.provider === "external_server");
         if (externalConfig) {
-          await supabase
+          const { error } = await supabase
             .from("email_oauth_config" as any)
             .update({ enabled: false, updated_at: new Date().toISOString() })
             .eq("id", externalConfig.id);
+          if (error) console.error("Erro ao desabilitar external_server:", error);
+        }
+        
+        // Enable google provider by default if not already configured
+        const googleConfig = (currentConfigs as any[])?.find((c: any) => c.provider === "google");
+        if (googleConfig) {
+          const { error } = await supabase
+            .from("email_oauth_config" as any)
+            .update({ enabled: true, updated_at: new Date().toISOString() })
+            .eq("id", googleConfig.id);
+          if (error) console.error("Erro ao habilitar google:", error);
+        } else {
+          // Create google config if it doesn't exist
+          const { error } = await supabase
+            .from("email_oauth_config" as any)
+            .insert({
+              estabelecimento_id: estabelecimentoId,
+              provider: "google",
+              enabled: true,
+              updated_at: new Date().toISOString()
+            });
+          if (error) console.error("Erro ao criar google config:", error);
         }
       }
 
       toast.success("Modo de email salvo com sucesso!");
+      // Reload to reflect changes
+      await loadEmailMode();
     } catch (error) {
       console.error("Erro ao salvar modo de email:", error);
       toast.error("Erro ao salvar modo de email");
