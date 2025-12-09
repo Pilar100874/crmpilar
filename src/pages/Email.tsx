@@ -285,8 +285,10 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
     setLoading(true);
     try {
-      // Enviar via SMTP do servidor pessoal do usuário
-      const { data, error } = await supabase.functions.invoke('send-email-smtp', {
+      // Escolher função baseado no tipo de autenticação
+      const functionName = useOAuth && oauthConnected ? 'gmail-send-email' : 'send-email-smtp';
+      
+      const { data, error } = await supabase.functions.invoke(functionName, {
         body: {
           to: newEmailTo,
           subject: newEmailSubject,
@@ -296,14 +298,19 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
       if (error) throw error;
 
-      toast.success("Email enviado do seu email pessoal!");
+      const successMessage = useOAuth ? "Email enviado via Gmail!" : "Email enviado do seu email pessoal!";
+      toast.success(successMessage);
       setComposing(false);
       setNewEmailTo("");
       setNewEmailSubject("");
       setNewEmailBody("");
       
       if (selectedFolder === 'sent') {
-        await loadEmails();
+        if (useOAuth && oauthConnected) {
+          await fetchNewEmails();
+        } else {
+          await loadEmails();
+        }
       }
     } catch (error: any) {
       console.error('Erro ao enviar email:', error);
