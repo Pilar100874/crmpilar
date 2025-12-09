@@ -7,8 +7,9 @@ import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Mail, HelpCircle, ChevronDown, ChevronUp, ExternalLink, Save, Eye, EyeOff } from "lucide-react";
+import { Mail, HelpCircle, ChevronDown, ChevronUp, ExternalLink, Save, Eye, EyeOff, LogIn, CheckCircle, Loader2 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { Badge } from "@/components/ui/badge";
 
 interface OAuthConfig {
   id?: string;
@@ -16,6 +17,13 @@ interface OAuthConfig {
   client_id: string;
   client_secret: string;
   enabled: boolean;
+}
+
+interface OAuthToken {
+  id: string;
+  provider: string;
+  email: string | null;
+  expires_at: string;
 }
 
 interface EmailOAuthConfigProps {
@@ -41,6 +49,8 @@ export function EmailOAuthConfig({ estabelecimentoId: propEstabelecimentoId }: E
   const [googleHelpOpen, setGoogleHelpOpen] = useState(false);
   const [microsoftHelpOpen, setMicrosoftHelpOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [connectingGoogle, setConnectingGoogle] = useState(false);
+  const [googleToken, setGoogleToken] = useState<OAuthToken | null>(null);
 
   useEffect(() => {
     const loadEstabelecimento = async () => {
@@ -88,6 +98,84 @@ export function EmailOAuthConfig({ estabelecimentoId: propEstabelecimentoId }: E
       });
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
+    }
+  };
+
+  const loadGoogleToken = async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      const { data, error } = await supabase
+        .from('email_oauth_tokens' as any)
+        .select('id, provider, email, expires_at')
+        .eq('user_id', userData.user.id)
+        .eq('provider', 'google')
+        .maybeSingle();
+
+      if (error) {
+        console.error('Erro ao carregar token Gmail:', error);
+        return;
+      }
+
+      if (data) {
+        setGoogleToken(data as unknown as OAuthToken);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar conexão Gmail:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadGoogleToken();
+  }, []);
+
+  const handleConnectGoogle = async () => {
+    if (!googleConfig.client_id || !googleConfig.client_secret) {
+      toast.error('Configure o Client ID e Client Secret do Google primeiro');
+      return;
+    }
+
+    setConnectingGoogle(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('gmail-auth-start', {
+        body: { 
+          redirect_url: window.location.href
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.auth_url) {
+        window.location.href = data.auth_url;
+      } else {
+        throw new Error('URL de autenticação não retornada');
+      }
+    } catch (error: any) {
+      console.error('Erro ao iniciar autenticação:', error);
+      toast.error(error.message || 'Erro ao conectar com Gmail');
+      setConnectingGoogle(false);
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      const { error } = await supabase
+        .from('email_oauth_tokens' as any)
+        .delete()
+        .eq('user_id', userData.user.id)
+        .eq('provider', 'google');
+
+      if (error) throw error;
+
+      setGoogleToken(null);
+      toast.success('Conta Gmail desconectada');
+    } catch (error) {
+      console.error('Erro ao desconectar:', error);
+      toast.error('Erro ao desconectar conta');
     }
   };
 
@@ -201,12 +289,48 @@ export function EmailOAuthConfig({ estabelecimentoId: propEstabelecimentoId }: E
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button onClick={() => saveConfig(googleConfig)} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
-              Salvar
+              Salvar Credenciais
             </Button>
+            
+            {googleToken ? (
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="flex items-center gap-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                  <CheckCircle className="h-3 w-3" />
+                  Conectado: {googleToken.email}
+                </Badge>
+                <Button variant="outline" size="sm" onClick={handleDisconnectGoogle}>
+                  Desconectar
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                variant="default" 
+                onClick={handleConnectGoogle} 
+                disabled={connectingGoogle || !googleConfig.client_id || !googleConfig.client_secret}
+              >
+                {connectingGoogle ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Conectando...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Conectar Gmail
+                  </>
+                )}
+              </Button>
+            )}
           </div>
+
+          {!googleConfig.client_id && (
+            <p className="text-sm text-muted-foreground">
+              Configure o Client ID e Client Secret primeiro, depois clique em "Conectar Gmail"
+            </p>
+          )}
 
           <Collapsible open={googleHelpOpen} onOpenChange={setGoogleHelpOpen}>
             <CollapsibleTrigger asChild>
