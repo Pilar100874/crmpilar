@@ -78,7 +78,8 @@ interface ConfigItem {
   title: string;
   description: string;
   icon: React.ElementType;
-  component: React.ComponentType<{ estabelecimentoId: string }>;
+  component?: React.ComponentType<{ estabelecimentoId: string }>;
+  navigateTo?: string;
   helpContent?: React.ReactNode;
 }
 
@@ -90,6 +91,13 @@ const getConfigCategories = (): ConfigCategory[] => [
     color: "text-blue-500",
     bgColor: "bg-blue-500/10",
     items: [
+      {
+        id: "email-config",
+        title: "Email Config",
+        description: "Configure servidor externo e OAuth",
+        icon: Mail,
+        navigateTo: "/email-config",
+      },
       {
         id: "resend-config",
         title: "Email (Resend)",
@@ -277,9 +285,13 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
     setSelectedItem(null);
   };
 
-  const handleItemClick = (itemId: string) => {
-    setSelectedItem(itemId);
-    setSearchParams({ subsecao: itemId });
+  const handleItemClick = (item: ConfigItem) => {
+    if (item.navigateTo) {
+      navigate(item.navigateTo);
+      return;
+    }
+    setSelectedItem(item.id);
+    setSearchParams({ subsecao: item.id });
   };
 
   const handleBackToCategories = () => {
@@ -297,7 +309,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
   const currentItem = currentCategory?.items.find(i => i.id === selectedItem);
 
   // Render item content
-  if (selectedItem && currentItem && currentCategory) {
+  if (selectedItem && currentItem && currentCategory && currentItem.component) {
     const ItemComponent = currentItem.component;
     return (
       <div className="space-y-4">
@@ -364,7 +376,7 @@ export function EstabelecimentoDetalhes({ estabelecimentoId, estabelecimentoNome
             <Card 
               key={item.id}
               className="overflow-hidden cursor-pointer hover:shadow-md active:scale-[0.99] transition-all"
-              onClick={() => handleItemClick(item.id)}
+              onClick={() => handleItemClick(item)}
             >
               <CardContent className="p-0">
                 <div className="flex items-center gap-3 p-3">
