@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,12 +11,10 @@ import {
 } from "lucide-react";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { WhatsAppConfigCRUD } from "@/components/config/WhatsAppConfigCRUD";
-import { EmailServerConfig } from "@/components/config/EmailServerConfig";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { useSearchParams } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
@@ -62,9 +61,9 @@ const CONFIG_SECTIONS: ConfigSection[] = [
     iconColor: "text-orange-500",
   },
   {
-    id: "email-server",
-    title: "Servidor de Email",
-    description: "Configure IMAP/SMTP para envio e recebimento",
+    id: "email-config",
+    title: "Email Config",
+    description: "Configure servidor externo e OAuth",
     icon: Mail,
     bgColor: "bg-cyan-500/10",
     iconColor: "text-cyan-500",
@@ -72,6 +71,7 @@ const CONFIG_SECTIONS: ConfigSection[] = [
 ];
 
 export default function Config() {
+  const navigate = useNavigate();
   const { openSubmenu } = useLayout();
   const [searchParams, setSearchParams] = useSearchParams();
   const secaoParam = searchParams.get('secao');
@@ -88,6 +88,10 @@ export default function Config() {
   }, [secaoParam]);
 
   const handleSectionClick = (sectionId: string) => {
+    if (sectionId === "email-config") {
+      navigate("/email-config");
+      return;
+    }
     setActiveSection(sectionId);
     setSearchParams({ secao: sectionId });
   };
@@ -127,8 +131,6 @@ export default function Config() {
         return <CampanhasContent />;
       case "conteudos":
         return <ConteudosContent />;
-      case "email-server":
-        return <EmailServerConfig />;
       default:
         return null;
     }
