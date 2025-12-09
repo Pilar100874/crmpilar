@@ -293,12 +293,18 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
           to: newEmailTo,
           subject: newEmailSubject,
           body: newEmailBody,
+          html: `<p>${newEmailBody.replace(/\n/g, '<br>')}</p>`
         }
       });
 
       if (error) throw error;
 
-      const successMessage = useOAuth ? "Email enviado via Gmail!" : "Email enviado do seu email pessoal!";
+      // Exibir messageId se disponível
+      const messageId = data?.messageId;
+      const successMessage = messageId 
+        ? `Email enviado com sucesso! ID: ${messageId}`
+        : "Email enviado com sucesso!";
+      
       toast.success(successMessage);
       setComposing(false);
       setNewEmailTo("");

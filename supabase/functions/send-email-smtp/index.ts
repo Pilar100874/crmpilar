@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,7 +31,7 @@ serve(async (req) => {
     // Get user email config
     const { data: usuario, error: userError } = await supabaseClient
       .from("usuarios")
-      .select("email, nome, smtp, porta_smtp, senha_email")
+      .select("email, nome, smtp, porta_smtp, senha_email, estabelecimento_id")
       .eq("auth_user_id", user.id)
       .single();
 
@@ -44,39 +43,63 @@ serve(async (req) => {
       throw new Error("Configure o servidor SMTP e senha do email nas configurações do usuário");
     }
 
+    // Get external server URL from email_oauth_config
+    const { data: serverConfig } = await supabaseClient
+      .from("email_oauth_config")
+      .select("client_id")
+      .eq("estabelecimento_id", usuario.estabelecimento_id)
+      .eq("provider", "external_server")
+      .eq("enabled", true)
+      .maybeSingle();
+
+    // Use external server URL or default
+    const serverUrl = serverConfig?.client_id || "https://pilar-mail-production.up.railway.app";
+
     const { to, subject, body, html } = await req.json();
 
     if (!to || !subject) {
       throw new Error("Destinatário e assunto são obrigatórios");
     }
 
-    console.log(`Sending email via SMTP: ${usuario.smtp}:${usuario.porta_smtp}`);
+    console.log(`Sending email via external API: ${serverUrl}/send-email`);
+    console.log(`SMTP: ${usuario.smtp}:${usuario.porta_smtp}`);
 
-    // Create SMTP client
-    const client = new SMTPClient({
-      connection: {
-        hostname: usuario.smtp,
-        port: usuario.porta_smtp || 587,
-        tls: usuario.porta_smtp === 465,
-        auth: {
-          username: usuario.email,
-          password: usuario.senha_email,
-        },
-      },
-    });
+    // Determinar se usa TLS (porta 465 = SSL direto, outras = STARTTLS)
+    const smtpSecure = usuario.porta_smtp === 465;
 
-    // Send email
-    await client.send({
-      from: usuario.email,
+    // Build request payload according to Railway API format
+    const payload = {
+      smtpHost: usuario.smtp,
+      smtpPort: usuario.porta_smtp || 587,
+      smtpSecure: smtpSecure,
+      user: usuario.email,
+      pass: usuario.senha_email,
+      from: usuario.nome ? `${usuario.nome} <${usuario.email}>` : usuario.email,
       to: to,
       subject: subject,
-      content: body || "",
-      html: html || undefined,
+      text: body || "",
+      html: html || `<p>${body || ""}</p>`
+    };
+
+    console.log("Payload (sem senha):", { ...payload, pass: "***" });
+
+    // Call external Railway API
+    const response = await fetch(`${serverUrl}/send-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
     });
 
-    await client.close();
+    const result = await response.json();
+    console.log("Railway API response:", result);
 
-    console.log("Email sent successfully");
+    if (!response.ok || !result.ok) {
+      throw new Error(result.error || result.message || "Erro ao enviar email via servidor externo");
+    }
+
+    console.log("Email sent successfully, messageId:", result.messageId);
 
     // Save sent email to database
     const { error: saveError } = await supabaseClient
@@ -98,7 +121,10 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ 
+        success: true, 
+        messageId: result.messageId 
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
