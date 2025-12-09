@@ -32,19 +32,40 @@ serve(async (req: Request) => {
     console.log("Testando conexão de email via servidor:", serverUrl);
     console.log("Email:", accounts[0]?.user);
 
-    // Fazer a chamada para o servidor de email externo
-    const response = await fetch(`${serverUrl}/send-emails`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        accounts,
-        to,
-        subject,
-        text,
-      }),
-    });
+    // Adicionar timeout de 30 segundos
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    let response: Response;
+    try {
+      response = await fetch(`${serverUrl}/send-emails`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          accounts,
+          to,
+          subject,
+          text,
+        }),
+        signal: controller.signal,
+      });
+    } catch (fetchError: unknown) {
+      clearTimeout(timeoutId);
+      const isAborted = fetchError instanceof Error && fetchError.name === 'AbortError';
+      const errorMsg = isAborted 
+        ? "Servidor de email não respondeu (timeout). Verifique se a URL do servidor está correta e acessível."
+        : `Erro ao conectar com servidor: ${fetchError instanceof Error ? fetchError.message : 'Erro desconhecido'}`;
+      
+      console.error("Erro no fetch:", fetchError);
+      return new Response(
+        JSON.stringify({ success: false, error: errorMsg }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    clearTimeout(timeoutId);
 
     const responseText = await response.text();
     console.log("Resposta do servidor:", response.status, responseText);
