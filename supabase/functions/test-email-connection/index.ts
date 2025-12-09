@@ -86,10 +86,16 @@ serve(async (req: Request) => {
         }
       );
     } else {
+      // O servidor externo respondeu com erro - pode ser problema de conexão com SMTP/IMAP
+      const serverError = result.error || result.message || "Erro desconhecido";
+      const userMessage = serverError.toLowerCase().includes('timeout')
+        ? `O servidor de email não conseguiu conectar ao servidor SMTP/IMAP. Verifique as credenciais e se o servidor de email está acessível. Detalhes: ${serverError}`
+        : `Erro do servidor de email: ${serverError}`;
+      
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: result.error || result.message || "Erro ao conectar com servidor de email" 
+          error: userMessage
         }),
         {
           status: response.status,
