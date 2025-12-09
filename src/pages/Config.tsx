@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, 
   Search, Link2, File, Bell, ShieldCheck, ChevronRight, ArrowLeft,
-  Settings, Check
+  Settings, Check, Mail
 } from "lucide-react";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { WhatsAppConfigCRUD } from "@/components/config/WhatsAppConfigCRUD";
+import { EmailServerConfig } from "@/components/config/EmailServerConfig";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
 import { useLayout } from "@/contexts/LayoutContext";
 import { Switch } from "@/components/ui/switch";
@@ -59,6 +60,14 @@ const CONFIG_SECTIONS: ConfigSection[] = [
     icon: Megaphone,
     bgColor: "bg-orange-500/10",
     iconColor: "text-orange-500",
+  },
+  {
+    id: "email-server",
+    title: "Servidor de Email",
+    description: "Configure IMAP/SMTP para envio e recebimento",
+    icon: Mail,
+    bgColor: "bg-cyan-500/10",
+    iconColor: "text-cyan-500",
   },
 ];
 
@@ -118,6 +127,8 @@ export default function Config() {
         return <CampanhasContent />;
       case "conteudos":
         return <ConteudosContent />;
+      case "email-server":
+        return <EmailServerConfig />;
       default:
         return null;
     }
