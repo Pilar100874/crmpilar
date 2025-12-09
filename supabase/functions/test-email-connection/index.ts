@@ -32,23 +32,47 @@ serve(async (req: Request) => {
     console.log("Testando conexão de email via servidor:", serverUrl);
     console.log("Email:", accounts[0]?.user);
 
+    const account = accounts[0];
+    if (!account) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Conta de email não fornecida" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Construir payload no formato esperado pela API do Railway
+    const smtpSecure = account.smtp_port === 465;
+    const payload = {
+      smtpHost: account.smtp,
+      smtpPort: account.smtp_port,
+      smtpSecure: smtpSecure,
+      user: account.user,
+      pass: account.pass,
+      from: account.user,
+      to: to,
+      subject: subject,
+      text: text,
+      html: `<p>${text}</p>`
+    };
+
+    console.log("Payload para API:", JSON.stringify({ ...payload, pass: "***" }));
+
     // Adicionar timeout de 30 segundos
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+    // Chamar /send-email (não /send-emails)
+    const apiUrl = `${serverUrl}/send-email`;
+    console.log("Chamando API:", apiUrl);
+
     let response: Response;
     try {
-      response = await fetch(`${serverUrl}/send-emails`, {
+      response = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          accounts,
-          to,
-          subject,
-          text,
-        }),
+        body: JSON.stringify(payload),
         signal: controller.signal,
       });
     } catch (fetchError: unknown) {
@@ -77,16 +101,16 @@ serve(async (req: Request) => {
       result = { message: responseText };
     }
 
-    if (response.ok) {
+    if (response.ok && result.ok) {
       return new Response(
-        JSON.stringify({ success: true, data: result }),
+        JSON.stringify({ success: true, data: result, messageId: result.messageId }),
         {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     } else {
-      // O servidor externo respondeu com erro - pode ser problema de conexão com SMTP/IMAP
+      // O servidor externo respondeu com erro
       const serverError = result.error || result.message || "Erro desconhecido";
       const userMessage = serverError.toLowerCase().includes('timeout')
         ? `O servidor de email não conseguiu conectar ao servidor SMTP/IMAP. Verifique as credenciais e se o servidor de email está acessível. Detalhes: ${serverError}`
