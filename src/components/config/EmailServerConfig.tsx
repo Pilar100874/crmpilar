@@ -51,7 +51,12 @@ export function EmailServerConfig({ estabelecimentoId: propEstabelecimentoId }: 
         setConfigId((data as any).id);
         // server_url é armazenado no client_id
         if ((data as any).client_id) {
-          setServerUrl((data as any).client_id);
+          let url = (data as any).client_id;
+          // Normalizar URL ao carregar
+          if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+            url = `https://${url}`;
+          }
+          setServerUrl(url);
         }
       }
     } catch (error) {
