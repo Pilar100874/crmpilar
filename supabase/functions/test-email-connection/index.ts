@@ -40,29 +40,34 @@ serve(async (req: Request) => {
       );
     }
 
-    // Construir payload no formato esperado pela API do Railway
-    const smtpSecure = account.smtp_port === 465;
+    // Build payload in the correct format for the external API
     const payload = {
-      smtpHost: account.smtp,
-      smtpPort: account.smtp_port,
-      smtpSecure: smtpSecure,
-      user: account.user,
-      pass: account.pass,
-      from: account.user,
+      accounts: [
+        {
+          user: account.user,
+          pass: account.pass,
+          smtp: account.smtp,
+          smtp_port: account.smtp_port,
+          imap: account.imap || "",
+          imap_port: account.imap_port || 993
+        }
+      ],
       to: to,
       subject: subject,
-      text: text,
-      html: `<p>${text}</p>`
+      text: text
     };
 
-    console.log("Payload para API:", JSON.stringify({ ...payload, pass: "***" }));
+    console.log("Payload para API:", JSON.stringify({ 
+      ...payload, 
+      accounts: payload.accounts.map(a => ({ ...a, pass: "***" })) 
+    }));
 
-    // Adicionar timeout de 30 segundos
+    // Add timeout of 30 seconds
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    // Chamar /send-email (não /send-emails)
-    const apiUrl = `${serverUrl}/send-email`;
+    // Call /send-emails (plural)
+    const apiUrl = `${serverUrl}/send-emails`;
     console.log("Chamando API:", apiUrl);
 
     let response: Response;
@@ -110,7 +115,7 @@ serve(async (req: Request) => {
         }
       );
     } else {
-      // O servidor externo respondeu com erro
+      // External server responded with error
       const serverError = result.error || result.message || "Erro desconhecido";
       const userMessage = serverError.toLowerCase().includes('timeout')
         ? `O servidor de email não conseguiu conectar ao servidor SMTP/IMAP. Verifique as credenciais e se o servidor de email está acessível. Detalhes: ${serverError}`

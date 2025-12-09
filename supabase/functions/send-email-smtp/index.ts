@@ -31,7 +31,7 @@ serve(async (req) => {
     // Get user email config
     const { data: usuario, error: userError } = await supabaseClient
       .from("usuarios")
-      .select("email, nome, smtp, porta_smtp, senha_email, estabelecimento_id")
+      .select("email, nome, smtp, porta_smtp, imap, porta_imap, senha_email, estabelecimento_id")
       .eq("auth_user_id", user.id)
       .single();
 
@@ -61,30 +61,34 @@ serve(async (req) => {
       throw new Error("Destinatário e assunto são obrigatórios");
     }
 
-    console.log(`Sending email via external API: ${serverUrl}/send-email`);
+    console.log(`Sending email via external API: ${serverUrl}/send-emails`);
     console.log(`SMTP: ${usuario.smtp}:${usuario.porta_smtp}`);
+    console.log(`IMAP: ${usuario.imap}:${usuario.porta_imap}`);
 
-    // Determinar se usa TLS (porta 465 = SSL direto, outras = STARTTLS)
-    const smtpSecure = usuario.porta_smtp === 465;
-
-    // Build request payload according to Railway API format
+    // Build request payload according to the correct API format
     const payload = {
-      smtpHost: usuario.smtp,
-      smtpPort: usuario.porta_smtp || 587,
-      smtpSecure: smtpSecure,
-      user: usuario.email,
-      pass: usuario.senha_email,
-      from: usuario.nome ? `${usuario.nome} <${usuario.email}>` : usuario.email,
+      accounts: [
+        {
+          user: usuario.email,
+          pass: usuario.senha_email,
+          smtp: usuario.smtp,
+          smtp_port: usuario.porta_smtp || 587,
+          imap: usuario.imap || "",
+          imap_port: usuario.porta_imap || 993
+        }
+      ],
       to: to,
       subject: subject,
-      text: body || "",
-      html: html || `<p>${body || ""}</p>`
+      text: body || ""
     };
 
-    console.log("Payload (sem senha):", { ...payload, pass: "***" });
+    console.log("Payload (sem senha):", { 
+      ...payload, 
+      accounts: payload.accounts.map(a => ({ ...a, pass: "***" })) 
+    });
 
-    // Call external Railway API
-    const response = await fetch(`${serverUrl}/send-email`, {
+    // Call external API - endpoint is /send-emails (plural)
+    const response = await fetch(`${serverUrl}/send-emails`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
