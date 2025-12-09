@@ -69,10 +69,18 @@ export function EmailServerConfig({ estabelecimentoId: propEstabelecimentoId }: 
 
     setSaving(true);
     try {
+      // Garantir que a URL tenha protocolo https://
+      let normalizedUrl = serverUrl.trim();
+      if (normalizedUrl && !normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
+        normalizedUrl = `https://${normalizedUrl}`;
+      }
+      // Remover barra final se existir
+      normalizedUrl = normalizedUrl.replace(/\/+$/, "");
+
       const payload = {
         estabelecimento_id: estabelecimentoId,
         provider: "external_server",
-        client_id: serverUrl,
+        client_id: normalizedUrl,
         enabled: true,
         updated_at: new Date().toISOString()
       };
