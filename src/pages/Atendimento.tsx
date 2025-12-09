@@ -917,46 +917,89 @@ export default function Atendimento() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // First try to fetch fresh emails from IMAP server
-      try {
-        const { data: fetchedEmails, error: fetchError } = await supabase.functions.invoke('fetch-emails-imap', {
-          body: { folder: 'INBOX', maxResults: 20 }
-        });
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
 
-        if (!fetchError && fetchedEmails?.emails) {
-          const mappedEmails = fetchedEmails.emails.map((email: any, index: number) => ({
-            id: email.id || `email-${Date.now()}-${index}`,
-            from_email: email.from_email,
-            to_email: email.to_email,
-            subject: email.subject,
-            body: email.body,
-            date: email.date,
-            read: email.read ?? false,
-            starred: email.starred ?? false,
-            folder: 'inbox',
-          }));
-          setUserEmails(mappedEmails);
-          return;
+      // Check email mode configuration
+      const { data: emailConfigs } = await supabase
+        .from('email_oauth_config')
+        .select('provider, enabled')
+        .eq('estabelecimento_id', estabId);
+
+      const googleEnabled = emailConfigs?.find((c: any) => c.provider === 'google')?.enabled;
+      const externalEnabled = emailConfigs?.find((c: any) => c.provider === 'external_server')?.enabled;
+
+      let emails: any[] = [];
+
+      // Use OAuth (Gmail) if enabled
+      if (googleEnabled) {
+        try {
+          const { data: fetchedEmails, error: fetchError } = await supabase.functions.invoke('gmail-fetch-emails', {
+            body: { folder: 'INBOX', maxResults: 50 }
+          });
+
+          if (!fetchError && fetchedEmails?.emails) {
+            emails = fetchedEmails.emails.map((email: any, index: number) => ({
+              id: email.id || `email-${Date.now()}-${index}`,
+              from_email: email.from_email,
+              to_email: email.to_email,
+              subject: email.subject,
+              body: email.body,
+              date: email.date,
+              read: email.read ?? false,
+              starred: email.starred ?? false,
+              folder: 'inbox',
+            }));
+          } else if (fetchError) {
+            console.error("Erro ao buscar emails via Gmail OAuth:", fetchError);
+          }
+        } catch (gmailError) {
+          console.error("Gmail OAuth fetch error:", gmailError);
         }
-      } catch (imapError) {
-        console.log("IMAP fetch not available, falling back to local:", imapError);
+      }
+      // Use external server (SMTP/IMAP) if enabled
+      else if (externalEnabled) {
+        try {
+          const { data: fetchedEmails, error: fetchError } = await supabase.functions.invoke('fetch-emails-imap', {
+            body: { folder: 'INBOX', maxResults: 50 }
+          });
+
+          if (!fetchError && fetchedEmails?.emails) {
+            emails = fetchedEmails.emails.map((email: any, index: number) => ({
+              id: email.id || `email-${Date.now()}-${index}`,
+              from_email: email.from_email,
+              to_email: email.to_email,
+              subject: email.subject,
+              body: email.body,
+              date: email.date,
+              read: email.read ?? false,
+              starred: email.starred ?? false,
+              folder: 'inbox',
+            }));
+          } else if (fetchError) {
+            console.error("Erro ao buscar emails via IMAP:", fetchError);
+          }
+        } catch (imapError) {
+          console.error("IMAP fetch error:", imapError);
+        }
       }
 
-      // Fallback: load from local database
-      const { data: emailsData, error } = await supabase
-        .from('emails')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('folder', 'inbox')
-        .order('date', { ascending: false })
-        .limit(20);
+      // If no emails from remote, fallback to local database
+      if (emails.length === 0) {
+        const { data: emailsData, error } = await supabase
+          .from('emails')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('folder', 'inbox')
+          .order('date', { ascending: false })
+          .limit(50);
 
-      if (error) {
-        console.error("Erro ao carregar emails:", error);
-        return;
+        if (!error && emailsData) {
+          emails = emailsData;
+        }
       }
 
-      setUserEmails(emailsData || []);
+      setUserEmails(emails);
     } catch (error) {
       console.error("Erro ao carregar emails:", error);
     }
