@@ -117,18 +117,33 @@ serve(async (req) => {
     }
 
     // Map folder to Gmail label
+    // Note: Gmail doesn't have an "ARCHIVE" label - archived emails are those without INBOX label
     const labelMap: Record<string, string> = {
       "inbox": "INBOX",
       "sent": "SENT",
       "trash": "TRASH",
-      "archive": "ARCHIVE",
       "drafts": "DRAFT",
+      "spam": "SPAM",
+      "starred": "STARRED",
     };
-    const gmailLabel = labelMap[folder.toLowerCase()] || "INBOX";
-
-    // Fetch messages list
+    
+    const folderLower = folder.toLowerCase();
+    const gmailLabel = labelMap[folderLower];
+    
+    // Build list URL
     const listUrl = new URL("https://gmail.googleapis.com/gmail/v1/users/me/messages");
-    listUrl.searchParams.set("labelIds", gmailLabel);
+    
+    if (folderLower === "archive") {
+      // Archived emails: all emails except those in INBOX, SENT, TRASH, SPAM, DRAFT
+      // We search for emails that don't have INBOX label
+      listUrl.searchParams.set("q", "-in:inbox -in:sent -in:trash -in:spam -in:draft");
+    } else if (gmailLabel) {
+      listUrl.searchParams.set("labelIds", gmailLabel);
+    } else {
+      // Default to INBOX
+      listUrl.searchParams.set("labelIds", "INBOX");
+    }
+    
     listUrl.searchParams.set("maxResults", String(maxResults));
 
     const listResponse = await fetch(listUrl.toString(), {
