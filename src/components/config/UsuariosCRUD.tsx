@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2 } from "lucide-react";
+import { Trash2, Edit, Plus, HelpCircle, ExternalLink, Award, TestTube, Loader2, Mail } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { AtendenteSkillsManager } from "./AtendenteSkillsManager";
 import {
@@ -972,7 +972,10 @@ export const UsuariosCRUD = ({ estabelecimentoId }: UsuariosCRUDProps) => {
 
         {/* Configurações de E-mail */}
         <Card className="p-4">
-          <h3 className="font-semibold text-sm mb-4 text-muted-foreground">📧 Configurações de E-mail</h3>
+          <h3 className="font-semibold text-sm mb-4 text-muted-foreground flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Configurações de E-mail
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="usuario-smtp">
