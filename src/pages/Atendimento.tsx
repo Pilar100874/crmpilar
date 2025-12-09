@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
@@ -190,6 +190,8 @@ export default function Atendimento() {
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [userEmails, setUserEmails] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
+  const [emailFolder, setEmailFolder] = useState<string>("inbox");
+  const [showComposeEmail, setShowComposeEmail] = useState(false);
   const [orcamentosStatusFilter, setOrcamentosStatusFilter] = useState<string>("");
   const [selectedOrcamentoId, setSelectedOrcamentoId] = useState<string | null>(null);
   const [selectedOrcamentoData, setSelectedOrcamentoData] = useState<any | null>(null);
@@ -1968,11 +1970,29 @@ ${recentMessages}
     });
   }, [todayTasks, globalFilter]);
 
-  // Filtered emails based on global filter
+  // Filtered emails based on global filter and folder
   const filteredEmails = useMemo(() => {
-    if (!globalFilter) return userEmails;
+    let emails = userEmails;
     
-    return userEmails.filter((email) => {
+    // Filter by folder
+    if (emailFolder === "inbox") {
+      emails = emails.filter(e => e.folder === "inbox" || !e.folder);
+    } else if (emailFolder === "sent") {
+      emails = emails.filter(e => e.folder === "sent");
+    } else if (emailFolder === "drafts") {
+      emails = emails.filter(e => e.folder === "drafts");
+    } else if (emailFolder === "archive") {
+      emails = emails.filter(e => e.folder === "archive");
+    } else if (emailFolder === "trash") {
+      emails = emails.filter(e => e.folder === "trash");
+    } else if (emailFolder === "starred") {
+      emails = emails.filter(e => e.starred);
+    }
+    
+    // Apply global filter
+    if (!globalFilter) return emails;
+    
+    return emails.filter((email) => {
       // If filter has email, match by email address
       if (globalFilter.email) {
         const filterEmail = globalFilter.email.toLowerCase();
@@ -1983,7 +2003,7 @@ ${recentMessages}
       return email.from_email?.toLowerCase().includes(globalFilter.nome.toLowerCase()) ||
              email.to_email?.toLowerCase().includes(globalFilter.nome.toLowerCase());
     });
-  }, [userEmails, globalFilter]);
+  }, [userEmails, globalFilter, emailFolder]);
 
   // Filtered orcamentos based on global filter
   const filteredOrcamentos = useMemo(() => {
@@ -4052,51 +4072,160 @@ ${recentMessages}
               )}
             </div>
           </div>
-        ) : activeTab === "email" && selectedEmailId && selectedEmailData ? (
-          /* Email Content */
-          <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
-            <div className="px-4 py-3 border-b bg-gradient-to-r from-blue-50 to-transparent">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-sm truncate">{selectedEmailData.subject}</h3>
-                    <p className="text-xs text-muted-foreground truncate">
-                      De: {selectedEmailData.from_email}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    setShowClientDetailsEmail(!showClientDetailsEmail);
-                  }}
-                  className="h-8 w-8 p-0"
-                >
-                  {showClientDetailsEmail ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                </Button>
+        ) : activeTab === "email" ? (
+          /* Email Full Screen Layout */
+          <div className="flex-1 flex h-full min-h-0 bg-background">
+            {/* Email folders sidebar */}
+            <div className="w-48 border-r border-border bg-muted/30 flex flex-col p-3 shrink-0">
+              <Button 
+                onClick={() => setShowComposeEmail(true)}
+                className="w-full mb-4 gap-2"
+                size="sm"
+              >
+                <Edit3 className="w-4 h-4" />
+                Escrever
+              </Button>
+              
+              <div className="space-y-1">
+                {[
+                  { id: "inbox", label: "Caixa de Entrada", icon: Inbox },
+                  { id: "starred", label: "Com Estrela", icon: Star },
+                  { id: "sent", label: "Enviados", icon: Send },
+                  { id: "drafts", label: "Rascunhos", icon: FileText },
+                  { id: "archive", label: "Arquivo", icon: Archive },
+                  { id: "trash", label: "Lixeira", icon: Trash2 },
+                ].map((folder) => (
+                  <button
+                    key={folder.id}
+                    onClick={() => {
+                      setEmailFolder(folder.id);
+                      setSelectedEmailId(null);
+                      setSelectedEmailData(null);
+                    }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      emailFolder === folder.id 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <folder.icon className="w-4 h-4" />
+                    {folder.label}
+                  </button>
+                ))}
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <Card className="p-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Para:</span>
-                    <span>{selectedEmailData.to_email}</span>
+            
+            {/* Email list */}
+            <div className="w-72 border-r border-border flex flex-col shrink-0">
+              <div className="p-3 border-b border-border">
+                <h3 className="font-medium text-sm">
+                  {emailFolder === "inbox" && "Caixa de Entrada"}
+                  {emailFolder === "starred" && "Com Estrela"}
+                  {emailFolder === "sent" && "Enviados"}
+                  {emailFolder === "drafts" && "Rascunhos"}
+                  {emailFolder === "archive" && "Arquivo"}
+                  {emailFolder === "trash" && "Lixeira"}
+                </h3>
+                <p className="text-xs text-muted-foreground">{filteredEmails.length} emails</p>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                {filteredEmails.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    <Mail className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">Nenhum email</p>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Data:</span>
-                    <span>{format(new Date(selectedEmailData.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                ) : (
+                  filteredEmails.map((email) => (
+                    <div 
+                      key={email.id} 
+                      className={`p-3 border-b border-border cursor-pointer transition-colors ${
+                        selectedEmailId === email.id
+                          ? "bg-blue-50 border-l-2 border-l-blue-500"
+                          : !email.read 
+                            ? 'bg-blue-50/50 hover:bg-blue-50' 
+                            : 'hover:bg-muted/50'
+                      }`}
+                      onClick={() => {
+                        setSelectedEmailId(email.id);
+                        setSelectedEmailData(email);
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className={`text-sm truncate flex-1 ${!email.read ? 'font-semibold' : 'text-muted-foreground'}`}>
+                          {email.from_email}
+                        </p>
+                        <span className="text-[10px] text-muted-foreground shrink-0">
+                          {format(new Date(email.date), 'dd/MM', { locale: ptBR })}
+                        </span>
+                      </div>
+                      <p className={`text-xs truncate ${!email.read ? 'font-medium' : 'text-muted-foreground'}`}>
+                        {email.subject}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            
+            {/* Email content */}
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+              {selectedEmailId && selectedEmailData ? (
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  {/* Email header */}
+                  <div className="p-4 border-b border-border bg-card">
+                    <h2 className="text-lg font-semibold mb-2">{selectedEmailData.subject}</h2>
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold shrink-0">
+                          {selectedEmailData.from_email?.charAt(0).toUpperCase() || 'E'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm truncate">{selectedEmailData.from_email}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            Para: {selectedEmailData.to_email}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-sm text-muted-foreground shrink-0">
+                        {format(new Date(selectedEmailData.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Email body */}
+                  <div className="flex-1 overflow-y-auto p-6 bg-background">
+                    <div className="prose prose-sm max-w-none">
+                      {selectedEmailData.body?.split('\n').map((line: string, i: number) => (
+                        <p key={i} className="mb-2">{line || <br />}</p>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Email actions */}
+                  <div className="p-3 border-t border-border bg-card flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Send className="w-4 h-4" />
+                      Responder
+                    </Button>
+                    <Button variant="ghost" size="sm" className="gap-2">
+                      <Archive className="w-4 h-4" />
+                      Arquivar
+                    </Button>
+                    <Button variant="ghost" size="sm" className="gap-2 text-destructive hover:text-destructive">
+                      <Trash2 className="w-4 h-4" />
+                      Excluir
+                    </Button>
                   </div>
                 </div>
-              </Card>
-              <Card className="p-4">
-                <h4 className="font-medium text-sm mb-3">Conteúdo</h4>
-                <div className="prose prose-sm max-w-none text-sm" dangerouslySetInnerHTML={{ __html: selectedEmailData.body }} />
-              </Card>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                  <div className="text-center">
+                    <Mail className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                    <p className="text-lg font-medium mb-2">Selecione um email</p>
+                    <p className="text-sm">Escolha um email da lista para visualizar</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -4115,73 +4244,6 @@ ${recentMessages}
                   <p className="text-lg font-medium mb-2">Selecione uma tarefa</p>
                   <p className="text-sm">Escolha uma tarefa da agenda para ver os detalhes</p>
                 </>
-              )}
-              {activeTab === "email" && (
-                <div className="w-full max-w-2xl">
-                  <div className="flex items-center justify-center gap-2 mb-4">
-                    <Mail className="w-6 h-6 text-blue-500" />
-                    <h3 className="text-lg font-medium">Caixa de Entrada</h3>
-                  </div>
-                  {filteredEmails.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Inbox className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
-                      <p className="text-sm text-muted-foreground">
-                        {globalFilter ? 'Nenhum e-mail para este filtro' : 'Nenhum e-mail na caixa de entrada'}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2 max-h-[60vh] overflow-y-auto px-4">
-                      {filteredEmails.map((email) => (
-                        <div 
-                          key={email.id} 
-                          className={`p-3 rounded-xl cursor-pointer transition-all duration-200 ${
-                            selectedEmailId === email.id
-                              ? "bg-blue-100 border border-blue-200 shadow-sm"
-                              : !email.read 
-                                ? 'bg-blue-50/80 border border-blue-100 hover:bg-blue-50 hover:shadow-sm' 
-                                : 'bg-white hover:bg-white/80 hover:shadow-sm border border-border/50'
-                          }`}
-                          onClick={() => {
-                            setSelectedEmailId(email.id);
-                            if (!showClientDetailsEmail) {
-                              setShowClientDetailsEmail(true);
-                            }
-                          }}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                              email.read ? 'bg-slate-100 text-slate-400' : 'bg-blue-500 text-white'
-                            }`}>
-                              {email.read ? (
-                                <MailOpen className="w-4 h-4" />
-                              ) : (
-                                <Mail className="w-4 h-4" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-0.5">
-                                <p className={`text-sm truncate ${!email.read ? 'font-bold text-foreground' : 'font-medium text-muted-foreground'}`}>
-                                  {email.from_email}
-                                </p>
-                                <span className="text-[10px] text-muted-foreground ml-2 flex-shrink-0 bg-slate-100 px-1.5 py-0.5 rounded-full">
-                                  {format(new Date(email.date), 'dd/MM', { locale: ptBR })}
-                                </span>
-                              </div>
-                              <p className={`text-xs truncate ${!email.read ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
-                                {email.subject}
-                              </p>
-                              {!email.read && (
-                                <Badge className="mt-1.5 text-[10px] px-1.5 py-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
-                                  Novo
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
               )}
               {activeTab === "orcamento" && (
                 <>
