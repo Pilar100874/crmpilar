@@ -2573,7 +2573,8 @@ ${recentMessages}
                 setSelectedEmailId={(id) => {
                   setSelectedEmailId(id);
                   if (id) {
-                    // useEffect will call loadSelectedEmail which fetches customer data
+                    const email = userEmails.find(e => e.id === id);
+                    setSelectedEmailData(email);
                     setMobileView("main");
                   }
                 }}
@@ -4087,7 +4088,7 @@ ${recentMessages}
                           }`}
                           onClick={() => {
                             setSelectedEmailId(email.id);
-                            // loadSelectedEmail will be called by useEffect and will fetch customer data
+                            setSelectedEmailData(email);
                           }}
                         >
                           <div className="flex items-start gap-3">
