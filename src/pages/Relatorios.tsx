@@ -190,29 +190,48 @@ export default function Relatorios() {
         }
       });
 
-      toast.dismiss(toastId);
-
       if (error) {
+        toast.dismiss(toastId);
         console.error('Erro na função:', error);
         throw new Error(error.message || 'Erro ao chamar função');
       }
       
       if (!data?.success) {
+        toast.dismiss(toastId);
         throw new Error(data?.error || 'Erro ao gerar relatório');
       }
 
-      // Baixar o arquivo automaticamente
+      // Baixar o arquivo via fetch e criar blob para download
       const fileUrl = data.fileUrl || data.pdfUrl || data.url;
       if (fileUrl) {
-        const link = document.createElement('a');
-        link.href = fileUrl;
-        link.download = data.fileName || `${report.nome}.${outputType}`;
-        link.target = '_blank';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success(`${outputType.toUpperCase()} baixado com sucesso!`);
+        toast.loading('Baixando arquivo...', { id: toastId });
+        
+        try {
+          const response = await fetch(fileUrl);
+          if (!response.ok) throw new Error('Falha ao baixar arquivo');
+          
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = data.fileName || `${report.nome}.${outputType}`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // Limpar blob URL após download
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
+          
+          toast.success(`${outputType.toUpperCase()} baixado com sucesso!`, { id: toastId });
+        } catch (fetchError) {
+          console.error('Erro ao baixar:', fetchError);
+          // Fallback: abrir em nova aba
+          window.open(fileUrl, '_blank');
+          toast.success(`${outputType.toUpperCase()} gerado! Abrindo em nova aba...`, { id: toastId });
+        }
       } else {
+        toast.dismiss(toastId);
         console.error('Resposta sem URL:', data);
         toast.error('URL do arquivo não retornada');
       }
