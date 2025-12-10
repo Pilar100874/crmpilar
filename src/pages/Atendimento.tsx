@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -4829,16 +4829,65 @@ function MobileMainContent({
   // Email content
   if (activeTab === "email" && selectedEmailData) {
     return (
-      <div className="h-full flex flex-col bg-card">
-        <div className="p-4 border-b">
-          <h3 className="font-semibold text-lg">{selectedEmailData.subject}</h3>
-          <p className="text-sm text-muted-foreground">De: {selectedEmailData.from_email}</p>
-          <p className="text-xs text-muted-foreground">
-            {format(new Date(selectedEmailData.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-          </p>
+      <div className="h-full flex flex-col bg-gradient-to-b from-blue-50 to-white dark:from-blue-950/20 dark:to-background">
+        {/* Header do Email */}
+        <div className="p-4 bg-white/80 dark:bg-card/80 backdrop-blur-sm border-b border-blue-100 dark:border-blue-900/30">
+          <div className="flex items-start gap-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+              !selectedEmailData.read 
+                ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white" 
+                : "bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50 text-blue-600 dark:text-blue-400"
+            }`}>
+              {selectedEmailData.read ? <MailOpen className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-base leading-tight line-clamp-2">{selectedEmailData.subject}</h3>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-sm text-muted-foreground truncate">De: {selectedEmailData.from_email}</span>
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">
+                  <Clock className="w-2.5 h-2.5 mr-0.5" />
+                  {format(new Date(selectedEmailData.date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </Badge>
+                {selectedEmailData.starred && (
+                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: selectedEmailData.body }} />
+
+        {/* Corpo do Email */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4">
+            <div className="bg-white dark:bg-card rounded-xl shadow-sm border border-blue-100/50 dark:border-blue-900/30 p-4">
+              <div 
+                className="prose prose-sm dark:prose-invert max-w-none text-foreground
+                  prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-blue-600
+                  prose-strong:text-foreground prose-li:text-muted-foreground" 
+                dangerouslySetInnerHTML={{ __html: selectedEmailData.body }} 
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Ações do Email */}
+        <div className="p-3 bg-white/80 dark:bg-card/80 backdrop-blur-sm border-t border-blue-100 dark:border-blue-900/30 flex gap-2">
+          <Button variant="outline" size="sm" className="flex-1 h-9 rounded-lg text-xs gap-1.5 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30">
+            <Reply className="w-3.5 h-3.5" />
+            Responder
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1 h-9 rounded-lg text-xs gap-1.5 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30">
+            <Forward className="w-3.5 h-3.5" />
+            Encaminhar
+          </Button>
+          <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-lg border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30">
+            <Archive className="w-3.5 h-3.5" />
+          </Button>
+          <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-lg border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400">
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
         </div>
       </div>
     );
