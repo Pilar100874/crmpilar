@@ -165,7 +165,7 @@ export function EmailPanel({
               variant="ghost" 
               size="sm" 
               onClick={onEmailClose}
-              className="gap-2 hover:bg-blue-50"
+              className="gap-2 hover:bg-orange-50 dark:hover:bg-orange-950/30"
             >
               <ChevronLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Voltar</span>
@@ -174,16 +174,16 @@ export function EmailPanel({
             <div className="flex-1" />
             
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-blue-50">
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-orange-50 dark:hover:bg-orange-950/30">
                 <Reply className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-blue-50">
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-orange-50 dark:hover:bg-orange-950/30">
                 <Forward className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-blue-50">
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-orange-50 dark:hover:bg-orange-950/30">
                 <Archive className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-red-50 text-destructive">
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-red-50 dark:hover:bg-red-950/30 text-destructive">
                 <Trash2 className="w-4 h-4" />
               </Button>
               {showDetailsToggle && (
@@ -191,7 +191,7 @@ export function EmailPanel({
                   variant="ghost" 
                   size="icon" 
                   onClick={onToggleDetails}
-                  className="h-9 w-9 hover:bg-blue-50"
+                  className="h-9 w-9 hover:bg-orange-50 dark:hover:bg-orange-950/30"
                 >
                   <MoreHorizontal className="w-4 h-4" />
                 </Button>
@@ -217,7 +217,7 @@ export function EmailPanel({
             {/* Sender Info */}
             <div className="px-6 py-4 border-b bg-muted/30">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg shadow-lg shadow-blue-500/20">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-semibold text-lg shadow-lg shadow-orange-500/20">
                   {getSenderInitial(selectedEmailData.from_email)}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -248,7 +248,7 @@ export function EmailPanel({
 
         {/* Quick Reply */}
         <div className="flex-shrink-0 border-t bg-card/80 backdrop-blur-sm p-4">
-          <Button className="w-full gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600">
+          <Button className="w-full gap-2 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600">
             <Reply className="w-4 h-4" />
             Responder
           </Button>
@@ -260,29 +260,29 @@ export function EmailPanel({
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-background">
       {/* Toolbar */}
-      <div className="flex-shrink-0 border-b bg-gradient-to-r from-blue-50/80 to-white px-4 py-3">
+      <div className="flex-shrink-0 border-b bg-gradient-to-r from-orange-50/80 to-white dark:from-orange-950/20 dark:to-background px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar emails..."
-              className="pl-10 h-10 rounded-xl bg-white border-blue-100 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+              className="pl-10 h-10 rounded-xl bg-white dark:bg-background border-orange-100 dark:border-orange-900/30 focus:border-orange-300 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/30"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
-          <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-0 px-3 py-1">
+          <Badge variant="secondary" className="bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 border-0 px-3 py-1">
             {filteredEmails.length} {filteredEmails.length === 1 ? 'email' : 'emails'}
           </Badge>
           
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-10 w-10 hover:bg-blue-50"
+            className="h-10 w-10 hover:bg-orange-50 dark:hover:bg-orange-950/30"
             onClick={onRefresh}
           >
-            <RefreshCw className="w-4 h-4 text-blue-600" />
+            <RefreshCw className="w-4 h-4 text-orange-600" />
           </Button>
         </div>
       </div>
@@ -291,8 +291,8 @@ export function EmailPanel({
       <ScrollArea className="flex-1">
         {filteredEmails.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center mb-4">
-              <Mail className="w-10 h-10 text-blue-400" />
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-900/50 dark:to-orange-950/30 flex items-center justify-center mb-4">
+              <Mail className="w-10 h-10 text-orange-400" />
             </div>
             <p className="font-semibold text-foreground">Nenhum email</p>
             <p className="text-sm text-muted-foreground mt-1 text-center">
@@ -310,17 +310,17 @@ export function EmailPanel({
                 onClick={() => onEmailSelect(email.id, email)}
                 className={cn(
                   "group flex items-start gap-4 px-4 py-4 cursor-pointer transition-all duration-200",
-                  "hover:bg-blue-50/50",
-                  !email.read && "bg-blue-50/30",
-                  email.starred && "bg-amber-50/20"
+                  "hover:bg-orange-50/50 dark:hover:bg-orange-950/20",
+                  !email.read && "bg-orange-50/30 dark:bg-orange-950/10",
+                  email.starred && "bg-amber-50/20 dark:bg-amber-950/10"
                 )}
               >
                 {/* Avatar */}
                 <div className={cn(
                   "w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-semibold text-sm shadow-sm transition-all",
                   !email.read 
-                    ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white"
-                    : "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600"
+                    ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white"
+                    : "bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 text-slate-600 dark:text-slate-300"
                 )}>
                   {getSenderInitial(email.from_email)}
                 </div>
@@ -330,7 +330,7 @@ export function EmailPanel({
                   <div className="flex items-center gap-2 mb-1">
                     {/* Unread dot */}
                     {!email.read && (
-                      <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 animate-pulse" />
+                      <div className="w-2 h-2 rounded-full bg-orange-500 flex-shrink-0 animate-pulse" />
                     )}
                     
                     {/* Sender */}
@@ -352,7 +352,7 @@ export function EmailPanel({
                     )}
                     
                     {/* Date */}
-                    <span className="text-xs text-muted-foreground ml-auto flex-shrink-0 bg-slate-100/80 px-2 py-0.5 rounded-full">
+                    <span className="text-xs text-muted-foreground ml-auto flex-shrink-0 bg-slate-100/80 dark:bg-slate-800/80 px-2 py-0.5 rounded-full">
                       {formatEmailDate(email.date)}
                     </span>
                   </div>
@@ -376,7 +376,7 @@ export function EmailPanel({
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 hover:bg-blue-100"
+                    className="h-8 w-8 hover:bg-orange-100 dark:hover:bg-orange-900/30"
                     onClick={(e) => {
                       e.stopPropagation();
                       // Toggle star
@@ -390,7 +390,7 @@ export function EmailPanel({
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 hover:bg-blue-100"
+                    className="h-8 w-8 hover:bg-orange-100 dark:hover:bg-orange-900/30"
                     onClick={(e) => {
                       e.stopPropagation();
                       // Archive

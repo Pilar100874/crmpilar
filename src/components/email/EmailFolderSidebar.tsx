@@ -10,8 +10,7 @@ import {
   FileText, 
   Inbox, 
   RefreshCw, 
-  Edit3,
-  Sparkles
+  Edit3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,11 +30,11 @@ interface EmailFolderSidebarProps {
 }
 
 const folders = [
-  { id: "inbox", label: "Caixa de Entrada", icon: Inbox, color: "from-blue-500 to-blue-600" },
+  { id: "inbox", label: "Caixa de Entrada", icon: Inbox, color: "from-orange-500 to-orange-600" },
   { id: "starred", label: "Com Estrela", icon: Star, color: "from-amber-500 to-amber-600" },
-  { id: "sent", label: "Enviados", icon: Send, color: "from-emerald-500 to-emerald-600" },
+  { id: "sent", label: "Enviados", icon: Send, color: "from-orange-400 to-orange-500" },
   { id: "drafts", label: "Rascunhos", icon: FileText, color: "from-slate-500 to-slate-600" },
-  { id: "archive", label: "Arquivo", icon: Archive, color: "from-purple-500 to-purple-600" },
+  { id: "archive", label: "Arquivo", icon: Archive, color: "from-orange-600 to-orange-700" },
   { id: "trash", label: "Lixeira", icon: Trash2, color: "from-red-500 to-red-600" },
 ];
 
@@ -60,12 +59,12 @@ export function EmailFolderSidebar({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-blue-50/80 via-white to-white">
+    <div className="flex flex-col h-full bg-gradient-to-b from-orange-50/80 via-white to-white dark:from-orange-950/20 dark:via-background dark:to-background">
       {/* Compose Button */}
       <div className="p-4">
         <Button 
           onClick={onComposeClick}
-          className="w-full h-12 gap-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-lg shadow-blue-500/25 rounded-xl font-medium text-sm transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.02]"
+          className="w-full h-12 gap-3 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 shadow-lg shadow-orange-500/25 rounded-xl font-medium text-sm transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-[1.02]"
         >
           <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
             <Edit3 className="w-4 h-4" />
@@ -89,8 +88,8 @@ export function EmailFolderSidebar({
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all duration-200",
                   isActive 
-                    ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md shadow-blue-500/25" 
-                    : "hover:bg-blue-50 text-slate-600 hover:text-slate-900"
+                    ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-md shadow-orange-500/25" 
+                    : "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
                 )}
               >
                 <div className={cn(
@@ -111,7 +110,7 @@ export function EmailFolderSidebar({
                       "text-[11px] px-2 py-0.5 font-semibold min-w-[24px] justify-center",
                       isActive 
                         ? "bg-white/25 text-white border-0 hover:bg-white/30" 
-                        : "bg-blue-100 text-blue-700 border-0 hover:bg-blue-200"
+                        : "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 border-0 hover:bg-orange-200 dark:hover:bg-orange-900"
                     )}
                   >
                     {count}
@@ -124,11 +123,11 @@ export function EmailFolderSidebar({
       </ScrollArea>
       
       {/* Refresh Button */}
-      <div className="p-3 border-t border-blue-100/50">
+      <div className="p-3 border-t border-orange-100/50 dark:border-orange-900/30">
         <Button 
           variant="ghost" 
           size="sm" 
-          className="w-full gap-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl h-10"
+          className="w-full gap-2 text-slate-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30 rounded-xl h-10"
           onClick={onRefresh}
         >
           <RefreshCw className="w-4 h-4" />
