@@ -2684,6 +2684,20 @@ ${recentMessages}
                   setSelectedOrcamentoId(null);
                   setMobileView("list");
                 }}
+                onReply={(email) => {
+                  const replySubject = email.subject?.startsWith('Re:') ? email.subject : `Re: ${email.subject || ''}`;
+                  const replyBody = `\n\n---\nEm ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}, ${email.from_email} escreveu:\n${email.body || ''}`;
+                  setComposeEmailMode('reply');
+                  setComposeEmailDefaults({ to: email.from_email, subject: replySubject, body: replyBody });
+                  setShowComposeEmail(true);
+                }}
+                onForward={(email) => {
+                  const fwdSubject = email.subject?.startsWith('Fwd:') || email.subject?.startsWith('Enc:') ? email.subject : `Enc: ${email.subject || ''}`;
+                  const fwdBody = `\n\n---\nMensagem encaminhada:\nDe: ${email.from_email}\nData: ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}\nAssunto: ${email.subject || ''}\n\n${email.body || ''}`;
+                  setComposeEmailMode('forward');
+                  setComposeEmailDefaults({ to: '', subject: fwdSubject, body: fwdBody });
+                  setShowComposeEmail(true);
+                }}
               />
             </div>
 
@@ -4704,6 +4718,8 @@ interface MobileMainContentProps {
   setOrcamentoSheetOpen: (open: boolean) => void;
   initialEmpresaForOrcamento?: string | null;
   onOrcamentoClose?: () => void;
+  onReply?: (email: any) => void;
+  onForward?: (email: any) => void;
 }
 
 function MobileMainContent({
@@ -4756,6 +4772,8 @@ function MobileMainContent({
   setOrcamentoSheetOpen,
   initialEmpresaForOrcamento,
   onOrcamentoClose,
+  onReply,
+  onForward,
 }: MobileMainContentProps) {
   // Chat content
   if (activeTab === "chat" && selectedConversation && selectedConv) {
@@ -4923,11 +4941,21 @@ function MobileMainContent({
 
         {/* Ações do Email */}
         <div className="p-3 bg-white/80 dark:bg-card/80 backdrop-blur-sm border-t border-blue-100 dark:border-blue-900/30 flex gap-2">
-          <Button variant="outline" size="sm" className="flex-1 h-9 rounded-lg text-xs gap-1.5 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1 h-9 rounded-lg text-xs gap-1.5 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+            onClick={() => onReply?.(selectedEmailData)}
+          >
             <Reply className="w-3.5 h-3.5" />
             Responder
           </Button>
-          <Button variant="outline" size="sm" className="flex-1 h-9 rounded-lg text-xs gap-1.5 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex-1 h-9 rounded-lg text-xs gap-1.5 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+            onClick={() => onForward?.(selectedEmailData)}
+          >
             <Forward className="w-3.5 h-3.5" />
             Encaminhar
           </Button>
