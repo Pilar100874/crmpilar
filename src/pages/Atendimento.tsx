@@ -197,6 +197,8 @@ export default function Atendimento() {
   const [emailFolder, setEmailFolder] = useState<string>("inbox");
   const [showComposeEmail, setShowComposeEmail] = useState(false);
   const [orcamentosStatusFilter, setOrcamentosStatusFilter] = useState<string>("");
+  const [orcamentosDateFilter, setOrcamentosDateFilter] = useState<string>("");
+  const [orcamentosEmpresaFilter, setOrcamentosEmpresaFilter] = useState<string>("");
   const [selectedOrcamentoId, setSelectedOrcamentoId] = useState<string | null>(null);
   const [selectedOrcamentoData, setSelectedOrcamentoData] = useState<any | null>(null);
   const [orcamentoSheetOpen, setOrcamentoSheetOpen] = useState(false);
@@ -3340,17 +3342,28 @@ ${recentMessages}
           {/* Orçamento Tab */}
           <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0">
             {/* Header with Filter */}
-            <div className="px-3 py-3 bg-gradient-to-r from-emerald-50 to-transparent border-b border-emerald-100/50">
-              <div className="flex gap-2">
+            <div className="px-3 py-3 bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20 border-b border-orange-100/50 dark:border-orange-900/30">
+              <div className="flex gap-2 flex-wrap">
                 <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
-                  <SelectTrigger className="flex-1 h-9 bg-white/70 border-emerald-200 rounded-xl">
-                    <SelectValue placeholder="Todos os status" />
+                  <SelectTrigger className="flex-1 min-w-[100px] h-9 bg-white/70 dark:bg-background border-orange-200 dark:border-orange-800 rounded-xl text-xs">
+                    <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os status</SelectItem>
                     <SelectItem value="orcamento">Orçamento</SelectItem>
                     <SelectItem value="negociacao">Negociação</SelectItem>
                     <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={orcamentosDateFilter || "all"} onValueChange={(value) => setOrcamentosDateFilter(value === "all" ? "" : value)}>
+                  <SelectTrigger className="flex-1 min-w-[80px] h-9 bg-white/70 dark:bg-background border-orange-200 dark:border-orange-800 rounded-xl text-xs">
+                    <SelectValue placeholder="Data" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as datas</SelectItem>
+                    <SelectItem value="today">Hoje</SelectItem>
+                    <SelectItem value="week">Últimos 7 dias</SelectItem>
+                    <SelectItem value="month">Últimos 30 dias</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button 
@@ -3364,7 +3377,7 @@ ${recentMessages}
                       setOrcamentoSheetOpen(true);
                     }
                   }}
-                  className="h-9 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700"
+                  className="h-9 px-3 rounded-xl bg-orange-600 hover:bg-orange-700"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Novo
@@ -3403,10 +3416,27 @@ ${recentMessages}
             {filteredOrcamentos
               .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
               .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
+              .filter(o => {
+                if (!orcamentosDateFilter) return true;
+                const orcDate = new Date(o.created_at);
+                const now = new Date();
+                if (orcamentosDateFilter === 'today') {
+                  return orcDate.toDateString() === now.toDateString();
+                }
+                if (orcamentosDateFilter === 'week') {
+                  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                  return orcDate >= weekAgo;
+                }
+                if (orcamentosDateFilter === 'month') {
+                  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                  return orcDate >= monthAgo;
+                }
+                return true;
+              })
               .length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <Receipt className="w-8 h-8 text-emerald-300" />
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                  <Receipt className="w-8 h-8 text-orange-300" />
                 </div>
                 <p className="text-sm font-medium">Sem orçamentos</p>
                 <p className="text-xs text-muted-foreground mt-1">{globalFilter ? 'Nenhum orçamento para este filtro' : 'Nenhum orçamento em andamento'}</p>
@@ -3415,13 +3445,30 @@ ${recentMessages}
               filteredOrcamentos
                 .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
                 .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
+                .filter(o => {
+                  if (!orcamentosDateFilter) return true;
+                  const orcDate = new Date(o.created_at);
+                  const now = new Date();
+                  if (orcamentosDateFilter === 'today') {
+                    return orcDate.toDateString() === now.toDateString();
+                  }
+                  if (orcamentosDateFilter === 'week') {
+                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    return orcDate >= weekAgo;
+                  }
+                  if (orcamentosDateFilter === 'month') {
+                    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    return orcDate >= monthAgo;
+                  }
+                  return true;
+                })
                 .map((orc) => (
                   <div 
                     key={orc.id} 
                     className={`p-3 rounded-xl cursor-pointer transition-all duration-200 group ${
                       selectedOrcamentoId === orc.id
-                        ? "bg-emerald-100 border border-emerald-200 shadow-sm"
-                        : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
+                        ? "bg-orange-100 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 shadow-sm"
+                        : "bg-white/60 dark:bg-background/60 hover:bg-white dark:hover:bg-background hover:shadow-sm border border-transparent"
                     }`}
                     onClick={() => {
                       setSelectedOrcamentoId(orc.id);
@@ -3431,8 +3478,8 @@ ${recentMessages}
                     <div className="flex items-start gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                         selectedOrcamentoId === orc.id
-                          ? "bg-emerald-500 text-white"
-                          : "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600"
+                          ? "bg-orange-500 text-white"
+                          : "bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/50 dark:to-orange-800/50 text-orange-600 dark:text-orange-400"
                       }`}>
                         <Receipt className="w-5 h-5" />
                       </div>
@@ -3442,7 +3489,7 @@ ${recentMessages}
                             {orc.customers?.nome || orc.empresas?.nome_fantasia || orc.empresas?.nome || 'Cliente'}
                           </p>
                           <div className="flex items-center gap-1">
-                            <span className="text-[10px] text-muted-foreground flex-shrink-0 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                            <span className="text-[10px] text-muted-foreground flex-shrink-0 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">
                               {format(new Date(orc.created_at), 'dd/MM', { locale: ptBR })}
                             </span>
                             <DropdownMenu>
@@ -3474,13 +3521,13 @@ ${recentMessages}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-bold text-emerald-600">
+                          <p className="text-sm font-bold text-orange-600 dark:text-orange-400">
                             {new Intl.NumberFormat('pt-BR', { 
                               style: 'currency', 
                               currency: 'BRL' 
                             }).format(orc.valor_total || 0)}
                           </p>
-                          <Badge className="text-[10px] px-1.5 py-0 bg-emerald-100 text-emerald-700 border-0">
+                          <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 border-0">
                             {orc.etapa || orc.status}
                           </Badge>
                         </div>
@@ -4504,13 +4551,13 @@ function MobileListContent({
               onClick={() => setSelectedOrcamentoId(orc.id)}
               className={`p-3 rounded-xl cursor-pointer transition-all ${
                 selectedOrcamentoId === orc.id
-                  ? "bg-emerald-100 border border-emerald-200"
-                  : "bg-white/60 hover:bg-white border border-transparent"
+                  ? "bg-orange-100 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800"
+                  : "bg-white/60 dark:bg-background/60 hover:bg-white dark:hover:bg-background border border-transparent"
               }`}
             >
               <div className="flex items-start gap-3">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  selectedOrcamentoId === orc.id ? "bg-emerald-500 text-white" : "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600"
+                  selectedOrcamentoId === orc.id ? "bg-orange-500 text-white" : "bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/50 dark:to-orange-800/50 text-orange-600 dark:text-orange-400"
                 }`}>
                   <Receipt className="w-5 h-5" />
                 </div>
@@ -4518,7 +4565,7 @@ function MobileListContent({
                   <p className="font-semibold text-sm truncate">
                     {orc.customers?.nome || orc.empresas?.nome_fantasia || 'Cliente'}
                   </p>
-                  <p className="text-sm font-bold text-emerald-600">
+                  <p className="text-sm font-bold text-orange-600 dark:text-orange-400">
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(orc.valor_total || 0)}
                   </p>
                 </div>
