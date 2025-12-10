@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, FileText, Eye, Copy, Trash2, MoreVertical, Edit, Pencil } from "lucide-react";
+import { Plus, FileText, FileDown, FileSpreadsheet, Copy, Trash2, MoreVertical, Edit, Pencil } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import {
   Dialog,
@@ -174,35 +174,36 @@ export default function Relatorios() {
     setShowDesigner(true);
   };
 
-  const handlePreview = (report: Report) => {
-    // Salvar relatório no localStorage e abrir visualização ReportBro
+  const handleGenerateReport = async (report: Report, outputType: 'pdf' | 'xlsx') => {
     if (!report.layout_json) {
       toast.error('Relatório sem layout definido');
       return;
     }
     
     try {
-      const layoutJsonObj = typeof report.layout_json === 'string' 
-        ? JSON.parse(report.layout_json)
-        : report.layout_json;
+      toast.loading(`Gerando ${outputType.toUpperCase()}...`);
       
-      const layoutStr = JSON.stringify(layoutJsonObj);
-      
-      // Salva no localStorage
-      localStorage.setItem('reportbro_preview', layoutStr);
-      
-      // Abre nova aba
-      const newWindow = window.open('/relatorios/viewer', '_blank');
-      
-      if (!newWindow) {
-        toast.error('Permita pop-ups para visualizar o relatório');
-        return;
+      const { data, error } = await supabase.functions.invoke('gerar-relatorio-pdf', {
+        body: {
+          relatorioId: report.id,
+          outputType,
+        }
+      });
+
+      toast.dismiss();
+
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Erro ao gerar relatório');
+
+      // Abrir o arquivo gerado
+      if (data.url) {
+        window.open(data.url, '_blank');
+        toast.success(`${outputType.toUpperCase()} gerado com sucesso!`);
       }
-      
-      toast.success('Abrindo visualização...');
-    } catch (error) {
-      console.error('Erro ao visualizar:', error);
-      toast.error(`Erro ao abrir visualização: ${error}`);
+    } catch (error: any) {
+      toast.dismiss();
+      console.error('Erro ao gerar relatório:', error);
+      toast.error(`Erro ao gerar ${outputType.toUpperCase()}: ${error.message}`);
     }
   };
 
@@ -420,10 +421,18 @@ export default function Relatorios() {
                         <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation();
                           setOpenMenuId(null);
-                          handlePreview(report);
+                          handleGenerateReport(report, 'pdf');
                         }}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          Visualizar
+                          <FileDown className="w-4 h-4 mr-2" />
+                          Gerar PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          handleGenerateReport(report, 'xlsx');
+                        }}>
+                          <FileSpreadsheet className="w-4 h-4 mr-2" />
+                          Gerar XLS
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation();
@@ -544,10 +553,18 @@ export default function Relatorios() {
                         <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation();
                           setOpenMenuId(null);
-                          handlePreview(report);
+                          handleGenerateReport(report, 'pdf');
                         }}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          Visualizar
+                          <FileDown className="w-4 h-4 mr-2" />
+                          Gerar PDF
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          handleGenerateReport(report, 'xlsx');
+                        }}>
+                          <FileSpreadsheet className="w-4 h-4 mr-2" />
+                          Gerar XLS
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation();
