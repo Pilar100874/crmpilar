@@ -35,6 +35,8 @@ import { useOmnichannelRouting } from "@/hooks/useOmnichannelRouting";
 import { AtendenteStatusSelector } from "@/components/atendimento/AtendenteStatusSelector";
 import { ConversationSummaryPanel } from "@/components/atendimento/ConversationSummaryPanel";
 import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
+import { EmailFolderSidebar } from "@/components/email/EmailFolderSidebar";
+import { EmailPanel } from "@/components/email/EmailPanel";
 import type { Atendente } from "@/types/atendimento";
 
 interface Conversation {
@@ -2926,77 +2928,17 @@ ${recentMessages}
           
           {/* Email Folders - Vertical list below tabs when email is active */}
           {activeTab === "email" && (
-            <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-blue-50/50 to-white">
-              {/* Compose Button */}
-              <div className="p-3">
-                <Button 
-                  onClick={() => setShowComposeEmail(true)}
-                  className="w-full gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-md"
-                >
-                  <Edit3 className="w-4 h-4" />
-                  Escrever
-                </Button>
-              </div>
-              
-              {/* Folders List */}
-              <div className="flex-1 overflow-y-auto px-2 pb-3">
-                <div className="space-y-0.5">
-                  {[
-                    { id: "inbox", label: "Caixa de Entrada", icon: Inbox, count: userEmails.filter(e => e.folder === 'inbox' && !e.read).length },
-                    { id: "starred", label: "Com Estrela", icon: Star, count: userEmails.filter(e => e.starred).length },
-                    { id: "sent", label: "Enviados", icon: Send, count: 0 },
-                    { id: "drafts", label: "Rascunhos", icon: FileText, count: userEmails.filter(e => e.folder === 'drafts').length },
-                    { id: "archive", label: "Arquivo", icon: Archive, count: 0 },
-                    { id: "trash", label: "Lixeira", icon: Trash2, count: 0 },
-                  ].map((folder) => {
-                    const FolderIcon = folder.icon;
-                    const isActive = emailFolder === folder.id;
-                    return (
-                      <button
-                        key={folder.id}
-                        onClick={() => {
-                          setEmailFolder(folder.id);
-                          setSelectedEmailId(null);
-                          setSelectedEmailData(null);
-                        }}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-                          isActive 
-                            ? 'bg-blue-600 text-white shadow-md font-medium' 
-                            : 'hover:bg-blue-100/80 text-muted-foreground hover:text-foreground'
-                        }`}
-                      >
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          isActive ? 'bg-white/20' : 'bg-blue-100/60'
-                        }`}>
-                          <FolderIcon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-blue-600'}`} />
-                        </div>
-                        <span className="flex-1 text-left">{folder.label}</span>
-                        {folder.count > 0 && (
-                          <Badge className={`text-[10px] px-1.5 py-0 ${
-                            isActive ? 'bg-white/20 text-white border-0' : 'bg-blue-100 text-blue-700 border-0'
-                          }`}>
-                            {folder.count}
-                          </Badge>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-                
-                {/* Refresh button */}
-                <div className="mt-4 pt-3 border-t border-border/30">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="w-full gap-2 text-muted-foreground hover:text-foreground"
-                    onClick={() => loadUserEmails()}
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    Atualizar
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <EmailFolderSidebar
+              emails={userEmails}
+              activeFolder={emailFolder}
+              onFolderChange={(folder) => {
+                setEmailFolder(folder);
+                setSelectedEmailId(null);
+                setSelectedEmailData(null);
+              }}
+              onComposeClick={() => setShowComposeEmail(true)}
+              onRefresh={() => loadUserEmails()}
+            />
           )}
 
             {/* Chat Tab */}
@@ -4044,153 +3986,30 @@ ${recentMessages}
             </div>
           </div>
         ) : activeTab === "email" ? (
-          /* Email Layout - Messages only (folders now in tab bar) */
-          <div className="flex-1 flex h-full min-h-0 bg-background">
-            
-            {/* Right side - Email list or email content */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-              {!selectedEmailId ? (
-                /* Email list view */
-                <>
-                  {/* Toolbar */}
-                  <div className="p-2 border-b border-border flex items-center gap-2 bg-card/50">
-                    <div className="relative flex-1 max-w-xs">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Buscar emails..."
-                        className="pl-8 h-8 text-sm"
-                      />
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {filteredEmails.length} emails
-                    </Badge>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => loadUserEmails()}>
-                      <RefreshCw className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  
-                  {/* Email list */}
-                  <div className="flex-1 overflow-y-auto divide-y divide-border">
-                    {filteredEmails.length === 0 ? (
-                      <div className="p-12 text-center text-muted-foreground">
-                        <Mail className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                        <p className="font-medium">Nenhum email</p>
-                        <p className="text-sm mt-1">
-                          {emailFolder === "inbox" ? "Sua caixa de entrada está vazia" : `Nenhum email em ${emailFolder}`}
-                        </p>
-                      </div>
-                    ) : (
-                      filteredEmails.map((email) => (
-                        <div 
-                          key={email.id} 
-                          className={`p-3 cursor-pointer transition-colors hover:bg-muted/50 ${
-                            !email.read ? 'bg-blue-50/30' : ''
-                          }`}
-                          onClick={() => {
-                            setSelectedEmailId(email.id);
-                            setSelectedEmailData(email);
-                          }}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                              email.read ? 'bg-muted text-muted-foreground' : 'bg-blue-500 text-white'
-                            }`}>
-                              {email.read ? (
-                                <MailOpen className="w-4 h-4" />
-                              ) : (
-                                <Mail className="w-4 h-4" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2 mb-0.5">
-                                <p className={`text-sm truncate ${!email.read ? 'font-semibold' : 'text-muted-foreground'}`}>
-                                  {email.from_email}
-                                </p>
-                                <span className="text-xs text-muted-foreground shrink-0">
-                                  {format(new Date(email.date), 'dd/MM HH:mm', { locale: ptBR })}
-                                </span>
-                              </div>
-                              <p className={`text-sm truncate ${!email.read ? 'font-medium' : 'text-muted-foreground'}`}>
-                                {email.subject}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                {email.body?.substring(0, 80)}...
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </>
-              ) : (
-                /* Email detail view */
-                <>
-                  {/* Back button and actions */}
-                  <div className="p-2 border-b border-border flex items-center gap-2 bg-card/50">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="gap-1.5"
-                      onClick={() => {
-                        setSelectedEmailId(null);
-                        setSelectedEmailData(null);
-                      }}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      Voltar
-                    </Button>
-                    <div className="flex-1" />
-                    <Button variant="outline" size="sm" className="gap-1.5">
-                      <Send className="w-4 h-4" />
-                      Responder
-                    </Button>
-                    <Button variant="ghost" size="sm" className="gap-1.5">
-                      <Archive className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="gap-1.5 text-destructive hover:text-destructive">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  
-                  {/* Email content */}
-                  <div className="flex-1 overflow-y-auto">
-                    {selectedEmailData && (
-                      <>
-                        {/* Email header */}
-                        <div className="p-4 border-b border-border bg-card">
-                          <h2 className="text-lg font-semibold mb-3">{selectedEmailData.subject}</h2>
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold shrink-0">
-                              {selectedEmailData.from_email?.charAt(0).toUpperCase() || 'E'}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm">{selectedEmailData.from_email}</p>
-                              <p className="text-xs text-muted-foreground">
-                                Para: {selectedEmailData.to_email}
-                              </p>
-                            </div>
-                            <span className="text-sm text-muted-foreground shrink-0">
-                              {format(new Date(selectedEmailData.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {/* Email body */}
-                        <div className="p-6">
-                          <div className="prose prose-sm max-w-none">
-                            <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                              {selectedEmailData.body}
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+          /* Email Layout - Modern Panel */
+          <EmailPanel
+            emails={filteredEmails}
+            selectedEmailId={selectedEmailId}
+            selectedEmailData={selectedEmailData}
+            emailFolder={emailFolder}
+            onFolderChange={(folder) => {
+              setEmailFolder(folder);
+              setSelectedEmailId(null);
+              setSelectedEmailData(null);
+            }}
+            onEmailSelect={(id, data) => {
+              setSelectedEmailId(id);
+              setSelectedEmailData(data);
+            }}
+            onEmailClose={() => {
+              setSelectedEmailId(null);
+              setSelectedEmailData(null);
+            }}
+            onComposeClick={() => setShowComposeEmail(true)}
+            onRefresh={() => loadUserEmails()}
+            onToggleDetails={() => setShowClientDetailsEmail(!showClientDetailsEmail)}
+            showDetailsToggle={!!selectedEmailId}
+          />
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
             <div className="text-center">
