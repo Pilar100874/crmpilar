@@ -1,25 +1,38 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Mail, 
+  MailOpen, 
   Star, 
+  Send, 
+  Archive, 
+  Trash2, 
+  FileText, 
+  Inbox, 
   Search, 
   RefreshCw, 
+  Edit3, 
   ChevronLeft, 
   Paperclip,
   Reply,
   Forward,
-  Archive,
-  Trash2,
-  ChevronRight,
-  Clock
+  MoreHorizontal,
+  Clock,
+  User
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Email {
   id: string;
@@ -54,6 +67,15 @@ interface EmailPanelProps {
   showDetailsToggle?: boolean;
 }
 
+const folders = [
+  { id: "inbox", label: "Caixa de Entrada", icon: Inbox },
+  { id: "starred", label: "Com Estrela", icon: Star },
+  { id: "sent", label: "Enviados", icon: Send },
+  { id: "drafts", label: "Rascunhos", icon: FileText },
+  { id: "archive", label: "Arquivo", icon: Archive },
+  { id: "trash", label: "Lixeira", icon: Trash2 },
+];
+
 export function EmailPanel({
   emails,
   selectedEmailId,
@@ -68,6 +90,13 @@ export function EmailPanel({
   showDetailsToggle,
 }: EmailPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
+
+  const getUnreadCount = (folderId: string) => {
+    if (folderId === "starred") {
+      return emails.filter(e => e.starred).length;
+    }
+    return emails.filter(e => e.folder === folderId && !e.read).length;
+  };
 
   const getFilteredEmails = () => {
     let filtered = emails;
@@ -116,98 +145,110 @@ export function EmailPanel({
     } else if (date >= yesterday) {
       return "Ontem";
     } else {
-      return format(date, "dd/MM", { locale: ptBR });
+      return format(date, "dd MMM", { locale: ptBR });
     }
   };
 
   const getPreviewText = (body: string) => {
     if (!body) return "";
     const text = body.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
-    return text.length > 60 ? text.substring(0, 60) + "..." : text;
+    return text.length > 80 ? text.substring(0, 80) + "..." : text;
   };
 
-  // Email detail view
   if (selectedEmailId && selectedEmailData) {
     return (
       <div className="flex-1 flex flex-col min-h-0 bg-background">
-        {/* Header */}
-        <div className="flex-shrink-0 border-b px-4 py-2.5 flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onEmailClose}
-            className="gap-1.5 h-8"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Voltar
-          </Button>
-          
-          <div className="flex-1" />
-          
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Reply className="w-4 h-4" />
+        {/* Email Header */}
+        <div className="flex-shrink-0 border-b bg-card/80 backdrop-blur-sm">
+          <div className="flex items-center gap-2 px-4 py-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onEmailClose}
+              className="gap-2 hover:bg-blue-50"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Voltar</span>
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Forward className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Archive className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-              <Trash2 className="w-4 h-4" />
-            </Button>
-            {showDetailsToggle && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={onToggleDetails}
-                className="h-8 w-8"
-              >
-                <ChevronRight className="w-4 h-4" />
+            
+            <div className="flex-1" />
+            
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-blue-50">
+                <Reply className="w-4 h-4" />
               </Button>
-            )}
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-blue-50">
+                <Forward className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-blue-50">
+                <Archive className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-red-50 text-destructive">
+                <Trash2 className="w-4 h-4" />
+              </Button>
+              {showDetailsToggle && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={onToggleDetails}
+                  className="h-9 w-9 hover:bg-blue-50"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Content */}
+        {/* Email Content */}
         <ScrollArea className="flex-1">
-          <div className="max-w-3xl mx-auto p-6">
+          <div className="max-w-4xl mx-auto">
             {/* Subject */}
-            <h1 className="text-lg font-semibold text-foreground mb-4">
-              {selectedEmailData.subject || "(Sem assunto)"}
-            </h1>
+            <div className="px-6 pt-6 pb-4 border-b">
+              <h1 className="text-xl font-semibold text-foreground mb-2">
+                {selectedEmailData.subject || "(Sem assunto)"}
+              </h1>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="w-4 h-4" />
+                {format(new Date(selectedEmailData.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+              </div>
+            </div>
 
             {/* Sender Info */}
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b">
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-medium">
-                {getSenderInitial(selectedEmailData.from_email)}
+            <div className="px-6 py-4 border-b bg-muted/30">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg shadow-lg shadow-blue-500/20">
+                  {getSenderInitial(selectedEmailData.from_email)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground">
+                    {getSenderName(selectedEmailData.from_email)}
+                  </p>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {selectedEmailData.from_email}
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">
-                  {getSenderName(selectedEmailData.from_email)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  para {selectedEmailData.to_email}
-                </p>
+              <div className="mt-3 flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">Para:</span>
+                <span className="text-foreground">{selectedEmailData.to_email}</span>
               </div>
-              <span className="text-xs text-muted-foreground">
-                {format(new Date(selectedEmailData.date), "dd MMM, HH:mm", { locale: ptBR })}
-              </span>
             </div>
 
             {/* Body */}
-            <div className="prose prose-sm max-w-none">
-              <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
-                {selectedEmailData.body}
+            <div className="px-6 py-6">
+              <div className="prose prose-sm max-w-none">
+                <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+                  {selectedEmailData.body}
+                </div>
               </div>
             </div>
           </div>
         </ScrollArea>
 
         {/* Quick Reply */}
-        <div className="flex-shrink-0 border-t p-3">
-          <Button className="w-full gap-2" size="sm">
+        <div className="flex-shrink-0 border-t bg-card/80 backdrop-blur-sm p-4">
+          <Button className="w-full gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600">
             <Reply className="w-4 h-4" />
             Responder
           </Button>
@@ -216,102 +257,147 @@ export function EmailPanel({
     );
   }
 
-  // Email list view
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-background">
       {/* Toolbar */}
-      <div className="flex-shrink-0 border-b px-3 py-2.5 flex items-center gap-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar..."
-            className="pl-8 h-8 text-sm"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="flex-shrink-0 border-b bg-gradient-to-r from-blue-50/80 to-white px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar emails..."
+              className="pl-10 h-10 rounded-xl bg-white border-blue-100 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-0 px-3 py-1">
+            {filteredEmails.length} {filteredEmails.length === 1 ? 'email' : 'emails'}
+          </Badge>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-10 w-10 hover:bg-blue-50"
+            onClick={onRefresh}
+          >
+            <RefreshCw className="w-4 h-4 text-blue-600" />
+          </Button>
         </div>
-        
-        <Badge variant="secondary" className="text-xs">
-          {filteredEmails.length}
-        </Badge>
-        
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-8 w-8"
-          onClick={onRefresh}
-        >
-          <RefreshCw className="w-4 h-4" />
-        </Button>
       </div>
 
-      {/* List */}
+      {/* Email List */}
       <ScrollArea className="flex-1">
         {filteredEmails.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4">
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-              <Mail className="w-6 h-6 text-muted-foreground" />
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center mb-4">
+              <Mail className="w-10 h-10 text-blue-400" />
             </div>
-            <p className="text-sm font-medium">Nenhum email</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Esta pasta está vazia
+            <p className="font-semibold text-foreground">Nenhum email</p>
+            <p className="text-sm text-muted-foreground mt-1 text-center">
+              {emailFolder === "inbox" 
+                ? "Sua caixa de entrada está vazia" 
+                : `Nenhum email em ${folders.find(f => f.id === emailFolder)?.label || emailFolder}`
+              }
             </p>
           </div>
         ) : (
-          <div className="divide-y">
+          <div className="divide-y divide-border/50">
             {filteredEmails.map((email) => (
               <div
                 key={email.id}
                 onClick={() => onEmailSelect(email.id, email)}
                 className={cn(
-                  "flex items-start gap-3 px-3 py-3 cursor-pointer transition-colors",
-                  "hover:bg-muted/50",
-                  !email.read && "bg-accent/30"
+                  "group flex items-start gap-4 px-4 py-4 cursor-pointer transition-all duration-200",
+                  "hover:bg-blue-50/50",
+                  !email.read && "bg-blue-50/30",
+                  email.starred && "bg-amber-50/20"
                 )}
               >
                 {/* Avatar */}
                 <div className={cn(
-                  "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-medium",
+                  "w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-semibold text-sm shadow-sm transition-all",
                   !email.read 
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
+                    ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+                    : "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600"
                 )}>
                   {getSenderInitial(email.from_email)}
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
+                  <div className="flex items-center gap-2 mb-1">
+                    {/* Unread dot */}
                     {!email.read && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                      <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 animate-pulse" />
                     )}
+                    
+                    {/* Sender */}
                     <span className={cn(
                       "text-sm truncate",
-                      !email.read ? "font-semibold" : "font-medium text-muted-foreground"
+                      !email.read ? "font-semibold text-foreground" : "font-medium text-muted-foreground"
                     )}>
                       {getSenderName(email.from_email)}
                     </span>
+                    
+                    {/* Star */}
                     {email.starred && (
-                      <Star className="w-3 h-3 fill-primary text-primary flex-shrink-0" />
+                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 flex-shrink-0" />
                     )}
+                    
+                    {/* Attachment */}
                     {email.hasAttachment && (
-                      <Paperclip className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                      <Paperclip className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                     )}
-                    <span className="text-[10px] text-muted-foreground ml-auto">
+                    
+                    {/* Date */}
+                    <span className="text-xs text-muted-foreground ml-auto flex-shrink-0 bg-slate-100/80 px-2 py-0.5 rounded-full">
                       {formatEmailDate(email.date)}
                     </span>
                   </div>
                   
+                  {/* Subject */}
                   <p className={cn(
-                    "text-sm truncate mb-0.5",
-                    !email.read ? "font-medium" : "text-muted-foreground"
+                    "text-sm truncate mb-1",
+                    !email.read ? "font-medium text-foreground" : "text-muted-foreground"
                   )}>
                     {email.subject || "(Sem assunto)"}
                   </p>
                   
-                  <p className="text-xs text-muted-foreground truncate">
+                  {/* Preview */}
+                  <p className="text-xs text-muted-foreground/80 truncate">
                     {getPreviewText(email.body)}
                   </p>
+                </div>
+
+                {/* Hover actions */}
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 hover:bg-blue-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Toggle star
+                    }}
+                  >
+                    <Star className={cn(
+                      "w-4 h-4",
+                      email.starred ? "fill-amber-400 text-amber-400" : "text-muted-foreground"
+                    )} />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 hover:bg-blue-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Archive
+                    }}
+                  >
+                    <Archive className="w-4 h-4 text-muted-foreground" />
+                  </Button>
                 </div>
               </div>
             ))}

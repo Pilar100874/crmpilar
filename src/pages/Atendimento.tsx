@@ -37,7 +37,6 @@ import { ConversationSummaryPanel } from "@/components/atendimento/ConversationS
 import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
 import { EmailFolderSidebar } from "@/components/email/EmailFolderSidebar";
 import { EmailPanel } from "@/components/email/EmailPanel";
-import { cn } from "@/lib/utils";
 import type { Atendente } from "@/types/atendimento";
 
 interface Conversation {
@@ -2849,43 +2848,55 @@ ${recentMessages}
       }`}>
         {showConversationsList && (
           <>
-            {/* Header - Minimal */}
-            <div className="flex-shrink-0 px-3 py-3 border-b">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-foreground">Atendimento</h2>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => setShowConversationsList(false)}
-                  className="h-7 w-7"
-                >
-                  <PanelLeftClose className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              {/* Search + Filter */}
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar..."
-                    className="pl-8 h-8 text-sm"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+            {/* Modern Header with Gradient */}
+            <div className="flex-shrink-0">
+              {/* Header Title Section */}
+              <div className="px-4 pt-4 pb-3 bg-gradient-to-br from-primary/15 via-primary/8 to-transparent">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+                      <MessageSquare className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-bold text-foreground">Atendimento</h2>
+                      <p className="text-[10px] text-muted-foreground">Gerencie suas conversas</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setShowConversationsList(false)}
+                    className="h-8 w-8 p-0 rounded-lg hover:bg-primary/10"
+                    title="Ocultar painel"
+                  >
+                    <PanelLeftClose className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {/* Search Input + Global Filter */}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar conversas..."
+                      className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40 focus:bg-white focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <GlobalClientFilter 
+                    activeFilter={globalFilter} 
+                    onFilterChange={setGlobalFilter}
+                    compact
                   />
                 </div>
-                <GlobalClientFilter 
-                  activeFilter={globalFilter} 
-                  onFilterChange={setGlobalFilter}
-                  compact
-                />
               </div>
             </div>
 
         {/* Tabs - Modern Design with ExpandableTabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          {/* Tab Navigation */}
-          <div className="px-2 py-2 border-b">
+          {/* Tab Navigation - Expandable Icons */}
+          <div className="px-3 py-2.5 bg-gradient-to-b from-slate-50/80 to-white border-b border-border/20">
             <ExpandableTabs
               tabs={[
                 { 
@@ -2931,63 +2942,70 @@ ${recentMessages}
           )}
 
             {/* Chat Tab */}
-          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 m-0 p-2">
+          <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2 bg-gradient-to-b from-slate-50/30 to-white">
             {filteredConversations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                  <MessageSquare className="w-6 h-6 text-muted-foreground" />
+              <div className="p-8 text-center text-muted-foreground">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="w-8 h-8 text-primary/40" />
                 </div>
                 <p className="text-sm font-medium">Nenhuma conversa</p>
                 <p className="text-xs text-muted-foreground mt-1">Use o botão direito para acessar opções</p>
               </div>
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {filteredConversations.map((conv) => (
                   <div
                     key={conv.id}
                     onClick={() => setSelectedConversation(conv.id)}
-                    className={cn(
-                      "px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
+                    className={`px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
                       selectedConversation === conv.id 
-                        ? "bg-accent" 
-                        : "hover:bg-muted/50"
-                    )}
+                        ? "bg-primary/10 border border-primary/30 shadow-sm" 
+                        : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
+                    }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={cn(
-                        "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0",
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                         selectedConversation === conv.id 
                           ? "bg-primary text-primary-foreground" 
-                          : "bg-muted text-muted-foreground"
-                      )}>
-                        <User className="w-4 h-4" />
+                          : "bg-gradient-to-br from-slate-100 to-slate-200"
+                      }`}>
+                        <User className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-medium text-sm truncate">
+                          <span className="font-semibold text-sm truncate">
                             {conv.customer?.nome || "Cliente"}
                           </span>
-                          <span className="text-[10px] text-muted-foreground ml-2">
+                          <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
                             {conv.lastMessage?.created_at
                               ? getTimeAgo(conv.lastMessage.created_at)
                               : getTimeAgo(conv.updated_at)}
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground truncate mb-1">
+                        <p className="text-xs text-muted-foreground truncate mb-1.5">
                           {conv.lastMessage?.text || "Sem mensagens"}
                         </p>
-                        <div className="flex items-center gap-1 flex-wrap">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           {conv.bot_active !== false && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                            <Badge className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
                               <Bot className="w-2.5 h-2.5 mr-0.5" />
                               BOT
                             </Badge>
                           )}
                           {conv.customerCompanies && conv.customerCompanies.length > 0 && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                              <Building2 className="w-2.5 h-2.5 mr-0.5" />
-                              {conv.customerCompanies[0].empresas?.nome_fantasia?.substring(0, 10) || "Empresa"}
-                            </Badge>
+                            <>
+                              {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
+                                <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-white/50">
+                                  <Building2 className="w-2.5 h-2.5" />
+                                  {rel.empresas?.nome_fantasia || rel.empresas?.nome || "Empresa"}
+                                </Badge>
+                              ))}
+                              {conv.customerCompanies.length > 1 && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                  +{conv.customerCompanies.length - 1}
+                                </Badge>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -3004,63 +3022,84 @@ ${recentMessages}
             <div className={`flex flex-col transition-all duration-300 ${
               showClientDetailsAgenda && selectedTaskData ? 'w-[calc(100%-320px)]' : 'w-full'
             }`}>
-            {/* Agenda Controls - Minimal */}
-            <div className="flex-shrink-0 px-3 py-2.5 border-b">
-              {/* Date Navigation */}
-              <div className="flex items-center gap-2 mb-2">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={handlePreviousDay}
-                  className="h-8 w-8"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                
-                <div className="flex-1 text-center">
-                  <p className="text-sm font-medium">
-                    {format(agendaDate, "dd MMM", { locale: ptBR })}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground capitalize">
-                    {format(agendaDate, "EEEE", { locale: ptBR })}
-                  </p>
+            {/* Agenda Controls - Modern Design */}
+            <div className="flex-shrink-0 px-3 py-3 bg-gradient-to-r from-orange-50 to-transparent border-b border-orange-100/50 space-y-2">
+              {/* Date Navigation + Toggle Button */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handlePreviousDay}
+                    className="h-8 w-8 p-0 rounded-full bg-white/70 hover:bg-white border-orange-200"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-orange-600" />
+                  </Button>
+                  
+                  <div className="flex-1 text-center bg-white/70 rounded-xl py-1.5 px-3">
+                    <p className="text-sm font-bold text-orange-700">
+                      {format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
+                    </p>
+                    <p className="text-[10px] text-orange-500 capitalize">
+                      {format(agendaDate, "EEEE", { locale: ptBR })}
+                    </p>
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleNextDay}
+                    className="h-8 w-8 p-0 rounded-full bg-white/70 hover:bg-white border-orange-200"
+                  >
+                    <ChevronRight className="w-4 h-4 text-orange-600" />
+                  </Button>
                 </div>
-                
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={handleNextDay}
-                  className="h-8 w-8"
+
+                {/* Toggle Details Button */}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const newState = !showClientDetailsAgenda;
+                    setShowClientDetailsAgenda(newState);
+                    // Em tablets, coordenar com o painel de conversas
+                    if (isTablet && newState && showConversationsList) {
+                      setShowConversationsList(false);
+                    }
+                  }}
+                  className="h-8 w-8 p-0"
+                  title={showClientDetailsAgenda ? "Ocultar detalhes" : "Mostrar detalhes"}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  {showClientDetailsAgenda ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                 </Button>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <Button 
-                  variant="ghost" 
+                  variant="secondary" 
                   size="sm" 
                   onClick={handleToday}
-                  className="h-7 gap-1 text-xs"
+                  className="h-8 w-8 p-0 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-600"
+                  title="Hoje"
                 >
-                  <CalendarDays className="w-3.5 h-3.5" />
-                  Hoje
+                  <CalendarDays className="w-4 h-4" />
                 </Button>
                 
                 <Button 
-                  variant="ghost" 
-                  size="icon" 
+                  variant="outline" 
+                  size="sm" 
                   onClick={() => setShowPredictiveDialer(true)}
-                  className="h-7 w-7"
+                  className="h-8 w-8 p-0 rounded-full border-orange-200 hover:bg-orange-50"
+                  title="Discador Preditivo"
                 >
-                  <PhoneCall className="w-3.5 h-3.5" />
+                  <PhoneCall className="w-4 h-4 text-orange-600" />
                 </Button>
                 
                 <Dialog open={showSortDialog} onOpenChange={setShowSortDialog}>
                   <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                      <ArrowUpDown className="w-3.5 h-3.5" />
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full border-orange-200 hover:bg-orange-50" title="Ordenação">
+                      <ArrowUpDown className="w-4 h-4 text-orange-600" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
@@ -3213,24 +3252,24 @@ ${recentMessages}
             </div>
 
             {/* Tasks List */}
-            <div className="flex-1 overflow-y-auto p-2">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
               {filteredTasks.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                    <Calendar className="w-6 h-6 text-muted-foreground" />
+                <div className="p-8 text-center text-muted-foreground">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 flex items-center justify-center">
+                    <Calendar className="w-8 h-8 text-orange-300" />
                   </div>
                   <p className="text-sm font-medium">Nenhuma tarefa</p>
                   <p className="text-xs text-muted-foreground mt-1">{globalFilter ? 'para este filtro' : 'para esta data'}</p>
                 </div>
               ) : (
-                <div className="space-y-1">
-                 {filteredTasks.map((task) => (
+                 filteredTasks.map((task) => (
                   <div 
                     key={task.id} 
-                    className={cn(
-                      "px-3 py-2.5 rounded-lg cursor-pointer transition-colors",
-                      selectedTaskId === task.id ? "bg-accent" : "hover:bg-muted/50"
-                    )}
+                    className={`p-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                      selectedTaskId === task.id 
+                        ? "bg-orange-100 border border-orange-200 shadow-sm" 
+                        : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
+                    }`}
                     onClick={() => {
                       setSelectedTaskId(task.id);
                       if (!showClientDetailsAgenda) {
@@ -3239,26 +3278,25 @@ ${recentMessages}
                     }}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                         task.status === 'concluida' 
-                          ? 'bg-emerald-100 text-emerald-600' 
-                          : 'bg-muted text-muted-foreground'
-                      )}>
+                          ? 'bg-green-100 text-green-600' 
+                          : 'bg-orange-100 text-orange-500'
+                      }`}>
                         <CheckCircle2 className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{task.title}</p>
+                        <p className="font-semibold text-sm truncate">{task.title}</p>
                         <p className="text-xs text-muted-foreground truncate">{task.contact_name}</p>
-                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                           {task.time && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                              <Clock className="w-2.5 h-2.5 mr-0.5" />
+                            <span className="text-[10px] text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full flex items-center font-medium">
+                              <Clock className="w-3 h-3 mr-1" />
                               {task.time}
-                            </Badge>
+                            </span>
                           )}
                           {task.origem && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-white/50">
                               {task.origem}
                             </Badge>
                           )}
@@ -3266,8 +3304,7 @@ ${recentMessages}
                       </div>
                     </div>
                   </div>
-                ))}
-                </div>
+                ))
               )}
             </div>
             </div>
@@ -3298,17 +3335,17 @@ ${recentMessages}
           {/* Orçamento Tab */}
           <TabsContent value="orcamento" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0">
             {/* Header with Filter */}
-            <div className="px-3 py-2.5 border-b">
+            <div className="px-3 py-3 bg-gradient-to-r from-emerald-50 to-transparent border-b border-emerald-100/50">
               <div className="flex gap-2">
                 <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
-                  <SelectTrigger className="flex-1 h-8 text-sm">
-                    <SelectValue placeholder="Todos" />
+                  <SelectTrigger className="flex-1 h-9 bg-white/70 border-emerald-200 rounded-xl">
+                    <SelectValue placeholder="Todos os status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="all">Todos os status</SelectItem>
                     <SelectItem value="orcamento">Orçamento</SelectItem>
                     <SelectItem value="negociacao">Negociação</SelectItem>
-                    <SelectItem value="aprovacao_gerencia">Aprovação</SelectItem>
+                    <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button 
@@ -3322,9 +3359,9 @@ ${recentMessages}
                       setOrcamentoSheetOpen(true);
                     }
                   }}
-                  className="h-8 gap-1"
+                  className="h-9 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4 mr-1" />
                   Novo
                 </Button>
               </div>
