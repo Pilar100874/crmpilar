@@ -2616,6 +2616,9 @@ ${recentMessages}
                 usuarioId={usuarioId}
                 loadAtendente={loadAtendente}
                 getTimeAgo={getTimeAgo}
+                emailFolder={emailFolder}
+                setEmailFolder={setEmailFolder}
+                setShowComposeEmail={setShowComposeEmail}
               />
             </div>
 
@@ -4331,6 +4334,9 @@ interface MobileListContentProps {
   usuarioId: string;
   loadAtendente: (id: string) => void;
   getTimeAgo: (date: string) => string;
+  emailFolder: string;
+  setEmailFolder: (folder: string) => void;
+  setShowComposeEmail: (show: boolean) => void;
 }
 
 function MobileListContent({
@@ -4364,6 +4370,9 @@ function MobileListContent({
   usuarioId,
   loadAtendente,
   getTimeAgo,
+  emailFolder,
+  setEmailFolder,
+  setShowComposeEmail,
 }: MobileListContentProps) {
   return (
     <div className="h-full flex flex-col bg-white/80">
@@ -4433,15 +4442,35 @@ function MobileListContent({
 
         {activeTab === "email" && (
           <div className="flex items-center gap-2">
+            <Select value={emailFolder} onValueChange={setEmailFolder}>
+              <SelectTrigger className="w-28 h-10 bg-white/70 rounded-xl text-xs">
+                <SelectValue placeholder="Pasta" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="inbox">Entrada</SelectItem>
+                <SelectItem value="sent">Enviados</SelectItem>
+                <SelectItem value="drafts">Rascunhos</SelectItem>
+                <SelectItem value="starred">Favoritos</SelectItem>
+                <SelectItem value="archive">Arquivo</SelectItem>
+                <SelectItem value="trash">Lixeira</SelectItem>
+              </SelectContent>
+            </Select>
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar emails..."
+                placeholder="Buscar..."
                 className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            <Button 
+              size="sm" 
+              onClick={() => setShowComposeEmail(true)}
+              className="h-10 w-10 p-0 rounded-xl bg-blue-500 hover:bg-blue-600"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
             <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
           </div>
         )}
