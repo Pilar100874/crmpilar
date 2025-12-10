@@ -104,7 +104,6 @@ const menuItems: MenuItem[] = [
     icon: MessageSquare,
     subItems: [
       { id: "Painel Chats", title: "Painel", url: "/atendimento", icon: MessageSquare },
-      { id: "Chat Interno", title: "Chat Interno", url: "/chat-interno", icon: LucideIcons.MessageCircle },
       { id: "Monitor de Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: Activity },
       { id: "Teste Roteamento", title: "Teste de Roteamento", url: "/test-roteamento", icon: TestTube2 },
       { id: "Config Atendimento", title: "Configurações", url: "/atendimento-config", icon: Settings },
