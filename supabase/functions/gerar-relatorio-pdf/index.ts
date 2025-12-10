@@ -44,9 +44,16 @@ serve(async (req) => {
     console.log("✅ Relatório encontrado:", relatorio.nome);
 
     // 2. Preparar parâmetros e converter tipos
+    // Usar apiVariables do body OU api_variables da configuração do relatório
+    const varsToUse = apiVariables && typeof apiVariables === 'object' && Object.keys(apiVariables).length > 0
+      ? apiVariables
+      : (relatorio.configuracoes?.api_variables || {});
+    
+    console.log("📦 Variáveis a usar:", JSON.stringify(varsToUse, null, 2));
+    
     const convertedParams: Record<string, any> = {};
-    if (apiVariables && typeof apiVariables === 'object') {
-      for (const [key, varData] of Object.entries(apiVariables)) {
+    if (varsToUse && typeof varsToUse === 'object') {
+      for (const [key, varData] of Object.entries(varsToUse)) {
         const isVarObject = typeof varData === 'object' && varData !== null && 'value' in varData && 'type' in varData;
         const value = isVarObject ? (varData as any).value : String(varData);
         const type = isVarObject ? (varData as any).type : 'string';
@@ -55,7 +62,7 @@ serve(async (req) => {
         try {
           switch (type) {
             case 'number':
-              convertedParams[key] = value ? parseFloat(value) : 0;
+              convertedParams[key] = value !== undefined && value !== null && value !== '' ? parseFloat(String(value)) : 0;
               break;
             case 'boolean':
               convertedParams[key] = value === 'true' || value === '1' || value === true;
@@ -70,7 +77,7 @@ serve(async (req) => {
               convertedParams[key] = value ? JSON.parse(value) : {};
               break;
             default: // string
-              convertedParams[key] = String(value);
+              convertedParams[key] = String(value ?? '');
           }
         } catch (convError) {
           console.warn(`⚠️ Erro ao converter ${key}:`, convError);
