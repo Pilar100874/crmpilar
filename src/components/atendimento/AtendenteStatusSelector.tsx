@@ -36,6 +36,7 @@ export const AtendenteStatusSelector = ({
   const [status, setStatus] = useState<AtendenteStatus>(currentStatus);
   const [pausaDialogOpen, setPausaDialogOpen] = useState(false);
   const [motivoPausa, setMotivoPausa] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setStatus(currentStatus);
@@ -75,6 +76,8 @@ export const AtendenteStatusSelector = ({
   };
 
   const handleStatusClick = async (newStatus: AtendenteStatus) => {
+    if (loading) return;
+    
     if (newStatus === "pausa") {
       setPausaDialogOpen(true);
       return;
@@ -95,6 +98,10 @@ export const AtendenteStatusSelector = ({
   };
 
   const updateStatus = async (newStatus: AtendenteStatus, motivo: string | null) => {
+    if (loading) return;
+    
+    setLoading(true);
+    
     try {
       const updateData: any = {
         status: newStatus,
@@ -109,46 +116,7 @@ export const AtendenteStatusSelector = ({
         updateData.tempo_pausa_inicio = null;
       }
 
-      // Se estava em pausa, calcular tempo total de pausa
-      if (status === "pausa" && newStatus !== "pausa") {
-        const { data: atendenteData } = await supabase
-          .from("atendentes")
-          .select("tempo_pausa_inicio")
-          .eq("id", atendenteId)
-          .single();
-
-        if (atendenteData?.tempo_pausa_inicio) {
-          const tempoPausaInicio = new Date(atendenteData.tempo_pausa_inicio);
-          const tempoPausaSegundos = Math.floor((Date.now() - tempoPausaInicio.getTime()) / 1000);
-          
-          // Atualizar métrica do dia
-          const hoje = new Date().toISOString().split('T')[0];
-          const { data: metricaExistente } = await supabase
-            .from("metricas_atendente")
-            .select("id, tempo_pausa")
-            .eq("atendente_id", atendenteId)
-            .eq("data", hoje)
-            .maybeSingle();
-
-          if (metricaExistente) {
-            await supabase
-              .from("metricas_atendente")
-              .update({
-                tempo_pausa: (metricaExistente.tempo_pausa || 0) + tempoPausaSegundos
-              })
-              .eq("id", metricaExistente.id);
-          } else {
-            await supabase
-              .from("metricas_atendente")
-              .insert({
-                atendente_id: atendenteId,
-                data: hoje,
-                tempo_pausa: tempoPausaSegundos
-              });
-          }
-        }
-      }
-
+      // Primeiro atualizar o status para feedback imediato
       const { error } = await supabase
         .from("atendentes")
         .update(updateData)
@@ -156,12 +124,63 @@ export const AtendenteStatusSelector = ({
 
       if (error) throw error;
 
+      // Atualizar estado local imediatamente
       setStatus(newStatus);
       toast.success(`Status alterado para ${getStatusLabel(newStatus)}`);
+
+      // Se estava em pausa, calcular tempo total de pausa em background
+      if (status === "pausa" && newStatus !== "pausa") {
+        // Executar em background sem bloquear
+        (async () => {
+          try {
+            const { data: atendenteData } = await supabase
+              .from("atendentes")
+              .select("tempo_pausa_inicio")
+              .eq("id", atendenteId)
+              .maybeSingle();
+
+            if (atendenteData?.tempo_pausa_inicio) {
+              const tempoPausaInicio = new Date(atendenteData.tempo_pausa_inicio);
+              const tempoPausaSegundos = Math.floor((Date.now() - tempoPausaInicio.getTime()) / 1000);
+              
+              const hoje = new Date().toISOString().split('T')[0];
+              const { data: metricaExistente } = await supabase
+                .from("metricas_atendente")
+                .select("id, tempo_pausa")
+                .eq("atendente_id", atendenteId)
+                .eq("data", hoje)
+                .maybeSingle();
+
+              if (metricaExistente) {
+                await supabase
+                  .from("metricas_atendente")
+                  .update({
+                    tempo_pausa: (metricaExistente.tempo_pausa || 0) + tempoPausaSegundos
+                  })
+                  .eq("id", metricaExistente.id);
+              } else {
+                await supabase
+                  .from("metricas_atendente")
+                  .insert({
+                    atendente_id: atendenteId,
+                    data: hoje,
+                    tempo_pausa: tempoPausaSegundos
+                  });
+              }
+            }
+          } catch (err) {
+            console.error("Erro ao atualizar métricas de pausa:", err);
+          }
+        })();
+      }
+
+      // Chamar callback após atualização principal
       onStatusChange?.();
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
       toast.error("Erro ao atualizar status");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -169,30 +188,34 @@ export const AtendenteStatusSelector = ({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
-            {getStatusIcon(status)}
+          <Button variant="outline" size="sm" className="gap-2" disabled={loading}>
+            {loading ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            ) : (
+              getStatusIcon(status)
+            )}
             {getStatusLabel(status)}
             <ChevronDown className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => handleStatusClick("disponivel")}>
+          <DropdownMenuItem onClick={() => handleStatusClick("disponivel")} disabled={loading}>
             <Circle className="h-4 w-4 mr-2 fill-green-500 text-green-500" />
             Disponível
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleStatusClick("ocupado")}>
+          <DropdownMenuItem onClick={() => handleStatusClick("ocupado")} disabled={loading}>
             <CircleDot className="h-4 w-4 mr-2 fill-red-500 text-red-500" />
             Ocupado
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleStatusClick("ausente")}>
+          <DropdownMenuItem onClick={() => handleStatusClick("ausente")} disabled={loading}>
             <Moon className="h-4 w-4 mr-2 fill-gray-500 text-gray-500" />
             Ausente
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleStatusClick("pausa")}>
+          <DropdownMenuItem onClick={() => handleStatusClick("pausa")} disabled={loading}>
             <Coffee className="h-4 w-4 mr-2 fill-yellow-500 text-yellow-500" />
             Pausa
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleStatusClick("offline")}>
+          <DropdownMenuItem onClick={() => handleStatusClick("offline")} disabled={loading}>
             <CircleSlash className="h-4 w-4 mr-2 fill-gray-400 text-gray-400" />
             Offline
           </DropdownMenuItem>
