@@ -201,24 +201,17 @@ export default function Relatorios() {
         throw new Error(data?.error || 'Erro ao gerar relatório');
       }
 
-      // Abrir o arquivo gerado (edge function retorna fileUrl ou pdfUrl)
+      // Baixar o arquivo automaticamente
       const fileUrl = data.fileUrl || data.pdfUrl || data.url;
       if (fileUrl) {
-        const newWindow = window.open(fileUrl, '_blank');
-        if (!newWindow) {
-          // Se popup bloqueado, mostrar link
-          toast.success(
-            <div className="flex flex-col gap-2">
-              <span>{outputType.toUpperCase()} gerado!</span>
-              <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">
-                Clique aqui para baixar
-              </a>
-            </div>,
-            { duration: 10000 }
-          );
-        } else {
-          toast.success(`${outputType.toUpperCase()} gerado com sucesso!`);
-        }
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = data.fileName || `${report.nome}.${outputType}`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success(`${outputType.toUpperCase()} baixado com sucesso!`);
       } else {
         console.error('Resposta sem URL:', data);
         toast.error('URL do arquivo não retornada');
