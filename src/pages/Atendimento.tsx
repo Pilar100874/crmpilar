@@ -2,7 +2,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { RadialMenu, type RadialMenuItem } from "@/components/ui/radial-menu";
@@ -197,7 +198,7 @@ export default function Atendimento() {
   const [emailFolder, setEmailFolder] = useState<string>("inbox");
   const [showComposeEmail, setShowComposeEmail] = useState(false);
   const [orcamentosStatusFilter, setOrcamentosStatusFilter] = useState<string>("");
-  const [orcamentosDateFilter, setOrcamentosDateFilter] = useState<string>("");
+  const [orcamentosDateRange, setOrcamentosDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [orcamentosEmpresaFilter, setOrcamentosEmpresaFilter] = useState<string>("");
   const [selectedOrcamentoId, setSelectedOrcamentoId] = useState<string | null>(null);
   const [selectedOrcamentoData, setSelectedOrcamentoData] = useState<any | null>(null);
@@ -2077,7 +2078,7 @@ ${recentMessages}
 
   const RADIAL_MENU_ITEMS: RadialMenuItem[] = [
     { id: "chat", icon: MessageSquare, label: "Conversas", badge: activeConversationsCount },
-    { id: "agenda", icon: Calendar, label: "Agenda", badge: todayTasksCount },
+    { id: "agenda", icon: CalendarIcon, label: "Agenda", badge: todayTasksCount },
     { id: "email", icon: Mail, label: "E-mails", badge: unreadEmailsCount },
     { id: "orcamento", icon: Receipt, label: "Orçamentos", badge: orcamentosEmAndamentoCount },
     { id: "dialer", icon: PhoneCall, label: "Discador" },
@@ -2764,7 +2765,7 @@ ${recentMessages}
               <div className="flex justify-around">
                 {[
                   { id: "chat", label: "Chats", icon: MessageSquare, badge: activeConversationsCount },
-                  { id: "agenda", label: "Agenda", icon: Calendar, badge: todayTasksCount },
+                  { id: "agenda", label: "Agenda", icon: CalendarIcon, badge: todayTasksCount },
                   { id: "email", label: "E-mails", icon: Mail, badge: unreadEmailsCount },
                   { id: "orcamento", label: "Orçamentos", icon: FileText, badge: orcamentosEmAndamentoCount },
                 ].map((tab) => {
@@ -3263,7 +3264,7 @@ ${recentMessages}
               {filteredTasks.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 flex items-center justify-center">
-                    <Calendar className="w-8 h-8 text-orange-300" />
+                    <CalendarIcon className="w-8 h-8 text-orange-300" />
                   </div>
                   <p className="text-sm font-medium">Nenhuma tarefa</p>
                   <p className="text-xs text-muted-foreground mt-1">{globalFilter ? 'para este filtro' : 'para esta data'}</p>
@@ -3355,17 +3356,46 @@ ${recentMessages}
                     <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={orcamentosDateFilter || "all"} onValueChange={(value) => setOrcamentosDateFilter(value === "all" ? "" : value)}>
-                  <SelectTrigger className="flex-1 min-w-[80px] h-9 bg-white/70 dark:bg-background border-orange-200 dark:border-orange-800 rounded-xl text-xs">
-                    <SelectValue placeholder="Data" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as datas</SelectItem>
-                    <SelectItem value="today">Hoje</SelectItem>
-                    <SelectItem value="week">Últimos 7 dias</SelectItem>
-                    <SelectItem value="month">Últimos 30 dias</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="flex-1 min-w-[140px] h-9 bg-white/70 dark:bg-background border-orange-200 dark:border-orange-800 rounded-xl text-xs justify-start"
+                    >
+                      <CalendarDays className="w-3 h-3 mr-1.5" />
+                      {orcamentosDateRange.from ? (
+                        orcamentosDateRange.to ? (
+                          <span>{format(orcamentosDateRange.from, "dd/MM", { locale: ptBR })} - {format(orcamentosDateRange.to, "dd/MM", { locale: ptBR })}</span>
+                        ) : (
+                          <span>{format(orcamentosDateRange.from, "dd/MM/yy", { locale: ptBR })}</span>
+                        )
+                      ) : (
+                        <span>Faixa de datas</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="range"
+                      defaultMonth={orcamentosDateRange.from}
+                      selected={orcamentosDateRange.from ? { from: orcamentosDateRange.from, to: orcamentosDateRange.to } : undefined}
+                      onSelect={(range: any) => setOrcamentosDateRange({ from: range?.from, to: range?.to })}
+                      numberOfMonths={1}
+                      locale={ptBR}
+                      className="pointer-events-auto p-3"
+                    />
+                    <div className="p-2 border-t flex justify-between">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-xs"
+                        onClick={() => setOrcamentosDateRange({ from: undefined, to: undefined })}
+                      >
+                        Limpar
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 <Button 
                   size="sm" 
                   onClick={() => {
@@ -3417,21 +3447,11 @@ ${recentMessages}
               .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
               .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
               .filter(o => {
-                if (!orcamentosDateFilter) return true;
+                if (!orcamentosDateRange.from) return true;
                 const orcDate = new Date(o.created_at);
-                const now = new Date();
-                if (orcamentosDateFilter === 'today') {
-                  return orcDate.toDateString() === now.toDateString();
-                }
-                if (orcamentosDateFilter === 'week') {
-                  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                  return orcDate >= weekAgo;
-                }
-                if (orcamentosDateFilter === 'month') {
-                  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                  return orcDate >= monthAgo;
-                }
-                return true;
+                const fromDate = startOfDay(orcamentosDateRange.from);
+                const toDate = orcamentosDateRange.to ? endOfDay(orcamentosDateRange.to) : endOfDay(orcamentosDateRange.from);
+                return orcDate >= fromDate && orcDate <= toDate;
               })
               .length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
@@ -3446,21 +3466,11 @@ ${recentMessages}
                 .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
                 .filter(o => !orcamentosStatusFilter || o.etapa === orcamentosStatusFilter)
                 .filter(o => {
-                  if (!orcamentosDateFilter) return true;
+                  if (!orcamentosDateRange.from) return true;
                   const orcDate = new Date(o.created_at);
-                  const now = new Date();
-                  if (orcamentosDateFilter === 'today') {
-                    return orcDate.toDateString() === now.toDateString();
-                  }
-                  if (orcamentosDateFilter === 'week') {
-                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                    return orcDate >= weekAgo;
-                  }
-                  if (orcamentosDateFilter === 'month') {
-                    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                    return orcDate >= monthAgo;
-                  }
-                  return true;
+                  const fromDate = startOfDay(orcamentosDateRange.from);
+                  const toDate = orcamentosDateRange.to ? endOfDay(orcamentosDateRange.to) : endOfDay(orcamentosDateRange.from);
+                  return orcDate >= fromDate && orcDate <= toDate;
                 })
                 .map((orc) => (
                   <div 
@@ -3984,7 +3994,7 @@ ${recentMessages}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-white" />
+                    <CalendarIcon className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-sm">{selectedTaskData.title}</h3>
@@ -4074,7 +4084,7 @@ ${recentMessages}
               )}
               {activeTab === "agenda" && (
                 <>
-                  <Calendar className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+                  <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
                   <p className="text-lg font-medium mb-2">Selecione uma tarefa</p>
                   <p className="text-sm">Escolha uma tarefa da agenda para ver os detalhes</p>
                 </>
@@ -4355,7 +4365,7 @@ function MobileListContent({
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
             {activeTab === "chat" && <MessageSquare className="h-5 w-5 text-white" />}
-            {activeTab === "agenda" && <Calendar className="h-5 w-5 text-white" />}
+            {activeTab === "agenda" && <CalendarIcon className="h-5 w-5 text-white" />}
             {activeTab === "email" && <Mail className="h-5 w-5 text-white" />}
             {activeTab === "orcamento" && <Receipt className="h-5 w-5 text-white" />}
           </div>
@@ -4500,7 +4510,7 @@ function MobileListContent({
               <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                 selectedTaskId === task.id ? "bg-orange-500 text-white" : "bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600"
               }`}>
-                <Calendar className="w-5 h-5" />
+                <CalendarIcon className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate">{task.contact_name}</p>
@@ -4791,7 +4801,7 @@ function MobileMainContent({
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-orange-600" />
+              <CalendarIcon className="w-6 h-6 text-orange-600" />
             </div>
             <div>
               <h3 className="font-semibold">{selectedTaskData.title}</h3>
