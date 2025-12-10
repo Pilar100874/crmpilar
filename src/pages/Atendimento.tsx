@@ -3346,9 +3346,9 @@ ${recentMessages}
             <div className="px-3 py-2 bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20 border-b border-orange-100/50 dark:border-orange-900/30">
               <div className="flex items-center gap-2">
                 {/* Filtros agrupados */}
-                <div className="flex items-center gap-1.5 flex-1 bg-white/50 dark:bg-background/50 rounded-xl px-2 py-1 border border-orange-100 dark:border-orange-900/50">
+                <div className="flex items-center gap-1.5 bg-white/50 dark:bg-background/50 rounded-xl px-2 py-1 border border-orange-100 dark:border-orange-900/50 min-w-0 overflow-hidden">
                   <Select value={orcamentosStatusFilter || "all"} onValueChange={(value) => setOrcamentosStatusFilter(value === "all" ? "" : value)}>
-                    <SelectTrigger className="h-7 min-w-[90px] bg-transparent border-0 shadow-none text-xs px-2 focus:ring-0">
+                    <SelectTrigger className="h-7 w-[85px] bg-transparent border-0 shadow-none text-xs px-2 focus:ring-0">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -3358,15 +3358,15 @@ ${recentMessages}
                       <SelectItem value="aprovacao_gerencia">Aprovação</SelectItem>
                     </SelectContent>
                   </Select>
-                  <div className="w-px h-5 bg-orange-200 dark:bg-orange-800" />
+                  <div className="w-px h-5 bg-orange-200 dark:bg-orange-800 shrink-0" />
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className={`h-7 px-2 text-xs gap-1 hover:bg-orange-100 dark:hover:bg-orange-900/30 ${orcamentosDateRange.from ? 'text-orange-600 dark:text-orange-400' : 'text-muted-foreground'}`}
+                        className={`h-7 px-2 text-xs gap-1 hover:bg-orange-100 dark:hover:bg-orange-900/30 whitespace-nowrap ${orcamentosDateRange.from ? 'text-orange-600 dark:text-orange-400' : 'text-muted-foreground'}`}
                       >
-                        <CalendarDays className="w-3.5 h-3.5" />
+                        <CalendarDays className="w-3.5 h-3.5 shrink-0" />
                         {orcamentosDateRange.from ? (
                           orcamentosDateRange.to ? (
                             <span>{format(orcamentosDateRange.from, "dd/MM", { locale: ptBR })} - {format(orcamentosDateRange.to, "dd/MM", { locale: ptBR })}</span>
@@ -3401,6 +3401,7 @@ ${recentMessages}
                     </PopoverContent>
                   </Popover>
                 </div>
+                <div className="flex-1" />
                 {/* Botão Novo */}
                 <Button 
                   size="sm" 
