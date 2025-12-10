@@ -175,14 +175,14 @@ export default function Relatorios() {
   };
 
   const handleGenerateReport = async (report: Report, outputType: 'pdf' | 'xlsx') => {
-    if (!report.layout_json) {
-      toast.error('Relatório sem layout definido');
+    if (!report.layout_json || Object.keys(report.layout_json).length === 0) {
+      toast.error('Relatório sem layout definido. Edite o modelo primeiro.');
       return;
     }
     
+    const toastId = toast.loading(`Gerando ${outputType.toUpperCase()}...`);
+    
     try {
-      toast.loading(`Gerando ${outputType.toUpperCase()}...`);
-      
       const { data, error } = await supabase.functions.invoke('gerar-relatorio-pdf', {
         body: {
           relatorioId: report.id,
@@ -190,18 +190,39 @@ export default function Relatorios() {
         }
       });
 
-      toast.dismiss();
+      toast.dismiss(toastId);
 
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || 'Erro ao gerar relatório');
+      if (error) {
+        console.error('Erro na função:', error);
+        throw new Error(error.message || 'Erro ao chamar função');
+      }
+      
+      if (!data?.success) {
+        throw new Error(data?.error || 'Erro ao gerar relatório');
+      }
 
       // Abrir o arquivo gerado
       if (data.url) {
-        window.open(data.url, '_blank');
-        toast.success(`${outputType.toUpperCase()} gerado com sucesso!`);
+        const newWindow = window.open(data.url, '_blank');
+        if (!newWindow) {
+          // Se popup bloqueado, mostrar link
+          toast.success(
+            <div className="flex flex-col gap-2">
+              <span>{outputType.toUpperCase()} gerado!</span>
+              <a href={data.url} target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">
+                Clique aqui para baixar
+              </a>
+            </div>,
+            { duration: 10000 }
+          );
+        } else {
+          toast.success(`${outputType.toUpperCase()} gerado com sucesso!`);
+        }
+      } else {
+        toast.error('URL do arquivo não retornada');
       }
     } catch (error: any) {
-      toast.dismiss();
+      toast.dismiss(toastId);
       console.error('Erro ao gerar relatório:', error);
       toast.error(`Erro ao gerar ${outputType.toUpperCase()}: ${error.message}`);
     }
