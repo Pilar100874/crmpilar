@@ -2911,13 +2911,7 @@ ${recentMessages}
                 { 
                   title: "Chats", 
                   icon: MessageSquare, 
-                  badge: activeConversationsCount,
-                  statusColor: atendente?.status ? (
-                    atendente.status === 'disponivel' ? 'bg-emerald-500' :
-                    atendente.status === 'ocupado' ? 'bg-amber-500' :
-                    atendente.status === 'pausa' ? 'bg-orange-500' :
-                    atendente.status === 'ausente' ? 'bg-red-500' : 'bg-gray-400'
-                  ) : undefined
+                  badge: activeConversationsCount
                 },
                 { title: "Agenda", icon: CalendarDays, badge: todayTasksCount },
                 { title: "E-mails", icon: Inbox, badge: unreadEmailsCount },
