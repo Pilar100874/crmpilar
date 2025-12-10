@@ -27,10 +27,10 @@ const ETAPA_LABELS: Record<string, string> = {
 
 const ETAPA_COLORS: Record<string, string> = {
   orcamento: 'bg-blue-500',
-  negociacao: 'bg-yellow-500',
+  negociacao: 'bg-amber-500',
   aprovacao_gerencia: 'bg-purple-500',
   perdido: 'bg-red-500',
-  finalizado: 'bg-green-500',
+  finalizado: 'bg-orange-500',
 };
 
 export default function OrcamentoListView({ orcamentos, onOrcamentoClick }: OrcamentoListViewProps) {

@@ -37,6 +37,7 @@ import { ConversationSummaryPanel } from "@/components/atendimento/ConversationS
 import { GlobalClientFilter, type GlobalFilter } from "@/components/atendimento/GlobalClientFilter";
 import { EmailFolderSidebar } from "@/components/email/EmailFolderSidebar";
 import { EmailPanel } from "@/components/email/EmailPanel";
+import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
 import type { Atendente } from "@/types/atendimento";
 
 interface Conversation {
@@ -2818,6 +2819,10 @@ ${recentMessages}
             open={showNovoContatoDialog}
             onOpenChange={setShowNovoContatoDialog}
           />
+          <ComposeEmailDialog
+            open={showComposeEmail}
+            onOpenChange={setShowComposeEmail}
+          />
         </div>
       ) : (
         /* ========== DESKTOP/TABLET LAYOUT ========== */
@@ -4217,6 +4222,11 @@ ${recentMessages}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ComposeEmailDialog
+        open={showComposeEmail}
+        onOpenChange={setShowComposeEmail}
+      />
       </div>
       )}
     </RadialMenu>
