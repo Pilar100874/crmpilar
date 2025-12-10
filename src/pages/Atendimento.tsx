@@ -4467,7 +4467,7 @@ function MobileListContent({
             <Button 
               size="sm" 
               onClick={() => setShowComposeEmail(true)}
-              className="h-10 w-10 p-0 rounded-xl bg-blue-500 hover:bg-blue-600"
+              className="h-10 w-10 p-0 rounded-xl bg-primary hover:bg-primary/90"
             >
               <Plus className="w-4 h-4" />
             </Button>
