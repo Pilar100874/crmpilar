@@ -2789,11 +2789,13 @@ ${recentMessages}
                         )}
                         <div className={`relative p-2 rounded-xl transition-colors ${isActive ? "bg-primary/10" : ""}`}>
                           <Icon className="h-5 w-5" />
-                          {tab.badge && tab.badge > 0 && (
+                          {tab.badge !== undefined && tab.badge >= 0 && (
                             <span className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[9px] font-bold px-1 rounded-full ${
-                              isActive 
-                                ? "bg-primary text-primary-foreground" 
-                                : "bg-destructive text-destructive-foreground"
+                              tab.badge > 0
+                                ? isActive 
+                                  ? "bg-primary text-primary-foreground" 
+                                  : "bg-destructive text-destructive-foreground"
+                                : "bg-muted text-muted-foreground"
                             }`}>
                               {tab.badge > 99 ? "99+" : tab.badge}
                             </span>
