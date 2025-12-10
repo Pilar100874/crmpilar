@@ -65,6 +65,8 @@ interface EmailPanelProps {
   onRefresh: () => void;
   onToggleDetails?: () => void;
   showDetailsToggle?: boolean;
+  onReply?: (email: Email) => void;
+  onForward?: (email: Email) => void;
 }
 
 const folders = [
@@ -88,6 +90,8 @@ export function EmailPanel({
   onRefresh,
   onToggleDetails,
   showDetailsToggle,
+  onReply,
+  onForward,
 }: EmailPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -174,10 +178,20 @@ export function EmailPanel({
             <div className="flex-1" />
             
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-orange-50 dark:hover:bg-orange-950/30">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-9 w-9 hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                onClick={() => onReply?.(selectedEmailData)}
+              >
                 <Reply className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-orange-50 dark:hover:bg-orange-950/30">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-9 w-9 hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                onClick={() => onForward?.(selectedEmailData)}
+              >
                 <Forward className="w-4 h-4" />
               </Button>
               <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-orange-50 dark:hover:bg-orange-950/30">
@@ -248,7 +262,10 @@ export function EmailPanel({
 
         {/* Quick Reply */}
         <div className="flex-shrink-0 border-t bg-card/80 backdrop-blur-sm p-4">
-          <Button className="w-full gap-2 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600">
+          <Button 
+            className="w-full gap-2 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600"
+            onClick={() => onReply?.(selectedEmailData)}
+          >
             <Reply className="w-4 h-4" />
             Responder
           </Button>
