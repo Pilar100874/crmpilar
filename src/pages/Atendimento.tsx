@@ -197,6 +197,8 @@ export default function Atendimento() {
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [emailFolder, setEmailFolder] = useState<string>("inbox");
   const [showComposeEmail, setShowComposeEmail] = useState(false);
+  const [composeEmailMode, setComposeEmailMode] = useState<'compose' | 'reply' | 'forward'>('compose');
+  const [composeEmailDefaults, setComposeEmailDefaults] = useState<{ to: string; subject: string; body: string }>({ to: '', subject: '', body: '' });
   const [orcamentosStatusFilter, setOrcamentosStatusFilter] = useState<string>("");
   const [orcamentosDateRange, setOrcamentosDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [orcamentosEmpresaFilter, setOrcamentosEmpresaFilter] = useState<string>("");
@@ -2826,6 +2828,10 @@ ${recentMessages}
           <ComposeEmailDialog
             open={showComposeEmail}
             onOpenChange={setShowComposeEmail}
+            mode={composeEmailMode}
+            defaultTo={composeEmailDefaults.to}
+            defaultSubject={composeEmailDefaults.subject}
+            defaultBody={composeEmailDefaults.body}
           />
         </div>
       ) : (
@@ -4069,10 +4075,28 @@ ${recentMessages}
               setSelectedEmailId(null);
               setSelectedEmailData(null);
             }}
-            onComposeClick={() => setShowComposeEmail(true)}
+            onComposeClick={() => {
+              setComposeEmailMode('compose');
+              setComposeEmailDefaults({ to: '', subject: '', body: '' });
+              setShowComposeEmail(true);
+            }}
             onRefresh={() => loadUserEmails()}
             onToggleDetails={() => setShowClientDetailsEmail(!showClientDetailsEmail)}
             showDetailsToggle={!!selectedEmailId}
+            onReply={(email) => {
+              const replySubject = email.subject?.startsWith('Re:') ? email.subject : `Re: ${email.subject || ''}`;
+              const replyBody = `\n\n---\nEm ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}, ${email.from_email} escreveu:\n${email.body || ''}`;
+              setComposeEmailMode('reply');
+              setComposeEmailDefaults({ to: email.from_email, subject: replySubject, body: replyBody });
+              setShowComposeEmail(true);
+            }}
+            onForward={(email) => {
+              const fwdSubject = email.subject?.startsWith('Fwd:') || email.subject?.startsWith('Enc:') ? email.subject : `Enc: ${email.subject || ''}`;
+              const fwdBody = `\n\n---\nMensagem encaminhada:\nDe: ${email.from_email}\nData: ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}\nAssunto: ${email.subject || ''}\n\n${email.body || ''}`;
+              setComposeEmailMode('forward');
+              setComposeEmailDefaults({ to: '', subject: fwdSubject, body: fwdBody });
+              setShowComposeEmail(true);
+            }}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
@@ -4285,6 +4309,10 @@ ${recentMessages}
       <ComposeEmailDialog
         open={showComposeEmail}
         onOpenChange={setShowComposeEmail}
+        mode={composeEmailMode}
+        defaultTo={composeEmailDefaults.to}
+        defaultSubject={composeEmailDefaults.subject}
+        defaultBody={composeEmailDefaults.body}
       />
       </div>
       )}

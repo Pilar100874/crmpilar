@@ -18,6 +18,9 @@ interface ComposeEmailDialogProps {
   onOpenChange: (open: boolean) => void;
   onSend?: (email: { to: string; subject: string; body: string }) => Promise<void>;
   defaultTo?: string;
+  defaultSubject?: string;
+  defaultBody?: string;
+  mode?: 'compose' | 'reply' | 'forward';
 }
 
 export function ComposeEmailDialog({
@@ -25,11 +28,24 @@ export function ComposeEmailDialog({
   onOpenChange,
   onSend,
   defaultTo = "",
+  defaultSubject = "",
+  defaultBody = "",
+  mode = 'compose',
 }: ComposeEmailDialogProps) {
   const [to, setTo] = useState(defaultTo);
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
+  const [subject, setSubject] = useState(defaultSubject);
+  const [body, setBody] = useState(defaultBody);
   const [sending, setSending] = useState(false);
+
+  // Reset fields when dialog opens with new defaults
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isOpen) {
+      setTo(defaultTo);
+      setSubject(defaultSubject);
+      setBody(defaultBody);
+    }
+    onOpenChange(isOpen);
+  };
 
   const handleSend = async () => {
     if (!to.trim()) {
@@ -75,21 +91,29 @@ export function ComposeEmailDialog({
   };
 
   const handleClose = () => {
-    setTo(defaultTo);
+    setTo("");
     setSubject("");
     setBody("");
     onOpenChange(false);
   };
 
+  const getTitle = () => {
+    switch (mode) {
+      case 'reply': return 'Responder Email';
+      case 'forward': return 'Encaminhar Email';
+      default: return 'Novo Email';
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
               <Send className="w-4 h-4 text-white" />
             </div>
-            Novo Email
+            {getTitle()}
           </DialogTitle>
         </DialogHeader>
 
