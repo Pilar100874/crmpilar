@@ -1080,7 +1080,7 @@ export default function MobilePOSLayout({
                       )}
 
                       {regrasAplicadas.length > 0 && (
-                        <div className="flex justify-between text-sm text-green-600">
+                        <div className="flex justify-between text-sm text-orange-600 dark:text-orange-400">
                           <span className="flex items-center gap-1">
                             <Tag className="h-3.5 w-3.5" />
                             Desconto ({regrasAplicadas.length} regras)
@@ -1175,14 +1175,14 @@ export default function MobilePOSLayout({
 
               {/* Regras Aplicadas */}
               {regrasAplicadas.length > 0 && (
-                <Card className="p-4 border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/30">
+                <Card className="p-4 border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/30">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-medium flex items-center gap-2 text-green-700 dark:text-green-300">
+                    <h3 className="text-sm font-medium flex items-center gap-2 text-orange-700 dark:text-orange-300">
                       <Tag className="h-4 w-4" />
                       Regras Aplicadas ({regrasAplicadas.length})
                     </h3>
                     {getTotal() > valorComRegras && (
-                      <Badge className="bg-green-500 text-white">
+                      <Badge className="bg-orange-500 text-white">
                         -{formatCurrency(getTotal() - valorComRegras)}
                       </Badge>
                     )}
@@ -1191,12 +1191,12 @@ export default function MobilePOSLayout({
                     {regrasAplicadas.map((regra, index) => (
                       <div key={index} className="bg-background/80 rounded p-2 border border-border/50">
                         <div className="flex items-start gap-2">
-                          <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <Check className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
                           <div className="flex-1">
                             <p className="font-medium text-sm">{regra.nome}</p>
                             <p className="text-xs text-muted-foreground">{regra.detalhes}</p>
                             {regra.desconto !== undefined && regra.desconto > 0 && (
-                              <p className="text-xs text-green-600 mt-1">
+                              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
                                 Desconto: {formatCurrency(regra.desconto)}
                                 {regra.percentual ? ` (${regra.percentual}%)` : ''}
                               </p>

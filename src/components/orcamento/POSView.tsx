@@ -1796,12 +1796,12 @@ export default function POSView({
               {showRegrasInDetails && regrasAplicadas.length > 0 ? (
                 <div className="space-y-2">
                   {/* Header das Regras */}
-                  <div className="bg-green-50 dark:bg-green-950/30 rounded p-2.5 border border-green-200 dark:border-green-800">
-                    <h4 className="text-xs font-medium text-green-700 dark:text-green-300 mb-1 flex items-center gap-2">
+                  <div className="bg-orange-50 dark:bg-orange-950/30 rounded p-2.5 border border-orange-200 dark:border-orange-800">
+                    <h4 className="text-xs font-medium text-orange-700 dark:text-orange-300 mb-1 flex items-center gap-2">
                       <Tag className="w-3.5 h-3.5" />
                       Regras Aplicadas ({regrasAplicadas.length})
                     </h4>
-                    <p className="text-[10px] text-green-600 dark:text-green-400">
+                    <p className="text-[10px] text-orange-600 dark:text-orange-400">
                       Economia total: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(getTotal() - valorComRegras)}
                     </p>
                   </div>
@@ -1814,8 +1814,8 @@ export default function POSView({
                       onClick={() => setExpandedRegraIndex(expandedRegraIndex === index ? null : index)}
                     >
                       <div className="p-2.5 flex items-start gap-2">
-                        <div className="p-1 rounded-full bg-green-500/10 mt-0.5">
-                          <Check className="w-3 h-3 text-green-600" />
+                        <div className="p-1 rounded-full bg-orange-500/10 mt-0.5">
+                          <Check className="w-3 h-3 text-orange-600" />
                         </div>
                         <div className="flex-1">
                           <p className="text-xs text-foreground font-medium">{regra.nome}</p>
@@ -1823,7 +1823,7 @@ export default function POSView({
                             <div className="mt-2 pt-2 border-t border-border/50 space-y-1">
                               <p className="text-xs text-muted-foreground">{regra.detalhes}</p>
                               {regra.desconto !== undefined && regra.desconto > 0 && (
-                                <p className="text-xs text-green-600">
+                                <p className="text-xs text-orange-600 dark:text-orange-400">
                                   Desconto: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(regra.desconto)}
                                   {regra.percentual ? ` (${regra.percentual}%)` : ''}
                                 </p>
@@ -2083,11 +2083,11 @@ export default function POSView({
 
                   {/* Custo do Frete */}
                   {freteResult && (
-                    <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 rounded-lg p-3 border border-emerald-200/50 dark:border-emerald-800/50">
-                      <h4 className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 mb-2">Custo do Frete</h4>
+                    <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 rounded-lg p-3 border border-orange-200/50 dark:border-orange-800/50">
+                      <h4 className="text-xs font-semibold text-orange-700 dark:text-orange-300 mb-2">Custo do Frete</h4>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs text-muted-foreground">Total</span>
-                        <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                        <span className="text-xl font-bold text-orange-600 dark:text-orange-400">
                           {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(freteResult.custoTotal)}
                         </span>
                       </div>
@@ -2325,10 +2325,10 @@ export default function POSView({
               <span className="text-muted-foreground/60 font-medium text-base line-through">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(getTotal())}
               </span>
-              <span className="text-emerald-600 font-bold text-2xl flex items-center gap-1.5">
+              <span className="text-orange-600 font-bold text-2xl flex items-center gap-1.5">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorComRegras)}
                 <span 
-                  className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white text-[11px] font-bold flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+                  className="w-6 h-6 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 text-white text-[11px] font-bold flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
                   onClick={() => setActiveTab("frete")}
                   title={`${regrasAplicadas.length} regra(s) aplicada(s)`}
                 >
@@ -2554,7 +2554,7 @@ export default function POSView({
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Tag className="w-5 h-5 text-green-600" />
+              <Tag className="w-5 h-5 text-orange-600" />
               Regras de Automação Aplicadas
             </DialogTitle>
           </DialogHeader>
@@ -2574,7 +2574,7 @@ export default function POSView({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Valor com Desconto</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-2xl font-bold text-orange-600">
                     {new Intl.NumberFormat('pt-BR', {
                       style: 'currency',
                       currency: 'BRL'
@@ -2586,7 +2586,7 @@ export default function POSView({
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-muted-foreground">Desconto Total</span>
                   <div className="text-right">
-                    <span className="text-lg font-bold text-green-600">
+                    <span className="text-lg font-bold text-orange-600">
                       {new Intl.NumberFormat('pt-BR', {
                         style: 'currency',
                         currency: 'BRL'
@@ -2609,14 +2609,14 @@ export default function POSView({
                 {regrasAplicadas.map((regra, index) => (
                   <Card key={index} className="p-3 border-border hover:border-primary/50 transition-colors">
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                        <Check className="w-4 h-4 text-green-600" />
+                      <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                        <Check className="w-4 h-4 text-orange-600" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-foreground mb-1">{regra.nome}</p>
                         <p className="text-sm text-muted-foreground">{regra.detalhes}</p>
                       </div>
-                      <Badge variant="outline" className="bg-green-500/5 text-green-600 border-green-500/20 flex-shrink-0">
+                      <Badge variant="outline" className="bg-orange-500/5 text-orange-600 border-orange-500/20 flex-shrink-0">
                         Ativa
                       </Badge>
                     </div>
