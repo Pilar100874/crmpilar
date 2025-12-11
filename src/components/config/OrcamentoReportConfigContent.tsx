@@ -6,14 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, Save, Eye, Image, FileText, Settings2, Palette } from "lucide-react";
+import { Save, Eye, FileText, Settings2, Palette, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 
 interface ReportConfig {
-  logo_url: string;
   empresa_nome: string;
   empresa_endereco: string;
   empresa_telefone: string;
@@ -22,7 +21,6 @@ interface ReportConfig {
   empresa_website: string;
   titulo_relatorio: string;
   subtitulo_relatorio: string;
-  mostrar_logo: boolean;
   mostrar_data: boolean;
   mostrar_numero_orcamento: boolean;
   mostrar_vendedor: boolean;
@@ -48,7 +46,6 @@ interface ReportConfig {
 }
 
 const defaultConfig: ReportConfig = {
-  logo_url: "",
   empresa_nome: "",
   empresa_endereco: "",
   empresa_telefone: "",
@@ -57,7 +54,6 @@ const defaultConfig: ReportConfig = {
   empresa_website: "",
   titulo_relatorio: "ORÇAMENTO",
   subtitulo_relatorio: "",
-  mostrar_logo: true,
   mostrar_data: true,
   mostrar_numero_orcamento: true,
   mostrar_vendedor: true,
@@ -88,12 +84,7 @@ interface OrcamentoReportConfigContentProps {
 
 export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoReportConfigContentProps) {
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [localConfig, setLocalConfig] = useState<ReportConfig | null>(null);
-  
-  // IDs únicos para evitar conflitos
-  const inputIdChange = `logo-input-change-${estabelecimentoId}`;
-  const inputIdUpload = `logo-input-upload-${estabelecimentoId}`;
 
   // Usar useQuery para carregar a configuração de forma estável
   const { data: savedConfig, isLoading: configLoading, isSuccess } = useQuery({
@@ -176,59 +167,6 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
     }
   };
 
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !estabelecimentoId) return;
-
-    e.target.value = "";
-    setUploading(true);
-    
-    try {
-      const fileExt = file.name.split(".").pop()?.toLowerCase();
-      const fileName = `${estabelecimentoId}/logo_orcamento.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("report-assets")
-        .upload(fileName, file, { upsert: true, contentType: file.type });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("report-assets")
-        .getPublicUrl(fileName);
-
-      const newLogoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-      const newConfig = { ...config, logo_url: newLogoUrl };
-      setConfig(newConfig);
-      
-      const saved = await saveConfigToDb(newConfig);
-      if (saved) {
-        toast.success("Logo enviado com sucesso!");
-      } else {
-        toast.error("Erro ao salvar logo");
-      }
-    } catch (error) {
-      console.error("Erro ao enviar logo:", error);
-      toast.error("Erro ao enviar logo");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleRemoveLogo = async () => {
-    if (!estabelecimentoId) return;
-    
-    const newConfig = { ...config, logo_url: "" };
-    setConfig(newConfig);
-    
-    const saved = await saveConfigToDb(newConfig);
-    if (saved) {
-      toast.success("Logo removido com sucesso!");
-    } else {
-      toast.error("Erro ao remover logo");
-    }
-  };
-
   const updateConfig = (key: keyof ReportConfig, value: any) => {
     setConfig({ ...config, [key]: value });
   };
@@ -248,8 +186,8 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
       <Tabs defaultValue="empresa" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="empresa" className="flex items-center gap-2">
-            <Image className="h-4 w-4" />
-            <span className="hidden sm:inline">Empresa & Logo</span>
+            <Building2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Empresa</span>
           </TabsTrigger>
           <TabsTrigger value="campos" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -265,132 +203,17 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
           </TabsTrigger>
         </TabsList>
 
-        {/* Empresa & Logo */}
+        {/* Dados da Empresa */}
         <TabsContent value="empresa">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Image className="h-5 w-5" />
-                  Logo da Empresa
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Switch
-                    checked={config.mostrar_logo}
-                    onCheckedChange={(v) => updateConfig("mostrar_logo", v)}
-                  />
-                  <Label>Exibir logo no relatório</Label>
-                </div>
-                
-                {/* Debug info completo */}
-                <div className="text-xs text-red-500 mb-2 p-2 bg-red-50 rounded border border-red-200">
-                  <p>Debug: configLoading={String(configLoading)}</p>
-                  <p>logo_url: {config.logo_url || "(vazio)"}</p>
-                </div>
-                
-                {/* Logo section - sempre mostra algo */}
-                <div className="border rounded-lg p-4 flex flex-col items-center gap-4 bg-gray-50">
-                  {configLoading ? (
-                    <p className="text-sm text-muted-foreground">Carregando...</p>
-                  ) : config.logo_url ? (
-                    <>
-                      <div 
-                        className="border-2 border-dashed border-gray-300 p-2 bg-white flex items-center justify-center overflow-visible" 
-                        style={{ minHeight: '150px', minWidth: '200px' }}
-                      >
-                        {/* Imagem com estilos inline forçados */}
-                        <img
-                          src={config.logo_url}
-                          alt="Logo da Empresa"
-                          width="150"
-                          height="100"
-                          style={{ 
-                            width: '150px',
-                            height: 'auto',
-                            maxHeight: '120px',
-                            objectFit: 'contain',
-                            display: 'block',
-                            visibility: 'visible',
-                            opacity: 1
-                          }}
-                          onLoad={(e) => {
-                            const img = e.currentTarget as HTMLImageElement;
-                            console.log("Logo carregado - dimensões:", img.naturalWidth, "x", img.naturalHeight, "rendered:", img.width, "x", img.height);
-                          }}
-                          onError={(e) => {
-                            console.log("Erro ao carregar imagem:", config.logo_url);
-                            (e.currentTarget as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50"><text x="10" y="30" fill="red">Erro ao carregar</text></svg>';
-                          }}
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate max-w-full">
-                        {config.logo_url.split('/').pop()?.split('?')[0]}
-                      </p>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          disabled={uploading}
-                          onClick={() => document.getElementById(inputIdChange)?.click()}
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          {uploading ? "Enviando..." : "Alterar"}
-                        </Button>
-                        <input
-                          id={inputIdChange}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleLogoUpload}
-                          disabled={uploading}
-                        />
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={handleRemoveLogo}
-                          disabled={uploading}
-                        >
-                          Remover
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <Button 
-                        variant="outline" 
-                        disabled={uploading}
-                        onClick={() => document.getElementById(inputIdUpload)?.click()}
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        {uploading ? "Enviando..." : "Enviar Logo"}
-                      </Button>
-                      <input
-                        id={inputIdUpload}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleLogoUpload}
-                        disabled={uploading}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        PNG, JPG ou SVG (máx. 2MB)
-                      </p>
-                    </>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Settings2 className="h-5 w-5" />
-                  Dados da Empresa
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Settings2 className="h-5 w-5" />
+                Dados da Empresa
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Nome da Empresa</Label>
                   <Input
@@ -407,69 +230,69 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                     placeholder="00.000.000/0000-00"
                   />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Endereço</Label>
+                <Input
+                  value={config.empresa_endereco}
+                  onChange={(e) => updateConfig("empresa_endereco", e.target.value)}
+                  placeholder="Rua, número, bairro - Cidade/UF"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Endereço</Label>
+                  <Label>Telefone</Label>
                   <Input
-                    value={config.empresa_endereco}
-                    onChange={(e) => updateConfig("empresa_endereco", e.target.value)}
-                    placeholder="Rua, Número, Cidade - UF"
+                    value={config.empresa_telefone}
+                    onChange={(e) => updateConfig("empresa_telefone", e.target.value)}
+                    placeholder="(00) 0000-0000"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Telefone</Label>
-                    <Input
-                      value={config.empresa_telefone}
-                      onChange={(e) => updateConfig("empresa_telefone", e.target.value)}
-                      placeholder="(00) 0000-0000"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>E-mail</Label>
-                    <Input
-                      value={config.empresa_email}
-                      onChange={(e) => updateConfig("empresa_email", e.target.value)}
-                      placeholder="contato@empresa.com"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label>E-mail</Label>
+                  <Input
+                    value={config.empresa_email}
+                    onChange={(e) => updateConfig("empresa_email", e.target.value)}
+                    placeholder="email@empresa.com"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Website</Label>
                   <Input
                     value={config.empresa_website}
                     onChange={(e) => updateConfig("empresa_website", e.target.value)}
-                    placeholder="www.empresa.com.br"
+                    placeholder="www.empresa.com"
                   />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="text-lg">Título e Subtítulo</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Título do Relatório</Label>
-                    <Input
-                      value={config.titulo_relatorio}
-                      onChange={(e) => updateConfig("titulo_relatorio", e.target.value)}
-                      placeholder="ORÇAMENTO"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Subtítulo (opcional)</Label>
-                    <Input
-                      value={config.subtitulo_relatorio}
-                      onChange={(e) => updateConfig("subtitulo_relatorio", e.target.value)}
-                      placeholder="Proposta Comercial"
-                    />
-                  </div>
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Título e Subtítulo</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Título do Relatório</Label>
+                  <Input
+                    value={config.titulo_relatorio}
+                    onChange={(e) => updateConfig("titulo_relatorio", e.target.value)}
+                    placeholder="ORÇAMENTO"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div className="space-y-2">
+                  <Label>Subtítulo (opcional)</Label>
+                  <Input
+                    value={config.subtitulo_relatorio}
+                    onChange={(e) => updateConfig("subtitulo_relatorio", e.target.value)}
+                    placeholder="Proposta Comercial"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Campos */}
@@ -740,63 +563,21 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
               </CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
-{/* Debug no preview */}
-              <div className="text-xs text-blue-600 mb-4 p-2 bg-blue-50 rounded border border-blue-200 break-all">
-                <p>Preview Debug:</p>
-                <p>mostrar_logo: {String(config.mostrar_logo)}</p>
-                <p>logo_url: {config.logo_url || "VAZIO"}</p>
-              </div>
-              
-              {/* TESTE DIRETO DA IMAGEM - SEM CONDIÇÃO */}
-              <div className="mb-4 p-2 border-4 border-green-500 bg-yellow-100">
-                <p className="text-sm mb-2 text-black font-bold">Teste img tag direta (sempre visível):</p>
-                <p className="text-xs text-gray-700 mb-2">URL: {config.logo_url?.substring(0, 50)}...</p>
-                <img 
-                  src={config.logo_url || "https://via.placeholder.com/100"} 
-                  alt="teste logo" 
-                  width={100}
-                  height={100}
-                  style={{ backgroundColor: '#fff', border: '2px solid red', display: 'block' }}
-                  onLoad={() => console.log('Imagem carregou!')}
-                  onError={(e) => {
-                    console.log('Erro ao carregar:', e);
-                    (e.target as HTMLImageElement).style.border = '2px solid orange';
-                  }}
-                />
-              </div>
-              
               <div 
                 className="bg-white text-black p-8 rounded-lg shadow-lg mx-auto"
                 style={{ maxWidth: "210mm", minHeight: "297mm" }}
               >
                 {/* Header */}
                 <div className="flex justify-between items-start mb-6 pb-4 border-b-2" style={{ borderColor: config.cor_primaria }}>
-                  <div className="flex items-center gap-4">
-                    {config.mostrar_logo && config.logo_url ? (
-                      <div 
-                        style={{ 
-                          width: '80px', 
-                          height: '80px', 
-                          backgroundImage: `url(${config.logo_url})`,
-                          backgroundSize: 'contain',
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'center',
-                          border: '1px solid #ccc',
-                          flexShrink: 0
-                        }}
-                        title="Logo"
-                      />
-                    ) : null}
-                    <div>
-                      <h1 className="text-xl font-bold" style={{ color: config.cor_primaria }}>
-                        {config.empresa_nome || "Nome da Empresa"}
-                      </h1>
-                      {config.empresa_cnpj && <p className="text-xs text-gray-600">CNPJ: {config.empresa_cnpj}</p>}
-                      {config.empresa_endereco && <p className="text-xs text-gray-600">{config.empresa_endereco}</p>}
-                      <p className="text-xs text-gray-600">
-                        {[config.empresa_telefone, config.empresa_email].filter(Boolean).join(" | ")}
-                      </p>
-                    </div>
+                  <div>
+                    <h1 className="text-xl font-bold" style={{ color: config.cor_primaria }}>
+                      {config.empresa_nome || "Nome da Empresa"}
+                    </h1>
+                    {config.empresa_cnpj && <p className="text-xs text-gray-600">CNPJ: {config.empresa_cnpj}</p>}
+                    {config.empresa_endereco && <p className="text-xs text-gray-600">{config.empresa_endereco}</p>}
+                    <p className="text-xs text-gray-600">
+                      {[config.empresa_telefone, config.empresa_email].filter(Boolean).join(" | ")}
+                    </p>
                   </div>
                   <div className="text-right">
                     <h2 className="text-2xl font-bold" style={{ color: config.cor_primaria }}>
