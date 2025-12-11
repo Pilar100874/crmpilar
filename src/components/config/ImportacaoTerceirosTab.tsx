@@ -4,8 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { 
   ArrowLeft, ArrowRight, CheckCircle2, Plus, Pencil, Trash2, FileSpreadsheet,
-  Calendar, Globe, MoreVertical, Edit, CheckCircle, XCircle, FileText
+  Calendar, Globe, MoreVertical, Edit, CheckCircle, XCircle, FileText, Type
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ImportWizardStep0 } from "@/components/importacao/ImportWizardStep0";
 import { ImportWizardStep1 } from "@/components/importacao/ImportWizardStep1";
 import { ImportWizardStep2 } from "@/components/importacao/ImportWizardStep2";
@@ -62,6 +71,9 @@ export function ImportacaoTerceirosTab({ estabelecimentoId }: ImportacaoTerceiro
   const [relatorioToDelete, setRelatorioToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [datePopoverOpen, setDatePopoverOpen] = useState<string | null>(null);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [relatorioToRename, setRelatorioToRename] = useState<Relatorio | null>(null);
+  const [newName, setNewName] = useState("");
 
   // Wizard state
   const [currentStep, setCurrentStep] = useState(0);
@@ -230,6 +242,28 @@ export function ImportacaoTerceirosTab({ estabelecimentoId }: ImportacaoTerceiro
 
     navigator.clipboard.writeText(apiEndpoint);
     toast.success("URL da API copiada!");
+  };
+
+  const handleRename = async () => {
+    if (!relatorioToRename || !newName.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from("relatorios_importacao")
+        .update({ nome: newName.trim() })
+        .eq("id", relatorioToRename.id);
+
+      if (error) throw error;
+
+      toast.success("Relatório renomeado com sucesso!");
+      setRenameDialogOpen(false);
+      setRelatorioToRename(null);
+      setNewName("");
+      loadRelatorios();
+    } catch (error: any) {
+      console.error("Erro ao renomear relatório:", error);
+      toast.error("Erro ao renomear relatório");
+    }
   };
 
   const handleDuplicate = async (relatorioId: string) => {
@@ -810,6 +844,15 @@ export function ImportacaoTerceirosTab({ estabelecimentoId }: ImportacaoTerceiro
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={(e) => {
                       e.stopPropagation();
+                      setRelatorioToRename(relatorio);
+                      setNewName(relatorio.nome);
+                      setRenameDialogOpen(true);
+                    }}>
+                      <Type className="h-4 w-4 mr-2" />
+                      Renomear
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
                       handleToggleAtivo(relatorio.id, relatorio.ativo);
                     }}>
                       {relatorio.ativo ? (
@@ -988,6 +1031,36 @@ export function ImportacaoTerceirosTab({ estabelecimentoId }: ImportacaoTerceiro
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={renameDialogOpen} onOpenChange={(open) => {
+        setRenameDialogOpen(open);
+        if (!open) {
+          setRelatorioToRename(null);
+          setNewName("");
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear Relatório</DialogTitle>
+            <DialogDescription>
+              Digite o novo nome para o relatório.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Nome do relatório"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleRename} disabled={!newName.trim()}>
+              Renomear
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
