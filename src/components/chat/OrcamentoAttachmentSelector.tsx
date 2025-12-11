@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
-import { FileText, Search, Link2, FileDown, User, DollarSign, Calendar } from "lucide-react";
+import { Receipt, Search, Link2, FileDown, User, DollarSign, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import jsPDF from "jspdf";
@@ -281,7 +281,7 @@ export default function OrcamentoAttachmentSelector({
                 className={open ? toolbarBtnActiveClass : toolbarBtnClass}
                 disabled={disabled}
               >
-                <FileText size={18} />
+                <Receipt size={18} />
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
