@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -3710,15 +3710,29 @@ ${recentMessages}
                             ) : (
                               <div className="mt-1.5 space-y-1">
                                 {msg.attachments.map((attachment, idx) => (
-                                  <a
+                                  <button
                                     key={idx}
-                                    href={attachment}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="block"
+                                    onClick={async () => {
+                                      try {
+                                        const response = await fetch(attachment);
+                                        const blob = await response.blob();
+                                        const blobUrl = window.URL.createObjectURL(blob);
+                                        const link = document.createElement('a');
+                                        link.href = blobUrl;
+                                        link.download = msg.payload?.fileName || 'arquivo';
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                        window.URL.revokeObjectURL(blobUrl);
+                                      } catch (error) {
+                                        console.error('Erro ao baixar arquivo:', error);
+                                        window.open(attachment, '_blank');
+                                      }
+                                    }}
+                                    className="block w-full text-left"
                                   >
-                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-background/80 border border-border/60 hover:bg-background transition-colors text-xs">
-                                      <File className="h-4 w-4 text-primary" />
+                                    <div className="flex items-center gap-2 p-2 rounded-lg bg-background/80 border border-border/60 hover:bg-background transition-colors text-xs cursor-pointer">
+                                      <Download className="h-4 w-4 text-primary" />
                                       <div className="flex flex-col min-w-0">
                                         <span className="font-medium truncate">
                                           {msg.payload?.fileName || "Arquivo"}
@@ -3728,7 +3742,7 @@ ${recentMessages}
                                         </span>
                                       </div>
                                     </div>
-                                  </a>
+                                  </button>
                                 ))}
                               </div>
                             )
