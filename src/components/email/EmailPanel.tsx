@@ -67,6 +67,7 @@ interface EmailPanelProps {
   showDetailsToggle?: boolean;
   onReply?: (email: Email) => void;
   onForward?: (email: Email) => void;
+  toolsSlot?: React.ReactNode;
 }
 
 const folders = [
@@ -92,6 +93,7 @@ export function EmailPanel({
   showDetailsToggle,
   onReply,
   onForward,
+  toolsSlot,
 }: EmailPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -200,6 +202,7 @@ export function EmailPanel({
               <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-red-50 dark:hover:bg-red-950/30 text-destructive">
                 <Trash2 className="w-4 h-4" />
               </Button>
+              {toolsSlot}
               {showDetailsToggle && (
                 <Button 
                   variant="ghost" 
