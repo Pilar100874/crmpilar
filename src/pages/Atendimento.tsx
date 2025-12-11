@@ -999,8 +999,21 @@ export default function Atendimento() {
         }
       }
 
-      // If no emails from remote, fallback to local database
-      if (emails.length === 0) {
+      // Also load sent emails from local database
+      const { data: sentEmailsData } = await supabase
+        .from('emails')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('folder', 'sent')
+        .order('date', { ascending: false })
+        .limit(50);
+
+      if (sentEmailsData && sentEmailsData.length > 0) {
+        emails = [...emails, ...sentEmailsData];
+      }
+
+      // If no emails from remote, fallback to local database for inbox
+      if (emails.filter(e => e.folder === 'inbox').length === 0) {
         const { data: emailsData, error } = await supabase
           .from('emails')
           .select('*')
@@ -1010,13 +1023,85 @@ export default function Atendimento() {
           .limit(50);
 
         if (!error && emailsData) {
-          emails = emailsData;
+          emails = [...emails.filter(e => e.folder === 'sent'), ...emailsData];
         }
       }
 
       setUserEmails(emails);
     } catch (error) {
       console.error("Erro ao carregar emails:", error);
+    }
+  };
+
+  // Send email function
+  const handleSendEmail = async (emailData: { to: string; subject: string; body: string; attachments?: any[] }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) throw new Error('Estabelecimento não encontrado');
+
+      // Check email mode configuration
+      const { data: emailConfigs } = await supabase
+        .from('email_oauth_config')
+        .select('provider, enabled')
+        .eq('estabelecimento_id', estabId);
+
+      const googleEnabled = emailConfigs?.find((c: any) => c.provider === 'google')?.enabled;
+      const externalEnabled = emailConfigs?.find((c: any) => c.provider === 'external_server')?.enabled;
+
+      let functionName = 'send-email-smtp';
+      if (googleEnabled) {
+        functionName = 'gmail-send-email';
+      }
+
+      // Send email via edge function
+      const { error: sendError } = await supabase.functions.invoke(functionName, {
+        body: {
+          to: emailData.to,
+          subject: emailData.subject,
+          body: emailData.body,
+          html: `<p>${emailData.body.replace(/\n/g, '<br>')}</p>`
+        }
+      });
+
+      if (sendError) throw sendError;
+
+      // Get user's email from usuarios table
+      const { data: usuarioData } = await supabase
+        .from('usuarios')
+        .select('email')
+        .eq('auth_user_id', user.id)
+        .single();
+
+      const fromEmail = usuarioData?.email || user.email || '';
+
+      // Save sent email to local database
+      const { error: insertError } = await supabase
+        .from('emails')
+        .insert({
+          user_id: user.id,
+          from_email: fromEmail,
+          to_email: emailData.to,
+          subject: emailData.subject,
+          body: emailData.body,
+          folder: 'sent',
+          read: true,
+          starred: false,
+          date: new Date().toISOString()
+        });
+
+      if (insertError) {
+        console.error('Erro ao salvar email enviado:', insertError);
+      }
+
+      // Reload emails to update the list
+      await loadUserEmails();
+
+    } catch (error: any) {
+      console.error('Erro ao enviar email:', error);
+      throw error;
     }
   };
   
@@ -2886,6 +2971,7 @@ ${recentMessages}
           <ComposeEmailDialog
             open={showComposeEmail}
             onOpenChange={setShowComposeEmail}
+            onSend={handleSendEmail}
             mode={composeEmailMode}
             defaultTo={composeEmailDefaults.to}
             defaultSubject={composeEmailDefaults.subject}
@@ -4396,6 +4482,7 @@ ${recentMessages}
       <ComposeEmailDialog
         open={showComposeEmail}
         onOpenChange={setShowComposeEmail}
+        onSend={handleSendEmail}
         mode={composeEmailMode}
         defaultTo={composeEmailDefaults.to}
         defaultSubject={composeEmailDefaults.subject}

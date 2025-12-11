@@ -87,23 +87,15 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
   };
 
   const handleToolClick = (toolId: string) => {
-    // Toggle sub-menu for tools that have them
-    if (activeToolId === toolId) {
-      setActiveToolId(null);
-    } else {
-      setActiveToolId(toolId);
-    }
-    
-    // For tools without sub-menus, trigger action directly
-    if (!hasSubMenu(toolId)) {
-      onToolAction?.(toolId);
-      setShowToolsMenu(false);
-    }
+    // For tools without sub-menus, trigger action directly and close menu
+    onToolAction?.(toolId);
+    setShowToolsMenu(false);
+    setActiveToolId(null);
   };
 
   const hasSubMenu = (toolId: string) => {
-    // Tools with sub-menus
-    return ['tool-attachments', 'tool-translate'].includes(toolId);
+    // Tools with sub-menus (Anexos Rápidos has reports sub-menu)
+    return ['tool-attachments'].includes(toolId);
   };
 
   const handleTranslate = async () => {
