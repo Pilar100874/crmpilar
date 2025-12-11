@@ -179,18 +179,69 @@ export default function OrcamentoReportConfig() {
 
       // Add timestamp to force cache refresh
       const logoUrlWithTimestamp = `${urlData.publicUrl}?t=${Date.now()}`;
-      setConfig(prev => ({ ...prev, logo_url: logoUrlWithTimestamp }));
-      toast.success("Logo enviado com sucesso!");
+      
+      // Update state and save to database
+      const newConfig = { ...config, logo_url: logoUrlWithTimestamp };
+      setConfig(newConfig);
+      
+      // Save to database immediately
+      const { data: existing } = await supabase
+        .from("orcamento_report_config" as any)
+        .select("id")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("orcamento_report_config" as any)
+          .update({ config_json: newConfig, updated_at: new Date().toISOString() })
+          .eq("id", (existing as any).id);
+      } else {
+        await supabase
+          .from("orcamento_report_config" as any)
+          .insert({ estabelecimento_id: estabelecimentoId, config_json: newConfig });
+      }
+      
+      toast.success("Logo enviado e salvo com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar logo:", error);
       toast.error("Erro ao enviar logo");
     } finally {
       setUploading(false);
+      // Reset file input
+      e.target.value = "";
     }
   };
 
   const updateConfig = (key: keyof ReportConfig, value: any) => {
     setConfig({ ...config, [key]: value });
+  };
+
+  const handleRemoveLogo = async () => {
+    if (!estabelecimentoId) return;
+    
+    try {
+      const newConfig = { ...config, logo_url: "" };
+      setConfig(newConfig);
+      
+      const { data: existing } = await supabase
+        .from("orcamento_report_config" as any)
+        .select("id")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("orcamento_report_config" as any)
+          .update({ config_json: newConfig, updated_at: new Date().toISOString() })
+          .eq("id", (existing as any).id);
+      }
+      
+      toast.success("Logo removido com sucesso!");
+    } catch (error) {
+      console.error("Erro ao remover logo:", error);
+      toast.error("Erro ao remover logo");
+    }
   };
 
   return (
@@ -281,7 +332,7 @@ export default function OrcamentoReportConfig() {
                         <Button 
                           variant="destructive" 
                           size="sm"
-                          onClick={() => updateConfig("logo_url", "")}
+                          onClick={handleRemoveLogo}
                         >
                           Remover
                         </Button>
