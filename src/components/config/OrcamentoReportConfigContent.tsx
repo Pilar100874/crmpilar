@@ -711,11 +711,12 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                       <h1 className="text-xl font-bold" style={{ color: config.cor_primaria }}>
                         {config.empresa_nome || "Nome da Empresa"}
                       </h1>
-                      {config.empresa_cnpj && <p className="text-xs text-gray-600">CNPJ: {config.empresa_cnpj}</p>}
-                      {config.empresa_endereco && <p className="text-xs text-gray-600">{config.empresa_endereco}</p>}
+                      <p className="text-xs text-gray-600">CNPJ: {config.empresa_cnpj || "00.000.000/0001-00"}</p>
+                      <p className="text-xs text-gray-600">{config.empresa_endereco || "Endereço da Empresa"}</p>
                       <p className="text-xs text-gray-600">
-                        {[config.empresa_telefone, config.empresa_email].filter(Boolean).join(" | ")}
+                        {config.empresa_telefone || "(00) 0000-0000"} | {config.empresa_email || "email@empresa.com"}
                       </p>
+                      {config.empresa_website && <p className="text-xs text-gray-600">{config.empresa_website}</p>}
                     </div>
                   </div>
                   <div className="text-right">
