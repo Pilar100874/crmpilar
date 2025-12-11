@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,10 +10,23 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Send, X, Loader2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Send, X, Loader2, Wrench, FileText, Sparkles } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { ToolsDropdown } from "@/components/atendimento/ToolsDropdown";
 import { useFerramentasAtendimento, type TabType } from "@/hooks/useFerramentasAtendimento";
+
+interface OrcamentoData {
+  numero?: string;
+  cliente?: string;
+  valor_total?: number;
+  itens?: Array<{ nome: string; quantidade: number; valor_unitario: number }>;
+}
 
 interface ComposeEmailDialogProps {
   open: boolean;
@@ -24,6 +37,7 @@ interface ComposeEmailDialogProps {
   defaultBody?: string;
   mode?: 'compose' | 'reply' | 'forward';
   estabelecimentoId?: string | null;
+  orcamentoData?: OrcamentoData | null;
 }
 
 export function ComposeEmailDialog({
@@ -35,18 +49,61 @@ export function ComposeEmailDialog({
   defaultBody = "",
   mode = 'compose',
   estabelecimentoId = null,
+  orcamentoData = null,
 }: ComposeEmailDialogProps) {
   const [to, setTo] = useState(defaultTo);
   const [subject, setSubject] = useState(defaultSubject);
   const [body, setBody] = useState(defaultBody);
   const [sending, setSending] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
 
   const { getToolbarFerramentas } = useFerramentasAtendimento(estabelecimentoId);
   const ferramentasEmail = getToolbarFerramentas('email' as TabType);
 
+  // Filtrar ferramentas por tipo
+  const toolsFerramentas = ferramentasEmail.filter(f => f.tipo === 'ferramenta');
+  const iaFerramentas = ferramentasEmail.filter(f => f.tipo === 'ia');
+
+  const handleAnexarOrcamento = () => {
+    if (!orcamentoData) {
+      toast({
+        title: "Nenhum orçamento selecionado",
+        description: "Selecione um orçamento antes de anexar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const orcamentoText = `
+=== DADOS DO ORÇAMENTO ===
+Número: ${orcamentoData.numero || 'N/A'}
+Cliente: ${orcamentoData.cliente || 'N/A'}
+Valor Total: R$ ${orcamentoData.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+
+${orcamentoData.itens && orcamentoData.itens.length > 0 ? `Itens:
+${orcamentoData.itens.map(item => `- ${item.nome}: ${item.quantidade}x R$ ${item.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`).join('\n')}` : ''}
+===========================
+`;
+
+    setBody(prev => prev + orcamentoText);
+    setToolsOpen(false);
+    toast({
+      title: "Orçamento anexado",
+      description: "Os dados do orçamento foram adicionados ao email",
+    });
+  };
+
   const handleSelectTool = (ferramentaId: string) => {
-    console.log('Ferramenta selecionada no email:', ferramentaId);
-    // TODO: Implementar ações das ferramentas
+    if (ferramentaId === 'anexar_orcamento') {
+      handleAnexarOrcamento();
+    } else {
+      console.log('Ferramenta selecionada no email:', ferramentaId);
+      toast({
+        title: "Ferramenta",
+        description: `Ferramenta "${ferramentaId}" será implementada em breve`,
+      });
+    }
+    setToolsOpen(false);
   };
 
   // Reset fields when dialog opens with new defaults
@@ -165,11 +222,63 @@ export function ComposeEmailDialog({
           </div>
 
           <div className="flex items-center gap-2">
-            <ToolsDropdown
-              ferramentas={ferramentasEmail}
-              onSelectTool={handleSelectTool}
-              tabType="email"
-            />
+            <DropdownMenu open={toolsOpen} onOpenChange={setToolsOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <Wrench className="h-4 w-4" />
+                  <span className="hidden sm:inline">Ferramentas</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 bg-popover z-50">
+                {/* Ferramenta fixa: Anexar Orçamento */}
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                  Ferramentas
+                </div>
+                <DropdownMenuItem
+                  onClick={() => handleSelectTool('anexar_orcamento')}
+                  className="gap-2 cursor-pointer"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Anexar Orçamento</span>
+                </DropdownMenuItem>
+                
+                {toolsFerramentas.map(ferramenta => {
+                  const Icon = ferramenta.IconComponent;
+                  return (
+                    <DropdownMenuItem
+                      key={ferramenta.id}
+                      onClick={() => handleSelectTool(ferramenta.ferramenta_id)}
+                      className="gap-2 cursor-pointer"
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{ferramenta.nome}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
+                
+                {iaFerramentas.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Inteligência Artificial
+                    </div>
+                    {iaFerramentas.map(ferramenta => {
+                      const Icon = ferramenta.IconComponent;
+                      return (
+                        <DropdownMenuItem
+                          key={ferramenta.id}
+                          onClick={() => handleSelectTool(ferramenta.ferramenta_id)}
+                          className="gap-2 cursor-pointer"
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span>{ferramenta.nome}</span>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
