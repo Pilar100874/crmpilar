@@ -10,14 +10,22 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Send, X, Loader2 } from "lucide-react";
+import { Send, X, Loader2, FileText, FileSpreadsheet, Paperclip } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { EmailToolsMenu } from "./EmailToolsMenu";
+
+export interface EmailAttachment {
+  id: string;
+  name: string;
+  type: 'pdf' | 'excel' | 'file';
+  url?: string;
+  size?: string;
+}
 
 interface ComposeEmailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSend?: (email: { to: string; subject: string; body: string }) => Promise<void>;
+  onSend?: (email: { to: string; subject: string; body: string; attachments?: EmailAttachment[] }) => Promise<void>;
   defaultTo?: string;
   defaultSubject?: string;
   defaultBody?: string;
@@ -39,6 +47,7 @@ export function ComposeEmailDialog({
   const [subject, setSubject] = useState(defaultSubject);
   const [body, setBody] = useState(defaultBody);
   const [sending, setSending] = useState(false);
+  const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
 
   // Reset fields when dialog opens with new defaults
   const handleOpenChange = (isOpen: boolean) => {
@@ -46,6 +55,7 @@ export function ComposeEmailDialog({
       setTo(defaultTo);
       setSubject(defaultSubject);
       setBody(defaultBody);
+      setAttachments([]);
     }
     onOpenChange(isOpen);
   };
@@ -72,7 +82,7 @@ export function ComposeEmailDialog({
     setSending(true);
     try {
       if (onSend) {
-        await onSend({ to, subject, body });
+        await onSend({ to, subject, body, attachments });
       }
       toast({
         title: "Email enviado",
@@ -81,6 +91,7 @@ export function ComposeEmailDialog({
       setTo("");
       setSubject("");
       setBody("");
+      setAttachments([]);
       onOpenChange(false);
     } catch (error) {
       toast({
@@ -97,6 +108,7 @@ export function ComposeEmailDialog({
     setTo("");
     setSubject("");
     setBody("");
+    setAttachments([]);
     onOpenChange(false);
   };
 
@@ -104,11 +116,36 @@ export function ComposeEmailDialog({
     setBody(prev => prev + text);
   };
 
+  const handleAddAttachment = (attachment: EmailAttachment) => {
+    setAttachments(prev => {
+      // Avoid duplicates
+      if (prev.some(a => a.id === attachment.id)) {
+        return prev;
+      }
+      return [...prev, attachment];
+    });
+  };
+
+  const handleRemoveAttachment = (attachmentId: string) => {
+    setAttachments(prev => prev.filter(a => a.id !== attachmentId));
+  };
+
   const getTitle = () => {
     switch (mode) {
       case 'reply': return 'Responder Email';
       case 'forward': return 'Encaminhar Email';
       default: return 'Novo Email';
+    }
+  };
+
+  const getAttachmentIcon = (type: EmailAttachment['type']) => {
+    switch (type) {
+      case 'pdf':
+        return <FileText className="h-4 w-4 text-red-500" />;
+      case 'excel':
+        return <FileSpreadsheet className="h-4 w-4 text-green-600" />;
+      default:
+        return <Paperclip className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -158,6 +195,41 @@ export function ComposeEmailDialog({
               className="min-h-[200px] resize-none border-orange-100 focus:border-orange-300 focus:ring-orange-100 dark:border-orange-900/30 dark:focus:border-orange-700"
             />
           </div>
+
+          {/* Attachments Section */}
+          {attachments.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Paperclip className="h-4 w-4" />
+                Anexos ({attachments.length})
+              </Label>
+              <div className="flex flex-wrap gap-2 p-3 bg-muted/50 rounded-lg border border-border/50">
+                {attachments.map((attachment) => (
+                  <div 
+                    key={attachment.id}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-background rounded-lg border border-border/50 shadow-sm group hover:border-orange-300 transition-colors"
+                  >
+                    {getAttachmentIcon(attachment.type)}
+                    <span className="text-sm font-medium truncate max-w-[150px]">
+                      {attachment.name}
+                    </span>
+                    {attachment.size && (
+                      <span className="text-xs text-muted-foreground">
+                        ({attachment.size})
+                      </span>
+                    )}
+                    <button
+                      onClick={() => handleRemoveAttachment(attachment.id)}
+                      className="ml-1 p-0.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                      title="Remover anexo"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="flex items-center justify-between w-full">
@@ -166,6 +238,7 @@ export function ComposeEmailDialog({
             <EmailToolsMenu 
               estabelecimentoId={estabelecimentoId}
               onInsertText={handleInsertText}
+              onAddAttachment={handleAddAttachment}
               disabled={sending}
             />
           </div>
