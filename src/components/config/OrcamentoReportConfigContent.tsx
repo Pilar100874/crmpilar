@@ -755,18 +755,21 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                 {/* Header */}
                 <div className="flex justify-between items-start mb-6 pb-4 border-b-2" style={{ borderColor: config.cor_primaria }}>
                   <div className="flex items-center gap-4">
-                    {config.mostrar_logo && config.logo_url && (
-                      <img 
-                        src={config.logo_url} 
-                        alt="Logo" 
-                        className="h-16 object-contain"
-                        style={{ minWidth: '50px', minHeight: '50px' }}
-                        onError={(e) => {
-                          console.log("Preview logo erro");
-                          (e.currentTarget as HTMLImageElement).style.border = "2px solid red";
+                    {config.mostrar_logo && config.logo_url ? (
+                      <div 
+                        style={{ 
+                          width: '80px', 
+                          height: '80px', 
+                          backgroundImage: `url(${config.logo_url})`,
+                          backgroundSize: 'contain',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'center',
+                          border: '1px solid #ccc',
+                          flexShrink: 0
                         }}
+                        title="Logo"
                       />
-                    )}
+                    ) : null}
                     <div>
                       <h1 className="text-xl font-bold" style={{ color: config.cor_primaria }}>
                         {config.empresa_nome || "Nome da Empresa"}
