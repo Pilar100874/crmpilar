@@ -740,18 +740,28 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
               </CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
-              {/* Debug no preview */}
-              <div className="text-xs text-blue-600 mb-4 p-2 bg-blue-50 rounded border border-blue-200">
+{/* Debug no preview */}
+              <div className="text-xs text-blue-600 mb-4 p-2 bg-blue-50 rounded border border-blue-200 break-all">
                 <p>Preview Debug:</p>
-                <p>empresa_nome: "{config.empresa_nome}"</p>
-                <p>logo_url: {config.logo_url ? "SIM" : "NÃO"}</p>
                 <p>mostrar_logo: {String(config.mostrar_logo)}</p>
+                <p>logo_url: {config.logo_url || "VAZIO"}</p>
               </div>
               
-              {/* TESTE - texto grande e colorido */}
-              <div className="bg-red-500 text-white p-4 text-2xl font-bold mb-4">
-                TESTE: SE VOCÊ VER ISSO, O RENDER ESTÁ OK
-              </div>
+              {/* TESTE DIRETO DA IMAGEM */}
+              {config.logo_url && (
+                <div className="mb-4 p-2 border-2 border-green-500 bg-gray-100">
+                  <p className="text-sm mb-2 text-black">Teste img tag direta:</p>
+                  <img 
+                    src={config.logo_url} 
+                    alt="teste logo" 
+                    width={100}
+                    height={100}
+                    style={{ backgroundColor: '#fff', border: '1px solid red' }}
+                    onLoad={() => console.log('Imagem carregou!')}
+                    onError={(e) => console.log('Erro ao carregar:', e)}
+                  />
+                </div>
+              )}
               
               <div 
                 className="bg-white text-black p-8 rounded-lg shadow-lg mx-auto"
