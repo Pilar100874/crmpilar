@@ -90,10 +90,6 @@ export default function OrcamentoReportConfig() {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [configLoaded, setConfigLoaded] = useState(false);
 
-  // Debug logs
-  console.log("PAGE RENDER - configLoaded:", configLoaded);
-  console.log("PAGE RENDER - config.logo_url:", config.logo_url);
-  console.log("PAGE RENDER - config.empresa_nome:", config.empresa_nome);
   useEffect(() => {
     loadConfig();
   }, []);
