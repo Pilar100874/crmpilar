@@ -10,7 +10,7 @@ import { Save, Eye, FileText, Settings2, Palette, Building2, Upload, Trash2, Ima
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 interface ReportConfig {
   logo_url: string;
@@ -85,7 +85,6 @@ interface OrcamentoReportConfigContentProps {
 }
 
 export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoReportConfigContentProps) {
-  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [localConfig, setLocalConfig] = useState<ReportConfig | null>(null);
@@ -197,14 +196,15 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
         .getPublicUrl(fileName);
 
       const newLogoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-      const newConfig = { ...config, logo_url: newLogoUrl };
-      setLocalConfig(newConfig);
       
-      const saved = await saveConfigToDb(newConfig);
-      if (saved) {
-        queryClient.invalidateQueries({ queryKey: ['orcamento-report-config', estabelecimentoId] });
-        toast.success("Logo enviado com sucesso!");
-      }
+      // Atualiza state local imediatamente
+      setLocalConfig(prev => ({ ...(prev ?? config), logo_url: newLogoUrl }));
+      
+      // Salva no banco
+      const configToSave = { ...config, logo_url: newLogoUrl };
+      await saveConfigToDb(configToSave);
+      
+      toast.success("Logo enviado com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar logo:", error);
       toast.error("Erro ao enviar logo");
@@ -214,14 +214,11 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
   };
 
   const handleRemoveLogo = async () => {
-    const newConfig = { ...config, logo_url: "" };
-    setLocalConfig(newConfig);
+    setLocalConfig(prev => ({ ...(prev ?? config), logo_url: "" }));
     
-    const saved = await saveConfigToDb(newConfig);
-    if (saved) {
-      queryClient.invalidateQueries({ queryKey: ['orcamento-report-config', estabelecimentoId] });
-      toast.success("Logo removido!");
-    }
+    const configToSave = { ...config, logo_url: "" };
+    await saveConfigToDb(configToSave);
+    toast.success("Logo removido!");
   };
 
   return (
