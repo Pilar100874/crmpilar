@@ -229,10 +229,7 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-muted-foreground text-sm">Personalize o modelo do seu orçamento em PDF</p>
-        </div>
+      <div className="flex items-center justify-end">
         <Button onClick={handleSave} disabled={loading}>
           <Save className="h-4 w-4 mr-2" />
           {loading ? "Salvando..." : "Salvar Configuração"}
