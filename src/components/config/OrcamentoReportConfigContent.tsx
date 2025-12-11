@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -87,16 +87,16 @@ interface OrcamentoReportConfigContentProps {
 }
 
 export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoReportConfigContentProps) {
-  const [config, setConfig] = useState<ReportConfig>(defaultConfig);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [localConfig, setLocalConfig] = useState<ReportConfig | null>(null);
   
   // IDs únicos para evitar conflitos
   const inputIdChange = `logo-input-change-${estabelecimentoId}`;
   const inputIdUpload = `logo-input-upload-${estabelecimentoId}`;
 
   // Usar useQuery para carregar a configuração de forma estável
-  const { data: savedConfig, isLoading: configLoading, refetch } = useQuery({
+  const { data: savedConfig, isLoading: configLoading } = useQuery({
     queryKey: ['orcamento-report-config', estabelecimentoId],
     queryFn: async () => {
       const { data: configData, error } = await supabase
@@ -112,17 +112,22 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
       return defaultConfig;
     },
     enabled: !!estabelecimentoId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 0, // Always fetch fresh
+    gcTime: 0,
   });
 
-  // Sincronizar savedConfig com estado local quando carregar
-  useEffect(() => {
-    if (savedConfig) {
-      setConfig(savedConfig);
-    }
-  }, [savedConfig]);
-
+  // Config ativa: usa localConfig se existir (edições do usuário), senão savedConfig
+  const config = localConfig ?? savedConfig ?? defaultConfig;
   const configLoaded = !configLoading;
+  
+  // Função para atualizar config localmente
+  const setConfig = (newConfig: ReportConfig | ((prev: ReportConfig) => ReportConfig)) => {
+    if (typeof newConfig === 'function') {
+      setLocalConfig(prev => newConfig(prev ?? savedConfig ?? defaultConfig));
+    } else {
+      setLocalConfig(newConfig);
+    }
+  };
 
   const saveConfigToDb = async (configToSave: ReportConfig) => {
     if (!estabelecimentoId) return false;
