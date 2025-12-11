@@ -10,8 +10,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Send, X, Paperclip, Loader2 } from "lucide-react";
+import { Send, X, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { ToolsDropdown } from "@/components/atendimento/ToolsDropdown";
+import { useFerramentasAtendimento, type TabType } from "@/hooks/useFerramentasAtendimento";
 
 interface ComposeEmailDialogProps {
   open: boolean;
@@ -21,6 +23,7 @@ interface ComposeEmailDialogProps {
   defaultSubject?: string;
   defaultBody?: string;
   mode?: 'compose' | 'reply' | 'forward';
+  estabelecimentoId?: string | null;
 }
 
 export function ComposeEmailDialog({
@@ -31,11 +34,20 @@ export function ComposeEmailDialog({
   defaultSubject = "",
   defaultBody = "",
   mode = 'compose',
+  estabelecimentoId = null,
 }: ComposeEmailDialogProps) {
   const [to, setTo] = useState(defaultTo);
   const [subject, setSubject] = useState(defaultSubject);
   const [body, setBody] = useState(defaultBody);
   const [sending, setSending] = useState(false);
+
+  const { getToolbarFerramentas } = useFerramentasAtendimento(estabelecimentoId);
+  const ferramentasEmail = getToolbarFerramentas('email' as TabType);
+
+  const handleSelectTool = (ferramentaId: string) => {
+    console.log('Ferramenta selecionada no email:', ferramentaId);
+    // TODO: Implementar ações das ferramentas
+  };
 
   // Reset fields when dialog opens with new defaults
   const handleOpenChange = (isOpen: boolean) => {
@@ -153,10 +165,11 @@ export function ComposeEmailDialog({
           </div>
 
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2">
-              <Paperclip className="w-4 h-4" />
-              Anexar arquivo
-            </Button>
+            <ToolsDropdown
+              ferramentas={ferramentasEmail}
+              onSelectTool={handleSelectTool}
+              tabType="email"
+            />
           </div>
         </div>
 
