@@ -17,10 +17,10 @@ import jsPDF from "jspdf";
 const toolbarBtnClass = "h-9 w-9 rounded-xl bg-background border border-border/50 shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 hover:shadow-md";
 const toolbarBtnActiveClass = "h-9 w-9 rounded-xl bg-primary/15 border border-primary/40 shadow-sm flex items-center justify-center text-primary hover:bg-primary/20 transition-all duration-200";
 
-interface Orcamento {
+interface OrcamentoRaw {
   id: string;
-  cliente?: { nome: string; telefone?: string };
-  vendedor?: { nome: string };
+  cliente?: { nome: string; telefone?: string } | Array<{ nome: string; telefone?: string }>;
+  vendedor?: { nome: string } | Array<{ nome: string }>;
   valor_total: number;
   created_at: string;
   token_compartilhamento?: string;
@@ -29,7 +29,25 @@ interface Orcamento {
     quantidade: number;
     preco_unitario: number;
     subtotal: number;
-    produto?: { nome: string; codigo?: string };
+    produto?: { nome: string; codigo?: string } | Array<{ nome: string; codigo?: string }>;
+  }>;
+}
+
+interface Orcamento {
+  id: string;
+  clienteNome?: string;
+  clienteTelefone?: string;
+  vendedorNome?: string;
+  valor_total: number;
+  created_at: string;
+  token_compartilhamento?: string;
+  itens?: Array<{
+    id: string;
+    quantidade: number;
+    preco_unitario: number;
+    subtotal: number;
+    produtoNome?: string;
+    produtoCodigo?: string;
   }>;
 }
 
@@ -85,7 +103,35 @@ export default function OrcamentoAttachmentSelector({
         .limit(50);
 
       if (error) throw error;
-      setOrcamentos((data || []) as Orcamento[]);
+      
+      // Normaliza os dados do Supabase
+      const normalizedData: Orcamento[] = (data || []).map((raw: OrcamentoRaw) => {
+        const cliente = Array.isArray(raw.cliente) ? raw.cliente[0] : raw.cliente;
+        const vendedor = Array.isArray(raw.vendedor) ? raw.vendedor[0] : raw.vendedor;
+        
+        return {
+          id: raw.id,
+          clienteNome: cliente?.nome,
+          clienteTelefone: cliente?.telefone,
+          vendedorNome: vendedor?.nome,
+          valor_total: raw.valor_total,
+          created_at: raw.created_at,
+          token_compartilhamento: raw.token_compartilhamento,
+          itens: raw.itens?.map(item => {
+            const produto = Array.isArray(item.produto) ? item.produto[0] : item.produto;
+            return {
+              id: item.id,
+              quantidade: item.quantidade,
+              preco_unitario: item.preco_unitario,
+              subtotal: item.subtotal,
+              produtoNome: produto?.nome,
+              produtoCodigo: produto?.codigo,
+            };
+          }),
+        };
+      });
+      
+      setOrcamentos(normalizedData);
     } catch (error: any) {
       console.error("Erro ao carregar orçamentos:", error);
       toast.error("Erro ao carregar orçamentos");
@@ -97,7 +143,7 @@ export default function OrcamentoAttachmentSelector({
   const handleShareLink = (orcamento: Orcamento) => {
     if (orcamento.token_compartilhamento) {
       const link = `${window.location.origin}/orcamento/${orcamento.token_compartilhamento}`;
-      const title = `Orçamento #${orcamento.id.slice(0, 8)} - ${orcamento.cliente?.nome || 'Cliente'}`;
+      const title = `Orçamento #${orcamento.id.slice(0, 8)} - ${orcamento.clienteNome || 'Cliente'}`;
       onSelectLink(link, title);
       setOpen(false);
       toast.success("Link do orçamento selecionado!");
@@ -128,13 +174,13 @@ export default function OrcamentoAttachmentSelector({
       doc.setFont("helvetica", "bold");
       doc.text("Cliente:", 20, y);
       doc.setFont("helvetica", "normal");
-      doc.text(orcamento.cliente?.nome || "N/A", 55, y);
+      doc.text(orcamento.clienteNome || "N/A", 55, y);
       
       y += 8;
       doc.setFont("helvetica", "bold");
       doc.text("Vendedor:", 20, y);
       doc.setFont("helvetica", "normal");
-      doc.text(orcamento.vendedor?.nome || "N/A", 55, y);
+      doc.text(orcamento.vendedorNome || "N/A", 55, y);
       
       y += 8;
       doc.setFont("helvetica", "bold");
@@ -166,8 +212,8 @@ export default function OrcamentoAttachmentSelector({
             y = 20;
           }
           
-          const produtoNome = item.produto?.nome || "Produto não identificado";
-          const nomeTruncado = produtoNome.length > 45 ? produtoNome.substring(0, 42) + "..." : produtoNome;
+          const prodNome = item.produtoNome || "Produto não identificado";
+          const nomeTruncado = prodNome.length > 45 ? prodNome.substring(0, 42) + "..." : prodNome;
           
           doc.text(nomeTruncado, 22, y);
           doc.text(String(item.quantidade), 110, y);
@@ -220,7 +266,7 @@ export default function OrcamentoAttachmentSelector({
   const filteredOrcamentos = orcamentos.filter((orc) => {
     const searchLower = searchQuery.toLowerCase();
     return (
-      orc.cliente?.nome?.toLowerCase().includes(searchLower) ||
+      orc.clienteNome?.toLowerCase().includes(searchLower) ||
       orc.id.toLowerCase().includes(searchLower)
     );
   });
@@ -281,7 +327,7 @@ export default function OrcamentoAttachmentSelector({
                         <div className="flex items-center gap-2">
                           <User className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                           <span className="font-medium text-sm truncate">
-                            {orc.cliente?.nome || "Cliente"}
+                            {orc.clienteNome || "Cliente"}
                           </span>
                         </div>
                         <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
