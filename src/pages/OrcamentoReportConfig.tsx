@@ -175,7 +175,9 @@ export default function OrcamentoReportConfig() {
         .from("report-assets")
         .getPublicUrl(fileName);
 
-      setConfig({ ...config, logo_url: urlData.publicUrl });
+      // Add timestamp to force cache refresh
+      const logoUrlWithTimestamp = `${urlData.publicUrl}?t=${Date.now()}`;
+      setConfig(prev => ({ ...prev, logo_url: logoUrlWithTimestamp }));
       toast.success("Logo enviado com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar logo:", error);
