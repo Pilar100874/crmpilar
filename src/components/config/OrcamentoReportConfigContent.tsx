@@ -740,6 +740,14 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
               </CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
+              {/* Debug no preview */}
+              <div className="text-xs text-blue-600 mb-4 p-2 bg-blue-50 rounded border border-blue-200">
+                <p>Preview Debug:</p>
+                <p>empresa_nome: "{config.empresa_nome}"</p>
+                <p>logo_url: {config.logo_url ? "SIM" : "NÃO"}</p>
+                <p>mostrar_logo: {String(config.mostrar_logo)}</p>
+              </div>
+              
               <div 
                 className="bg-white text-black p-8 rounded-lg shadow-lg mx-auto"
                 style={{ maxWidth: "210mm", minHeight: "297mm" }}
@@ -751,7 +759,12 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                       <img 
                         src={config.logo_url} 
                         alt="Logo" 
-                        className="h-16 object-contain" 
+                        className="h-16 object-contain"
+                        style={{ minWidth: '50px', minHeight: '50px' }}
+                        onError={(e) => {
+                          console.log("Preview logo erro");
+                          (e.currentTarget as HTMLImageElement).style.border = "2px solid red";
+                        }}
                       />
                     )}
                     <div>
