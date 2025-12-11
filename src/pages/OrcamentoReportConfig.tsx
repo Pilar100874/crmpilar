@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -88,21 +88,19 @@ export default function OrcamentoReportConfig() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
-  const [configLoaded, setConfigLoaded] = useState(false);
-  const isOperatingRef = useRef(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    if (!configLoaded && !isOperatingRef.current) {
-      loadConfig();
-    }
-  }, [configLoaded]);
+    loadConfig();
+  }, []);
 
   const loadConfig = async () => {
-    if (isOperatingRef.current) return;
-    
     try {
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
+      if (!userData.user) {
+        setInitialLoading(false);
+        return;
+      }
 
       const { data: usuario } = await supabase
         .from("usuarios")
@@ -121,12 +119,13 @@ export default function OrcamentoReportConfig() {
 
         if (configData && !error) {
           const loadedConfig = (configData as any).config_json;
-          setConfig({ ...defaultConfig, ...loadedConfig });
+          setConfig(prev => ({ ...defaultConfig, ...loadedConfig }));
         }
-        setConfigLoaded(true);
       }
     } catch (error) {
       console.error("Erro ao carregar configuração:", error);
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -168,11 +167,10 @@ export default function OrcamentoReportConfig() {
     const file = e.target.files?.[0];
     if (!file || !estabelecimentoId) return;
 
-    isOperatingRef.current = true;
     setUploading(true);
     
     try {
-      const fileExt = file.name.split(".").pop();
+      const fileExt = file.name.split(".").pop()?.toLowerCase();
       const fileName = `${estabelecimentoId}/logo_orcamento.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
@@ -188,9 +186,8 @@ export default function OrcamentoReportConfig() {
       // Add timestamp to force cache refresh
       const logoUrlWithTimestamp = `${urlData.publicUrl}?t=${Date.now()}`;
       
-      // Update state and save to database
+      // Update state first
       const newConfig = { ...config, logo_url: logoUrlWithTimestamp };
-      setConfig(newConfig);
       
       // Save to database immediately
       const { data: existing } = await supabase
@@ -210,13 +207,14 @@ export default function OrcamentoReportConfig() {
           .insert({ estabelecimento_id: estabelecimentoId, config_json: newConfig });
       }
       
+      // Update state after successful save
+      setConfig(newConfig);
       toast.success("Logo enviado e salvo com sucesso!");
     } catch (error) {
       console.error("Erro ao enviar logo:", error);
       toast.error("Erro ao enviar logo");
     } finally {
       setUploading(false);
-      isOperatingRef.current = false;
       // Reset file input
       if (e.target) e.target.value = "";
     }
@@ -229,10 +227,8 @@ export default function OrcamentoReportConfig() {
   const handleRemoveLogo = async () => {
     if (!estabelecimentoId) return;
     
-    isOperatingRef.current = true;
     try {
       const newConfig = { ...config, logo_url: "" };
-      setConfig(newConfig);
       
       const { data: existing } = await supabase
         .from("orcamento_report_config" as any)
@@ -247,12 +243,11 @@ export default function OrcamentoReportConfig() {
           .eq("id", (existing as any).id);
       }
       
+      setConfig(newConfig);
       toast.success("Logo removido com sucesso!");
     } catch (error) {
       console.error("Erro ao remover logo:", error);
       toast.error("Erro ao remover logo");
-    } finally {
-      isOperatingRef.current = false;
     }
   };
 
@@ -315,7 +310,11 @@ export default function OrcamentoReportConfig() {
                     <Label>Exibir logo no relatório</Label>
                   </div>
                   
-                  {config.logo_url ? (
+                  {initialLoading ? (
+                    <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                      <p className="text-sm text-muted-foreground">Carregando...</p>
+                    </div>
+                  ) : config.logo_url ? (
                     <div className="border rounded-lg p-4 flex flex-col items-center gap-4">
                       <img
                         key={config.logo_url}
@@ -326,7 +325,9 @@ export default function OrcamentoReportConfig() {
                           console.error("Error loading logo in config:", config.logo_url);
                         }}
                       />
-                      <p className="text-xs text-muted-foreground truncate max-w-full">{config.logo_url.split('/').pop()}</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-full">
+                        {config.logo_url.split('/').pop()?.split('?')[0]}
+                      </p>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" asChild>
                           <label className="cursor-pointer">
