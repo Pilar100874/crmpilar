@@ -4743,6 +4743,38 @@ export type Database = {
           },
         ]
       }
+      orcamento_report_config: {
+        Row: {
+          config_json: Json
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          config_json?: Json
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          config_json?: Json
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_report_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamentos: {
         Row: {
           cliente_id: string | null

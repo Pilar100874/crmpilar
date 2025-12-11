@@ -107,14 +107,14 @@ export default function OrcamentoReportConfig() {
       if (usuario?.estabelecimento_id) {
         setEstabelecimentoId(usuario.estabelecimento_id);
 
-        const { data: configData } = await supabase
-          .from("orcamento_report_config")
+        const { data: configData, error } = await supabase
+          .from("orcamento_report_config" as any)
           .select("*")
           .eq("estabelecimento_id", usuario.estabelecimento_id)
           .single();
 
-        if (configData) {
-          setConfig({ ...defaultConfig, ...configData.config_json });
+        if (configData && !error) {
+          setConfig({ ...defaultConfig, ...(configData as any).config_json });
         }
       }
     } catch (error) {
@@ -131,19 +131,19 @@ export default function OrcamentoReportConfig() {
     setLoading(true);
     try {
       const { data: existing } = await supabase
-        .from("orcamento_report_config")
+        .from("orcamento_report_config" as any)
         .select("id")
         .eq("estabelecimento_id", estabelecimentoId)
         .single();
 
       if (existing) {
         await supabase
-          .from("orcamento_report_config")
+          .from("orcamento_report_config" as any)
           .update({ config_json: config, updated_at: new Date().toISOString() })
-          .eq("id", existing.id);
+          .eq("id", (existing as any).id);
       } else {
         await supabase
-          .from("orcamento_report_config")
+          .from("orcamento_report_config" as any)
           .insert({ estabelecimento_id: estabelecimentoId, config_json: config });
       }
 
