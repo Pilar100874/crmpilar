@@ -1,8 +1,8 @@
 import { Message } from "@/pages/ChatWebhook";
 import { Badge } from "@/components/ui/badge";
-import { User, Webhook, Music, Image as ImageIcon, File, Variable } from "lucide-react";
+import { User, Webhook, Music, Image as ImageIcon, File, Variable, Download } from "lucide-react";
 import { format } from "date-fns";
-
+import { Button } from "@/components/ui/button";
 interface ChatMessageProps {
   message: Message;
   translation?: string | null;
@@ -10,6 +10,25 @@ interface ChatMessageProps {
 
 export default function ChatMessage({ message, translation }: ChatMessageProps) {
   const isUser = message.role === "user";
+
+  const handleDownloadFile = async (url: string, fileName: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Erro ao baixar arquivo:', error);
+      // Fallback: abrir em nova aba
+      window.open(url, '_blank');
+    }
+  };
 
   const renderContent = () => {
     switch (message.contentType) {
@@ -44,17 +63,16 @@ export default function ChatMessage({ message, translation }: ChatMessageProps) 
         return (
           <div className="space-y-2">
             {message.fileUrl && (
-              <a
-                href={message.fileUrl}
-                download={message.fileName}
-                className="flex items-center gap-2 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+              <button
+                onClick={() => handleDownloadFile(message.fileUrl!, message.fileName || "arquivo")}
+                className="flex items-center gap-2 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer w-full text-left"
               >
-                <File className="h-5 w-5 text-primary" />
+                <Download className="h-5 w-5 text-primary" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{message.fileName || "Arquivo"}</p>
                   <p className="text-xs text-muted-foreground">Clique para baixar</p>
                 </div>
-              </a>
+              </button>
             )}
             {message.content && <p className="text-sm">{message.content}</p>}
           </div>
