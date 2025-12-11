@@ -296,13 +296,23 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                     <p className="text-sm text-muted-foreground">Carregando...</p>
                   ) : config.logo_url ? (
                     <>
-                      <div className="border-2 border-dashed border-gray-300 p-2 bg-white min-h-[100px] min-w-[150px] flex items-center justify-center">
+                      <div className="border-2 border-dashed border-gray-300 p-2 bg-white flex items-center justify-center" style={{ minHeight: '120px', minWidth: '200px' }}>
                         <img
                           src={config.logo_url}
                           alt="Logo da Empresa"
-                          className="max-h-24 object-contain"
-                          style={{ backgroundColor: '#f0f0f0' }}
-                          onLoad={() => console.log("Logo carregado com sucesso")}
+                          style={{ 
+                            maxHeight: '100px', 
+                            maxWidth: '180px',
+                            minHeight: '50px',
+                            minWidth: '50px',
+                            objectFit: 'contain',
+                            display: 'block',
+                            border: '1px solid red'
+                          }}
+                          onLoad={(e) => {
+                            const img = e.currentTarget as HTMLImageElement;
+                            console.log("Logo carregado - dimensões:", img.naturalWidth, "x", img.naturalHeight);
+                          }}
                           onError={(e) => {
                             console.log("Erro ao carregar imagem:", config.logo_url);
                             (e.currentTarget as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50"><text x="10" y="30" fill="red">Erro ao carregar</text></svg>';
