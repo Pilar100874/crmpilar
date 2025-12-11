@@ -10,6 +10,7 @@ import { Plus, FileText, Languages, FileCheck, FileSpreadsheet } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/hooks/use-toast";
+import type { EmailAttachment } from "./ComposeEmailDialog";
 
 // Elegant toolbar button styles matching ChatInput
 const toolbarBtnClass = "h-9 w-9 rounded-xl bg-card border border-border/30 shadow-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted hover:border-border/50 hover:shadow-md transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
@@ -18,10 +19,11 @@ const toolbarBtnActiveClass = "h-9 w-9 rounded-xl bg-primary/15 border border-pr
 interface EmailToolsMenuProps {
   estabelecimentoId: string | null;
   onInsertText?: (text: string) => void;
+  onAddAttachment?: (attachment: EmailAttachment) => void;
   disabled?: boolean;
 }
 
-export function EmailToolsMenu({ estabelecimentoId, onInsertText, disabled }: EmailToolsMenuProps) {
+export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachment, disabled }: EmailToolsMenuProps) {
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
@@ -105,7 +107,6 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, disabled }: Em
   };
 
   const handleImportReportSelect = async (reportId: string, format: 'pdf' | 'excel') => {
-    setSelectedImportReport(reportId);
     setIsProcessingReport(true);
     setReportProgress(0);
     
@@ -117,21 +118,30 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, disabled }: Em
         }
         return prev + 10;
       });
-    }, 200);
+    }, 150);
 
     setTimeout(() => {
       clearInterval(interval);
       setReportProgress(100);
+      
       const report = importReports.find(r => r.id === reportId);
-      if (report && onInsertText) {
-        onInsertText(`\n[Relatório anexado: ${report.nome} (${format.toUpperCase()})]\nLink: ${report.url_arquivo}\n`);
+      if (report && onAddAttachment) {
+        // Add as actual attachment
+        onAddAttachment({
+          id: `${report.id}-${format}`,
+          name: `${report.nome}.${format}`,
+          type: format,
+          url: report.url_arquivo,
+          size: format === 'pdf' ? 'PDF' : 'Excel'
+        });
+        toast({ title: "Anexo adicionado", description: `${report.nome} anexado como ${format.toUpperCase()}` });
       }
+      
       setIsProcessingReport(false);
       setShowImportReportsPopover(false);
       setShowToolsMenu(false);
       setSelectedImportReport(null);
-      toast({ title: "Relatório anexado", description: "O relatório foi adicionado ao email" });
-    }, 2000);
+    }, 1500);
   };
 
   return (
@@ -216,7 +226,7 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, disabled }: Em
                       </button>
                     </PopoverTrigger>
                   </TooltipTrigger>
-                  <TooltipContent side="right"><p>Relatórios</p></TooltipContent>
+                  <TooltipContent side="right"><p>Anexar Relatório</p></TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <PopoverContent 
@@ -227,7 +237,7 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, disabled }: Em
                 style={{ zIndex: 10000 }}
               >
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">Relatórios Importados</Label>
+                  <Label className="text-sm font-medium">Anexar Relatório</Label>
                   {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
                   {importReports.length > 0 ? (
                     <div className="space-y-3">
