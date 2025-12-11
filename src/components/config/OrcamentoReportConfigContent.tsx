@@ -10,7 +10,7 @@ import { Save, Eye, FileText, Settings2, Palette, Building2, Upload, Trash2, Ima
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface ReportConfig {
   logo_url: string;
@@ -85,6 +85,7 @@ interface OrcamentoReportConfigContentProps {
 }
 
 export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoReportConfigContentProps) {
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [localConfig, setLocalConfig] = useState<ReportConfig | null>(null);
@@ -197,10 +198,11 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
 
       const newLogoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
       const newConfig = { ...config, logo_url: newLogoUrl };
-      setConfig(newConfig);
+      setLocalConfig(newConfig);
       
       const saved = await saveConfigToDb(newConfig);
       if (saved) {
+        queryClient.invalidateQueries({ queryKey: ['orcamento-report-config', estabelecimentoId] });
         toast.success("Logo enviado com sucesso!");
       }
     } catch (error) {
@@ -213,10 +215,11 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
 
   const handleRemoveLogo = async () => {
     const newConfig = { ...config, logo_url: "" };
-    setConfig(newConfig);
+    setLocalConfig(newConfig);
     
     const saved = await saveConfigToDb(newConfig);
     if (saved) {
+      queryClient.invalidateQueries({ queryKey: ['orcamento-report-config', estabelecimentoId] });
       toast.success("Logo removido!");
     }
   };
