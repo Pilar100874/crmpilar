@@ -437,19 +437,18 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, disabled }: Em
 
   return (
     <div ref={menuRef} className="relative">
-      {/* All items expanding upward */}
+      {/* All items expanding to the right in a row */}
       {showToolsMenu && (
         <div 
-          className="absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5"
+          className="absolute left-full top-1/2 -translate-y-1/2 ml-2 flex flex-row gap-1.5"
           style={{ zIndex: 9999 }}
         >
           {allItems.map((item, index) => (
             <div 
               key={`tool-${index}`}
-              className="transform transition-all duration-200 flex-shrink-0"
+              className="transform transition-all duration-200 flex-shrink-0 animate-scale-in"
               style={{
-                transitionDelay: `${index * 30}ms`,
-                animation: 'fadeInUp 0.2s ease-out forwards',
+                animationDelay: `${index * 30}ms`,
               }}
             >
               {item}
