@@ -6,10 +6,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { Plus, FileText, Languages, FileCheck, FileSpreadsheet } from "lucide-react";
+import { Plus, FileText, FileSpreadsheet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/hooks/use-toast";
+import { useFerramentasAtendimento } from "@/hooks/useFerramentasAtendimento";
 import type { EmailAttachment } from "./ComposeEmailDialog";
 
 // Elegant toolbar button styles matching ChatInput
@@ -20,38 +21,43 @@ interface EmailToolsMenuProps {
   estabelecimentoId: string | null;
   onInsertText?: (text: string) => void;
   onAddAttachment?: (attachment: EmailAttachment) => void;
+  onToolAction?: (toolId: string) => void;
   disabled?: boolean;
 }
 
-export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachment, disabled }: EmailToolsMenuProps) {
+export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachment, onToolAction, disabled }: EmailToolsMenuProps) {
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
-  // Translate states
-  const [showTranslatePopover, setShowTranslatePopover] = useState(false);
-  const [targetLanguage, setTargetLanguage] = useState("en");
-  const [isTranslating, setIsTranslating] = useState(false);
+  // Load ferramentas from database
+  const { getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId);
+  const emailFerramentas = getToolbarFerramentas('email');
+  
+  // Active tool state for sub-menus
+  const [activeToolId, setActiveToolId] = useState<string | null>(null);
   
   // Import Reports states
-  const [showImportReportsPopover, setShowImportReportsPopover] = useState(false);
   const [importReports, setImportReports] = useState<any[]>([]);
   const [selectedImportReport, setSelectedImportReport] = useState<string | null>(null);
   const [isProcessingReport, setIsProcessingReport] = useState(false);
   const [reportProgress, setReportProgress] = useState(0);
+  
+  // Translation states
+  const [targetLanguage, setTargetLanguage] = useState("en");
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        // Only close main menu if no popover is open
-        if (!showTranslatePopover && !showImportReportsPopover) {
+        if (!activeToolId) {
           setShowToolsMenu(false);
         }
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showTranslatePopover, showImportReportsPopover]);
+  }, [activeToolId]);
 
   // Load import reports
   useEffect(() => {
@@ -80,17 +86,36 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
     }
   };
 
+  const handleToolClick = (toolId: string) => {
+    // Toggle sub-menu for tools that have them
+    if (activeToolId === toolId) {
+      setActiveToolId(null);
+    } else {
+      setActiveToolId(toolId);
+    }
+    
+    // For tools without sub-menus, trigger action directly
+    if (!hasSubMenu(toolId)) {
+      onToolAction?.(toolId);
+      setShowToolsMenu(false);
+    }
+  };
+
+  const hasSubMenu = (toolId: string) => {
+    // Tools with sub-menus
+    return ['tool-attachments', 'tool-translate'].includes(toolId);
+  };
+
   const handleTranslate = async () => {
     setIsTranslating(true);
     try {
-      // Simular tradução - aqui seria a chamada real para a API de tradução
       await new Promise(resolve => setTimeout(resolve, 1000));
       toast({ title: "Tradução", description: `Texto traduzido para ${getLanguageName(targetLanguage)}` });
     } catch (error) {
       toast({ title: "Erro", description: "Erro ao traduzir", variant: "destructive" });
     } finally {
       setIsTranslating(false);
-      setShowTranslatePopover(false);
+      setActiveToolId(null);
       setShowToolsMenu(false);
     }
   };
@@ -126,7 +151,6 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
       
       const report = importReports.find(r => r.id === reportId);
       if (report && onAddAttachment) {
-        // Add as actual attachment
         onAddAttachment({
           id: `${report.id}-${format}`,
           name: `${report.nome}.${format}`,
@@ -138,10 +162,100 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
       }
       
       setIsProcessingReport(false);
-      setShowImportReportsPopover(false);
+      setActiveToolId(null);
       setShowToolsMenu(false);
       setSelectedImportReport(null);
     }, 1500);
+  };
+
+  // Render sub-menu content based on tool
+  const renderSubMenu = (toolId: string) => {
+    switch (toolId) {
+      case 'tool-attachments':
+        return (
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Anexar Relatório</Label>
+            {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
+            {importReports.length > 0 ? (
+              <div className="space-y-3">
+                <Select 
+                  value={selectedImportReport || ""} 
+                  onValueChange={(value) => setSelectedImportReport(value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Escolha um relatório..." />
+                  </SelectTrigger>
+                  <SelectContent style={{ zIndex: 10001 }}>
+                    {importReports.map((report) => (
+                      <SelectItem key={report.id} value={report.id}>
+                        {report.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                {selectedImportReport && (
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => handleImportReportSelect(selectedImportReport, 'pdf')} 
+                      disabled={isProcessingReport}
+                    >
+                      <FileText className="h-4 w-4 mr-2 text-red-500" />
+                      PDF
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => handleImportReportSelect(selectedImportReport, 'excel')} 
+                      disabled={isProcessingReport}
+                    >
+                      <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+                      Excel
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">Nenhum relatório disponível</p>
+            )}
+          </div>
+        );
+      
+      case 'tool-translate':
+        return (
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Traduzir para</Label>
+            <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent style={{ zIndex: 10001 }}>
+                <SelectItem value="en">Inglês</SelectItem>
+                <SelectItem value="es">Espanhol</SelectItem>
+                <SelectItem value="pt">Português</SelectItem>
+                <SelectItem value="fr">Francês</SelectItem>
+                <SelectItem value="de">Alemão</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button 
+              size="sm" 
+              onClick={handleTranslate}
+              disabled={isTranslating}
+              className="w-full"
+            >
+              {isTranslating ? (
+                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              ) : null}
+              Traduzir
+            </Button>
+          </div>
+        );
+      
+      default:
+        return null;
+    }
   };
 
   return (
@@ -152,143 +266,67 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
           className="absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5"
           style={{ zIndex: 9999 }}
         >
-          {/* Translate Tool */}
-          <div className="animate-scale-in" style={{ animationDelay: '0ms' }}>
-            <Popover open={showTranslatePopover} onOpenChange={setShowTranslatePopover} modal={false}>
-              <TooltipProvider delayDuration={200}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <PopoverTrigger asChild>
-                      <button 
-                        className={showTranslatePopover || isTranslating ? toolbarBtnActiveClass : toolbarBtnClass} 
-                        disabled={disabled}
-                      >
-                        {isTranslating ? (
-                          <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Languages size={18} />
-                        )}
-                      </button>
-                    </PopoverTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="right"><p>Traduzir</p></TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <PopoverContent 
-                className="w-56 p-3 rounded-xl shadow-xl border-border/50 bg-popover" 
-                align="start" 
-                side="right"
-                sideOffset={8}
-                style={{ zIndex: 10000 }}
+          {emailFerramentas.map((ferramenta, index) => {
+            const IconComponent = ferramenta.IconComponent;
+            const isActive = activeToolId === ferramenta.ferramenta_id;
+            const toolHasSubMenu = hasSubMenu(ferramenta.ferramenta_id);
+            
+            return (
+              <div 
+                key={ferramenta.id} 
+                className="animate-scale-in" 
+                style={{ animationDelay: `${index * 30}ms` }}
               >
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Traduzir para</Label>
-                  <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent style={{ zIndex: 10001 }}>
-                      <SelectItem value="en">Inglês</SelectItem>
-                      <SelectItem value="es">Espanhol</SelectItem>
-                      <SelectItem value="pt">Português</SelectItem>
-                      <SelectItem value="fr">Francês</SelectItem>
-                      <SelectItem value="de">Alemão</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    size="sm" 
-                    onClick={handleTranslate}
-                    disabled={isTranslating}
-                    className="w-full"
+                {toolHasSubMenu ? (
+                  <Popover 
+                    open={isActive} 
+                    onOpenChange={(open) => setActiveToolId(open ? ferramenta.ferramenta_id : null)} 
+                    modal={false}
                   >
-                    {isTranslating ? (
-                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    ) : (
-                      <Languages className="h-4 w-4 mr-2" />
-                    )}
-                    Traduzir
-                  </Button>
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          {/* Reports Tool */}
-          <div className="animate-scale-in" style={{ animationDelay: '30ms' }}>
-            <Popover open={showImportReportsPopover} onOpenChange={setShowImportReportsPopover} modal={false}>
-              <TooltipProvider delayDuration={200}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <PopoverTrigger asChild>
-                      <button 
-                        className={showImportReportsPopover ? toolbarBtnActiveClass : toolbarBtnClass} 
-                        disabled={disabled}
-                      >
-                        <FileCheck size={18} />
-                      </button>
-                    </PopoverTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="right"><p>Anexar Relatório</p></TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <PopoverContent 
-                className="w-72 p-3 rounded-xl shadow-xl border-border/50 bg-popover" 
-                align="start" 
-                side="right"
-                sideOffset={8}
-                style={{ zIndex: 10000 }}
-              >
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Anexar Relatório</Label>
-                  {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
-                  {importReports.length > 0 ? (
-                    <div className="space-y-3">
-                      <Select 
-                        value={selectedImportReport || ""} 
-                        onValueChange={(value) => setSelectedImportReport(value)}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Escolha um relatório..." />
-                        </SelectTrigger>
-                        <SelectContent style={{ zIndex: 10001 }}>
-                          {importReports.map((report) => (
-                            <SelectItem key={report.id} value={report.id}>
-                              {report.nome}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      {selectedImportReport && (
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={() => handleImportReportSelect(selectedImportReport, 'pdf')} 
-                            disabled={isProcessingReport}
-                          >
-                            <FileText className="h-4 w-4 mr-2 text-red-500" />
-                            PDF
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={() => handleImportReportSelect(selectedImportReport, 'excel')} 
-                            disabled={isProcessingReport}
-                          >
-                            <FileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
-                            Excel
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum relatório disponível</p>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <PopoverTrigger asChild>
+                            <button 
+                              className={isActive ? toolbarBtnActiveClass : toolbarBtnClass} 
+                              disabled={disabled}
+                            >
+                              <IconComponent size={18} />
+                            </button>
+                          </PopoverTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent side="right"><p>{ferramenta.nome}</p></TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <PopoverContent 
+                      className="w-72 p-3 rounded-xl shadow-xl border-border/50 bg-popover" 
+                      align="start" 
+                      side="right"
+                      sideOffset={8}
+                      style={{ zIndex: 10000 }}
+                    >
+                      {renderSubMenu(ferramenta.ferramenta_id)}
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button 
+                          className={toolbarBtnClass} 
+                          disabled={disabled}
+                          onClick={() => handleToolClick(ferramenta.ferramenta_id)}
+                        >
+                          <IconComponent size={18} />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right"><p>{ferramenta.nome}</p></TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -307,6 +345,7 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
               )}
               onClick={() => setShowToolsMenu(!showToolsMenu)}
               type="button"
+              disabled={loadingFerramentas}
             >
               <Plus className="h-5 w-5" />
             </button>
