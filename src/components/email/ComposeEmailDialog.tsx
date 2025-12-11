@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,23 +10,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Send, X, Loader2, Wrench, FileText, Sparkles } from "lucide-react";
+import { Send, X, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { useFerramentasAtendimento, type TabType } from "@/hooks/useFerramentasAtendimento";
-
-interface OrcamentoData {
-  numero?: string;
-  cliente?: string;
-  valor_total?: number;
-  itens?: Array<{ nome: string; quantidade: number; valor_unitario: number }>;
-}
 
 interface ComposeEmailDialogProps {
   open: boolean;
@@ -36,8 +21,7 @@ interface ComposeEmailDialogProps {
   defaultSubject?: string;
   defaultBody?: string;
   mode?: 'compose' | 'reply' | 'forward';
-  estabelecimentoId?: string | null;
-  orcamentoData?: OrcamentoData | null;
+  toolsSlot?: React.ReactNode;
 }
 
 export function ComposeEmailDialog({
@@ -48,60 +32,12 @@ export function ComposeEmailDialog({
   defaultSubject = "",
   defaultBody = "",
   mode = 'compose',
-  estabelecimentoId = null,
-  orcamentoData = null,
+  toolsSlot,
 }: ComposeEmailDialogProps) {
   const [to, setTo] = useState(defaultTo);
   const [subject, setSubject] = useState(defaultSubject);
   const [body, setBody] = useState(defaultBody);
   const [sending, setSending] = useState(false);
-
-  const { getToolbarFerramentas } = useFerramentasAtendimento(estabelecimentoId);
-  const ferramentasEmail = getToolbarFerramentas('email' as TabType);
-
-  // Filtrar ferramentas por tipo
-  const toolsFerramentas = ferramentasEmail.filter(f => f.tipo === 'ferramenta');
-  const iaFerramentas = ferramentasEmail.filter(f => f.tipo === 'ia');
-
-  const handleAnexarOrcamento = () => {
-    if (!orcamentoData) {
-      toast({
-        title: "Nenhum orçamento selecionado",
-        description: "Selecione um orçamento antes de anexar",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const orcamentoText = `
-=== DADOS DO ORÇAMENTO ===
-Número: ${orcamentoData.numero || 'N/A'}
-Cliente: ${orcamentoData.cliente || 'N/A'}
-Valor Total: R$ ${orcamentoData.valor_total?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
-
-${orcamentoData.itens && orcamentoData.itens.length > 0 ? `Itens:
-${orcamentoData.itens.map(item => `- ${item.nome}: ${item.quantidade}x R$ ${item.valor_unitario.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`).join('\n')}` : ''}
-===========================
-`;
-
-    setBody(prev => prev + orcamentoText);
-    toast({
-      title: "Orçamento anexado",
-      description: "Os dados do orçamento foram adicionados ao email",
-    });
-  };
-
-  const handleSelectTool = (ferramentaId: string) => {
-    if (ferramentaId === 'anexar_orcamento') {
-      handleAnexarOrcamento();
-    } else {
-      console.log('Ferramenta selecionada no email:', ferramentaId);
-      toast({
-        title: "Ferramenta",
-        description: `Ferramenta "${ferramentaId}" será implementada em breve`,
-      });
-    }
-  };
 
   // Reset fields when dialog opens with new defaults
   const handleOpenChange = (isOpen: boolean) => {
@@ -218,70 +154,11 @@ ${orcamentoData.itens.map(item => `- ${item.nome}: ${item.quantidade}x R$ ${item
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  size="sm" 
-                  className="gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                >
-                  <Wrench className="h-4 w-4" />
-                  <span>Ferramentas</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                align="start" 
-                className="w-56 bg-popover" 
-                sideOffset={5}
-                style={{ zIndex: 9999 }}
-              >
-                {toolsFerramentas.length > 0 && (
-                  <>
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                      Ferramentas
-                    </div>
-                    {toolsFerramentas.map(ferramenta => {
-                      const Icon = ferramenta.IconComponent;
-                      return (
-                        <DropdownMenuItem
-                          key={ferramenta.id}
-                          onClick={() => handleSelectTool(ferramenta.ferramenta_id)}
-                          className="gap-2 cursor-pointer"
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{ferramenta.nome}</span>
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </>
-                )}
-                
-                {iaFerramentas.length > 0 && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                      Inteligência Artificial
-                    </div>
-                    {iaFerramentas.map(ferramenta => {
-                      const Icon = ferramenta.IconComponent;
-                      return (
-                        <DropdownMenuItem
-                          key={ferramenta.id}
-                          onClick={() => handleSelectTool(ferramenta.ferramenta_id)}
-                          className="gap-2 cursor-pointer"
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{ferramenta.nome}</span>
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          {toolsSlot && (
+            <div className="flex items-center gap-2">
+              {toolsSlot}
+            </div>
+          )}
         </div>
 
         <DialogFooter className="gap-2">
