@@ -284,6 +284,11 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                   <Label>Exibir logo no relatório</Label>
                 </div>
                 
+                {/* Debug info */}
+                <div className="text-xs text-red-500 mb-2">
+                  Debug: configLoading={String(configLoading)}, logo_url={config.logo_url ? "exists" : "empty"}
+                </div>
+                
                 {configLoading && (
                   <div className="border-2 border-dashed rounded-lg p-8 text-center">
                     <p className="text-sm text-muted-foreground">Carregando...</p>
