@@ -2501,6 +2501,80 @@ export type Database = {
         }
         Relationships: []
       }
+      ferramentas_atendimento: {
+        Row: {
+          aba_agenda: boolean | null
+          aba_chat: boolean | null
+          aba_email: boolean | null
+          aba_orcamento: boolean | null
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          ferramenta_id: string
+          icone: string
+          id: string
+          nome: string
+          ordem: number | null
+          radial_agenda: boolean | null
+          radial_chat: boolean | null
+          radial_email: boolean | null
+          radial_orcamento: boolean | null
+          tipo: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          aba_agenda?: boolean | null
+          aba_chat?: boolean | null
+          aba_email?: boolean | null
+          aba_orcamento?: boolean | null
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          ferramenta_id: string
+          icone: string
+          id?: string
+          nome: string
+          ordem?: number | null
+          radial_agenda?: boolean | null
+          radial_chat?: boolean | null
+          radial_email?: boolean | null
+          radial_orcamento?: boolean | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          aba_agenda?: boolean | null
+          aba_chat?: boolean | null
+          aba_email?: boolean | null
+          aba_orcamento?: boolean | null
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          ferramenta_id?: string
+          icone?: string
+          id?: string
+          nome?: string
+          ordem?: number | null
+          radial_agenda?: boolean | null
+          radial_chat?: boolean | null
+          radial_email?: boolean | null
+          radial_orcamento?: boolean | null
+          tipo?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferramentas_atendimento_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fila_skills: {
         Row: {
           created_at: string | null
