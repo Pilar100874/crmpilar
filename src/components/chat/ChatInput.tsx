@@ -16,6 +16,7 @@ import VariableSequence from "./VariableSequence";
 import EmojiPicker from "./EmojiPicker";
 import QuickRepliesSelector from "./QuickRepliesSelector";
 import QuickAttachmentsSelector from "./QuickAttachmentsSelector";
+import OrcamentoAttachmentSelector from "./OrcamentoAttachmentSelector";
 import { Message } from "@/pages/ChatWebhook";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
@@ -716,6 +717,20 @@ export default function ChatInput({
   );
   allItems.push(
     <QuickAttachmentsSelector key="quick-attachments" onSelect={(attachment) => { handleQuickAttachmentSelect(attachment); setShowToolsMenu(false); }} disabled={disabled} />
+  );
+  allItems.push(
+    <OrcamentoAttachmentSelector 
+      key="orcamento-attachment" 
+      onSelectLink={(link, title) => { 
+        setMessage(prev => prev + (prev ? '\n' : '') + `${title}: ${link}`); 
+        setShowToolsMenu(false); 
+      }} 
+      onSelectPdf={(file, url) => { 
+        handleFileSelected(file, url); 
+        setShowToolsMenu(false); 
+      }} 
+      disabled={disabled} 
+    />
   );
 
   // Translate
