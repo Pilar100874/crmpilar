@@ -295,80 +295,74 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                   </div>
                 )}
                 
-                {!configLoading && config.logo_url && (
-                  <div className="border rounded-lg p-4 flex flex-col items-center gap-4">
-                    <img
-                      src={config.logo_url}
-                      alt="Logo da Empresa"
-                      className="max-h-24 object-contain"
-                      onError={(e) => {
-                        console.log("Erro ao carregar imagem:", config.logo_url);
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                    <p className="text-xs text-muted-foreground truncate max-w-full">
-                      {config.logo_url.split('/').pop()?.split('?')[0]}
-                    </p>
-                    <div className="flex gap-2">
-                      <label htmlFor={inputIdChange}>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          disabled={uploading}
-                          asChild
-                        >
-                          <span>
+                {!configLoading && (
+                  <>
+                    {config.logo_url ? (
+                      <div className="border rounded-lg p-4 flex flex-col items-center gap-4">
+                        <img
+                          src={config.logo_url}
+                          alt="Logo da Empresa"
+                          className="max-h-24 object-contain"
+                          onError={(e) => {
+                            console.log("Erro ao carregar imagem:", config.logo_url);
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                        <p className="text-xs text-muted-foreground truncate max-w-full">
+                          {config.logo_url.split('/').pop()?.split('?')[0]}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            disabled={uploading}
+                            onClick={() => document.getElementById(inputIdChange)?.click()}
+                          >
                             <Upload className="h-4 w-4 mr-2" />
                             {uploading ? "Enviando..." : "Alterar"}
-                          </span>
-                        </Button>
-                      </label>
-                      <input
-                        id={inputIdChange}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleLogoUpload}
-                        disabled={uploading}
-                      />
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={handleRemoveLogo}
-                        disabled={uploading}
-                      >
-                        Remover
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                
-                {!configLoading && !config.logo_url && (
-                  <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                    <label htmlFor={inputIdUpload}>
-                      <Button 
-                        variant="outline" 
-                        disabled={uploading}
-                        asChild
-                      >
-                        <span>
+                          </Button>
+                          <input
+                            id={inputIdChange}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleLogoUpload}
+                            disabled={uploading}
+                          />
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={handleRemoveLogo}
+                            disabled={uploading}
+                          >
+                            Remover
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                        <Button 
+                          variant="outline" 
+                          disabled={uploading}
+                          onClick={() => document.getElementById(inputIdUpload)?.click()}
+                        >
                           <Upload className="h-4 w-4 mr-2" />
                           {uploading ? "Enviando..." : "Enviar Logo"}
-                        </span>
-                      </Button>
-                    </label>
-                    <input
-                      id={inputIdUpload}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleLogoUpload}
-                      disabled={uploading}
-                    />
-                    <p className="text-xs text-muted-foreground mt-2">
-                      PNG, JPG ou SVG (máx. 2MB)
-                    </p>
-                  </div>
+                        </Button>
+                        <input
+                          id={inputIdUpload}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleLogoUpload}
+                          disabled={uploading}
+                        />
+                        <p className="text-xs text-muted-foreground mt-2">
+                          PNG, JPG ou SVG (máx. 2MB)
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
