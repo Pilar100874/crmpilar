@@ -26,6 +26,7 @@ const DEFAULT_TOOLS = [
   { ferramenta_id: 'tool-variables', nome: 'Variáveis', icone: 'Variable', descricao: 'Inserir variáveis', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'tool-quick-replies', nome: 'Respostas Rápidas', icone: 'Zap', descricao: 'Textos prontos', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'tool-attachments', nome: 'Anexos Rápidos', icone: 'FileCheck', descricao: 'Anexos pré-configurados', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
+  { ferramenta_id: 'tool-budget', nome: 'Anexar Orçamento', icone: 'FileText', descricao: 'Anexar orçamento ao atendimento', tipo: 'ferramenta', aba_chat: true, aba_orcamento: true, radial_chat: true, radial_orcamento: true },
   { ferramenta_id: 'tool-translate', nome: 'Traduzir', icone: 'Languages', descricao: 'Traduzir texto', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'tool-reports', nome: 'Relatórios', icone: 'FileText', descricao: 'Importar relatórios', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'tool-bot', nome: 'Redirecionar Bot', icone: 'Bot', descricao: 'Redirecionar para bot', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
