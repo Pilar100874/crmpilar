@@ -2890,6 +2890,7 @@ ${recentMessages}
             defaultTo={composeEmailDefaults.to}
             defaultSubject={composeEmailDefaults.subject}
             defaultBody={composeEmailDefaults.body}
+            estabelecimentoId={estabelecimentoId}
           />
         </div>
       ) : (
@@ -4399,6 +4400,7 @@ ${recentMessages}
         defaultTo={composeEmailDefaults.to}
         defaultSubject={composeEmailDefaults.subject}
         defaultBody={composeEmailDefaults.body}
+        estabelecimentoId={estabelecimentoId}
       />
       </div>
       )}
