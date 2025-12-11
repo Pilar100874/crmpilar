@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Plus, FileText, FileSpreadsheet } from "lucide-react";
+import { Plus, FileText, FileSpreadsheet, Upload, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/hooks/use-toast";
@@ -28,6 +30,8 @@ interface EmailToolsMenuProps {
 export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachment, onToolAction, disabled }: EmailToolsMenuProps) {
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Load ferramentas from database
   const { getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId);
@@ -42,9 +46,13 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
   const [isProcessingReport, setIsProcessingReport] = useState(false);
   const [reportProgress, setReportProgress] = useState(0);
   
-  // Translation states
-  const [targetLanguage, setTargetLanguage] = useState("en");
-  const [isTranslating, setIsTranslating] = useState(false);
+  // Quick replies states
+  const [quickReplies, setQuickReplies] = useState<any[]>([]);
+  const [quickReplySearch, setQuickReplySearch] = useState("");
+  
+  // Orcamentos states
+  const [orcamentos, setOrcamentos] = useState<any[]>([]);
+  const [orcamentoSearch, setOrcamentoSearch] = useState("");
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -59,10 +67,14 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [activeToolId]);
 
-  // Load import reports
+  // Load data when menu opens
   useEffect(() => {
-    loadImportReports();
-  }, [estabelecimentoId]);
+    if (showToolsMenu) {
+      loadImportReports();
+      loadQuickReplies();
+      loadOrcamentos();
+    }
+  }, [showToolsMenu, estabelecimentoId]);
 
   const loadImportReports = async () => {
     try {
@@ -86,41 +98,155 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
     }
   };
 
-  const handleToolClick = (toolId: string) => {
-    // For tools without sub-menus, trigger action directly and close menu
-    onToolAction?.(toolId);
-    setShowToolsMenu(false);
-    setActiveToolId(null);
-  };
-
-  const hasSubMenu = (toolId: string) => {
-    // Tools with sub-menus (Anexos Rápidos has reports sub-menu)
-    return ['tool-attachments'].includes(toolId);
-  };
-
-  const handleTranslate = async () => {
-    setIsTranslating(true);
+  const loadQuickReplies = async () => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast({ title: "Tradução", description: `Texto traduzido para ${getLanguageName(targetLanguage)}` });
+      const estabId = estabelecimentoId || await getEstabelecimentoId();
+      if (!estabId) return;
+
+      const { data, error } = await supabase
+        .from("quick_replies")
+        .select("id, title, content, shortcut")
+        .eq("estabelecimento_id", estabId)
+        .order("title");
+
+      if (error) throw error;
+      setQuickReplies(data || []);
     } catch (error) {
-      toast({ title: "Erro", description: "Erro ao traduzir", variant: "destructive" });
-    } finally {
-      setIsTranslating(false);
-      setActiveToolId(null);
-      setShowToolsMenu(false);
+      console.error("Erro ao carregar respostas rápidas:", error);
     }
   };
 
-  const getLanguageName = (code: string) => {
-    const names: Record<string, string> = {
-      en: "Inglês",
-      es: "Espanhol", 
-      pt: "Português",
-      fr: "Francês",
-      de: "Alemão"
-    };
-    return names[code] || code;
+  const loadOrcamentos = async () => {
+    try {
+      const estabId = estabelecimentoId || await getEstabelecimentoId();
+      if (!estabId) return;
+
+      const { data, error } = await supabase
+        .from("orcamentos")
+        .select(`
+          id,
+          numero,
+          created_at,
+          valor_total,
+          customers:cliente_id (nome),
+          empresas:empresa_id (nome_fantasia)
+        `)
+        .eq("estabelecimento_id", estabId)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+      setOrcamentos(data || []);
+    } catch (error) {
+      console.error("Erro ao carregar orçamentos:", error);
+    }
+  };
+
+  const hasSubMenu = (toolId: string) => {
+    // All tools have sub-menus now
+    return ['tool-attachments', 'tool-image', 'tool-file', 'tool-quick-replies', 'tool-budget'].includes(toolId);
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const estabId = estabelecimentoId || await getEstabelecimentoId();
+      const fileName = `${Date.now()}_${file.name}`;
+      const filePath = `email-attachments/${estabId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('bot-media')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('bot-media')
+        .getPublicUrl(filePath);
+
+      onAddAttachment?.({
+        id: fileName,
+        name: file.name,
+        type: 'file',
+        url: publicUrl,
+        size: formatFileSize(file.size)
+      });
+
+      toast({ title: "Imagem anexada", description: file.name });
+      setActiveToolId(null);
+      setShowToolsMenu(false);
+    } catch (error) {
+      console.error("Erro ao anexar imagem:", error);
+      toast({ title: "Erro", description: "Não foi possível anexar a imagem", variant: "destructive" });
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const estabId = estabelecimentoId || await getEstabelecimentoId();
+      const fileName = `${Date.now()}_${file.name}`;
+      const filePath = `email-attachments/${estabId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('bot-media')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('bot-media')
+        .getPublicUrl(filePath);
+
+      const fileType = file.name.endsWith('.pdf') ? 'pdf' : 
+                       file.name.endsWith('.xlsx') || file.name.endsWith('.xls') ? 'excel' : 'file';
+
+      onAddAttachment?.({
+        id: fileName,
+        name: file.name,
+        type: fileType,
+        url: publicUrl,
+        size: formatFileSize(file.size)
+      });
+
+      toast({ title: "Arquivo anexado", description: file.name });
+      setActiveToolId(null);
+      setShowToolsMenu(false);
+    } catch (error) {
+      console.error("Erro ao anexar arquivo:", error);
+      toast({ title: "Erro", description: "Não foi possível anexar o arquivo", variant: "destructive" });
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handleQuickReplySelect = (reply: any) => {
+    onInsertText?.(reply.content || '');
+    toast({ title: "Resposta inserida", description: reply.title });
+    setActiveToolId(null);
+    setShowToolsMenu(false);
+  };
+
+  const handleOrcamentoSelect = (orcamento: any) => {
+    const clientName = orcamento.customers?.nome || orcamento.empresas?.nome_fantasia || 'Cliente';
+    onAddAttachment?.({
+      id: `orcamento-${orcamento.id}`,
+      name: `Orçamento #${orcamento.numero || orcamento.id.slice(0, 8)} - ${clientName}`,
+      type: 'pdf',
+      url: `/orcamento/${orcamento.id}`,
+      size: 'PDF'
+    });
+    toast({ title: "Orçamento anexado", description: `Orçamento #${orcamento.numero || orcamento.id.slice(0, 8)}` });
+    setActiveToolId(null);
+    setShowToolsMenu(false);
   };
 
   const handleImportReportSelect = async (reportId: string, format: 'pdf' | 'excel') => {
@@ -160,9 +286,145 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
     }, 1500);
   };
 
+  const filteredQuickReplies = quickReplies.filter(r => 
+    r.title?.toLowerCase().includes(quickReplySearch.toLowerCase()) ||
+    r.content?.toLowerCase().includes(quickReplySearch.toLowerCase())
+  );
+
+  const filteredOrcamentos = orcamentos.filter(o => {
+    const search = orcamentoSearch.toLowerCase();
+    return (
+      o.numero?.toString().includes(search) ||
+      o.customers?.nome?.toLowerCase().includes(search) ||
+      o.empresas?.nome_fantasia?.toLowerCase().includes(search)
+    );
+  });
+
   // Render sub-menu content based on tool
   const renderSubMenu = (toolId: string) => {
     switch (toolId) {
+      case 'tool-image':
+        return (
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Anexar Imagem</Label>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageSelect}
+            />
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="w-full"
+              onClick={() => imageInputRef.current?.click()}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Selecionar Imagem
+            </Button>
+          </div>
+        );
+
+      case 'tool-file':
+        return (
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Anexar Arquivo</Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="w-full"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Selecionar Arquivo
+            </Button>
+          </div>
+        );
+
+      case 'tool-quick-replies':
+        return (
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Respostas Rápidas</Label>
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar..."
+                value={quickReplySearch}
+                onChange={(e) => setQuickReplySearch(e.target.value)}
+                className="pl-8 h-9"
+              />
+            </div>
+            <ScrollArea className="h-40">
+              {filteredQuickReplies.length > 0 ? (
+                <div className="space-y-1">
+                  {filteredQuickReplies.map((reply) => (
+                    <button
+                      key={reply.id}
+                      onClick={() => handleQuickReplySelect(reply)}
+                      className="w-full text-left p-2 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <p className="text-sm font-medium truncate">{reply.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{reply.content}</p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  {quickReplies.length === 0 ? "Nenhuma resposta cadastrada" : "Nenhum resultado"}
+                </p>
+              )}
+            </ScrollArea>
+          </div>
+        );
+
+      case 'tool-budget':
+        return (
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Anexar Orçamento</Label>
+            <div className="relative">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por número ou cliente..."
+                value={orcamentoSearch}
+                onChange={(e) => setOrcamentoSearch(e.target.value)}
+                className="pl-8 h-9"
+              />
+            </div>
+            <ScrollArea className="h-40">
+              {filteredOrcamentos.length > 0 ? (
+                <div className="space-y-1">
+                  {filteredOrcamentos.map((orc) => (
+                    <button
+                      key={orc.id}
+                      onClick={() => handleOrcamentoSelect(orc)}
+                      className="w-full text-left p-2 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <p className="text-sm font-medium">
+                        #{orc.numero || orc.id.slice(0, 8)}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {orc.customers?.nome || orc.empresas?.nome_fantasia || 'Sem cliente'}
+                        {orc.valor_total ? ` - R$ ${orc.valor_total.toFixed(2)}` : ''}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  {orcamentos.length === 0 ? "Nenhum orçamento encontrado" : "Nenhum resultado"}
+                </p>
+              )}
+            </ScrollArea>
+          </div>
+        );
+
       case 'tool-attachments':
         return (
           <div className="space-y-3">
@@ -217,34 +479,6 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
           </div>
         );
       
-      case 'tool-translate':
-        return (
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Traduzir para</Label>
-            <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent style={{ zIndex: 10001 }}>
-                <SelectItem value="en">Inglês</SelectItem>
-                <SelectItem value="es">Espanhol</SelectItem>
-                <SelectItem value="pt">Português</SelectItem>
-                <SelectItem value="fr">Francês</SelectItem>
-                <SelectItem value="de">Alemão</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button 
-              size="sm" 
-              onClick={handleTranslate}
-              disabled={isTranslating}
-              className="w-full"
-            >
-              {isTranslating ? (
-                <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-              ) : null}
-              Traduzir
-            </Button>
-          </div>
-        );
-      
       default:
         return null;
     }
@@ -252,6 +486,21 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
 
   return (
     <div ref={menuRef} className="relative">
+      {/* Hidden file inputs */}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleImageSelect}
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+
       {/* Tools expanding upward */}
       {showToolsMenu && (
         <div 
@@ -307,7 +556,7 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
                         <button 
                           className={toolbarBtnClass} 
                           disabled={disabled}
-                          onClick={() => handleToolClick(ferramenta.ferramenta_id)}
+                          onClick={() => onToolAction?.(ferramenta.ferramenta_id)}
                         >
                           <IconComponent size={18} />
                         </button>
