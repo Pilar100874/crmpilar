@@ -96,7 +96,7 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
   const inputIdUpload = `logo-input-upload-${estabelecimentoId}`;
 
   // Usar useQuery para carregar a configuração de forma estável
-  const { data: savedConfig, isLoading: configLoading } = useQuery({
+  const { data: savedConfig, isLoading: configLoading, isSuccess } = useQuery({
     queryKey: ['orcamento-report-config', estabelecimentoId],
     queryFn: async () => {
       const { data: configData, error } = await supabase
@@ -107,18 +107,19 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
 
       if (configData && !error) {
         const loadedConfig = (configData as any).config_json;
-        return { ...defaultConfig, ...loadedConfig };
+        console.log("Query loaded config:", { ...defaultConfig, ...loadedConfig });
+        return { ...defaultConfig, ...loadedConfig } as ReportConfig;
       }
       return defaultConfig;
     },
     enabled: !!estabelecimentoId,
-    staleTime: 0, // Always fetch fresh
-    gcTime: 0,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
   });
 
-  // Config ativa: usa localConfig se existir (edições do usuário), senão savedConfig
-  const config = localConfig ?? savedConfig ?? defaultConfig;
-  const configLoaded = !configLoading;
+  // Config ativa: usa localConfig se existir (edições do usuário), senão savedConfig, senão default
+  const config: ReportConfig = localConfig ?? savedConfig ?? defaultConfig;
+  const configLoaded = !configLoading && isSuccess;
   
   // Função para atualizar config localmente
   const setConfig = (newConfig: ReportConfig | ((prev: ReportConfig) => ReportConfig)) => {
@@ -283,13 +284,13 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                   <Label>Exibir logo no relatório</Label>
                 </div>
                 
-                {!configLoaded && (
+                {configLoading && (
                   <div className="border-2 border-dashed rounded-lg p-8 text-center">
                     <p className="text-sm text-muted-foreground">Carregando...</p>
                   </div>
                 )}
                 
-                {configLoaded && config.logo_url && (
+                {!configLoading && config.logo_url && (
                   <div className="border rounded-lg p-4 flex flex-col items-center gap-4">
                     <img
                       src={config.logo_url}
@@ -337,7 +338,7 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                   </div>
                 )}
                 
-                {configLoaded && !config.logo_url && (
+                {!configLoading && !config.logo_url && (
                   <div className="border-2 border-dashed rounded-lg p-8 text-center">
                     <label htmlFor={inputIdUpload}>
                       <Button 
