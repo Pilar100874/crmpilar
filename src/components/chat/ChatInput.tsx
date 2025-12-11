@@ -389,8 +389,36 @@ export default function ChatInput({
     onSendMessage(`Imagem: ${file.name}`, "image", fileUrl, file.name);
   };
 
-  const handleFileSelected = (file: File, fileUrl: string) => {
-    onSendMessage(`Arquivo: ${file.name}`, "file", fileUrl, file.name);
+  const handleFileSelected = async (file: File, fileUrl: string) => {
+    try {
+      // Upload file to Supabase storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `attachments/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('chat-attachments')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error("Erro ao fazer upload:", uploadError);
+        toast.error("Erro ao anexar arquivo");
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('chat-attachments')
+        .getPublicUrl(filePath);
+
+      if (urlData?.publicUrl) {
+        onSendMessage(`Arquivo: ${file.name}`, "file", urlData.publicUrl, file.name);
+      } else {
+        toast.error("Erro ao obter URL do arquivo");
+      }
+    } catch (error) {
+      console.error("Erro ao processar arquivo:", error);
+      toast.error("Erro ao anexar arquivo");
+    }
   };
 
   const handleVariablesSubmit = (variables: Record<string, string>) => {
