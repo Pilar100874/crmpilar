@@ -22,7 +22,8 @@ import {
   Power,
   TestTube2,
   Phone,
-  Video
+  Video,
+  Wrench
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,6 +54,7 @@ import SentimentAnalysisCRUD from '@/components/config/SentimentAnalysisCRUD';
 import KnowledgeBaseCRUD from '@/components/config/KnowledgeBaseCRUD';
 import IAConfigCRUD from '@/components/config/IAConfigCRUD';
 import SLAConfigCRUD from '@/components/config/SLAConfigCRUD';
+import FerramentasAtendimentoCRUD from '@/components/config/FerramentasAtendimentoCRUD';
 
 // Import Bot components
 import BotCreate from './BotCreate';
@@ -69,6 +71,7 @@ interface TabItem {
 }
 
 const tabItems: TabItem[] = [
+  { id: 'ferramentas', label: 'Ferramentas por Aba', icon: Wrench },
   { id: 'textos-prontos', label: 'Textos Prontos', icon: MessageSquareQuote },
   { id: 'anexos-rapidos', label: 'Anexos Rápidos', icon: Paperclip },
   { id: 'skills', label: 'Skills de Atendimento', icon: Award },
@@ -373,7 +376,7 @@ function FilasManagerEmbedded({ estabelecimentoId }: { estabelecimentoId: string
 export default function AtendimentoConfig() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
-  const currentTab = searchParams.get('tab') || 'textos-prontos';
+  const currentTab = searchParams.get('tab') || 'ferramentas';
 
   const { data: estabelecimentoId } = useQuery({
     queryKey: ['user-estabelecimento-atendimento'],
@@ -460,6 +463,16 @@ export default function AtendimentoConfig() {
           </div>
 
           <div className="flex-1 overflow-auto p-3 sm:p-6">
+            <TabsContent value="ferramentas" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Wrench className="h-4 w-4 sm:h-5 sm:w-5" />Ferramentas por Aba</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Configure quais ferramentas aparecem em cada aba e no RadialMenu</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">{estabelecimentoId && <FerramentasAtendimentoCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="textos-prontos" className="mt-0 h-full">
               <Card className="h-full">
                 <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
