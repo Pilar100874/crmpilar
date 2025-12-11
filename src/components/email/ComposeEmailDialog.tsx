@@ -55,7 +55,6 @@ export function ComposeEmailDialog({
   const [subject, setSubject] = useState(defaultSubject);
   const [body, setBody] = useState(defaultBody);
   const [sending, setSending] = useState(false);
-  const [toolsOpen, setToolsOpen] = useState(false);
 
   const { getToolbarFerramentas } = useFerramentasAtendimento(estabelecimentoId);
   const ferramentasEmail = getToolbarFerramentas('email' as TabType);
@@ -86,7 +85,6 @@ ${orcamentoData.itens.map(item => `- ${item.nome}: ${item.quantidade}x R$ ${item
 `;
 
     setBody(prev => prev + orcamentoText);
-    setToolsOpen(false);
     toast({
       title: "Orçamento anexado",
       description: "Os dados do orçamento foram adicionados ao email",
@@ -103,7 +101,6 @@ ${orcamentoData.itens.map(item => `- ${item.nome}: ${item.quantidade}x R$ ${item
         description: `Ferramenta "${ferramentaId}" será implementada em breve`,
       });
     }
-    setToolsOpen(false);
   };
 
   // Reset fields when dialog opens with new defaults
@@ -222,14 +219,24 @@ ${orcamentoData.itens.map(item => `- ${item.nome}: ${item.quantidade}x R$ ${item
           </div>
 
           <div className="flex items-center gap-2">
-            <DropdownMenu open={toolsOpen} onOpenChange={setToolsOpen} modal={false}>
+            <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50">
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  size="sm" 
+                  className="gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                >
                   <Wrench className="h-4 w-4" />
                   <span>Ferramentas</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 bg-popover z-[100]" sideOffset={5}>
+              <DropdownMenuContent 
+                align="start" 
+                className="w-56 bg-popover" 
+                sideOffset={5}
+                style={{ zIndex: 9999 }}
+              >
                 {/* Ferramenta fixa: Anexar Orçamento */}
                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                   Ferramentas
