@@ -246,8 +246,9 @@ export default function OrcamentoAttachmentSelector({
         165, y
       );
 
-      // Generate blob
-      const pdfBlob = doc.output("blob");
+      // Generate blob using arraybuffer for better reliability
+      const pdfArrayBuffer = doc.output("arraybuffer");
+      const pdfBlob = new Blob([pdfArrayBuffer], { type: "application/pdf" });
       const fileName = `orcamento_${orcamento.id.slice(0, 8)}.pdf`;
       const file = new File([pdfBlob], fileName, { type: "application/pdf" });
       const url = URL.createObjectURL(pdfBlob);

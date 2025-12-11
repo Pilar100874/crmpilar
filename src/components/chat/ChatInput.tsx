@@ -398,7 +398,10 @@ export default function ChatInput({
 
       const { error: uploadError } = await supabase.storage
         .from('chat-attachments')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          contentType: file.type || 'application/octet-stream',
+          cacheControl: '3600',
+        });
 
       if (uploadError) {
         console.error("Erro ao fazer upload:", uploadError);
