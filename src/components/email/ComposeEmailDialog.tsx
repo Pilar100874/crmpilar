@@ -222,14 +222,14 @@ ${orcamentoData.itens.map(item => `- ${item.nome}: ${item.quantidade}x R$ ${item
           </div>
 
           <div className="flex items-center gap-2">
-            <DropdownMenu open={toolsOpen} onOpenChange={setToolsOpen}>
+            <DropdownMenu open={toolsOpen} onOpenChange={setToolsOpen} modal={false}>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-2">
+                <Button variant="ghost" size="sm" className="gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50">
                   <Wrench className="h-4 w-4" />
-                  <span className="hidden sm:inline">Ferramentas</span>
+                  <span>Ferramentas</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 bg-popover z-50">
+              <DropdownMenuContent align="start" className="w-56 bg-popover z-[100]" sideOffset={5}>
                 {/* Ferramenta fixa: Anexar Orçamento */}
                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                   Ferramentas
