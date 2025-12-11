@@ -120,6 +120,14 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
   const config = localConfig ?? savedConfig ?? defaultConfig;
   const configLoaded = !configLoading;
   
+  // Debug logs
+  console.log("RENDER - configLoading:", configLoading, "configLoaded:", configLoaded);
+  console.log("RENDER - savedConfig:", savedConfig);
+  console.log("RENDER - localConfig:", localConfig);
+  console.log("RENDER - config:", config);
+  console.log("RENDER - config.logo_url:", config.logo_url);
+  console.log("RENDER - config.empresa_nome:", config.empresa_nome);
+  
   // Função para atualizar config localmente
   const setConfig = (newConfig: ReportConfig | ((prev: ReportConfig) => ReportConfig)) => {
     if (typeof newConfig === 'function') {
