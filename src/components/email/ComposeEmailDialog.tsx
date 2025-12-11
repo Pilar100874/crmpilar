@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Send, X, Paperclip, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { FormattingToolbar } from "@/components/flow/block-configs/FormattingToolbar";
 
 interface ComposeEmailDialogProps {
   open: boolean;
@@ -37,34 +36,6 @@ export function ComposeEmailDialog({
   const [subject, setSubject] = useState(defaultSubject);
   const [body, setBody] = useState(defaultBody);
   const [sending, setSending] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const handleFormat = (prefix: string, suffix: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = body.substring(start, end);
-    const newText = body.substring(0, start) + prefix + selectedText + suffix + body.substring(end);
-    
-    setBody(newText);
-    
-    // Restore cursor position after the formatted text
-    setTimeout(() => {
-      textarea.focus();
-      const newCursorPos = start + prefix.length + selectedText.length + suffix.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
-  };
-
-  const handleVariableClick = () => {
-    // Placeholder for variable insertion - can be expanded later
-    toast({
-      title: "Variáveis",
-      description: "Funcionalidade de variáveis em desenvolvimento",
-    });
-  };
 
   // Reset fields when dialog opens with new defaults
   const handleOpenChange = (isOpen: boolean) => {
@@ -172,12 +143,7 @@ export function ComposeEmailDialog({
 
           <div className="space-y-2">
             <Label htmlFor="body">Mensagem</Label>
-            <FormattingToolbar 
-              onFormat={handleFormat} 
-              onVariableClick={handleVariableClick} 
-            />
             <Textarea
-              ref={textareaRef}
               id="body"
               placeholder="Escreva sua mensagem..."
               value={body}
