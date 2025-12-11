@@ -2894,7 +2894,8 @@ ${recentMessages}
               <ToolsDropdown 
                 ferramentas={getToolbarFerramentas('email')} 
                 onSelectTool={handleToolSelect} 
-                tabType="email" 
+                tabType="email"
+                insideDialog={true}
               />
             }
           />
@@ -4410,7 +4411,8 @@ ${recentMessages}
           <ToolsDropdown 
             ferramentas={getToolbarFerramentas('email')} 
             onSelectTool={handleToolSelect} 
-            tabType="email" 
+            tabType="email"
+            insideDialog={true}
           />
         }
       />

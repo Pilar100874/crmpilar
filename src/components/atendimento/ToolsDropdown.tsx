@@ -8,9 +8,10 @@ interface ToolsDropdownProps {
   ferramentas: FerramentaConfig[];
   onSelectTool: (ferramentaId: string) => void;
   tabType: TabType;
+  insideDialog?: boolean;
 }
 
-export function ToolsDropdown({ ferramentas, onSelectTool, tabType }: ToolsDropdownProps) {
+export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog = false }: ToolsDropdownProps) {
   const [open, setOpen] = useState(false);
 
   // Filtrar ferramentas por tipo
@@ -22,14 +23,19 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType }: ToolsDropd
   }
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
+    <DropdownMenu open={open} onOpenChange={setOpen} modal={!insideDialog}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
+        <Button variant="ghost" size="sm" className="gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50">
           <Wrench className="h-4 w-4" />
-          <span className="hidden sm:inline">Ferramentas</span>
+          <span>Ferramentas</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent 
+        align="start" 
+        className="w-56 bg-popover"
+        style={insideDialog ? { zIndex: 9999 } : undefined}
+        sideOffset={5}
+      >
         {toolsFerramentas.length > 0 && (
           <>
             <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
