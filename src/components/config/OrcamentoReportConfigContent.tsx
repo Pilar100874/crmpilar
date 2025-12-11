@@ -95,13 +95,17 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
   const inputIdChange = `logo-input-change-${estabelecimentoId}`;
   const inputIdUpload = `logo-input-upload-${estabelecimentoId}`;
 
+  console.log("OrcamentoReportConfigContent RENDER - estabelecimentoId:", estabelecimentoId, "configLoaded:", configLoaded, "config.logo_url:", config.logo_url, "config.empresa_nome:", config.empresa_nome);
+
   useEffect(() => {
+    console.log("OrcamentoReportConfigContent useEffect - estabelecimentoId:", estabelecimentoId);
     if (estabelecimentoId) {
       loadConfig();
     }
   }, [estabelecimentoId]);
 
   const loadConfig = async () => {
+    console.log("OrcamentoReportConfigContent loadConfig START");
     try {
       const { data: configData, error } = await supabase
         .from("orcamento_report_config" as any)
@@ -120,6 +124,7 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
     } catch (error) {
       console.error("Erro ao carregar configuração:", error);
     } finally {
+      console.log("OrcamentoReportConfigContent loadConfig END - setting configLoaded to true");
       setConfigLoaded(true);
     }
   };
