@@ -237,31 +237,26 @@ ${orcamentoData.itens.map(item => `- ${item.nome}: ${item.quantidade}x R$ ${item
                 sideOffset={5}
                 style={{ zIndex: 9999 }}
               >
-                {/* Ferramenta fixa: Anexar Orçamento */}
-                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                  Ferramentas
-                </div>
-                <DropdownMenuItem
-                  onClick={() => handleSelectTool('anexar_orcamento')}
-                  className="gap-2 cursor-pointer"
-                >
-                  <FileText className="h-4 w-4" />
-                  <span>Anexar Orçamento</span>
-                </DropdownMenuItem>
-                
-                {toolsFerramentas.map(ferramenta => {
-                  const Icon = ferramenta.IconComponent;
-                  return (
-                    <DropdownMenuItem
-                      key={ferramenta.id}
-                      onClick={() => handleSelectTool(ferramenta.ferramenta_id)}
-                      className="gap-2 cursor-pointer"
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span>{ferramenta.nome}</span>
-                    </DropdownMenuItem>
-                  );
-                })}
+                {toolsFerramentas.length > 0 && (
+                  <>
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      Ferramentas
+                    </div>
+                    {toolsFerramentas.map(ferramenta => {
+                      const Icon = ferramenta.IconComponent;
+                      return (
+                        <DropdownMenuItem
+                          key={ferramenta.id}
+                          onClick={() => handleSelectTool(ferramenta.ferramenta_id)}
+                          className="gap-2 cursor-pointer"
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span>{ferramenta.nome}</span>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </>
+                )}
                 
                 {iaFerramentas.length > 0 && (
                   <>
