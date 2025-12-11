@@ -111,10 +111,12 @@ export default function OrcamentoReportConfig() {
           .from("orcamento_report_config" as any)
           .select("*")
           .eq("estabelecimento_id", usuario.estabelecimento_id)
-          .single();
+          .maybeSingle();
 
         if (configData && !error) {
-          setConfig({ ...defaultConfig, ...(configData as any).config_json });
+          const loadedConfig = (configData as any).config_json;
+          console.log("Config loaded:", loadedConfig);
+          setConfig({ ...defaultConfig, ...loadedConfig });
         }
       }
     } catch (error) {
@@ -253,10 +255,15 @@ export default function OrcamentoReportConfig() {
                   {config.logo_url ? (
                     <div className="border rounded-lg p-4 flex flex-col items-center gap-4">
                       <img
+                        key={config.logo_url}
                         src={config.logo_url}
                         alt="Logo"
                         className="max-h-24 object-contain"
+                        onError={(e) => {
+                          console.error("Error loading logo in config:", config.logo_url);
+                        }}
                       />
+                      <p className="text-xs text-muted-foreground truncate max-w-full">{config.logo_url.split('/').pop()}</p>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" asChild>
                           <label className="cursor-pointer">
@@ -667,7 +674,15 @@ export default function OrcamentoReportConfig() {
                   <div className="flex justify-between items-start mb-6 pb-4 border-b-2" style={{ borderColor: config.cor_primaria }}>
                     <div className="flex items-center gap-4">
                       {config.mostrar_logo && config.logo_url && (
-                        <img src={config.logo_url} alt="Logo" className="h-16 object-contain" />
+                        <img 
+                          src={config.logo_url} 
+                          alt="Logo" 
+                          className="h-16 object-contain" 
+                          onError={(e) => {
+                            console.error("Error loading logo:", config.logo_url);
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
                       )}
                       <div>
                         <h1 className="text-xl font-bold" style={{ color: config.cor_primaria }}>
