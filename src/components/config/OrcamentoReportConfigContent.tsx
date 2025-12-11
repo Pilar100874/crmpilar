@@ -284,86 +284,86 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                   <Label>Exibir logo no relatório</Label>
                 </div>
                 
-                {/* Debug info */}
-                <div className="text-xs text-red-500 mb-2">
-                  Debug: configLoading={String(configLoading)}, logo_url={config.logo_url ? "exists" : "empty"}
+                {/* Debug info completo */}
+                <div className="text-xs text-red-500 mb-2 p-2 bg-red-50 rounded border border-red-200">
+                  <p>Debug: configLoading={String(configLoading)}</p>
+                  <p>logo_url: {config.logo_url || "(vazio)"}</p>
                 </div>
                 
-                {configLoading && (
-                  <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                {/* Logo section - sempre mostra algo */}
+                <div className="border rounded-lg p-4 flex flex-col items-center gap-4 bg-gray-50">
+                  {configLoading ? (
                     <p className="text-sm text-muted-foreground">Carregando...</p>
-                  </div>
-                )}
-                
-                {!configLoading && (
-                  <>
-                    {config.logo_url ? (
-                      <div className="border rounded-lg p-4 flex flex-col items-center gap-4">
+                  ) : config.logo_url ? (
+                    <>
+                      <div className="border-2 border-dashed border-gray-300 p-2 bg-white min-h-[100px] min-w-[150px] flex items-center justify-center">
                         <img
                           src={config.logo_url}
                           alt="Logo da Empresa"
                           className="max-h-24 object-contain"
+                          style={{ backgroundColor: '#f0f0f0' }}
+                          onLoad={() => console.log("Logo carregado com sucesso")}
                           onError={(e) => {
                             console.log("Erro ao carregar imagem:", config.logo_url);
-                            e.currentTarget.style.display = 'none';
+                            (e.currentTarget as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50"><text x="10" y="30" fill="red">Erro ao carregar</text></svg>';
                           }}
                         />
-                        <p className="text-xs text-muted-foreground truncate max-w-full">
-                          {config.logo_url.split('/').pop()?.split('?')[0]}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            disabled={uploading}
-                            onClick={() => document.getElementById(inputIdChange)?.click()}
-                          >
-                            <Upload className="h-4 w-4 mr-2" />
-                            {uploading ? "Enviando..." : "Alterar"}
-                          </Button>
-                          <input
-                            id={inputIdChange}
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleLogoUpload}
-                            disabled={uploading}
-                          />
-                          <Button 
-                            variant="destructive" 
-                            size="sm"
-                            onClick={handleRemoveLogo}
-                            disabled={uploading}
-                          >
-                            Remover
-                          </Button>
-                        </div>
                       </div>
-                    ) : (
-                      <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                      <p className="text-xs text-muted-foreground truncate max-w-full">
+                        {config.logo_url.split('/').pop()?.split('?')[0]}
+                      </p>
+                      <div className="flex gap-2">
                         <Button 
                           variant="outline" 
+                          size="sm" 
                           disabled={uploading}
-                          onClick={() => document.getElementById(inputIdUpload)?.click()}
+                          onClick={() => document.getElementById(inputIdChange)?.click()}
                         >
                           <Upload className="h-4 w-4 mr-2" />
-                          {uploading ? "Enviando..." : "Enviar Logo"}
+                          {uploading ? "Enviando..." : "Alterar"}
                         </Button>
                         <input
-                          id={inputIdUpload}
+                          id={inputIdChange}
                           type="file"
                           accept="image/*"
                           className="hidden"
                           onChange={handleLogoUpload}
                           disabled={uploading}
                         />
-                        <p className="text-xs text-muted-foreground mt-2">
-                          PNG, JPG ou SVG (máx. 2MB)
-                        </p>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={handleRemoveLogo}
+                          disabled={uploading}
+                        >
+                          Remover
+                        </Button>
                       </div>
-                    )}
-                  </>
-                )}
+                    </>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        disabled={uploading}
+                        onClick={() => document.getElementById(inputIdUpload)?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {uploading ? "Enviando..." : "Enviar Logo"}
+                      </Button>
+                      <input
+                        id={inputIdUpload}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleLogoUpload}
+                        disabled={uploading}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        PNG, JPG ou SVG (máx. 2MB)
+                      </p>
+                    </>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
