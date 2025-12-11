@@ -283,31 +283,40 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                   <Label>Exibir logo no relatório</Label>
                 </div>
                 
-                {!configLoaded ? (
+                {!configLoaded && (
                   <div className="border-2 border-dashed rounded-lg p-8 text-center">
                     <p className="text-sm text-muted-foreground">Carregando...</p>
                   </div>
-                ) : config.logo_url ? (
+                )}
+                
+                {configLoaded && config.logo_url && (
                   <div className="border rounded-lg p-4 flex flex-col items-center gap-4">
                     <img
-                      key={config.logo_url}
                       src={config.logo_url}
-                      alt="Logo"
+                      alt="Logo da Empresa"
                       className="max-h-24 object-contain"
+                      onError={(e) => {
+                        console.log("Erro ao carregar imagem:", config.logo_url);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                     <p className="text-xs text-muted-foreground truncate max-w-full">
                       {config.logo_url.split('/').pop()?.split('?')[0]}
                     </p>
                     <div className="flex gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        disabled={uploading}
-                        onClick={() => document.getElementById(inputIdChange)?.click()}
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        {uploading ? "Enviando..." : "Alterar"}
-                      </Button>
+                      <label htmlFor={inputIdChange}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          disabled={uploading}
+                          asChild
+                        >
+                          <span>
+                            <Upload className="h-4 w-4 mr-2" />
+                            {uploading ? "Enviando..." : "Alterar"}
+                          </span>
+                        </Button>
+                      </label>
                       <input
                         id={inputIdChange}
                         type="file"
@@ -326,16 +335,22 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                       </Button>
                     </div>
                   </div>
-                ) : (
+                )}
+                
+                {configLoaded && !config.logo_url && (
                   <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                    <Button 
-                      variant="outline" 
-                      disabled={uploading}
-                      onClick={() => document.getElementById(inputIdUpload)?.click()}
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      {uploading ? "Enviando..." : "Enviar Logo"}
-                    </Button>
+                    <label htmlFor={inputIdUpload}>
+                      <Button 
+                        variant="outline" 
+                        disabled={uploading}
+                        asChild
+                      >
+                        <span>
+                          <Upload className="h-4 w-4 mr-2" />
+                          {uploading ? "Enviando..." : "Enviar Logo"}
+                        </span>
+                      </Button>
+                    </label>
                     <input
                       id={inputIdUpload}
                       type="file"
