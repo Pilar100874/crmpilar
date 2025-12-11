@@ -40,7 +40,8 @@ import { EmailFolderSidebar } from "@/components/email/EmailFolderSidebar";
 import { EmailPanel } from "@/components/email/EmailPanel";
 import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
 import type { Atendente } from "@/types/atendimento";
-
+import { useFerramentasAtendimento, type TabType } from "@/hooks/useFerramentasAtendimento";
+import { ToolsDropdown } from "@/components/atendimento/ToolsDropdown";
 interface Conversation {
   id: string;
   customer_id: string;
@@ -238,6 +239,9 @@ export default function Atendimento() {
 
   // Global client filter
   const [globalFilter, setGlobalFilter] = useState<GlobalFilter | null>(null);
+
+  // Ferramentas dinâmicas por aba
+  const { getRadialMenuItems, getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId || null);
 
   // Omnichannel routing
   const { setupMessageListener } = useOmnichannelRouting();
@@ -2078,36 +2082,25 @@ ${recentMessages}
     );
   }
 
+  // Ferramentas dinâmicas baseadas na aba ativa
+  const currentTabType = activeTab as TabType;
+  const dynamicRadialTools = useMemo(() => {
+    const tools = getRadialMenuItems(currentTabType);
+    return tools.length > 0 ? tools : [];
+  }, [currentTabType, getRadialMenuItems]);
+
   const RADIAL_MENU_ITEMS: RadialMenuItem[] = [
     { id: "chat", icon: MessageSquare, label: "Conversas", badge: activeConversationsCount },
     { id: "agenda", icon: CalendarIcon, label: "Agenda", badge: todayTasksCount },
     { id: "email", icon: Mail, label: "E-mails", badge: unreadEmailsCount },
     { id: "orcamento", icon: Receipt, label: "Orçamentos", badge: orcamentosEmAndamentoCount },
     { id: "dialer", icon: PhoneCall, label: "Discador" },
-    { 
+    ...(dynamicRadialTools.length > 0 ? [{ 
       id: "tools", 
       icon: Plus, 
       label: "Ferramentas",
-      subItems: [
-        // Ferramentas básicas
-        { id: "tool-image", icon: Image, label: "Imagem" },
-        { id: "tool-file", icon: Paperclip, label: "Arquivo" },
-        { id: "tool-variables", icon: Variable, label: "Variáveis" },
-        { id: "tool-quick-replies", icon: Zap, label: "Respostas Rápidas" },
-        { id: "tool-attachments", icon: FileCheck, label: "Anexos Rápidos" },
-        { id: "tool-translate", icon: Languages, label: "Traduzir" },
-        { id: "tool-reports", icon: FileText, label: "Relatórios" },
-        { id: "tool-bot", icon: Bot, label: "Redirecionar Bot" },
-        { id: "tool-webhook", icon: Webhook, label: "Resposta Automática" },
-        { id: "tool-transfer", icon: UserPlus, label: "Transferir Usuário" },
-        // Ferramentas de IA
-        { id: "ai-chat", icon: Wand2, label: "Chat IA" },
-        { id: "ai-suggestion", icon: Sparkles, label: "Sugestão Contextual" },
-        { id: "ai-summary", icon: FileText, label: "Gerar Resumo" },
-        { id: "ai-kb", icon: BookOpen, label: "Artigos KB" },
-        { id: "ai-translate", icon: Languages, label: "Tradução em Tempo Real" },
-      ]
-    },
+      subItems: dynamicRadialTools
+    }] : []),
   ];
 
   const handleRadialMenuSelect = (item: RadialMenuItem) => {
@@ -2164,6 +2157,57 @@ ${recentMessages}
         setShowRadialTransferDialog(true);
         break;
       // AI submenu items
+      case "ai-chat":
+        setShowAIChat(!showAIChat);
+        break;
+      case "ai-suggestion":
+        setTriggerTool('context');
+        break;
+      case "ai-summary":
+        setTriggerTool('summary');
+        break;
+      case "ai-kb":
+        setTriggerTool('kb');
+        break;
+      case "ai-translate":
+        setShowRadialRealTimeTranslateDialog(true);
+        break;
+    }
+  };
+
+  // Handler para seleção de ferramenta (usado pelo ToolsDropdown e RadialMenu)
+  const handleToolSelect = (toolId: string) => {
+    switch (toolId) {
+      case "tool-image":
+        setTriggerTool('image');
+        break;
+      case "tool-file":
+        setTriggerTool('file');
+        break;
+      case "tool-variables":
+        setTriggerTool('variables');
+        break;
+      case "tool-quick-replies":
+        setTriggerTool('quick-replies');
+        break;
+      case "tool-attachments":
+        setTriggerTool('quick-attachments');
+        break;
+      case "tool-translate":
+        setShowRadialTranslateDialog(true);
+        break;
+      case "tool-reports":
+        setShowRadialReportsDialog(true);
+        break;
+      case "tool-bot":
+        setShowRadialBotDialog(true);
+        break;
+      case "tool-webhook":
+        setShowRadialWebhookDialog(true);
+        break;
+      case "tool-transfer":
+        setShowRadialTransferDialog(true);
+        break;
       case "ai-chat":
         setShowAIChat(!showAIChat);
         break;
@@ -4039,16 +4083,23 @@ ${recentMessages}
                     </p>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    setShowClientDetailsAgenda(!showClientDetailsAgenda);
-                  }}
-                  className="h-8 w-8 p-0"
-                >
-                  {showClientDetailsAgenda ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <ToolsDropdown 
+                    ferramentas={getToolbarFerramentas('agenda')} 
+                    onSelectTool={handleToolSelect} 
+                    tabType="agenda" 
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setShowClientDetailsAgenda(!showClientDetailsAgenda);
+                    }}
+                    className="h-8 w-8 p-0"
+                  >
+                    {showClientDetailsAgenda ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -4125,6 +4176,13 @@ ${recentMessages}
               setComposeEmailDefaults({ to: '', subject: fwdSubject, body: fwdBody });
               setShowComposeEmail(true);
             }}
+            toolsSlot={
+              <ToolsDropdown 
+                ferramentas={getToolbarFerramentas('email')} 
+                onSelectTool={handleToolSelect} 
+                tabType="email" 
+              />
+            }
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
