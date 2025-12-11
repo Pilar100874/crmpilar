@@ -109,6 +109,47 @@ export default function FerramentasAtendimentoCRUD({ estabelecimentoId }: Ferram
         return;
       }
 
+      // Verificar se há ferramentas padrão faltando e adicionar
+      const existingIds = data.map(f => f.ferramenta_id);
+      const missingTools = DEFAULT_TOOLS.filter(t => !existingIds.includes(t.ferramenta_id));
+      
+      if (missingTools.length > 0) {
+        const toolsToInsert = missingTools.map((tool, index) => ({
+          ferramenta_id: tool.ferramenta_id,
+          nome: tool.nome,
+          icone: tool.icone,
+          descricao: tool.descricao,
+          tipo: tool.tipo,
+          estabelecimento_id: estabelecimentoId,
+          ordem: data.length + index,
+          ativo: true,
+          aba_chat: tool.aba_chat || false,
+          aba_agenda: (tool as any).aba_agenda || false,
+          aba_email: (tool as any).aba_email || false,
+          aba_orcamento: (tool as any).aba_orcamento || false,
+          radial_chat: tool.radial_chat || false,
+          radial_agenda: (tool as any).radial_agenda || false,
+          radial_email: (tool as any).radial_email || false,
+          radial_orcamento: (tool as any).radial_orcamento || false
+        }));
+
+        const { error: insertError } = await supabase
+          .from('ferramentas_atendimento')
+          .insert(toolsToInsert);
+
+        if (!insertError) {
+          // Recarregar para pegar as novas ferramentas
+          const { data: newData } = await supabase
+            .from('ferramentas_atendimento')
+            .select('*')
+            .eq('estabelecimento_id', estabelecimentoId)
+            .order('ordem');
+          
+          setFerramentas((newData || []) as Ferramenta[]);
+          return;
+        }
+      }
+
       setFerramentas(data as Ferramenta[]);
     } catch (error) {
       console.error('Erro ao carregar ferramentas:', error);
