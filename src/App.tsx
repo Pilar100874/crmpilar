@@ -92,6 +92,7 @@ import AtendimentoConfig from "./pages/AtendimentoConfig";
 import LandingPage from "./pages/LandingPage";
 import Avisos from "./pages/Avisos";
 import EmailConfig from "./pages/EmailConfig";
+import OrcamentoReportConfig from "./pages/OrcamentoReportConfig";
 
 const queryClient = new QueryClient();
 
@@ -171,6 +172,7 @@ const App = () => (
             <Route path="/editor-regras" element={<EditorRegras />} />
             <Route path="/editor-regras/:id" element={<EditorRegras />} />
             <Route path="/vendas-config" element={<VendasConfig />} />
+            <Route path="/orcamento-report-config" element={<OrcamentoReportConfig />} />
             <Route path="/atendimento-config" element={<AtendimentoConfig />} />
             <Route path="/chat-interno" element={<ChatInterno />} />
             <Route path="/avisos" element={<Avisos />} />
