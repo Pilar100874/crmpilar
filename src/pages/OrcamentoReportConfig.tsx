@@ -88,23 +88,17 @@ export default function OrcamentoReportConfig() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [logoPreview, setLogoPreview] = useState<string>("");
+  const [configLoaded, setConfigLoaded] = useState(false);
 
   useEffect(() => {
     loadConfig();
   }, []);
 
-  // Sync logoPreview with config.logo_url
-  useEffect(() => {
-    setLogoPreview(config.logo_url || "");
-  }, [config.logo_url]);
-
   const loadConfig = async () => {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
-        setInitialLoading(false);
+        setConfigLoaded(true);
         return;
       }
 
@@ -126,14 +120,14 @@ export default function OrcamentoReportConfig() {
         if (configData && !error) {
           const loadedConfig = (configData as any).config_json;
           const mergedConfig = { ...defaultConfig, ...loadedConfig };
+          console.log("Config carregado:", mergedConfig);
           setConfig(mergedConfig);
-          setLogoPreview(mergedConfig.logo_url || "");
         }
       }
     } catch (error) {
       console.error("Erro ao carregar configuração:", error);
     } finally {
-      setInitialLoading(false);
+      setConfigLoaded(true);
     }
   };
 
@@ -187,9 +181,7 @@ export default function OrcamentoReportConfig() {
     const file = e.target.files?.[0];
     if (!file || !estabelecimentoId) return;
 
-    // Reset input immediately
     e.target.value = "";
-
     setUploading(true);
     
     try {
@@ -207,11 +199,6 @@ export default function OrcamentoReportConfig() {
         .getPublicUrl(fileName);
 
       const newLogoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-      
-      // Update preview immediately
-      setLogoPreview(newLogoUrl);
-      
-      // Update config and save
       const newConfig = { ...config, logo_url: newLogoUrl };
       setConfig(newConfig);
       
@@ -231,9 +218,6 @@ export default function OrcamentoReportConfig() {
 
   const handleRemoveLogo = async () => {
     if (!estabelecimentoId) return;
-    
-    // Update preview immediately
-    setLogoPreview("");
     
     const newConfig = { ...config, logo_url: "" };
     setConfig(newConfig);
@@ -309,20 +293,20 @@ export default function OrcamentoReportConfig() {
                     <Label>Exibir logo no relatório</Label>
                   </div>
                   
-                  {initialLoading ? (
+                  {!configLoaded ? (
                     <div className="border-2 border-dashed rounded-lg p-8 text-center">
                       <p className="text-sm text-muted-foreground">Carregando...</p>
                     </div>
-                  ) : logoPreview ? (
+                  ) : config.logo_url ? (
                     <div className="border rounded-lg p-4 flex flex-col items-center gap-4">
                       <img
-                        key={logoPreview}
-                        src={logoPreview}
+                        key={config.logo_url}
+                        src={config.logo_url}
                         alt="Logo"
                         className="max-h-24 object-contain"
                       />
                       <p className="text-xs text-muted-foreground truncate max-w-full">
-                        {logoPreview.split('/').pop()?.split('?')[0]}
+                        {config.logo_url.split('/').pop()?.split('?')[0]}
                       </p>
                       <div className="flex gap-2">
                         <Button 
@@ -742,9 +726,9 @@ export default function OrcamentoReportConfig() {
                   {/* Header */}
                   <div className="flex justify-between items-start mb-6 pb-4 border-b-2" style={{ borderColor: config.cor_primaria }}>
                     <div className="flex items-center gap-4">
-                      {config.mostrar_logo && logoPreview && (
+                      {config.mostrar_logo && config.logo_url && (
                         <img 
-                          src={logoPreview} 
+                          src={config.logo_url} 
                           alt="Logo" 
                           className="h-16 object-contain" 
                         />
