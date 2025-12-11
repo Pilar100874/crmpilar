@@ -747,21 +747,23 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                 <p>logo_url: {config.logo_url || "VAZIO"}</p>
               </div>
               
-              {/* TESTE DIRETO DA IMAGEM */}
-              {config.logo_url && (
-                <div className="mb-4 p-2 border-2 border-green-500 bg-gray-100">
-                  <p className="text-sm mb-2 text-black">Teste img tag direta:</p>
-                  <img 
-                    src={config.logo_url} 
-                    alt="teste logo" 
-                    width={100}
-                    height={100}
-                    style={{ backgroundColor: '#fff', border: '1px solid red' }}
-                    onLoad={() => console.log('Imagem carregou!')}
-                    onError={(e) => console.log('Erro ao carregar:', e)}
-                  />
-                </div>
-              )}
+              {/* TESTE DIRETO DA IMAGEM - SEM CONDIÇÃO */}
+              <div className="mb-4 p-2 border-4 border-green-500 bg-yellow-100">
+                <p className="text-sm mb-2 text-black font-bold">Teste img tag direta (sempre visível):</p>
+                <p className="text-xs text-gray-700 mb-2">URL: {config.logo_url?.substring(0, 50)}...</p>
+                <img 
+                  src={config.logo_url || "https://via.placeholder.com/100"} 
+                  alt="teste logo" 
+                  width={100}
+                  height={100}
+                  style={{ backgroundColor: '#fff', border: '2px solid red', display: 'block' }}
+                  onLoad={() => console.log('Imagem carregou!')}
+                  onError={(e) => {
+                    console.log('Erro ao carregar:', e);
+                    (e.target as HTMLImageElement).style.border = '2px solid orange';
+                  }}
+                />
+              </div>
               
               <div 
                 className="bg-white text-black p-8 rounded-lg shadow-lg mx-auto"
