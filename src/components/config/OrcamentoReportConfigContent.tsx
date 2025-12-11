@@ -90,6 +90,10 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [configLoaded, setConfigLoaded] = useState(false);
+  
+  // IDs únicos para evitar conflitos
+  const inputIdChange = `logo-input-change-${estabelecimentoId}`;
+  const inputIdUpload = `logo-input-upload-${estabelecimentoId}`;
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -105,9 +109,12 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
         .eq("estabelecimento_id", estabelecimentoId)
         .maybeSingle();
 
+      console.log("OrcamentoReportConfigContent - configData:", configData, "error:", error);
+
       if (configData && !error) {
         const loadedConfig = (configData as any).config_json;
         const mergedConfig = { ...defaultConfig, ...loadedConfig };
+        console.log("OrcamentoReportConfigContent - mergedConfig:", mergedConfig);
         setConfig(mergedConfig);
       }
     } catch (error) {
@@ -291,13 +298,13 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                         variant="outline" 
                         size="sm" 
                         disabled={uploading}
-                        onClick={() => document.getElementById('logo-input-change')?.click()}
+                        onClick={() => document.getElementById(inputIdChange)?.click()}
                       >
                         <Upload className="h-4 w-4 mr-2" />
                         {uploading ? "Enviando..." : "Alterar"}
                       </Button>
                       <input
-                        id="logo-input-change"
+                        id={inputIdChange}
                         type="file"
                         accept="image/*"
                         className="hidden"
@@ -319,13 +326,13 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                     <Button 
                       variant="outline" 
                       disabled={uploading}
-                      onClick={() => document.getElementById('logo-input-upload')?.click()}
+                      onClick={() => document.getElementById(inputIdUpload)?.click()}
                     >
                       <Upload className="h-4 w-4 mr-2" />
                       {uploading ? "Enviando..." : "Enviar Logo"}
                     </Button>
                     <input
-                      id="logo-input-upload"
+                      id={inputIdUpload}
                       type="file"
                       accept="image/*"
                       className="hidden"
