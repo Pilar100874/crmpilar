@@ -296,22 +296,28 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                     <p className="text-sm text-muted-foreground">Carregando...</p>
                   ) : config.logo_url ? (
                     <>
-                      <div className="border-2 border-dashed border-gray-300 p-2 bg-white flex items-center justify-center" style={{ minHeight: '120px', minWidth: '200px' }}>
+                      <div 
+                        className="border-2 border-dashed border-gray-300 p-2 bg-white flex items-center justify-center overflow-visible" 
+                        style={{ minHeight: '150px', minWidth: '200px' }}
+                      >
+                        {/* Imagem com estilos inline forçados */}
                         <img
                           src={config.logo_url}
                           alt="Logo da Empresa"
+                          width="150"
+                          height="100"
                           style={{ 
-                            maxHeight: '100px', 
-                            maxWidth: '180px',
-                            minHeight: '50px',
-                            minWidth: '50px',
+                            width: '150px',
+                            height: 'auto',
+                            maxHeight: '120px',
                             objectFit: 'contain',
                             display: 'block',
-                            border: '1px solid red'
+                            visibility: 'visible',
+                            opacity: 1
                           }}
                           onLoad={(e) => {
                             const img = e.currentTarget as HTMLImageElement;
-                            console.log("Logo carregado - dimensões:", img.naturalWidth, "x", img.naturalHeight);
+                            console.log("Logo carregado - dimensões:", img.naturalWidth, "x", img.naturalHeight, "rendered:", img.width, "x", img.height);
                           }}
                           onError={(e) => {
                             console.log("Erro ao carregar imagem:", config.logo_url);
