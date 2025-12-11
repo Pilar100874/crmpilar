@@ -88,6 +88,7 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [localConfig, setLocalConfig] = useState<ReportConfig | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string>("");
 
   // Usar useQuery para carregar a configuração de forma estável
   const { data: savedConfig, isLoading: configLoading, isSuccess } = useQuery({
@@ -101,18 +102,23 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
 
       if (configData && !error) {
         const loadedConfig = (configData as any).config_json;
-        console.log("Query loaded config:", { ...defaultConfig, ...loadedConfig });
+        // Sincroniza logoUrl quando carregar do banco
+        if (loadedConfig.logo_url) {
+          setLogoUrl(loadedConfig.logo_url);
+        }
         return { ...defaultConfig, ...loadedConfig } as ReportConfig;
       }
       return defaultConfig;
     },
     enabled: !!estabelecimentoId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
   });
 
   // Config ativa: usa localConfig se existir (edições do usuário), senão savedConfig, senão default
   const config: ReportConfig = localConfig ?? savedConfig ?? defaultConfig;
+  // Usa logoUrl do state dedicado se existir, senão usa do config
+  const currentLogoUrl = logoUrl || config.logo_url;
   const configLoaded = !configLoading && isSuccess;
   
   // Função para atualizar config localmente
@@ -197,8 +203,8 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
 
       const newLogoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
       
-      // Atualiza state local imediatamente
-      setLocalConfig(prev => ({ ...(prev ?? config), logo_url: newLogoUrl }));
+      // Atualiza state dedicado imediatamente (força re-render)
+      setLogoUrl(newLogoUrl);
       
       // Salva no banco
       const configToSave = { ...config, logo_url: newLogoUrl };
@@ -214,7 +220,7 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
   };
 
   const handleRemoveLogo = async () => {
-    setLocalConfig(prev => ({ ...(prev ?? config), logo_url: "" }));
+    setLogoUrl("");
     
     const configToSave = { ...config, logo_url: "" };
     await saveConfigToDb(configToSave);
@@ -329,9 +335,9 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
               <div className="flex flex-col sm:flex-row items-start gap-6">
                 {/* Preview do Logo */}
                 <div className="w-40 h-40 border-2 border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center bg-muted/20 overflow-hidden">
-                  {config.logo_url ? (
+                  {currentLogoUrl ? (
                     <img 
-                      src={config.logo_url} 
+                      src={currentLogoUrl} 
                       alt="Logo da empresa"
                       className="max-w-full max-h-full object-contain"
                     />
@@ -354,7 +360,7 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                     disabled={uploading}
                   />
                   
-                  {!config.logo_url ? (
+                  {!currentLogoUrl ? (
                     <Button 
                       variant="outline" 
                       onClick={() => document.getElementById("logo-upload")?.click()}
@@ -694,9 +700,9 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                 {/* Header */}
                 <div className="flex justify-between items-start mb-6 pb-4 border-b-2" style={{ borderColor: config.cor_primaria }}>
                   <div className="flex items-center gap-4">
-                    {config.logo_url && (
+                    {currentLogoUrl && (
                       <img 
-                        src={config.logo_url} 
+                        src={currentLogoUrl} 
                         alt="Logo da empresa"
                         className="w-16 h-16 object-contain"
                       />
