@@ -89,10 +89,16 @@ export default function OrcamentoReportConfig() {
   const [uploading, setUploading] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [logoPreview, setLogoPreview] = useState<string>("");
 
   useEffect(() => {
     loadConfig();
   }, []);
+
+  // Sync logoPreview with config.logo_url
+  useEffect(() => {
+    setLogoPreview(config.logo_url || "");
+  }, [config.logo_url]);
 
   const loadConfig = async () => {
     try {
@@ -119,13 +125,42 @@ export default function OrcamentoReportConfig() {
 
         if (configData && !error) {
           const loadedConfig = (configData as any).config_json;
-          setConfig(prev => ({ ...defaultConfig, ...loadedConfig }));
+          const mergedConfig = { ...defaultConfig, ...loadedConfig };
+          setConfig(mergedConfig);
+          setLogoPreview(mergedConfig.logo_url || "");
         }
       }
     } catch (error) {
       console.error("Erro ao carregar configuração:", error);
     } finally {
       setInitialLoading(false);
+    }
+  };
+
+  const saveConfigToDb = async (configToSave: ReportConfig) => {
+    if (!estabelecimentoId) return false;
+    
+    try {
+      const { data: existing } = await supabase
+        .from("orcamento_report_config" as any)
+        .select("id")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("orcamento_report_config" as any)
+          .update({ config_json: configToSave, updated_at: new Date().toISOString() })
+          .eq("id", (existing as any).id);
+      } else {
+        await supabase
+          .from("orcamento_report_config" as any)
+          .insert({ estabelecimento_id: estabelecimentoId, config_json: configToSave });
+      }
+      return true;
+    } catch (error) {
+      console.error("Erro ao salvar config:", error);
+      return false;
     }
   };
 
@@ -137,27 +172,12 @@ export default function OrcamentoReportConfig() {
 
     setLoading(true);
     try {
-      const { data: existing } = await supabase
-        .from("orcamento_report_config" as any)
-        .select("id")
-        .eq("estabelecimento_id", estabelecimentoId)
-        .single();
-
-      if (existing) {
-        await supabase
-          .from("orcamento_report_config" as any)
-          .update({ config_json: config, updated_at: new Date().toISOString() })
-          .eq("id", (existing as any).id);
+      const saved = await saveConfigToDb(config);
+      if (saved) {
+        toast.success("Configuração salva com sucesso!");
       } else {
-        await supabase
-          .from("orcamento_report_config" as any)
-          .insert({ estabelecimento_id: estabelecimentoId, config_json: config });
+        toast.error("Erro ao salvar configuração");
       }
-
-      toast.success("Configuração salva com sucesso!");
-    } catch (error) {
-      console.error("Erro ao salvar:", error);
-      toast.error("Erro ao salvar configuração");
     } finally {
       setLoading(false);
     }
@@ -166,6 +186,9 @@ export default function OrcamentoReportConfig() {
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !estabelecimentoId) return;
+
+    // Reset input immediately
+    e.target.value = "";
 
     setUploading(true);
     
@@ -183,72 +206,48 @@ export default function OrcamentoReportConfig() {
         .from("report-assets")
         .getPublicUrl(fileName);
 
-      // Add timestamp to force cache refresh
-      const logoUrlWithTimestamp = `${urlData.publicUrl}?t=${Date.now()}`;
+      const newLogoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
       
-      // Update state first
-      const newConfig = { ...config, logo_url: logoUrlWithTimestamp };
+      // Update preview immediately
+      setLogoPreview(newLogoUrl);
       
-      // Save to database immediately
-      const { data: existing } = await supabase
-        .from("orcamento_report_config" as any)
-        .select("id")
-        .eq("estabelecimento_id", estabelecimentoId)
-        .maybeSingle();
-
-      if (existing) {
-        await supabase
-          .from("orcamento_report_config" as any)
-          .update({ config_json: newConfig, updated_at: new Date().toISOString() })
-          .eq("id", (existing as any).id);
-      } else {
-        await supabase
-          .from("orcamento_report_config" as any)
-          .insert({ estabelecimento_id: estabelecimentoId, config_json: newConfig });
-      }
-      
-      // Update state after successful save
+      // Update config and save
+      const newConfig = { ...config, logo_url: newLogoUrl };
       setConfig(newConfig);
-      toast.success("Logo enviado e salvo com sucesso!");
+      
+      const saved = await saveConfigToDb(newConfig);
+      if (saved) {
+        toast.success("Logo enviado com sucesso!");
+      } else {
+        toast.error("Erro ao salvar logo");
+      }
     } catch (error) {
       console.error("Erro ao enviar logo:", error);
       toast.error("Erro ao enviar logo");
     } finally {
       setUploading(false);
-      // Reset file input
-      if (e.target) e.target.value = "";
     }
-  };
-
-  const updateConfig = (key: keyof ReportConfig, value: any) => {
-    setConfig({ ...config, [key]: value });
   };
 
   const handleRemoveLogo = async () => {
     if (!estabelecimentoId) return;
     
-    try {
-      const newConfig = { ...config, logo_url: "" };
-      
-      const { data: existing } = await supabase
-        .from("orcamento_report_config" as any)
-        .select("id")
-        .eq("estabelecimento_id", estabelecimentoId)
-        .maybeSingle();
-
-      if (existing) {
-        await supabase
-          .from("orcamento_report_config" as any)
-          .update({ config_json: newConfig, updated_at: new Date().toISOString() })
-          .eq("id", (existing as any).id);
-      }
-      
-      setConfig(newConfig);
+    // Update preview immediately
+    setLogoPreview("");
+    
+    const newConfig = { ...config, logo_url: "" };
+    setConfig(newConfig);
+    
+    const saved = await saveConfigToDb(newConfig);
+    if (saved) {
       toast.success("Logo removido com sucesso!");
-    } catch (error) {
-      console.error("Erro ao remover logo:", error);
+    } else {
       toast.error("Erro ao remover logo");
     }
+  };
+
+  const updateConfig = (key: keyof ReportConfig, value: any) => {
+    setConfig({ ...config, [key]: value });
   };
 
   return (
@@ -314,38 +313,38 @@ export default function OrcamentoReportConfig() {
                     <div className="border-2 border-dashed rounded-lg p-8 text-center">
                       <p className="text-sm text-muted-foreground">Carregando...</p>
                     </div>
-                  ) : config.logo_url ? (
+                  ) : logoPreview ? (
                     <div className="border rounded-lg p-4 flex flex-col items-center gap-4">
                       <img
-                        key={config.logo_url}
-                        src={config.logo_url}
+                        key={logoPreview}
+                        src={logoPreview}
                         alt="Logo"
                         className="max-h-24 object-contain"
-                        onError={(e) => {
-                          console.error("Error loading logo in config:", config.logo_url);
-                        }}
                       />
                       <p className="text-xs text-muted-foreground truncate max-w-full">
-                        {config.logo_url.split('/').pop()?.split('?')[0]}
+                        {logoPreview.split('/').pop()?.split('?')[0]}
                       </p>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" asChild>
-                          <label className="cursor-pointer">
-                            <Upload className="h-4 w-4 mr-2" />
-                            {uploading ? "Enviando..." : "Alterar Logo"}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={handleLogoUpload}
-                              disabled={uploading}
-                            />
-                          </label>
-                        </Button>
+                        <label className="cursor-pointer">
+                          <Button variant="outline" size="sm" disabled={uploading} asChild>
+                            <span>
+                              <Upload className="h-4 w-4 mr-2" />
+                              {uploading ? "Enviando..." : "Alterar"}
+                            </span>
+                          </Button>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleLogoUpload}
+                            disabled={uploading}
+                          />
+                        </label>
                         <Button 
                           variant="destructive" 
                           size="sm"
                           onClick={handleRemoveLogo}
+                          disabled={uploading}
                         >
                           Remover
                         </Button>
@@ -353,18 +352,21 @@ export default function OrcamentoReportConfig() {
                     </div>
                   ) : (
                     <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                      <Button variant="outline" asChild disabled={uploading}>
-                        <label className="cursor-pointer">
-                          <Upload className="h-4 w-4 mr-2" />
-                          {uploading ? "Enviando..." : "Enviar Logo"}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleLogoUpload}
-                          />
-                        </label>
-                      </Button>
+                      <label className="cursor-pointer inline-block">
+                        <Button variant="outline" disabled={uploading} asChild>
+                          <span>
+                            <Upload className="h-4 w-4 mr-2" />
+                            {uploading ? "Enviando..." : "Enviar Logo"}
+                          </span>
+                        </Button>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleLogoUpload}
+                          disabled={uploading}
+                        />
+                      </label>
                       <p className="text-xs text-muted-foreground mt-2">
                         PNG, JPG ou SVG (máx. 2MB)
                       </p>
@@ -737,15 +739,11 @@ export default function OrcamentoReportConfig() {
                   {/* Header */}
                   <div className="flex justify-between items-start mb-6 pb-4 border-b-2" style={{ borderColor: config.cor_primaria }}>
                     <div className="flex items-center gap-4">
-                      {config.mostrar_logo && config.logo_url && (
+                      {config.mostrar_logo && logoPreview && (
                         <img 
-                          src={config.logo_url} 
+                          src={logoPreview} 
                           alt="Logo" 
                           className="h-16 object-contain" 
-                          onError={(e) => {
-                            console.error("Error loading logo:", config.logo_url);
-                            e.currentTarget.style.display = 'none';
-                          }}
                         />
                       )}
                       <div>
