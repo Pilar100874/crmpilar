@@ -18,7 +18,8 @@ import {
   PanelLeft,
   Globe,
   MessageCircle,
-  FileUp
+  FileUp,
+  FileText
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,6 +40,7 @@ import { CustosVeiculosCRUD } from '@/components/config/CustosVeiculosCRUD';
 import PedagioAPIConfigCRUD from '@/components/config/PedagioAPIConfigCRUD';
 import { ImportacaoApiTab } from '@/components/config/ImportacaoApiTab';
 import { ImportacaoTerceirosTab } from '@/components/config/ImportacaoTerceirosTab';
+import { OrcamentoReportConfigContent } from '@/components/config/OrcamentoReportConfigContent';
 import { useQuery } from '@tanstack/react-query';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
@@ -61,6 +63,7 @@ const tabItems: TabItem[] = [
   { id: 'custos-veiculo', label: 'Custos de Veículos', icon: Truck },
   { id: 'pedagio', label: 'API de Pedágio', icon: Calculator },
   { id: 'automacao', label: 'Regras de Automação', icon: Zap },
+  { id: 'relatorio-orcamento', label: 'Configuração do Relatório', icon: FileText },
   { id: 'importacao-api', label: 'Importação via API', icon: Globe },
   { id: 'importacao-terceiros', label: 'Importação de Terceiros', icon: FileUp },
   { id: 'whatsapp-catalogo', label: 'Lista de Produtos no WhatsApp', icon: MessageCircle },
@@ -373,6 +376,23 @@ export default function VendasConfig() {
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">
                   {estabelecimentoId && <AutomacaoVendasCRUD estabelecimentoId={estabelecimentoId} />}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="relatorio-orcamento" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Configuração do Relatório de Orçamento
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Personalize o modelo do seu orçamento em PDF
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">
+                  {estabelecimentoId && <OrcamentoReportConfigContent estabelecimentoId={estabelecimentoId} />}
                 </CardContent>
               </Card>
             </TabsContent>
