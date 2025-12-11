@@ -748,6 +748,11 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                 <p>mostrar_logo: {String(config.mostrar_logo)}</p>
               </div>
               
+              {/* TESTE - texto grande e colorido */}
+              <div className="bg-red-500 text-white p-4 text-2xl font-bold mb-4">
+                TESTE: SE VOCÊ VER ISSO, O RENDER ESTÁ OK
+              </div>
+              
               <div 
                 className="bg-white text-black p-8 rounded-lg shadow-lg mx-auto"
                 style={{ maxWidth: "210mm", minHeight: "297mm" }}
