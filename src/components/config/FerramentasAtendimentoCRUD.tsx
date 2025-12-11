@@ -254,18 +254,13 @@ export default function FerramentasAtendimentoCRUD({ estabelecimentoId }: Ferram
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-muted-foreground">
-          Configure quais ferramentas aparecem em cada aba e no RadialMenu
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={loadFerramentas}>
-            <RefreshCw className="h-4 w-4 mr-2" /> Atualizar
-          </Button>
-          <Button size="sm" onClick={() => { setEditingFerramenta(null); resetFormData(); setDialogOpen(true); }}>
-            <Plus className="h-4 w-4 mr-2" /> Nova Ferramenta
-          </Button>
-        </div>
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={loadFerramentas}>
+          <RefreshCw className="h-4 w-4 mr-2" /> Atualizar
+        </Button>
+        <Button size="sm" onClick={() => { setEditingFerramenta(null); resetFormData(); setDialogOpen(true); }}>
+          <Plus className="h-4 w-4 mr-2" /> Nova Ferramenta
+        </Button>
       </div>
 
       <div className="overflow-x-auto">
