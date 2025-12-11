@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -88,12 +88,18 @@ export default function OrcamentoReportConfig() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [configLoaded, setConfigLoaded] = useState(false);
+  const isOperatingRef = useRef(false);
 
   useEffect(() => {
-    loadConfig();
-  }, []);
+    if (!configLoaded && !isOperatingRef.current) {
+      loadConfig();
+    }
+  }, [configLoaded]);
 
   const loadConfig = async () => {
+    if (isOperatingRef.current) return;
+    
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return;
@@ -115,9 +121,9 @@ export default function OrcamentoReportConfig() {
 
         if (configData && !error) {
           const loadedConfig = (configData as any).config_json;
-          console.log("Config loaded:", loadedConfig);
           setConfig({ ...defaultConfig, ...loadedConfig });
         }
+        setConfigLoaded(true);
       }
     } catch (error) {
       console.error("Erro ao carregar configuração:", error);
@@ -162,7 +168,9 @@ export default function OrcamentoReportConfig() {
     const file = e.target.files?.[0];
     if (!file || !estabelecimentoId) return;
 
+    isOperatingRef.current = true;
     setUploading(true);
+    
     try {
       const fileExt = file.name.split(".").pop();
       const fileName = `${estabelecimentoId}/logo_orcamento.${fileExt}`;
@@ -208,8 +216,9 @@ export default function OrcamentoReportConfig() {
       toast.error("Erro ao enviar logo");
     } finally {
       setUploading(false);
+      isOperatingRef.current = false;
       // Reset file input
-      e.target.value = "";
+      if (e.target) e.target.value = "";
     }
   };
 
@@ -220,6 +229,7 @@ export default function OrcamentoReportConfig() {
   const handleRemoveLogo = async () => {
     if (!estabelecimentoId) return;
     
+    isOperatingRef.current = true;
     try {
       const newConfig = { ...config, logo_url: "" };
       setConfig(newConfig);
@@ -241,6 +251,8 @@ export default function OrcamentoReportConfig() {
     } catch (error) {
       console.error("Erro ao remover logo:", error);
       toast.error("Erro ao remover logo");
+    } finally {
+      isOperatingRef.current = false;
     }
   };
 
