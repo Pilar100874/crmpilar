@@ -257,19 +257,28 @@ export default function OrcamentoReportConfig() {
                         alt="Logo"
                         className="max-h-24 object-contain"
                       />
-                      <Button variant="outline" size="sm" asChild>
-                        <label className="cursor-pointer">
-                          <Upload className="h-4 w-4 mr-2" />
-                          Trocar Logo
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleLogoUpload}
-                            disabled={uploading}
-                          />
-                        </label>
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <label className="cursor-pointer">
+                            <Upload className="h-4 w-4 mr-2" />
+                            {uploading ? "Enviando..." : "Alterar Logo"}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleLogoUpload}
+                              disabled={uploading}
+                            />
+                          </label>
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => updateConfig("logo_url", "")}
+                        >
+                          Remover
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <div className="border-2 border-dashed rounded-lg p-8 text-center">
