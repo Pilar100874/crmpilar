@@ -693,6 +693,11 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
               </CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
+              {configLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <p className="text-muted-foreground">Carregando configuração...</p>
+                </div>
+              ) : (
               <div 
                 className="bg-white text-black p-8 rounded-lg shadow-lg mx-auto"
                 style={{ maxWidth: "210mm", minHeight: "297mm" }}
@@ -823,6 +828,7 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                   </div>
                 )}
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
