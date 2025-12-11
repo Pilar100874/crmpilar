@@ -325,21 +325,23 @@ export default function OrcamentoReportConfig() {
                         {logoPreview.split('/').pop()?.split('?')[0]}
                       </p>
                       <div className="flex gap-2">
-                        <label className="cursor-pointer">
-                          <Button variant="outline" size="sm" disabled={uploading} asChild>
-                            <span>
-                              <Upload className="h-4 w-4 mr-2" />
-                              {uploading ? "Enviando..." : "Alterar"}
-                            </span>
-                          </Button>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={handleLogoUpload}
-                            disabled={uploading}
-                          />
-                        </label>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          disabled={uploading}
+                          onClick={() => document.getElementById('logo-input-change')?.click()}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          {uploading ? "Enviando..." : "Alterar"}
+                        </Button>
+                        <input
+                          id="logo-input-change"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleLogoUpload}
+                          disabled={uploading}
+                        />
                         <Button 
                           variant="destructive" 
                           size="sm"
@@ -352,21 +354,22 @@ export default function OrcamentoReportConfig() {
                     </div>
                   ) : (
                     <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                      <label className="cursor-pointer inline-block">
-                        <Button variant="outline" disabled={uploading} asChild>
-                          <span>
-                            <Upload className="h-4 w-4 mr-2" />
-                            {uploading ? "Enviando..." : "Enviar Logo"}
-                          </span>
-                        </Button>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleLogoUpload}
-                          disabled={uploading}
-                        />
-                      </label>
+                      <Button 
+                        variant="outline" 
+                        disabled={uploading}
+                        onClick={() => document.getElementById('logo-input-upload')?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {uploading ? "Enviando..." : "Enviar Logo"}
+                      </Button>
+                      <input
+                        id="logo-input-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleLogoUpload}
+                        disabled={uploading}
+                      />
                       <p className="text-xs text-muted-foreground mt-2">
                         PNG, JPG ou SVG (máx. 2MB)
                       </p>
