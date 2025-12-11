@@ -150,43 +150,45 @@ export function ComposeEmailDialog({
 
           <div className="space-y-2">
             <Label htmlFor="body">Mensagem</Label>
-            <div className="relative">
-              <Textarea
-                id="body"
-                placeholder="Escreva sua mensagem..."
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                className="min-h-[200px] resize-none border-orange-100 focus:border-orange-300 focus:ring-orange-100 dark:border-orange-900/30 dark:focus:border-orange-700 pr-14"
-              />
-              {/* Tools menu positioned at bottom-left of textarea */}
-              <div className="absolute bottom-3 left-3">
-                <EmailToolsMenu 
-                  estabelecimentoId={estabelecimentoId}
-                  onInsertText={handleInsertText}
-                  disabled={sending}
-                />
-              </div>
-            </div>
+            <Textarea
+              id="body"
+              placeholder="Escreva sua mensagem..."
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              className="min-h-[200px] resize-none border-orange-100 focus:border-orange-300 focus:ring-orange-100 dark:border-orange-900/30 dark:focus:border-orange-700"
+            />
           </div>
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={handleClose}>
-            <X className="w-4 h-4 mr-2" />
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSend}
-            disabled={sending}
-            className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600"
-          >
-            {sending ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4 mr-2" />
-            )}
-            Enviar
-          </Button>
+        <DialogFooter className="flex items-center justify-between w-full">
+          {/* Tools menu on left side */}
+          <div className="flex-shrink-0">
+            <EmailToolsMenu 
+              estabelecimentoId={estabelecimentoId}
+              onInsertText={handleInsertText}
+              disabled={sending}
+            />
+          </div>
+          
+          {/* Action buttons on right side */}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleClose}>
+              <X className="w-4 h-4 mr-2" />
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSend}
+              disabled={sending}
+              className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600"
+            >
+              {sending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4 mr-2" />
+              )}
+              Enviar
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
