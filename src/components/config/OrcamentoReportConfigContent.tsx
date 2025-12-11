@@ -6,13 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Save, Eye, FileText, Settings2, Palette, Building2 } from "lucide-react";
+import { Save, Eye, FileText, Settings2, Palette, Building2, Upload, Trash2, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 
 interface ReportConfig {
+  logo_url: string;
   empresa_nome: string;
   empresa_endereco: string;
   empresa_telefone: string;
@@ -46,6 +47,7 @@ interface ReportConfig {
 }
 
 const defaultConfig: ReportConfig = {
+  logo_url: "",
   empresa_nome: "",
   empresa_endereco: "",
   empresa_telefone: "",
@@ -84,6 +86,7 @@ interface OrcamentoReportConfigContentProps {
 
 export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoReportConfigContentProps) {
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [localConfig, setLocalConfig] = useState<ReportConfig | null>(null);
 
   // Usar useQuery para carregar a configuração de forma estável
@@ -169,6 +172,53 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
 
   const updateConfig = (key: keyof ReportConfig, value: any) => {
     setConfig({ ...config, [key]: value });
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !estabelecimentoId) return;
+
+    e.target.value = "";
+    setUploading(true);
+    
+    try {
+      const fileExt = file.name.split(".").pop()?.toLowerCase();
+      const fileName = `${estabelecimentoId}/logo_orcamento.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("report-assets")
+        .upload(fileName, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("report-assets")
+        .getPublicUrl(fileName);
+
+      const newLogoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      const newConfig = { ...config, logo_url: newLogoUrl };
+      setConfig(newConfig);
+      
+      const saved = await saveConfigToDb(newConfig);
+      if (saved) {
+        toast.success("Logo enviado com sucesso!");
+      }
+    } catch (error) {
+      console.error("Erro ao enviar logo:", error);
+      toast.error("Erro ao enviar logo");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    const newConfig = { ...config, logo_url: "" };
+    setConfig(newConfig);
+    
+    const saved = await saveConfigToDb(newConfig);
+    if (saved) {
+      toast.success("Logo removido!");
+    }
   };
 
   return (
@@ -263,6 +313,80 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
                     onChange={(e) => updateConfig("empresa_website", e.target.value)}
                     placeholder="www.empresa.com"
                   />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                Logo da Empresa
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row items-start gap-6">
+                {/* Preview do Logo */}
+                <div className="w-40 h-40 border-2 border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center bg-muted/20 overflow-hidden">
+                  {config.logo_url ? (
+                    <img 
+                      src={config.logo_url} 
+                      alt="Logo da empresa"
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  ) : (
+                    <div className="text-center text-muted-foreground">
+                      <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Nenhum logo</p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Botões */}
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="file"
+                    id="logo-upload"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoUpload}
+                    disabled={uploading}
+                  />
+                  
+                  {!config.logo_url ? (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => document.getElementById("logo-upload")?.click()}
+                      disabled={uploading}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {uploading ? "Enviando..." : "Procurar Logo"}
+                    </Button>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => document.getElementById("logo-upload")?.click()}
+                        disabled={uploading}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {uploading ? "Enviando..." : "Modificar"}
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        onClick={handleRemoveLogo}
+                        disabled={uploading}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Deletar
+                      </Button>
+                    </>
+                  )}
+                  
+                  <p className="text-xs text-muted-foreground mt-2">
+                    PNG, JPG ou SVG (máx. 2MB)
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -569,15 +693,24 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
               >
                 {/* Header */}
                 <div className="flex justify-between items-start mb-6 pb-4 border-b-2" style={{ borderColor: config.cor_primaria }}>
-                  <div>
-                    <h1 className="text-xl font-bold" style={{ color: config.cor_primaria }}>
-                      {config.empresa_nome || "Nome da Empresa"}
-                    </h1>
-                    {config.empresa_cnpj && <p className="text-xs text-gray-600">CNPJ: {config.empresa_cnpj}</p>}
-                    {config.empresa_endereco && <p className="text-xs text-gray-600">{config.empresa_endereco}</p>}
-                    <p className="text-xs text-gray-600">
-                      {[config.empresa_telefone, config.empresa_email].filter(Boolean).join(" | ")}
-                    </p>
+                  <div className="flex items-center gap-4">
+                    {config.logo_url && (
+                      <img 
+                        src={config.logo_url} 
+                        alt="Logo da empresa"
+                        className="w-16 h-16 object-contain"
+                      />
+                    )}
+                    <div>
+                      <h1 className="text-xl font-bold" style={{ color: config.cor_primaria }}>
+                        {config.empresa_nome || "Nome da Empresa"}
+                      </h1>
+                      {config.empresa_cnpj && <p className="text-xs text-gray-600">CNPJ: {config.empresa_cnpj}</p>}
+                      {config.empresa_endereco && <p className="text-xs text-gray-600">{config.empresa_endereco}</p>}
+                      <p className="text-xs text-gray-600">
+                        {[config.empresa_telefone, config.empresa_email].filter(Boolean).join(" | ")}
+                      </p>
+                    </div>
                   </div>
                   <div className="text-right">
                     <h2 className="text-2xl font-bold" style={{ color: config.cor_primaria }}>
