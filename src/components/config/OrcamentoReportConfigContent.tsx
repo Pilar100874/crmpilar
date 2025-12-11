@@ -10,6 +10,7 @@ import { Upload, Save, Eye, Image, FileText, Settings2, Palette } from "lucide-r
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
 
 interface ReportConfig {
   logo_url: string;
@@ -89,45 +90,39 @@ export function OrcamentoReportConfigContent({ estabelecimentoId }: OrcamentoRep
   const [config, setConfig] = useState<ReportConfig>(defaultConfig);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [configLoaded, setConfigLoaded] = useState(false);
   
   // IDs únicos para evitar conflitos
   const inputIdChange = `logo-input-change-${estabelecimentoId}`;
   const inputIdUpload = `logo-input-upload-${estabelecimentoId}`;
 
-  console.log("OrcamentoReportConfigContent RENDER - estabelecimentoId:", estabelecimentoId, "configLoaded:", configLoaded, "config.logo_url:", config.logo_url, "config.empresa_nome:", config.empresa_nome);
-
-  useEffect(() => {
-    console.log("OrcamentoReportConfigContent useEffect - estabelecimentoId:", estabelecimentoId);
-    if (estabelecimentoId) {
-      loadConfig();
-    }
-  }, [estabelecimentoId]);
-
-  const loadConfig = async () => {
-    console.log("OrcamentoReportConfigContent loadConfig START");
-    try {
+  // Usar useQuery para carregar a configuração de forma estável
+  const { data: savedConfig, isLoading: configLoading, refetch } = useQuery({
+    queryKey: ['orcamento-report-config', estabelecimentoId],
+    queryFn: async () => {
       const { data: configData, error } = await supabase
         .from("orcamento_report_config" as any)
         .select("*")
         .eq("estabelecimento_id", estabelecimentoId)
         .maybeSingle();
 
-      console.log("OrcamentoReportConfigContent - configData:", configData, "error:", error);
-
       if (configData && !error) {
         const loadedConfig = (configData as any).config_json;
-        const mergedConfig = { ...defaultConfig, ...loadedConfig };
-        console.log("OrcamentoReportConfigContent - mergedConfig:", mergedConfig);
-        setConfig(mergedConfig);
+        return { ...defaultConfig, ...loadedConfig };
       }
-    } catch (error) {
-      console.error("Erro ao carregar configuração:", error);
-    } finally {
-      console.log("OrcamentoReportConfigContent loadConfig END - setting configLoaded to true");
-      setConfigLoaded(true);
+      return defaultConfig;
+    },
+    enabled: !!estabelecimentoId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Sincronizar savedConfig com estado local quando carregar
+  useEffect(() => {
+    if (savedConfig) {
+      setConfig(savedConfig);
     }
-  };
+  }, [savedConfig]);
+
+  const configLoaded = !configLoading;
 
   const saveConfigToDb = async (configToSave: ReportConfig) => {
     if (!estabelecimentoId) return false;

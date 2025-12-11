@@ -392,7 +392,7 @@ export default function VendasConfig() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">
-                  {estabelecimentoId && <OrcamentoReportConfigContent estabelecimentoId={estabelecimentoId} />}
+                  {estabelecimentoId && <OrcamentoReportConfigContent key={estabelecimentoId} estabelecimentoId={estabelecimentoId} />}
                 </CardContent>
               </Card>
             </TabsContent>
