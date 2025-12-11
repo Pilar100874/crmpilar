@@ -2890,14 +2890,7 @@ ${recentMessages}
             defaultTo={composeEmailDefaults.to}
             defaultSubject={composeEmailDefaults.subject}
             defaultBody={composeEmailDefaults.body}
-            toolsSlot={
-              <ToolsDropdown 
-                ferramentas={getToolbarFerramentas('email')} 
-                onSelectTool={handleToolSelect} 
-                tabType="email"
-                insideDialog={true}
-              />
-            }
+            estabelecimentoId={estabelecimentoId}
           />
         </div>
       ) : (
@@ -4407,14 +4400,7 @@ ${recentMessages}
         defaultTo={composeEmailDefaults.to}
         defaultSubject={composeEmailDefaults.subject}
         defaultBody={composeEmailDefaults.body}
-        toolsSlot={
-          <ToolsDropdown 
-            ferramentas={getToolbarFerramentas('email')} 
-            onSelectTool={handleToolSelect} 
-            tabType="email"
-            insideDialog={true}
-          />
-        }
+        estabelecimentoId={estabelecimentoId}
       />
       </div>
       )}

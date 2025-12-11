@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Send, X, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { EmailToolsMenu } from "./EmailToolsMenu";
 
 interface ComposeEmailDialogProps {
   open: boolean;
@@ -21,7 +22,7 @@ interface ComposeEmailDialogProps {
   defaultSubject?: string;
   defaultBody?: string;
   mode?: 'compose' | 'reply' | 'forward';
-  toolsSlot?: React.ReactNode;
+  estabelecimentoId?: string | null;
 }
 
 export function ComposeEmailDialog({
@@ -32,7 +33,7 @@ export function ComposeEmailDialog({
   defaultSubject = "",
   defaultBody = "",
   mode = 'compose',
-  toolsSlot,
+  estabelecimentoId = null,
 }: ComposeEmailDialogProps) {
   const [to, setTo] = useState(defaultTo);
   const [subject, setSubject] = useState(defaultSubject);
@@ -99,6 +100,10 @@ export function ComposeEmailDialog({
     onOpenChange(false);
   };
 
+  const handleInsertText = (text: string) => {
+    setBody(prev => prev + text);
+  };
+
   const getTitle = () => {
     switch (mode) {
       case 'reply': return 'Responder Email';
@@ -145,20 +150,24 @@ export function ComposeEmailDialog({
 
           <div className="space-y-2">
             <Label htmlFor="body">Mensagem</Label>
-            <Textarea
-              id="body"
-              placeholder="Escreva sua mensagem..."
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              className="min-h-[200px] resize-none border-orange-100 focus:border-orange-300 focus:ring-orange-100 dark:border-orange-900/30 dark:focus:border-orange-700"
-            />
-          </div>
-
-          {toolsSlot && (
-            <div className="flex items-center gap-2">
-              {toolsSlot}
+            <div className="relative">
+              <Textarea
+                id="body"
+                placeholder="Escreva sua mensagem..."
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                className="min-h-[200px] resize-none border-orange-100 focus:border-orange-300 focus:ring-orange-100 dark:border-orange-900/30 dark:focus:border-orange-700 pr-14"
+              />
+              {/* Tools menu positioned at bottom-left of textarea */}
+              <div className="absolute bottom-3 left-3">
+                <EmailToolsMenu 
+                  estabelecimentoId={estabelecimentoId}
+                  onInsertText={handleInsertText}
+                  disabled={sending}
+                />
+              </div>
             </div>
-          )}
+          </div>
         </div>
 
         <DialogFooter className="gap-2">
