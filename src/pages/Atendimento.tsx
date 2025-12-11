@@ -2057,6 +2057,13 @@ ${recentMessages}
     setTodayTasksCount(filteredTasks.length);
   }, [filteredTasks]);
 
+  // Ferramentas dinâmicas baseadas na aba ativa - MUST be before any conditional returns
+  const currentTabType = activeTab as TabType;
+  const dynamicRadialTools = useMemo(() => {
+    const tools = getRadialMenuItems(currentTabType);
+    return tools.length > 0 ? tools : [];
+  }, [currentTabType, getRadialMenuItems]);
+
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -2081,13 +2088,6 @@ ${recentMessages}
       </div>
     );
   }
-
-  // Ferramentas dinâmicas baseadas na aba ativa
-  const currentTabType = activeTab as TabType;
-  const dynamicRadialTools = useMemo(() => {
-    const tools = getRadialMenuItems(currentTabType);
-    return tools.length > 0 ? tools : [];
-  }, [currentTabType, getRadialMenuItems]);
 
   const RADIAL_MENU_ITEMS: RadialMenuItem[] = [
     { id: "chat", icon: MessageSquare, label: "Conversas", badge: activeConversationsCount },
