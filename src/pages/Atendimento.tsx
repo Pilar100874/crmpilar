@@ -3055,6 +3055,7 @@ ${recentMessages}
                     })) || []),
                     ...(selectedEmailData.empresa ? [{ empresas: selectedEmailData.empresa }] : [])
                   ]}
+                  onCompaniesUpdated={() => loadSelectedEmail(selectedEmailId || '')}
                   onSetGlobalFilter={setGlobalFilter}
                 />
               )}
@@ -4533,6 +4534,7 @@ ${recentMessages}
               })) || []),
               ...(selectedEmailData.empresa ? [{ empresas: selectedEmailData.empresa }] : [])
             ]}
+            onCompaniesUpdated={() => loadSelectedEmail(selectedEmailId || '')}
             onSetGlobalFilter={setGlobalFilter}
           />
         </div>

@@ -19,6 +19,7 @@ interface UnifiedDetailsPanelProps {
   whatsapp?: string;
   email?: string;
   customerId?: string;
+  empresaId?: string; // Para vincular diretamente quando não há customer
   // Dados específicos por tipo
   protocolo?: string;
   status?: string;
@@ -42,6 +43,7 @@ export function UnifiedDetailsPanel({
   whatsapp,
   email,
   customerId,
+  empresaId,
   protocolo,
   status,
   valorTotal,
@@ -131,7 +133,7 @@ export function UnifiedDetailsPanel({
               <Card className="p-4 text-center rounded-2xl border-dashed">
                 <Building2 className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
                 <p className="text-xs text-muted-foreground">Nenhuma empresa vinculada</p>
-                {customerId && (
+                {(customerId || email || whatsapp || telefone) && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -200,7 +202,7 @@ export function UnifiedDetailsPanel({
                     </Card>
                   );
                 })}
-                {customerId && (
+                {(customerId || email || whatsapp || telefone) && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -317,6 +319,8 @@ export function UnifiedDetailsPanel({
         open={showVincularDialog}
         onOpenChange={setShowVincularDialog}
         customerId={customerId}
+        emailVinculo={type === 'email' ? email : undefined}
+        whatsappVinculo={type === 'chat' ? (whatsapp || telefone) : undefined}
         onSuccess={onCompaniesUpdated}
       />
     </div>
