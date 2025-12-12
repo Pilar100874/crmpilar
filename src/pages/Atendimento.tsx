@@ -1344,6 +1344,8 @@ export default function Atendimento() {
   // Carregar dados do email selecionado e buscar contato/empresa
   const loadSelectedEmail = async (emailId: string) => {
     try {
+      const estabId = await getEstabelecimentoId();
+
       const { data: emailData, error: emailError } = await supabase
         .from("emails")
         .select("*")
@@ -1352,33 +1354,40 @@ export default function Atendimento() {
 
       if (emailError) throw emailError;
 
+      const fromEmail = emailData.from_email || "";
+
       // Buscar contato pelo email
-      const { data: customerData } = await supabase
-        .from("customers")
-        .select(`
-          *,
-          customer_empresas!customer_empresas_customer_id_fkey (
-            id,
-            cargo,
-            departamento,
-            is_primary,
-            empresas (
+      let customerData = null;
+      if (estabId && fromEmail) {
+        const { data } = await supabase
+          .from("customers")
+          .select(`
+            *,
+            customer_empresas!customer_empresas_customer_id_fkey (
               id,
-              nome,
-              nome_fantasia,
-              cnpj,
-              telefone,
-              email
+              cargo,
+              departamento,
+              is_primary,
+              empresas (
+                id,
+                nome,
+                nome_fantasia,
+                cnpj,
+                telefone,
+                email
+              )
             )
-          )
-        `)
-        .eq("estabelecimento_id", estabelecimentoId)
-        .ilike("email", `%${emailData.from_email}%`)
-        .maybeSingle();
+          `)
+          .eq("estabelecimento_id", estabId)
+          .ilike("email", `%${fromEmail}%`)
+          .maybeSingle();
+
+        customerData = data as any;
+      }
 
       // Se não encontrou customer, buscar empresa diretamente pelo email
       let empresaData = null;
-      if (!customerData) {
+      if (!customerData && estabId && fromEmail) {
         const { data: empresa } = await supabase
           .from("empresas")
           .select(`
@@ -1389,8 +1398,8 @@ export default function Atendimento() {
             telefone,
             email
           `)
-          .eq("estabelecimento_id", estabelecimentoId)
-          .ilike("email", `%${emailData.from_email}%`)
+          .eq("estabelecimento_id", estabId)
+          .ilike("email", `%${fromEmail}%`)
           .maybeSingle();
         
         empresaData = empresa;
