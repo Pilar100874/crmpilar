@@ -25,7 +25,37 @@ function updateStatus(status: MacroExecutionStatus) {
 
 async function waitForElement(target: string, retries = MAX_RETRIES): Promise<HTMLElement | null> {
   for (let i = 0; i < retries; i++) {
-    const element = document.querySelector(`[data-macro-id="${target}"]`) as HTMLElement;
+    let element: HTMLElement | null = null;
+    
+    // Tenta primeiro por data-macro-id
+    element = document.querySelector(`[data-macro-id="${target}"]`) as HTMLElement;
+    
+    // Se não encontrar, tenta como seletor CSS direto
+    if (!element) {
+      try {
+        // Suporta seletores como #id, .classe, tag.classe, [name="x"], etc.
+        element = document.querySelector(target) as HTMLElement;
+      } catch {
+        // Seletor inválido, ignora
+      }
+    }
+    
+    // Se ainda não encontrar, tenta por texto (formato tag:texto)
+    if (!element && target.includes(':')) {
+      const [tagPart, textPart] = target.split(':');
+      const tag = tagPart.replace(/\./g, ' ').trim().split(' ')[0] || '*';
+      const text = textPart.trim();
+      if (text) {
+        const elements = document.querySelectorAll(tag);
+        for (const el of elements) {
+          if (el.textContent?.trim().startsWith(text)) {
+            element = el as HTMLElement;
+            break;
+          }
+        }
+      }
+    }
+    
     if (element) return element;
     await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
   }
