@@ -295,8 +295,7 @@ export default function MacrosPage() {
 
   // Criar macros de exemplo
   const createExampleMacros = async () => {
-    const example1: Omit<Macro, 'createdAt' | 'updatedAt'> = {
-      id: 'example-1',
+    const example1 = {
       name: 'Exemplo: Preencher e Salvar',
       description: 'Preenche um formulário e clica em salvar',
       shortcut: 'CTRL+SHIFT+P',
@@ -310,8 +309,7 @@ export default function MacrosPage() {
       ]
     };
 
-    const example2: Omit<Macro, 'createdAt' | 'updatedAt'> = {
-      id: 'example-2',
+    const example2 = {
       name: 'Exemplo: Filtrar e Exportar',
       description: 'Aplica filtro e exporta os resultados',
       shortcut: 'CTRL+SHIFT+E',
@@ -326,11 +324,13 @@ export default function MacrosPage() {
       ]
     };
 
-    for (const example of [example1, example2]) {
-      const now = new Date().toISOString();
-      await updateMacro({ ...example, createdAt: now, updatedAt: now } as Macro);
+    try {
+      await importMacro(JSON.stringify(example1));
+      await importMacro(JSON.stringify(example2));
+      toast.success('Macros de exemplo criadas!');
+    } catch {
+      toast.error('Erro ao criar macros de exemplo');
     }
-    toast.success('Macros de exemplo criadas!');
   };
 
   return (

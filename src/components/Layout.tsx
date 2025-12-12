@@ -58,6 +58,7 @@ import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import * as LucideIcons from "lucide-react";
+import { FloatingMacroRecorder } from "@/components/macro/FloatingMacroRecorder";
 
 interface MenuPermissions {
   view: boolean;
@@ -471,53 +472,53 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <LayoutContext.Provider value={{ openSubmenu: setOpenSubmenuId }}>
-        <div className="min-h-screen flex w-full bg-background relative">
+      <div className="min-h-screen flex w-full bg-background relative">
         {sidebarVisible && (
-        <div 
-          ref={sidebarRef} 
-          className={`${
-            menuLocked 
-              ? 'fixed left-0 top-0 bottom-0 w-16 md:w-20 lg:w-16 z-[500]' 
-              : `slide-out-menu ${menuOpen ? 'open' : ''}`
-          } border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col`}
-          onMouseEnter={handleMenuMouseEnter}
-          onMouseLeave={handleMenuMouseLeave}
-        >
-          {/* Aba lateral - só aparece quando não está travado */}
-          {!menuLocked && (
-            <div 
-              className={`slide-out-menu-tab ${menuOpen ? 'menu-open' : ''}`}
-              onClick={handleTabClick}
-            >
-              {menuOpen ? (
-                <ChevronLeft className="w-3 h-3" />
-              ) : (
-                <ChevronRight className="w-3 h-3" />
-              )}
+          <div 
+            ref={sidebarRef} 
+            className={`${
+              menuLocked 
+                ? 'fixed left-0 top-0 bottom-0 w-16 md:w-20 lg:w-16 z-[500]' 
+                : `slide-out-menu ${menuOpen ? 'open' : ''}`
+            } border-r border-sidebar-border bg-sidebar flex-shrink-0 flex flex-col`}
+            onMouseEnter={handleMenuMouseEnter}
+            onMouseLeave={handleMenuMouseLeave}
+          >
+            {/* Aba lateral - só aparece quando não está travado */}
+            {!menuLocked && (
+              <div 
+                className={`slide-out-menu-tab ${menuOpen ? 'menu-open' : ''}`}
+                onClick={handleTabClick}
+              >
+                {menuOpen ? (
+                  <ChevronLeft className="w-3 h-3" />
+                ) : (
+                  <ChevronRight className="w-3 h-3" />
+                )}
+              </div>
+            )}
+
+            {/* Logo no topo */}
+            <div className="flex items-center justify-center py-3 md:py-4 border-b border-sidebar-border/50">
+              <button
+                onClick={() => setShowEstabelecimentoSelector(true)}
+                className="w-10 h-10 md:w-12 md:h-12 lg:w-10 lg:h-10 rounded-lg bg-sidebar-accent/80 flex items-center justify-center hover:bg-sidebar-accent transition-colors cursor-pointer"
+                title={estabelecimentoName || "Logo"}
+              >
+                <Building2 className="w-5 h-5 md:w-6 md:h-6 lg:w-5 lg:h-5 text-sidebar-foreground/90" />
+              </button>
             </div>
-          )}
 
-          {/* Logo no topo */}
-          <div className="flex items-center justify-center py-3 md:py-4 border-b border-sidebar-border/50">
-            <button
-              onClick={() => setShowEstabelecimentoSelector(true)}
-              className="w-10 h-10 md:w-12 md:h-12 lg:w-10 lg:h-10 rounded-lg bg-sidebar-accent/80 flex items-center justify-center hover:bg-sidebar-accent transition-colors cursor-pointer"
-              title={estabelecimentoName || "Logo"}
-            >
-              <Building2 className="w-5 h-5 md:w-6 md:h-6 lg:w-5 lg:h-5 text-sidebar-foreground/90" />
-            </button>
-          </div>
-
-          <ScrollArea className="flex-1 bg-sidebar">
-            <div className={`py-2 flex flex-col gap-1 ${menuLocked ? 'items-center' : 'px-4'}`}>
-              {/* Menu Atalhos com submenu */}
-              <>
-                {menuLocked ? (
-                  <div className="relative w-full flex justify-center">
-                    {(() => {
-                      const isAtalhosOpen = openSubmenuId === "Atalhos";
-                      return (
-                        <button
+            <ScrollArea className="flex-1 bg-sidebar">
+              <div className={`py-2 flex flex-col gap-1 ${menuLocked ? 'items-center' : 'px-4'}`}>
+                {/* Menu Atalhos com submenu */}
+                <>
+                  {menuLocked ? (
+                    <div className="relative w-full flex justify-center">
+                      {(() => {
+                        const isAtalhosOpen = openSubmenuId === "Atalhos";
+                        return (
+                          <button
                           type="button"
                           onClick={() => setOpenSubmenuId(isAtalhosOpen ? null : "Atalhos")}
                           className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all ${
@@ -1066,6 +1067,9 @@ export default function Layout({ children }: LayoutProps) {
         open={showChangePasswordDialog}
         onOpenChange={setShowChangePasswordDialog}
       />
+
+      {/* Controles flutuantes do gravador de macros */}
+      <FloatingMacroRecorder />
     </LayoutContext.Provider>
   );
 }
