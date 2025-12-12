@@ -21,11 +21,6 @@ export function FloatingMacroRecorder() {
 
   const hasSteps = recordingSteps.length > 0;
 
-  // Só mostra o botão flutuante quando o usuário clicou em "Iniciar Gravação" na aba Gravador
-  if (!recordingMeta) {
-    return null;
-  }
-
   // Captura automática de cliques em elementos com data-macro-id
   useEffect(() => {
     if (!isRecording) return;
@@ -112,6 +107,11 @@ export function FloatingMacroRecorder() {
 
     await saveCurrentRecording();
   };
+
+  // Só mostra o botão flutuante quando o usuário clicou em "Iniciar Gravação" na aba Gravador
+  if (!recordingMeta) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border bg-card px-3 py-2 shadow-lg">
