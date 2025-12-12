@@ -1341,7 +1341,7 @@ export default function Atendimento() {
     }
   };
 
-  // Carregar dados do email selecionado e buscar contato
+  // Carregar dados do email selecionado e buscar contato/empresa
   const loadSelectedEmail = async (emailId: string) => {
     try {
       const { data: emailData, error: emailError } = await supabase
@@ -1353,27 +1353,53 @@ export default function Atendimento() {
       if (emailError) throw emailError;
 
       // Buscar contato pelo email
-      const { data: customerData, error: customerError } = await supabase
+      const { data: customerData } = await supabase
         .from("customers")
         .select(`
           *,
           customer_empresas!customer_empresas_customer_id_fkey (
+            id,
+            cargo,
+            departamento,
+            is_primary,
             empresas (
               id,
               nome,
               nome_fantasia,
               cnpj,
-              telefone
+              telefone,
+              email
             )
           )
         `)
-        .eq("email", emailData.from_email)
         .eq("estabelecimento_id", estabelecimentoId)
+        .ilike("email", `%${emailData.from_email}%`)
         .maybeSingle();
+
+      // Se não encontrou customer, buscar empresa diretamente pelo email
+      let empresaData = null;
+      if (!customerData) {
+        const { data: empresa } = await supabase
+          .from("empresas")
+          .select(`
+            id,
+            nome,
+            nome_fantasia,
+            cnpj,
+            telefone,
+            email
+          `)
+          .eq("estabelecimento_id", estabelecimentoId)
+          .ilike("email", `%${emailData.from_email}%`)
+          .maybeSingle();
+        
+        empresaData = empresa;
+      }
 
       setSelectedEmailData({
         ...emailData,
-        customer: customerData || null
+        customer: customerData || null,
+        empresa: empresaData || null
       });
     } catch (error: any) {
       console.error("Erro ao carregar email:", error);
@@ -2869,19 +2895,22 @@ ${recentMessages}
               {activeTab === "email" && selectedEmailData && (
                 <UnifiedDetailsPanel
                   type="email"
-                  nome={selectedEmailData.customer?.nome || selectedEmailData.from_email}
-                  telefone={selectedEmailData.customer?.telefone}
-                  whatsapp={selectedEmailData.customer?.telefone}
+                  nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || selectedEmailData.from_email}
+                  telefone={selectedEmailData.customer?.telefone || selectedEmailData.empresa?.telefone}
+                  whatsapp={selectedEmailData.customer?.telefone || selectedEmailData.empresa?.telefone}
                   email={selectedEmailData.from_email}
                   customerId={selectedEmailData.customer?.id}
                   protocolo={selectedEmailData.id?.slice(0, 8).toUpperCase()}
                   status={selectedEmailData.read ? "Lido" : "Não lido"}
                   titulo={selectedEmailData.subject}
                   dataHora={format(new Date(selectedEmailData.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
-                  companies={selectedEmailData.customer?.customer_empresas?.map((ce: any) => ({
-                    ...ce,
-                    empresas: ce.empresas
-                  })) || []}
+                  companies={[
+                    ...(selectedEmailData.customer?.customer_empresas?.map((ce: any) => ({
+                      ...ce,
+                      empresas: ce.empresas
+                    })) || []),
+                    ...(selectedEmailData.empresa ? [{ empresas: selectedEmailData.empresa }] : [])
+                  ]}
                   onSetGlobalFilter={setGlobalFilter}
                 />
               )}
@@ -4344,19 +4373,22 @@ ${recentMessages}
         <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="email"
-            nome={selectedEmailData.customer?.nome || selectedEmailData.from_email}
-            telefone={selectedEmailData.customer?.telefone}
-            whatsapp={selectedEmailData.customer?.telefone}
+            nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || selectedEmailData.from_email}
+            telefone={selectedEmailData.customer?.telefone || selectedEmailData.empresa?.telefone}
+            whatsapp={selectedEmailData.customer?.telefone || selectedEmailData.empresa?.telefone}
             email={selectedEmailData.from_email}
             customerId={selectedEmailData.customer?.id}
             protocolo={selectedEmailData.id?.slice(0, 8).toUpperCase()}
             status={selectedEmailData.read ? "Lido" : "Não lido"}
             titulo={selectedEmailData.subject}
             dataHora={format(new Date(selectedEmailData.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
-            companies={selectedEmailData.customer?.customer_empresas?.map((ce: any) => ({
-              ...ce,
-              empresas: ce.empresas
-            })) || []}
+            companies={[
+              ...(selectedEmailData.customer?.customer_empresas?.map((ce: any) => ({
+                ...ce,
+                empresas: ce.empresas
+              })) || []),
+              ...(selectedEmailData.empresa ? [{ empresas: selectedEmailData.empresa }] : [])
+            ]}
             onSetGlobalFilter={setGlobalFilter}
           />
         </div>
