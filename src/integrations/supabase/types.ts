@@ -2355,6 +2355,7 @@ export type Database = {
           created_at: string | null
           custom_fields: Json | null
           email: string | null
+          emails_vinculados: string[] | null
           endereco: string | null
           estabelecimento_id: string | null
           estado: string | null
@@ -2363,6 +2364,7 @@ export type Database = {
           nome_fantasia: string | null
           telefone: string | null
           updated_at: string | null
+          whatsapps_vinculados: string[] | null
         }
         Insert: {
           bairro?: string | null
@@ -2372,6 +2374,7 @@ export type Database = {
           created_at?: string | null
           custom_fields?: Json | null
           email?: string | null
+          emails_vinculados?: string[] | null
           endereco?: string | null
           estabelecimento_id?: string | null
           estado?: string | null
@@ -2380,6 +2383,7 @@ export type Database = {
           nome_fantasia?: string | null
           telefone?: string | null
           updated_at?: string | null
+          whatsapps_vinculados?: string[] | null
         }
         Update: {
           bairro?: string | null
@@ -2389,6 +2393,7 @@ export type Database = {
           created_at?: string | null
           custom_fields?: Json | null
           email?: string | null
+          emails_vinculados?: string[] | null
           endereco?: string | null
           estabelecimento_id?: string | null
           estado?: string | null
@@ -2397,6 +2402,7 @@ export type Database = {
           nome_fantasia?: string | null
           telefone?: string | null
           updated_at?: string | null
+          whatsapps_vinculados?: string[] | null
         }
         Relationships: [
           {

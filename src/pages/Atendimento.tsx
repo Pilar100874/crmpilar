@@ -658,6 +658,41 @@ export default function Atendimento() {
       }
 
       if (!customerId) {
+        // Se não encontrou customer, tentar buscar empresa direto pelo whatsapp_vinculados
+        if (phone) {
+          const normalizedPhone = normalizePhone(phone);
+          const estabId = await getEstabelecimentoId();
+          
+          if (estabId) {
+            const { data: empresas } = await supabase
+              .from("empresas")
+              .select("id, nome, nome_fantasia, cnpj, whatsapps_vinculados")
+              .eq("estabelecimento_id", estabId)
+              .not("whatsapps_vinculados", "is", null);
+
+            const empresaEncontrada = empresas?.find((e: any) =>
+              e.whatsapps_vinculados?.some((wp: string) =>
+                normalizePhone(wp) === normalizedPhone
+              )
+            );
+
+            if (empresaEncontrada) {
+              setCustomerCompanies([{
+                empresa_id: empresaEncontrada.id,
+                is_primary: true,
+                cargo: null,
+                empresas: {
+                  id: empresaEncontrada.id,
+                  nome: empresaEncontrada.nome,
+                  nome_fantasia: empresaEncontrada.nome_fantasia,
+                  cnpj: empresaEncontrada.cnpj
+                }
+              }]);
+              return;
+            }
+          }
+        }
+
         setCustomerCompanies([]);
         return;
       }
@@ -677,9 +712,43 @@ export default function Atendimento() {
         `)
         .eq('customer_id', customerId);
 
-      if (companiesData) {
+      if (companiesData && companiesData.length > 0) {
         setCustomerCompanies(companiesData);
       } else {
+        // Tentar também pelo whatsapps_vinculados caso não tenha vinculo tradicional
+        if (phone) {
+          const normalizedPhone = normalizePhone(phone);
+          const estabId = await getEstabelecimentoId();
+          
+          if (estabId) {
+            const { data: empresas } = await supabase
+              .from("empresas")
+              .select("id, nome, nome_fantasia, cnpj, whatsapps_vinculados")
+              .eq("estabelecimento_id", estabId)
+              .not("whatsapps_vinculados", "is", null);
+
+            const empresaEncontrada = empresas?.find((e: any) =>
+              e.whatsapps_vinculados?.some((wp: string) =>
+                normalizePhone(wp) === normalizedPhone
+              )
+            );
+
+            if (empresaEncontrada) {
+              setCustomerCompanies([{
+                empresa_id: empresaEncontrada.id,
+                is_primary: true,
+                cargo: null,
+                empresas: {
+                  id: empresaEncontrada.id,
+                  nome: empresaEncontrada.nome,
+                  nome_fantasia: empresaEncontrada.nome_fantasia,
+                  cnpj: empresaEncontrada.cnpj
+                }
+              }]);
+              return;
+            }
+          }
+        }
         setCustomerCompanies([]);
       }
     } catch (error) {
@@ -1422,9 +1491,10 @@ export default function Atendimento() {
         console.log("[Atendimento] Customer encontrado para email:", contactEmail, customerData);
       }
 
-      // Se não encontrou customer, buscar empresa diretamente pelo email
+      // Se não encontrou customer, buscar empresa diretamente pelo email ou emails_vinculados
       let empresaData: any = null;
       if (!customerData && contactEmail) {
+        // Primeiro tenta pelo email principal
         const { data: empresa } = await supabase
           .from("empresas")
           .select(`
@@ -1433,12 +1503,40 @@ export default function Atendimento() {
             nome_fantasia,
             cnpj,
             telefone,
-            email
+            email,
+            emails_vinculados
           `)
           .ilike("email", contactEmail)
           .maybeSingle();
 
-        empresaData = empresa as any;
+        if (empresa) {
+          empresaData = empresa;
+        } else {
+          // Se não encontrou, buscar nas empresas que possuem esse email vinculado
+          const { data: empresas } = await supabase
+            .from("empresas")
+            .select(`
+              id,
+              nome,
+              nome_fantasia,
+              cnpj,
+              telefone,
+              email,
+              emails_vinculados
+            `)
+            .not("emails_vinculados", "is", null);
+
+          // Filtrar empresas que contêm o email vinculado
+          const emailLower = contactEmail.toLowerCase();
+          const empresaEncontrada = empresas?.find((e: any) =>
+            e.emails_vinculados?.some((emailVinc: string) =>
+              emailVinc.toLowerCase() === emailLower
+            )
+          );
+
+          empresaData = empresaEncontrada || null;
+        }
+
         console.log("[Atendimento] Empresa encontrada para email:", contactEmail, empresaData);
       }
 

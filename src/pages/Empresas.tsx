@@ -27,6 +27,7 @@ import { EmpresaFieldsCRUD } from "@/components/config/EmpresaFieldsCRUD";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { APIImportDialogEmpresas } from "@/components/config/APIImportDialogEmpresas";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
+import { VinculosContatoSection } from "@/components/empresas/VinculosContatoSection";
 
 
 interface CustomField {
@@ -52,6 +53,8 @@ interface Empresa {
   cep: string | null;
   custom_fields: any;
   created_at?: string;
+  emails_vinculados?: string[];
+  whatsapps_vinculados?: string[];
 }
 
 interface Contato {
@@ -92,6 +95,10 @@ export default function Empresas() {
   // Estado para softphone
   const [softphoneOpen, setSoftphoneOpen] = useState(false);
   const [softphoneNumber, setSoftphoneNumber] = useState("");
+  
+  // Estados para emails e WhatsApps vinculados
+  const [emailsVinculados, setEmailsVinculados] = useState<string[]>([]);
+  const [whatsappsVinculados, setWhatsappsVinculados] = useState<string[]>([]);
 
   // Gerenciamento de colunas da tabela
   const [tableColumns, setTableColumns] = useState<TableColumn[]>(() => {
@@ -507,6 +514,10 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       })));
     }
 
+    // Carregar emails e WhatsApps vinculados
+    setEmailsVinculados(empresa.emails_vinculados || []);
+    setWhatsappsVinculados(empresa.whatsapps_vinculados || []);
+
     setShowForm(true);
   };
 
@@ -789,7 +800,9 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         estado: formData.state,
         cep: formData.cep,
         bairro: formData.neighborhood || null,
-        custom_fields: customFieldsData
+        custom_fields: customFieldsData,
+        emails_vinculados: emailsVinculados,
+        whatsapps_vinculados: whatsappsVinculados
       };
 
       let empresaId: string;
@@ -877,6 +890,8 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
       setContatosVinculados([]);
       setEditingEmpresa(null);
       setCriarNovoContato(false);
+      setEmailsVinculados([]);
+      setWhatsappsVinculados([]);
       if (estabId) fetchEmpresas(estabId);
       if (estabId) fetchContatos(estabId);
     } catch (error) {
@@ -1584,6 +1599,12 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               Dados da Empresa
             </TabsTrigger>
             <TabsTrigger 
+              value="contatos_vinculados"
+              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Emails/WhatsApp
+            </TabsTrigger>
+            <TabsTrigger 
               value="contatos"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
               onClick={() => setCriarNovoContato(false)}
@@ -1654,6 +1675,33 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 {editingEmpresa ? "Salvar Alterações" : "Criar Empresa"}
               </Button>
             </div>
+          </TabsContent>
+
+          <TabsContent value="contatos_vinculados" className="p-6">
+            <Card className="p-6">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-2">Emails e WhatsApps Vinculados</h3>
+                <p className="text-sm text-muted-foreground">
+                  Vincule múltiplos emails e números de WhatsApp a esta empresa. Esses vínculos serão usados para identificar a empresa automaticamente em conversas e emails.
+                </p>
+              </div>
+
+              <VinculosContatoSection
+                emailsVinculados={emailsVinculados}
+                whatsappsVinculados={whatsappsVinculados}
+                onEmailsChange={setEmailsVinculados}
+                onWhatsappsChange={setWhatsappsVinculados}
+              />
+
+              <div className="flex justify-end gap-3 mt-6">
+                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveEmpresa} className="shadow-sm">
+                  {editingEmpresa ? "Salvar Alterações" : "Criar Empresa"}
+                </Button>
+              </div>
+            </Card>
           </TabsContent>
 
           <TabsContent value="contatos" className="p-6">
