@@ -90,10 +90,12 @@ export function FloatingMacroRecorder() {
 
     // Adiciona listeners
     document.addEventListener('click', handleGlobalClick, true);
+    document.addEventListener('input', handleGlobalInput, true);
     document.addEventListener('change', handleGlobalInput, true);
-
+ 
     return () => {
       document.removeEventListener('click', handleGlobalClick, true);
+      document.removeEventListener('input', handleGlobalInput, true);
       document.removeEventListener('change', handleGlobalInput, true);
     };
   }, [isRecording, addRecordingStep]);
