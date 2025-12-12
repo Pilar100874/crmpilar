@@ -1344,6 +1344,18 @@ export default function Atendimento() {
   // Carregar dados do email selecionado e buscar contato/empresa
   const loadSelectedEmail = async (emailId: string) => {
     try {
+      // Alguns registros de email podem vir com IDs não UUID (ex: IDs externos do servidor de e-mail).
+      // Esses IDs quebram o filtro .eq("id") na tabela emails, então ignoramos a busca nesse caso.
+      const isUuid =
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+          emailId,
+        );
+
+      if (!isUuid) {
+        console.warn("[Atendimento] ID de email não é UUID, ignorando busca em 'emails':", emailId);
+        return;
+      }
+
       const { data: emailData, error: emailError } = await supabase
         .from("emails")
         .select("*")
@@ -1352,6 +1364,13 @@ export default function Atendimento() {
 
       if (emailError) throw emailError;
 
+      console.log("[Atendimento] Email carregado:", {
+        id: emailData.id,
+        folder: emailData.folder,
+        from_email: emailData.from_email,
+        to_email: emailData.to_email,
+      });
+
       // Definir o email de contato de acordo com a pasta
       // - Inbox (recebidos): usar sempre o remetente (cliente)
       // - Sent (enviados): usar sempre o destinatário (cliente)
@@ -1359,6 +1378,8 @@ export default function Atendimento() {
         emailData.folder === "sent"
           ? emailData.to_email || emailData.from_email || ""
           : emailData.from_email || emailData.to_email || "";
+
+      console.log("[Atendimento] Email de contato detectado:", contactEmail);
 
       // Buscar contato pelo email (cliente vinculado)
       let customerData: any = null;
@@ -1386,6 +1407,7 @@ export default function Atendimento() {
           .maybeSingle();
 
         customerData = data as any;
+        console.log("[Atendimento] Customer encontrado para email:", contactEmail, customerData);
       }
 
       // Se não encontrou customer, buscar empresa diretamente pelo email
@@ -1403,14 +1425,15 @@ export default function Atendimento() {
           `)
           .ilike("email", contactEmail)
           .maybeSingle();
-        
+
         empresaData = empresa as any;
+        console.log("[Atendimento] Empresa encontrada para email:", contactEmail, empresaData);
       }
 
       setSelectedEmailData({
         ...emailData,
         customer: customerData || null,
-        empresa: empresaData || null
+        empresa: empresaData || null,
       });
     } catch (error: any) {
       console.error("Erro ao carregar email:", error);
