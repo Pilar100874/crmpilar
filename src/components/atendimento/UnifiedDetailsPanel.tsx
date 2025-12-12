@@ -1,13 +1,15 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { useState } from "react";
 import { GlobalFilter } from "./GlobalClientFilter";
 import { toast } from "@/lib/toast-config";
+import { supabase } from "@/integrations/supabase/client";
 
 export type PanelType = "chat" | "agenda" | "email" | "orcamento";
 
@@ -60,6 +62,13 @@ export function UnifiedDetailsPanel({
   const [empresasOpen, setEmpresasOpen] = useState(true);
   const [contatoOpen, setContatoOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
+  
+  // Estados para edição inline
+  const [editingNome, setEditingNome] = useState(false);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [tempNome, setTempNome] = useState("");
+  const [tempEmail, setTempEmail] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const getIcon = () => {
     switch (type) {
@@ -79,6 +88,48 @@ export function UnifiedDetailsPanel({
       case "email": return "Email";
       case "orcamento": return "Orçamento";
       default: return "Detalhes";
+    }
+  };
+
+  const handleSaveNome = async () => {
+    if (!customerId || !tempNome.trim()) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .update({ nome: tempNome.trim() })
+        .eq('id', customerId);
+      
+      if (error) throw error;
+      toast.success("Nome atualizado!");
+      setEditingNome(false);
+      onCompaniesUpdated?.();
+    } catch (error) {
+      console.error('Erro ao atualizar nome:', error);
+      toast.error("Erro ao atualizar nome");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveEmail = async () => {
+    if (!customerId) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .update({ email: tempEmail.trim() || '' })
+        .eq('id', customerId);
+      
+      if (error) throw error;
+      toast.success("Email atualizado!");
+      setEditingEmail(false);
+      onCompaniesUpdated?.();
+    } catch (error) {
+      console.error('Erro ao atualizar email:', error);
+      toast.error("Erro ao atualizar email");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -238,6 +289,59 @@ export function UnifiedDetailsPanel({
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
             <Card className="p-3 rounded-2xl space-y-3">
+              {/* Nome - Editável inline */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Nome</span>
+                </div>
+                {editingNome ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={tempNome}
+                      onChange={(e) => setTempNome(e.target.value)}
+                      className="h-7 text-xs w-32"
+                      placeholder="Nome..."
+                      autoFocus
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
+                      onClick={handleSaveNome}
+                      disabled={saving}
+                    >
+                      <Check className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground"
+                      onClick={() => setEditingNome(false)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs">{nome || '-'}</span>
+                    {customerId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                        onClick={() => {
+                          setTempNome(nome || '');
+                          setEditingNome(true);
+                        }}
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Telefone */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -284,23 +388,68 @@ export function UnifiedDetailsPanel({
                 )}
               </div>
 
-              {/* Email */}
+              {/* Email - Editável inline */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">Email</span>
                 </div>
-                {email ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-auto py-1 px-2 text-xs hover:text-primary truncate max-w-[150px]"
-                    onClick={() => window.open(`mailto:${email}`, '_blank')}
-                  >
-                    {email}
-                  </Button>
+                {editingEmail ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="email"
+                      value={tempEmail}
+                      onChange={(e) => setTempEmail(e.target.value)}
+                      className="h-7 text-xs w-36"
+                      placeholder="email@exemplo.com"
+                      autoFocus
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
+                      onClick={handleSaveEmail}
+                      disabled={saving}
+                    >
+                      <Check className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground"
+                      onClick={() => setEditingEmail(false)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
                 ) : (
-                  <span className="text-xs text-muted-foreground">-</span>
+                  <div className="flex items-center gap-1">
+                    {email ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-auto py-1 px-2 text-xs hover:text-primary truncate max-w-[120px]"
+                        onClick={() => window.open(`mailto:${email}`, '_blank')}
+                      >
+                        {email}
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">-</span>
+                    )}
+                    {customerId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                        onClick={() => {
+                          setTempEmail(email || '');
+                          setEditingEmail(true);
+                        }}
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </Card>
