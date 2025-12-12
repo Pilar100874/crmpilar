@@ -344,7 +344,11 @@ export default function MacrosPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+          <Button 
+            variant="outline" 
+            onClick={() => fileInputRef.current?.click()}
+            data-macro-id="btn_importar_macro"
+          >
             <Upload className="h-4 w-4 mr-2" />
             Importar
           </Button>
@@ -355,12 +359,31 @@ export default function MacrosPage() {
             className="hidden"
             onChange={handleImportFile}
           />
-          <Button variant="outline" onClick={createExampleMacros}>
+          <Button 
+            variant="outline" 
+            onClick={createExampleMacros}
+            data-macro-id="btn_criar_exemplos"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Criar Exemplos
           </Button>
         </div>
       </div>
+
+      {/* Aviso sobre gravação */}
+      <Card className="border-primary/50 bg-primary/5">
+        <CardContent className="flex items-start gap-3 p-4">
+          <Info className="h-5 w-5 text-primary mt-0.5" />
+          <div>
+            <p className="font-medium text-primary">Como gravar macros</p>
+            <p className="text-sm text-muted-foreground">
+              Use o controle flutuante no canto inferior direito para iniciar a gravação. 
+              A gravação captura cliques em elementos marcados com <code className="bg-muted px-1 rounded">data-macro-id</code>.
+              Teste clicando nos botões "Importar" ou "Criar Exemplos" acima durante a gravação.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Aviso de limitação */}
       <Card className="border-amber-500/50 bg-amber-500/5">
@@ -377,11 +400,11 @@ export default function MacrosPage() {
 
       <Tabs defaultValue="macros" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="macros">
+          <TabsTrigger value="macros" data-macro-id="tab_minhas_macros">
             <List className="h-4 w-4 mr-2" />
             Minhas Macros
           </TabsTrigger>
-          <TabsTrigger value="recorder">
+          <TabsTrigger value="recorder" data-macro-id="tab_gravador">
             <Circle className="h-4 w-4 mr-2" />
             Gravador
           </TabsTrigger>
@@ -397,6 +420,7 @@ export default function MacrosPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
+              data-macro-id="input_buscar_macros"
             />
           </div>
 
