@@ -67,9 +67,11 @@ export function UnifiedDetailsPanel({
   const [editingNome, setEditingNome] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
   const [editingCargo, setEditingCargo] = useState(false);
+  const [editingWhatsapp, setEditingWhatsapp] = useState(false);
   const [tempNome, setTempNome] = useState("");
   const [tempEmail, setTempEmail] = useState("");
   const [tempCargo, setTempCargo] = useState("");
+  const [tempWhatsapp, setTempWhatsapp] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Obtém o cargo da primeira empresa vinculada
@@ -156,6 +158,27 @@ export function UnifiedDetailsPanel({
     } catch (error) {
       console.error('Erro ao atualizar cargo:', error);
       toast.error("Erro ao atualizar cargo");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveWhatsapp = async () => {
+    if (!customerId) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .update({ telefone: tempWhatsapp.trim() || '' })
+        .eq('id', customerId);
+      
+      if (error) throw error;
+      toast.success("WhatsApp atualizado!");
+      setEditingWhatsapp(false);
+      onCompaniesUpdated?.();
+    } catch (error) {
+      console.error('Erro ao atualizar WhatsApp:', error);
+      toast.error("Erro ao atualizar WhatsApp");
     } finally {
       setSaving(false);
     }
@@ -370,43 +393,85 @@ export function UnifiedDetailsPanel({
                 )}
               </div>
 
-              {/* WhatsApp */}
+              {/* WhatsApp - Editável inline */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">WhatsApp</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  {whatsapp || telefone ? (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-auto py-1 px-2 text-xs hover:text-green-500"
-                        onClick={() => {
-                          const number = (whatsapp || telefone || "").replace(/\D/g, '');
-                          window.open(`https://wa.me/55${number}`, '_blank');
-                        }}
-                      >
-                        {whatsapp || telefone}
-                      </Button>
+                {editingWhatsapp ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={tempWhatsapp}
+                      onChange={(e) => setTempWhatsapp(e.target.value)}
+                      className="h-7 text-xs w-32"
+                      placeholder="(00) 00000-0000"
+                      autoFocus
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
+                      onClick={handleSaveWhatsapp}
+                      disabled={saving}
+                    >
+                      <Check className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground"
+                      onClick={() => setEditingWhatsapp(false)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    {whatsapp || telefone ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto py-1 px-2 text-xs hover:text-green-500"
+                          onClick={() => {
+                            const number = (whatsapp || telefone || "").replace(/\D/g, '');
+                            window.open(`https://wa.me/55${number}`, '_blank');
+                          }}
+                        >
+                          {whatsapp || telefone}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                          onClick={() => {
+                            setDialNumber(whatsapp || telefone || '');
+                            setShowSoftphone(true);
+                          }}
+                          title="Ligar"
+                        >
+                          <Phone className="w-3 h-3" />
+                        </Button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">-</span>
+                    )}
+                    {customerId && (
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
                         onClick={() => {
-                          setDialNumber(whatsapp || telefone || '');
-                          setShowSoftphone(true);
+                          setTempWhatsapp(whatsapp || telefone || '');
+                          setEditingWhatsapp(true);
                         }}
-                        title="Ligar"
                       >
-                        <Phone className="w-3 h-3" />
+                        <Pencil className="w-3 h-3" />
                       </Button>
-                    </>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">-</span>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Email - Editável inline */}
