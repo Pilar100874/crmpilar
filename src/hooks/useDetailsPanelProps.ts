@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PanelType } from "@/components/atendimento/UnifiedDetailsPanel";
 
-interface DetailsPanelProps {
+export interface DetailsPanelProps {
   type: PanelType;
   nome?: string;
   telefone?: string;
