@@ -340,13 +340,13 @@ export function UnifiedDetailsPanel({
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
             <Card className="p-3 rounded-2xl space-y-3">
-              {/* Nome - Editável inline */}
+              {/* Nome */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-muted-foreground" />
+                <div className="flex items-center gap-2 min-w-0">
+                  <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground">Nome</span>
                 </div>
-                {editingNome ? (
+                {editingNome && customerId ? (
                   <div className="flex items-center gap-1">
                     <Input
                       value={tempNome}
@@ -375,12 +375,12 @@ export function UnifiedDetailsPanel({
                   </div>
                 ) : (
                   <div className="flex items-center gap-1">
-                    <span className="text-xs">{nome || '-'}</span>
+                    <span className="text-xs truncate max-w-[120px]">{nome || '-'}</span>
                     {customerId && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
                         onClick={() => {
                           setTempNome(nome || '');
                           setEditingNome(true);
@@ -393,13 +393,13 @@ export function UnifiedDetailsPanel({
                 )}
               </div>
 
-              {/* WhatsApp - Editável inline */}
+              {/* WhatsApp/Telefone */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">WhatsApp</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Telefone</span>
                 </div>
-                {editingWhatsapp ? (
+                {editingWhatsapp && customerId ? (
                   <div className="flex items-center gap-1">
                     <Input
                       value={tempWhatsapp}
@@ -430,21 +430,23 @@ export function UnifiedDetailsPanel({
                   <div className="flex items-center gap-1">
                     {whatsapp || telefone ? (
                       <>
+                        <span className="text-xs truncate max-w-[100px]">{whatsapp || telefone}</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-auto py-1 px-2 text-xs hover:text-green-500"
+                          className="h-6 w-6 p-0 text-green-600 hover:text-green-700 flex-shrink-0"
                           onClick={() => {
                             const number = (whatsapp || telefone || "").replace(/\D/g, '');
                             window.open(`https://wa.me/55${number}`, '_blank');
                           }}
+                          title="WhatsApp"
                         >
-                          {whatsapp || telefone}
+                          <MessageSquare className="w-3 h-3" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
                           onClick={() => {
                             setDialNumber(whatsapp || telefone || '');
                             setShowSoftphone(true);
@@ -461,7 +463,7 @@ export function UnifiedDetailsPanel({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
                         onClick={() => {
                           setTempWhatsapp(whatsapp || telefone || '');
                           setEditingWhatsapp(true);
@@ -474,13 +476,13 @@ export function UnifiedDetailsPanel({
                 )}
               </div>
 
-              {/* Email - Editável inline */}
+              {/* Email */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
+                <div className="flex items-center gap-2 min-w-0">
+                  <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground">Email</span>
                 </div>
-                {editingEmail ? (
+                {editingEmail && customerId ? (
                   <div className="flex items-center gap-1">
                     <Input
                       type="email"
@@ -511,14 +513,18 @@ export function UnifiedDetailsPanel({
                 ) : (
                   <div className="flex items-center gap-1">
                     {email ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-auto py-1 px-2 text-xs hover:text-primary truncate max-w-[120px]"
-                        onClick={() => window.open(`mailto:${email}`, '_blank')}
-                      >
-                        {email}
-                      </Button>
+                      <>
+                        <span className="text-xs truncate max-w-[100px]">{email}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
+                          onClick={() => window.open(`mailto:${email}`, '_blank')}
+                          title="Enviar email"
+                        >
+                          <Mail className="w-3 h-3" />
+                        </Button>
+                      </>
                     ) : (
                       <span className="text-xs text-muted-foreground">-</span>
                     )}
@@ -526,7 +532,7 @@ export function UnifiedDetailsPanel({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
                         onClick={() => {
                           setTempEmail(email || '');
                           setEditingEmail(true);
@@ -539,47 +545,47 @@ export function UnifiedDetailsPanel({
                 )}
               </div>
 
-              {/* Cargo - Editável inline */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Cargo</span>
-                </div>
-                {editingCargo && companies.length > 0 ? (
-                  <div className="flex items-center gap-1">
-                    <Input
-                      value={tempCargo}
-                      onChange={(e) => setTempCargo(e.target.value)}
-                      className="h-7 text-xs w-32"
-                      placeholder="Cargo..."
-                      autoFocus
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
-                      onClick={handleSaveCargo}
-                      disabled={saving}
-                    >
-                      <Check className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-muted-foreground"
-                      onClick={() => setEditingCargo(false)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
+              {/* Cargo - só mostra se houver empresa vinculada */}
+              {companies.length > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Briefcase className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-xs text-muted-foreground">Cargo</span>
                   </div>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs">{currentCargo || '-'}</span>
-                    {companies.length > 0 && (
+                  {editingCargo ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        value={tempCargo}
+                        onChange={(e) => setTempCargo(e.target.value)}
+                        className="h-7 text-xs w-32"
+                        placeholder="Cargo..."
+                        autoFocus
+                      />
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                        className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
+                        onClick={handleSaveCargo}
+                        disabled={saving}
+                      >
+                        <Check className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-muted-foreground"
+                        onClick={() => setEditingCargo(false)}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs truncate max-w-[120px]">{currentCargo || '-'}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
                         onClick={() => {
                           setTempCargo(currentCargo);
                           setEditingCargo(true);
@@ -587,10 +593,10 @@ export function UnifiedDetailsPanel({
                       >
                         <Pencil className="w-3 h-3" />
                       </Button>
-                    )}
-                  </div>
-                )}
-              </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           </CollapsibleContent>
         </Collapsible>
