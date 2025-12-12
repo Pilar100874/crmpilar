@@ -11,12 +11,66 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, RefreshCw, Image, Paperclip, Variable, Zap, FileCheck, Languages, FileText, Bot, Webhook, UserPlus, Wand2, Sparkles, BookOpen, type LucideIcon } from 'lucide-react';
+import { 
+  Plus, Edit, Trash2, RefreshCw, Image, Paperclip, Variable, Zap, FileCheck, Languages, 
+  FileText, Bot, Webhook, UserPlus, Wand2, Sparkles, BookOpen, type LucideIcon,
+  MessageSquare, MessageCircle, Mail, Phone, PhoneCall, Video, Send, Reply, Forward,
+  File, FilePlus, FileSearch, Folder, FolderOpen, Download, Upload, Archive, 
+  Clipboard, ClipboardList, ClipboardCheck,
+  User, Users, UserCheck, UserX, UserCog, Contact, CircleUser,
+  Settings, Cog, Wrench, SlidersHorizontal, ToggleLeft,
+  Home, Search, Filter, SortAsc, SortDesc, ArrowRight, ArrowLeft, ChevronRight, ChevronDown,
+  Check, CheckCircle, X, XCircle, AlertTriangle, AlertCircle, Info, HelpCircle, Bell, BellRing,
+  Play, Pause, Square, SkipForward, SkipBack, RotateCw, Repeat,
+  Clock, Calendar, CalendarDays, Timer, History, Hourglass,
+  DollarSign, CreditCard, Wallet, Receipt, ShoppingCart, ShoppingBag, Package, Truck, 
+  BarChart, BarChart2, LineChart, PieChart, TrendingUp, TrendingDown, Activity,
+  Lock, Unlock, Shield, ShieldCheck, Key, Eye, EyeOff,
+  Camera, Mic, Volume2, VolumeX, Music, Headphones,
+  Globe, Link, Wifi, Cloud, CloudUpload, CloudDownload, Database, Server,
+  Pencil, Eraser, Scissors, Copy, Move, Maximize, Minimize, ZoomIn, ZoomOut,
+  Star, Heart, ThumbsUp, ThumbsDown, Flag, Bookmark, Tag, Hash, AtSign, Smile, Frown,
+  Share, ExternalLink, QrCode, Lightbulb, Rocket, Target, Award, Gift, Crown
+} from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { cn } from '@/lib/utils';
 
-// Mapa de ícones disponíveis
+// Mapa de ícones disponíveis organizados por categoria
 const ICON_MAP: Record<string, LucideIcon> = {
-  Image, Paperclip, Variable, Zap, FileCheck, Languages, FileText, Bot, Webhook, UserPlus, Wand2, Sparkles, BookOpen
+  MessageSquare, MessageCircle, Mail, Phone, PhoneCall, Video, Send, Reply, Forward,
+  Image, Paperclip, File, FileText, FilePlus, FileSearch, FileCheck, 
+  Folder, FolderOpen, Download, Upload, Archive, Clipboard, ClipboardList, ClipboardCheck,
+  User, Users, UserPlus, UserCheck, UserX, UserCog, Contact, CircleUser,
+  Settings, Cog, Wrench, SlidersHorizontal, ToggleLeft,
+  Home, Search, Filter, SortAsc, SortDesc, ArrowRight, ArrowLeft, ChevronRight, ChevronDown,
+  Check, CheckCircle, X, XCircle, AlertTriangle, AlertCircle, Info, HelpCircle, Bell, BellRing,
+  Play, Pause, Square, SkipForward, SkipBack, RotateCw, Repeat,
+  Clock, Calendar, CalendarDays, Timer, History, Hourglass,
+  DollarSign, CreditCard, Wallet, Receipt, ShoppingCart, ShoppingBag, Package, Truck,
+  BarChart, BarChart2, LineChart, PieChart, TrendingUp, TrendingDown, Activity,
+  Lock, Unlock, Shield, ShieldCheck, Key, Eye, EyeOff,
+  Camera, Mic, Volume2, VolumeX, Music, Headphones,
+  Globe, Link, Wifi, Cloud, CloudUpload, CloudDownload, Database, Server, Webhook,
+  Pencil, Eraser, Scissors, Copy, Move, Maximize, Minimize, ZoomIn, ZoomOut,
+  Bot, Wand2, Sparkles, Zap, Variable, Languages, BookOpen,
+  Star, Heart, ThumbsUp, ThumbsDown, Flag, Bookmark, Tag, Hash, AtSign, Smile, Frown,
+  Share, ExternalLink, QrCode, Lightbulb, Rocket, Target, Award, Gift, Crown
+};
+
+const ICON_CATEGORIES: Record<string, string[]> = {
+  'Comunicação': ['MessageSquare', 'MessageCircle', 'Mail', 'Phone', 'PhoneCall', 'Video', 'Send', 'Reply', 'Forward'],
+  'Arquivos': ['Image', 'Paperclip', 'File', 'FileText', 'FilePlus', 'FileSearch', 'FileCheck', 'Folder', 'FolderOpen', 'Download', 'Upload', 'Archive', 'Clipboard', 'ClipboardList', 'ClipboardCheck'],
+  'Usuários': ['User', 'Users', 'UserPlus', 'UserCheck', 'UserX', 'UserCog', 'Contact', 'CircleUser'],
+  'Configurações': ['Settings', 'Cog', 'Wrench', 'SlidersHorizontal', 'ToggleLeft'],
+  'Status': ['Check', 'CheckCircle', 'X', 'XCircle', 'AlertTriangle', 'AlertCircle', 'Info', 'HelpCircle', 'Bell', 'BellRing'],
+  'Tempo': ['Clock', 'Calendar', 'CalendarDays', 'Timer', 'History', 'Hourglass'],
+  'Negócios': ['DollarSign', 'CreditCard', 'Wallet', 'Receipt', 'ShoppingCart', 'ShoppingBag', 'Package', 'Truck'],
+  'Gráficos': ['BarChart', 'BarChart2', 'LineChart', 'PieChart', 'TrendingUp', 'TrendingDown', 'Activity'],
+  'Segurança': ['Lock', 'Unlock', 'Shield', 'ShieldCheck', 'Key', 'Eye', 'EyeOff'],
+  'Mídia': ['Camera', 'Mic', 'Volume2', 'VolumeX', 'Music', 'Headphones'],
+  'Redes': ['Globe', 'Link', 'Wifi', 'Cloud', 'CloudUpload', 'CloudDownload', 'Database', 'Server', 'Webhook'],
+  'IA e Automação': ['Bot', 'Wand2', 'Sparkles', 'Zap', 'Variable', 'Languages', 'BookOpen'],
+  'Outros': ['Star', 'Heart', 'ThumbsUp', 'ThumbsDown', 'Flag', 'Bookmark', 'Tag', 'Hash', 'AtSign', 'Smile', 'Frown', 'Share', 'ExternalLink', 'QrCode', 'Lightbulb', 'Rocket', 'Target', 'Award', 'Gift', 'Crown']
 };
 
 // Ferramentas padrão que serão inicializadas para cada estabelecimento
@@ -482,18 +536,6 @@ export default function FerramentasAtendimentoCRUD({ estabelecimentoId }: Ferram
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Ícone</Label>
-                <select 
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                  value={formData.icone}
-                  onChange={(e) => setFormData({ ...formData, icone: e.target.value })}
-                >
-                  {Object.keys(ICON_MAP).map(icon => (
-                    <option key={icon} value={icon}>{icon}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
                 <Label>Tipo</Label>
                 <select 
                   className="w-full h-10 px-3 rounded-md border border-input bg-background"
@@ -503,6 +545,43 @@ export default function FerramentasAtendimentoCRUD({ estabelecimentoId }: Ferram
                   <option value="ferramenta">Ferramenta</option>
                   <option value="ia">IA</option>
                 </select>
+              </div>
+              <div className="flex items-end gap-2">
+                <div className="flex items-center justify-center w-10 h-10 rounded-md border bg-primary/10">
+                  {getIconComponent(formData.icone)}
+                </div>
+                <span className="text-sm text-muted-foreground">{formData.icone}</span>
+              </div>
+            </div>
+            
+            <div>
+              <Label>Ícone</Label>
+              <div className="border rounded-lg p-3 max-h-48 overflow-y-auto">
+                {Object.entries(ICON_CATEGORIES).map(([category, icons]) => (
+                  <div key={category} className="mb-3">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">{category}</p>
+                    <div className="grid grid-cols-10 gap-1">
+                      {icons.map(iconName => {
+                        const IconComp = ICON_MAP[iconName];
+                        if (!IconComp) return null;
+                        return (
+                          <button
+                            key={iconName}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, icone: iconName })}
+                            className={cn(
+                              "p-2 rounded hover:bg-muted transition-colors",
+                              formData.icone === iconName && "bg-primary/20 ring-2 ring-primary"
+                            )}
+                            title={iconName}
+                          >
+                            <IconComp className="h-4 w-4" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
             <div>
