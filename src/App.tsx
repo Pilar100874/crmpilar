@@ -93,8 +93,17 @@ import LandingPage from "./pages/LandingPage";
 import Avisos from "./pages/Avisos";
 import EmailConfig from "./pages/EmailConfig";
 import OrcamentoReportConfig from "./pages/OrcamentoReportConfig";
+import MacrosPage from "./pages/MacrosPage";
+import { MacroProvider } from "./contexts/MacroContext";
+import { useMacroHotkeys } from "./hooks/useMacroHotkeys";
 
 const queryClient = new QueryClient();
+
+// Component to activate hotkeys
+function MacroHotkeysActivator() {
+  useMacroHotkeys();
+  return null;
+}
 
 // Layout wrapper component
 const LayoutWrapper = () => (
@@ -105,114 +114,118 @@ const LayoutWrapper = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route element={<LayoutWrapper />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/atendimento" element={<Atendimento />} />
-            <Route path="/email" element={<EmailHub />} />
-            <Route path="/email/:folder" element={<Email />} />
-            <Route path="/email-config" element={<EmailConfig />} />
-            <Route path="/listas" element={<ListasHub />} />
-            <Route path="/bot-builder" element={<BotBuilder />} />
-            <Route path="/bot-test" element={<BotTest />} />
-            <Route path="/bot-create" element={<BotCreate />} />
-            <Route path="/campanhas" element={<Campanhas />} />
-            <Route path="/calendario" element={<Calendario />} />
-            <Route path="/funil" element={<Funil />} />
-            <Route path="/orcamentos" element={<Orcamentos />} />
-            <Route path="/conteudos" element={<Conteudos />} />
-            <Route path="/contatos" element={<Contatos />} />
-            <Route path="/empresas" element={<Empresas />} />
-            <Route path="/todos" element={<Todos />} />
-            <Route path="/vinculos-empresas" element={<VinculosEmpresas />} />
-            <Route path="/vinculos-contatos" element={<VinculosContatos />} />
-            <Route path="/config" element={<Config />} />
-            <Route path="/config/webhooks" element={<ChatWebhook />} />
-            <Route path="/config/variaveis" element={<GlobalVariables />} />
-            <Route path="/config/campanhas" element={<Campanhas />} />
-            <Route path="/global-variables" element={<GlobalVariables />} />
-            <Route path="/desenho" element={<Desenho />} />
-            <Route path="/marketing" element={<MarketingHub />} />
-            <Route path="/marketing/canvas" element={<MarketingCanvas />} />
-            <Route path="/marketing/automacoes" element={<MarketingAutomacoes />} />
-            <Route path="/marketing/campanhas" element={<MarketingCampanhas />} />
-            <Route path="/relatorios" element={<Relatorios />} />
-            <Route path="/relatorios/viewer" element={<ReportBroViewerPage />} />
-            <Route path="/importacao-produtos" element={<ImportacaoProdutosLista />} />
-            <Route path="/importacao-produtos/novo" element={<ImportacaoProdutos />} />
-            <Route path="/importacao-produtos/editar/:id" element={<ImportacaoProdutos />} />
-            <Route path="/softphone" element={<Softphone />} />
-            <Route path="/videocall" element={<VideoCall />} />
-            <Route path="/chat-webhook" element={<ChatWebhook />} />
-            <Route path="/meus-textos-prontos" element={<MeusTextosProntos />} />
-            <Route path="/meus-anexos" element={<MeusAnexos />} />
-            <Route path="/stimulsoft-viewer" element={<StimulsoftViewer />} />
-            <Route path="/config/skills" element={<ConfigSkills />} />
-            <Route path="/monitor-filas" element={<MonitorarFilas />} />
-            <Route path="/omnichannel-builder" element={<OmnichannelBuilder />} />
-            <Route path="/omnichannel-builder/:id" element={<OmnichannelBuilder />} />
-            <Route path="/dashboard-atendente" element={<DashboardAtendentePage />} />
-            <Route path="/dashboard-supervisor" element={<DashboardSupervisorPage />} />
-            <Route path="/test-roteamento" element={<TestRoteamento />} />
-            <Route path="/sla-dashboard" element={<SLADashboardPage />} />
-            <Route path="/config/sla" element={<ConfigSLAPage />} />
-            <Route path="/advanced-analytics" element={<AdvancedAnalyticsPage />} />
-            <Route path="/dashboard-pesquisas-satisfacao" element={<DashboardPesquisasSatisfacao />} />
-            <Route path="/dashboard-gastos-ia" element={<DashboardGastosIA />} />
-            <Route path="/pesquisas-satisfacao" element={<PesquisasSatisfacaoPage />} />
-            <Route path="/base-conhecimento" element={<BaseConhecimento />} />
-            <Route path="/quality-assurance" element={<QualityAssurance />} />
-            <Route path="/automacoes-vendas" element={<AutomacoesVendas />} />
-            <Route path="/editor-regras" element={<EditorRegras />} />
-            <Route path="/editor-regras/:id" element={<EditorRegras />} />
-            <Route path="/vendas-config" element={<VendasConfig />} />
-            <Route path="/orcamento-report-config" element={<OrcamentoReportConfig />} />
-            <Route path="/atendimento-config" element={<AtendimentoConfig />} />
-            <Route path="/chat-interno" element={<ChatInterno />} />
-            <Route path="/avisos" element={<Avisos />} />
-            <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
-            <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
-            <Route path="/perfil" element={<Perfil />} />
-            <Route path="/logistica" element={<LogisticaHub />} />
-            <Route path="/logistica/monitoramento" element={<LogisticaMonitoramento />} />
-            <Route path="/logistica/veiculos" element={<LogisticaVeiculos />} />
-            <Route path="/logistica/historico" element={<LogisticaHistorico />} />
-            <Route path="/logistica/historico/:veiculoId" element={<LogisticaHistorico />} />
-            <Route path="/logistica/roteirizacao" element={<LogisticaRoteirizacao />} />
-            <Route path="/logistica/rotas" element={<LogisticaRotas />} />
-            <Route path="/logistica/automacoes" element={<LogisticaAutomacoes />} />
-            <Route path="/logistica/config" element={<LogisticaConfig />} />
-            <Route path="/marketplaces" element={<MarketplacesHubPage />} />
-            <Route path="/robo-precos" element={<RoboPrecos />} />
-            <Route path="/whatsapp-catalogo" element={<WhatsAppCatalogo />} />
-            {/* Ads Routes */}
-            <Route path="/ads" element={<AdsHub />} />
-            <Route path="/ads/:platform" element={<AdsPlatformDashboard />} />
-            <Route path="/ads/campaigns" element={<AdsCampaigns />} />
-            <Route path="/ads/reports" element={<AdsReports />} />
-            <Route path="/ads/alerts" element={<AdsAlerts />} />
-            <Route path="/ads/credentials" element={<AdsCredentials />} />
-            <Route path="/ads/logs" element={<AdsLogs />} />
-            <Route path="/ads/automation" element={<AdsAutomation />} />
-            <Route path="/ads/automation/:id" element={<AdsAutomation />} />
-          </Route>
-          {/* Public routes (no layout) */}
-          <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
-          <Route path="/webchat" element={<WebChat />} />
-          <Route path="/pilar-rastreador" element={<PilarRastreador />} />
-          <Route path="/pilar-rastreador-nativo" element={<PilarRastreadorNativo />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <MacroProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <MacroHotkeysActivator />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route element={<LayoutWrapper />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/atendimento" element={<Atendimento />} />
+              <Route path="/email" element={<EmailHub />} />
+              <Route path="/email/:folder" element={<Email />} />
+              <Route path="/email-config" element={<EmailConfig />} />
+              <Route path="/listas" element={<ListasHub />} />
+              <Route path="/bot-builder" element={<BotBuilder />} />
+              <Route path="/bot-test" element={<BotTest />} />
+              <Route path="/bot-create" element={<BotCreate />} />
+              <Route path="/campanhas" element={<Campanhas />} />
+              <Route path="/calendario" element={<Calendario />} />
+              <Route path="/funil" element={<Funil />} />
+              <Route path="/orcamentos" element={<Orcamentos />} />
+              <Route path="/conteudos" element={<Conteudos />} />
+              <Route path="/contatos" element={<Contatos />} />
+              <Route path="/empresas" element={<Empresas />} />
+              <Route path="/todos" element={<Todos />} />
+              <Route path="/vinculos-empresas" element={<VinculosEmpresas />} />
+              <Route path="/vinculos-contatos" element={<VinculosContatos />} />
+              <Route path="/config" element={<Config />} />
+              <Route path="/config/webhooks" element={<ChatWebhook />} />
+              <Route path="/config/variaveis" element={<GlobalVariables />} />
+              <Route path="/config/campanhas" element={<Campanhas />} />
+              <Route path="/global-variables" element={<GlobalVariables />} />
+              <Route path="/desenho" element={<Desenho />} />
+              <Route path="/marketing" element={<MarketingHub />} />
+              <Route path="/marketing/canvas" element={<MarketingCanvas />} />
+              <Route path="/marketing/automacoes" element={<MarketingAutomacoes />} />
+              <Route path="/marketing/campanhas" element={<MarketingCampanhas />} />
+              <Route path="/relatorios" element={<Relatorios />} />
+              <Route path="/relatorios/viewer" element={<ReportBroViewerPage />} />
+              <Route path="/importacao-produtos" element={<ImportacaoProdutosLista />} />
+              <Route path="/importacao-produtos/novo" element={<ImportacaoProdutos />} />
+              <Route path="/importacao-produtos/editar/:id" element={<ImportacaoProdutos />} />
+              <Route path="/softphone" element={<Softphone />} />
+              <Route path="/videocall" element={<VideoCall />} />
+              <Route path="/chat-webhook" element={<ChatWebhook />} />
+              <Route path="/meus-textos-prontos" element={<MeusTextosProntos />} />
+              <Route path="/meus-anexos" element={<MeusAnexos />} />
+              <Route path="/stimulsoft-viewer" element={<StimulsoftViewer />} />
+              <Route path="/config/skills" element={<ConfigSkills />} />
+              <Route path="/monitor-filas" element={<MonitorarFilas />} />
+              <Route path="/omnichannel-builder" element={<OmnichannelBuilder />} />
+              <Route path="/omnichannel-builder/:id" element={<OmnichannelBuilder />} />
+              <Route path="/dashboard-atendente" element={<DashboardAtendentePage />} />
+              <Route path="/dashboard-supervisor" element={<DashboardSupervisorPage />} />
+              <Route path="/test-roteamento" element={<TestRoteamento />} />
+              <Route path="/sla-dashboard" element={<SLADashboardPage />} />
+              <Route path="/config/sla" element={<ConfigSLAPage />} />
+              <Route path="/advanced-analytics" element={<AdvancedAnalyticsPage />} />
+              <Route path="/dashboard-pesquisas-satisfacao" element={<DashboardPesquisasSatisfacao />} />
+              <Route path="/dashboard-gastos-ia" element={<DashboardGastosIA />} />
+              <Route path="/pesquisas-satisfacao" element={<PesquisasSatisfacaoPage />} />
+              <Route path="/base-conhecimento" element={<BaseConhecimento />} />
+              <Route path="/quality-assurance" element={<QualityAssurance />} />
+              <Route path="/automacoes-vendas" element={<AutomacoesVendas />} />
+              <Route path="/editor-regras" element={<EditorRegras />} />
+              <Route path="/editor-regras/:id" element={<EditorRegras />} />
+              <Route path="/vendas-config" element={<VendasConfig />} />
+              <Route path="/orcamento-report-config" element={<OrcamentoReportConfig />} />
+              <Route path="/atendimento-config" element={<AtendimentoConfig />} />
+              <Route path="/chat-interno" element={<ChatInterno />} />
+              <Route path="/avisos" element={<Avisos />} />
+              <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
+              <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
+              <Route path="/perfil" element={<Perfil />} />
+              <Route path="/logistica" element={<LogisticaHub />} />
+              <Route path="/logistica/monitoramento" element={<LogisticaMonitoramento />} />
+              <Route path="/logistica/veiculos" element={<LogisticaVeiculos />} />
+              <Route path="/logistica/historico" element={<LogisticaHistorico />} />
+              <Route path="/logistica/historico/:veiculoId" element={<LogisticaHistorico />} />
+              <Route path="/logistica/roteirizacao" element={<LogisticaRoteirizacao />} />
+              <Route path="/logistica/rotas" element={<LogisticaRotas />} />
+              <Route path="/logistica/automacoes" element={<LogisticaAutomacoes />} />
+              <Route path="/logistica/config" element={<LogisticaConfig />} />
+              <Route path="/marketplaces" element={<MarketplacesHubPage />} />
+              <Route path="/robo-precos" element={<RoboPrecos />} />
+              <Route path="/whatsapp-catalogo" element={<WhatsAppCatalogo />} />
+              <Route path="/macros" element={<MacrosPage />} />
+              {/* Ads Routes */}
+              <Route path="/ads" element={<AdsHub />} />
+              <Route path="/ads/:platform" element={<AdsPlatformDashboard />} />
+              <Route path="/ads/campaigns" element={<AdsCampaigns />} />
+              <Route path="/ads/reports" element={<AdsReports />} />
+              <Route path="/ads/alerts" element={<AdsAlerts />} />
+              <Route path="/ads/credentials" element={<AdsCredentials />} />
+              <Route path="/ads/logs" element={<AdsLogs />} />
+              <Route path="/ads/automation" element={<AdsAutomation />} />
+              <Route path="/ads/automation/:id" element={<AdsAutomation />} />
+            </Route>
+            {/* Public routes (no layout) */}
+            <Route path="/orcamento/:token" element={<OrcamentoPublico />} />
+            <Route path="/webchat" element={<WebChat />} />
+            <Route path="/pilar-rastreador" element={<PilarRastreador />} />
+            <Route path="/pilar-rastreador-nativo" element={<PilarRastreadorNativo />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </MacroProvider>
   </QueryClientProvider>
 );
 

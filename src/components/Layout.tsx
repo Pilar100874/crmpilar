@@ -132,6 +132,14 @@ const menuItems: MenuItem[] = [
   { id: "Marketplaces", title: "Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
   { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
+  { 
+    id: "Admin",
+    title: "Admin",
+    icon: LucideIcons.ShieldCheck,
+    subItems: [
+      { id: "Macros", title: "Macros", url: "/macros", icon: LucideIcons.Zap },
+    ]
+  },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
 
