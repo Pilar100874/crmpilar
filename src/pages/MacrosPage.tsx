@@ -843,31 +843,31 @@ export default function MacrosPage() {
       </Dialog>
 
       {/* Dialog de confirmação de exclusão */}
-      {deleteConfirmId && (
-        <AlertDialog open={true} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Excluir Macro?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta ação não pode ser desfeita. A macro será permanentemente excluída.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteConfirmId(null)}>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={async () => {
-                  const idToDelete = deleteConfirmId;
-                  setDeleteConfirmId(null);
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Macro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. A macro será permanentemente excluída.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteConfirmId(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                const idToDelete = deleteConfirmId;
+                setDeleteConfirmId(null);
+                if (idToDelete) {
                   await deleteMacro(idToDelete);
-                }}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Excluir
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Dialog de importação */}
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
