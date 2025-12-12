@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Building2, Search, Plus, Loader2 } from "lucide-react";
+import { Building2, Search, Plus, Loader2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -41,10 +41,23 @@ export function VincularEmpresaDialog({
   const [empresasFiltradas, setEmpresasFiltradas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
   const [vinculando, setVinculando] = useState(false);
+  
+  // Estado para cadastro de nova empresa
+  const [modoCadastro, setModoCadastro] = useState(false);
+  const [novaEmpresa, setNovaEmpresa] = useState({
+    nome_fantasia: "",
+    nome: "",
+    cnpj: "",
+    email: "",
+    telefone: ""
+  });
+  const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
     if (open) {
       loadEmpresas();
+      setModoCadastro(false);
+      setNovaEmpresa({ nome_fantasia: "", nome: "", cnpj: "", email: "", telefone: "" });
     }
   }, [open]);
 
@@ -236,83 +249,245 @@ export function VincularEmpresaDialog({
     }
   };
 
+  const handleCadastrarEVincular = async () => {
+    if (!novaEmpresa.nome_fantasia.trim()) {
+      toast.error("Nome fantasia é obrigatório");
+      return;
+    }
+
+    setSalvando(true);
+    try {
+      const estabId = await getEstabelecimentoId();
+      
+      // Criar a nova empresa
+      const { data: empresaCriada, error: empresaErr } = await supabase
+        .from('empresas')
+        .insert({
+          estabelecimento_id: estabId,
+          nome_fantasia: novaEmpresa.nome_fantasia.trim(),
+          nome: novaEmpresa.nome.trim() || novaEmpresa.nome_fantasia.trim(),
+          cnpj: novaEmpresa.cnpj.trim() || null,
+          email: novaEmpresa.email.trim() || null,
+          telefone: novaEmpresa.telefone.trim() || null,
+          emails_vinculados: emailVinculo ? [emailVinculo] : [],
+          whatsapps_vinculados: whatsappVinculo ? [whatsappVinculo] : []
+        })
+        .select('id')
+        .single();
+
+      if (empresaErr) throw empresaErr;
+
+      // Se temos customerId, vincular diretamente
+      if (customerId) {
+        await supabase
+          .from('customer_empresas')
+          .insert({
+            customer_id: customerId,
+            empresa_id: empresaCriada.id,
+            is_primary: false
+          });
+      }
+
+      toast.success("Empresa cadastrada e vinculada com sucesso!");
+      onSuccess?.();
+      onOpenChange(false);
+      setBusca("");
+      setEmpresasFiltradas([]);
+      setModoCadastro(false);
+      setNovaEmpresa({ nome_fantasia: "", nome: "", cnpj: "", email: "", telefone: "" });
+    } catch (error: any) {
+      console.error('Erro ao cadastrar empresa:', error);
+      toast.error(error?.message || "Erro ao cadastrar empresa");
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  const iniciarCadastro = () => {
+    setModoCadastro(true);
+    // Preencher nome fantasia com o termo buscado
+    setNovaEmpresa(prev => ({ ...prev, nome_fantasia: busca }));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
+            {modoCadastro && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 mr-1"
+                onClick={() => setModoCadastro(false)}
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+            )}
             <Building2 className="w-5 h-5 text-primary" />
-            Vincular Empresa
+            {modoCadastro ? "Cadastrar Nova Empresa" : "Vincular Empresa"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Campo de busca */}
-          <div className="space-y-2">
-            <Label className="text-sm">Buscar Empresa</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        {modoCadastro ? (
+          // Formulário de cadastro de nova empresa
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-sm">Nome Fantasia *</Label>
               <Input
-                placeholder="Digite nome, CNPJ..."
-                value={busca}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-9"
+                placeholder="Nome fantasia da empresa"
+                value={novaEmpresa.nome_fantasia}
+                onChange={(e) => setNovaEmpresa(prev => ({ ...prev, nome_fantasia: e.target.value }))}
               />
             </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm">Razão Social</Label>
+              <Input
+                placeholder="Razão social (opcional)"
+                value={novaEmpresa.nome}
+                onChange={(e) => setNovaEmpresa(prev => ({ ...prev, nome: e.target.value }))}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm">CNPJ</Label>
+              <Input
+                placeholder="00.000.000/0000-00"
+                value={novaEmpresa.cnpj}
+                onChange={(e) => setNovaEmpresa(prev => ({ ...prev, cnpj: e.target.value }))}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-sm">Email</Label>
+                <Input
+                  type="email"
+                  placeholder="email@empresa.com"
+                  value={novaEmpresa.email}
+                  onChange={(e) => setNovaEmpresa(prev => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm">Telefone</Label>
+                <Input
+                  placeholder="(00) 0000-0000"
+                  value={novaEmpresa.telefone}
+                  onChange={(e) => setNovaEmpresa(prev => ({ ...prev, telefone: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={handleCadastrarEVincular}
+              disabled={salvando || !novaEmpresa.nome_fantasia.trim()}
+            >
+              {salvando ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Cadastrar e Vincular
+                </>
+              )}
+            </Button>
           </div>
-
-          {/* Loading */}
-          {loading && (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        ) : (
+          // Modo de busca normal
+          <div className="space-y-4 py-4">
+            {/* Campo de busca */}
+            <div className="space-y-2">
+              <Label className="text-sm">Buscar Empresa</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Digite nome, CNPJ..."
+                  value={busca}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
             </div>
-          )}
 
-          {/* Lista de empresas filtradas */}
-          {!loading && empresasFiltradas.length > 0 && (
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-              {empresasFiltradas.map((empresa) => (
-                <Card
-                  key={empresa.id}
-                  className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => handleVincular(empresa.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">
-                        {empresa.nome_fantasia || empresa.nome}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {empresa.cnpj || 'Sem CNPJ'}
-                      </p>
+            {/* Loading */}
+            {loading && (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            )}
+
+            {/* Lista de empresas filtradas */}
+            {!loading && empresasFiltradas.length > 0 && (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {empresasFiltradas.map((empresa) => (
+                  <Card
+                    key={empresa.id}
+                    className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => handleVincular(empresa.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {empresa.nome_fantasia || empresa.nome}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {empresa.cnpj || 'Sem CNPJ'}
+                        </p>
+                      </div>
+                      {vinculando ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Plus className="w-4 h-4 text-primary" />
+                      )}
                     </div>
-                    {vinculando ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Plus className="w-4 h-4 text-primary" />
-                    )}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
+                  </Card>
+                ))}
+              </div>
+            )}
 
-          {/* Mensagem quando não encontra */}
-          {!loading && busca && empresasFiltradas.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              <Building2 className="w-10 h-10 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Nenhuma empresa encontrada</p>
-            </div>
-          )}
+            {/* Mensagem quando não encontra + botão de cadastrar */}
+            {!loading && busca && empresasFiltradas.length === 0 && (
+              <div className="text-center py-6 space-y-4">
+                <div className="text-muted-foreground">
+                  <Building2 className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">Nenhuma empresa encontrada</p>
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={iniciarCadastro}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Cadastrar "{busca}"
+                </Button>
+              </div>
+            )}
 
-          {/* Estado inicial */}
-          {!loading && !busca && (
-            <div className="text-center py-8 text-muted-foreground">
-              <Search className="w-10 h-10 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Digite para buscar uma empresa</p>
-            </div>
-          )}
-        </div>
+            {/* Estado inicial */}
+            {!loading && !busca && (
+              <div className="text-center py-6 space-y-4">
+                <div className="text-muted-foreground">
+                  <Search className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">Digite para buscar uma empresa</p>
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setModoCadastro(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Cadastrar Nova Empresa
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
