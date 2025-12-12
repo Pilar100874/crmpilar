@@ -96,11 +96,6 @@ export function FloatingMacroRecorder() {
       return;
     }
 
-    if (!hasSteps) {
-      alert('Nenhum passo gravado para salvar.');
-      return;
-    }
-
     if (isRecording) {
       stopRecording();
     }
