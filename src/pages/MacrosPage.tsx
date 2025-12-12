@@ -720,6 +720,7 @@ export default function MacrosPage() {
       {/* Dialog de edição */}
       <Dialog
         open={!!editingMacro}
+        modal={false}
         onOpenChange={(open) => {
           if (!open) setEditingMacro(null);
         }}
