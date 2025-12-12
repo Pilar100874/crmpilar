@@ -240,6 +240,7 @@ export function ComposeEmailDialog({
               onInsertText={handleInsertText}
               onAddAttachment={handleAddAttachment}
               disabled={sending}
+              recipientEmail={to}
             />
           </div>
           

@@ -25,9 +25,10 @@ interface EmailToolsMenuProps {
   onAddAttachment?: (attachment: EmailAttachment) => void;
   onToolAction?: (toolId: string) => void;
   disabled?: boolean;
+  recipientEmail?: string;
 }
 
-export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachment, onToolAction, disabled }: EmailToolsMenuProps) {
+export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachment, onToolAction, disabled, recipientEmail }: EmailToolsMenuProps) {
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -67,14 +68,14 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [activeToolId]);
 
-  // Load data when menu opens
+  // Load data when menu opens or recipient email changes
   useEffect(() => {
     if (showToolsMenu) {
       loadImportReports();
       loadQuickReplies();
       loadOrcamentos();
     }
-  }, [showToolsMenu, estabelecimentoId]);
+  }, [showToolsMenu, estabelecimentoId, recipientEmail]);
 
   const loadImportReports = async () => {
     try {
@@ -121,19 +122,67 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
       const estabId = estabelecimentoId || await getEstabelecimentoId();
       if (!estabId) return;
 
-      const { data, error } = await supabase
+      // If we have a recipient email, search for matching customers/empresas first
+      let matchingClienteIds: string[] = [];
+      let matchingEmpresaIds: string[] = [];
+
+      if (recipientEmail && recipientEmail.trim()) {
+        const email = recipientEmail.trim().toLowerCase();
+        
+        // Search customers with matching email
+        const { data: customers } = await supabase
+          .from("customers")
+          .select("id")
+          .eq("estabelecimento_id", estabId)
+          .ilike("email", `%${email}%`);
+        
+        if (customers) {
+          matchingClienteIds = customers.map(c => c.id);
+        }
+
+        // Search empresas with matching email
+        const { data: empresas } = await supabase
+          .from("empresas")
+          .select("id")
+          .eq("estabelecimento_id", estabId)
+          .ilike("email", `%${email}%`);
+        
+        if (empresas) {
+          matchingEmpresaIds = empresas.map(e => e.id);
+        }
+      }
+
+      // Build query
+      let query = supabase
         .from("orcamentos")
         .select(`
           id,
           numero,
           created_at,
           valor_total,
-          customers:cliente_id (nome),
-          empresas:empresa_id (nome_fantasia)
+          cliente_id,
+          empresa_id,
+          customers:cliente_id (nome, email),
+          empresas:empresa_id (nome_fantasia, email)
         `)
         .eq("estabelecimento_id", estabId)
-        .order("created_at", { ascending: false })
-        .limit(20);
+        .order("created_at", { ascending: false });
+
+      // If we have matching IDs, filter by them
+      if (recipientEmail && recipientEmail.trim() && (matchingClienteIds.length > 0 || matchingEmpresaIds.length > 0)) {
+        const filters = [];
+        if (matchingClienteIds.length > 0) {
+          filters.push(`cliente_id.in.(${matchingClienteIds.join(',')})`);
+        }
+        if (matchingEmpresaIds.length > 0) {
+          filters.push(`empresa_id.in.(${matchingEmpresaIds.join(',')})`);
+        }
+        query = query.or(filters.join(','));
+      }
+
+      query = query.limit(50);
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setOrcamentos(data || []);
@@ -388,6 +437,11 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
         return (
           <div className="space-y-3">
             <Label className="text-sm font-medium">Anexar Orçamento</Label>
+            {recipientEmail && recipientEmail.trim() && (
+              <p className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
+                Filtrando por: {recipientEmail}
+              </p>
+            )}
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -418,7 +472,11 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  {orcamentos.length === 0 ? "Nenhum orçamento encontrado" : "Nenhum resultado"}
+                  {recipientEmail && recipientEmail.trim() 
+                    ? "Nenhum orçamento vinculado a este email"
+                    : orcamentos.length === 0 
+                      ? "Nenhum orçamento encontrado" 
+                      : "Nenhum resultado"}
                 </p>
               )}
             </ScrollArea>
