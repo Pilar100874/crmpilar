@@ -1135,10 +1135,13 @@ export default function Contatos() {
   const handleSaveContact = async () => {
     const errors: Record<string, string> = {};
     
-    // Validar campos obrigatórios de contato
-    const requiredContactFields = ['name', 'phone', 'email', 'position'];
-    requiredContactFields.forEach(field => {
-      if (!formData[field]?.trim()) {
+    // Validar campos obrigatórios de contato com base na configuração
+    const requiredContactFieldIds = contactFields
+      .filter(f => f.required)
+      .map(f => f.id);
+    
+    requiredContactFieldIds.forEach(field => {
+      if (!formData[field]?.toString().trim()) {
         errors[field] = "Campo obrigatório";
       }
     });
@@ -1153,14 +1156,13 @@ export default function Contatos() {
       errors.phone = "WhatsApp inválido";
     }
 
-    // Se tem empresa sendo criada, validar campos da empresa
+    // Se tem empresa sendo criada, validar campos da empresa com base na configuração
     if (criarNovaEmpresa) {
-      const requiredCompanyFields = [
-        'company_type', 'cpf_cnpj', 'company_name', 'company_fantasia',
-        'cep', 'address', 'city', 'neighborhood', 'state', 'inscricao'
-      ];
+      const requiredCompanyFieldIds = companyFields
+        .filter(f => f.required)
+        .map(f => f.id);
       
-      requiredCompanyFields.forEach(field => {
+      requiredCompanyFieldIds.forEach(field => {
         if (!formData[field]?.toString().trim()) {
           errors[field] = "Campo obrigatório";
         }
