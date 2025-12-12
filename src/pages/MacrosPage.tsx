@@ -295,6 +295,18 @@ export default function MacrosPage() {
     });
   };
 
+  const handleUpdateStep = (updatedStep: MacroStep) => {
+    if (!editingMacro) return;
+
+    setEditingMacro({
+      ...editingMacro,
+      steps: editingMacro.steps.map(s =>
+        s.id === updatedStep.id ? updatedStep : s
+      )
+    });
+    setEditingStep(null);
+  };
+
   // Criar macros de exemplo
   const createExampleMacros = async () => {
     const example1 = {
@@ -867,6 +879,100 @@ export default function MacrosPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de edição de passo */}
+      {editingStep && (
+        <Dialog open={true} onOpenChange={(open) => { if (!open) setEditingStep(null); }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Editar Passo</DialogTitle>
+              <DialogDescription>
+                Modifique os detalhes deste passo da macro
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <select
+                  className="w-full rounded-md border bg-background px-3 py-2"
+                  value={editingStep.type}
+                  onChange={(e) => setEditingStep({ ...editingStep, type: e.target.value as MacroStep['type'] })}
+                >
+                  <option value="click">Clique</option>
+                  <option value="setValue">Preencher Valor</option>
+                  <option value="toggle">Alternar</option>
+                  <option value="select">Selecionar</option>
+                  <option value="navigate">Navegar</option>
+                  <option value="callAction">Chamar Ação</option>
+                  <option value="wait">Aguardar</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Rótulo (label)</Label>
+                <Input
+                  value={editingStep.meta?.label || ''}
+                  onChange={(e) => setEditingStep({ 
+                    ...editingStep, 
+                    meta: { ...editingStep.meta, label: e.target.value } 
+                  })}
+                  placeholder="Descrição do passo"
+                />
+              </div>
+
+              {editingStep.type !== 'wait' && (
+                <div className="space-y-2">
+                  <Label>Alvo (target)</Label>
+                  <Input
+                    value={editingStep.target || ''}
+                    onChange={(e) => setEditingStep({ ...editingStep, target: e.target.value })}
+                    placeholder="ID do elemento ou seletor"
+                  />
+                </div>
+              )}
+
+              {(editingStep.type === 'setValue' || editingStep.type === 'select' || editingStep.type === 'navigate') && (
+                <div className="space-y-2">
+                  <Label>Valor</Label>
+                  <Input
+                    value={editingStep.value || ''}
+                    onChange={(e) => setEditingStep({ ...editingStep, value: e.target.value })}
+                    placeholder={editingStep.type === 'navigate' ? 'Rota (ex: /dashboard)' : 'Valor a ser preenchido'}
+                  />
+                </div>
+              )}
+
+              {editingStep.type === 'wait' && (
+                <div className="space-y-2">
+                  <Label>Tempo (ms)</Label>
+                  <Input
+                    type="number"
+                    value={editingStep.ms || 0}
+                    onChange={(e) => setEditingStep({ ...editingStep, ms: parseInt(e.target.value) || 0 })}
+                    placeholder="Tempo em milissegundos"
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={editingStep.enabled !== false}
+                  onCheckedChange={(checked) => setEditingStep({ ...editingStep, enabled: checked })}
+                />
+                <Label>Passo habilitado</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingStep(null)}>
+                Cancelar
+              </Button>
+              <Button onClick={() => handleUpdateStep(editingStep)}>
+                Salvar Passo
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
