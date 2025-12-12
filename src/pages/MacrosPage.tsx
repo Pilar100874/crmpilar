@@ -716,7 +716,13 @@ export default function MacrosPage() {
 
       {/* Dialog de edição */}
       {editingMacro && (
-        <Dialog open={true} onOpenChange={(open) => { if (!open) setEditingMacro(null); }}>
+        <Dialog
+          open={true}
+          onOpenChange={(open) => {
+            console.log('[MacrosPage] Dialog onOpenChange', open);
+            if (!open) setEditingMacro(null);
+          }}
+        >
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle>Editar Macro</DialogTitle>
@@ -831,7 +837,13 @@ export default function MacrosPage() {
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingMacro(null)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  console.log('[MacrosPage] Cancelar clique, limpando editingMacro');
+                  setEditingMacro(null);
+                }}
+              >
                 Cancelar
               </Button>
               <Button onClick={handleUpdateMacro}>
@@ -841,6 +853,7 @@ export default function MacrosPage() {
           </DialogContent>
         </Dialog>
       )}
+
 
 
       {/* Dialog de confirmação de exclusão */}
