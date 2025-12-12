@@ -27,13 +27,29 @@ async function waitForElement(target: string, retries = MAX_RETRIES): Promise<HT
   for (let i = 0; i < retries; i++) {
     let element: Element | null = null;
     
-    // Tenta primeiro por data-macro-id
-    element = document.querySelector(`[data-macro-id="${target}"]`);
+    // Se parece ser um seletor CSS (começa com #, ., [ ou contém [), tenta primeiro como seletor direto
+    const looksLikeCssSelector = target.startsWith('#') || target.startsWith('.') || target.startsWith('[') || target.includes('[');
     
-    // Se não encontrar, tenta como seletor CSS direto
-    if (!element) {
+    if (looksLikeCssSelector) {
       try {
-        // Suporta seletores como #id, .classe, tag.classe, [name="x"], etc.
+        element = document.querySelector(target);
+      } catch {
+        // Seletor inválido, ignora
+      }
+    }
+    
+    // Se não encontrou, tenta por data-macro-id (só se não tiver caracteres especiais)
+    if (!element && !target.includes('[') && !target.includes('"')) {
+      try {
+        element = document.querySelector(`[data-macro-id="${target}"]`);
+      } catch {
+        // Ignora erros
+      }
+    }
+    
+    // Se não é seletor CSS e não encontrou, tenta como seletor direto
+    if (!element && !looksLikeCssSelector) {
+      try {
         element = document.querySelector(target);
       } catch {
         // Seletor inválido, ignora
@@ -41,24 +57,28 @@ async function waitForElement(target: string, retries = MAX_RETRIES): Promise<HT
     }
     
     // Se ainda não encontrar, tenta por texto (formato tag:texto)
-    if (!element && target.includes(':')) {
+    if (!element && target.includes(':') && !target.includes('[')) {
       const colonIndex = target.indexOf(':');
       const tagPart = target.substring(0, colonIndex);
       const textPart = target.substring(colonIndex + 1);
       const tag = tagPart.replace(/\./g, ' ').trim().split(' ')[0] || '*';
       const text = textPart.trim();
       if (text) {
-        const elements = document.querySelectorAll(tag);
-        for (const el of elements) {
-          if (el.textContent?.trim().startsWith(text)) {
-            element = el;
-            break;
+        try {
+          const elements = document.querySelectorAll(tag);
+          for (const el of elements) {
+            if (el.textContent?.trim().startsWith(text)) {
+              element = el;
+              break;
+            }
           }
+        } catch {
+          // Ignora erros
         }
       }
     }
     
-    // Verifica se é um HTMLElement válido com método click
+    // Verifica se é um HTMLElement válido
     if (element && element instanceof HTMLElement) {
       return element;
     }
