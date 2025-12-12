@@ -3019,7 +3019,7 @@ ${recentMessages}
                   canal={selectedConv.canal}
                   dataHora={format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                   companies={customerCompanies}
-                  onCompaniesUpdated={loadConversations}
+                  onCompaniesUpdated={() => loadCustomerCompanies(selectedConversation || '')}
                   onSetGlobalFilter={setGlobalFilter}
                 />
               )}
@@ -4490,7 +4490,7 @@ ${recentMessages}
             canal={selectedConv.canal}
             dataHora={format(new Date(selectedConv.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
             companies={customerCompanies}
-            onCompaniesUpdated={loadConversations}
+            onCompaniesUpdated={() => loadCustomerCompanies(selectedConversation || '')}
             onSetGlobalFilter={setGlobalFilter}
           />
         </div>
