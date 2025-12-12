@@ -21,6 +21,13 @@ export function FloatingMacroRecorder() {
 
   const hasSteps = recordingSteps.length > 0;
 
+  // Só mostra o botão flutuante quando há uma sessão de gravação ativa
+  const shouldShow = recordingMeta !== null || hasSteps || isRecording;
+
+  if (!shouldShow) {
+    return null;
+  }
+
   // Captura automática de cliques em elementos com data-macro-id
   useEffect(() => {
     if (!isRecording) return;
