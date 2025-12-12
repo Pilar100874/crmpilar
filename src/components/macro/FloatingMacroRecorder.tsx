@@ -10,10 +10,13 @@ export function FloatingMacroRecorder() {
   const {
     isRecording,
     recordingSteps,
+    recordingMeta,
     startRecording,
+    resumeRecording,
     stopRecording,
     addRecordingStep,
     clearRecordingSteps,
+    saveCurrentRecording,
   } = useMacro();
 
   const hasSteps = recordingSteps.length > 0;
@@ -74,15 +77,46 @@ export function FloatingMacroRecorder() {
     };
   }, [isRecording, addRecordingStep]);
 
+  const handleRecordClick = () => {
+    if (!recordingMeta) {
+      alert('Antes de gravar, vá na aba "Gravador" e preencha Nome, Descrição e Atalho.');
+      return;
+    }
+
+    if (hasSteps) {
+      resumeRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  const handleFinishClick = async () => {
+    if (!recordingMeta) {
+      alert('Antes de encerrar, vá na aba "Gravador" e preencha Nome, Descrição e Atalho.');
+      return;
+    }
+
+    if (!hasSteps) {
+      alert('Nenhum passo gravado para salvar.');
+      return;
+    }
+
+    if (isRecording) {
+      stopRecording();
+    }
+
+    await saveCurrentRecording();
+  };
+
   return (
     <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border bg-card px-3 py-2 shadow-lg">
       {/* Indicador de status */}
       <div className={`flex items-center gap-2 ${isRecording ? 'text-destructive' : 'text-muted-foreground'}`}>
-        <div className={isRecording ? "animate-pulse" : ""}>
+        <div className={isRecording ? 'animate-pulse' : ''}>
           <Circle className="h-3 w-3 fill-current" />
         </div>
         <span className="text-xs font-medium">
-          {isRecording ? "Gravando" : hasSteps ? "Gravado" : "Macro"}
+          {isRecording ? 'Gravando' : hasSteps ? 'Pausado' : 'Macro'}
         </span>
         {hasSteps && (
           <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
@@ -99,19 +133,19 @@ export function FloatingMacroRecorder() {
           <Button
             size="sm"
             variant="ghost"
-            onClick={startRecording}
+            onClick={handleRecordClick}
             className="h-7 w-7 p-0"
-            title="Iniciar gravação"
+            title={hasSteps ? 'Retomar gravação' : 'Iniciar gravação'}
           >
-            <Circle className="h-4 w-4 text-destructive" />
+            {hasSteps ? <Play className="h-4 w-4" /> : <Circle className="h-4 w-4 text-destructive" />}
           </Button>
-          
+
           {hasSteps && (
             <>
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => navigate("/macros?tab=recorder")}
+                onClick={() => navigate('/macros?tab=recorder')}
                 className="h-7 w-7 p-0"
                 title="Ver passos gravados"
               >
@@ -136,7 +170,16 @@ export function FloatingMacroRecorder() {
             variant="ghost"
             onClick={stopRecording}
             className="h-7 w-7 p-0"
-            title="Parar gravação"
+            title="Pausar gravação"
+          >
+            <Pause className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleFinishClick}
+            className="h-7 w-7 p-0 text-destructive"
+            title="Encerrar e salvar macro"
           >
             <Square className="h-4 w-4 text-destructive fill-destructive" />
           </Button>

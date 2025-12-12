@@ -5,18 +5,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Json } from '@/integrations/supabase/types';
 
+interface MacroRecordingMeta {
+  name: string;
+  description?: string;
+  shortcut?: string;
+}
+
 interface MacroContextType {
   macros: Macro[];
   isRecording: boolean;
   recordingSteps: MacroStep[];
   executionStatus: MacroExecutionStatus | null;
+  recordingMeta: MacroRecordingMeta | null;
   
   // Gravação
   startRecording: () => void;
+  resumeRecording: () => void;
   stopRecording: () => void;
   addRecordingStep: (step: Omit<MacroStep, 'id'>) => void;
   insertDelay: (ms: number) => void;
   clearRecordingSteps: () => void;
+  setRecordingMeta: (meta: MacroRecordingMeta | null) => void;
+  saveCurrentRecording: () => Promise<void>;
   
   // CRUD
   saveMacro: (name: string, description?: string, shortcut?: string) => Promise<void>;
@@ -46,6 +56,7 @@ export function MacroProvider({ children }: { children: ReactNode }) {
   const [macros, setMacros] = useState<Macro[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSteps, setRecordingSteps] = useState<MacroStep[]>([]);
+  const [recordingMeta, setRecordingMeta] = useState<MacroRecordingMeta | null>(null);
   const [executionStatus, setExecutionStatus] = useState<MacroExecutionStatus | null>(null);
   const [userInfo, setUserInfo] = useState<{ usuarioId: string; estabelecimentoId: string } | null>(null);
 
@@ -250,9 +261,18 @@ export function MacroProvider({ children }: { children: ReactNode }) {
     toast.info('Gravação iniciada');
   }, []);
 
+  const resumeRecording = useCallback(() => {
+    if (recordingSteps.length === 0) {
+      toast.error('Nenhum passo gravado para retomar');
+      return;
+    }
+    setIsRecording(true);
+    toast.info('Gravação retomada');
+  }, [recordingSteps]);
+
   const stopRecording = useCallback(() => {
     setIsRecording(false);
-    toast.info('Gravação parada');
+    toast.info('Gravação pausada');
   }, []);
 
   const addRecordingStep = useCallback((step: Omit<MacroStep, 'id'>) => {
@@ -282,6 +302,16 @@ export function MacroProvider({ children }: { children: ReactNode }) {
   const clearRecordingSteps = useCallback(() => {
     setRecordingSteps([]);
   }, []);
+
+  const saveCurrentRecording = useCallback(async () => {
+    if (!recordingMeta) {
+      toast.error('Preencha nome, descrição e atalho na aba Gravador antes de salvar');
+      return;
+    }
+
+    await saveMacro(recordingMeta.name, recordingMeta.description, recordingMeta.shortcut);
+    setRecordingMeta(null);
+  }, [recordingMeta, saveMacro]);
 
   // Execução
   const executeMacro = useCallback(async (macroId: string) => {
@@ -359,11 +389,15 @@ export function MacroProvider({ children }: { children: ReactNode }) {
       isRecording,
       recordingSteps,
       executionStatus,
+      recordingMeta,
       startRecording,
+      resumeRecording,
       stopRecording,
       addRecordingStep,
       insertDelay,
       clearRecordingSteps,
+      setRecordingMeta,
+      saveCurrentRecording,
       saveMacro,
       updateMacro,
       deleteMacro,

@@ -145,7 +145,8 @@ export default function MacrosPage() {
     executeMacro,
     stopExecution,
     exportMacro,
-    importMacro
+    importMacro,
+    setRecordingMeta,
   } = useMacro();
 
   const {
@@ -217,13 +218,13 @@ export default function MacrosPage() {
   };
 
   const handleSaveNewMacro = async () => {
-    if (!newMacroName.trim()) {
-      toast.error('Digite um nome para a macro');
+    if (!newMacroName.trim() || !newMacroDescription.trim() || !newMacroShortcut.trim()) {
+      toast.error('Preencha nome, descrição e atalho');
       return;
     }
 
     // Verifica atalho duplicado
-    if (newMacroShortcut && macros.some(m => m.shortcut === newMacroShortcut)) {
+    if (macros.some(m => m.shortcut === newMacroShortcut)) {
       toast.error('Este atalho já está em uso');
       return;
     }
@@ -232,6 +233,7 @@ export default function MacrosPage() {
     setNewMacroName('');
     setNewMacroDescription('');
     setNewMacroShortcut('');
+    setRecordingMeta(null);
   };
 
   const handleUpdateMacro = async () => {
@@ -548,17 +550,32 @@ export default function MacrosPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-2">
-                  {!isRecording ? (
-                    <Button onClick={startRecording} className="flex-1">
-                      <Circle className="h-4 w-4 mr-2 fill-red-500 text-red-500" />
-                      Iniciar Gravação
-                    </Button>
-                  ) : (
-                    <Button onClick={stopRecording} variant="destructive" className="flex-1">
-                      <Square className="h-4 w-4 mr-2" />
-                      Parar Gravação
-                    </Button>
-                  )}
+                  <Button
+                    onClick={() => {
+                      if (!newMacroName.trim() || !newMacroDescription.trim() || !newMacroShortcut.trim()) {
+                        toast.error('Preencha nome, descrição e atalho antes de iniciar');
+                        return;
+                      }
+
+                      if (macros.some(m => m.shortcut === newMacroShortcut)) {
+                        toast.error('Este atalho já está em uso');
+                        return;
+                      }
+
+                      setRecordingMeta({
+                        name: newMacroName.trim(),
+                        description: newMacroDescription.trim(),
+                        shortcut: newMacroShortcut.trim(),
+                      });
+
+                      toast.success('Pronto! Agora use o botão flutuante para começar a gravar.');
+                    }}
+                    className="flex-1"
+                    disabled={!newMacroName.trim() || !newMacroDescription.trim() || !newMacroShortcut.trim()}
+                  >
+                    <Circle className="h-4 w-4 mr-2 fill-red-500 text-red-500" />
+                    Iniciar Gravação
+                  </Button>
                   <Button
                     variant="outline"
                     onClick={clearRecordingSteps}
