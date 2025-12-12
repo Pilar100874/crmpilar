@@ -1397,7 +1397,21 @@ export default function Atendimento() {
             nome,
             telefone,
             email,
-            custom_fields
+            custom_fields,
+            customer_empresas (
+              id,
+              empresa_id,
+              cargo,
+              is_primary,
+              empresas (
+                id,
+                nome,
+                nome_fantasia,
+                cnpj,
+                telefone,
+                email
+              )
+            )
           )
         `)
         .eq("id", taskId)
@@ -3026,13 +3040,17 @@ ${recentMessages}
               {activeTab === "agenda" && selectedTaskData && (
                 <UnifiedDetailsPanel
                   type="agenda"
-                  nome={selectedTaskData.contact_name}
-                  customerId={selectedTaskData.contact_id}
+                  nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
+                  telefone={selectedTaskData.customers?.telefone}
+                  whatsapp={selectedTaskData.customers?.telefone}
+                  email={selectedTaskData.customers?.email}
+                  customerId={selectedTaskData.customers?.id || selectedTaskData.contact_id}
                   protocolo={selectedTaskData.id?.slice(0, 8).toUpperCase()}
                   status={selectedTaskData.status}
                   titulo={selectedTaskData.title}
                   dataHora={`${format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}${selectedTaskData.time ? ` às ${selectedTaskData.time}` : ""}`}
-                  companies={[]}
+                  companies={selectedTaskData.customers?.customer_empresas || []}
+                  onCompaniesUpdated={() => loadSelectedTask(selectedTaskId || '')}
                   onSetGlobalFilter={setGlobalFilter}
                 />
               )}
@@ -3645,13 +3663,14 @@ ${recentMessages}
                 telefone={selectedTaskData.customers?.telefone}
                 whatsapp={selectedTaskData.customers?.telefone}
                 email={selectedTaskData.customers?.email}
-                customerId={selectedTaskData.customers?.id}
+                customerId={selectedTaskData.customers?.id || selectedTaskData.contact_id}
                 protocolo={selectedTaskData.id?.slice(0, 8).toUpperCase()}
                 status={selectedTaskData.status}
                 titulo={selectedTaskData.title}
                 descricao={selectedTaskData.description}
                 dataHora={selectedTaskData.date ? format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : undefined}
                 companies={selectedTaskData.customers?.customer_empresas || []}
+                onCompaniesUpdated={() => loadSelectedTask(selectedTaskId || '')}
                 onSetGlobalFilter={setGlobalFilter}
               />
             )}
@@ -4501,13 +4520,17 @@ ${recentMessages}
         <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="agenda"
-            nome={selectedTaskData.contact_name}
-            customerId={selectedTaskData.contact_id}
+            nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
+            telefone={selectedTaskData.customers?.telefone}
+            whatsapp={selectedTaskData.customers?.telefone}
+            email={selectedTaskData.customers?.email}
+            customerId={selectedTaskData.customers?.id || selectedTaskData.contact_id}
             protocolo={selectedTaskData.id?.slice(0, 8).toUpperCase()}
             status={selectedTaskData.status === "concluido" ? "Concluído" : "Pendente"}
             titulo={selectedTaskData.title}
             dataHora={format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) + (selectedTaskData.time ? ` às ${selectedTaskData.time}` : "")}
-            companies={[]}
+            companies={selectedTaskData.customers?.customer_empresas || []}
+            onCompaniesUpdated={() => loadSelectedTask(selectedTaskId || '')}
             onSetGlobalFilter={setGlobalFilter}
           />
         </div>
