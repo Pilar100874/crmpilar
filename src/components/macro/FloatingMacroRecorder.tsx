@@ -22,27 +22,55 @@ export function FloatingMacroRecorder() {
   const hasSteps = recordingSteps.length > 0;
 
   // Encontra o elemento clicável mais próximo (button, a, etc.)
-  const findClickableElement = (element: HTMLElement): HTMLElement => {
-    // Se for SVG ou path, sobe para o pai clicável
+  const findClickableElement = (element: HTMLElement): HTMLElement | null => {
+    // Lista de tags que não são clicáveis por si só
+    const nonClickableTags = ['svg', 'path', 'circle', 'rect', 'line', 'polygon', 'polyline', 'g', 'use', 'span'];
+    
+    // Se for SVG ou elemento interno de SVG, sempre sobe para o pai
+    const tagName = element.tagName.toLowerCase();
+    if (nonClickableTags.includes(tagName) || element instanceof SVGElement) {
+      // Procura o elemento pai clicável
+      const clickableSelectors = 'button, a, [role="button"], [role="menuitem"], [role="tab"], [data-macro-id], div[onclick], li';
+      const clickable = element.closest(clickableSelectors) as HTMLElement;
+      if (clickable && !(clickable instanceof SVGElement)) return clickable;
+      
+      // Sobe na hierarquia até encontrar algo não-SVG
+      let parent = element.parentElement;
+      while (parent && parent !== document.body) {
+        if (!(parent instanceof SVGElement) && !nonClickableTags.includes(parent.tagName.toLowerCase())) {
+          return parent;
+        }
+        parent = parent.parentElement;
+      }
+      return null; // Não grave nada se não encontrar
+    }
+    
+    // Procura elemento clicável mais próximo
     const clickableSelectors = 'button, a, [role="button"], [role="menuitem"], [role="tab"], [data-macro-id]';
     const clickable = element.closest(clickableSelectors) as HTMLElement;
-    if (clickable) return clickable;
+    if (clickable && !(clickable instanceof SVGElement)) return clickable;
     
     // Se o próprio elemento ou pai próximo é clicável por natureza
     let current: HTMLElement | null = element;
     while (current && current !== document.body) {
       const tag = current.tagName.toLowerCase();
-      if (['button', 'a', 'input', 'select'].includes(tag)) {
-        return current;
-      }
-      // Se tem onClick ou cursor pointer, é provavelmente clicável
-      if (current.onclick || getComputedStyle(current).cursor === 'pointer') {
-        return current;
+      if (['button', 'a', 'input', 'select', 'div', 'li', 'span'].includes(tag)) {
+        // Verifica se tem algum indicador de ser clicável
+        if (current.onclick || current.getAttribute('role') || 
+            getComputedStyle(current).cursor === 'pointer' ||
+            tag === 'button' || tag === 'a') {
+          return current;
+        }
       }
       current = current.parentElement;
     }
     
-    return element;
+    // Retorna o elemento original se não for SVG
+    if (!(element instanceof SVGElement)) {
+      return element;
+    }
+    
+    return null;
   };
 
   // Gera um identificador para o elemento
@@ -105,6 +133,9 @@ export function FloatingMacroRecorder() {
       // Encontra o elemento clicável real (não SVG, path, etc.)
       const target = findClickableElement(rawTarget);
       
+      // Se não encontrou elemento válido, ignora
+      if (!target) return;
+      
       const tagName = target.tagName.toLowerCase();
       const isInput = tagName === 'input' || tagName === 'textarea';
       const isSelect = target.closest('[role="combobox"]') || tagName === 'select';
@@ -112,6 +143,9 @@ export function FloatingMacroRecorder() {
       // Só grava cliques (não inputs/selects que são tratados separadamente)
       if (!isInput && !isSelect) {
         const elementId = generateElementId(target);
+        // Ignora se o elementId for apenas "svg" ou similar
+        if (['svg', 'path', 'circle', 'g'].includes(elementId.toLowerCase())) return;
+        
         const label = target.textContent?.trim().substring(0, 50) || elementId;
         addRecordingStep({
           type: 'click',
