@@ -1352,11 +1352,12 @@ export default function Atendimento() {
 
       if (emailError) throw emailError;
 
-      const fromEmail: string = emailData.from_email || "";
+      // Priorizar o email do destinatário (contato do CRM) e, se não houver, usar o remetente
+      const contactEmail: string = emailData.to_email || emailData.from_email || "";
 
       // Buscar contato pelo email (cliente vinculado)
       let customerData: any = null;
-      if (fromEmail) {
+      if (contactEmail) {
         const { data } = await supabase
           .from("customers")
           .select(`
@@ -1376,7 +1377,7 @@ export default function Atendimento() {
               )
             )
           `)
-          .ilike("email", fromEmail)
+          .ilike("email", contactEmail)
           .maybeSingle();
 
         customerData = data as any;
@@ -1384,7 +1385,7 @@ export default function Atendimento() {
 
       // Se não encontrou customer, buscar empresa diretamente pelo email
       let empresaData: any = null;
-      if (!customerData && fromEmail) {
+      if (!customerData && contactEmail) {
         const { data: empresa } = await supabase
           .from("empresas")
           .select(`
@@ -1395,7 +1396,7 @@ export default function Atendimento() {
             telefone,
             email
           `)
-          .ilike("email", fromEmail)
+          .ilike("email", contactEmail)
           .maybeSingle();
         
         empresaData = empresa as any;
