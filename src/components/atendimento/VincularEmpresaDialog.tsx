@@ -12,6 +12,8 @@ interface VincularEmpresaDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   customerId?: string;
+  emailVinculo?: string; // Para vincular email diretamente à empresa
+  whatsappVinculo?: string; // Para vincular whatsapp diretamente à empresa
   onSuccess?: () => void;
 }
 
@@ -21,12 +23,16 @@ interface Empresa {
   nome_fantasia: string | null;
   cnpj: string | null;
   custom_fields?: any;
+  emails_vinculados?: string[];
+  whatsapps_vinculados?: string[];
 }
 
 export function VincularEmpresaDialog({
   open,
   onOpenChange,
   customerId,
+  emailVinculo,
+  whatsappVinculo,
   onSuccess
 }: VincularEmpresaDialogProps) {
   const [busca, setBusca] = useState("");
@@ -46,7 +52,7 @@ export function VincularEmpresaDialog({
     try {
       const { data, error } = await supabase
         .from('empresas')
-        .select('id, nome, nome_fantasia, cnpj, custom_fields')
+        .select('id, nome, nome_fantasia, cnpj, custom_fields, emails_vinculados, whatsapps_vinculados')
         .order('nome_fantasia', { ascending: true });
 
       if (error) throw error;
@@ -74,37 +80,90 @@ export function VincularEmpresaDialog({
   };
 
   const handleVincular = async (empresaId: string) => {
-    if (!customerId) {
-      toast.error("Cliente não identificado");
-      return;
-    }
-
     setVinculando(true);
     try {
-      const { error } = await supabase
-        .from('customer_empresas')
-        .insert({
-          customer_id: customerId,
-          empresa_id: empresaId,
-          is_primary: false
-        });
+      // Se temos customerId, vincular via customer_empresas
+      if (customerId) {
+        const { error } = await supabase
+          .from('customer_empresas')
+          .insert({
+            customer_id: customerId,
+            empresa_id: empresaId,
+            is_primary: false
+          });
 
-      if (error) {
-        if (error.code === '23505') {
-          toast.error("Empresa já está vinculada a este cliente");
+        if (error) {
+          if (error.code === '23505') {
+            toast.error("Empresa já está vinculada a este cliente");
+          } else {
+            throw error;
+          }
         } else {
-          throw error;
+          toast.success("Empresa vinculada com sucesso!");
+          onSuccess?.();
+          onOpenChange(false);
+          setBusca("");
+          setEmpresasFiltradas([]);
         }
-      } else {
-        toast.success("Empresa vinculada com sucesso!");
+      } 
+      // Se temos emailVinculo, adicionar email à empresa
+      else if (emailVinculo) {
+        const empresa = empresas.find(e => e.id === empresaId);
+        const emailsAtuais = empresa?.emails_vinculados || [];
+        
+        if (emailsAtuais.includes(emailVinculo)) {
+          toast.error("Este email já está vinculado a esta empresa");
+          setVinculando(false);
+          return;
+        }
+
+        const { error } = await supabase
+          .from('empresas')
+          .update({
+            emails_vinculados: [...emailsAtuais, emailVinculo]
+          })
+          .eq('id', empresaId);
+
+        if (error) throw error;
+        
+        toast.success("Email vinculado à empresa com sucesso!");
         onSuccess?.();
         onOpenChange(false);
         setBusca("");
         setEmpresasFiltradas([]);
       }
+      // Se temos whatsappVinculo, adicionar whatsapp à empresa
+      else if (whatsappVinculo) {
+        const empresa = empresas.find(e => e.id === empresaId);
+        const whatsappsAtuais = empresa?.whatsapps_vinculados || [];
+        
+        if (whatsappsAtuais.includes(whatsappVinculo)) {
+          toast.error("Este WhatsApp já está vinculado a esta empresa");
+          setVinculando(false);
+          return;
+        }
+
+        const { error } = await supabase
+          .from('empresas')
+          .update({
+            whatsapps_vinculados: [...whatsappsAtuais, whatsappVinculo]
+          })
+          .eq('id', empresaId);
+
+        if (error) throw error;
+        
+        toast.success("WhatsApp vinculado à empresa com sucesso!");
+        onSuccess?.();
+        onOpenChange(false);
+        setBusca("");
+        setEmpresasFiltradas([]);
+      }
+      else {
+        toast.error("Nenhum cliente ou contato para vincular");
+      }
     } catch (error: any) {
-      console.error('Erro ao vincular empresa:', error);
-      toast.error(error?.message || "Erro ao vincular empresa");
+      console.error('Erro ao vincular:', error);
+      toast.error(error?.message || "Erro ao vincular");
     } finally {
       setVinculando(false);
     }
