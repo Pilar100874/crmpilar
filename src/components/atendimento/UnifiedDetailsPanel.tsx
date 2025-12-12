@@ -1,4 +1,4 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Check, X } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Check, X, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -66,9 +66,16 @@ export function UnifiedDetailsPanel({
   // Estados para edição inline
   const [editingNome, setEditingNome] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
+  const [editingCargo, setEditingCargo] = useState(false);
   const [tempNome, setTempNome] = useState("");
   const [tempEmail, setTempEmail] = useState("");
+  const [tempCargo, setTempCargo] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Obtém o cargo da primeira empresa vinculada
+  const primaryCompany = companies.find(c => c.is_primary) || companies[0];
+  const currentCargo = primaryCompany?.cargo || "";
+  const customerEmpresaId = primaryCompany?.id;
 
   const getIcon = () => {
     switch (type) {
@@ -128,6 +135,27 @@ export function UnifiedDetailsPanel({
     } catch (error) {
       console.error('Erro ao atualizar email:', error);
       toast.error("Erro ao atualizar email");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveCargo = async () => {
+    if (!customerEmpresaId) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('customer_empresas')
+        .update({ cargo: tempCargo.trim() || null })
+        .eq('id', customerEmpresaId);
+      
+      if (error) throw error;
+      toast.success("Cargo atualizado!");
+      setEditingCargo(false);
+      onCompaniesUpdated?.();
+    } catch (error) {
+      console.error('Erro ao atualizar cargo:', error);
+      toast.error("Erro ao atualizar cargo");
     } finally {
       setSaving(false);
     }
@@ -445,6 +473,61 @@ export function UnifiedDetailsPanel({
                   </div>
                 )}
               </div>
+
+              {/* Cargo - Editável inline (apenas se há empresa vinculada) */}
+              {companies.length > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Cargo</span>
+                  </div>
+                  {editingCargo ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        value={tempCargo}
+                        onChange={(e) => setTempCargo(e.target.value)}
+                        className="h-7 text-xs w-32"
+                        placeholder="Cargo..."
+                        autoFocus
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
+                        onClick={handleSaveCargo}
+                        disabled={saving}
+                      >
+                        <Check className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-muted-foreground"
+                        onClick={() => setEditingCargo(false)}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs">{currentCargo || '-'}</span>
+                      {customerEmpresaId && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                          onClick={() => {
+                            setTempCargo(currentCargo);
+                            setEditingCargo(true);
+                          }}
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           </CollapsibleContent>
         </Collapsible>
