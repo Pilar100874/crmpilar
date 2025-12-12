@@ -206,19 +206,24 @@ export function MacroProvider({ children }: { children: ReactNode }) {
 
   // Deletar macro
   const deleteMacro = useCallback(async (id: string) => {
-    if (userInfo) {
-      const { error } = await supabase.from('user_macros').delete().eq('id', id);
-      if (error) {
-        console.error('Erro ao deletar macro:', error);
-        toast.error('Erro ao deletar macro');
-        return;
+    try {
+      if (userInfo) {
+        const { error } = await supabase.from('user_macros').delete().eq('id', id);
+        if (error) {
+          console.error('Erro ao deletar macro:', error);
+          toast.error('Erro ao deletar macro no servidor');
+          // Continua para deletar localmente mesmo se falhar no servidor
+        }
       }
-    }
 
-    const updatedMacros = macros.filter(m => m.id !== id);
-    setMacros(updatedMacros);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMacros));
-    toast.success('Macro excluída');
+      const updatedMacros = macros.filter(m => m.id !== id);
+      setMacros(updatedMacros);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMacros));
+      toast.success('Macro excluída');
+    } catch (err) {
+      console.error('Erro inesperado ao deletar macro:', err);
+      toast.error('Erro ao excluir macro');
+    }
   }, [macros, userInfo]);
 
   // Duplicar macro
