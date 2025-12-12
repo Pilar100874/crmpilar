@@ -1352,8 +1352,13 @@ export default function Atendimento() {
 
       if (emailError) throw emailError;
 
-      // Priorizar o email do destinatário (contato do CRM) e, se não houver, usar o remetente
-      const contactEmail: string = emailData.to_email || emailData.from_email || "";
+      // Definir o email de contato de acordo com a pasta
+      // - Inbox (recebidos): usar sempre o remetente (cliente)
+      // - Sent (enviados): usar sempre o destinatário (cliente)
+      const contactEmail: string =
+        emailData.folder === "sent"
+          ? emailData.to_email || emailData.from_email || ""
+          : emailData.from_email || emailData.to_email || "";
 
       // Buscar contato pelo email (cliente vinculado)
       let customerData: any = null;
