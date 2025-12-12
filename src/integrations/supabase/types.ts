@@ -7865,6 +7865,60 @@ export type Database = {
           },
         ]
       }
+      user_macros: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean | null
+          estabelecimento_id: string
+          id: string
+          name: string
+          shortcut: string | null
+          steps: Json
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean | null
+          estabelecimento_id: string
+          id?: string
+          name: string
+          shortcut?: string | null
+          steps?: Json
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean | null
+          estabelecimento_id?: string
+          id?: string
+          name?: string
+          shortcut?: string | null
+          steps?: Json
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_macros_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_macros_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
