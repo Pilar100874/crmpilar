@@ -568,7 +568,10 @@ export default function MacrosPage() {
                         shortcut: newMacroShortcut.trim(),
                       });
 
-                      toast.success('Pronto! Agora use o botão flutuante para começar a gravar.');
+                      // Já inicia a gravação automaticamente
+                      startRecording();
+
+                      toast.success('Gravação iniciada! Agora navegue pelo sistema e use normalmente.');
                     }}
                     className="flex-1"
                     disabled={!newMacroName.trim() || !newMacroDescription.trim() || !newMacroShortcut.trim()}
