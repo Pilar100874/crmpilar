@@ -683,16 +683,16 @@ export default function MacrosPage() {
       </Tabs>
 
       {/* Dialog de edição */}
-      <Dialog open={!!editingMacro} onOpenChange={(open) => !open && setEditingMacro(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Editar Macro</DialogTitle>
-            <DialogDescription>
-              Modifique as configurações e os passos da macro
-            </DialogDescription>
-          </DialogHeader>
-          
-          {editingMacro && (
+      {editingMacro && (
+        <Dialog open={true} onOpenChange={(open) => { if (!open) setEditingMacro(null); }}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Editar Macro</DialogTitle>
+              <DialogDescription>
+                Modifique as configurações e os passos da macro
+              </DialogDescription>
+            </DialogHeader>
+            
             <div className="flex-1 overflow-y-auto space-y-4 pr-2">
               <div className="space-y-2">
                 <Label>Nome</Label>
@@ -753,6 +753,7 @@ export default function MacrosPage() {
                 <p className="text-xs text-muted-foreground">Arraste para reordenar</p>
                 
                 <DndContext
+                  key={editingMacro.id}
                   sensors={sensors}
                   collisionDetection={closestCenter}
                   onDragEnd={handleDragEnd}
@@ -776,44 +777,45 @@ export default function MacrosPage() {
                 </DndContext>
               </div>
             </div>
-          )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingMacro(null)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleUpdateMacro}>
-              Salvar Alterações
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingMacro(null)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateMacro}>
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Dialog de confirmação de exclusão */}
-      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Macro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita. A macro será permanentemente excluída.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (deleteConfirmId) {
-                  deleteMacro(deleteConfirmId);
+      {deleteConfirmId && (
+        <AlertDialog open={true} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir Macro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita. A macro será permanentemente excluída.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteConfirmId(null)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async () => {
+                  const idToDelete = deleteConfirmId;
                   setDeleteConfirmId(null);
-                }
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+                  await deleteMacro(idToDelete);
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       {/* Dialog de importação */}
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
