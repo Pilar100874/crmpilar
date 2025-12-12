@@ -25,16 +25,16 @@ function updateStatus(status: MacroExecutionStatus) {
 
 async function waitForElement(target: string, retries = MAX_RETRIES): Promise<HTMLElement | null> {
   for (let i = 0; i < retries; i++) {
-    let element: HTMLElement | null = null;
+    let element: Element | null = null;
     
     // Tenta primeiro por data-macro-id
-    element = document.querySelector(`[data-macro-id="${target}"]`) as HTMLElement;
+    element = document.querySelector(`[data-macro-id="${target}"]`);
     
     // Se não encontrar, tenta como seletor CSS direto
     if (!element) {
       try {
         // Suporta seletores como #id, .classe, tag.classe, [name="x"], etc.
-        element = document.querySelector(target) as HTMLElement;
+        element = document.querySelector(target);
       } catch {
         // Seletor inválido, ignora
       }
@@ -42,21 +42,27 @@ async function waitForElement(target: string, retries = MAX_RETRIES): Promise<HT
     
     // Se ainda não encontrar, tenta por texto (formato tag:texto)
     if (!element && target.includes(':')) {
-      const [tagPart, textPart] = target.split(':');
+      const colonIndex = target.indexOf(':');
+      const tagPart = target.substring(0, colonIndex);
+      const textPart = target.substring(colonIndex + 1);
       const tag = tagPart.replace(/\./g, ' ').trim().split(' ')[0] || '*';
       const text = textPart.trim();
       if (text) {
         const elements = document.querySelectorAll(tag);
         for (const el of elements) {
           if (el.textContent?.trim().startsWith(text)) {
-            element = el as HTMLElement;
+            element = el;
             break;
           }
         }
       }
     }
     
-    if (element) return element;
+    // Verifica se é um HTMLElement válido com método click
+    if (element && element instanceof HTMLElement) {
+      return element;
+    }
+    
     await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
   }
   return null;
@@ -68,7 +74,13 @@ async function executeClick(step: MacroStep): Promise<void> {
   const element = await waitForElement(step.target);
   if (!element) throw new Error(`Elemento não encontrado: ${step.target}`);
   
-  element.click();
+  // Garante que o elemento é clicável
+  if (typeof element.click === 'function') {
+    element.click();
+  } else {
+    // Fallback: dispara evento de clique manualmente
+    element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+  }
 }
 
 async function executeSetValue(step: MacroStep): Promise<void> {
