@@ -482,7 +482,10 @@ export default function MacrosPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditingMacro(macro)}>
+                        <DropdownMenuItem onSelect={(e) => {
+                          e.preventDefault();
+                          setTimeout(() => setEditingMacro(macro), 0);
+                        }}>
                           <Edit2 className="h-4 w-4 mr-2" />
                           Editar
                         </DropdownMenuItem>
@@ -717,6 +720,7 @@ export default function MacrosPage() {
       {/* Dialog de edição */}
       <Dialog
         open={!!editingMacro}
+        modal={false}
         onOpenChange={(open) => {
           if (!open) setEditingMacro(null);
         }}
