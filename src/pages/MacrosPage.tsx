@@ -715,16 +715,16 @@ export default function MacrosPage() {
       </Tabs>
 
       {/* Dialog de edição */}
-      {editingMacro && (
-        <Dialog open={true} onOpenChange={(open) => { if (!open) setEditingMacro(null); }}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-            <DialogHeader>
-              <DialogTitle>Editar Macro</DialogTitle>
-              <DialogDescription>
-                Modifique as configurações e os passos da macro
-              </DialogDescription>
-            </DialogHeader>
-            
+      <Dialog open={!!editingMacro} onOpenChange={(open) => { if (!open) setEditingMacro(null); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Editar Macro</DialogTitle>
+            <DialogDescription>
+              Modifique as configurações e os passos da macro
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editingMacro && (
             <div className="flex-1 overflow-y-auto space-y-4 pr-2">
               <div className="space-y-2">
                 <Label>Nome</Label>
@@ -784,43 +784,63 @@ export default function MacrosPage() {
                 <Label>Passos ({editingMacro.steps.length})</Label>
                 <p className="text-xs text-muted-foreground">Arraste para reordenar</p>
                 
-                <DndContext
-                  key={editingMacro.id}
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={editingMacro.steps.map(s => s.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div className="space-y-2">
-                      {editingMacro.steps.map((step) => (
-                        <SortableStepItem
-                          key={step.id}
-                          step={step}
-                          onEdit={() => setEditingStep(step)}
-                          onDelete={() => handleDeleteStep(step.id)}
-                          onToggle={() => handleToggleStep(step.id)}
-                        />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
+                <ScrollArea className="h-[200px]">
+                  <div className="space-y-2 pr-2">
+                    {editingMacro.steps.map((step, index) => (
+                      <div
+                        key={step.id}
+                        className="flex items-center gap-2 p-2 rounded bg-muted/50"
+                      >
+                        <GripVertical className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground w-6">{index + 1}</span>
+                        <div className="flex items-center justify-center w-6 h-6 rounded bg-primary/10 text-primary">
+                          {stepTypeIcons[step.type] || <Zap className="h-4 w-4" />}
+                        </div>
+                        <span className={`flex-1 text-sm truncate ${step.enabled === false ? 'line-through text-muted-foreground' : ''}`}>
+                          {step.meta?.label || getStepLabel(step)}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => setEditingStep(step)}
+                        >
+                          <Edit2 className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => handleToggleStep(step.id)}
+                        >
+                          {step.enabled === false ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-destructive"
+                          onClick={() => handleDeleteStep(step.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
               </div>
             </div>
+          )}
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingMacro(null)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleUpdateMacro}>
-                Salvar Alterações
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingMacro(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdateMacro}>
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de confirmação de exclusão */}
       {deleteConfirmId && (
