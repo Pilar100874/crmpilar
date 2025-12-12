@@ -511,19 +511,17 @@ export function UnifiedDetailsPanel({
                   ) : (
                     <div className="flex items-center gap-1">
                       <span className="text-xs">{currentCargo || '-'}</span>
-                      {customerEmpresaId && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
-                          onClick={() => {
-                            setTempCargo(currentCargo);
-                            setEditingCargo(true);
-                          }}
-                        >
-                          <Pencil className="w-3 h-3" />
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                        onClick={() => {
+                          setTempCargo(currentCargo);
+                          setEditingCargo(true);
+                        }}
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </Button>
                     </div>
                   )}
                 </div>
