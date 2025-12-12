@@ -21,48 +21,69 @@ export function FloatingMacroRecorder() {
 
   const hasSteps = recordingSteps.length > 0;
 
-  // Captura automática de cliques em elementos com data-macro-id
+  // Gera um identificador para o elemento
+  const generateElementId = (element: HTMLElement): string => {
+    // Prioriza data-macro-id
+    const macroId = element.getAttribute('data-macro-id');
+    if (macroId) return macroId;
+
+    // Usa id se existir
+    if (element.id) return `#${element.id}`;
+
+    // Usa nome do formulário se for input
+    const name = element.getAttribute('name');
+    if (name) return `[name="${name}"]`;
+
+    // Usa classe principal + tag
+    const tagName = element.tagName.toLowerCase();
+    const className = element.className?.split?.(' ')?.[0];
+    if (className && typeof className === 'string') {
+      return `${tagName}.${className}`;
+    }
+
+    // Fallback: tag + texto truncado
+    const text = element.textContent?.trim().substring(0, 20) || '';
+    return `${tagName}${text ? `:${text}` : ''}`;
+  };
+
+  // Captura automática de cliques e inputs
   useEffect(() => {
     if (!isRecording) return;
 
     const handleGlobalClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       
-      // Procura pelo elemento ou ancestral com data-macro-id
-      const macroElement = target.closest('[data-macro-id]') as HTMLElement;
-      if (macroElement) {
-        const macroId = macroElement.getAttribute('data-macro-id');
-        if (macroId) {
-          // Determina o tipo baseado no elemento
-          const tagName = macroElement.tagName.toLowerCase();
-          const isInput = tagName === 'input' || tagName === 'textarea';
-          const isSelect = macroElement.closest('[role="combobox"]') || tagName === 'select';
-          
-          if (!isInput && !isSelect) {
-            // É um clique
-            const label = macroElement.textContent?.trim().substring(0, 50) || macroId;
-            addRecordingStep({
-              type: 'click',
-              target: macroId,
-              meta: { label: `Clique: ${label}` }
-            });
-          }
-        }
+      // Ignora cliques no próprio botão flutuante
+      if (target.closest('.fixed.bottom-4.right-4')) return;
+      
+      const tagName = target.tagName.toLowerCase();
+      const isInput = tagName === 'input' || tagName === 'textarea';
+      const isSelect = target.closest('[role="combobox"]') || tagName === 'select';
+      
+      // Só grava cliques (não inputs/selects que são tratados separadamente)
+      if (!isInput && !isSelect) {
+        const elementId = generateElementId(target);
+        const label = target.textContent?.trim().substring(0, 50) || elementId;
+        addRecordingStep({
+          type: 'click',
+          target: elementId,
+          meta: { label: `Clique: ${label}` }
+        });
       }
     };
 
     // Captura mudanças em inputs
     const handleGlobalInput = (e: Event) => {
       const target = e.target as HTMLElement;
-      const macroId = target.getAttribute('data-macro-id');
       
-      if (macroId && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        const elementId = generateElementId(target);
         const value = (target as HTMLInputElement).value;
         addRecordingStep({
           type: 'setValue',
-          target: macroId,
+          target: elementId,
           value,
-          meta: { label: `Preencher: ${macroId} = ${value.substring(0, 30)}...` }
+          meta: { label: `Preencher: ${elementId} = ${value.substring(0, 30)}${value.length > 30 ? '...' : ''}` }
         });
       }
     };
