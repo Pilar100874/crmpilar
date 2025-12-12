@@ -715,16 +715,16 @@ export default function MacrosPage() {
       </Tabs>
 
       {/* Dialog de edição */}
-      <Dialog open={!!editingMacro} onOpenChange={(open) => { if (!open) setEditingMacro(null); }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Editar Macro</DialogTitle>
-            <DialogDescription>
-              Modifique as configurações e os passos da macro
-            </DialogDescription>
-          </DialogHeader>
-          
-          {editingMacro && (
+      {editingMacro && (
+        <Dialog open={true} onOpenChange={(open) => { if (!open) setEditingMacro(null); }}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Editar Macro</DialogTitle>
+              <DialogDescription>
+                Modifique as configurações e os passos da macro
+              </DialogDescription>
+            </DialogHeader>
+            
             <div className="flex-1 overflow-y-auto space-y-4 pr-2">
               <div className="space-y-2">
                 <Label>Nome</Label>
@@ -829,18 +829,19 @@ export default function MacrosPage() {
                 </ScrollArea>
               </div>
             </div>
-          )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingMacro(null)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleUpdateMacro}>
-              Salvar Alterações
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingMacro(null)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleUpdateMacro}>
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
 
       {/* Dialog de confirmação de exclusão */}
       <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
