@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,14 +49,17 @@ export function ComposeEmailDialog({
   const [sending, setSending] = useState(false);
   const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
 
-  // Reset fields when dialog opens with new defaults
-  const handleOpenChange = (isOpen: boolean) => {
-    if (isOpen) {
+  // Sync state when dialog opens or defaults change
+  useEffect(() => {
+    if (open) {
       setTo(defaultTo);
       setSubject(defaultSubject);
       setBody(defaultBody);
       setAttachments([]);
     }
+  }, [open, defaultTo, defaultSubject, defaultBody]);
+
+  const handleOpenChange = (isOpen: boolean) => {
     onOpenChange(isOpen);
   };
 
