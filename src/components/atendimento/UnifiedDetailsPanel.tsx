@@ -474,43 +474,43 @@ export function UnifiedDetailsPanel({
                 )}
               </div>
 
-              {/* Cargo - Editável inline (apenas se há empresa vinculada) */}
-              {companies.length > 0 && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Cargo</span>
+              {/* Cargo - Editável inline */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Cargo</span>
+                </div>
+                {editingCargo && companies.length > 0 ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      value={tempCargo}
+                      onChange={(e) => setTempCargo(e.target.value)}
+                      className="h-7 text-xs w-32"
+                      placeholder="Cargo..."
+                      autoFocus
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
+                      onClick={handleSaveCargo}
+                      disabled={saving}
+                    >
+                      <Check className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground"
+                      onClick={() => setEditingCargo(false)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
                   </div>
-                  {editingCargo ? (
-                    <div className="flex items-center gap-1">
-                      <Input
-                        value={tempCargo}
-                        onChange={(e) => setTempCargo(e.target.value)}
-                        className="h-7 text-xs w-32"
-                        placeholder="Cargo..."
-                        autoFocus
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
-                        onClick={handleSaveCargo}
-                        disabled={saving}
-                      >
-                        <Check className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-muted-foreground"
-                        onClick={() => setEditingCargo(false)}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs">{currentCargo || '-'}</span>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs">{currentCargo || '-'}</span>
+                    {companies.length > 0 && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -522,10 +522,10 @@ export function UnifiedDetailsPanel({
                       >
                         <Pencil className="w-3 h-3" />
                       </Button>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
+              </div>
             </Card>
           </CollapsibleContent>
         </Collapsible>
