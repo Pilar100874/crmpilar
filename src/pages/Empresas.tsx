@@ -27,7 +27,7 @@ import { EmpresaFieldsCRUD } from "@/components/config/EmpresaFieldsCRUD";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { APIImportDialogEmpresas } from "@/components/config/APIImportDialogEmpresas";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
-import { VinculosContatoSection } from "@/components/empresas/VinculosContatoSection";
+
 
 
 interface CustomField {
@@ -1599,12 +1599,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               Dados da Empresa
             </TabsTrigger>
             <TabsTrigger 
-              value="contatos_vinculados"
-              className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
-            >
-              Emails/WhatsApp
-            </TabsTrigger>
-            <TabsTrigger 
               value="contatos"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
               onClick={() => setCriarNovoContato(false)}
@@ -1677,32 +1671,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             </div>
           </TabsContent>
 
-          <TabsContent value="contatos_vinculados" className="p-6">
-            <Card className="p-6">
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-2">Emails e WhatsApps Vinculados</h3>
-                <p className="text-sm text-muted-foreground">
-                  Vincule múltiplos emails e números de WhatsApp a esta empresa. Esses vínculos serão usados para identificar a empresa automaticamente em conversas e emails.
-                </p>
-              </div>
-
-              <VinculosContatoSection
-                emailsVinculados={emailsVinculados}
-                whatsappsVinculados={whatsappsVinculados}
-                onEmailsChange={setEmailsVinculados}
-                onWhatsappsChange={setWhatsappsVinculados}
-              />
-
-              <div className="flex justify-end gap-3 mt-6">
-                <Button variant="outline" onClick={() => setShowForm(false)} className="border-border/40">
-                  Cancelar
-                </Button>
-                <Button onClick={handleSaveEmpresa} className="shadow-sm">
-                  {editingEmpresa ? "Salvar Alterações" : "Criar Empresa"}
-                </Button>
-              </div>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="contatos" className="p-6">
             {/* Lista de Contatos Vinculados */}

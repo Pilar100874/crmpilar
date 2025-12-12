@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Building2, Search, Plus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 interface VincularEmpresaDialogProps {
   open: boolean;
@@ -82,6 +83,8 @@ export function VincularEmpresaDialog({
   const handleVincular = async (empresaId: string) => {
     setVinculando(true);
     try {
+      const estabId = await getEstabelecimentoId();
+      
       // Se temos customerId, vincular via customer_empresas
       if (customerId) {
         const { error } = await supabase
@@ -99,6 +102,24 @@ export function VincularEmpresaDialog({
             throw error;
           }
         } else {
+          // Vincular email e whatsapp automaticamente à empresa
+          const empresa = empresas.find(e => e.id === empresaId);
+          const updates: any = {};
+          
+          if (emailVinculo && !empresa?.emails_vinculados?.includes(emailVinculo)) {
+            updates.emails_vinculados = [...(empresa?.emails_vinculados || []), emailVinculo];
+          }
+          if (whatsappVinculo && !empresa?.whatsapps_vinculados?.includes(whatsappVinculo)) {
+            updates.whatsapps_vinculados = [...(empresa?.whatsapps_vinculados || []), whatsappVinculo];
+          }
+          
+          if (Object.keys(updates).length > 0) {
+            await supabase
+              .from('empresas')
+              .update(updates)
+              .eq('id', empresaId);
+          }
+          
           toast.success("Empresa vinculada com sucesso!");
           onSuccess?.();
           onOpenChange(false);
@@ -106,7 +127,7 @@ export function VincularEmpresaDialog({
           setEmpresasFiltradas([]);
         }
       } 
-      // Se temos emailVinculo, adicionar email à empresa
+      // Se temos emailVinculo mas não customerId, criar contato e vincular
       else if (emailVinculo) {
         const empresa = empresas.find(e => e.id === empresaId);
         const emailsAtuais = empresa?.emails_vinculados || [];
@@ -117,14 +138,37 @@ export function VincularEmpresaDialog({
           return;
         }
 
-        const { error } = await supabase
+        // Criar contato sem email temporário - deixar em branco
+        const { data: novoContato, error: contatoErr } = await supabase
+          .from('customers')
+          .insert([{
+            estabelecimento_id: estabId,
+            nome: emailVinculo.split('@')[0], // Usar parte do email como nome inicial
+            telefone: '',
+            email: '', // Deixar email em branco para edição posterior
+            tipo_operador: true
+          }])
+          .select('id')
+          .maybeSingle();
+
+        if (contatoErr) throw contatoErr;
+
+        // Vincular contato à empresa
+        await supabase
+          .from('customer_empresas')
+          .insert([{
+            customer_id: novoContato!.id,
+            empresa_id: empresaId,
+            is_primary: false
+          }]);
+
+        // Adicionar email aos emails_vinculados da empresa
+        await supabase
           .from('empresas')
           .update({
             emails_vinculados: [...emailsAtuais, emailVinculo]
           })
           .eq('id', empresaId);
-
-        if (error) throw error;
         
         toast.success("Email vinculado à empresa com sucesso!");
         onSuccess?.();
@@ -132,7 +176,7 @@ export function VincularEmpresaDialog({
         setBusca("");
         setEmpresasFiltradas([]);
       }
-      // Se temos whatsappVinculo, adicionar whatsapp à empresa
+      // Se temos whatsappVinculo mas não customerId, criar contato e vincular
       else if (whatsappVinculo) {
         const empresa = empresas.find(e => e.id === empresaId);
         const whatsappsAtuais = empresa?.whatsapps_vinculados || [];
@@ -143,14 +187,37 @@ export function VincularEmpresaDialog({
           return;
         }
 
-        const { error } = await supabase
+        // Criar contato sem email temporário - deixar em branco
+        const { data: novoContato, error: contatoErr } = await supabase
+          .from('customers')
+          .insert([{
+            estabelecimento_id: estabId,
+            nome: whatsappVinculo, // Usar número como nome inicial
+            telefone: whatsappVinculo,
+            email: '', // Deixar email em branco para edição posterior
+            tipo_operador: true
+          }])
+          .select('id')
+          .maybeSingle();
+
+        if (contatoErr) throw contatoErr;
+
+        // Vincular contato à empresa
+        await supabase
+          .from('customer_empresas')
+          .insert([{
+            customer_id: novoContato!.id,
+            empresa_id: empresaId,
+            is_primary: false
+          }]);
+
+        // Adicionar whatsapp aos whatsapps_vinculados da empresa
+        await supabase
           .from('empresas')
           .update({
             whatsapps_vinculados: [...whatsappsAtuais, whatsappVinculo]
           })
           .eq('id', empresaId);
-
-        if (error) throw error;
         
         toast.success("WhatsApp vinculado à empresa com sucesso!");
         onSuccess?.();
