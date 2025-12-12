@@ -1344,17 +1344,7 @@ export default function Atendimento() {
   // Carregar dados do email selecionado e buscar contato/empresa
   const loadSelectedEmail = async (emailId: string) => {
     try {
-      // Alguns registros de email podem vir com IDs não UUID (ex: IDs externos do servidor de e-mail).
-      // Esses IDs quebram o filtro .eq("id") na tabela emails, então ignoramos a busca nesse caso.
-      const isUuid =
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
-          emailId,
-        );
-
-      if (!isUuid) {
-        console.warn("[Atendimento] ID de email não é UUID, ignorando busca em 'emails':", emailId);
-        return;
-      }
+      console.log("[Atendimento] Buscando email com ID:", emailId);
 
       const { data: emailData, error: emailError } = await supabase
         .from("emails")
