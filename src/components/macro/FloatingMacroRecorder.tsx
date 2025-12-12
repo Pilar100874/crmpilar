@@ -21,10 +21,8 @@ export function FloatingMacroRecorder() {
 
   const hasSteps = recordingSteps.length > 0;
 
-  // Só mostra o botão flutuante quando há uma sessão de gravação ativa
-  const shouldShow = recordingMeta !== null || hasSteps || isRecording;
-
-  if (!shouldShow) {
+  // Só mostra o botão flutuante quando o usuário clicou em "Iniciar Gravação" na aba Gravador
+  if (!recordingMeta) {
     return null;
   }
 
