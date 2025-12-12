@@ -715,14 +715,14 @@ export default function MacrosPage() {
       </Tabs>
 
       {/* Dialog de edição */}
-      {editingMacro && (
-        <Dialog
-          open={true}
-          onOpenChange={(open) => {
-            console.log('[MacrosPage] Dialog onOpenChange', open);
-            if (!open) setEditingMacro(null);
-          }}
-        >
+      <Dialog
+        open={!!editingMacro}
+        modal={false}
+        onOpenChange={(open) => {
+          if (!open) setEditingMacro(null);
+        }}
+      >
+        {editingMacro && (
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle>Editar Macro</DialogTitle>
@@ -839,10 +839,7 @@ export default function MacrosPage() {
             <DialogFooter>
               <Button
                 variant="outline"
-                onClick={() => {
-                  console.log('[MacrosPage] Cancelar clique, limpando editingMacro');
-                  setEditingMacro(null);
-                }}
+                onClick={() => setEditingMacro(null)}
               >
                 Cancelar
               </Button>
@@ -851,8 +848,8 @@ export default function MacrosPage() {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
-      )}
+        )}
+      </Dialog>
 
 
 
@@ -884,7 +881,7 @@ export default function MacrosPage() {
       </AlertDialog>
 
       {/* Dialog de importação */}
-      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+      <Dialog open={showImportDialog} modal={false} onOpenChange={setShowImportDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Importar Macro</DialogTitle>
@@ -915,8 +912,12 @@ export default function MacrosPage() {
       </Dialog>
 
       {/* Dialog de edição de passo */}
-      {editingStep && (
-        <Dialog open={true} onOpenChange={(open) => { if (!open) setEditingStep(null); }}>
+      <Dialog
+        open={!!editingStep}
+        modal={false}
+        onOpenChange={(open) => { if (!open) setEditingStep(null); }}
+      >
+        {editingStep && (
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Editar Passo</DialogTitle>
@@ -1005,8 +1006,8 @@ export default function MacrosPage() {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
-      )}
+        )}
+      </Dialog>
     </div>
   );
 }
