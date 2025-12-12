@@ -1346,13 +1346,35 @@ export default function Atendimento() {
     try {
       console.log("[Atendimento] Buscando email com ID:", emailId);
 
-      const { data: emailData, error: emailError } = await supabase
-        .from("emails")
-        .select("*")
-        .eq("id", emailId)
-        .single();
+      // Tentar reaproveitar o email já carregado na lista (caso venha de servidor externo)
+      let emailData: any =
+        selectedEmailData && selectedEmailData.id === emailId ? selectedEmailData : null;
 
-      if (emailError) throw emailError;
+      // Alguns emails possuem ID UUID salvo na tabela, outros usam ID externo (IMAP)
+      const isUuid =
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+          emailId,
+        );
+
+      // Só tenta buscar na tabela "emails" quando o ID é realmente um UUID
+      if (!emailData && isUuid) {
+        const { data, error } = await supabase
+          .from("emails")
+          .select("*")
+          .eq("id", emailId)
+          .single();
+
+        if (error) throw error;
+        emailData = data;
+      }
+
+      if (!emailData) {
+        console.warn(
+          "[Atendimento] Não foi possível carregar o registro do email (ID externo sem UUID).",
+          emailId,
+        );
+        return;
+      }
 
       console.log("[Atendimento] Email carregado:", {
         id: emailData.id,
