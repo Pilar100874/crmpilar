@@ -1344,8 +1344,6 @@ export default function Atendimento() {
   // Carregar dados do email selecionado e buscar contato/empresa
   const loadSelectedEmail = async (emailId: string) => {
     try {
-      const estabId = await getEstabelecimentoId();
-
       const { data: emailData, error: emailError } = await supabase
         .from("emails")
         .select("*")
@@ -1354,11 +1352,11 @@ export default function Atendimento() {
 
       if (emailError) throw emailError;
 
-      const fromEmail = emailData.from_email || "";
+      const fromEmail: string = emailData.from_email || "";
 
-      // Buscar contato pelo email
-      let customerData = null;
-      if (estabId && fromEmail) {
+      // Buscar contato pelo email (cliente vinculado)
+      let customerData: any = null;
+      if (fromEmail) {
         const { data } = await supabase
           .from("customers")
           .select(`
@@ -1378,16 +1376,15 @@ export default function Atendimento() {
               )
             )
           `)
-          .eq("estabelecimento_id", estabId)
-          .ilike("email", `%${fromEmail}%`)
+          .ilike("email", fromEmail)
           .maybeSingle();
 
         customerData = data as any;
       }
 
       // Se não encontrou customer, buscar empresa diretamente pelo email
-      let empresaData = null;
-      if (!customerData && estabId && fromEmail) {
+      let empresaData: any = null;
+      if (!customerData && fromEmail) {
         const { data: empresa } = await supabase
           .from("empresas")
           .select(`
@@ -1398,11 +1395,10 @@ export default function Atendimento() {
             telefone,
             email
           `)
-          .eq("estabelecimento_id", estabId)
-          .ilike("email", `%${fromEmail}%`)
+          .ilike("email", fromEmail)
           .maybeSingle();
         
-        empresaData = empresa;
+        empresaData = empresa as any;
       }
 
       setSelectedEmailData({
