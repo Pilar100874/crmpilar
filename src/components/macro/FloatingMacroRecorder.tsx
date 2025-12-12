@@ -21,6 +21,30 @@ export function FloatingMacroRecorder() {
 
   const hasSteps = recordingSteps.length > 0;
 
+  // Encontra o elemento clicável mais próximo (button, a, etc.)
+  const findClickableElement = (element: HTMLElement): HTMLElement => {
+    // Se for SVG ou path, sobe para o pai clicável
+    const clickableSelectors = 'button, a, [role="button"], [role="menuitem"], [role="tab"], [data-macro-id]';
+    const clickable = element.closest(clickableSelectors) as HTMLElement;
+    if (clickable) return clickable;
+    
+    // Se o próprio elemento ou pai próximo é clicável por natureza
+    let current: HTMLElement | null = element;
+    while (current && current !== document.body) {
+      const tag = current.tagName.toLowerCase();
+      if (['button', 'a', 'input', 'select'].includes(tag)) {
+        return current;
+      }
+      // Se tem onClick ou cursor pointer, é provavelmente clicável
+      if (current.onclick || getComputedStyle(current).cursor === 'pointer') {
+        return current;
+      }
+      current = current.parentElement;
+    }
+    
+    return element;
+  };
+
   // Gera um identificador para o elemento
   const generateElementId = (element: HTMLElement): string => {
     // Prioriza data-macro-id
@@ -34,16 +58,38 @@ export function FloatingMacroRecorder() {
     const name = element.getAttribute('name');
     if (name) return `[name="${name}"]`;
 
-    // Usa classe principal + tag
+    // Para botões, usa o texto interno
     const tagName = element.tagName.toLowerCase();
+    if (tagName === 'button') {
+      const text = element.textContent?.trim().substring(0, 30);
+      if (text) return `button:${text}`;
+    }
+
+    // Para links, usa href ou texto
+    if (tagName === 'a') {
+      const href = element.getAttribute('href');
+      if (href && href !== '#') return `a[href="${href}"]`;
+      const text = element.textContent?.trim().substring(0, 30);
+      if (text) return `a:${text}`;
+    }
+
+    // Usa aria-label se existir
+    const ariaLabel = element.getAttribute('aria-label');
+    if (ariaLabel) return `[aria-label="${ariaLabel}"]`;
+
+    // Usa title se existir
+    const title = element.getAttribute('title');
+    if (title) return `[title="${title}"]`;
+
+    // Usa classe principal + tag
     const className = element.className?.split?.(' ')?.[0];
-    if (className && typeof className === 'string') {
+    if (className && typeof className === 'string' && !className.includes(':')) {
       return `${tagName}.${className}`;
     }
 
     // Fallback: tag + texto truncado
     const text = element.textContent?.trim().substring(0, 20) || '';
-    return `${tagName}${text ? `:${text}` : ''}`;
+    return `${tagName}${text ? `:${text}` : ''}`; 
   };
 
   // Captura automática de cliques e inputs
@@ -51,10 +97,13 @@ export function FloatingMacroRecorder() {
     if (!isRecording) return;
 
     const handleGlobalClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+      const rawTarget = e.target as HTMLElement;
       
       // Ignora cliques no próprio botão flutuante
-      if (target.closest('.fixed.bottom-4.right-4')) return;
+      if (rawTarget.closest('.fixed.bottom-4.right-4')) return;
+      
+      // Encontra o elemento clicável real (não SVG, path, etc.)
+      const target = findClickableElement(rawTarget);
       
       const tagName = target.tagName.toLowerCase();
       const isInput = tagName === 'input' || tagName === 'textarea';
