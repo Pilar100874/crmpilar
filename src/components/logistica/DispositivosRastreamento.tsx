@@ -89,27 +89,21 @@ const DispositivosRastreamento: React.FC<DispositivosRastreamentoProps> = ({ est
     }
   };
 
-  const aprovarDispositivo = async (dispositivoId: string, veiculoId: string) => {
-    if (!veiculoId) {
-      toast.error('Selecione um veículo');
-      return;
-    }
-
+  const aprovarDispositivo = async (dispositivoId: string) => {
     setSaving(dispositivoId);
     try {
       const { error } = await supabase
         .from('dispositivos_rastreamento')
         .update({
           status: 'aprovado',
-          veiculo_id: veiculoId,
-          estabelecimento_id: estabelecimentoId, // Link to current establishment on approval
+          estabelecimento_id: estabelecimentoId,
           aprovado_em: new Date().toISOString()
         })
         .eq('id', dispositivoId);
 
       if (error) throw error;
 
-      toast.success('Dispositivo aprovado e vinculado!');
+      toast.success('Dispositivo aprovado! Edite para vincular a um veículo.');
       loadData();
     } catch (error) {
       console.error('Error approving device:', error);
@@ -206,7 +200,7 @@ const DispositivosRastreamento: React.FC<DispositivosRastreamentoProps> = ({ est
               Dispositivos Aguardando Liberação ({pendentes.length})
             </CardTitle>
             <CardDescription>
-              Aprove e vincule os dispositivos a veículos para permitir o rastreamento
+              Aprove os dispositivos para permitir o rastreamento. Vincule a veículos depois.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -216,21 +210,46 @@ const DispositivosRastreamento: React.FC<DispositivosRastreamentoProps> = ({ est
                   <TableHead>Dispositivo</TableHead>
                   <TableHead>Plataforma</TableHead>
                   <TableHead>Primeiro Acesso</TableHead>
-                  <TableHead>Vincular a Veículo</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {pendentes.map((disp) => (
-                  <DispositivoPendenteRow
-                    key={disp.id}
-                    dispositivo={disp}
-                    veiculos={veiculos}
-                    saving={saving === disp.id}
-                    onAprovar={aprovarDispositivo}
-                    onBloquear={bloquearDispositivo}
-                    getPlatformIcon={getPlatformIcon}
-                  />
+                  <TableRow key={disp.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{disp.nome_dispositivo || disp.device_uuid}</div>
+                        <div className="text-xs text-muted-foreground">{disp.device_uuid}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-lg">{getPlatformIcon(disp.plataforma)}</span>
+                      <span className="ml-1 text-sm capitalize">{disp.plataforma || 'Desconhecido'}</span>
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(disp.primeiro_acesso), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button 
+                          size="sm"
+                          onClick={() => aprovarDispositivo(disp.id)}
+                          disabled={saving === disp.id}
+                        >
+                          {saving === disp.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
+                          Aprovar
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => bloquearDispositivo(disp.id)}
+                          disabled={saving === disp.id}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))}
               </TableBody>
             </Table>
@@ -377,8 +396,8 @@ const DispositivosRastreamento: React.FC<DispositivosRastreamentoProps> = ({ est
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => aprovarDispositivo(disp.id, disp.veiculo_id || '')}
-                        disabled={saving === disp.id || !disp.veiculo_id}
+                        onClick={() => aprovarDispositivo(disp.id)}
+                        disabled={saving === disp.id}
                       >
                         Desbloquear
                       </Button>
@@ -391,70 +410,6 @@ const DispositivosRastreamento: React.FC<DispositivosRastreamentoProps> = ({ est
         </Card>
       )}
     </div>
-  );
-};
-
-// Row component for pending devices with vehicle selector
-const DispositivoPendenteRow: React.FC<{
-  dispositivo: Dispositivo;
-  veiculos: Veiculo[];
-  saving: boolean;
-  onAprovar: (dispId: string, veicId: string) => void;
-  onBloquear: (dispId: string) => void;
-  getPlatformIcon: (p: string | null) => string;
-}> = ({ dispositivo, veiculos, saving, onAprovar, onBloquear, getPlatformIcon }) => {
-  const [selectedVeiculo, setSelectedVeiculo] = useState('');
-
-  return (
-    <TableRow>
-      <TableCell>
-        <div>
-          <div className="font-medium">{dispositivo.nome_dispositivo || dispositivo.device_uuid}</div>
-          <div className="text-xs text-muted-foreground">{dispositivo.device_uuid}</div>
-        </div>
-      </TableCell>
-      <TableCell>
-        <span className="text-lg">{getPlatformIcon(dispositivo.plataforma)}</span>
-        <span className="ml-1 text-sm capitalize">{dispositivo.plataforma || 'Desconhecido'}</span>
-      </TableCell>
-      <TableCell>
-        {format(new Date(dispositivo.primeiro_acesso), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-      </TableCell>
-      <TableCell>
-        <Select value={selectedVeiculo} onValueChange={setSelectedVeiculo}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Selecione um veículo" />
-          </SelectTrigger>
-          <SelectContent>
-            {veiculos.map((v) => (
-              <SelectItem key={v.id} value={v.id}>
-                {v.placa} {v.descricao ? `- ${v.descricao}` : ''}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </TableCell>
-      <TableCell className="text-right">
-        <div className="flex items-center justify-end gap-2">
-          <Button 
-            size="sm"
-            onClick={() => onAprovar(dispositivo.id, selectedVeiculo)}
-            disabled={saving || !selectedVeiculo}
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 mr-1" />}
-            Aprovar
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => onBloquear(dispositivo.id)}
-            disabled={saving}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
   );
 };
 
