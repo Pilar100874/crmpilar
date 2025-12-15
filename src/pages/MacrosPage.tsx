@@ -24,16 +24,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -161,7 +151,7 @@ export default function MacrosPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMacro, setSelectedMacro] = useState<Macro | null>(null);
   const [editingMacro, setEditingMacro] = useState<Macro | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  
   const [newMacroName, setNewMacroName] = useState('');
   const [newMacroDescription, setNewMacroDescription] = useState('');
   const [newMacroShortcut, setNewMacroShortcut] = useState('');
@@ -499,7 +489,13 @@ export default function MacrosPage() {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onClick={() => setDeleteConfirmId(macro.id)}
+                          onClick={() => {
+                            if (window.confirm('Excluir esta macro? Esta ação não pode ser desfeita.')) {
+                              if (selectedMacro?.id === macro.id) setSelectedMacro(null);
+                              if (editingMacro?.id === macro.id) setEditingMacro(null);
+                              deleteMacro(macro.id);
+                            }
+                          }}
                           className="text-destructive"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -855,40 +851,6 @@ export default function MacrosPage() {
 
 
 
-      {/* Dialog de confirmação de exclusão */}
-      {deleteConfirmId && (
-        <AlertDialog open={true} onOpenChange={() => setDeleteConfirmId(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Excluir Macro?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta ação não pode ser desfeita. A macro será permanentemente excluída.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  const idToDelete = deleteConfirmId;
-                  setSelectedMacro(null);
-                  setEditingMacro(null);
-                  setEditingStep(null);
-                  setDeleteConfirmId(null);
-                  // Executa a deleção após fechar o dialog
-                  setTimeout(() => {
-                    if (idToDelete) {
-                      deleteMacro(idToDelete);
-                    }
-                  }, 50);
-                }}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Excluir
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
 
       {/* Dialog de importação */}
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
