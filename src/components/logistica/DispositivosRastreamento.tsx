@@ -113,26 +113,6 @@ const DispositivosRastreamento: React.FC<DispositivosRastreamentoProps> = ({ est
     }
   };
 
-  const vincularVeiculo = async (dispositivoId: string, veiculoId: string | null) => {
-    setSaving(dispositivoId);
-    try {
-      const { error } = await supabase
-        .from('dispositivos_rastreamento')
-        .update({ veiculo_id: veiculoId })
-        .eq('id', dispositivoId);
-
-      if (error) throw error;
-
-      toast.success(veiculoId ? 'Veículo vinculado!' : 'Veículo desvinculado');
-      loadData();
-    } catch (error) {
-      console.error('Error linking vehicle:', error);
-      toast.error('Erro ao vincular veículo');
-    } finally {
-      setSaving(null);
-    }
-  };
-
   const bloquearDispositivo = async (dispositivoId: string) => {
     setSaving(dispositivoId);
     try {
@@ -305,86 +285,63 @@ const DispositivosRastreamento: React.FC<DispositivosRastreamentoProps> = ({ est
                 <TableRow>
                   <TableHead>Dispositivo</TableHead>
                   <TableHead>Plataforma</TableHead>
-                  <TableHead>Veículo Vinculado</TableHead>
                   <TableHead>Último Acesso</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {aprovados.map((disp) => {
-                  const veiculo = veiculos.find(v => v.id === disp.veiculo_id);
-                  return (
-                    <TableRow key={disp.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{disp.nome_dispositivo || disp.device_uuid}</div>
-                          <div className="text-xs text-muted-foreground">{disp.device_uuid}</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-lg">{getPlatformIcon(disp.plataforma)}</span>
-                        <span className="ml-1 text-sm capitalize">{disp.plataforma || 'Desconhecido'}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={disp.veiculo_id || '__none__'} 
-                          onValueChange={(value) => vincularVeiculo(disp.id, value === '__none__' ? null : value)}
+                {aprovados.map((disp) => (
+                  <TableRow key={disp.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{disp.nome_dispositivo || disp.device_uuid}</div>
+                        <div className="text-xs text-muted-foreground">{disp.device_uuid}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-lg">{getPlatformIcon(disp.plataforma)}</span>
+                      <span className="ml-1 text-sm capitalize">{disp.plataforma || 'Desconhecido'}</span>
+                    </TableCell>
+                    <TableCell>
+                      {disp.ultimo_acesso 
+                        ? format(new Date(disp.ultimo_acesso), "dd/MM/yyyy HH:mm", { locale: ptBR })
+                        : '-'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => bloquearDispositivo(disp.id)}
                           disabled={saving === disp.id}
                         >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Vincular veículo" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__none__">Nenhum</SelectItem>
-                            {veiculos.map((v) => (
-                              <SelectItem key={v.id} value={v.id}>
-                                {v.placa} {v.descricao ? `- ${v.descricao}` : ''}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        {disp.ultimo_acesso 
-                          ? format(new Date(disp.ultimo_acesso), "dd/MM/yyyy HH:mm", { locale: ptBR })
-                          : '-'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => bloquearDispositivo(disp.id)}
-                            disabled={saving === disp.id}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm" className="text-destructive">
+                          <X className="w-4 h-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-destructive">
+                              Excluir
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Excluir Dispositivo?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta ação não pode ser desfeita. O dispositivo precisará ser registrado novamente.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => excluirDispositivo(disp.id)}>
                                 Excluir
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Excluir Dispositivo?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta ação não pode ser desfeita. O dispositivo precisará ser registrado novamente.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => excluirDispositivo(disp.id)}>
-                                  Excluir
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           )}
