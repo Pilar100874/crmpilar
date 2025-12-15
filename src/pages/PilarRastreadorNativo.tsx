@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Geolocation, Position } from '@capacitor/geolocation';
+import { Preferences } from '@capacitor/preferences';
 
 declare global {
   interface Window {
@@ -32,7 +33,8 @@ import {
   AlertCircle,
   CheckCircle,
   Loader2,
-  SendHorizonal
+  SendHorizonal,
+  RefreshCw
 } from "lucide-react";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -68,33 +70,62 @@ const PilarRastreadorNativo = () => {
   const watchIdRef = useRef<string | null>(null);
   const pendingPositionsRef = useRef<any[]>([]);
   const intervalRef = useRef<number | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Generate unique device ID
-  const generateDeviceUuid = () => {
-    let uuid = localStorage.getItem('pilar_device_uuid');
-    if (!uuid) {
-      uuid = 'DEV-' + crypto.randomUUID().slice(0, 8).toUpperCase();
-      localStorage.setItem('pilar_device_uuid', uuid);
+  // Generate or retrieve unique device ID using Capacitor Preferences
+  const initializeDeviceUuid = useCallback(async () => {
+    try {
+      const { value } = await Preferences.get({ key: 'pilar_device_uuid' });
+      
+      if (value) {
+        console.log('Loaded existing UUID:', value);
+        setDeviceUuid(value);
+        return value;
+      }
+      
+      // Generate new UUID
+      const newUuid = 'DEV-' + crypto.randomUUID().slice(0, 8).toUpperCase();
+      await Preferences.set({ key: 'pilar_device_uuid', value: newUuid });
+      console.log('Generated new UUID:', newUuid);
+      setDeviceUuid(newUuid);
+      return newUuid;
+    } catch (error) {
+      console.error('Error with Preferences, falling back to localStorage:', error);
+      // Fallback to localStorage for web
+      let uuid = localStorage.getItem('pilar_device_uuid');
+      if (!uuid) {
+        uuid = 'DEV-' + crypto.randomUUID().slice(0, 8).toUpperCase();
+        localStorage.setItem('pilar_device_uuid', uuid);
+      }
+      setDeviceUuid(uuid);
+      return uuid;
     }
-    return uuid;
-  };
+  }, []);
 
   // Check device status and auto-register
-  const checkDeviceStatus = useCallback(async () => {
-    const uuid = generateDeviceUuid();
-    setDeviceUuid(uuid);
+  const checkDeviceStatus = useCallback(async (uuid?: string) => {
+    const currentUuid = uuid || deviceUuid;
+    if (!currentUuid) {
+      console.log('No UUID available yet');
+      return;
+    }
+
+    console.log('Checking device status for UUID:', currentUuid);
 
     try {
       // Check if device exists
       const { data: device, error } = await supabase
         .from('dispositivos_rastreamento')
         .select('*')
-        .eq('device_uuid', uuid)
+        .eq('device_uuid', currentUuid)
         .maybeSingle();
+
+      console.log('Device lookup result:', device, error);
 
       if (error) throw error;
 
       if (device) {
+        console.log('Device found with status:', device.status);
         setDeviceStatus(device.status as DeviceStatus);
         setNomeDispositivo(device.nome_dispositivo || '');
         
@@ -117,14 +148,14 @@ const PilarRastreadorNativo = () => {
           .update({ ultimo_acesso: new Date().toISOString() })
           .eq('id', device.id);
       } else {
-        // Auto-register new device
+        console.log('Device not found, setting status to not_registered');
         setDeviceStatus('not_registered');
       }
     } catch (error) {
       console.error('Error checking device:', error);
       setDeviceStatus('not_registered');
     }
-  }, []);
+  }, [deviceUuid]);
 
   // Register device
   const registerDevice = async () => {
@@ -177,10 +208,16 @@ const PilarRastreadorNativo = () => {
     }
   };
 
-  // Check permissions on mount
+  // Initialize device UUID and check status on mount
   useEffect(() => {
-    checkPermissions();
-    checkDeviceStatus();
+    const init = async () => {
+      checkPermissions();
+      const uuid = await initializeDeviceUuid();
+      setIsInitialized(true);
+      await checkDeviceStatus(uuid);
+    };
+    
+    init();
     
     // Battery API
     if ('getBattery' in navigator) {
@@ -191,11 +228,15 @@ const PilarRastreadorNativo = () => {
         });
       });
     }
+  }, [initializeDeviceUuid]);
 
-    // Periodic status check
-    const statusInterval = window.setInterval(checkDeviceStatus, 30000);
+  // Periodic status check (only after initialized)
+  useEffect(() => {
+    if (!isInitialized || !deviceUuid) return;
+    
+    const statusInterval = window.setInterval(() => checkDeviceStatus(), 30000);
     return () => clearInterval(statusInterval);
-  }, [checkDeviceStatus]);
+  }, [isInitialized, deviceUuid, checkDeviceStatus]);
 
   // Online/offline detection
   useEffect(() => {
@@ -555,7 +596,7 @@ const PilarRastreadorNativo = () => {
                   onClick={forceCheckStatus}
                   className="h-6 w-6 p-0 text-white/60 hover:text-white hover:bg-white/10"
                 >
-                  <Loader2 className={`w-4 h-4 ${deviceStatus === 'checking' ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 ${deviceStatus === 'checking' ? 'animate-spin' : ''}`} />
                 </Button>
               </div>
             </div>
