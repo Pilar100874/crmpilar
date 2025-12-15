@@ -490,6 +490,13 @@ const PilarRastreadorNativo = () => {
     return date.toLocaleTimeString('pt-BR');
   };
 
+  // Force re-check device status
+  const forceCheckStatus = async () => {
+    setDeviceStatus('checking');
+    await checkDeviceStatus();
+    toast.info('Status atualizado');
+  };
+
   const getStatusBadge = () => {
     switch (deviceStatus) {
       case 'checking':
@@ -537,13 +544,26 @@ const PilarRastreadorNativo = () => {
       <div className="p-4 space-y-4">
         {/* Status Card */}
         <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-          <CardContent className="pt-4">
+          <CardContent className="pt-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-white/80 text-sm">Status do Dispositivo</span>
-              {getStatusBadge()}
+              <div className="flex items-center gap-2">
+                {getStatusBadge()}
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={forceCheckStatus}
+                  className="h-6 w-6 p-0 text-white/60 hover:text-white hover:bg-white/10"
+                >
+                  <Loader2 className={`w-4 h-4 ${deviceStatus === 'checking' ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+            </div>
+            <div className="text-xs text-white/50 font-mono bg-black/20 px-2 py-1 rounded">
+              ID: {deviceUuid}
             </div>
             {veiculoNome && (
-              <div className="mt-2 text-sm text-white/60">
+              <div className="text-sm text-white/60">
                 Veículo: <span className="text-white font-medium">{veiculoNome}</span>
               </div>
             )}
