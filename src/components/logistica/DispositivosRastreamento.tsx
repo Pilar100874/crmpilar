@@ -113,6 +113,26 @@ const DispositivosRastreamento: React.FC<DispositivosRastreamentoProps> = ({ est
     }
   };
 
+  const vincularVeiculo = async (dispositivoId: string, veiculoId: string | null) => {
+    setSaving(dispositivoId);
+    try {
+      const { error } = await supabase
+        .from('dispositivos_rastreamento')
+        .update({ veiculo_id: veiculoId })
+        .eq('id', dispositivoId);
+
+      if (error) throw error;
+
+      toast.success(veiculoId ? 'Veículo vinculado!' : 'Veículo desvinculado');
+      loadData();
+    } catch (error) {
+      console.error('Error linking vehicle:', error);
+      toast.error('Erro ao vincular veículo');
+    } finally {
+      setSaving(null);
+    }
+  };
+
   const bloquearDispositivo = async (dispositivoId: string) => {
     setSaving(dispositivoId);
     try {
@@ -306,14 +326,23 @@ const DispositivosRastreamento: React.FC<DispositivosRastreamentoProps> = ({ est
                         <span className="ml-1 text-sm capitalize">{disp.plataforma || 'Desconhecido'}</span>
                       </TableCell>
                       <TableCell>
-                        {veiculo ? (
-                          <Badge variant="outline" className="bg-blue-50">
-                            <Link2 className="w-3 h-3 mr-1" />
-                            {veiculo.placa}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        )}
+                        <Select 
+                          value={disp.veiculo_id || ''} 
+                          onValueChange={(value) => vincularVeiculo(disp.id, value || null)}
+                          disabled={saving === disp.id}
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Vincular veículo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Nenhum</SelectItem>
+                            {veiculos.map((v) => (
+                              <SelectItem key={v.id} value={v.id}>
+                                {v.placa} {v.descricao ? `- ${v.descricao}` : ''}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         {disp.ultimo_acesso 
