@@ -744,10 +744,18 @@ const PilarRastreadorNativo = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Show current UUID for debugging */}
+              {deviceUuid && (
+                <div className="bg-white/5 rounded p-2 border border-white/10">
+                  <p className="text-white/50 text-xs">ID atual deste celular:</p>
+                  <p className="text-white/80 font-mono text-sm">{deviceUuid}</p>
+                </div>
+              )}
+              
               {!showManualInput ? (
                 <>
                   <p className="text-white/70 text-sm">
-                    Este dispositivo ainda não está registrado. Digite um nome para identificá-lo e aguarde a liberação do administrador.
+                    Este dispositivo ainda não está registrado. Registre como novo ou use um ID já aprovado.
                   </p>
                   <div className="space-y-2">
                     <Label className="text-white/80">Nome do Dispositivo</Label>
