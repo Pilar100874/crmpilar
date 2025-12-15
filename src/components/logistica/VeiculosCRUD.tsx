@@ -23,6 +23,7 @@ interface DispositivoAprovado {
   device_uuid: string;
   nome_dispositivo: string | null;
   veiculo_id: string | null;
+  estabelecimento_id: string | null;
 }
 
 const tipos = [
@@ -81,14 +82,19 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
   const fetchDispositivos = async () => {
     try {
+      // Fetch all approved devices - they may be from any estabelecimento
+      // since devices are approved in LogisticaConfig which may use a different estabelecimento
       const { data, error } = await supabase
         .from('dispositivos_rastreamento')
-        .select('id, device_uuid, nome_dispositivo, veiculo_id')
-        .eq('estabelecimento_id', estabelecimentoId)
+        .select('id, device_uuid, nome_dispositivo, veiculo_id, estabelecimento_id')
         .eq('status', 'aprovado');
 
       if (error) throw error;
-      setDispositivos(data || []);
+      // Filter to show devices from this estabelecimento OR devices without estabelecimento
+      const filtered = (data || []).filter(d => 
+        d.estabelecimento_id === estabelecimentoId || !d.estabelecimento_id
+      );
+      setDispositivos(filtered);
     } catch (error) {
       console.error('Error fetching devices:', error);
     }
