@@ -10,47 +10,34 @@ declare global {
   }
 }
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   MapPin, 
   Navigation, 
-  Gauge, 
-  Clock, 
   Wifi, 
   WifiOff, 
   Play, 
   Square, 
   Settings,
-  Smartphone,
-  Battery,
   Signal,
-  ChevronDown,
-  ChevronUp,
   AlertCircle,
   CheckCircle,
   Loader2,
-  SendHorizonal,
-  RefreshCw
+  RefreshCw,
+  Download
 } from "lucide-react";
 import { toast } from "sonner";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 
 const TRACKING_ENDPOINT = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rastreamento-posicao`;
 
-interface TrackingStats {
-  positionsSent: number;
-  lastSentTime: Date | null;
-  errors: number;
-}
-
 type DeviceStatus = 'checking' | 'pending' | 'approved' | 'blocked' | 'not_registered';
 
-// Map database status (Portuguese) to internal status (English)
 const mapDbStatusToInternal = (dbStatus: string): DeviceStatus => {
   switch (dbStatus) {
     case 'aprovado': return 'approved';
@@ -64,46 +51,43 @@ const PilarRastreadorNativo = () => {
   const [deviceUuid, setDeviceUuid] = useState('');
   const [deviceStatus, setDeviceStatus] = useState<DeviceStatus>('checking');
   const [veiculoNome, setVeiculoNome] = useState<string | null>(null);
+  const [nomeDispositivo, setNomeDispositivo] = useState('');
+  const [manualUuid, setManualUuid] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
+  
   const [isTracking, setIsTracking] = useState(false);
   const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [interval, setIntervalValue] = useState(15);
   const [showConfig, setShowConfig] = useState(false);
-  const [stats, setStats] = useState<TrackingStats>({
-    positionsSent: 0,
-    lastSentTime: null,
-    errors: 0
-  });
+  const [totalSent, setTotalSent] = useState(0);
+  const [lastSentTime, setLastSentTime] = useState<Date | null>(null);
   const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
-  const [nomeDispositivo, setNomeDispositivo] = useState('');
-  const [manualUuid, setManualUuid] = useState('');
-  const [showManualInput, setShowManualInput] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const watchIdRef = useRef<string | null>(null);
   const pendingPositionsRef = useRef<any[]>([]);
   const intervalRef = useRef<number | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Generate or retrieve unique device ID using Capacitor Preferences
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [canInstall, setCanInstall] = useState(false);
+
+  // Initialize device UUID using Capacitor Preferences
   const initializeDeviceUuid = useCallback(async () => {
     try {
       const { value } = await Preferences.get({ key: 'pilar_device_uuid' });
       
       if (value) {
-        console.log('Loaded existing UUID:', value);
         setDeviceUuid(value);
         return value;
       }
       
-      // Generate new UUID
       const newUuid = 'DEV-' + crypto.randomUUID().slice(0, 8).toUpperCase();
       await Preferences.set({ key: 'pilar_device_uuid', value: newUuid });
-      console.log('Generated new UUID:', newUuid);
       setDeviceUuid(newUuid);
       return newUuid;
     } catch (error) {
       console.error('Error with Preferences, falling back to localStorage:', error);
-      // Fallback to localStorage for web
       let uuid = localStorage.getItem('pilar_device_uuid');
       if (!uuid) {
         uuid = 'DEV-' + crypto.randomUUID().slice(0, 8).toUpperCase();
@@ -114,34 +98,24 @@ const PilarRastreadorNativo = () => {
     }
   }, []);
 
-  // Check device status and auto-register
+  // Check device status
   const checkDeviceStatus = useCallback(async (uuid?: string) => {
     const currentUuid = uuid || deviceUuid;
-    if (!currentUuid) {
-      console.log('No UUID available yet');
-      return;
-    }
-
-    console.log('Checking device status for UUID:', currentUuid);
+    if (!currentUuid) return;
 
     try {
-      // Check if device exists
       const { data: device, error } = await supabase
         .from('dispositivos_rastreamento')
         .select('*')
         .eq('device_uuid', currentUuid)
         .maybeSingle();
 
-      console.log('Device lookup result:', device, error);
-
       if (error) throw error;
 
       if (device) {
-        console.log('Device found with status:', device.status);
         setDeviceStatus(mapDbStatusToInternal(device.status));
         setNomeDispositivo(device.nome_dispositivo || '');
         
-        // Fetch vehicle info if linked
         if (device.veiculo_id) {
           const { data: veiculo } = await supabase
             .from('veiculos')
@@ -154,13 +128,11 @@ const PilarRastreadorNativo = () => {
           }
         }
 
-        // Update last access
         await supabase
           .from('dispositivos_rastreamento')
           .update({ ultimo_acesso: new Date().toISOString() })
           .eq('id', device.id);
       } else {
-        console.log('Device not found, setting status to not_registered');
         setDeviceStatus('not_registered');
       }
     } catch (error) {
@@ -177,7 +149,6 @@ const PilarRastreadorNativo = () => {
     }
 
     try {
-      // First check if device already exists (could be a duplicate attempt)
       const { data: existingDevice } = await supabase
         .from('dispositivos_rastreamento')
         .select('id, status')
@@ -185,7 +156,6 @@ const PilarRastreadorNativo = () => {
         .maybeSingle();
 
       if (existingDevice) {
-        // Device already exists, just update status display
         setDeviceStatus(mapDbStatusToInternal(existingDevice.status));
         toast.info('Dispositivo já está registrado');
         return;
@@ -203,7 +173,6 @@ const PilarRastreadorNativo = () => {
         });
 
       if (error) {
-        // Handle duplicate key error gracefully
         if (error.code === '23505') {
           await checkDeviceStatus();
           toast.info('Dispositivo já registrado');
@@ -220,7 +189,7 @@ const PilarRastreadorNativo = () => {
     }
   };
 
-  // Use manually entered UUID
+  // Use manual UUID
   const useManualUuid = async () => {
     const trimmed = manualUuid.trim().toUpperCase();
     if (!trimmed) {
@@ -228,37 +197,26 @@ const PilarRastreadorNativo = () => {
       return;
     }
 
-    console.log('Searching for device UUID:', trimmed);
-
     try {
-      // Check if device exists with this UUID - query without RLS restrictions
       const { data: device, error } = await supabase
         .from('dispositivos_rastreamento')
         .select('*')
         .eq('device_uuid', trimmed)
         .maybeSingle();
 
-      console.log('Device search result:', { device, error });
-
       if (error) {
-        console.error('Query error:', error);
         toast.error(`Erro na busca: ${error.message}`);
         return;
       }
 
       if (!device) {
-        // Try case-insensitive search as fallback
-        const { data: devices, error: err2 } = await supabase
+        const { data: devices } = await supabase
           .from('dispositivos_rastreamento')
           .select('*')
           .ilike('device_uuid', trimmed);
         
-        console.log('Case-insensitive search result:', { devices, err2 });
-        
         if (devices && devices.length > 0) {
-          // Found with different case
-          const foundDevice = devices[0];
-          await applyDevice(foundDevice);
+          await applyDevice(devices[0]);
           return;
         }
         
@@ -276,7 +234,6 @@ const PilarRastreadorNativo = () => {
   const applyDevice = async (device: any) => {
     const uuid = device.device_uuid;
     
-    // Save the UUID
     try {
       await Preferences.set({ key: 'pilar_device_uuid', value: uuid });
     } catch (e) {
@@ -305,7 +262,6 @@ const PilarRastreadorNativo = () => {
     toast.success('ID aplicado com sucesso!');
   };
 
-  // Initialize device UUID and check status on mount
   useEffect(() => {
     const init = async () => {
       checkPermissions();
@@ -316,7 +272,6 @@ const PilarRastreadorNativo = () => {
     
     init();
     
-    // Battery API
     if ('getBattery' in navigator) {
       (navigator as any).getBattery().then((battery: any) => {
         setBatteryLevel(Math.round(battery.level * 100));
@@ -325,35 +280,38 @@ const PilarRastreadorNativo = () => {
         });
       });
     }
-  }, [initializeDeviceUuid]);
 
-  // Periodic status check (only after initialized)
-  useEffect(() => {
-    if (!isInitialized || !deviceUuid) return;
-    
-    const statusInterval = window.setInterval(() => checkDeviceStatus(), 30000);
-    return () => clearInterval(statusInterval);
-  }, [isInitialized, deviceUuid, checkDeviceStatus]);
-
-  // Online/offline detection
-  useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
       flushPendingPositions();
     };
     const handleOffline = () => setIsOnline(false);
-
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+
+    const handleBeforeInstall = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setCanInstall(true);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      stopTracking();
     };
-  }, []);
+  }, [initializeDeviceUuid]);
+
+  useEffect(() => {
+    if (!isInitialized || !deviceUuid) return;
+    const statusInterval = window.setInterval(() => checkDeviceStatus(), 30000);
+    return () => clearInterval(statusInterval);
+  }, [isInitialized, deviceUuid, checkDeviceStatus]);
 
   const checkPermissions = async () => {
     try {
-      // Check if we're in a native Capacitor environment
       const isNative = window.Capacitor?.isNativePlatform?.() ?? false;
       
       if (isNative) {
@@ -368,18 +326,15 @@ const PilarRastreadorNativo = () => {
         }
       }
       
-      // Web browser fallback - use Permissions API first
       if ('permissions' in navigator) {
         try {
           const result = await navigator.permissions.query({ name: 'geolocation' });
-          console.log('Geolocation permission status:', result.state);
           if (result.state === 'granted') return;
         } catch (e) {
           console.log('Permissions API not supported');
         }
       }
       
-      // If permission not yet granted, trigger the browser prompt
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
           () => console.log('Geolocation permission granted'),
@@ -389,12 +344,10 @@ const PilarRastreadorNativo = () => {
       }
     } catch (error) {
       console.error('Error checking permissions:', error);
-      // Don't show error toast - this is not critical, tracking will request permission when started
     }
   };
 
   const sendPosition = useCallback(async (position: Position) => {
-    // Get vehicle ID from device registration
     const { data: device } = await supabase
       .from('dispositivos_rastreamento')
       .select('veiculo_id')
@@ -406,7 +359,6 @@ const PilarRastreadorNativo = () => {
       return;
     }
 
-    // Fetch vehicle details
     const { data: veiculo } = await supabase
       .from('veiculos')
       .select('traccar_device_id, placa')
@@ -449,18 +401,14 @@ const PilarRastreadorNativo = () => {
       });
 
       if (response.ok) {
-        setStats(prev => ({
-          ...prev,
-          positionsSent: prev.positionsSent + 1,
-          lastSentTime: new Date()
-        }));
+        setTotalSent(prev => prev + 1);
+        setLastSentTime(new Date());
       } else {
         throw new Error('Failed to send');
       }
     } catch (error) {
       console.error('Error sending position:', error);
       pendingPositionsRef.current.push(payload);
-      setStats(prev => ({ ...prev, errors: prev.errors + 1 }));
     }
   }, [deviceUuid, isOnline, batteryLevel]);
 
@@ -480,11 +428,8 @@ const PilarRastreadorNativo = () => {
         });
 
         await fetch(`${TRACKING_ENDPOINT}?${params.toString()}`, { method: 'GET' });
-        setStats(prev => ({
-          ...prev,
-          positionsSent: prev.positionsSent + 1,
-          lastSentTime: new Date()
-        }));
+        setTotalSent(prev => prev + 1);
+        setLastSentTime(new Date());
       } catch (error) {
         console.error('Error flushing position:', error);
       }
@@ -501,24 +446,49 @@ const PilarRastreadorNativo = () => {
     }
 
     try {
-      const id = await Geolocation.watchPosition(
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        },
-        (position, err) => {
-          if (err) {
-            console.error('Watch error:', err);
-            return;
-          }
-          if (position) {
-            setCurrentPosition(position);
-          }
-        }
-      );
+      const isNative = window.Capacitor?.isNativePlatform?.() ?? false;
       
-      watchIdRef.current = id;
+      if (isNative) {
+        try {
+          watchIdRef.current = await Geolocation.watchPosition(
+            { enableHighAccuracy: true },
+            (position, err) => {
+              if (err) {
+                console.error('Watch error:', err);
+                return;
+              }
+              if (position) {
+                setCurrentPosition(position);
+              }
+            }
+          );
+        } catch (e) {
+          console.log('Capacitor watch failed, using web fallback');
+        }
+      }
+      
+      if (!watchIdRef.current && 'geolocation' in navigator) {
+        const webWatchId = navigator.geolocation.watchPosition(
+          (pos) => {
+            const position: Position = {
+              coords: {
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy,
+                altitude: pos.coords.altitude,
+                altitudeAccuracy: pos.coords.altitudeAccuracy,
+                heading: pos.coords.heading,
+                speed: pos.coords.speed
+              },
+              timestamp: pos.timestamp
+            };
+            setCurrentPosition(position);
+          },
+          (err) => console.error('Web geolocation error:', err),
+          { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+        );
+        watchIdRef.current = webWatchId.toString();
+      }
 
       intervalRef.current = window.setInterval(() => {
         if (currentPosition) {
@@ -526,15 +496,41 @@ const PilarRastreadorNativo = () => {
         }
       }, interval * 1000);
 
-      const initialPosition = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 10000
-      });
-      setCurrentPosition(initialPosition);
-      sendPosition(initialPosition);
+      // Send first position immediately
+      try {
+        const isNative = window.Capacitor?.isNativePlatform?.() ?? false;
+        if (isNative) {
+          const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+          setCurrentPosition(pos);
+          sendPosition(pos);
+        } else if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const position: Position = {
+                coords: {
+                  latitude: pos.coords.latitude,
+                  longitude: pos.coords.longitude,
+                  accuracy: pos.coords.accuracy,
+                  altitude: pos.coords.altitude,
+                  altitudeAccuracy: pos.coords.altitudeAccuracy,
+                  heading: pos.coords.heading,
+                  speed: pos.coords.speed
+                },
+                timestamp: pos.timestamp
+              };
+              setCurrentPosition(position);
+              sendPosition(position);
+            },
+            (err) => console.error('Get position error:', err),
+            { enableHighAccuracy: true }
+          );
+        }
+      } catch (e) {
+        console.error('Error getting initial position:', e);
+      }
 
       setIsTracking(true);
-      toast.success('Rastreamento iniciado!');
+      toast.success('Rastreamento iniciado');
     } catch (error) {
       console.error('Error starting tracking:', error);
       toast.error('Erro ao iniciar rastreamento');
@@ -543,443 +539,236 @@ const PilarRastreadorNativo = () => {
 
   const stopTracking = async () => {
     if (watchIdRef.current) {
-      await Geolocation.clearWatch({ id: watchIdRef.current });
+      try {
+        const isNative = window.Capacitor?.isNativePlatform?.() ?? false;
+        if (isNative) {
+          await Geolocation.clearWatch({ id: watchIdRef.current });
+        } else {
+          navigator.geolocation.clearWatch(parseInt(watchIdRef.current));
+        }
+      } catch (e) {
+        console.log('Error clearing watch:', e);
+      }
       watchIdRef.current = null;
     }
+
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+
     setIsTracking(false);
-    toast.info('Rastreamento parado');
   };
 
-  // Test button - send current location manually
-  const sendTestLocation = async () => {
-    try {
-      toast.info('Obtendo localização...');
-      
-      const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 15000
-      });
-      
-      setCurrentPosition(position);
-      
-      // Get vehicle ID from device registration
-      const { data: device } = await supabase
-        .from('dispositivos_rastreamento')
-        .select('veiculo_id')
-        .eq('device_uuid', deviceUuid)
-        .single();
-
-      if (!device?.veiculo_id) {
-        toast.error('Dispositivo não está vinculado a um veículo');
-        return;
+  const installPWA = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        toast.success('App instalado com sucesso!');
       }
-
-      // Fetch vehicle details
-      const { data: veiculo } = await supabase
-        .from('veiculos')
-        .select('traccar_device_id, placa')
-        .eq('id', device.veiculo_id)
-        .single();
-
-      const vehicleId = veiculo?.traccar_device_id || veiculo?.placa || device.veiculo_id;
-
-      const params = new URLSearchParams({
-        id: vehicleId,
-        lat: position.coords.latitude.toString(),
-        lon: position.coords.longitude.toString(),
-        speed: (position.coords.speed || 0).toString(),
-        bearing: (position.coords.heading || 0).toString(),
-        timestamp: Math.floor(position.timestamp / 1000).toString()
-      });
-
-      const response = await fetch(`${TRACKING_ENDPOINT}?${params.toString()}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      if (response.ok) {
-        setStats(prev => ({
-          ...prev,
-          positionsSent: prev.positionsSent + 1,
-          lastSentTime: new Date()
-        }));
-        toast.success('Localização enviada com sucesso!');
-      } else {
-        throw new Error('Falha ao enviar');
-      }
-    } catch (error) {
-      console.error('Error sending test location:', error);
-      toast.error('Erro ao enviar localização de teste');
-      setStats(prev => ({ ...prev, errors: prev.errors + 1 }));
+      setDeferredPrompt(null);
+      setCanInstall(false);
     }
-  };
-
-  const formatSpeed = (speed: number | null) => {
-    if (!speed) return '0 km/h';
-    return `${Math.round(speed * 3.6)} km/h`;
-  };
-
-  const formatTime = (date: Date | null) => {
-    if (!date) return '--:--:--';
-    return date.toLocaleTimeString('pt-BR');
-  };
-
-  // Force re-check device status
-  const forceCheckStatus = async () => {
-    setDeviceStatus('checking');
-    await checkDeviceStatus();
-    toast.info('Status atualizado');
   };
 
   const getStatusBadge = () => {
     switch (deviceStatus) {
       case 'checking':
-        return <Badge className="bg-gray-500"><Loader2 className="w-3 h-3 mr-1 animate-spin" />Verificando...</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-500"><AlertCircle className="w-3 h-3 mr-1" />Aguardando liberação</Badge>;
+        return <Badge variant="secondary"><Loader2 className="h-3 w-3 mr-1 animate-spin" />Verificando...</Badge>;
       case 'approved':
-        return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Liberado</Badge>;
+        return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Liberado</Badge>;
+      case 'pending':
+        return <Badge variant="secondary" className="bg-yellow-500 text-white"><AlertCircle className="h-3 w-3 mr-1" />Aguardando liberação</Badge>;
       case 'blocked':
-        return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" />Bloqueado</Badge>;
+        return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Bloqueado</Badge>;
       default:
-        return <Badge variant="secondary"><AlertCircle className="w-3 h-3 mr-1" />Não registrado</Badge>;
+        return <Badge variant="outline"><AlertCircle className="h-3 w-3 mr-1" />Não registrado</Badge>;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white">
-      {/* Header */}
-      <div className="bg-black/20 backdrop-blur-sm p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center">
-            <Navigation className="w-6 h-6" />
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/10 p-4">
+      <div className="max-w-md mx-auto space-y-4">
+        {/* Header */}
+        <div className="text-center pt-4 pb-2">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground mb-3 shadow-lg">
+            <Navigation className="h-8 w-8" />
           </div>
-          <div>
-            <h1 className="font-bold text-lg">Pilar Rastreador</h1>
-            <p className="text-xs text-white/60">
-              {veiculoNome || deviceUuid}
-            </p>
-          </div>
+          <h1 className="text-2xl font-bold">Pilar Rastreador</h1>
+          <p className="text-muted-foreground text-sm">GPS Tracker para Logística</p>
         </div>
-        <div className="flex items-center gap-2">
-          {batteryLevel !== null && (
-            <Badge variant="outline" className="border-white/20 text-white/80">
-              <Battery className="w-3 h-3 mr-1" />
-              {batteryLevel}%
-            </Badge>
-          )}
-          <Badge variant={isOnline ? "default" : "destructive"} className={isOnline ? "bg-green-500" : ""}>
-            {isOnline ? <Wifi className="w-3 h-3 mr-1" /> : <WifiOff className="w-3 h-3 mr-1" />}
-            {isOnline ? 'Online' : 'Offline'}
-          </Badge>
-        </div>
-      </div>
 
-      <div className="p-4 space-y-4">
-        {/* Status Card */}
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-          <CardContent className="pt-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-white/80 text-sm">Status do Dispositivo</span>
+        {/* Device Status Card */}
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                {getStatusBadge()}
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={forceCheckStatus}
-                  className="h-6 w-6 p-0 text-white/60 hover:text-white hover:bg-white/10"
-                >
-                  <RefreshCw className={`w-4 h-4 ${deviceStatus === 'checking' ? 'animate-spin' : ''}`} />
-                </Button>
+                {isOnline ? (
+                  <Badge variant="default" className="bg-green-500">
+                    <Wifi className="h-3 w-3 mr-1" />Online
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">
+                    <WifiOff className="h-3 w-3 mr-1" />Offline
+                  </Badge>
+                )}
               </div>
+              {getStatusBadge()}
             </div>
-            <div className="text-xs text-white/50 font-mono bg-black/20 px-2 py-1 rounded">
-              ID: {deviceUuid || 'Gerando...'}
-            </div>
-            {veiculoNome && (
-              <div className="text-sm text-white/60">
-                Veículo: <span className="text-white font-medium">{veiculoNome}</span>
+
+            {/* Show UUID */}
+            {deviceUuid && (
+              <div className="bg-muted/50 rounded-lg p-2 mb-4 border">
+                <p className="text-muted-foreground text-xs">ID do dispositivo:</p>
+                <p className="font-mono text-sm">{deviceUuid}</p>
               </div>
             )}
-            
-            {/* Always show manual UUID input option when not approved */}
-            {deviceStatus !== 'approved' && !showManualInput && (
-              <Button 
-                onClick={() => setShowManualInput(true)} 
-                size="sm"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2"
-              >
-                Inserir ID manualmente
-              </Button>
-            )}
-            
-            {/* Manual UUID Input - inline */}
-            {showManualInput && (
-              <div className="space-y-2 pt-2 border-t border-white/20">
-                <Label className="text-white/80 text-xs">ID do Dispositivo Aprovado</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={manualUuid}
-                    onChange={(e) => setManualUuid(e.target.value.toUpperCase())}
-                    placeholder="DEV-XXXXXXXX"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 font-mono text-sm flex-1"
-                  />
-                  <Button onClick={useManualUuid} size="sm" className="bg-green-500 hover:bg-green-600 text-white">
-                    OK
-                  </Button>
-                  <Button 
-                    onClick={() => setShowManualInput(false)} 
-                    size="sm"
-                    className="bg-red-500/80 hover:bg-red-600 text-white"
-                  >
-                    ✕
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Registration Form - only show if not registered */}
-        {deviceStatus === 'not_registered' && (
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white text-base flex items-center gap-2">
-                <Smartphone className="w-5 h-5" />
-                {showManualInput ? 'Usar ID Existente' : 'Registrar Dispositivo'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Show current UUID for debugging */}
-              {deviceUuid && (
-                <div className="bg-white/5 rounded p-2 border border-white/10">
-                  <p className="text-white/50 text-xs">ID atual deste celular:</p>
-                  <p className="text-white/80 font-mono text-sm">{deviceUuid}</p>
-                </div>
-              )}
-              
-              {!showManualInput ? (
-                <>
-                  <p className="text-white/70 text-sm">
-                    Este dispositivo ainda não está registrado. Registre como novo ou use um ID já aprovado.
-                  </p>
-                  <div className="space-y-2">
-                    <Label className="text-white/80">Nome do Dispositivo</Label>
-                    <Input
-                      value={nomeDispositivo}
-                      onChange={(e) => setNomeDispositivo(e.target.value)}
-                      placeholder="Ex: Celular do João"
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                    />
-                  </div>
-                  <Button onClick={registerDevice} className="w-full bg-green-500 hover:bg-green-600 text-white">
-                    Registrar Novo Dispositivo
-                  </Button>
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-white/20" />
-                    </div>
-                    <div className="relative flex justify-center text-xs">
-                      <span className="bg-transparent px-2 text-white/50">ou</span>
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={() => setShowManualInput(true)} 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Já tenho um ID registrado
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <p className="text-white/70 text-sm">
-                    Digite o ID do dispositivo que já foi registrado anteriormente (ex: DEV-EFD3468F)
-                  </p>
-                  <div className="space-y-2">
-                    <Label className="text-white/80">ID do Dispositivo</Label>
-                    <Input
-                      value={manualUuid}
-                      onChange={(e) => setManualUuid(e.target.value.toUpperCase())}
-                      placeholder="DEV-XXXXXXXX"
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 font-mono"
-                    />
-                  </div>
-                  <Button onClick={useManualUuid} className="w-full bg-green-500 hover:bg-green-600 text-white">
-                    Usar este ID
-                  </Button>
-                  <Button 
-                    onClick={() => setShowManualInput(false)} 
-                    className="w-full bg-gray-600 hover:bg-gray-700 text-white"
-                  >
-                    Voltar
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Pending Message */}
-        {deviceStatus === 'pending' && (
-          <Card className="bg-yellow-500/20 backdrop-blur-sm border-yellow-500/30">
-            <CardContent className="pt-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-6 h-6 text-yellow-400 flex-shrink-0" />
-                <div>
-                  <p className="text-white font-medium">Aguardando Liberação</p>
-                  <p className="text-white/70 text-sm mt-1">
-                    O administrador precisa aprovar este dispositivo e vinculá-lo a um veículo antes de iniciar o rastreamento.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Blocked Message */}
-        {deviceStatus === 'blocked' && (
-          <Card className="bg-red-500/20 backdrop-blur-sm border-red-500/30">
-            <CardContent className="pt-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0" />
-                <div>
-                  <p className="text-white font-medium">Dispositivo Bloqueado</p>
-                  <p className="text-white/70 text-sm mt-1">
-                    Este dispositivo foi bloqueado pelo administrador. Entre em contato para mais informações.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Main Control Button - only for approved devices */}
-        {deviceStatus === 'approved' && (
-          <>
-            <div className="flex justify-center py-6">
-              <button
-                onClick={isTracking ? stopTracking : startTracking}
-                className={`w-40 h-40 rounded-full flex flex-col items-center justify-center gap-2 transition-all shadow-2xl ${
-                  isTracking 
-                    ? 'bg-gradient-to-br from-red-500 to-red-700 animate-pulse' 
-                    : 'bg-gradient-to-br from-green-400 to-green-600 hover:from-green-500 hover:to-green-700'
-                }`}
-              >
-                {isTracking ? (
+            {/* Not Registered State */}
+            {deviceStatus === 'not_registered' && (
+              <div className="space-y-4">
+                {!showManualInput ? (
                   <>
-                    <Square className="w-12 h-12" />
-                    <span className="font-bold">PARAR</span>
+                    <p className="text-muted-foreground text-sm">
+                      Este dispositivo ainda não está registrado. Registre como novo ou use um ID já aprovado.
+                    </p>
+                    <div className="space-y-2">
+                      <Label>Nome do Dispositivo</Label>
+                      <Input
+                        value={nomeDispositivo}
+                        onChange={(e) => setNomeDispositivo(e.target.value)}
+                        placeholder="Ex: Celular do João"
+                      />
+                    </div>
+                    <Button onClick={registerDevice} className="w-full">
+                      Registrar Novo Dispositivo
+                    </Button>
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs">
+                        <span className="bg-background px-2 text-muted-foreground">ou</span>
+                      </div>
+                    </div>
+                    <Button variant="outline" onClick={() => setShowManualInput(true)} className="w-full">
+                      Já tenho um ID registrado
+                    </Button>
                   </>
                 ) : (
                   <>
-                    <Play className="w-12 h-12 ml-2" />
-                    <span className="font-bold">INICIAR</span>
+                    <div className="space-y-2">
+                      <Label>ID do Dispositivo</Label>
+                      <Input
+                        value={manualUuid}
+                        onChange={(e) => setManualUuid(e.target.value)}
+                        placeholder="DEV-XXXXXXXX"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={useManualUuid} className="flex-1">OK</Button>
+                      <Button variant="outline" onClick={() => { setShowManualInput(false); setManualUuid(''); }}>
+                        Cancelar
+                      </Button>
+                    </div>
                   </>
                 )}
-              </button>
-            </div>
-
-            {/* Test Button */}
-            <div className="flex justify-center">
-              <Button 
-                onClick={sendTestLocation}
-                variant="outline"
-                className="border-white/30 text-white hover:bg-white/10"
-              >
-                <SendHorizonal className="w-4 h-4 mr-2" />
-                Enviar Localização de Teste
-              </Button>
-            </div>
-
-            {/* Current Position */}
-            {currentPosition && (
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-white text-sm flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-green-400" />
-                    Posição Atual
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <p className="text-xs text-white/60">Latitude</p>
-                      <p className="font-mono text-sm">{currentPosition.coords.latitude.toFixed(6)}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs text-white/60">Longitude</p>
-                      <p className="font-mono text-sm">{currentPosition.coords.longitude.toFixed(6)}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs text-white/60">Velocidade</p>
-                      <p className="font-mono text-sm flex items-center gap-1">
-                        <Gauge className="w-3 h-3" />
-                        {formatSpeed(currentPosition.coords.speed)}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs text-white/60">Precisão</p>
-                      <p className="font-mono text-sm flex items-center gap-1">
-                        <Signal className="w-3 h-3" />
-                        {Math.round(currentPosition.coords.accuracy)}m
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              </div>
             )}
 
-            {/* Stats */}
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-white text-sm flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  Estatísticas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-2xl font-bold text-green-400">{stats.positionsSent}</p>
-                    <p className="text-xs text-white/60">Enviadas</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-yellow-400">{pendingPositionsRef.current.length}</p>
-                    <p className="text-xs text-white/60">Pendentes</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-red-400">{stats.errors}</p>
-                    <p className="text-xs text-white/60">Erros</p>
-                  </div>
-                </div>
-                <div className="mt-4 text-center text-xs text-white/60">
-                  Último envio: {formatTime(stats.lastSentTime)}
-                </div>
-              </CardContent>
-            </Card>
+            {/* Pending State */}
+            {deviceStatus === 'pending' && (
+              <div className="text-center py-4">
+                <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-2" />
+                <p className="font-medium">Aguardando liberação</p>
+                <p className="text-sm text-muted-foreground">
+                  Um administrador precisa aprovar este dispositivo.
+                </p>
+                <Button variant="outline" size="sm" onClick={() => checkDeviceStatus()} className="mt-3">
+                  <RefreshCw className="h-4 w-4 mr-2" />Verificar status
+                </Button>
+              </div>
+            )}
 
-            {/* Config Panel */}
-            <Collapsible open={showConfig} onOpenChange={setShowConfig}>
-              <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="pb-2 cursor-pointer">
-                    <CardTitle className="text-white text-sm flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Settings className="w-4 h-4" />
-                        Configuração
+            {/* Blocked State */}
+            {deviceStatus === 'blocked' && (
+              <div className="text-center py-4">
+                <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-2" />
+                <p className="font-medium">Dispositivo bloqueado</p>
+                <p className="text-sm text-muted-foreground">
+                  Entre em contato com o administrador.
+                </p>
+              </div>
+            )}
+
+            {/* Approved State */}
+            {deviceStatus === 'approved' && (
+              <>
+                {veiculoNome && (
+                  <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 mb-4 border border-green-200 dark:border-green-800">
+                    <p className="text-xs text-green-600 dark:text-green-400">Veículo vinculado:</p>
+                    <p className="font-medium text-green-700 dark:text-green-300">{veiculoNome}</p>
+                  </div>
+                )}
+
+                {currentPosition && (
+                  <div className="bg-muted/50 rounded-lg p-3 mb-4 space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <span className="font-mono text-xs">
+                        {currentPosition.coords.latitude.toFixed(6)}, {currentPosition.coords.longitude.toFixed(6)}
+                      </span>
+                    </div>
+                    {currentPosition.coords.accuracy && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Signal className="h-3 w-3" />
+                        Precisão: {currentPosition.coords.accuracy.toFixed(0)}m
                       </div>
-                      {showConfig ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </CardTitle>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-white/80">Intervalo de envio: {interval}s</Label>
+                    )}
+                    {currentPosition.coords.speed !== null && (
+                      <div className="text-xs text-muted-foreground">
+                        Velocidade: {((currentPosition.coords.speed || 0) * 3.6).toFixed(1)} km/h
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-muted/30 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-primary">{totalSent}</div>
+                    <div className="text-xs text-muted-foreground">Posições enviadas</div>
+                  </div>
+                  <div className="bg-muted/30 rounded-lg p-3 text-center">
+                    <div className="text-sm font-medium">
+                      {lastSentTime ? lastSentTime.toLocaleTimeString() : '--:--:--'}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Último envio</div>
+                  </div>
+                </div>
+
+                <Button 
+                  className="w-full h-14 text-lg"
+                  variant={isTracking ? "destructive" : "default"}
+                  onClick={isTracking ? stopTracking : startTracking}
+                >
+                  {isTracking ? (
+                    <><Square className="h-5 w-5 mr-2" />Parar Rastreamento</>
+                  ) : (
+                    <><Play className="h-5 w-5 mr-2" />Iniciar Rastreamento</>
+                  )}
+                </Button>
+
+                <Collapsible open={showConfig} onOpenChange={setShowConfig} className="mt-4">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Configurações
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-4 space-y-4">
+                    <div>
+                      <Label>Intervalo de envio: {interval}s</Label>
                       <Slider
                         value={[interval]}
                         onValueChange={(v) => setIntervalValue(v[0])}
@@ -987,23 +776,41 @@ const PilarRastreadorNativo = () => {
                         max={120}
                         step={5}
                         disabled={isTracking}
-                        className="py-2"
+                        className="mt-2"
                       />
                     </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          </>
-        )}
-      </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black/30 backdrop-blur-sm p-4 text-center">
-        <p className="text-xs text-white/40">
-          <Smartphone className="w-3 h-3 inline mr-1" />
-          Pilar Rastreador v2.0 • ID: {deviceUuid}
-        </p>
+        {/* Install PWA */}
+        {canInstall && (
+          <Card className="border-primary/50 bg-primary/5">
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Download className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium text-sm">Instalar App</div>
+                  <div className="text-xs text-muted-foreground">
+                    Adicione à tela inicial para acesso rápido
+                  </div>
+                </div>
+                <Button size="sm" onClick={installPWA}>Instalar</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Footer */}
+        <div className="text-center text-xs text-muted-foreground pb-4">
+          <p>Pilar Rastreador v2.0</p>
+          <p>Sistema de Logística Pilar</p>
+        </div>
       </div>
     </div>
   );
