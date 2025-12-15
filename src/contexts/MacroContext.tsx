@@ -52,6 +52,11 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
+function isValidUUID(id: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}
+
 export function MacroProvider({ children }: { children: ReactNode }) {
   const [macros, setMacros] = useState<Macro[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -206,24 +211,24 @@ export function MacroProvider({ children }: { children: ReactNode }) {
 
   // Deletar macro
   const deleteMacro = useCallback(async (id: string) => {
-    try {
-      if (userInfo) {
+    // Primeiro remove localmente para evitar estados inconsistentes
+    const updatedMacros = macros.filter(m => m.id !== id);
+    setMacros(updatedMacros);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMacros));
+
+    // Só tenta deletar no Supabase se for UUID válido
+    if (userInfo && isValidUUID(id)) {
+      try {
         const { error } = await supabase.from('user_macros').delete().eq('id', id);
         if (error) {
-          console.error('Erro ao deletar macro:', error);
-          toast.error('Erro ao deletar macro no servidor');
-          // Continua para deletar localmente mesmo se falhar no servidor
+          console.error('Erro ao deletar macro no servidor:', error);
         }
+      } catch (err) {
+        console.error('Erro inesperado ao deletar macro:', err);
       }
-
-      const updatedMacros = macros.filter(m => m.id !== id);
-      setMacros(updatedMacros);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMacros));
-      toast.success('Macro excluída');
-    } catch (err) {
-      console.error('Erro inesperado ao deletar macro:', err);
-      toast.error('Erro ao excluir macro');
     }
+
+    toast.success('Macro excluída');
   }, [macros, userInfo]);
 
   // Duplicar macro
