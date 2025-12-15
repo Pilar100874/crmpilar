@@ -218,45 +218,81 @@ const PilarRastreadorNativo = () => {
       return;
     }
 
+    console.log('Searching for device UUID:', trimmed);
+
     try {
-      // Check if device exists with this UUID
-      const { data: device } = await supabase
+      // Check if device exists with this UUID - query without RLS restrictions
+      const { data: device, error } = await supabase
         .from('dispositivos_rastreamento')
         .select('*')
         .eq('device_uuid', trimmed)
         .maybeSingle();
 
-      if (!device) {
-        toast.error('Dispositivo não encontrado com este ID');
+      console.log('Device search result:', { device, error });
+
+      if (error) {
+        console.error('Query error:', error);
+        toast.error(`Erro na busca: ${error.message}`);
         return;
       }
 
-      // Save the UUID
-      await Preferences.set({ key: 'pilar_device_uuid', value: trimmed });
-      localStorage.setItem('pilar_device_uuid', trimmed);
-      
-      setDeviceUuid(trimmed);
-      setDeviceStatus(device.status as DeviceStatus);
-      setNomeDispositivo(device.nome_dispositivo || '');
-      setShowManualInput(false);
-      
-      if (device.veiculo_id) {
-        const { data: veiculo } = await supabase
-          .from('veiculos')
-          .select('placa, descricao')
-          .eq('id', device.veiculo_id)
-          .single();
+      if (!device) {
+        // Try case-insensitive search as fallback
+        const { data: devices, error: err2 } = await supabase
+          .from('dispositivos_rastreamento')
+          .select('*')
+          .ilike('device_uuid', trimmed);
         
-        if (veiculo) {
-          setVeiculoNome(`${veiculo.placa} - ${veiculo.descricao || ''}`);
+        console.log('Case-insensitive search result:', { devices, err2 });
+        
+        if (devices && devices.length > 0) {
+          // Found with different case
+          const foundDevice = devices[0];
+          await applyDevice(foundDevice);
+          return;
         }
+        
+        toast.error(`Dispositivo não encontrado: ${trimmed}`);
+        return;
       }
-      
-      toast.success('ID aplicado com sucesso!');
+
+      await applyDevice(device);
     } catch (error) {
       console.error('Error applying manual UUID:', error);
       toast.error('Erro ao aplicar ID');
     }
+  };
+
+  const applyDevice = async (device: any) => {
+    const uuid = device.device_uuid;
+    
+    // Save the UUID
+    try {
+      await Preferences.set({ key: 'pilar_device_uuid', value: uuid });
+    } catch (e) {
+      console.log('Preferences.set failed, using localStorage');
+    }
+    localStorage.setItem('pilar_device_uuid', uuid);
+    
+    setDeviceUuid(uuid);
+    setDeviceStatus(device.status as DeviceStatus);
+    setNomeDispositivo(device.nome_dispositivo || '');
+    setShowManualInput(false);
+    setManualUuid('');
+    
+    if (device.veiculo_id) {
+      const { data: veiculo } = await supabase
+        .from('veiculos')
+        .select('placa, descricao')
+        .eq('id', device.veiculo_id)
+        .single();
+      
+      if (veiculo) {
+        setVeiculoNome(`${veiculo.placa} - ${veiculo.descricao || ''}`);
+      }
+    }
+    
+    toast.success('ID aplicado com sucesso!');
   };
 
   // Initialize device UUID and check status on mount
