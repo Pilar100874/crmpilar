@@ -856,35 +856,39 @@ export default function MacrosPage() {
 
 
       {/* Dialog de confirmação de exclusão */}
-      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => { if (!open) setDeleteConfirmId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Macro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita. A macro será permanentemente excluída.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteConfirmId(null)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                const idToDelete = deleteConfirmId;
-                // Limpar todos os estados ANTES de fechar o dialog
-                setSelectedMacro(null);
-                setEditingMacro(null);
-                setEditingStep(null);
-                setDeleteConfirmId(null);
-                if (idToDelete) {
-                  await deleteMacro(idToDelete);
-                }
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {deleteConfirmId && (
+        <AlertDialog open={true} onOpenChange={() => setDeleteConfirmId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir Macro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita. A macro será permanentemente excluída.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  const idToDelete = deleteConfirmId;
+                  setSelectedMacro(null);
+                  setEditingMacro(null);
+                  setEditingStep(null);
+                  setDeleteConfirmId(null);
+                  // Executa a deleção após fechar o dialog
+                  setTimeout(() => {
+                    if (idToDelete) {
+                      deleteMacro(idToDelete);
+                    }
+                  }, 50);
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       {/* Dialog de importação */}
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
