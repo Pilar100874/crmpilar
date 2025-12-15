@@ -50,6 +50,16 @@ interface TrackingStats {
 
 type DeviceStatus = 'checking' | 'pending' | 'approved' | 'blocked' | 'not_registered';
 
+// Map database status (Portuguese) to internal status (English)
+const mapDbStatusToInternal = (dbStatus: string): DeviceStatus => {
+  switch (dbStatus) {
+    case 'aprovado': return 'approved';
+    case 'pendente': return 'pending';
+    case 'bloqueado': return 'blocked';
+    default: return 'not_registered';
+  }
+};
+
 const PilarRastreadorNativo = () => {
   const [deviceUuid, setDeviceUuid] = useState('');
   const [deviceStatus, setDeviceStatus] = useState<DeviceStatus>('checking');
@@ -128,7 +138,7 @@ const PilarRastreadorNativo = () => {
 
       if (device) {
         console.log('Device found with status:', device.status);
-        setDeviceStatus(device.status as DeviceStatus);
+        setDeviceStatus(mapDbStatusToInternal(device.status));
         setNomeDispositivo(device.nome_dispositivo || '');
         
         // Fetch vehicle info if linked
@@ -176,7 +186,7 @@ const PilarRastreadorNativo = () => {
 
       if (existingDevice) {
         // Device already exists, just update status display
-        setDeviceStatus(existingDevice.status as DeviceStatus);
+        setDeviceStatus(mapDbStatusToInternal(existingDevice.status));
         toast.info('Dispositivo já está registrado');
         return;
       }
@@ -275,7 +285,7 @@ const PilarRastreadorNativo = () => {
     localStorage.setItem('pilar_device_uuid', uuid);
     
     setDeviceUuid(uuid);
-    setDeviceStatus(device.status as DeviceStatus);
+    setDeviceStatus(mapDbStatusToInternal(device.status));
     setNomeDispositivo(device.nome_dispositivo || '');
     setShowManualInput(false);
     setManualUuid('');
