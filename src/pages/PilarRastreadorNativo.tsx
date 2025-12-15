@@ -31,7 +31,8 @@ import {
   ChevronUp,
   AlertCircle,
   CheckCircle,
-  Loader2
+  Loader2,
+  SendHorizonal
 } from "lucide-react";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -415,6 +416,70 @@ const PilarRastreadorNativo = () => {
     toast.info('Rastreamento parado');
   };
 
+  // Test button - send current location manually
+  const sendTestLocation = async () => {
+    try {
+      toast.info('Obtendo localização...');
+      
+      const position = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 15000
+      });
+      
+      setCurrentPosition(position);
+      
+      // Get vehicle ID from device registration
+      const { data: device } = await supabase
+        .from('dispositivos_rastreamento')
+        .select('veiculo_id')
+        .eq('device_uuid', deviceUuid)
+        .single();
+
+      if (!device?.veiculo_id) {
+        toast.error('Dispositivo não está vinculado a um veículo');
+        return;
+      }
+
+      // Fetch vehicle details
+      const { data: veiculo } = await supabase
+        .from('veiculos')
+        .select('traccar_device_id, placa')
+        .eq('id', device.veiculo_id)
+        .single();
+
+      const vehicleId = veiculo?.traccar_device_id || veiculo?.placa || device.veiculo_id;
+
+      const params = new URLSearchParams({
+        id: vehicleId,
+        lat: position.coords.latitude.toString(),
+        lon: position.coords.longitude.toString(),
+        speed: (position.coords.speed || 0).toString(),
+        bearing: (position.coords.heading || 0).toString(),
+        timestamp: Math.floor(position.timestamp / 1000).toString()
+      });
+
+      const response = await fetch(`${TRACKING_ENDPOINT}?${params.toString()}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        setStats(prev => ({
+          ...prev,
+          positionsSent: prev.positionsSent + 1,
+          lastSentTime: new Date()
+        }));
+        toast.success('Localização enviada com sucesso!');
+      } else {
+        throw new Error('Falha ao enviar');
+      }
+    } catch (error) {
+      console.error('Error sending test location:', error);
+      toast.error('Erro ao enviar localização de teste');
+      setStats(prev => ({ ...prev, errors: prev.errors + 1 }));
+    }
+  };
+
   const formatSpeed = (speed: number | null) => {
     if (!speed) return '0 km/h';
     return `${Math.round(speed * 3.6)} km/h`;
@@ -572,6 +637,18 @@ const PilarRastreadorNativo = () => {
                   </>
                 )}
               </button>
+            </div>
+
+            {/* Test Button */}
+            <div className="flex justify-center">
+              <Button 
+                onClick={sendTestLocation}
+                variant="outline"
+                className="border-white/30 text-white hover:bg-white/10"
+              >
+                <SendHorizonal className="w-4 h-4 mr-2" />
+                Enviar Localização de Teste
+              </Button>
             </div>
 
             {/* Current Position */}
