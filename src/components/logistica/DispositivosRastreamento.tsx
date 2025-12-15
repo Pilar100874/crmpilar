@@ -327,15 +327,15 @@ const DispositivosRastreamento: React.FC<DispositivosRastreamentoProps> = ({ est
                       </TableCell>
                       <TableCell>
                         <Select 
-                          value={disp.veiculo_id || ''} 
-                          onValueChange={(value) => vincularVeiculo(disp.id, value || null)}
+                          value={disp.veiculo_id || '__none__'} 
+                          onValueChange={(value) => vincularVeiculo(disp.id, value === '__none__' ? null : value)}
                           disabled={saving === disp.id}
                         >
                           <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="Vincular veículo" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Nenhum</SelectItem>
+                            <SelectItem value="__none__">Nenhum</SelectItem>
                             {veiculos.map((v) => (
                               <SelectItem key={v.id} value={v.id}>
                                 {v.placa} {v.descricao ? `- ${v.descricao}` : ''}
