@@ -1,11 +1,11 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.1afb47beda3540dfa390d0f257cc5ab1',
-  appName: 'crmpilar',
+  appId: 'app.lovable.pilar.rastreador',
+  appName: 'Pilar Rastreador',
   webDir: 'dist',
   server: {
-    url: 'https://1afb47be-da35-40df-a390-d0f257cc5ab1.lovableproject.com?forceHideBadge=true',
+    url: 'https://1afb47be-da35-40df-a390-d0f257cc5ab1.lovableproject.com/pilar-rastreador-nativo?forceHideBadge=true',
     cleartext: true
   },
   plugins: {
