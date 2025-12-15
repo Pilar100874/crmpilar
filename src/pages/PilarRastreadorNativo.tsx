@@ -700,9 +700,8 @@ const PilarRastreadorNativo = () => {
             {deviceStatus !== 'approved' && !showManualInput && (
               <Button 
                 onClick={() => setShowManualInput(true)} 
-                variant="outline"
                 size="sm"
-                className="w-full border-white/30 text-white hover:bg-white/10 mt-2"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2"
               >
                 Inserir ID manualmente
               </Button>
@@ -719,14 +718,13 @@ const PilarRastreadorNativo = () => {
                     placeholder="DEV-XXXXXXXX"
                     className="bg-white/10 border-white/20 text-white placeholder:text-white/40 font-mono text-sm flex-1"
                   />
-                  <Button onClick={useManualUuid} size="sm" className="bg-green-500 hover:bg-green-600">
+                  <Button onClick={useManualUuid} size="sm" className="bg-green-500 hover:bg-green-600 text-white">
                     OK
                   </Button>
                   <Button 
                     onClick={() => setShowManualInput(false)} 
                     size="sm"
-                    variant="ghost"
-                    className="text-white/60 hover:text-white"
+                    className="bg-red-500/80 hover:bg-red-600 text-white"
                   >
                     ✕
                   </Button>
@@ -760,7 +758,7 @@ const PilarRastreadorNativo = () => {
                       className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
                     />
                   </div>
-                  <Button onClick={registerDevice} className="w-full bg-green-500 hover:bg-green-600">
+                  <Button onClick={registerDevice} className="w-full bg-green-500 hover:bg-green-600 text-white">
                     Registrar Novo Dispositivo
                   </Button>
                   <div className="relative">
@@ -773,8 +771,7 @@ const PilarRastreadorNativo = () => {
                   </div>
                   <Button 
                     onClick={() => setShowManualInput(true)} 
-                    variant="outline"
-                    className="w-full border-white/30 text-white hover:bg-white/10"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     Já tenho um ID registrado
                   </Button>
@@ -793,13 +790,12 @@ const PilarRastreadorNativo = () => {
                       className="bg-white/10 border-white/20 text-white placeholder:text-white/40 font-mono"
                     />
                   </div>
-                  <Button onClick={useManualUuid} className="w-full bg-green-500 hover:bg-green-600">
+                  <Button onClick={useManualUuid} className="w-full bg-green-500 hover:bg-green-600 text-white">
                     Usar este ID
                   </Button>
                   <Button 
                     onClick={() => setShowManualInput(false)} 
-                    variant="outline"
-                    className="w-full border-white/30 text-white hover:bg-white/10"
+                    className="w-full bg-gray-600 hover:bg-gray-700 text-white"
                   >
                     Voltar
                   </Button>
