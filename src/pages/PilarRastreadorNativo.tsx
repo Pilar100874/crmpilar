@@ -66,6 +66,8 @@ const PilarRastreadorNativo = () => {
   });
   const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
   const [nomeDispositivo, setNomeDispositivo] = useState('');
+  const [manualUuid, setManualUuid] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
   
   const watchIdRef = useRef<string | null>(null);
   const pendingPositionsRef = useRef<any[]>([]);
@@ -205,6 +207,55 @@ const PilarRastreadorNativo = () => {
     } catch (error) {
       console.error('Error registering device:', error);
       toast.error('Erro ao registrar dispositivo');
+    }
+  };
+
+  // Use manually entered UUID
+  const useManualUuid = async () => {
+    const trimmed = manualUuid.trim().toUpperCase();
+    if (!trimmed) {
+      toast.error('Digite o ID do dispositivo');
+      return;
+    }
+
+    try {
+      // Check if device exists with this UUID
+      const { data: device } = await supabase
+        .from('dispositivos_rastreamento')
+        .select('*')
+        .eq('device_uuid', trimmed)
+        .maybeSingle();
+
+      if (!device) {
+        toast.error('Dispositivo não encontrado com este ID');
+        return;
+      }
+
+      // Save the UUID
+      await Preferences.set({ key: 'pilar_device_uuid', value: trimmed });
+      localStorage.setItem('pilar_device_uuid', trimmed);
+      
+      setDeviceUuid(trimmed);
+      setDeviceStatus(device.status as DeviceStatus);
+      setNomeDispositivo(device.nome_dispositivo || '');
+      setShowManualInput(false);
+      
+      if (device.veiculo_id) {
+        const { data: veiculo } = await supabase
+          .from('veiculos')
+          .select('placa, descricao')
+          .eq('id', device.veiculo_id)
+          .single();
+        
+        if (veiculo) {
+          setVeiculoNome(`${veiculo.placa} - ${veiculo.descricao || ''}`);
+        }
+      }
+      
+      toast.success('ID aplicado com sucesso!');
+    } catch (error) {
+      console.error('Error applying manual UUID:', error);
+      toast.error('Erro ao aplicar ID');
     }
   };
 
@@ -617,25 +668,69 @@ const PilarRastreadorNativo = () => {
             <CardHeader>
               <CardTitle className="text-white text-base flex items-center gap-2">
                 <Smartphone className="w-5 h-5" />
-                Registrar Dispositivo
+                {showManualInput ? 'Usar ID Existente' : 'Registrar Dispositivo'}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-white/70 text-sm">
-                Este dispositivo ainda não está registrado. Digite um nome para identificá-lo e aguarde a liberação do administrador.
-              </p>
-              <div className="space-y-2">
-                <Label className="text-white/80">Nome do Dispositivo</Label>
-                <Input
-                  value={nomeDispositivo}
-                  onChange={(e) => setNomeDispositivo(e.target.value)}
-                  placeholder="Ex: Celular do João"
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                />
-              </div>
-              <Button onClick={registerDevice} className="w-full bg-green-500 hover:bg-green-600">
-                Registrar Dispositivo
-              </Button>
+              {!showManualInput ? (
+                <>
+                  <p className="text-white/70 text-sm">
+                    Este dispositivo ainda não está registrado. Digite um nome para identificá-lo e aguarde a liberação do administrador.
+                  </p>
+                  <div className="space-y-2">
+                    <Label className="text-white/80">Nome do Dispositivo</Label>
+                    <Input
+                      value={nomeDispositivo}
+                      onChange={(e) => setNomeDispositivo(e.target.value)}
+                      placeholder="Ex: Celular do João"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                    />
+                  </div>
+                  <Button onClick={registerDevice} className="w-full bg-green-500 hover:bg-green-600">
+                    Registrar Novo Dispositivo
+                  </Button>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-white/20" />
+                    </div>
+                    <div className="relative flex justify-center text-xs">
+                      <span className="bg-transparent px-2 text-white/50">ou</span>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => setShowManualInput(true)} 
+                    variant="outline"
+                    className="w-full border-white/30 text-white hover:bg-white/10"
+                  >
+                    Já tenho um ID registrado
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-white/70 text-sm">
+                    Digite o ID do dispositivo que já foi registrado anteriormente (ex: DEV-EFD3468F)
+                  </p>
+                  <div className="space-y-2">
+                    <Label className="text-white/80">ID do Dispositivo</Label>
+                    <Input
+                      value={manualUuid}
+                      onChange={(e) => setManualUuid(e.target.value.toUpperCase())}
+                      placeholder="DEV-XXXXXXXX"
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/40 font-mono"
+                    />
+                  </div>
+                  <Button onClick={useManualUuid} className="w-full bg-green-500 hover:bg-green-600">
+                    Usar este ID
+                  </Button>
+                  <Button 
+                    onClick={() => setShowManualInput(false)} 
+                    variant="outline"
+                    className="w-full border-white/30 text-white hover:bg-white/10"
+                  >
+                    Voltar
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         )}
