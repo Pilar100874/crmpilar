@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Settings, Copy, Check, Key, Eye, EyeOff, Link2 } from 'lucide-react';
+import { ArrowLeft, Settings, Copy, Check, Key, Eye, EyeOff, Link2, Smartphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -9,11 +9,14 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DispositivosRastreamento from '@/components/logistica/DispositivosRastreamento';
 
 interface LogisticaConfigData {
   id: string;
   token_rastreamento: string;
   heigit_api_key: string | null;
+  estabelecimento_id: string;
 }
 
 interface LogisticaConfigProps {
@@ -312,6 +315,22 @@ Content-Type: application/json
                   </pre>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Dispositivos de Rastreamento */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Smartphone className="h-5 w-5" />
+                Dispositivos de Rastreamento
+              </CardTitle>
+              <CardDescription>
+                Gerencie os dispositivos que podem enviar dados de localização
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DispositivosRastreamento estabelecimentoId={config?.estabelecimento_id || null} />
             </CardContent>
           </Card>
         </div>
