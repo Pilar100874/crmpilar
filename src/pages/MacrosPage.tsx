@@ -720,7 +720,6 @@ export default function MacrosPage() {
       {/* Dialog de edição */}
       <Dialog
         open={!!editingMacro}
-        modal={false}
         onOpenChange={(open) => {
           if (!open) setEditingMacro(null);
         }}
@@ -870,15 +869,12 @@ export default function MacrosPage() {
             <AlertDialogAction
               onClick={async () => {
                 const idToDelete = deleteConfirmId;
+                // Limpar todos os estados ANTES de fechar o dialog
+                setSelectedMacro(null);
+                setEditingMacro(null);
+                setEditingStep(null);
                 setDeleteConfirmId(null);
                 if (idToDelete) {
-                  // Limpar estados que referenciam a macro deletada
-                  if (selectedMacro?.id === idToDelete) {
-                    setSelectedMacro(null);
-                  }
-                  if (editingMacro?.id === idToDelete) {
-                    setEditingMacro(null);
-                  }
                   await deleteMacro(idToDelete);
                 }
               }}
