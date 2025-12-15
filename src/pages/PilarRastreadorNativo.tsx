@@ -133,6 +133,20 @@ const PilarRastreadorNativo = () => {
     }
 
     try {
+      // First check if device already exists (could be a duplicate attempt)
+      const { data: existingDevice } = await supabase
+        .from('dispositivos_rastreamento')
+        .select('id, status')
+        .eq('device_uuid', deviceUuid)
+        .maybeSingle();
+
+      if (existingDevice) {
+        // Device already exists, just update status display
+        setDeviceStatus(existingDevice.status as DeviceStatus);
+        toast.info('Dispositivo já está registrado');
+        return;
+      }
+
       const { error } = await supabase
         .from('dispositivos_rastreamento')
         .insert({
@@ -144,7 +158,15 @@ const PilarRastreadorNativo = () => {
           status: 'pendente'
         });
 
-      if (error) throw error;
+      if (error) {
+        // Handle duplicate key error gracefully
+        if (error.code === '23505') {
+          await checkDeviceStatus();
+          toast.info('Dispositivo já registrado');
+          return;
+        }
+        throw error;
+      }
 
       setDeviceStatus('pending');
       toast.success('Dispositivo registrado! Aguardando liberação do administrador.');
