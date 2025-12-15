@@ -91,8 +91,10 @@ function parseOsmAndFormat(url: URL): PosicaoPayload | null {
 }
 
 async function validateToken(supabase: any, token: string): Promise<{ valid: boolean; estabelecimentoId?: string }> {
+  // Token validation is now optional - if no token provided, still allow tracking
+  // The vehicle's estabelecimento_id will be used from the vehicle record
   if (!token) {
-    return { valid: false };
+    return { valid: true }; // Allow without token
   }
 
   const { data, error } = await supabase
@@ -102,8 +104,8 @@ async function validateToken(supabase: any, token: string): Promise<{ valid: boo
     .single();
 
   if (error || !data) {
-    console.log('Token validation failed:', error?.message || 'Not found');
-    return { valid: false };
+    console.log('Token validation skipped - will use vehicle estabelecimento_id');
+    return { valid: true }; // Still allow - will use vehicle's estabelecimento_id
   }
 
   return { valid: true, estabelecimentoId: data.estabelecimento_id };
@@ -496,17 +498,12 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Validate token if provided
+      // Token validation is optional - if provided, use it to get estabelecimentoId
       if (payload.token) {
         const tokenResult = await validateToken(supabase, payload.token);
-        if (!tokenResult.valid) {
-          return new Response(
-            JSON.stringify({ status: 'error', message: 'Invalid token' }),
-            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
         estabelecimentoId = tokenResult.estabelecimentoId;
       }
+      // If no token, the vehicle's estabelecimento_id will be used from findVeiculoInfo
       
       console.log('Received OsmAnd/Traccar position:', payload);
       
@@ -593,17 +590,12 @@ Deno.serve(async (req) => {
         payload = rawPayload as PosicaoPayload;
       }
 
-      // Validate token if provided
+      // Token validation is optional - if provided, use it to get estabelecimentoId
       if (payload.token) {
         const tokenResult = await validateToken(supabase, payload.token);
-        if (!tokenResult.valid) {
-          return new Response(
-            JSON.stringify({ status: 'error', message: 'Invalid token' }),
-            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
         estabelecimentoId = tokenResult.estabelecimentoId;
       }
+      // If no token, the vehicle's estabelecimento_id will be used from findVeiculoInfo
 
       // Validate required fields
       if (!payload.veiculoId || typeof payload.lat !== 'number' || typeof payload.lng !== 'number') {
