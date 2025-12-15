@@ -162,16 +162,27 @@ export function useAvisosSistema() {
     }
   };
 
-  // Realtime subscription
+  // Realtime subscription for avisos_sistema and avisos_lidos
   useEffect(() => {
     const channel = supabase
-      .channel('avisos-sistema')
+      .channel('avisos-sistema-realtime')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'avisos_sistema',
+        },
+        () => {
+          carregarAvisos();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'avisos_lidos',
         },
         () => {
           carregarAvisos();
