@@ -82,19 +82,16 @@ export const VeiculosCRUD: React.FC<VeiculosCRUDProps> = ({ estabelecimentoId })
 
   const fetchDispositivos = async () => {
     try {
-      // Fetch all approved devices - they may be from any estabelecimento
-      // since devices are approved in LogisticaConfig which may use a different estabelecimento
+      // Fetch ALL approved devices regardless of estabelecimento
+      // since the config screen may use a different estabelecimento
       const { data, error } = await supabase
         .from('dispositivos_rastreamento')
         .select('id, device_uuid, nome_dispositivo, veiculo_id, estabelecimento_id')
         .eq('status', 'aprovado');
 
       if (error) throw error;
-      // Filter to show devices from this estabelecimento OR devices without estabelecimento
-      const filtered = (data || []).filter(d => 
-        d.estabelecimento_id === estabelecimentoId || !d.estabelecimento_id
-      );
-      setDispositivos(filtered);
+      console.log('Dispositivos aprovados encontrados:', data);
+      setDispositivos(data || []);
     } catch (error) {
       console.error('Error fetching devices:', error);
     }
