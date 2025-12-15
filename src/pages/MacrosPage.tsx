@@ -872,6 +872,13 @@ export default function MacrosPage() {
                 const idToDelete = deleteConfirmId;
                 setDeleteConfirmId(null);
                 if (idToDelete) {
+                  // Limpar estados que referenciam a macro deletada
+                  if (selectedMacro?.id === idToDelete) {
+                    setSelectedMacro(null);
+                  }
+                  if (editingMacro?.id === idToDelete) {
+                    setEditingMacro(null);
+                  }
                   await deleteMacro(idToDelete);
                 }
               }}
