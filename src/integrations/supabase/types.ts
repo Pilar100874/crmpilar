@@ -2172,6 +2172,79 @@ export type Database = {
           },
         ]
       }
+      dispositivos_rastreamento: {
+        Row: {
+          aprovado_em: string | null
+          aprovado_por: string | null
+          created_at: string
+          device_uuid: string
+          estabelecimento_id: string | null
+          id: string
+          modelo: string | null
+          nome_dispositivo: string | null
+          plataforma: string | null
+          primeiro_acesso: string
+          status: string
+          ultimo_acesso: string | null
+          updated_at: string
+          veiculo_id: string | null
+        }
+        Insert: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          created_at?: string
+          device_uuid: string
+          estabelecimento_id?: string | null
+          id?: string
+          modelo?: string | null
+          nome_dispositivo?: string | null
+          plataforma?: string | null
+          primeiro_acesso?: string
+          status?: string
+          ultimo_acesso?: string | null
+          updated_at?: string
+          veiculo_id?: string | null
+        }
+        Update: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          created_at?: string
+          device_uuid?: string
+          estabelecimento_id?: string | null
+          id?: string
+          modelo?: string | null
+          nome_dispositivo?: string | null
+          plataforma?: string | null
+          primeiro_acesso?: string
+          status?: string
+          ultimo_acesso?: string | null
+          updated_at?: string
+          veiculo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispositivos_rastreamento_aprovado_por_fkey"
+            columns: ["aprovado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispositivos_rastreamento_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispositivos_rastreamento_veiculo_id_fkey"
+            columns: ["veiculo_id"]
+            isOneToOne: false
+            referencedRelation: "veiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_oauth_config: {
         Row: {
           client_id: string | null
