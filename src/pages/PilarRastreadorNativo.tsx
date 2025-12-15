@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Geolocation, Position } from '@capacitor/geolocation';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { 
   MapPin, 
   Navigation, 
@@ -18,10 +18,12 @@ import {
   Settings,
   Smartphone,
   Battery,
-  Signal
+  Signal,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const TRACKING_ENDPOINT = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/rastreamento-posicao`;
 
@@ -33,12 +35,11 @@ interface TrackingStats {
 
 const PilarRastreadorNativo = () => {
   const [deviceId, setDeviceId] = useState('');
-  const [token, setToken] = useState('');
   const [isTracking, setIsTracking] = useState(false);
   const [currentPosition, setCurrentPosition] = useState<Position | null>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [interval, setInterval] = useState(15);
-  const [showConfig, setShowConfig] = useState(true);
+  const [showConfig, setShowConfig] = useState(false);
   const [stats, setStats] = useState<TrackingStats>({
     positionsSent: 0,
     lastSentTime: null,
@@ -48,6 +49,7 @@ const PilarRastreadorNativo = () => {
   
   const watchIdRef = useRef<string | null>(null);
   const pendingPositionsRef = useRef<any[]>([]);
+  const intervalRef = useRef<number | null>(null);
 
   // Check permissions on mount
   useEffect(() => {
@@ -79,7 +81,7 @@ const PilarRastreadorNativo = () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [token, deviceId]);
+  }, [deviceId]);
 
   const checkPermissions = async () => {
     try {
@@ -95,22 +97,18 @@ const PilarRastreadorNativo = () => {
 
   const loadSavedConfig = () => {
     const savedDeviceId = localStorage.getItem('pilar_device_id');
-    const savedToken = localStorage.getItem('pilar_token');
     const savedInterval = localStorage.getItem('pilar_interval');
     
     if (savedDeviceId) setDeviceId(savedDeviceId);
-    if (savedToken) setToken(savedToken);
     if (savedInterval) setInterval(parseInt(savedInterval));
-    if (savedDeviceId && savedToken) setShowConfig(false);
   };
 
   const saveConfig = () => {
-    if (!deviceId || !token) {
-      toast.error('Preencha todos os campos');
+    if (!deviceId) {
+      toast.error('Preencha o ID do Veículo');
       return;
     }
     localStorage.setItem('pilar_device_id', deviceId);
-    localStorage.setItem('pilar_token', token);
     localStorage.setItem('pilar_interval', interval.toString());
     setShowConfig(false);
     toast.success('Configuração salva!');
@@ -118,14 +116,14 @@ const PilarRastreadorNativo = () => {
 
   const sendPosition = useCallback(async (position: Position) => {
     const payload = {
-      device_id: deviceId,
+      id: deviceId,
       lat: position.coords.latitude,
       lon: position.coords.longitude,
       speed: position.coords.speed || 0,
       altitude: position.coords.altitude || 0,
       accuracy: position.coords.accuracy,
       heading: position.coords.heading || 0,
-      timestamp: new Date(position.timestamp).toISOString(),
+      timestamp: Math.floor(position.timestamp / 1000),
       battery: batteryLevel
     };
 
@@ -136,13 +134,21 @@ const PilarRastreadorNativo = () => {
     }
 
     try {
-      const response = await fetch(TRACKING_ENDPOINT, {
-        method: 'POST',
+      // Send as GET request with query params (OsmAnd format - no token needed)
+      const params = new URLSearchParams({
+        id: payload.id,
+        lat: payload.lat.toString(),
+        lon: payload.lon.toString(),
+        speed: payload.speed.toString(),
+        bearing: payload.heading.toString(),
+        timestamp: payload.timestamp.toString()
+      });
+
+      const response = await fetch(`${TRACKING_ENDPOINT}?${params.toString()}`, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
+          'Content-Type': 'application/json'
+        }
       });
 
       if (response.ok) {
@@ -159,7 +165,7 @@ const PilarRastreadorNativo = () => {
       pendingPositionsRef.current.push(payload);
       setStats(prev => ({ ...prev, errors: prev.errors + 1 }));
     }
-  }, [deviceId, token, isOnline, batteryLevel]);
+  }, [deviceId, isOnline, batteryLevel]);
 
   const flushPendingPositions = async () => {
     const pending = pendingPositionsRef.current;
@@ -167,13 +173,17 @@ const PilarRastreadorNativo = () => {
 
     for (const payload of pending) {
       try {
-        await fetch(TRACKING_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(payload)
+        const params = new URLSearchParams({
+          id: payload.id,
+          lat: payload.lat.toString(),
+          lon: payload.lon.toString(),
+          speed: (payload.speed || 0).toString(),
+          bearing: (payload.heading || 0).toString(),
+          timestamp: payload.timestamp.toString()
+        });
+
+        await fetch(`${TRACKING_ENDPOINT}?${params.toString()}`, {
+          method: 'GET'
         });
         setStats(prev => ({
           ...prev,
@@ -186,9 +196,16 @@ const PilarRastreadorNativo = () => {
     }
     pendingPositionsRef.current = [];
     localStorage.removeItem('pilar_pending');
+    toast.success(`${pending.length} posições pendentes enviadas`);
   };
 
   const startTracking = async () => {
+    if (!deviceId) {
+      toast.error('Configure o ID do Veículo primeiro');
+      setShowConfig(true);
+      return;
+    }
+
     try {
       const id = await Geolocation.watchPosition(
         {
@@ -203,12 +220,27 @@ const PilarRastreadorNativo = () => {
           }
           if (position) {
             setCurrentPosition(position);
-            sendPosition(position);
           }
         }
       );
       
       watchIdRef.current = id;
+
+      // Send position at interval
+      intervalRef.current = window.setInterval(() => {
+        if (currentPosition) {
+          sendPosition(currentPosition);
+        }
+      }, interval * 1000);
+
+      // Get and send first position immediately
+      const initialPosition = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 10000
+      });
+      setCurrentPosition(initialPosition);
+      sendPosition(initialPosition);
+
       setIsTracking(true);
       toast.success('Rastreamento iniciado!');
     } catch (error) {
@@ -221,6 +253,10 @@ const PilarRastreadorNativo = () => {
     if (watchIdRef.current) {
       await Geolocation.clearWatch({ id: watchIdRef.current });
       watchIdRef.current = null;
+    }
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
     setIsTracking(false);
     toast.info('Rastreamento parado');
@@ -246,7 +282,9 @@ const PilarRastreadorNativo = () => {
           </div>
           <div>
             <h1 className="font-bold text-lg">Pilar Rastreador</h1>
-            <p className="text-xs text-white/60">Versão Nativa</p>
+            <p className="text-xs text-white/60">
+              {deviceId ? `Veículo: ${deviceId}` : 'Não configurado'}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -263,75 +301,19 @@ const PilarRastreadorNativo = () => {
             {isOnline ? <Wifi className="w-3 h-3 mr-1" /> : <WifiOff className="w-3 h-3 mr-1" />}
             {isOnline ? 'Online' : 'Offline'}
           </Badge>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowConfig(!showConfig)}
-            className="text-white"
-          >
-            <Settings className="w-5 h-5" />
-          </Button>
         </div>
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Config Panel */}
-        {showConfig && (
-          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                Configuração
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-white/80">ID do Dispositivo</Label>
-                <Input
-                  value={deviceId}
-                  onChange={(e) => setDeviceId(e.target.value)}
-                  placeholder="Ex: CELULAR-001"
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-white/80">Token de Autenticação</Label>
-                <Input
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  placeholder="Token do sistema Logística"
-                  type="password"
-                  className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-white/80">Intervalo (segundos)</Label>
-                <Input
-                  type="number"
-                  value={interval}
-                  onChange={(e) => setInterval(parseInt(e.target.value) || 15)}
-                  min={5}
-                  max={300}
-                  className="bg-white/10 border-white/20 text-white"
-                />
-              </div>
-              <Button onClick={saveConfig} className="w-full bg-green-500 hover:bg-green-600">
-                Salvar Configuração
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Main Control Button */}
         <div className="flex justify-center py-6">
           <button
             onClick={isTracking ? stopTracking : startTracking}
-            disabled={!deviceId || !token}
             className={`w-40 h-40 rounded-full flex flex-col items-center justify-center gap-2 transition-all shadow-2xl ${
               isTracking 
                 ? 'bg-gradient-to-br from-red-500 to-red-700 animate-pulse' 
                 : 'bg-gradient-to-br from-green-400 to-green-600 hover:from-green-500 hover:to-green-700'
-            } ${(!deviceId || !token) ? 'opacity-50' : ''}`}
+            }`}
           >
             {isTracking ? (
               <>
@@ -413,13 +395,66 @@ const PilarRastreadorNativo = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Config Panel - Collapsible */}
+        <Collapsible open={showConfig} onOpenChange={setShowConfig}>
+          <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="pb-2 cursor-pointer">
+                <CardTitle className="text-white text-sm flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-4 h-4" />
+                    Configuração
+                  </div>
+                  {showConfig ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </CardTitle>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-white/80">ID do Veículo (Placa ou Código)</Label>
+                  <Input
+                    value={deviceId}
+                    onChange={(e) => setDeviceId(e.target.value.toUpperCase())}
+                    placeholder="Ex: ABC1234 ou CAMINHAO-01"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                    disabled={isTracking}
+                  />
+                  <p className="text-xs text-white/50">
+                    Use a mesma placa ou código cadastrado no sistema de veículos
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white/80">Intervalo de envio: {interval}s</Label>
+                  <Slider
+                    value={[interval]}
+                    onValueChange={(v) => setInterval(v[0])}
+                    min={5}
+                    max={120}
+                    step={5}
+                    disabled={isTracking}
+                    className="py-2"
+                  />
+                </div>
+                <Button 
+                  onClick={saveConfig} 
+                  className="w-full bg-green-500 hover:bg-green-600"
+                  disabled={isTracking}
+                >
+                  Salvar Configuração
+                </Button>
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </div>
 
       {/* Footer */}
       <div className="fixed bottom-0 left-0 right-0 bg-black/30 backdrop-blur-sm p-4 text-center">
         <p className="text-xs text-white/40">
           <Smartphone className="w-3 h-3 inline mr-1" />
-          Pilar Rastreador v1.0 • GPS Nativo
+          Pilar Rastreador v2.0 • GPS Nativo Android
         </p>
       </div>
     </div>
