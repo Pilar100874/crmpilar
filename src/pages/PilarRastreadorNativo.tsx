@@ -1,5 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Geolocation, Position } from '@capacitor/geolocation';
+
+declare global {
+  interface Window {
+    Capacitor?: {
+      isNativePlatform?: () => boolean;
+    };
+  }
+}
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -184,9 +192,30 @@ const PilarRastreadorNativo = () => {
 
   const checkPermissions = async () => {
     try {
-      const permission = await Geolocation.checkPermissions();
-      if (permission.location !== 'granted') {
-        await Geolocation.requestPermissions();
+      // Check if we're in a native Capacitor environment
+      const isNative = window.Capacitor?.isNativePlatform?.() ?? false;
+      
+      if (isNative) {
+        const permission = await Geolocation.checkPermissions();
+        if (permission.location !== 'granted') {
+          await Geolocation.requestPermissions();
+        }
+      } else {
+        // Web browser fallback - request permission via standard API
+        if ('geolocation' in navigator) {
+          await new Promise<void>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+              () => resolve(),
+              (err) => {
+                if (err.code === err.PERMISSION_DENIED) {
+                  reject(new Error('Permissão de localização negada'));
+                }
+                resolve(); // Other errors are ok, permission might still be granted
+              },
+              { timeout: 5000 }
+            );
+          });
+        }
       }
     } catch (error) {
       console.error('Error checking permissions:', error);
