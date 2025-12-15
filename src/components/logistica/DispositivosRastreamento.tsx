@@ -48,15 +48,28 @@ const DispositivosRastreamento: React.FC<DispositivosRastreamentoProps> = ({ est
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load dispositivos
-      const { data: disps, error: dispError } = await supabase
+      // Load dispositivos from this establishment AND pending devices without establishment
+      const { data: dispsEstab, error: dispError1 } = await supabase
         .from('dispositivos_rastreamento')
         .select('*')
         .eq('estabelecimento_id', estabelecimentoId)
         .order('primeiro_acesso', { ascending: false });
 
-      if (dispError) throw dispError;
-      setDispositivos(disps || []);
+      if (dispError1) throw dispError1;
+
+      // Also load pending devices without estabelecimento (for approval workflow)
+      const { data: dispsPending, error: dispError2 } = await supabase
+        .from('dispositivos_rastreamento')
+        .select('*')
+        .is('estabelecimento_id', null)
+        .eq('status', 'pendente')
+        .order('primeiro_acesso', { ascending: false });
+
+      if (dispError2) throw dispError2;
+
+      // Combine both lists, avoiding duplicates
+      const allDisps = [...(dispsEstab || []), ...(dispsPending || [])];
+      setDispositivos(allDisps);
 
       // Load veículos sem dispositivo vinculado
       const { data: veics, error: veicError } = await supabase
@@ -89,6 +102,7 @@ const DispositivosRastreamento: React.FC<DispositivosRastreamentoProps> = ({ est
         .update({
           status: 'aprovado',
           veiculo_id: veiculoId,
+          estabelecimento_id: estabelecimentoId, // Link to current establishment on approval
           aprovado_em: new Date().toISOString()
         })
         .eq('id', dispositivoId);
