@@ -652,11 +652,49 @@ const PilarRastreadorNativo = () => {
               </div>
             </div>
             <div className="text-xs text-white/50 font-mono bg-black/20 px-2 py-1 rounded">
-              ID: {deviceUuid}
+              ID: {deviceUuid || 'Gerando...'}
             </div>
             {veiculoNome && (
               <div className="text-sm text-white/60">
                 Veículo: <span className="text-white font-medium">{veiculoNome}</span>
+              </div>
+            )}
+            
+            {/* Always show manual UUID input option when not approved */}
+            {deviceStatus !== 'approved' && !showManualInput && (
+              <Button 
+                onClick={() => setShowManualInput(true)} 
+                variant="outline"
+                size="sm"
+                className="w-full border-white/30 text-white hover:bg-white/10 mt-2"
+              >
+                Inserir ID manualmente
+              </Button>
+            )}
+            
+            {/* Manual UUID Input - inline */}
+            {showManualInput && (
+              <div className="space-y-2 pt-2 border-t border-white/20">
+                <Label className="text-white/80 text-xs">ID do Dispositivo Aprovado</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={manualUuid}
+                    onChange={(e) => setManualUuid(e.target.value.toUpperCase())}
+                    placeholder="DEV-XXXXXXXX"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 font-mono text-sm flex-1"
+                  />
+                  <Button onClick={useManualUuid} size="sm" className="bg-green-500 hover:bg-green-600">
+                    OK
+                  </Button>
+                  <Button 
+                    onClick={() => setShowManualInput(false)} 
+                    size="sm"
+                    variant="ghost"
+                    className="text-white/60 hover:text-white"
+                  >
+                    ✕
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
