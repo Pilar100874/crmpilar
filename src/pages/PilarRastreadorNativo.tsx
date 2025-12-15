@@ -196,30 +196,39 @@ const PilarRastreadorNativo = () => {
       const isNative = window.Capacitor?.isNativePlatform?.() ?? false;
       
       if (isNative) {
-        const permission = await Geolocation.checkPermissions();
-        if (permission.location !== 'granted') {
-          await Geolocation.requestPermissions();
+        try {
+          const permission = await Geolocation.checkPermissions();
+          if (permission.location !== 'granted') {
+            await Geolocation.requestPermissions();
+          }
+          return;
+        } catch (capacitorError) {
+          console.log('Capacitor Geolocation not available, using web fallback');
         }
-      } else {
-        // Web browser fallback - request permission via standard API
-        if ('geolocation' in navigator) {
-          await new Promise<void>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(
-              () => resolve(),
-              (err) => {
-                if (err.code === err.PERMISSION_DENIED) {
-                  reject(new Error('Permissão de localização negada'));
-                }
-                resolve(); // Other errors are ok, permission might still be granted
-              },
-              { timeout: 5000 }
-            );
-          });
+      }
+      
+      // Web browser fallback - use Permissions API first
+      if ('permissions' in navigator) {
+        try {
+          const result = await navigator.permissions.query({ name: 'geolocation' });
+          console.log('Geolocation permission status:', result.state);
+          if (result.state === 'granted') return;
+        } catch (e) {
+          console.log('Permissions API not supported');
         }
+      }
+      
+      // If permission not yet granted, trigger the browser prompt
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          () => console.log('Geolocation permission granted'),
+          (err) => console.log('Geolocation error:', err.message),
+          { timeout: 10000, enableHighAccuracy: false }
+        );
       }
     } catch (error) {
       console.error('Error checking permissions:', error);
-      toast.error('Erro ao verificar permissões de localização');
+      // Don't show error toast - this is not critical, tracking will request permission when started
     }
   };
 
