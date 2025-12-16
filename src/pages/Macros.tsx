@@ -50,6 +50,8 @@ export default function Macros() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMacro, setEditingMacro] = useState<string | null>(null);
   const [isSelectingElement, setIsSelectingElement] = useState(false);
+  const [showRouteDialog, setShowRouteDialog] = useState(false);
+  const [selectedRouteForElement, setSelectedRouteForElement] = useState('');
   
   // Form state
   const [name, setName] = useState('');
@@ -131,21 +133,44 @@ export default function Macros() {
   };
 
   const startElementSelection = () => {
-    setIsDialogOpen(false); // Fecha dialog temporariamente
+    setSelectedRouteForElement('');
+    setShowRouteDialog(true);
+  };
+
+  const confirmRouteAndSelectElement = () => {
+    if (!selectedRouteForElement) {
+      toast.error('Selecione uma tela primeiro');
+      return;
+    }
+    
+    setShowRouteDialog(false);
+    setIsDialogOpen(false);
+    
+    // Navega para a tela selecionada
+    window.history.pushState({}, '', selectedRouteForElement);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    
+    // Aguarda a navegação e abre o seletor
     setTimeout(() => {
       setIsSelectingElement(true);
-    }, 100);
+    }, 500);
   };
 
   const handleElementSelected = (selector: string, info: ElementInfo) => {
     setIsSelectingElement(false);
+    
+    // Volta para a tela de macros
+    window.history.pushState({}, '', '/macros');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    
+    const routeLabel = AVAILABLE_ROUTES.find(r => r.value === selectedRouteForElement)?.label || selectedRouteForElement;
     
     const newStep: MacroStep = {
       id: generateStepId(),
       type: 'typeText',
       value: '',
       target: selector,
-      label: `Digitar em: ${info.placeholder || info.text?.slice(0, 20) || info.tagName.toLowerCase()}`,
+      label: `Digitar em: ${info.placeholder || info.text?.slice(0, 20) || info.tagName.toLowerCase()} (${routeLabel})`,
       enabled: true
     };
     setSteps(prev => [...prev, newStep]);
@@ -153,7 +178,7 @@ export default function Macros() {
     // Reabre o dialog
     setTimeout(() => {
       setIsDialogOpen(true);
-    }, 100);
+    }, 300);
   };
 
   const updateStep = (stepId: string, updates: Partial<MacroStep>) => {
@@ -458,13 +483,49 @@ export default function Macros() {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog de seleção de tela */}
+      <Dialog open={showRouteDialog} onOpenChange={setShowRouteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Selecionar Tela</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground mb-4">
+            Escolha a tela onde deseja selecionar o campo:
+          </p>
+          <Select value={selectedRouteForElement} onValueChange={setSelectedRouteForElement}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione a tela..." />
+            </SelectTrigger>
+            <SelectContent>
+              {AVAILABLE_ROUTES.map(route => (
+                <SelectItem key={route.value} value={route.value}>
+                  {route.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setShowRouteDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmRouteAndSelectElement}>
+              <Navigation className="h-4 w-4 mr-2" />
+              Ir para tela
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Element Selector Overlay */}
       <ElementSelector
         isActive={isSelectingElement}
         onSelect={handleElementSelected}
         onCancel={() => {
           setIsSelectingElement(false);
-          setIsDialogOpen(true);
+          // Volta para macros
+          window.history.pushState({}, '', '/macros');
+          window.dispatchEvent(new PopStateEvent('popstate'));
+          setTimeout(() => setIsDialogOpen(true), 300);
         }}
       />
 
