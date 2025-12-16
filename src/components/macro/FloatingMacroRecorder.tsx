@@ -12,9 +12,7 @@ import {
   Navigation,
   Type,
   Trash2,
-  MousePointerClick,
-  Check,
-  Crosshair
+  MousePointerClick
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ElementSelector, ElementInfo } from './ElementSelector';
@@ -25,7 +23,6 @@ function generateStepId(): string {
 
 export function FloatingMacroRecorder() {
   const { saveMacro } = useMacro();
-  const recorderRef = useRef<HTMLDivElement>(null);
   
   const [isVisible, setIsVisible] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -35,24 +32,70 @@ export function FloatingMacroRecorder() {
   const [showNameInput, setShowNameInput] = useState(false);
   const [lastCapturedPath, setLastCapturedPath] = useState<string | null>(null);
   
-  // Estado para escolha de ação
-  const [pendingElement, setPendingElement] = useState<{selector: string, info: ElementInfo, element: HTMLElement} | null>(null);
-  const [showActionChoice, setShowActionChoice] = useState(false);
-  const [isWaitingForInput, setIsWaitingForInput] = useState(false);
-  const [originalValue, setOriginalValue] = useState('');
+  // Para capturar digitação
+  const [watchingInput, setWatchingInput] = useState<{element: HTMLInputElement | HTMLTextAreaElement, selector: string, info: ElementInfo} | null>(null);
+  const initialValueRef = useRef('');
+
+  // Observa mudanças no input sendo monitorado
+  useEffect(() => {
+    if (!watchingInput) return;
+
+    const { element } = watchingInput;
+    initialValueRef.current = element.value;
+
+    const handleInput = () => {
+      // Usuário está digitando - não faz nada, só espera
+    };
+
+    const handleBlur = () => {
+      // Quando sair do campo, captura o que foi digitado
+      const typedValue = element.value;
+      
+      if (typedValue !== initialValueRef.current) {
+        // Houve digitação - salva o passo
+        const { selector, info } = watchingInput;
+        const elementLabel = info.placeholder || info.tagName.toLowerCase();
+        
+        setSteps(prev => [...prev, {
+          id: generateStepId(),
+          type: 'typeText',
+          value: typedValue,
+          target: selector,
+          label: `Digitar "${typedValue.slice(0, 12)}${typedValue.length > 12 ? '...' : ''}" em: ${elementLabel}`,
+          enabled: true
+        }]);
+        
+        toast.success('Texto capturado!');
+      }
+      
+      // Volta para seleção
+      setWatchingInput(null);
+      if (isRecording) {
+        setTimeout(() => setIsSelectingElement(true), 200);
+      }
+    };
+
+    element.addEventListener('input', handleInput);
+    element.addEventListener('blur', handleBlur);
+
+    return () => {
+      element.removeEventListener('input', handleInput);
+      element.removeEventListener('blur', handleBlur);
+    };
+  }, [watchingInput, isRecording]);
 
   const startRecording = () => {
     setSteps([]);
     setIsRecording(true);
     setLastCapturedPath(null);
-    toast.success('Gravação iniciada! Clique em "Selecionar" para capturar elementos.');
+    setIsSelectingElement(true);
+    toast.success('Gravação iniciada! Clique nos elementos.');
   };
 
   const stopRecording = () => {
     setIsSelectingElement(false);
-    setShowActionChoice(false);
-    setIsWaitingForInput(false);
-    setPendingElement(null);
+    setWatchingInput(null);
+    
     if (steps.length === 0) {
       toast.error('Nenhum passo gravado');
       setIsRecording(false);
@@ -65,9 +108,7 @@ export function FloatingMacroRecorder() {
   const cancelRecording = () => {
     setIsRecording(false);
     setIsSelectingElement(false);
-    setShowActionChoice(false);
-    setIsWaitingForInput(false);
-    setPendingElement(null);
+    setWatchingInput(null);
     setSteps([]);
     setShowNameInput(false);
     setMacroName('');
@@ -86,47 +127,36 @@ export function FloatingMacroRecorder() {
       steps
     });
 
-    toast.success('Macro salva com sucesso!');
+    toast.success('Macro salva!');
     setShowNameInput(false);
     setMacroName('');
     setSteps([]);
     setIsVisible(false);
   };
 
-  const startElementSelection = () => {
-    setIsSelectingElement(true);
-  };
-
   const handleElementSelected = (selector: string, info: ElementInfo, element: HTMLElement) => {
     setIsSelectingElement(false);
-    setPendingElement({ selector, info, element });
-    setShowActionChoice(true);
-  };
-
-  const addNavigationStep = () => {
+    
+    // Adiciona navegação se mudou de tela
     const currentPath = window.location.pathname;
     if (lastCapturedPath !== currentPath) {
-      const step: MacroStep = {
+      setSteps(prev => [...prev, {
         id: generateStepId(),
         type: 'navigate',
         value: currentPath,
         label: `Abrir: ${currentPath}`,
         enabled: true
-      };
-      setSteps(prev => [...prev, step]);
+      }]);
       setLastCapturedPath(currentPath);
     }
-  };
-
-  const executeClickAction = () => {
-    if (!pendingElement) return;
     
-    const { selector, info, element } = pendingElement;
+    const elementLabel = info.placeholder || info.text?.slice(0, 15) || info.tagName.toLowerCase();
+    const isInputElement = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
     
-    addNavigationStep();
+    // Clica no elemento automaticamente
+    element.click();
     
-    const elementLabel = info.placeholder || info.text?.slice(0, 20) || info.tagName.toLowerCase();
-    
+    // Adiciona passo de clique
     setSteps(prev => [...prev, {
       id: generateStepId(),
       type: 'click',
@@ -136,70 +166,17 @@ export function FloatingMacroRecorder() {
       enabled: true
     }]);
     
-    try {
-      element.click();
-      toast.success('Clique executado!');
-    } catch {
-      toast.error('Erro ao clicar');
-    }
-    
-    setShowActionChoice(false);
-    setPendingElement(null);
-  };
-
-  const startTypeAction = () => {
-    if (!pendingElement) return;
-    
-    const { element } = pendingElement;
-    const inputEl = element as HTMLInputElement | HTMLTextAreaElement;
-    setOriginalValue(inputEl.value || '');
-    
-    setShowActionChoice(false);
-    setIsWaitingForInput(true);
-    
-    setTimeout(() => {
+    // Se for input, foca e monitora digitação
+    if (isInputElement) {
+      const inputEl = element as HTMLInputElement | HTMLTextAreaElement;
       inputEl.focus();
-      inputEl.select();
-    }, 100);
-    
-    toast.info('Digite no campo e clique em Confirmar');
-  };
-
-  const confirmTypeAction = () => {
-    if (!pendingElement) return;
-    
-    const { selector, info, element } = pendingElement;
-    const inputEl = element as HTMLInputElement | HTMLTextAreaElement;
-    const typedValue = inputEl.value;
-    
-    addNavigationStep();
-    
-    const elementLabel = info.placeholder || info.text?.slice(0, 20) || info.tagName.toLowerCase();
-    
-    setSteps(prev => [...prev, {
-      id: generateStepId(),
-      type: 'typeText',
-      value: typedValue,
-      target: selector,
-      label: `Digitar "${typedValue.slice(0, 15)}${typedValue.length > 15 ? '...' : ''}" em: ${elementLabel}`,
-      enabled: true
-    }]);
-    
-    toast.success('Texto capturado!');
-    
-    setIsWaitingForInput(false);
-    setPendingElement(null);
-  };
-
-  const cancelTypeAction = () => {
-    if (pendingElement) {
-      const inputEl = pendingElement.element as HTMLInputElement | HTMLTextAreaElement;
-      inputEl.value = originalValue;
-      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+      setWatchingInput({ element: inputEl, selector, info });
+      toast.info('Digite no campo. Clique fora para capturar.');
+    } else {
+      // Se não for input, volta direto para seleção
+      toast.success('Clique capturado!');
+      setTimeout(() => setIsSelectingElement(true), 300);
     }
-    
-    setIsWaitingForInput(false);
-    setShowActionChoice(true);
   };
 
   const removeStep = (stepId: string) => {
@@ -233,10 +210,7 @@ export function FloatingMacroRecorder() {
 
   return (
     <>
-      <div 
-        ref={recorderRef}
-        className="fixed bottom-4 left-4 z-[9999999] bg-background border rounded-lg shadow-xl p-3 min-w-[280px]"
-      >
+      <div className="fixed bottom-4 left-4 z-[9999999] bg-background border rounded-lg shadow-xl p-3 min-w-[260px]">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -248,10 +222,9 @@ export function FloatingMacroRecorder() {
             )}
             <span className="font-medium text-sm">
               {showNameInput ? 'Salvar Macro' : 
-               isWaitingForInput ? 'Digite no campo...' :
-               showActionChoice ? 'Escolha a ação' :
+               watchingInput ? 'Digitando...' :
                isSelectingElement ? 'Clique no elemento' :
-               isRecording ? 'Gravando' : 'Gravador de Macro'}
+               isRecording ? 'Gravando' : 'Macro'}
             </span>
           </div>
           <Button
@@ -267,47 +240,6 @@ export function FloatingMacroRecorder() {
           </Button>
         </div>
 
-        {/* Aguardando input */}
-        {isWaitingForInput && pendingElement && (
-          <div className="space-y-3">
-            <p className="text-xs text-muted-foreground">
-              Campo: <span className="font-medium text-foreground">
-                {pendingElement.info.placeholder || pendingElement.info.tagName}
-              </span>
-            </p>
-            <div className="flex gap-2">
-              <Button size="sm" className="flex-1" onClick={confirmTypeAction}>
-                <Check className="h-4 w-4 mr-1" />
-                Confirmar
-              </Button>
-              <Button size="sm" variant="outline" onClick={cancelTypeAction}>
-                Voltar
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Escolha de ação */}
-        {showActionChoice && pendingElement && (
-          <div className="space-y-3">
-            <p className="text-xs text-muted-foreground">
-              Elemento: <span className="font-medium text-foreground">
-                {pendingElement.info.placeholder || pendingElement.info.text?.slice(0, 25) || pendingElement.info.tagName}
-              </span>
-            </p>
-            <div className="flex gap-2">
-              <Button size="sm" className="flex-1" onClick={executeClickAction}>
-                <MousePointerClick className="h-4 w-4 mr-1" />
-                Clicar
-              </Button>
-              <Button size="sm" variant="secondary" className="flex-1" onClick={startTypeAction}>
-                <Type className="h-4 w-4 mr-1" />
-                Digitar
-              </Button>
-            </div>
-          </div>
-        )}
-
         {/* Nome da macro */}
         {showNameInput && (
           <div className="space-y-3">
@@ -316,6 +248,7 @@ export function FloatingMacroRecorder() {
               value={macroName}
               onChange={(e) => setMacroName(e.target.value)}
               autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && saveMacroHandler()}
             />
             <div className="flex gap-2">
               <Button size="sm" className="flex-1" onClick={saveMacroHandler}>
@@ -329,8 +262,8 @@ export function FloatingMacroRecorder() {
           </div>
         )}
         
-        {/* Controles principais */}
-        {!showNameInput && !showActionChoice && !isWaitingForInput && !isSelectingElement && (
+        {/* Controles */}
+        {!showNameInput && (
           <>
             <div className="flex items-center gap-2 mb-3">
               {!isRecording ? (
@@ -339,15 +272,10 @@ export function FloatingMacroRecorder() {
                   Gravar
                 </Button>
               ) : (
-                <>
-                  <Button size="sm" onClick={startElementSelection} variant="secondary" className="flex-1">
-                    <Crosshair className="h-4 w-4 mr-1" />
-                    Selecionar
-                  </Button>
-                  <Button size="sm" onClick={stopRecording} variant="destructive">
-                    <Square className="h-4 w-4" />
-                  </Button>
-                </>
+                <Button size="sm" onClick={stopRecording} variant="destructive" className="flex-1">
+                  <Square className="h-4 w-4 mr-1" />
+                  Parar
+                </Button>
               )}
             </div>
 
@@ -356,8 +284,8 @@ export function FloatingMacroRecorder() {
               <div className="space-y-1 max-h-[150px] overflow-y-auto">
                 <p className="text-xs text-muted-foreground mb-1">Passos: {steps.length}</p>
                 {steps.map((step, index) => (
-                  <div key={step.id} className="flex items-center gap-2 text-xs p-1.5 bg-muted/50 rounded group">
-                    <span className="text-muted-foreground">{index + 1}.</span>
+                  <div key={step.id} className="flex items-center gap-1 text-xs p-1 bg-muted/50 rounded group">
+                    <span className="text-muted-foreground w-4">{index + 1}.</span>
                     {step.type === 'navigate' ? (
                       <Badge variant="outline" className="text-xs py-0 flex-1 truncate">
                         <Navigation className="h-3 w-3 mr-1 shrink-0" />
@@ -366,18 +294,18 @@ export function FloatingMacroRecorder() {
                     ) : step.type === 'click' ? (
                       <Badge variant="default" className="text-xs py-0 flex-1 truncate">
                         <MousePointerClick className="h-3 w-3 mr-1 shrink-0" />
-                        <span className="truncate">{step.label}</span>
+                        <span className="truncate">{step.label?.replace('Clicar: ', '')}</span>
                       </Badge>
                     ) : (
                       <Badge variant="secondary" className="text-xs py-0 flex-1 truncate">
                         <Type className="h-3 w-3 mr-1 shrink-0" />
-                        <span className="truncate">{step.label}</span>
+                        <span className="truncate">{step.label?.replace('Digitar ', '').replace(' em:', ' →')}</span>
                       </Badge>
                     )}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-5 w-5 opacity-0 group-hover:opacity-100 shrink-0"
+                      className="h-4 w-4 opacity-0 group-hover:opacity-100 shrink-0"
                       onClick={() => removeStep(step.id)}
                     >
                       <Trash2 className="h-3 w-3 text-destructive" />
@@ -387,9 +315,15 @@ export function FloatingMacroRecorder() {
               </div>
             )}
 
-            {isRecording && steps.length === 0 && (
+            {isRecording && steps.length === 0 && !watchingInput && (
               <p className="text-xs text-muted-foreground text-center">
-                Clique em Selecionar para capturar elementos
+                Clique nos elementos da página
+              </p>
+            )}
+            
+            {watchingInput && (
+              <p className="text-xs text-primary text-center animate-pulse">
+                Digite e clique fora para capturar
               </p>
             )}
           </>
