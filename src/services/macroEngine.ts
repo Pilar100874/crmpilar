@@ -90,6 +90,48 @@ async function executeTypeText(step: MacroStep): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 100));
 }
 
+// Clicar em um elemento
+async function executeClick(step: MacroStep): Promise<void> {
+  const target = step.target || step.value;
+  if (!target) throw new Error('Seletor do elemento não definido');
+  
+  let element: HTMLElement | null = null;
+  
+  // Tenta primeiro por data-macro-id
+  element = document.querySelector(`[data-macro-id="${target}"]`);
+  
+  // Se não encontrou, tenta como seletor CSS direto
+  if (!element) {
+    try {
+      element = document.querySelector(target);
+    } catch {
+      // Seletor inválido
+    }
+  }
+  
+  // Tenta por texto do botão
+  if (!element && target.includes(':contains(')) {
+    const match = target.match(/button:contains\("(.+)"\)/);
+    if (match) {
+      const buttons = document.querySelectorAll('button');
+      for (const btn of buttons) {
+        if (btn.textContent?.trim().includes(match[1])) {
+          element = btn;
+          break;
+        }
+      }
+    }
+  }
+  
+  if (!element) throw new Error(`Elemento não encontrado: ${target}`);
+  
+  // Simula o clique
+  element.focus();
+  element.click();
+  
+  await new Promise(resolve => setTimeout(resolve, 300));
+}
+
 async function executeStep(step: MacroStep): Promise<void> {
   switch (step.type) {
     case 'navigate':
@@ -97,6 +139,9 @@ async function executeStep(step: MacroStep): Promise<void> {
       break;
     case 'typeText':
       await executeTypeText(step);
+      break;
+    case 'click':
+      await executeClick(step);
       break;
     default:
       throw new Error(`Tipo de step desconhecido: ${step.type}`);
@@ -157,6 +202,8 @@ export function getStepLabel(step: MacroStep): string {
       return `Abrir tela: ${step.value}`;
     case 'typeText':
       return `Digitar "${step.value}" em ${step.target}`;
+    case 'click':
+      return `Clicar em: ${step.target || step.value}`;
     default:
       return `Step: ${step.type}`;
   }
