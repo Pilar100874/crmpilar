@@ -4,7 +4,7 @@ import { X, MousePointer2 } from 'lucide-react';
 
 interface ElementSelectorProps {
   isActive: boolean;
-  onSelect: (selector: string, elementInfo: ElementInfo) => void;
+  onSelect: (selector: string, elementInfo: ElementInfo, element: HTMLElement) => void;
   onCancel: () => void;
 }
 
@@ -140,7 +140,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       className: target.className?.toString().slice(0, 100) || undefined,
     };
     
-    onSelect(selector, elementInfo);
+    onSelect(selector, elementInfo, target);
   }, [onSelect]);
 
   useEffect(() => {
