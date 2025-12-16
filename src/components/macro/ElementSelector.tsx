@@ -176,7 +176,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
   return (
     <div 
       data-element-selector
-      className="fixed inset-0 z-[9999] pointer-events-none"
+      className="fixed inset-0 z-[999999] pointer-events-none"
     >
       {/* Barra de instrução */}
       <div className="fixed top-4 left-1/2 -translate-x-1/2 pointer-events-auto">
