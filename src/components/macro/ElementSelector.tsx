@@ -171,26 +171,28 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
+        return false;
       };
       
-      // Adiciona bloqueadores temporários
-      document.addEventListener('mousedown', blockEvent, true);
-      document.addEventListener('click', blockEvent, true);
-      document.addEventListener('pointerdown', blockEvent, true);
+      // Adiciona bloqueadores em TODOS os eventos que podem fechar popup
+      const events = ['mousedown', 'mouseup', 'click', 'pointerdown', 'pointerup', 'focusin', 'focusout'];
+      events.forEach(evt => document.addEventListener(evt, blockEvent, true));
       
       // Foca o elemento de forma segura
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-          (element as HTMLInputElement).focus({ preventScroll: true });
+          const input = element as HTMLInputElement;
+          input.focus({ preventScroll: true });
+          // Garante que o cursor está no final
+          const len = input.value.length;
+          input.setSelectionRange(len, len);
         }
         
-        // Remove bloqueadores após um tempo
+        // Remove bloqueadores após um tempo maior
         setTimeout(() => {
-          document.removeEventListener('mousedown', blockEvent, true);
-          document.removeEventListener('click', blockEvent, true);
-          document.removeEventListener('pointerdown', blockEvent, true);
-        }, 100);
-      }, 10);
+          events.forEach(evt => document.removeEventListener(evt, blockEvent, true));
+        }, 200);
+      });
     }
     
     onSelect(selector, elementInfo, element, action);

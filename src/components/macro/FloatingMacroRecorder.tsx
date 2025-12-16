@@ -40,14 +40,14 @@ export function FloatingMacroRecorder() {
   useEffect(() => {
     if (!watchingInput) return;
 
-    const { element } = watchingInput;
+    const { element, selector, info } = watchingInput;
     initialValueRef.current = element.value;
+    let lastValue = element.value;
 
-    const handleBlur = () => {
+    const captureText = () => {
       const typedValue = element.value;
       
-      if (typedValue !== initialValueRef.current) {
-        const { selector, info } = watchingInput;
+      if (typedValue && typedValue !== initialValueRef.current) {
         const elementLabel = info.placeholder || info.tagName.toLowerCase();
         
         setSteps(prev => [...prev, {
@@ -60,18 +60,43 @@ export function FloatingMacroRecorder() {
         }]);
         
         toast.success('Texto capturado!');
+        return true;
       }
-      
+      return false;
+    };
+
+    const handleInput = () => {
+      lastValue = element.value;
+    };
+
+    const handleBlur = () => {
+      captureText();
       setWatchingInput(null);
       if (isRecording) {
         setTimeout(() => setIsSelectingElement(true), 200);
       }
     };
 
+    // Captura com Enter também
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        if (captureText()) {
+          setWatchingInput(null);
+          if (isRecording) {
+            setTimeout(() => setIsSelectingElement(true), 200);
+          }
+        }
+      }
+    };
+
+    element.addEventListener('input', handleInput);
     element.addEventListener('blur', handleBlur);
+    element.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      element.removeEventListener('input', handleInput);
       element.removeEventListener('blur', handleBlur);
+      element.removeEventListener('keydown', handleKeyDown);
     };
   }, [watchingInput, isRecording]);
 
