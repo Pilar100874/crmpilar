@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useMacro } from '@/contexts/MacroContext';
 import { MacroStep } from '@/types/macro';
 import { Button } from '@/components/ui/button';
@@ -31,74 +31,6 @@ export function FloatingMacroRecorder() {
   const [steps, setSteps] = useState<MacroStep[]>([]);
   const [showNameInput, setShowNameInput] = useState(false);
   const [lastCapturedPath, setLastCapturedPath] = useState<string | null>(null);
-  
-  // Para capturar digitação
-  const [watchingInput, setWatchingInput] = useState<{element: HTMLInputElement | HTMLTextAreaElement, selector: string, info: ElementInfo} | null>(null);
-  const initialValueRef = useRef('');
-
-  // Observa mudanças no input sendo monitorado
-  useEffect(() => {
-    if (!watchingInput) return;
-
-    const { element, selector, info } = watchingInput;
-    initialValueRef.current = element.value;
-    let lastValue = element.value;
-
-    const captureText = () => {
-      const typedValue = element.value;
-      
-      if (typedValue && typedValue !== initialValueRef.current) {
-        const elementLabel = info.placeholder || info.tagName.toLowerCase();
-        
-        setSteps(prev => [...prev, {
-          id: generateStepId(),
-          type: 'typeText',
-          value: typedValue,
-          target: selector,
-          label: `Digitar "${typedValue.slice(0, 12)}${typedValue.length > 12 ? '...' : ''}" em: ${elementLabel}`,
-          enabled: true
-        }]);
-        
-        toast.success('Texto capturado!');
-        return true;
-      }
-      return false;
-    };
-
-    const handleInput = () => {
-      lastValue = element.value;
-    };
-
-    const handleBlur = () => {
-      captureText();
-      setWatchingInput(null);
-      if (isRecording) {
-        setTimeout(() => setIsSelectingElement(true), 200);
-      }
-    };
-
-    // Captura com Enter também
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        if (captureText()) {
-          setWatchingInput(null);
-          if (isRecording) {
-            setTimeout(() => setIsSelectingElement(true), 200);
-          }
-        }
-      }
-    };
-
-    element.addEventListener('input', handleInput);
-    element.addEventListener('blur', handleBlur);
-    element.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      element.removeEventListener('input', handleInput);
-      element.removeEventListener('blur', handleBlur);
-      element.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [watchingInput, isRecording]);
 
   const startRecording = () => {
     setSteps([]);
@@ -110,7 +42,6 @@ export function FloatingMacroRecorder() {
 
   const stopRecording = () => {
     setIsSelectingElement(false);
-    setWatchingInput(null);
     
     if (steps.length === 0) {
       toast.error('Nenhum passo gravado');
@@ -124,7 +55,6 @@ export function FloatingMacroRecorder() {
   const cancelRecording = () => {
     setIsRecording(false);
     setIsSelectingElement(false);
-    setWatchingInput(null);
     setSteps([]);
     setShowNameInput(false);
     setMacroName('');
@@ -150,9 +80,7 @@ export function FloatingMacroRecorder() {
     setIsVisible(false);
   };
 
-  const handleElementSelected = (selector: string, info: ElementInfo, element: HTMLElement, action: 'click' | 'type') => {
-    setIsSelectingElement(false);
-    
+  const handleElementSelected = (selector: string, info: ElementInfo, element: HTMLElement, action: 'click' | 'type', typedValue?: string) => {
     // Adiciona navegação se mudou de tela
     const currentPath = window.location.pathname;
     if (lastCapturedPath !== currentPath) {
@@ -179,24 +107,22 @@ export function FloatingMacroRecorder() {
         enabled: true
       }]);
       
-      // Executa o clique
-      setTimeout(() => {
-        element.click();
-        toast.success('Clique capturado!');
-        setTimeout(() => setIsSelectingElement(true), 300);
-      }, 50);
+      toast.success('Clique capturado!');
+      setTimeout(() => setIsSelectingElement(true), 300);
     } else {
-      // Ação de digitar - o ElementSelector já fez o focus com bloqueio de eventos
-      const isInputElement = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
-      
-      if (isInputElement) {
-        const inputEl = element as HTMLInputElement | HTMLTextAreaElement;
-        setWatchingInput({ element: inputEl, selector, info });
-        toast.info('Digite no campo. Clique fora para capturar.');
-      } else {
-        toast.error('Este elemento não aceita digitação');
-        setTimeout(() => setIsSelectingElement(true), 200);
+      // Ação de digitar - o ElementSelector já capturou o texto
+      if (typedValue) {
+        setSteps(prev => [...prev, {
+          id: generateStepId(),
+          type: 'typeText',
+          value: typedValue,
+          target: selector,
+          label: `Digitar "${typedValue.slice(0, 12)}${typedValue.length > 12 ? '...' : ''}" em: ${elementLabel}`,
+          enabled: true
+        }]);
+        toast.success('Texto capturado!');
       }
+      setTimeout(() => setIsSelectingElement(true), 300);
     }
   };
 
@@ -246,7 +172,6 @@ export function FloatingMacroRecorder() {
             )}
             <span className="font-medium text-sm">
               {showNameInput ? 'Salvar Macro' : 
-               watchingInput ? 'Digitando...' :
                isSelectingElement ? 'Selecione o elemento' :
                isRecording ? 'Gravando' : 'Macro'}
             </span>
@@ -339,15 +264,9 @@ export function FloatingMacroRecorder() {
               </div>
             )}
 
-            {isRecording && steps.length === 0 && !watchingInput && (
+            {isRecording && steps.length === 0 && (
               <p className="text-xs text-muted-foreground text-center">
                 Clique nos elementos da página
-              </p>
-            )}
-            
-            {watchingInput && (
-              <p className="text-xs text-primary text-center animate-pulse">
-                Digite e clique fora para capturar
               </p>
             )}
           </>
