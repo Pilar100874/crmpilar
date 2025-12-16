@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMacro } from '@/contexts/MacroContext';
 import { MacroStep } from '@/types/macro';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,8 @@ import {
   Navigation,
   Type,
   Trash2,
-  MousePointerClick
+  MousePointerClick,
+  Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ElementSelector, ElementInfo } from './ElementSelector';
@@ -23,6 +24,7 @@ function generateStepId(): string {
 
 export function FloatingMacroRecorder() {
   const { saveMacro } = useMacro();
+  const recorderRef = useRef<HTMLDivElement>(null);
   
   const [isVisible, setIsVisible] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -35,18 +37,30 @@ export function FloatingMacroRecorder() {
   // Estado para escolha de ação
   const [pendingElement, setPendingElement] = useState<{selector: string, info: ElementInfo, element: HTMLElement} | null>(null);
   const [showActionChoice, setShowActionChoice] = useState(false);
-  const [showTextInput, setShowTextInput] = useState(false);
-  const [textToType, setTextToType] = useState('');
+  const [isWaitingForInput, setIsWaitingForInput] = useState(false);
+  const [originalValue, setOriginalValue] = useState('');
 
   // Ativa o seletor quando está gravando e não tem escolha pendente
   useEffect(() => {
-    if (isRecording && !showNameInput && !isSelectingElement && !showActionChoice && !showTextInput) {
+    if (isRecording && !showNameInput && !isSelectingElement && !showActionChoice && !isWaitingForInput) {
       const timer = setTimeout(() => {
         setIsSelectingElement(true);
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [isRecording, showNameInput, isSelectingElement, showActionChoice, showTextInput]);
+  }, [isRecording, showNameInput, isSelectingElement, showActionChoice, isWaitingForInput]);
+
+  // Impede que cliques no recorder fechem popups
+  useEffect(() => {
+    const handleRecorderClick = (e: MouseEvent) => {
+      if (recorderRef.current?.contains(e.target as Node)) {
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener('click', handleRecorderClick, true);
+    return () => document.removeEventListener('click', handleRecorderClick, true);
+  }, []);
 
   const startRecording = () => {
     setSteps([]);
@@ -58,7 +72,7 @@ export function FloatingMacroRecorder() {
   const stopRecording = () => {
     setIsSelectingElement(false);
     setShowActionChoice(false);
-    setShowTextInput(false);
+    setIsWaitingForInput(false);
     setPendingElement(null);
     if (steps.length === 0) {
       toast.error('Nenhum passo gravado');
@@ -73,13 +87,12 @@ export function FloatingMacroRecorder() {
     setIsRecording(false);
     setIsSelectingElement(false);
     setShowActionChoice(false);
-    setShowTextInput(false);
+    setIsWaitingForInput(false);
     setPendingElement(null);
     setSteps([]);
     setShowNameInput(false);
     setMacroName('');
     setLastCapturedPath(null);
-    setTextToType('');
   };
 
   const saveMacroHandler = async () => {
@@ -101,163 +114,130 @@ export function FloatingMacroRecorder() {
   };
 
   const handleElementSelected = (selector: string, info: ElementInfo, element: HTMLElement) => {
-    // Desativa o seletor primeiro
     setIsSelectingElement(false);
     
-    // Pequeno delay para garantir que o overlay desmonte
     setTimeout(() => {
       setPendingElement({ selector, info, element });
       setShowActionChoice(true);
     }, 50);
   };
 
-  const executeClickAction = () => {
-    if (!pendingElement) return;
-    
-    const { selector, info, element } = pendingElement;
+  const addNavigationStep = () => {
     const currentPath = window.location.pathname;
-    const newSteps: MacroStep[] = [];
-    
-    // Adiciona navegação se mudou de tela
     if (lastCapturedPath !== currentPath) {
-      newSteps.push({
+      const step: MacroStep = {
         id: generateStepId(),
         type: 'navigate',
         value: currentPath,
         label: `Abrir: ${currentPath}`,
         enabled: true
-      });
+      };
+      setSteps(prev => [...prev, step]);
       setLastCapturedPath(currentPath);
     }
+  };
+
+  const executeClickAction = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!pendingElement) return;
+    
+    const { selector, info, element } = pendingElement;
+    
+    addNavigationStep();
     
     const elementLabel = info.placeholder || info.text?.slice(0, 20) || info.tagName.toLowerCase();
     
     // Adiciona o passo de clique
-    newSteps.push({
+    setSteps(prev => [...prev, {
       id: generateStepId(),
       type: 'click',
       value: selector,
       target: selector,
       label: `Clicar: ${elementLabel}`,
       enabled: true
-    });
+    }]);
     
-    setSteps(prev => [...prev, ...newSteps]);
-    
-    // Executa o clique no elemento
+    // Executa o clique
     try {
-      element.focus();
       element.click();
       toast.success('Clique executado!');
-    } catch (err) {
-      toast.error('Erro ao clicar no elemento');
+    } catch {
+      toast.error('Erro ao clicar');
     }
     
-    // Limpa e continua gravação
     setShowActionChoice(false);
     setPendingElement(null);
   };
 
-  const showTypeInput = () => {
-    setShowActionChoice(false);
-    setShowTextInput(true);
-    setTextToType('');
-  };
-
-  const executeTypeAction = () => {
+  const startTypeAction = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!pendingElement) return;
     
-    const { selector, info } = pendingElement;
-    const currentPath = window.location.pathname;
-    const newSteps: MacroStep[] = [];
+    const { element } = pendingElement;
     
-    // Adiciona navegação se mudou de tela
-    if (lastCapturedPath !== currentPath) {
-      newSteps.push({
-        id: generateStepId(),
-        type: 'navigate',
-        value: currentPath,
-        label: `Abrir: ${currentPath}`,
-        enabled: true
-      });
-      setLastCapturedPath(currentPath);
-    }
+    // Salva o valor original
+    const inputEl = element as HTMLInputElement | HTMLTextAreaElement;
+    setOriginalValue(inputEl.value || '');
+    
+    // Foca no elemento para o usuário digitar
+    setShowActionChoice(false);
+    setIsWaitingForInput(true);
+    
+    setTimeout(() => {
+      inputEl.focus();
+      inputEl.select();
+    }, 100);
+    
+    toast.info('Digite no campo selecionado e clique em "Confirmar"');
+  };
+
+  const confirmTypeAction = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!pendingElement) return;
+    
+    const { selector, info, element } = pendingElement;
+    const inputEl = element as HTMLInputElement | HTMLTextAreaElement;
+    const typedValue = inputEl.value;
+    
+    addNavigationStep();
     
     const elementLabel = info.placeholder || info.text?.slice(0, 20) || info.tagName.toLowerCase();
     
     // Adiciona o passo de digitar
-    newSteps.push({
+    setSteps(prev => [...prev, {
       id: generateStepId(),
       type: 'typeText',
-      value: textToType,
+      value: typedValue,
       target: selector,
-      label: `Digitar "${textToType.slice(0, 15)}${textToType.length > 15 ? '...' : ''}" em: ${elementLabel}`,
+      label: `Digitar "${typedValue.slice(0, 15)}${typedValue.length > 15 ? '...' : ''}" em: ${elementLabel}`,
       enabled: true
-    });
+    }]);
     
-    setSteps(prev => [...prev, ...newSteps]);
+    toast.success('Texto capturado!');
     
-    // Re-encontra o elemento pelo seletor (pode ter mudado de referência)
-    const findElement = (): HTMLElement | null => {
-      // Tenta pelo seletor direto
-      try {
-        const el = document.querySelector(selector);
-        if (el) return el as HTMLElement;
-      } catch {}
-      
-      // Tenta por placeholder
-      if (info.placeholder) {
-        const inputs = document.querySelectorAll('input, textarea');
-        for (const input of inputs) {
-          if ((input as HTMLInputElement).placeholder === info.placeholder) {
-            return input as HTMLElement;
-          }
-        }
-      }
-      
-      return null;
-    };
+    setIsWaitingForInput(false);
+    setPendingElement(null);
+  };
+
+  const cancelTypeAction = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     
-    // Executa a digitação no elemento
-    try {
-      const element = findElement();
-      if (!element) {
-        toast.error('Elemento não encontrado. O popup pode ter fechado.');
-        setShowTextInput(false);
-        setTextToType('');
-        setPendingElement(null);
-        return;
-      }
-      
-      const inputEl = element as HTMLInputElement | HTMLTextAreaElement;
-      inputEl.focus();
-      
-      // Usa o setter nativo para React
-      const nativeSetter = Object.getOwnPropertyDescriptor(
-        element.tagName === 'TEXTAREA' 
-          ? window.HTMLTextAreaElement.prototype 
-          : window.HTMLInputElement.prototype,
-        'value'
-      )?.set;
-      
-      if (nativeSetter) {
-        nativeSetter.call(inputEl, textToType);
-      } else {
-        inputEl.value = textToType;
-      }
-      
+    if (pendingElement) {
+      // Restaura o valor original
+      const inputEl = pendingElement.element as HTMLInputElement | HTMLTextAreaElement;
+      inputEl.value = originalValue;
       inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-      inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-      
-      toast.success('Texto digitado!');
-    } catch (err) {
-      toast.error('Erro ao digitar no elemento');
     }
     
-    // Limpa e continua gravação
-    setShowTextInput(false);
-    setTextToType('');
-    setPendingElement(null);
+    setIsWaitingForInput(false);
+    setShowActionChoice(true);
   };
 
   const removeStep = (stepId: string) => {
@@ -292,7 +272,12 @@ export function FloatingMacroRecorder() {
 
   return (
     <>
-      <div className="fixed bottom-4 left-4 z-[9999999] bg-background border rounded-lg shadow-xl p-3 min-w-[300px] pointer-events-auto">
+      <div 
+        ref={recorderRef}
+        className="fixed bottom-4 left-4 z-[9999999] bg-background border rounded-lg shadow-xl p-3 min-w-[300px]"
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -304,7 +289,7 @@ export function FloatingMacroRecorder() {
             )}
             <span className="font-medium text-sm">
               {showNameInput ? 'Salvar Macro' : 
-               showTextInput ? 'Digite o texto' :
+               isWaitingForInput ? 'Digite no campo...' :
                showActionChoice ? 'Escolha a ação' :
                isRecording ? 'Clique no elemento...' : 'Gravador de Macro'}
             </span>
@@ -313,7 +298,8 @@ export function FloatingMacroRecorder() {
             variant="ghost"
             size="icon"
             className="h-6 w-6"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               if (isRecording) {
                 cancelRecording();
               }
@@ -324,44 +310,33 @@ export function FloatingMacroRecorder() {
           </Button>
         </div>
 
-        {/* Input de texto para digitar */}
-        {showTextInput && pendingElement && (
+        {/* Aguardando input do usuário */}
+        {isWaitingForInput && pendingElement && (
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground">
-              Elemento: <span className="font-medium text-foreground">
+              Campo: <span className="font-medium text-foreground">
                 {pendingElement.info.placeholder || pendingElement.info.text?.slice(0, 30) || pendingElement.info.tagName}
               </span>
             </p>
-            <Input
-              placeholder="Digite o texto..."
-              value={textToType}
-              onChange={(e) => setTextToType(e.target.value)}
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  executeTypeAction();
-                }
-              }}
-            />
+            <p className="text-xs text-primary">
+              Digite no campo da página e clique em Confirmar
+            </p>
             <div className="flex gap-2">
               <Button 
                 size="sm" 
                 variant="default"
                 className="flex-1"
-                onClick={executeTypeAction}
+                onClick={confirmTypeAction}
               >
-                <Type className="h-4 w-4 mr-1" />
-                Digitar
+                <Check className="h-4 w-4 mr-1" />
+                Confirmar
               </Button>
               <Button 
                 size="sm" 
                 variant="outline"
-                onClick={() => {
-                  setShowTextInput(false);
-                  setShowActionChoice(true);
-                }}
+                onClick={cancelTypeAction}
               >
-                Voltar
+                Cancelar
               </Button>
             </div>
           </div>
@@ -389,7 +364,7 @@ export function FloatingMacroRecorder() {
                 size="sm" 
                 variant="secondary"
                 className="flex-1"
-                onClick={showTypeInput}
+                onClick={startTypeAction}
               >
                 <Type className="h-4 w-4 mr-1" />
                 Digitar
@@ -420,7 +395,7 @@ export function FloatingMacroRecorder() {
         )}
         
         {/* Controles e lista de passos */}
-        {!showNameInput && !showActionChoice && !showTextInput && (
+        {!showNameInput && !showActionChoice && !isWaitingForInput && (
           <>
             {/* Controles */}
             <div className="flex items-center gap-2 mb-3">
