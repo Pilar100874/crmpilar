@@ -43,16 +43,10 @@ export function FloatingMacroRecorder() {
     const { element } = watchingInput;
     initialValueRef.current = element.value;
 
-    const handleInput = () => {
-      // Usuário está digitando - não faz nada, só espera
-    };
-
     const handleBlur = () => {
-      // Quando sair do campo, captura o que foi digitado
       const typedValue = element.value;
       
       if (typedValue !== initialValueRef.current) {
-        // Houve digitação - salva o passo
         const { selector, info } = watchingInput;
         const elementLabel = info.placeholder || info.tagName.toLowerCase();
         
@@ -68,18 +62,15 @@ export function FloatingMacroRecorder() {
         toast.success('Texto capturado!');
       }
       
-      // Volta para seleção
       setWatchingInput(null);
       if (isRecording) {
         setTimeout(() => setIsSelectingElement(true), 200);
       }
     };
 
-    element.addEventListener('input', handleInput);
     element.addEventListener('blur', handleBlur);
 
     return () => {
-      element.removeEventListener('input', handleInput);
       element.removeEventListener('blur', handleBlur);
     };
   }, [watchingInput, isRecording]);
@@ -134,7 +125,7 @@ export function FloatingMacroRecorder() {
     setIsVisible(false);
   };
 
-  const handleElementSelected = (selector: string, info: ElementInfo, element: HTMLElement) => {
+  const handleElementSelected = (selector: string, info: ElementInfo, element: HTMLElement, action: 'click' | 'type') => {
     setIsSelectingElement(false);
     
     // Adiciona navegação se mudou de tela
@@ -151,31 +142,37 @@ export function FloatingMacroRecorder() {
     }
     
     const elementLabel = info.placeholder || info.text?.slice(0, 15) || info.tagName.toLowerCase();
-    const isInputElement = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
     
-    // Clica no elemento automaticamente
-    element.click();
-    
-    // Adiciona passo de clique
-    setSteps(prev => [...prev, {
-      id: generateStepId(),
-      type: 'click',
-      value: selector,
-      target: selector,
-      label: `Clicar: ${elementLabel}`,
-      enabled: true
-    }]);
-    
-    // Se for input, foca e monitora digitação
-    if (isInputElement) {
-      const inputEl = element as HTMLInputElement | HTMLTextAreaElement;
-      inputEl.focus();
-      setWatchingInput({ element: inputEl, selector, info });
-      toast.info('Digite no campo. Clique fora para capturar.');
-    } else {
-      // Se não for input, volta direto para seleção
+    if (action === 'click') {
+      // Clica no elemento
+      element.click();
+      
+      // Adiciona passo de clique
+      setSteps(prev => [...prev, {
+        id: generateStepId(),
+        type: 'click',
+        value: selector,
+        target: selector,
+        label: `Clicar: ${elementLabel}`,
+        enabled: true
+      }]);
+      
       toast.success('Clique capturado!');
       setTimeout(() => setIsSelectingElement(true), 300);
+    } else {
+      // Ação de digitar
+      const isInputElement = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
+      
+      if (isInputElement) {
+        const inputEl = element as HTMLInputElement | HTMLTextAreaElement;
+        inputEl.focus();
+        inputEl.click();
+        setWatchingInput({ element: inputEl, selector, info });
+        toast.info('Digite no campo. Clique fora para capturar.');
+      } else {
+        toast.error('Este elemento não aceita digitação');
+        setTimeout(() => setIsSelectingElement(true), 200);
+      }
     }
   };
 
@@ -223,7 +220,7 @@ export function FloatingMacroRecorder() {
             <span className="font-medium text-sm">
               {showNameInput ? 'Salvar Macro' : 
                watchingInput ? 'Digitando...' :
-               isSelectingElement ? 'Clique no elemento' :
+               isSelectingElement ? 'Selecione o elemento' :
                isRecording ? 'Gravando' : 'Macro'}
             </span>
           </div>
