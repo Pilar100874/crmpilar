@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { X, MousePointer2, MousePointerClick, Type, Check } from 'lucide-react';
 
 interface ElementSelectorProps {
@@ -96,108 +95,23 @@ function generateSelector(element: HTMLElement): string {
   return path.join(' > ');
 }
 
-// Modal renderizado via portal - independente de qualquer popup
-function TextInputModal({ 
-  elementInfo, 
-  onConfirm, 
-  onCancel 
-}: { 
-  elementInfo: ElementInfo;
-  onConfirm: (text: string) => void;
-  onCancel: () => void;
-}) {
-  const [value, setValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    // Foca no input quando o modal abrir
-    const timer = setTimeout(() => inputRef.current?.focus(), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return createPortal(
-    <div 
-      className="fixed inset-0 z-[9999999] flex items-center justify-center"
-      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onCancel();
-        }
-      }}
-    >
-      <div 
-        className="bg-background border rounded-xl shadow-2xl p-6 min-w-[350px] max-w-md"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Type className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-lg">Digitar Texto</h3>
-            <p className="text-sm text-muted-foreground">
-              Campo: {elementInfo.placeholder || elementInfo.tagName.toLowerCase()}
-            </p>
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-muted-foreground block mb-2">
-              Texto a ser digitado:
-            </label>
-            <Input
-              ref={inputRef}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && value.trim()) {
-                  onConfirm(value);
-                } else if (e.key === 'Escape') {
-                  onCancel();
-                }
-              }}
-              placeholder="Digite o texto aqui..."
-              className="h-11"
-            />
-          </div>
-          
-          <div className="flex gap-2 justify-end">
-            <Button
-              variant="outline"
-              onClick={onCancel}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => value.trim() && onConfirm(value)}
-              disabled={!value.trim()}
-            >
-              <Check className="h-4 w-4 mr-2" />
-              Confirmar
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>,
-    document.body
-  );
-}
-
 export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelectorProps) {
   const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
-  const [textInputModal, setTextInputModal] = useState<{
+  
+  // Estado para modo de digitação - usuário digita manualmente no campo
+  const [typingMode, setTypingMode] = useState<{
     element: HTMLElement;
     selector: string;
     info: ElementInfo;
   } | null>(null);
+  const [confirmButtonPos, setConfirmButtonPos] = useState<{ top: number; left: number } | null>(null);
   
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (selectedElement || textInputModal) return;
+    if (selectedElement || typingMode) return;
     
     const target = e.target as HTMLElement;
     
@@ -207,7 +121,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     }
     
     setHoveredElement(target);
-  }, [selectedElement, textInputModal]);
+  }, [selectedElement, typingMode]);
 
   const handleClick = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -217,20 +131,23 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       return;
     }
     
+    // Se estiver no modo de digitação, permite cliques normais no campo
+    if (typingMode) {
+      // Permite o clique normal para o usuário poder clicar no input
+      return;
+    }
+    
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
     
-    // Só seleciona elemento se não estiver em modo modal
-    if (!textInputModal) {
-      const rect = target.getBoundingClientRect();
-      setSelectedElement(target);
-      setMenuPosition({
-        top: rect.top + window.scrollY,
-        left: rect.right + 8 + window.scrollX
-      });
-    }
-  }, [textInputModal]);
+    const rect = target.getBoundingClientRect();
+    setSelectedElement(target);
+    setMenuPosition({
+      top: rect.top + window.scrollY,
+      left: rect.right + 8 + window.scrollX
+    });
+  }, [typingMode]);
 
   const handleAction = (action: 'click' | 'type') => {
     if (!selectedElement) return;
@@ -247,38 +164,64 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       className: element.className?.toString().slice(0, 100) || undefined,
     };
     
-    // Limpa o estado do menu ANTES de abrir modal ou executar ação
-    setSelectedElement(null);
+    // Limpa menu
     setMenuPosition(null);
-    setHoveredElement(null);
     
     if (action === 'click') {
+      setSelectedElement(null);
+      setHoveredElement(null);
       onSelect(selector, elementInfo, element, 'click');
     } else {
-      // Abre modal para digitar - o popup pode fechar, não importa
-      setTextInputModal({
+      // Modo de digitação: mantém elemento selecionado, mostra botão confirmar
+      // O usuário pode agora clicar no campo e digitar normalmente
+      setTypingMode({
         element,
         selector,
         info: elementInfo
       });
+      
+      // Posiciona botão de confirmar próximo ao elemento
+      const rect = element.getBoundingClientRect();
+      setConfirmButtonPos({
+        top: rect.bottom + 8 + window.scrollY,
+        left: rect.left + window.scrollX
+      });
     }
   };
 
-  const handleTextConfirm = (text: string) => {
-    if (!textInputModal) return;
+  const confirmTyping = () => {
+    if (!typingMode) return;
+    
+    const element = typingMode.element;
+    let typedValue = '';
+    
+    // Lê o valor que o usuário digitou no campo
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+      typedValue = element.value;
+    } else if (element.isContentEditable) {
+      typedValue = element.textContent || '';
+    }
     
     onSelect(
-      textInputModal.selector, 
-      textInputModal.info, 
-      textInputModal.element, 
+      typingMode.selector, 
+      typingMode.info, 
+      typingMode.element, 
       'type', 
-      text
+      typedValue
     );
-    setTextInputModal(null);
+    
+    // Limpa estados
+    setTypingMode(null);
+    setConfirmButtonPos(null);
+    setSelectedElement(null);
+    setHoveredElement(null);
   };
 
-  const handleTextCancel = () => {
-    setTextInputModal(null);
+  const cancelTyping = () => {
+    setTypingMode(null);
+    setConfirmButtonPos(null);
+    setSelectedElement(null);
+    setHoveredElement(null);
   };
 
   const cancelSelection = () => {
@@ -292,18 +235,19 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       setSelectedElement(null);
       setMenuPosition(null);
       setHoveredElement(null);
-      setTextInputModal(null);
+      setTypingMode(null);
+      setConfirmButtonPos(null);
       return;
     }
 
-    // Bloqueia eventos apenas quando não estamos no modal
+    // Bloqueia eventos apenas quando não estamos no modo de digitação
     const blockEvent = (e: Event) => {
       const target = e.target as HTMLElement;
       if (target.closest('[data-element-selector]')) {
         return;
       }
-      // Não bloqueia se o modal de texto estiver aberto
-      if (document.querySelector('[data-text-input-modal]')) {
+      // Não bloqueia se estiver no modo de digitação
+      if (typingMode) {
         return;
       }
       e.preventDefault();
@@ -313,8 +257,12 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
 
     document.addEventListener('mousemove', handleMouseMove, true);
     document.addEventListener('click', handleClick, true);
-    document.addEventListener('mousedown', blockEvent, true);
-    document.addEventListener('pointerdown', blockEvent, true);
+    
+    // Só bloqueia mousedown/pointerdown quando não está em modo de digitação
+    if (!typingMode) {
+      document.addEventListener('mousedown', blockEvent, true);
+      document.addEventListener('pointerdown', blockEvent, true);
+    }
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove, true);
@@ -322,17 +270,21 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       document.removeEventListener('mousedown', blockEvent, true);
       document.removeEventListener('pointerdown', blockEvent, true);
     };
-  }, [isActive, handleMouseMove, handleClick]);
+  }, [isActive, handleMouseMove, handleClick, typingMode]);
 
   // Highlight do elemento
   useEffect(() => {
-    const targetElement = selectedElement || hoveredElement;
+    const targetElement = typingMode?.element || selectedElement || hoveredElement;
     if (!targetElement) return;
 
     const originalOutline = targetElement.style.outline;
     const originalOutlineOffset = targetElement.style.outlineOffset;
     
-    const color = selectedElement ? 'hsl(var(--destructive))' : 'hsl(var(--primary))';
+    const color = typingMode 
+      ? 'hsl(142, 76%, 36%)' // Verde para modo digitação
+      : selectedElement 
+        ? 'hsl(var(--destructive))' 
+        : 'hsl(var(--primary))';
     
     targetElement.style.outline = `3px solid ${color}`;
     targetElement.style.outlineOffset = '2px';
@@ -341,7 +293,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       targetElement.style.outline = originalOutline;
       targetElement.style.outlineOffset = originalOutlineOffset;
     };
-  }, [hoveredElement, selectedElement]);
+  }, [hoveredElement, selectedElement, typingMode]);
 
   if (!isActive) return null;
 
@@ -352,7 +304,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         className="fixed inset-0 z-[999999] pointer-events-none"
       >
         {/* Barra de instrução */}
-        {!textInputModal && (
+        {!typingMode && (
           <div className="fixed top-4 left-1/2 -translate-x-1/2 pointer-events-auto">
             <div className="bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-3">
               <MousePointer2 className="h-5 w-5 animate-pulse" />
@@ -378,7 +330,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         )}
 
         {/* Menu de ações ao lado do elemento */}
-        {selectedElement && menuPosition && (
+        {selectedElement && menuPosition && !typingMode && (
           <div 
             ref={menuRef}
             className="fixed pointer-events-auto z-[9999999]"
@@ -411,7 +363,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         )}
 
         {/* Info do elemento hover */}
-        {hoveredElement && !selectedElement && !textInputModal && (
+        {hoveredElement && !selectedElement && !typingMode && (
           <div className="fixed bottom-4 left-1/2 -translate-x-1/2 pointer-events-none">
             <div className="bg-background border rounded-lg shadow-lg px-3 py-2 text-sm">
               <span className="text-muted-foreground">Elemento: </span>
@@ -425,13 +377,56 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         )}
       </div>
 
-      {/* Modal de texto - via portal, independente de popups */}
-      {textInputModal && (
-        <TextInputModal
-          elementInfo={textInputModal.info}
-          onConfirm={handleTextConfirm}
-          onCancel={handleTextCancel}
-        />
+      {/* Botão de confirmar digitação - renderizado via portal */}
+      {typingMode && confirmButtonPos && createPortal(
+        <div
+          data-element-selector
+          className="fixed z-[9999999] pointer-events-auto"
+          style={{
+            top: confirmButtonPos.top,
+            left: confirmButtonPos.left
+          }}
+        >
+          <div className="bg-background border rounded-lg shadow-xl p-3 flex flex-col gap-2 min-w-[200px]">
+            <p className="text-sm text-muted-foreground">
+              Digite no campo acima e confirme
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={confirmTyping}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                <Check className="h-4 w-4 mr-1" />
+                Confirmar
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={cancelTyping}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Instrução flutuante no modo digitação */}
+      {typingMode && createPortal(
+        <div
+          data-element-selector
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999999] pointer-events-none"
+        >
+          <div className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-3">
+            <Type className="h-5 w-5" />
+            <span className="font-medium">
+              Clique no campo destacado e digite. Depois clique em Confirmar.
+            </span>
+          </div>
+        </div>,
+        document.body
       )}
     </>
   );
