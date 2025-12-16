@@ -144,9 +144,6 @@ export function FloatingMacroRecorder() {
     const elementLabel = info.placeholder || info.text?.slice(0, 15) || info.tagName.toLowerCase();
     
     if (action === 'click') {
-      // Clica no elemento
-      element.click();
-      
       // Adiciona passo de clique
       setSteps(prev => [...prev, {
         id: generateStepId(),
@@ -157,8 +154,12 @@ export function FloatingMacroRecorder() {
         enabled: true
       }]);
       
-      toast.success('Clique capturado!');
-      setTimeout(() => setIsSelectingElement(true), 300);
+      // Executa o clique
+      setTimeout(() => {
+        element.click();
+        toast.success('Clique capturado!');
+        setTimeout(() => setIsSelectingElement(true), 300);
+      }, 50);
     } else {
       // Ação de digitar
       const isInputElement = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
@@ -207,7 +208,10 @@ export function FloatingMacroRecorder() {
 
   return (
     <>
-      <div className="fixed bottom-4 left-4 z-[9999999] bg-background border rounded-lg shadow-xl p-3 min-w-[260px]">
+      <div 
+        data-element-selector
+        className="fixed bottom-4 left-4 z-[9999999] bg-background border rounded-lg shadow-xl p-3 min-w-[260px]"
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
