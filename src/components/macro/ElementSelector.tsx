@@ -186,25 +186,22 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       setSelectedElement(null);
       setMenuPosition(null);
       setHoveredElement(null);
-      // Notifica - o clique será executado pelo parent após remover listeners
       onSelect(selector, elementInfo, element, 'click');
     } else {
-      // Entra em modo digitação - NÃO limpa estados ainda para não disparar eventos
+      // Entra em modo digitação
       const isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
       if (isInput) {
         const input = element as HTMLInputElement;
-        // Primeiro entra em modo digitação
+        // IMPORTANTE: NÃO limpa estados - mantém tudo como está
+        // Apenas adiciona o modo digitação
         setTypingMode({
           element,
           selector,
           info: elementInfo,
           initialValue: input.value
         });
-        // Depois limpa o menu (já em modo seguro)
-        setSelectedElement(null);
+        // Esconde o menu mas mantém selectedElement
         setMenuPosition(null);
-        setHoveredElement(null);
-        // NÃO foca automaticamente - usuário clica no input
       } else {
         setSelectedElement(null);
         setMenuPosition(null);
@@ -220,8 +217,10 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     const input = typingMode.element as HTMLInputElement;
     const typedValue = input.value;
     
-    onSelect(typingMode.selector, typingMode.info, typingMode.element, 'type', typedValue);
     setTypingMode(null);
+    setSelectedElement(null);
+    setHoveredElement(null);
+    onSelect(typingMode.selector, typingMode.info, typingMode.element, 'type', typedValue);
   };
 
   const cancelTyping = () => {
@@ -231,6 +230,8 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     const input = typingMode.element as HTMLInputElement;
     input.value = typingMode.initialValue;
     setTypingMode(null);
+    setSelectedElement(null);
+    setHoveredElement(null);
   };
 
   const cancelSelection = () => {
@@ -356,7 +357,15 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
               size="sm"
               variant="ghost"
               className="justify-start gap-2 h-8"
-              onClick={() => handleAction('click')}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAction('click');
+              }}
             >
               <MousePointerClick className="h-4 w-4 text-primary" />
               Clicar
@@ -365,7 +374,15 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
               size="sm"
               variant="ghost"
               className="justify-start gap-2 h-8"
-              onClick={() => handleAction('type')}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAction('type');
+              }}
             >
               <Type className="h-4 w-4 text-primary" />
               Digitar
