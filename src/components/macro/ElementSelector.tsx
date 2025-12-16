@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, MousePointer2, MousePointerClick, Type } from 'lucide-react';
+import { X, MousePointer2, MousePointerClick, Type, Check } from 'lucide-react';
 
 interface ElementSelectorProps {
   isActive: boolean;
-  onSelect: (selector: string, elementInfo: ElementInfo, element: HTMLElement, action: 'click' | 'type') => void;
+  onSelect: (selector: string, elementInfo: ElementInfo, element: HTMLElement, action: 'click' | 'type', typedValue?: string) => void;
   onCancel: () => void;
 }
 
@@ -98,10 +98,58 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
   const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [typingMode, setTypingMode] = useState<{ element: HTMLElement; selector: string; info: ElementInfo; initialValue: string } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // Bloqueia eventos para elementos fora do seletor e do input em modo digitação
+  const handleMouseDown = useCallback((e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    
+    // Permite interação com o seletor
+    if (target.closest('[data-element-selector]')) {
+      return;
+    }
+    
+    // Em modo digitação, permite interação com o input selecionado
+    if (typingMode && (target === typingMode.element || typingMode.element.contains(target))) {
+      return;
+    }
+    
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  }, [typingMode]);
+
+  const handleClick = useCallback((e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    
+    // Permite cliques no seletor
+    if (target.closest('[data-element-selector]')) {
+      return;
+    }
+    
+    // Em modo digitação, permite cliques no input
+    if (typingMode && (target === typingMode.element || typingMode.element.contains(target))) {
+      return;
+    }
+    
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    
+    // Só seleciona elemento se não estiver em modo digitação
+    if (!typingMode) {
+      const rect = target.getBoundingClientRect();
+      setSelectedElement(target);
+      setMenuPosition({
+        top: rect.top + window.scrollY,
+        left: rect.right + 8 + window.scrollX
+      });
+    }
+  }, [typingMode]);
+
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (selectedElement) return; // Não muda hover se já tem elemento selecionado
+    if (selectedElement || typingMode) return;
     
     const target = e.target as HTMLElement;
     
@@ -111,39 +159,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     }
     
     setHoveredElement(target);
-  }, [selectedElement]);
-
-  const handleMouseDown = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    
-    if (target.closest('[data-element-selector]')) {
-      return;
-    }
-    
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-  }, []);
-
-  const handleClick = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    
-    if (target.closest('[data-element-selector]')) {
-      return;
-    }
-    
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    
-    // Seleciona o elemento e mostra o menu
-    const rect = target.getBoundingClientRect();
-    setSelectedElement(target);
-    setMenuPosition({
-      top: rect.top + window.scrollY,
-      left: rect.right + 8 + window.scrollX
-    });
-  }, []);
+  }, [selectedElement, typingMode]);
 
   const handleAction = (action: 'click' | 'type') => {
     if (!selectedElement) return;
@@ -160,42 +176,50 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       className: element.className?.toString().slice(0, 100) || undefined,
     };
     
-    // Limpa estado visual
     setSelectedElement(null);
     setMenuPosition(null);
     setHoveredElement(null);
     
-    // Para ação de digitar, mantém bloqueio de eventos durante o focus
-    if (action === 'type') {
-      const blockEvent = (e: Event) => {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        return false;
-      };
-      
-      // Adiciona bloqueadores em TODOS os eventos que podem fechar popup
-      const events = ['mousedown', 'mouseup', 'click', 'pointerdown', 'pointerup', 'focusin', 'focusout'];
-      events.forEach(evt => document.addEventListener(evt, blockEvent, true));
-      
-      // Foca o elemento de forma segura
-      requestAnimationFrame(() => {
-        if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-          const input = element as HTMLInputElement;
-          input.focus({ preventScroll: true });
-          // Garante que o cursor está no final
-          const len = input.value.length;
-          input.setSelectionRange(len, len);
-        }
-        
-        // Remove bloqueadores após um tempo maior
-        setTimeout(() => {
-          events.forEach(evt => document.removeEventListener(evt, blockEvent, true));
-        }, 200);
-      });
+    if (action === 'click') {
+      // Executa o clique e notifica
+      setTimeout(() => element.click(), 10);
+      onSelect(selector, elementInfo, element, 'click');
+    } else {
+      // Entra em modo digitação
+      const isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
+      if (isInput) {
+        const input = element as HTMLInputElement;
+        setTypingMode({
+          element,
+          selector,
+          info: elementInfo,
+          initialValue: input.value
+        });
+        // Foca o input
+        setTimeout(() => input.focus(), 10);
+      } else {
+        onSelect(selector, elementInfo, element, 'click');
+      }
     }
+  };
+
+  const confirmTyping = () => {
+    if (!typingMode) return;
     
-    onSelect(selector, elementInfo, element, action);
+    const input = typingMode.element as HTMLInputElement;
+    const typedValue = input.value;
+    
+    onSelect(typingMode.selector, typingMode.info, typingMode.element, 'type', typedValue);
+    setTypingMode(null);
+  };
+
+  const cancelTyping = () => {
+    if (!typingMode) return;
+    
+    // Restaura valor original
+    const input = typingMode.element as HTMLInputElement;
+    input.value = typingMode.initialValue;
+    setTypingMode(null);
   };
 
   const cancelSelection = () => {
@@ -209,6 +233,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       setSelectedElement(null);
       setMenuPosition(null);
       setHoveredElement(null);
+      setTypingMode(null);
       return;
     }
 
@@ -223,24 +248,26 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     };
   }, [isActive, handleMouseMove, handleMouseDown, handleClick]);
 
-  // Highlight do elemento hover
+  // Highlight do elemento
   useEffect(() => {
-    const targetElement = selectedElement || hoveredElement;
+    const targetElement = typingMode?.element || selectedElement || hoveredElement;
     if (!targetElement) return;
 
     const originalOutline = targetElement.style.outline;
     const originalOutlineOffset = targetElement.style.outlineOffset;
     
-    targetElement.style.outline = selectedElement 
-      ? '3px solid hsl(var(--destructive))' 
-      : '3px solid hsl(var(--primary))';
+    const color = typingMode ? 'hsl(var(--primary))' : 
+                  selectedElement ? 'hsl(var(--destructive))' : 
+                  'hsl(var(--primary))';
+    
+    targetElement.style.outline = `3px solid ${color}`;
     targetElement.style.outlineOffset = '2px';
 
     return () => {
       targetElement.style.outline = originalOutline;
       targetElement.style.outlineOffset = originalOutlineOffset;
     };
-  }, [hoveredElement, selectedElement]);
+  }, [hoveredElement, selectedElement, typingMode]);
 
   if (!isActive) return null;
 
@@ -254,22 +281,45 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         <div className="bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-3">
           <MousePointer2 className="h-5 w-5 animate-pulse" />
           <span className="font-medium">
-            {selectedElement ? 'Escolha a ação' : 'Clique no elemento'}
+            {typingMode ? 'Digite e clique ✓' : 
+             selectedElement ? 'Escolha a ação' : 
+             'Clique no elemento'}
           </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              if (selectedElement) {
-                cancelSelection();
-              } else {
-                onCancel();
-              }
-            }}
-            className="h-7 px-2 hover:bg-primary-foreground/20"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {typingMode ? (
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={confirmTyping}
+                className="h-7 px-2 hover:bg-primary-foreground/20"
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={cancelTyping}
+                className="h-7 px-2 hover:bg-primary-foreground/20"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (selectedElement) {
+                  cancelSelection();
+                } else {
+                  onCancel();
+                }
+              }}
+              className="h-7 px-2 hover:bg-primary-foreground/20"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -307,7 +357,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       )}
 
       {/* Info do elemento hover */}
-      {hoveredElement && !selectedElement && (
+      {hoveredElement && !selectedElement && !typingMode && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 pointer-events-none">
           <div className="bg-background border rounded-lg shadow-lg px-3 py-2 text-sm">
             <span className="text-muted-foreground">Elemento: </span>
