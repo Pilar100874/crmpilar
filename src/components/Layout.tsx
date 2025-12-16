@@ -58,7 +58,7 @@ import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import * as LucideIcons from "lucide-react";
-import { FloatingMacroRecorder } from "@/components/macro/FloatingMacroRecorder";
+
 
 interface MenuPermissions {
   view: boolean;
@@ -1067,9 +1067,6 @@ export default function Layout({ children }: LayoutProps) {
         open={showChangePasswordDialog}
         onOpenChange={setShowChangePasswordDialog}
       />
-
-      {/* Controles flutuantes do gravador de macros */}
-      <FloatingMacroRecorder />
     </LayoutContext.Provider>
   );
 }

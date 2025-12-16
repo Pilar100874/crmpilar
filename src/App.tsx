@@ -93,17 +93,10 @@ import LandingPage from "./pages/LandingPage";
 import Avisos from "./pages/Avisos";
 import EmailConfig from "./pages/EmailConfig";
 import OrcamentoReportConfig from "./pages/OrcamentoReportConfig";
-import MacrosPage from "./pages/MacrosPage";
+import Macros from "./pages/Macros";
 import { MacroProvider } from "./contexts/MacroContext";
-import { useMacroHotkeys } from "./hooks/useMacroHotkeys";
 
 const queryClient = new QueryClient();
-
-// Component to activate hotkeys
-function MacroHotkeysActivator() {
-  useMacroHotkeys();
-  return null;
-}
 
 // Layout wrapper component
 const LayoutWrapper = () => (
@@ -118,7 +111,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <MacroHotkeysActivator />
+        
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<LandingPage />} />
@@ -202,7 +195,7 @@ const App = () => (
               <Route path="/marketplaces" element={<MarketplacesHubPage />} />
               <Route path="/robo-precos" element={<RoboPrecos />} />
               <Route path="/whatsapp-catalogo" element={<WhatsAppCatalogo />} />
-              <Route path="/macros" element={<MacrosPage />} />
+              <Route path="/macros" element={<Macros />} />
               {/* Ads Routes */}
               <Route path="/ads" element={<AdsHub />} />
               <Route path="/ads/:platform" element={<AdsPlatformDashboard />} />
