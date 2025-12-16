@@ -1,38 +1,18 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { Macro, MacroStep, MacroRecordingState, MacroExecutionStatus } from '@/types/macro';
+import { Macro, MacroStep, MacroExecutionStatus } from '@/types/macro';
 import { runMacro, setExecutionStatusCallback, cancelExecution } from '@/services/macroEngine';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Json } from '@/integrations/supabase/types';
 
-interface MacroRecordingMeta {
-  name: string;
-  description?: string;
-  shortcut?: string;
-}
-
 interface MacroContextType {
   macros: Macro[];
-  isRecording: boolean;
-  recordingSteps: MacroStep[];
   executionStatus: MacroExecutionStatus | null;
-  recordingMeta: MacroRecordingMeta | null;
-  
-  // Gravação
-  startRecording: () => void;
-  resumeRecording: () => void;
-  stopRecording: () => void;
-  addRecordingStep: (step: Omit<MacroStep, 'id'>) => void;
-  insertDelay: (ms: number) => void;
-  clearRecordingSteps: () => void;
-  setRecordingMeta: (meta: MacroRecordingMeta | null) => void;
-  saveCurrentRecording: () => Promise<void>;
   
   // CRUD
-  saveMacro: (name: string, description?: string, shortcut?: string) => Promise<void>;
+  saveMacro: (macro: Omit<Macro, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateMacro: (macro: Macro) => Promise<void>;
   deleteMacro: (id: string) => Promise<void>;
-  duplicateMacro: (id: string) => Promise<void>;
   
   // Execução
   executeMacro: (macroId: string) => Promise<void>;
@@ -40,13 +20,11 @@ interface MacroContextType {
   
   // Persistência
   loadMacros: () => Promise<void>;
-  exportMacro: (macro: Macro) => string;
-  importMacro: (json: string) => Promise<void>;
 }
 
 const MacroContext = createContext<MacroContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'macros_v1';
+const STORAGE_KEY = 'macros_v2';
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -59,9 +37,6 @@ function isValidUUID(id: string): boolean {
 
 export function MacroProvider({ children }: { children: ReactNode }) {
   const [macros, setMacros] = useState<Macro[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingSteps, setRecordingSteps] = useState<MacroStep[]>([]);
-  const [recordingMeta, setRecordingMeta] = useState<MacroRecordingMeta | null>(null);
   const [executionStatus, setExecutionStatus] = useState<MacroExecutionStatus | null>(null);
   const [userInfo, setUserInfo] = useState<{ usuarioId: string; estabelecimentoId: string } | null>(null);
 
@@ -92,7 +67,7 @@ export function MacroProvider({ children }: { children: ReactNode }) {
     setExecutionStatusCallback(setExecutionStatus);
   }, []);
 
-  // Carregar macros do localStorage (fallback) e Supabase
+  // Carregar macros
   const loadMacros = useCallback(async () => {
     // Primeiro tenta localStorage
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -101,7 +76,7 @@ export function MacroProvider({ children }: { children: ReactNode }) {
         const localMacros = JSON.parse(stored) as Macro[];
         setMacros(localMacros);
       } catch (e) {
-        console.error('Erro ao parsear macros do localStorage:', e);
+        console.error('Erro ao parsear macros:', e);
       }
     }
 
@@ -124,7 +99,6 @@ export function MacroProvider({ children }: { children: ReactNode }) {
           updatedAt: m.updated_at
         }));
         setMacros(supabaseMacros);
-        // Atualiza localStorage
         localStorage.setItem(STORAGE_KEY, JSON.stringify(supabaseMacros));
       }
     }
@@ -135,25 +109,15 @@ export function MacroProvider({ children }: { children: ReactNode }) {
   }, [loadMacros]);
 
   // Salvar macro
-  const saveMacro = useCallback(async (name: string, description?: string, shortcut?: string) => {
-    if (recordingSteps.length === 0) {
-      toast.error('Nenhum passo gravado');
-      return;
-    }
-
+  const saveMacro = useCallback(async (macroData: Omit<Macro, 'id' | 'createdAt' | 'updatedAt'>) => {
     const now = new Date().toISOString();
     const newMacro: Macro = {
+      ...macroData,
       id: generateId(),
-      name,
-      description,
-      shortcut,
-      enabled: true,
-      steps: recordingSteps,
       createdAt: now,
       updatedAt: now
     };
 
-    // Salva no Supabase se logado
     if (userInfo) {
       const { error } = await supabase.from('user_macros').insert({
         usuario_id: userInfo.usuarioId,
@@ -166,7 +130,7 @@ export function MacroProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        console.error('Erro ao salvar macro no Supabase:', error);
+        console.error('Erro ao salvar macro:', error);
         toast.error('Erro ao salvar macro');
         return;
       }
@@ -175,16 +139,14 @@ export function MacroProvider({ children }: { children: ReactNode }) {
     const updatedMacros = [...macros, newMacro];
     setMacros(updatedMacros);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMacros));
-    setRecordingSteps([]);
-    setIsRecording(false);
-    toast.success('Macro salva com sucesso!');
-  }, [recordingSteps, macros, userInfo]);
+    toast.success('Macro salva!');
+  }, [macros, userInfo]);
 
   // Atualizar macro
   const updateMacro = useCallback(async (macro: Macro) => {
     const updatedMacro = { ...macro, updatedAt: new Date().toISOString() };
 
-    if (userInfo) {
+    if (userInfo && isValidUUID(macro.id)) {
       const { error } = await supabase
         .from('user_macros')
         .update({
@@ -198,7 +160,7 @@ export function MacroProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Erro ao atualizar macro:', error);
-        toast.error('Erro ao atualizar macro');
+        toast.error('Erro ao atualizar');
         return;
       }
     }
@@ -211,119 +173,18 @@ export function MacroProvider({ children }: { children: ReactNode }) {
 
   // Deletar macro
   const deleteMacro = useCallback(async (id: string) => {
-    // Primeiro remove localmente para evitar estados inconsistentes
     const updatedMacros = macros.filter(m => m.id !== id);
     setMacros(updatedMacros);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMacros));
 
-    // Só tenta deletar no Supabase se for UUID válido
     if (userInfo && isValidUUID(id)) {
-      try {
-        const { error } = await supabase.from('user_macros').delete().eq('id', id);
-        if (error) {
-          console.error('Erro ao deletar macro no servidor:', error);
-        }
-      } catch (err) {
-        console.error('Erro inesperado ao deletar macro:', err);
-      }
+      await supabase.from('user_macros').delete().eq('id', id);
     }
 
     toast.success('Macro excluída');
   }, [macros, userInfo]);
 
-  // Duplicar macro
-  const duplicateMacro = useCallback(async (id: string) => {
-    const original = macros.find(m => m.id === id);
-    if (!original) return;
-
-    const now = new Date().toISOString();
-    const duplicate: Macro = {
-      ...original,
-      id: generateId(),
-      name: `${original.name} (cópia)`,
-      shortcut: undefined,
-      createdAt: now,
-      updatedAt: now
-    };
-
-    if (userInfo) {
-      await supabase.from('user_macros').insert({
-        usuario_id: userInfo.usuarioId,
-        estabelecimento_id: userInfo.estabelecimentoId,
-        name: duplicate.name,
-        description: duplicate.description,
-        shortcut: duplicate.shortcut,
-        enabled: duplicate.enabled,
-        steps: duplicate.steps as unknown as Json
-      });
-    }
-
-    const updatedMacros = [...macros, duplicate];
-    setMacros(updatedMacros);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMacros));
-    toast.success('Macro duplicada!');
-  }, [macros, userInfo]);
-
-  // Gravação
-  const startRecording = useCallback(() => {
-    setRecordingSteps([]);
-    setIsRecording(true);
-    toast.info('Gravação iniciada');
-  }, []);
-
-  const resumeRecording = useCallback(() => {
-    if (recordingSteps.length === 0) {
-      toast.error('Nenhum passo gravado para retomar');
-      return;
-    }
-    setIsRecording(true);
-    toast.info('Gravação retomada');
-  }, [recordingSteps]);
-
-  const stopRecording = useCallback(() => {
-    setIsRecording(false);
-    toast.info('Gravação pausada');
-  }, []);
-
-  const addRecordingStep = useCallback((step: Omit<MacroStep, 'id'>) => {
-    if (!isRecording) return;
-    
-    const newStep: MacroStep = {
-      ...step,
-      id: generateId(),
-      enabled: true
-    };
-    setRecordingSteps(prev => [...prev, newStep]);
-  }, [isRecording]);
-
-  const insertDelay = useCallback((ms: number) => {
-    if (!isRecording) return;
-    
-    const delayStep: MacroStep = {
-      id: generateId(),
-      type: 'wait',
-      ms,
-      enabled: true,
-      meta: { label: `Aguardar ${ms}ms` }
-    };
-    setRecordingSteps(prev => [...prev, delayStep]);
-  }, [isRecording]);
-
-  const clearRecordingSteps = useCallback(() => {
-    setRecordingSteps([]);
-  }, []);
-
-  const saveCurrentRecording = useCallback(async () => {
-    if (!recordingMeta) {
-      toast.error('Preencha nome, descrição e atalho na aba Gravador antes de salvar');
-      return;
-    }
-
-    await saveMacro(recordingMeta.name, recordingMeta.description, recordingMeta.shortcut);
-    setRecordingMeta(null);
-  }, [recordingMeta, saveMacro]);
-
-  // Execução
+  // Executar macro
   const executeMacro = useCallback(async (macroId: string) => {
     const macro = macros.find(m => m.id === macroId);
     if (!macro) {
@@ -340,7 +201,7 @@ export function MacroProvider({ children }: { children: ReactNode }) {
       await runMacro(macro);
       toast.success(`Macro "${macro.name}" executada!`);
     } catch (error) {
-      toast.error(`Erro na macro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      toast.error(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }, [macros]);
 
@@ -348,75 +209,16 @@ export function MacroProvider({ children }: { children: ReactNode }) {
     cancelExecution();
   }, []);
 
-  // Export/Import
-  const exportMacro = useCallback((macro: Macro): string => {
-    return JSON.stringify(macro, null, 2);
-  }, []);
-
-  const importMacro = useCallback(async (json: string) => {
-    try {
-      const imported = JSON.parse(json) as Macro;
-      
-      // Valida estrutura básica
-      if (!imported.name || !Array.isArray(imported.steps)) {
-        throw new Error('Formato de macro inválido');
-      }
-
-      const now = new Date().toISOString();
-      const newMacro: Macro = {
-        ...imported,
-        id: generateId(),
-        shortcut: undefined, // Limpa atalho para evitar conflitos
-        createdAt: now,
-        updatedAt: now
-      };
-
-      if (userInfo) {
-        await supabase.from('user_macros').insert({
-          usuario_id: userInfo.usuarioId,
-          estabelecimento_id: userInfo.estabelecimentoId,
-          name: newMacro.name,
-          description: newMacro.description,
-          shortcut: newMacro.shortcut,
-          enabled: newMacro.enabled,
-          steps: newMacro.steps as unknown as Json
-        });
-      }
-
-      const updatedMacros = [...macros, newMacro];
-      setMacros(updatedMacros);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMacros));
-      toast.success('Macro importada!');
-    } catch (error) {
-      toast.error('Erro ao importar macro');
-      console.error(error);
-    }
-  }, [macros, userInfo]);
-
   return (
     <MacroContext.Provider value={{
       macros,
-      isRecording,
-      recordingSteps,
       executionStatus,
-      recordingMeta,
-      startRecording,
-      resumeRecording,
-      stopRecording,
-      addRecordingStep,
-      insertDelay,
-      clearRecordingSteps,
-      setRecordingMeta,
-      saveCurrentRecording,
       saveMacro,
       updateMacro,
       deleteMacro,
-      duplicateMacro,
       executeMacro,
       stopExecution,
-      loadMacros,
-      exportMacro,
-      importMacro
+      loadMacros
     }}>
       {children}
     </MacroContext.Provider>

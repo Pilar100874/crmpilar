@@ -1,10 +1,6 @@
-// Motor de execução de Macros
+// Motor de execução de Macros - Versão Simplificada
 
 import { Macro, MacroStep, MacroExecutionStatus } from '@/types/macro';
-import { ActionRegistry } from './ActionRegistry';
-
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 200;
 
 let isExecutionCancelled = false;
 let statusCallback: ((status: MacroExecutionStatus) => void) | null = null;
@@ -23,193 +19,87 @@ function updateStatus(status: MacroExecutionStatus) {
   }
 }
 
-async function waitForElement(target: string, retries = MAX_RETRIES): Promise<HTMLElement | null> {
-  for (let i = 0; i < retries; i++) {
-    let element: Element | null = null;
-    
-    // Se parece ser um seletor CSS (começa com #, ., [ ou contém [), tenta primeiro como seletor direto
-    const looksLikeCssSelector = target.startsWith('#') || target.startsWith('.') || target.startsWith('[') || target.includes('[');
-    
-    if (looksLikeCssSelector) {
-      try {
-        element = document.querySelector(target);
-      } catch {
-        // Seletor inválido, ignora
-      }
-    }
-    
-    // Se não encontrou, tenta por data-macro-id (só se não tiver caracteres especiais)
-    if (!element && !target.includes('[') && !target.includes('"')) {
-      try {
-        element = document.querySelector(`[data-macro-id="${target}"]`);
-      } catch {
-        // Ignora erros
-      }
-    }
-    
-    // Se não é seletor CSS e não encontrou, tenta como seletor direto
-    if (!element && !looksLikeCssSelector) {
-      try {
-        element = document.querySelector(target);
-      } catch {
-        // Seletor inválido, ignora
-      }
-    }
-    
-    // Se ainda não encontrar, tenta por texto (formato tag:texto)
-    if (!element && target.includes(':') && !target.includes('[')) {
-      const colonIndex = target.indexOf(':');
-      const tagPart = target.substring(0, colonIndex);
-      const textPart = target.substring(colonIndex + 1);
-      const tag = tagPart.replace(/\./g, ' ').trim().split(' ')[0] || '*';
-      const text = textPart.trim();
-      if (text) {
-        try {
-          const elements = document.querySelectorAll(tag);
-          for (const el of elements) {
-            if (el.textContent?.trim().startsWith(text)) {
-              element = el;
-              break;
-            }
-          }
-        } catch {
-          // Ignora erros
-        }
-      }
-    }
-    
-    // Verifica se é um HTMLElement válido
-    if (element && element instanceof HTMLElement) {
-      return element;
-    }
-    
-    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-  }
-  return null;
+// Navegar para uma rota
+async function executeNavigate(step: MacroStep): Promise<void> {
+  if (!step.value) throw new Error('Rota não definida');
+  
+  // Usa pushState para navegação SPA
+  window.history.pushState({}, '', step.value);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+  
+  // Aguarda a navegação
+  await new Promise(resolve => setTimeout(resolve, 800));
 }
 
-async function executeClick(step: MacroStep): Promise<void> {
-  if (!step.target) throw new Error('Target não definido para click');
+// Digitar texto em um elemento
+async function executeTypeText(step: MacroStep): Promise<void> {
+  if (!step.target) throw new Error('Seletor do elemento não definido');
   
-  const element = await waitForElement(step.target);
-  if (!element) throw new Error(`Elemento não encontrado: ${step.target}`);
+  // Tenta encontrar o elemento
+  let element: HTMLElement | null = null;
   
-  // Garante que o elemento é clicável
-  if (typeof element.click === 'function') {
-    element.click();
-  } else {
-    // Fallback: dispara evento de clique manualmente
-    element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+  // Tenta primeiro por data-macro-id
+  element = document.querySelector(`[data-macro-id="${step.target}"]`);
+  
+  // Se não encontrou, tenta como seletor CSS direto
+  if (!element) {
+    try {
+      element = document.querySelector(step.target);
+    } catch {
+      // Seletor inválido
+    }
   }
-}
-
-async function executeSetValue(step: MacroStep): Promise<void> {
-  if (!step.target) throw new Error('Target não definido para setValue');
   
-  const element = await waitForElement(step.target) as HTMLInputElement | HTMLTextAreaElement;
+  // Se não encontrou, tenta por placeholder
+  if (!element) {
+    const inputs = document.querySelectorAll('input, textarea');
+    for (const input of inputs) {
+      if ((input as HTMLInputElement).placeholder?.toLowerCase().includes(step.target.toLowerCase())) {
+        element = input as HTMLElement;
+        break;
+      }
+    }
+  }
+  
   if (!element) throw new Error(`Elemento não encontrado: ${step.target}`);
   
-  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-    window.HTMLInputElement.prototype,
+  // Foca no elemento
+  element.focus();
+  
+  // Define o valor
+  const inputEl = element as HTMLInputElement | HTMLTextAreaElement;
+  
+  // Usa o setter nativo para garantir compatibilidade com React
+  const nativeSetter = Object.getOwnPropertyDescriptor(
+    element.tagName === 'TEXTAREA' 
+      ? window.HTMLTextAreaElement.prototype 
+      : window.HTMLInputElement.prototype,
     'value'
   )?.set;
   
-  const nativeTextAreaValueSetter = Object.getOwnPropertyDescriptor(
-    window.HTMLTextAreaElement.prototype,
-    'value'
-  )?.set;
-  
-  if (element.tagName === 'INPUT' && nativeInputValueSetter) {
-    nativeInputValueSetter.call(element, step.value || '');
-  } else if (element.tagName === 'TEXTAREA' && nativeTextAreaValueSetter) {
-    nativeTextAreaValueSetter.call(element, step.value || '');
+  if (nativeSetter) {
+    nativeSetter.call(inputEl, step.value || '');
   } else {
-    element.value = step.value || '';
+    inputEl.value = step.value || '';
   }
   
-  element.dispatchEvent(new Event('input', { bubbles: true }));
-  element.dispatchEvent(new Event('change', { bubbles: true }));
-}
-
-async function executeToggle(step: MacroStep): Promise<void> {
-  if (!step.target) throw new Error('Target não definido para toggle');
-  
-  const element = await waitForElement(step.target) as HTMLInputElement;
-  if (!element) throw new Error(`Elemento não encontrado: ${step.target}`);
-  
-  element.click();
-}
-
-async function executeSelect(step: MacroStep): Promise<void> {
-  if (!step.target) throw new Error('Target não definido para select');
-  
-  const element = await waitForElement(step.target) as HTMLSelectElement;
-  if (!element) throw new Error(`Elemento não encontrado: ${step.target}`);
-  
-  // Tenta clicar primeiro (para abrir selects customizados)
-  element.click();
+  // Dispara eventos
+  inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+  inputEl.dispatchEvent(new Event('change', { bubbles: true }));
   
   await new Promise(resolve => setTimeout(resolve, 100));
-  
-  // Se for um select nativo
-  if (element.tagName === 'SELECT') {
-    element.value = step.value || '';
-    element.dispatchEvent(new Event('change', { bubbles: true }));
-  } else {
-    // Para selects customizados (Radix, etc), procura a opção
-    const option = document.querySelector(`[data-macro-id="${step.target}-option-${step.value}"]`) as HTMLElement;
-    if (option) {
-      option.click();
-    }
-  }
-}
-
-async function executeNavigate(step: MacroStep): Promise<void> {
-  if (!step.value) throw new Error('Rota não definida para navigate');
-  
-  // Usa window.location para navegação
-  window.location.href = step.value;
-  
-  // Aguarda um pouco para a navegação
-  await new Promise(resolve => setTimeout(resolve, 500));
-}
-
-async function executeCallAction(step: MacroStep): Promise<void> {
-  if (!step.target) throw new Error('Nome da ação não definido para callAction');
-  
-  await ActionRegistry.execute(step.target, step.params);
-}
-
-async function executeWait(step: MacroStep): Promise<void> {
-  const ms = step.ms || 500;
-  await new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function executeStep(step: MacroStep): Promise<void> {
   switch (step.type) {
-    case 'click':
-      await executeClick(step);
-      break;
-    case 'setValue':
-      await executeSetValue(step);
-      break;
-    case 'toggle':
-      await executeToggle(step);
-      break;
-    case 'select':
-      await executeSelect(step);
-      break;
     case 'navigate':
       await executeNavigate(step);
       break;
-    case 'callAction':
-      await executeCallAction(step);
-      break;
-    case 'wait':
-      await executeWait(step);
+    case 'typeText':
+      await executeTypeText(step);
       break;
     default:
-      throw new Error(`Tipo de step desconhecido: ${(step as MacroStep).type}`);
+      throw new Error(`Tipo de step desconhecido: ${step.type}`);
   }
 }
 
@@ -225,7 +115,7 @@ export async function runMacro(macro: Macro): Promise<void> {
         isRunning: false,
         currentStep: i,
         totalSteps,
-        error: 'Execução cancelada pelo usuário'
+        error: 'Execução cancelada'
       });
       return;
     }
@@ -236,13 +126,11 @@ export async function runMacro(macro: Macro): Promise<void> {
       isRunning: true,
       currentStep: i + 1,
       totalSteps,
-      currentStepLabel: step.meta?.label || `${step.type}: ${step.target || step.value || ''}`
+      currentStepLabel: step.label || (step.type === 'navigate' ? `Navegar: ${step.value}` : `Digitar: ${step.value}`)
     });
     
     try {
       await executeStep(step);
-      // Pequeno delay entre steps para estabilidade
-      await new Promise(resolve => setTimeout(resolve, 50));
     } catch (error) {
       updateStatus({
         isRunning: false,
@@ -262,21 +150,13 @@ export async function runMacro(macro: Macro): Promise<void> {
 }
 
 export function getStepLabel(step: MacroStep): string {
+  if (step.label) return step.label;
+  
   switch (step.type) {
-    case 'click':
-      return `Clique em "${step.target}"`;
-    case 'setValue':
-      return `Definir "${step.target}" = "${step.value}"`;
-    case 'toggle':
-      return `Alternar "${step.target}"`;
-    case 'select':
-      return `Selecionar "${step.value}" em "${step.target}"`;
     case 'navigate':
-      return `Navegar para "${step.value}"`;
-    case 'callAction':
-      return `Executar ação "${step.target}"`;
-    case 'wait':
-      return `Aguardar ${step.ms}ms`;
+      return `Abrir tela: ${step.value}`;
+    case 'typeText':
+      return `Digitar "${step.value}" em ${step.target}`;
     default:
       return `Step: ${step.type}`;
   }

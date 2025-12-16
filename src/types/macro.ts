@@ -1,27 +1,13 @@
-// Tipos para o sistema de Macros
+// Tipos para o sistema de Macros - Versão Simplificada
 
-export type MacroStepType = 
-  | 'click'
-  | 'setValue'
-  | 'toggle'
-  | 'select'
-  | 'navigate'
-  | 'callAction'
-  | 'wait';
+export type MacroStepType = 'navigate' | 'typeText';
 
 export interface MacroStep {
   id: string;
   type: MacroStepType;
-  target?: string; // data-macro-id do elemento
-  value?: string; // para setValue/select
-  ms?: number; // para wait
-  params?: Record<string, unknown>; // para callAction
-  meta?: {
-    label?: string;
-    screen?: string;
-    validationLevel?: 'success' | 'warning' | 'error';
-    validationMessage?: string;
-  };
+  value: string; // rota para navigate, texto para typeText
+  target?: string; // seletor do elemento para typeText
+  label?: string;
   enabled?: boolean;
 }
 
@@ -42,10 +28,4 @@ export interface MacroExecutionStatus {
   totalSteps: number;
   currentStepLabel?: string;
   error?: string;
-}
-
-export interface MacroRecordingState {
-  isRecording: boolean;
-  steps: MacroStep[];
-  macroName: string;
 }
