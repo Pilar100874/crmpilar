@@ -101,8 +101,8 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
   const [typingMode, setTypingMode] = useState<{ element: HTMLElement; selector: string; info: ElementInfo; initialValue: string } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Bloqueia eventos para elementos fora do seletor e do input em modo digitação
-  const handleMouseDown = useCallback((e: MouseEvent) => {
+  // Bloqueador agressivo de eventos para evitar fechamento de popups
+  const blockAllEvents = useCallback((e: Event) => {
     const target = e.target as HTMLElement;
     
     // Permite interação com o seletor
@@ -111,8 +111,11 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     }
     
     // Em modo digitação, permite interação com o input selecionado
-    if (typingMode && (target === typingMode.element || typingMode.element.contains(target))) {
-      return;
+    if (typingMode) {
+      const inputEl = typingMode.element;
+      if (target === inputEl || inputEl.contains(target) || target.contains(inputEl)) {
+        return;
+      }
     }
     
     e.preventDefault();
@@ -129,8 +132,11 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     }
     
     // Em modo digitação, permite cliques no input
-    if (typingMode && (target === typingMode.element || typingMode.element.contains(target))) {
-      return;
+    if (typingMode) {
+      const inputEl = typingMode.element;
+      if (target === inputEl || inputEl.contains(target) || target.contains(inputEl)) {
+        return;
+      }
     }
     
     e.preventDefault();
@@ -236,16 +242,23 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       return;
     }
 
+    // Bloqueia todos os eventos que podem fechar popups
+    const eventsToBlock = ['mousedown', 'pointerdown', 'focusin', 'focusout', 'blur'];
+    
     document.addEventListener('mousemove', handleMouseMove, true);
-    document.addEventListener('mousedown', handleMouseDown, true);
     document.addEventListener('click', handleClick, true);
+    eventsToBlock.forEach(evt => {
+      document.addEventListener(evt, blockAllEvents, true);
+    });
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove, true);
-      document.removeEventListener('mousedown', handleMouseDown, true);
       document.removeEventListener('click', handleClick, true);
+      eventsToBlock.forEach(evt => {
+        document.removeEventListener(evt, blockAllEvents, true);
+      });
     };
-  }, [isActive, handleMouseMove, handleMouseDown, handleClick]);
+  }, [isActive, handleMouseMove, blockAllEvents, handleClick]);
 
   // Highlight do elemento
   useEffect(() => {
