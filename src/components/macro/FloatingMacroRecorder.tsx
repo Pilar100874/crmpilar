@@ -161,13 +161,11 @@ export function FloatingMacroRecorder() {
         setTimeout(() => setIsSelectingElement(true), 300);
       }, 50);
     } else {
-      // Ação de digitar
+      // Ação de digitar - o ElementSelector já fez o focus com bloqueio de eventos
       const isInputElement = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
       
       if (isInputElement) {
         const inputEl = element as HTMLInputElement | HTMLTextAreaElement;
-        inputEl.focus();
-        inputEl.click();
         setWatchingInput({ element: inputEl, selector, info });
         toast.info('Digite no campo. Clique fora para capturar.');
       } else {

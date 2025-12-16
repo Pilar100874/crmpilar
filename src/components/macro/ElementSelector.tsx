@@ -148,23 +148,52 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
   const handleAction = (action: 'click' | 'type') => {
     if (!selectedElement) return;
     
-    const selector = generateSelector(selectedElement);
+    const element = selectedElement;
+    const selector = generateSelector(element);
     const elementInfo: ElementInfo = {
       selector,
-      tagName: selectedElement.tagName,
-      type: selectedElement.getAttribute('type') || undefined,
-      placeholder: selectedElement.getAttribute('placeholder') || undefined,
-      text: selectedElement.textContent?.trim().slice(0, 50) || undefined,
-      id: selectedElement.id || undefined,
-      className: selectedElement.className?.toString().slice(0, 100) || undefined,
+      tagName: element.tagName,
+      type: element.getAttribute('type') || undefined,
+      placeholder: element.getAttribute('placeholder') || undefined,
+      text: element.textContent?.trim().slice(0, 50) || undefined,
+      id: element.id || undefined,
+      className: element.className?.toString().slice(0, 100) || undefined,
     };
     
-    // Limpa estado antes de chamar callback
+    // Limpa estado visual
     setSelectedElement(null);
     setMenuPosition(null);
     setHoveredElement(null);
     
-    onSelect(selector, elementInfo, selectedElement, action);
+    // Para ação de digitar, mantém bloqueio de eventos durante o focus
+    if (action === 'type') {
+      const blockEvent = (e: Event) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      };
+      
+      // Adiciona bloqueadores temporários
+      document.addEventListener('mousedown', blockEvent, true);
+      document.addEventListener('click', blockEvent, true);
+      document.addEventListener('pointerdown', blockEvent, true);
+      
+      // Foca o elemento de forma segura
+      setTimeout(() => {
+        if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+          (element as HTMLInputElement).focus({ preventScroll: true });
+        }
+        
+        // Remove bloqueadores após um tempo
+        setTimeout(() => {
+          document.removeEventListener('mousedown', blockEvent, true);
+          document.removeEventListener('click', blockEvent, true);
+          document.removeEventListener('pointerdown', blockEvent, true);
+        }, 100);
+      }, 10);
+    }
+    
+    onSelect(selector, elementInfo, element, action);
   };
 
   const cancelSelection = () => {
