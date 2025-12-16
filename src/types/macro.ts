@@ -1,6 +1,6 @@
 // Tipos para o sistema de Macros - Versão Simplificada
 
-export type MacroStepType = 'navigate' | 'typeText';
+export type MacroStepType = 'navigate' | 'typeText' | 'click';
 
 export interface MacroStep {
   id: string;
