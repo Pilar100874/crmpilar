@@ -97,6 +97,9 @@ export function FloatingMacroRecorder() {
     const elementLabel = info.placeholder || info.text?.slice(0, 15) || info.tagName.toLowerCase();
     
     if (action === 'click') {
+      // Desativa seleção para liberar event listeners
+      setIsSelectingElement(false);
+      
       // Adiciona passo de clique
       setSteps(prev => [...prev, {
         id: generateStepId(),
@@ -107,8 +110,13 @@ export function FloatingMacroRecorder() {
         enabled: true
       }]);
       
-      toast.success('Clique capturado!');
-      setTimeout(() => setIsSelectingElement(true), 300);
+      // Executa o clique após os listeners serem removidos
+      setTimeout(() => {
+        element.click();
+        toast.success('Clique capturado!');
+        // Reativa seleção para próximo elemento
+        setTimeout(() => setIsSelectingElement(true), 200);
+      }, 50);
     } else {
       // Ação de digitar - o ElementSelector já capturou o texto
       if (typedValue) {

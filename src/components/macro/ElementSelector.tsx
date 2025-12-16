@@ -181,8 +181,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     setHoveredElement(null);
     
     if (action === 'click') {
-      // Executa o clique e notifica
-      setTimeout(() => element.click(), 10);
+      // Notifica - o clique será executado pelo parent após remover listeners
       onSelect(selector, elementInfo, element, 'click');
     } else {
       // Entra em modo digitação
