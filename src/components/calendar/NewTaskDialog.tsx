@@ -842,7 +842,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                       <CalendarIcon className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 flex bg-background z-50 pointer-events-auto" align="start">
+                  <PopoverContent className="w-auto p-0 flex bg-background pointer-events-auto" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
                     {/* Opções rápidas */}
                     <div className="border-r bg-background">
                       <ScrollArea className="h-[300px] w-[140px]">
@@ -917,7 +917,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                       <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[120px] p-0 bg-background z-50 pointer-events-auto" align="start">
+                  <PopoverContent className="w-[120px] p-0 bg-background pointer-events-auto" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
                     <ScrollArea className="h-[320px]">
                       <div className="p-2 grid grid-cols-2 gap-1">
                         {hourSlots.map((hour) => (
@@ -959,7 +959,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
                       <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     </div>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[100px] p-0 bg-background z-50 pointer-events-auto" align="start">
+                  <PopoverContent className="w-[100px] p-0 bg-background pointer-events-auto" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
                     <div className="p-2 space-y-1">
                       {minuteSlots.map((minute) => (
                         <button
