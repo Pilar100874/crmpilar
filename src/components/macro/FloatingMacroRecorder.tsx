@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useMacro } from '@/contexts/MacroContext';
 import { MacroStep } from '@/types/macro';
 import { Button } from '@/components/ui/button';
@@ -7,13 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Circle, 
   Square, 
-  Pause, 
-  Play,
   X,
   Save,
-  MousePointer2,
   Navigation,
-  Type
+  Type,
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ElementSelector, ElementInfo } from './ElementSelector';
@@ -27,62 +25,32 @@ export function FloatingMacroRecorder() {
   
   const [isVisible, setIsVisible] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [isSelectingElement, setIsSelectingElement] = useState(false);
   const [macroName, setMacroName] = useState('');
   const [steps, setSteps] = useState<MacroStep[]>([]);
   const [showNameInput, setShowNameInput] = useState(false);
+  const [lastCapturedPath, setLastCapturedPath] = useState<string | null>(null);
 
-  // Captura navegação
+  // Sempre ativa o seletor de elementos quando está gravando
   useEffect(() => {
-    if (!isRecording || isPaused) return;
-
-    const handleNavigation = () => {
-      const path = window.location.pathname;
-      
-      // Evita duplicar navegação para mesma rota
-      const lastStep = steps[steps.length - 1];
-      if (lastStep?.type === 'navigate' && lastStep.value === path) return;
-      
-      const newStep: MacroStep = {
-        id: generateStepId(),
-        type: 'navigate',
-        value: path,
-        label: `Abrir: ${path}`,
-        enabled: true
-      };
-      
-      setSteps(prev => [...prev, newStep]);
-    };
-
-    window.addEventListener('popstate', handleNavigation);
-    
-    // Captura navegação inicial
-    handleNavigation();
-
-    return () => {
-      window.removeEventListener('popstate', handleNavigation);
-    };
-  }, [isRecording, isPaused]);
+    if (isRecording && !showNameInput && !isSelectingElement) {
+      // Pequeno delay para permitir que o UI atualize
+      const timer = setTimeout(() => {
+        setIsSelectingElement(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isRecording, showNameInput, isSelectingElement]);
 
   const startRecording = () => {
     setSteps([]);
     setIsRecording(true);
-    setIsPaused(false);
-    toast.success('Gravação iniciada! Clique em "Selecionar Campo" para capturar elementos.');
-  };
-
-  const pauseRecording = () => {
-    setIsPaused(true);
-    toast.info('Gravação pausada');
-  };
-
-  const resumeRecording = () => {
-    setIsPaused(false);
-    toast.info('Gravação retomada');
+    setLastCapturedPath(null);
+    toast.success('Gravação iniciada! Clique no elemento que deseja capturar.');
   };
 
   const stopRecording = () => {
+    setIsSelectingElement(false);
     if (steps.length === 0) {
       toast.error('Nenhum passo gravado');
       setIsRecording(false);
@@ -94,10 +62,11 @@ export function FloatingMacroRecorder() {
 
   const cancelRecording = () => {
     setIsRecording(false);
-    setIsPaused(false);
+    setIsSelectingElement(false);
     setSteps([]);
     setShowNameInput(false);
     setMacroName('');
+    setLastCapturedPath(null);
   };
 
   const saveMacroHandler = async () => {
@@ -118,26 +87,45 @@ export function FloatingMacroRecorder() {
     setSteps([]);
   };
 
-  const startElementSelection = () => {
-    setIsPaused(true);
-    setIsSelectingElement(true);
-  };
-
   const handleElementSelected = (selector: string, info: ElementInfo) => {
-    setIsSelectingElement(false);
+    const currentPath = window.location.pathname;
+    const newSteps: MacroStep[] = [];
     
-    const newStep: MacroStep = {
+    // Adiciona navegação se mudou de tela
+    if (lastCapturedPath !== currentPath) {
+      newSteps.push({
+        id: generateStepId(),
+        type: 'navigate',
+        value: currentPath,
+        label: `Abrir: ${currentPath}`,
+        enabled: true
+      });
+      setLastCapturedPath(currentPath);
+    }
+    
+    // Adiciona o campo capturado
+    newSteps.push({
       id: generateStepId(),
       type: 'typeText',
       value: '',
       target: selector,
       label: `Campo: ${info.placeholder || info.text?.slice(0, 20) || info.tagName.toLowerCase()}`,
       enabled: true
-    };
+    });
     
-    setSteps(prev => [...prev, newStep]);
-    setIsPaused(false);
-    toast.success('Campo capturado!');
+    setSteps(prev => [...prev, ...newSteps]);
+    toast.success('Campo capturado! Clique em outro ou pare a gravação.');
+    
+    // Reativa o seletor para continuar capturando
+    setTimeout(() => {
+      if (isRecording) {
+        setIsSelectingElement(true);
+      }
+    }, 300);
+  };
+
+  const removeStep = (stepId: string) => {
+    setSteps(prev => prev.filter(s => s.id !== stepId));
   };
 
   // Hotkey para abrir/fechar gravador
@@ -156,7 +144,7 @@ export function FloatingMacroRecorder() {
   if (!isVisible && !isRecording) {
     return (
       <Button
-        className="fixed bottom-4 left-4 z-50 rounded-full shadow-lg"
+        className="fixed bottom-4 left-4 z-[99999] rounded-full shadow-lg"
         size="sm"
         onClick={() => setIsVisible(true)}
       >
@@ -168,7 +156,7 @@ export function FloatingMacroRecorder() {
 
   return (
     <>
-      <div className="fixed bottom-4 left-4 z-50 bg-background border rounded-lg shadow-xl p-3 min-w-[300px]">
+      <div className="fixed bottom-4 left-4 z-[99999] bg-background border rounded-lg shadow-xl p-3 min-w-[300px]">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -179,7 +167,7 @@ export function FloatingMacroRecorder() {
               </span>
             )}
             <span className="font-medium text-sm">
-              {showNameInput ? 'Salvar Macro' : isRecording ? (isPaused ? 'Pausado' : 'Gravando...') : 'Gravador de Macro'}
+              {showNameInput ? 'Salvar Macro' : isRecording ? 'Selecione os campos...' : 'Gravador de Macro'}
             </span>
           </div>
           <Button
@@ -226,39 +214,12 @@ export function FloatingMacroRecorder() {
                   Gravar
                 </Button>
               ) : (
-                <>
-                  {isPaused ? (
-                    <Button size="sm" onClick={resumeRecording} variant="outline">
-                      <Play className="h-4 w-4 mr-1" />
-                      Continuar
-                    </Button>
-                  ) : (
-                    <Button size="sm" onClick={pauseRecording} variant="outline">
-                      <Pause className="h-4 w-4 mr-1" />
-                      Pausar
-                    </Button>
-                  )}
-                  <Button size="sm" onClick={stopRecording} variant="default">
-                    <Square className="h-4 w-4 mr-1" />
-                    Parar
-                  </Button>
-                </>
+                <Button size="sm" onClick={stopRecording} variant="destructive" className="flex-1">
+                  <Square className="h-4 w-4 mr-1" />
+                  Parar Gravação
+                </Button>
               )}
             </div>
-
-            {/* Botão de selecionar elemento */}
-            {isRecording && (
-              <Button 
-                size="sm" 
-                variant="secondary" 
-                className="w-full mb-3"
-                onClick={startElementSelection}
-                disabled={isSelectingElement}
-              >
-                <MousePointer2 className="h-4 w-4 mr-2" />
-                Selecionar Campo
-              </Button>
-            )}
 
             {/* Lista de passos */}
             {steps.length > 0 && (
@@ -269,20 +230,28 @@ export function FloatingMacroRecorder() {
                 {steps.map((step, index) => (
                   <div 
                     key={step.id}
-                    className="flex items-center gap-2 text-xs p-1.5 bg-muted/50 rounded"
+                    className="flex items-center gap-2 text-xs p-1.5 bg-muted/50 rounded group"
                   >
                     <span className="text-muted-foreground">{index + 1}.</span>
                     {step.type === 'navigate' ? (
-                      <Badge variant="outline" className="text-xs py-0">
+                      <Badge variant="outline" className="text-xs py-0 flex-1">
                         <Navigation className="h-3 w-3 mr-1" />
                         {step.value}
                       </Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-xs py-0">
+                      <Badge variant="secondary" className="text-xs py-0 flex-1">
                         <Type className="h-3 w-3 mr-1" />
                         {step.label}
                       </Badge>
                     )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 opacity-0 group-hover:opacity-100"
+                      onClick={() => removeStep(step.id)}
+                    >
+                      <Trash2 className="h-3 w-3 text-destructive" />
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -291,7 +260,7 @@ export function FloatingMacroRecorder() {
             {/* Dica */}
             {isRecording && steps.length === 0 && (
               <p className="text-xs text-muted-foreground text-center">
-                Navegue pelas telas e use "Selecionar Campo" para capturar elementos
+                Navegue até a tela desejada e clique nos campos
               </p>
             )}
           </>
@@ -300,11 +269,10 @@ export function FloatingMacroRecorder() {
 
       {/* Element Selector Overlay */}
       <ElementSelector
-        isActive={isSelectingElement}
+        isActive={isSelectingElement && isRecording}
         onSelect={handleElementSelected}
         onCancel={() => {
           setIsSelectingElement(false);
-          setIsPaused(false);
         }}
       />
     </>
