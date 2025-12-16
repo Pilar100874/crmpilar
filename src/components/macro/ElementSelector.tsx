@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { X, MousePointer2, MousePointerClick, Type, Check } from 'lucide-react';
 
@@ -95,201 +94,69 @@ function generateSelector(element: HTMLElement): string {
   return path.join(' > ');
 }
 
-// Container para o botão de confirmar - criado fora do React para não causar re-renders
-let confirmContainer: HTMLDivElement | null = null;
-
-function createConfirmButton(
-  element: HTMLElement, 
-  onConfirm: () => void, 
-  onCancel: () => void
-) {
-  // Remove container existente
-  if (confirmContainer) {
-    confirmContainer.remove();
-  }
-  
-  // Cria novo container
-  confirmContainer = document.createElement('div');
-  confirmContainer.setAttribute('data-element-selector', 'true');
-  confirmContainer.style.cssText = `
-    position: fixed;
-    z-index: 9999999;
-    pointer-events: auto;
-  `;
-  
-  const rect = element.getBoundingClientRect();
-  confirmContainer.style.top = `${rect.bottom + 8}px`;
-  confirmContainer.style.left = `${rect.left}px`;
-  
-  confirmContainer.innerHTML = `
-    <div style="background: hsl(var(--background)); border: 1px solid hsl(var(--border)); border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); padding: 12px; min-width: 220px;">
-      <p style="font-size: 13px; color: hsl(var(--muted-foreground)); margin-bottom: 8px;">
-        Digite no campo acima e confirme
-      </p>
-      <div style="display: flex; gap: 8px;">
-        <button id="confirm-typing-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 12px; background: hsl(142, 76%, 36%); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          Confirmar
-        </button>
-        <button id="cancel-typing-btn" style="padding: 8px 12px; background: transparent; border: 1px solid hsl(var(--border)); border-radius: 6px; cursor: pointer;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(confirmContainer);
-  
-  // Adiciona listeners
-  const confirmBtn = confirmContainer.querySelector('#confirm-typing-btn');
-  const cancelBtn = confirmContainer.querySelector('#cancel-typing-btn');
-  
-  confirmBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onConfirm();
-  });
-  
-  cancelBtn?.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onCancel();
-  });
-}
-
-function removeConfirmButton() {
-  if (confirmContainer) {
-    confirmContainer.remove();
-    confirmContainer = null;
-  }
-}
-
-// Instrução flutuante para modo digitação
-let instructionContainer: HTMLDivElement | null = null;
-
-function createInstruction() {
-  if (instructionContainer) return;
-  
-  instructionContainer = document.createElement('div');
-  instructionContainer.setAttribute('data-element-selector', 'true');
-  instructionContainer.style.cssText = `
-    position: fixed;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 9999999;
-    pointer-events: none;
-  `;
-  
-  instructionContainer.innerHTML = `
-    <div style="background: hsl(142, 76%, 36%); color: white; padding: 8px 16px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
-      Clique no campo destacado e digite. Depois clique em Confirmar.
-    </div>
-  `;
-  
-  document.body.appendChild(instructionContainer);
-}
-
-function removeInstruction() {
-  if (instructionContainer) {
-    instructionContainer.remove();
-    instructionContainer = null;
-  }
-}
-
 export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelectorProps) {
   const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
-  
-  // Refs para modo digitação - evita re-renders
-  const typingModeRef = useRef<{
+  const [isTypingMode, setIsTypingMode] = useState(false);
+  const [typingData, setTypingData] = useState<{
     element: HTMLElement;
     selector: string;
     info: ElementInfo;
   } | null>(null);
-  const [isTypingMode, setIsTypingMode] = useState(false);
   
-  const menuRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (selectedElement || typingModeRef.current) return;
-    
-    const target = e.target as HTMLElement;
-    
-    if (target.closest('[data-element-selector]')) {
-      setHoveredElement(null);
-      return;
+  // Função para selecionar elemento pelo ponto
+  const getElementAtPoint = useCallback((x: number, y: number): HTMLElement | null => {
+    // Temporariamente esconde o overlay para pegar o elemento por baixo
+    if (overlayRef.current) {
+      overlayRef.current.style.pointerEvents = 'none';
     }
     
-    setHoveredElement(target);
-  }, [selectedElement]);
+    const element = document.elementFromPoint(x, y) as HTMLElement;
+    
+    if (overlayRef.current) {
+      overlayRef.current.style.pointerEvents = 'auto';
+    }
+    
+    return element;
+  }, []);
 
-  const handleClick = useCallback((e: MouseEvent) => {
+  const handleOverlayClick = useCallback((e: React.MouseEvent) => {
+    // Se clicou em algo do seletor, ignora
     const target = e.target as HTMLElement;
-    
-    // Permite cliques no seletor
-    if (target.closest('[data-element-selector]')) {
+    if (target.closest('[data-selector-ui]')) {
       return;
     }
-    
-    // Se estiver no modo de digitação, permite cliques normais
-    if (typingModeRef.current) {
+
+    // Se está em modo de digitação, permite o clique passar
+    if (isTypingMode) {
       return;
     }
-    
+
     e.preventDefault();
     e.stopPropagation();
-    e.stopImmediatePropagation();
+
+    // Pega o elemento por baixo do overlay
+    const element = getElementAtPoint(e.clientX, e.clientY);
     
-    const rect = target.getBoundingClientRect();
-    setSelectedElement(target);
+    if (!element || element.closest('[data-macro-recorder]') || element.closest('[data-element-selector]')) {
+      return;
+    }
+
+    const rect = element.getBoundingClientRect();
+    setSelectedElement(element);
     setMenuPosition({
-      top: rect.top + window.scrollY,
-      left: rect.right + 8 + window.scrollX
+      top: rect.top,
+      left: rect.right + 8
     });
-  }, []);
+  }, [getElementAtPoint, isTypingMode]);
 
-  const confirmTyping = useCallback(() => {
-    if (!typingModeRef.current) return;
+  const handleAction = useCallback((action: 'click' | 'type', e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     
-    const { element, selector, info } = typingModeRef.current;
-    let typedValue = '';
-    
-    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-      typedValue = element.value;
-    } else if (element.isContentEditable) {
-      typedValue = element.textContent || '';
-    }
-    
-    // Limpa
-    element.style.outline = '';
-    element.style.outlineOffset = '';
-    removeConfirmButton();
-    removeInstruction();
-    typingModeRef.current = null;
-    setIsTypingMode(false);
-    setSelectedElement(null);
-    setHoveredElement(null);
-    
-    onSelect(selector, info, element, 'type', typedValue);
-  }, [onSelect]);
-
-  const cancelTyping = useCallback(() => {
-    if (typingModeRef.current) {
-      typingModeRef.current.element.style.outline = '';
-      typingModeRef.current.element.style.outlineOffset = '';
-    }
-    removeConfirmButton();
-    removeInstruction();
-    typingModeRef.current = null;
-    setIsTypingMode(false);
-    setSelectedElement(null);
-    setHoveredElement(null);
-  }, []);
-
-  const handleAction = useCallback((action: 'click' | 'type') => {
     if (!selectedElement) return;
     
     const element = selectedElement;
@@ -304,7 +171,6 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       className: element.className?.toString().slice(0, 100) || undefined,
     };
     
-    // Limpa menu
     setMenuPosition(null);
     
     if (action === 'click') {
@@ -312,86 +178,98 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       setHoveredElement(null);
       onSelect(selector, elementInfo, element, 'click');
     } else {
-      // Modo digitação - usa DOM direto para não causar re-render
-      typingModeRef.current = { element, selector, info: elementInfo };
-      
-      // Destaca elemento em verde
-      element.style.outline = '3px solid hsl(142, 76%, 36%)';
-      element.style.outlineOffset = '2px';
-      
-      // Cria botão de confirmar via DOM (não React)
-      createConfirmButton(element, confirmTyping, cancelTyping);
-      createInstruction();
-      
-      // Atualiza estado apenas para desabilitar bloqueio de eventos
+      // Entra no modo de digitação
+      setTypingData({ element, selector, info: elementInfo });
       setIsTypingMode(true);
       setSelectedElement(null);
     }
-  }, [selectedElement, onSelect, confirmTyping, cancelTyping]);
+  }, [selectedElement, onSelect]);
 
-  const cancelSelection = () => {
+  const confirmTyping = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!typingData) return;
+    
+    const { element, selector, info } = typingData;
+    let typedValue = '';
+    
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+      typedValue = element.value;
+    } else if (element.isContentEditable) {
+      typedValue = element.textContent || '';
+    }
+    
+    setTypingData(null);
+    setIsTypingMode(false);
+    setHoveredElement(null);
+    
+    onSelect(selector, info, element, 'type', typedValue);
+  }, [typingData, onSelect]);
+
+  const cancelTyping = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setTypingData(null);
+    setIsTypingMode(false);
+    setSelectedElement(null);
+    setHoveredElement(null);
+  }, []);
+
+  const cancelSelection = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     setSelectedElement(null);
     setMenuPosition(null);
     setHoveredElement(null);
-  };
+  }, []);
 
+  // Mouse move para highlight
+  useEffect(() => {
+    if (!isActive || selectedElement || isTypingMode) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const element = getElementAtPoint(e.clientX, e.clientY);
+      
+      if (!element || element.closest('[data-macro-recorder]') || element.closest('[data-element-selector]') || element.closest('[data-selector-ui]')) {
+        setHoveredElement(null);
+        return;
+      }
+      
+      setHoveredElement(element);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, [isActive, selectedElement, isTypingMode, getElementAtPoint]);
+
+  // Cleanup
   useEffect(() => {
     if (!isActive) {
       setSelectedElement(null);
       setMenuPosition(null);
       setHoveredElement(null);
       setIsTypingMode(false);
-      removeConfirmButton();
-      removeInstruction();
-      if (typingModeRef.current) {
-        typingModeRef.current.element.style.outline = '';
-        typingModeRef.current.element.style.outlineOffset = '';
-        typingModeRef.current = null;
-      }
-      return;
+      setTypingData(null);
     }
+  }, [isActive]);
 
-    const blockEvent = (e: Event) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('[data-element-selector]')) {
-        return;
-      }
-      // Não bloqueia se estiver no modo de digitação
-      if (typingModeRef.current || isTypingMode) {
-        return;
-      }
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-    };
-
-    document.addEventListener('mousemove', handleMouseMove, true);
-    document.addEventListener('click', handleClick, true);
-    
-    if (!isTypingMode) {
-      document.addEventListener('mousedown', blockEvent, true);
-      document.addEventListener('pointerdown', blockEvent, true);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove, true);
-      document.removeEventListener('click', handleClick, true);
-      document.removeEventListener('mousedown', blockEvent, true);
-      document.removeEventListener('pointerdown', blockEvent, true);
-    };
-  }, [isActive, handleMouseMove, handleClick, isTypingMode]);
-
-  // Highlight do elemento (apenas quando não está em typing mode)
+  // Highlight do elemento
   useEffect(() => {
-    if (isTypingMode) return;
-    
-    const targetElement = selectedElement || hoveredElement;
+    const targetElement = typingData?.element || selectedElement || hoveredElement;
     if (!targetElement) return;
 
     const originalOutline = targetElement.style.outline;
     const originalOutlineOffset = targetElement.style.outlineOffset;
     
-    const color = selectedElement ? 'hsl(var(--destructive))' : 'hsl(var(--primary))';
+    let color = 'hsl(var(--primary))';
+    if (typingData?.element === targetElement) {
+      color = 'hsl(142, 76%, 36%)';
+    } else if (selectedElement === targetElement) {
+      color = 'hsl(var(--destructive))';
+    }
     
     targetElement.style.outline = `3px solid ${color}`;
     targetElement.style.outlineOffset = '2px';
@@ -400,19 +278,50 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       targetElement.style.outline = originalOutline;
       targetElement.style.outlineOffset = originalOutlineOffset;
     };
-  }, [hoveredElement, selectedElement, isTypingMode]);
+  }, [hoveredElement, selectedElement, typingData]);
 
   if (!isActive) return null;
 
   return (
     <>
-      <div 
+      {/* Overlay transparente que captura todos os eventos */}
+      <div
+        ref={overlayRef}
         data-element-selector
-        className="fixed inset-0 z-[999999] pointer-events-none"
+        onClick={handleOverlayClick}
+        onMouseDown={(e) => { if (!isTypingMode) { e.preventDefault(); e.stopPropagation(); } }}
+        onPointerDown={(e) => { if (!isTypingMode) { e.preventDefault(); e.stopPropagation(); } }}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 999998,
+          cursor: 'crosshair',
+          pointerEvents: isTypingMode ? 'none' : 'auto',
+        }}
+      />
+
+      {/* UI do seletor - acima do overlay */}
+      <div
+        data-element-selector
+        data-selector-ui
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 999999,
+          pointerEvents: 'none',
+        }}
       >
-        {/* Barra de instrução - apenas quando não está em typing mode */}
+        {/* Barra de instrução */}
         {!isTypingMode && (
-          <div className="fixed top-4 left-1/2 -translate-x-1/2 pointer-events-auto">
+          <div 
+            style={{ 
+              position: 'fixed', 
+              top: 16, 
+              left: '50%', 
+              transform: 'translateX(-50%)',
+              pointerEvents: 'auto',
+            }}
+          >
             <div className="bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-3">
               <MousePointer2 className="h-5 w-5 animate-pulse" />
               <span className="font-medium">
@@ -421,9 +330,11 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (selectedElement) {
-                    cancelSelection();
+                    cancelSelection(e);
                   } else {
                     onCancel();
                   }
@@ -436,14 +347,14 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
           </div>
         )}
 
-        {/* Menu de ações ao lado do elemento */}
+        {/* Menu de ações */}
         {selectedElement && menuPosition && !isTypingMode && (
           <div 
-            ref={menuRef}
-            className="fixed pointer-events-auto z-[9999999]"
             style={{ 
+              position: 'fixed',
               top: menuPosition.top,
-              left: Math.min(menuPosition.left, window.innerWidth - 120)
+              left: Math.min(menuPosition.left, window.innerWidth - 120),
+              pointerEvents: 'auto',
             }}
           >
             <div className="bg-background border rounded-lg shadow-xl p-1 flex flex-col gap-1">
@@ -451,8 +362,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
                 size="sm"
                 variant="ghost"
                 className="justify-start gap-2 h-8"
-                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAction('click'); }}
+                onClick={(e) => handleAction('click', e)}
               >
                 <MousePointerClick className="h-4 w-4 text-primary" />
                 Clicar
@@ -461,8 +371,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
                 size="sm"
                 variant="ghost"
                 className="justify-start gap-2 h-8"
-                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAction('type'); }}
+                onClick={(e) => handleAction('type', e)}
               >
                 <Type className="h-4 w-4 text-primary" />
                 Digitar
@@ -473,7 +382,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
 
         {/* Info do elemento hover */}
         {hoveredElement && !selectedElement && !isTypingMode && (
-          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 pointer-events-none">
+          <div style={{ position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)' }}>
             <div className="bg-background border rounded-lg shadow-lg px-3 py-2 text-sm">
               <span className="text-muted-foreground">Elemento: </span>
               <span className="font-mono text-primary">
@@ -483,6 +392,62 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
               </span>
             </div>
           </div>
+        )}
+
+        {/* UI do modo de digitação */}
+        {isTypingMode && typingData && (
+          <>
+            {/* Instrução */}
+            <div 
+              style={{ 
+                position: 'fixed', 
+                top: 16, 
+                left: '50%', 
+                transform: 'translateX(-50%)',
+                pointerEvents: 'none',
+              }}
+            >
+              <div className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-3">
+                <Type className="h-5 w-5" />
+                <span className="font-medium">
+                  Digite no campo e clique em Confirmar
+                </span>
+              </div>
+            </div>
+
+            {/* Botão de confirmar */}
+            <div 
+              style={{ 
+                position: 'fixed',
+                top: typingData.element.getBoundingClientRect().bottom + 8,
+                left: typingData.element.getBoundingClientRect().left,
+                pointerEvents: 'auto',
+              }}
+            >
+              <div className="bg-background border rounded-lg shadow-xl p-3 min-w-[200px]">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Digite no campo acima
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={confirmTyping}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    <Check className="h-4 w-4 mr-1" />
+                    Confirmar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={cancelTyping}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </>
