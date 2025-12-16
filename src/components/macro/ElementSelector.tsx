@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, MousePointer2 } from 'lucide-react';
+import { X, MousePointer2, MousePointerClick, Type } from 'lucide-react';
 
 interface ElementSelectorProps {
   isActive: boolean;
-  onSelect: (selector: string, elementInfo: ElementInfo, element: HTMLElement) => void;
+  onSelect: (selector: string, elementInfo: ElementInfo, element: HTMLElement, action: 'click' | 'type') => void;
   onCancel: () => void;
 }
 
@@ -96,28 +96,30 @@ function generateSelector(element: HTMLElement): string {
 
 export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelectorProps) {
   const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
+  const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (selectedElement) return; // Não muda hover se já tem elemento selecionado
+    
     const target = e.target as HTMLElement;
     
-    // Ignora elementos do próprio seletor
     if (target.closest('[data-element-selector]')) {
       setHoveredElement(null);
       return;
     }
     
     setHoveredElement(target);
-  }, []);
+  }, [selectedElement]);
 
   const handleMouseDown = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
     
-    // Permite cliques no próprio seletor (botão cancelar)
     if (target.closest('[data-element-selector]')) {
       return;
     }
     
-    // Bloqueia o evento para não fechar popups
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
@@ -126,7 +128,6 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
   const handleClick = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
     
-    // Permite cliques no próprio seletor
     if (target.closest('[data-element-selector]')) {
       return;
     }
@@ -135,22 +136,50 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     e.stopPropagation();
     e.stopImmediatePropagation();
     
-    const selector = generateSelector(target);
+    // Seleciona o elemento e mostra o menu
+    const rect = target.getBoundingClientRect();
+    setSelectedElement(target);
+    setMenuPosition({
+      top: rect.top + window.scrollY,
+      left: rect.right + 8 + window.scrollX
+    });
+  }, []);
+
+  const handleAction = (action: 'click' | 'type') => {
+    if (!selectedElement) return;
+    
+    const selector = generateSelector(selectedElement);
     const elementInfo: ElementInfo = {
       selector,
-      tagName: target.tagName,
-      type: target.getAttribute('type') || undefined,
-      placeholder: target.getAttribute('placeholder') || undefined,
-      text: target.textContent?.trim().slice(0, 50) || undefined,
-      id: target.id || undefined,
-      className: target.className?.toString().slice(0, 100) || undefined,
+      tagName: selectedElement.tagName,
+      type: selectedElement.getAttribute('type') || undefined,
+      placeholder: selectedElement.getAttribute('placeholder') || undefined,
+      text: selectedElement.textContent?.trim().slice(0, 50) || undefined,
+      id: selectedElement.id || undefined,
+      className: selectedElement.className?.toString().slice(0, 100) || undefined,
     };
     
-    onSelect(selector, elementInfo, target);
-  }, [onSelect]);
+    // Limpa estado antes de chamar callback
+    setSelectedElement(null);
+    setMenuPosition(null);
+    setHoveredElement(null);
+    
+    onSelect(selector, elementInfo, selectedElement, action);
+  };
+
+  const cancelSelection = () => {
+    setSelectedElement(null);
+    setMenuPosition(null);
+    setHoveredElement(null);
+  };
 
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive) {
+      setSelectedElement(null);
+      setMenuPosition(null);
+      setHoveredElement(null);
+      return;
+    }
 
     document.addEventListener('mousemove', handleMouseMove, true);
     document.addEventListener('mousedown', handleMouseDown, true);
@@ -163,21 +192,24 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     };
   }, [isActive, handleMouseMove, handleMouseDown, handleClick]);
 
-  // Highlight do elemento
+  // Highlight do elemento hover
   useEffect(() => {
-    if (!hoveredElement) return;
+    const targetElement = selectedElement || hoveredElement;
+    if (!targetElement) return;
 
-    const originalOutline = hoveredElement.style.outline;
-    const originalOutlineOffset = hoveredElement.style.outlineOffset;
+    const originalOutline = targetElement.style.outline;
+    const originalOutlineOffset = targetElement.style.outlineOffset;
     
-    hoveredElement.style.outline = '3px solid hsl(var(--primary))';
-    hoveredElement.style.outlineOffset = '2px';
+    targetElement.style.outline = selectedElement 
+      ? '3px solid hsl(var(--destructive))' 
+      : '3px solid hsl(var(--primary))';
+    targetElement.style.outlineOffset = '2px';
 
     return () => {
-      hoveredElement.style.outline = originalOutline;
-      hoveredElement.style.outlineOffset = originalOutlineOffset;
+      targetElement.style.outline = originalOutline;
+      targetElement.style.outlineOffset = originalOutlineOffset;
     };
-  }, [hoveredElement]);
+  }, [hoveredElement, selectedElement]);
 
   if (!isActive) return null;
 
@@ -190,11 +222,19 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       <div className="fixed top-4 left-1/2 -translate-x-1/2 pointer-events-auto">
         <div className="bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-3">
           <MousePointer2 className="h-5 w-5 animate-pulse" />
-          <span className="font-medium">Clique no elemento que deseja selecionar</span>
+          <span className="font-medium">
+            {selectedElement ? 'Escolha a ação' : 'Clique no elemento'}
+          </span>
           <Button
             variant="ghost"
             size="sm"
-            onClick={onCancel}
+            onClick={() => {
+              if (selectedElement) {
+                cancelSelection();
+              } else {
+                onCancel();
+              }
+            }}
             className="h-7 px-2 hover:bg-primary-foreground/20"
           >
             <X className="h-4 w-4" />
@@ -202,8 +242,41 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         </div>
       </div>
 
+      {/* Menu de ações ao lado do elemento */}
+      {selectedElement && menuPosition && (
+        <div 
+          ref={menuRef}
+          className="fixed pointer-events-auto z-[9999999]"
+          style={{ 
+            top: menuPosition.top,
+            left: Math.min(menuPosition.left, window.innerWidth - 120)
+          }}
+        >
+          <div className="bg-background border rounded-lg shadow-xl p-1 flex flex-col gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="justify-start gap-2 h-8"
+              onClick={() => handleAction('click')}
+            >
+              <MousePointerClick className="h-4 w-4 text-primary" />
+              Clicar
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="justify-start gap-2 h-8"
+              onClick={() => handleAction('type')}
+            >
+              <Type className="h-4 w-4 text-primary" />
+              Digitar
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Info do elemento hover */}
-      {hoveredElement && (
+      {hoveredElement && !selectedElement && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 pointer-events-none">
           <div className="bg-background border rounded-lg shadow-lg px-3 py-2 text-sm">
             <span className="text-muted-foreground">Elemento: </span>
