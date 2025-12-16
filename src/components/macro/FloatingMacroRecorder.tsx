@@ -101,9 +101,14 @@ export function FloatingMacroRecorder() {
   };
 
   const handleElementSelected = (selector: string, info: ElementInfo, element: HTMLElement) => {
+    // Desativa o seletor primeiro
     setIsSelectingElement(false);
-    setPendingElement({ selector, info, element });
-    setShowActionChoice(true);
+    
+    // Pequeno delay para garantir que o overlay desmonte
+    setTimeout(() => {
+      setPendingElement({ selector, info, element });
+      setShowActionChoice(true);
+    }, 50);
   };
 
   const executeClickAction = () => {
@@ -275,7 +280,7 @@ export function FloatingMacroRecorder() {
   if (!isVisible && !isRecording) {
     return (
       <Button
-        className="fixed bottom-4 left-4 z-[99999] rounded-full shadow-lg"
+        className="fixed bottom-4 left-4 z-[9999999] rounded-full shadow-lg"
         size="sm"
         onClick={() => setIsVisible(true)}
       >
@@ -287,7 +292,7 @@ export function FloatingMacroRecorder() {
 
   return (
     <>
-      <div className="fixed bottom-4 left-4 z-[99999] bg-background border rounded-lg shadow-xl p-3 min-w-[300px]">
+      <div className="fixed bottom-4 left-4 z-[9999999] bg-background border rounded-lg shadow-xl p-3 min-w-[300px] pointer-events-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
