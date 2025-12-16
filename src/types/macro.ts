@@ -19,6 +19,8 @@ export interface MacroStep {
   meta?: {
     label?: string;
     screen?: string;
+    validationLevel?: 'success' | 'warning' | 'error';
+    validationMessage?: string;
   };
   enabled?: boolean;
 }
