@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, MousePointer2 } from 'lucide-react';
 
@@ -60,7 +60,6 @@ function generateSelector(element: HTMLElement): string {
   if (element.tagName === 'BUTTON' || element.getAttribute('role') === 'button') {
     const text = element.textContent?.trim();
     if (text && text.length < 50) {
-      // Usa xpath-like approach via classe especial
       return `button:contains("${text}")`;
     }
   }
@@ -96,7 +95,6 @@ function generateSelector(element: HTMLElement): string {
     path.unshift(selector);
     current = parent;
     
-    // Limita profundidade
     if (path.length >= 4) break;
   }
   
@@ -105,29 +103,44 @@ function generateSelector(element: HTMLElement): string {
 
 export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelectorProps) {
   const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Encontra elemento sob o cursor, ignorando o overlay
+  const getElementUnderCursor = useCallback((x: number, y: number): HTMLElement | null => {
+    // Temporariamente esconde o overlay para encontrar o elemento real
+    if (overlayRef.current) {
+      overlayRef.current.style.display = 'none';
+    }
+    
+    const element = document.elementFromPoint(x, y) as HTMLElement;
+    
+    if (overlayRef.current) {
+      overlayRef.current.style.display = '';
+    }
+    
+    return element;
+  }, []);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
+    const target = getElementUnderCursor(e.clientX, e.clientY);
     
-    // Ignora elementos do próprio seletor
-    if (target.closest('[data-element-selector]')) {
+    if (!target || target.closest('[data-element-selector]')) {
       setHoveredElement(null);
       return;
     }
     
     setHoveredElement(target);
-  }, []);
+  }, [getElementUnderCursor]);
 
   const handleClick = useCallback((e: MouseEvent) => {
-    // Previne TODOS os comportamentos padrão para não fechar popups
+    // Bloqueia TUDO
     e.preventDefault();
     e.stopPropagation();
     e.stopImmediatePropagation();
     
-    const target = e.target as HTMLElement;
+    const target = getElementUnderCursor(e.clientX, e.clientY);
     
-    // Ignora cliques no próprio seletor
-    if (target.closest('[data-element-selector]')) {
+    if (!target || target.closest('[data-element-selector]')) {
       return;
     }
     
@@ -143,34 +156,38 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     };
     
     onSelect(selector, elementInfo, target);
-  }, [onSelect]);
+  }, [getElementUnderCursor, onSelect]);
 
-  // Previne eventos que poderiam fechar popups
-  const preventClose = useCallback((e: Event) => {
+  // Bloqueia eventos que fecham popups
+  const blockEvent = useCallback((e: Event) => {
     const target = e.target as HTMLElement;
-    if (!target.closest('[data-element-selector]')) {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
+    if (target.closest('[data-element-selector]')) {
+      return; // Permite eventos no próprio seletor
     }
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
   }, []);
 
   useEffect(() => {
     if (!isActive) return;
 
-    // Adiciona em capture phase para pegar primeiro
+    // Captura todos os eventos relevantes na fase de captura
+    const events = ['mousedown', 'mouseup', 'click', 'pointerdown', 'pointerup', 'focusin', 'focusout'];
+    
+    events.forEach(eventName => {
+      document.addEventListener(eventName, blockEvent, true);
+    });
+    
     document.addEventListener('mousemove', handleMouseMove, true);
-    document.addEventListener('click', handleClick, true);
-    document.addEventListener('mousedown', preventClose, true);
-    document.addEventListener('pointerdown', preventClose, true);
 
     return () => {
+      events.forEach(eventName => {
+        document.removeEventListener(eventName, blockEvent, true);
+      });
       document.removeEventListener('mousemove', handleMouseMove, true);
-      document.removeEventListener('click', handleClick, true);
-      document.removeEventListener('mousedown', preventClose, true);
-      document.removeEventListener('pointerdown', preventClose, true);
     };
-  }, [isActive, handleMouseMove, handleClick, preventClose]);
+  }, [isActive, handleMouseMove, blockEvent]);
 
   // Highlight do elemento
   useEffect(() => {
@@ -179,7 +196,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     const originalOutline = hoveredElement.style.outline;
     const originalOutlineOffset = hoveredElement.style.outlineOffset;
     
-    hoveredElement.style.outline = '2px solid hsl(var(--primary))';
+    hoveredElement.style.outline = '3px solid hsl(var(--primary))';
     hoveredElement.style.outlineOffset = '2px';
 
     return () => {
@@ -192,18 +209,34 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
 
   return (
     <div 
+      ref={overlayRef}
       data-element-selector
-      className="fixed inset-0 z-[999999] pointer-events-none"
+      className="fixed inset-0 z-[999999]"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        handleClick(e.nativeEvent);
+      }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
     >
+      {/* Overlay transparente que captura cliques */}
+      <div className="absolute inset-0 bg-transparent cursor-crosshair" />
+      
       {/* Barra de instrução */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 pointer-events-auto">
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 pointer-events-auto z-[9999999]">
         <div className="bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-3">
           <MousePointer2 className="h-5 w-5 animate-pulse" />
           <span className="font-medium">Clique no elemento que deseja selecionar</span>
           <Button
             variant="ghost"
             size="sm"
-            onClick={onCancel}
+            onClick={(e) => {
+              e.stopPropagation();
+              onCancel();
+            }}
             className="h-7 px-2 hover:bg-primary-foreground/20"
           >
             <X className="h-4 w-4" />
@@ -213,7 +246,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
 
       {/* Info do elemento hover */}
       {hoveredElement && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 pointer-events-none">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 pointer-events-none z-[9999999]">
           <div className="bg-background border rounded-lg shadow-lg px-3 py-2 text-sm">
             <span className="text-muted-foreground">Elemento: </span>
             <span className="font-mono text-primary">
