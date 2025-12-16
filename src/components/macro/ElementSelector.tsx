@@ -172,20 +172,22 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       setHoveredElement(null);
       onSelect(selector, elementInfo, element, 'click');
     } else {
-      // Modo de digitação: mantém elemento selecionado, mostra botão confirmar
-      // O usuário pode agora clicar no campo e digitar normalmente
-      setTypingMode({
-        element,
-        selector,
-        info: elementInfo
-      });
-      
-      // Posiciona botão de confirmar próximo ao elemento
-      const rect = element.getBoundingClientRect();
-      setConfirmButtonPos({
-        top: rect.bottom + 8 + window.scrollY,
-        left: rect.left + window.scrollX
-      });
+      // Usa setTimeout para atrasar a mudança de estado
+      // Isso evita que o popup detecte como clique fora
+      setTimeout(() => {
+        setTypingMode({
+          element,
+          selector,
+          info: elementInfo
+        });
+        
+        // Posiciona botão de confirmar próximo ao elemento
+        const rect = element.getBoundingClientRect();
+        setConfirmButtonPos({
+          top: rect.bottom + 8 + window.scrollY,
+          left: rect.left + window.scrollX
+        });
+      }, 50);
     }
   };
 
