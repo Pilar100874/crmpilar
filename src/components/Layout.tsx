@@ -48,6 +48,7 @@ import { toast } from "@/lib/toast-config";
 import logo from "@/assets/logo_branco_sidebar.png";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import { UsuarioSelector } from "@/components/UsuarioSelector";
+import { FloatingMacroRecorder } from "@/components/macro/FloatingMacroRecorder";
 import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
 import { ChatAvisosFloatingButton } from "@/components/chat-interno/ChatAvisosFloatingButton";
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
@@ -1063,6 +1064,7 @@ export default function Layout({ children }: LayoutProps) {
         <ChatAvisosFloatingButton />
       </ChatInternoProvider>
       
+      <FloatingMacroRecorder />
       <ChangePasswordDialog
         open={showChangePasswordDialog}
         onOpenChange={setShowChangePasswordDialog}
