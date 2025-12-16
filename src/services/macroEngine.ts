@@ -38,8 +38,13 @@ async function executeTypeText(step: MacroStep): Promise<void> {
   // Tenta encontrar o elemento
   let element: HTMLElement | null = null;
   
-  // Tenta primeiro por data-macro-id
-  element = document.querySelector(`[data-macro-id="${step.target}"]`);
+  // Tenta primeiro por data-macro-id (escapando caracteres especiais)
+  try {
+    const escapedTarget = CSS.escape(step.target);
+    element = document.querySelector(`[data-macro-id="${escapedTarget}"]`);
+  } catch {
+    // Seletor inválido
+  }
   
   // Se não encontrou, tenta como seletor CSS direto
   if (!element) {
@@ -97,8 +102,30 @@ async function executeClick(step: MacroStep): Promise<void> {
   
   let element: HTMLElement | null = null;
   
-  // Tenta primeiro por data-macro-id
-  element = document.querySelector(`[data-macro-id="${target}"]`);
+  // Primeiro verifica se é um seletor :contains() (não é CSS válido)
+  if (target.includes(':contains(')) {
+    const match = target.match(/button:contains\("(.+)"\)/);
+    if (match) {
+      const searchText = match[1];
+      const buttons = document.querySelectorAll('button');
+      for (const btn of buttons) {
+        if (btn.textContent?.trim().includes(searchText)) {
+          element = btn;
+          break;
+        }
+      }
+    }
+  }
+  
+  // Se não encontrou, tenta por data-macro-id (escapando caracteres especiais)
+  if (!element) {
+    try {
+      const escapedTarget = CSS.escape(target);
+      element = document.querySelector(`[data-macro-id="${escapedTarget}"]`);
+    } catch {
+      // Seletor inválido
+    }
+  }
   
   // Se não encontrou, tenta como seletor CSS direto
   if (!element) {
@@ -109,16 +136,13 @@ async function executeClick(step: MacroStep): Promise<void> {
     }
   }
   
-  // Tenta por texto do botão
-  if (!element && target.includes(':contains(')) {
-    const match = target.match(/button:contains\("(.+)"\)/);
-    if (match) {
-      const buttons = document.querySelectorAll('button');
-      for (const btn of buttons) {
-        if (btn.textContent?.trim().includes(match[1])) {
-          element = btn;
-          break;
-        }
+  // Tenta por texto em qualquer elemento clicável
+  if (!element) {
+    const clickables = document.querySelectorAll('button, a, [role="button"], [onclick]');
+    for (const el of clickables) {
+      if (el.textContent?.trim().includes(target)) {
+        element = el as HTMLElement;
+        break;
       }
     }
   }
