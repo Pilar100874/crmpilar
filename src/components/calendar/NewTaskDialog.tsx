@@ -830,17 +830,22 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
               {/* Campo de data editável */}
               <div className="space-y-2">
                 <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
-                  <PopoverTrigger asChild>
-                    <div className="relative">
-                      <Input
-                        placeholder="dd/mm/aaaa"
-                        value={dateInput}
-                        onChange={(e) => handleDateInputChange(e.target.value)}
-                        className="pr-8"
-                      />
-                      <CalendarIcon className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
-                    </div>
-                  </PopoverTrigger>
+                  <div className="relative">
+                    <Input
+                      placeholder="dd/mm/aaaa"
+                      value={dateInput}
+                      onChange={(e) => handleDateInputChange(e.target.value)}
+                      className="pr-8"
+                    />
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
+                      >
+                        <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </PopoverTrigger>
+                  </div>
                   <PopoverContent className="w-auto p-0 flex bg-background z-50 pointer-events-auto" align="start">
                     {/* Opções rápidas */}
                     <div className="border-r bg-background">
@@ -904,24 +909,30 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
               {/* Seletor de hora */}
               <div className="space-y-2">
                 <Popover open={hourPickerOpen} onOpenChange={setHourPickerOpen}>
-                  <PopoverTrigger asChild>
-                    <div className="relative">
-                      <Input
-                        placeholder="HH"
-                        value={hours}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '').slice(0, 2);
-                          if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 23)) {
-                            setHours(value);
-                          }
-                        }}
+                  <div className="relative">
+                    <Input
+                      placeholder="HH"
+                      value={hours}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 2);
+                        if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 23)) {
+                          setHours(value);
+                        }
+                      }}
+                      disabled={isAllDay || noTimeSet}
+                      className="pr-8"
+                      maxLength={2}
+                    />
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded disabled:opacity-50"
                         disabled={isAllDay || noTimeSet}
-                        className="pr-8"
-                        maxLength={2}
-                      />
-                      <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
-                    </div>
-                  </PopoverTrigger>
+                      >
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </PopoverTrigger>
+                  </div>
                   <PopoverContent className="w-[120px] p-0 bg-background z-50 pointer-events-auto" align="start">
                     <ScrollArea className="h-[320px]">
                       <div className="p-2 grid grid-cols-2 gap-1">
@@ -952,24 +963,30 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
               {/* Seletor de minutos */}
               <div className="space-y-2">
                 <Popover open={minutePickerOpen} onOpenChange={setMinutePickerOpen}>
-                  <PopoverTrigger asChild>
-                    <div className="relative">
-                      <Input
-                        placeholder="MM"
-                        value={minutes}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '').slice(0, 2);
-                          if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 59)) {
-                            setMinutes(value);
-                          }
-                        }}
+                  <div className="relative">
+                    <Input
+                      placeholder="MM"
+                      value={minutes}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 2);
+                        if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 59)) {
+                          setMinutes(value);
+                        }
+                      }}
+                      disabled={isAllDay || noTimeSet}
+                      className="pr-8"
+                      maxLength={2}
+                    />
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded disabled:opacity-50"
                         disabled={isAllDay || noTimeSet}
-                        className="pr-8"
-                        maxLength={2}
-                      />
-                      <Clock className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground cursor-pointer" />
-                    </div>
-                  </PopoverTrigger>
+                      >
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    </PopoverTrigger>
+                  </div>
                   <PopoverContent className="w-[100px] p-0 bg-background z-50 pointer-events-auto" align="start">
                     <div className="p-2 space-y-1">
                       {minuteSlots.map((minute) => (
