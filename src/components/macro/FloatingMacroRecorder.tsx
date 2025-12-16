@@ -4,6 +4,151 @@ import { useMacro } from "@/contexts/MacroContext";
 import { Button } from "@/components/ui/button";
 import { Circle, Square, Pause, Play, List, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/lib/toast-config";
+
+type ValidationLevel = 'success' | 'warning' | 'error';
+
+interface ValidationResult {
+  level: ValidationLevel;
+  message: string;
+  details: string;
+}
+
+// Valida se o seletor do elemento provavelmente funcionará
+function validateElementSelector(elementId: string, element: HTMLElement): ValidationResult {
+  // Melhor caso: data-macro-id
+  if (element.getAttribute('data-macro-id')) {
+    return {
+      level: 'success',
+      message: '✅ Elemento confiável',
+      details: 'Usa data-macro-id (100% confiável)'
+    };
+  }
+
+  // Bom caso: ID estável
+  if (elementId.startsWith('#') && element.id && !element.id.match(/[0-9]{5,}|radix|:r/)) {
+    return {
+      level: 'success',
+      message: '✅ Elemento confiável',
+      details: 'Usa ID estável'
+    };
+  }
+
+  // Bom caso: name attribute
+  if (elementId.includes('[name=')) {
+    return {
+      level: 'success',
+      message: '✅ Elemento confiável',
+      details: 'Usa atributo name'
+    };
+  }
+
+  // Caso médio: aria-label ou title
+  if (elementId.includes('[aria-label=') || elementId.includes('[title=')) {
+    return {
+      level: 'warning',
+      message: '⚠️ Pode falhar',
+      details: 'Usa aria-label/title (pode mudar se texto for traduzido)'
+    };
+  }
+
+  // Caso médio: texto do botão/link
+  if (elementId.includes('button:') || elementId.includes('a:')) {
+    return {
+      level: 'warning',
+      message: '⚠️ Pode falhar',
+      details: 'Usa texto do elemento (pode mudar se texto for alterado)'
+    };
+  }
+
+  // Verificar se está em iframe
+  try {
+    if (element.ownerDocument !== document) {
+      return {
+        level: 'error',
+        message: '❌ NÃO vai funcionar',
+        details: 'Elemento está em iframe (não suportado)'
+      };
+    }
+  } catch {
+    return {
+      level: 'error',
+      message: '❌ NÃO vai funcionar',
+      details: 'Elemento inacessível (provavelmente iframe)'
+    };
+  }
+
+  // Verificar se está em Shadow DOM
+  if (element.getRootNode() !== document) {
+    return {
+      level: 'error',
+      message: '❌ NÃO vai funcionar',
+      details: 'Elemento está em Shadow DOM (não suportado)'
+    };
+  }
+
+  // Verificar ID dinâmico (radix, números longos, :r pattern)
+  if (elementId.startsWith('#') && element.id?.match(/[0-9]{5,}|radix|:r/)) {
+    return {
+      level: 'error',
+      message: '❌ Provavelmente vai falhar',
+      details: 'ID dinâmico detectado (muda a cada reload)'
+    };
+  }
+
+  // Verificar classe dinâmica
+  if (elementId.includes('.') && element.className?.includes?.('css-')) {
+    return {
+      level: 'error',
+      message: '❌ Provavelmente vai falhar',
+      details: 'Classe CSS dinâmica detectada'
+    };
+  }
+
+  // Caso incerto: classe genérica
+  if (elementId.match(/^[a-z]+\.[a-z]/)) {
+    return {
+      level: 'warning',
+      message: '⚠️ Pode falhar',
+      details: 'Usa classe CSS (pode não ser única na página)'
+    };
+  }
+
+  // Caso fraco: apenas tag + texto
+  if (elementId.match(/^[a-z]+:/)) {
+    return {
+      level: 'warning',
+      message: '⚠️ Pode falhar',
+      details: 'Usa tag + texto (pode haver duplicatas)'
+    };
+  }
+
+  return {
+    level: 'warning',
+    message: '⚠️ Verificar manualmente',
+    details: 'Seletor genérico - teste antes de usar'
+  };
+}
+
+// Mostra toast com feedback visual
+function showValidationToast(label: string, validation: ValidationResult) {
+  const toastConfig = {
+    success: { duration: 2000 },
+    warning: { duration: 3500 },
+    error: { duration: 5000 }
+  };
+
+  const toastFn = validation.level === 'success' 
+    ? toast.success 
+    : validation.level === 'warning' 
+      ? toast.info 
+      : toast.error;
+
+  toastFn(`${validation.message}: ${label.substring(0, 40)}${label.length > 40 ? '...' : ''}`, {
+    description: validation.details,
+    duration: toastConfig[validation.level].duration
+  });
+}
 
 export function FloatingMacroRecorder() {
   const navigate = useNavigate();
@@ -147,10 +292,19 @@ export function FloatingMacroRecorder() {
         if (['svg', 'path', 'circle', 'g'].includes(elementId.toLowerCase())) return;
         
         const label = target.textContent?.trim().substring(0, 50) || elementId;
+        
+        // Valida e mostra feedback
+        const validation = validateElementSelector(elementId, target);
+        showValidationToast(`Clique: ${label}`, validation);
+        
         addRecordingStep({
           type: 'click',
           target: elementId,
-          meta: { label: `Clique: ${label}` }
+          meta: { 
+            label: `Clique: ${label}`,
+            validationLevel: validation.level,
+            validationMessage: validation.details
+          }
         });
       }
     };
@@ -162,11 +316,21 @@ export function FloatingMacroRecorder() {
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
         const elementId = generateElementId(target);
         const value = (target as HTMLInputElement).value;
+        const label = `Preencher: ${elementId} = ${value.substring(0, 30)}${value.length > 30 ? '...' : ''}`;
+        
+        // Valida e mostra feedback
+        const validation = validateElementSelector(elementId, target);
+        showValidationToast(label, validation);
+        
         addRecordingStep({
           type: 'setValue',
           target: elementId,
           value,
-          meta: { label: `Preencher: ${elementId} = ${value.substring(0, 30)}${value.length > 30 ? '...' : ''}` }
+          meta: { 
+            label,
+            validationLevel: validation.level,
+            validationMessage: validation.details
+          }
         });
       }
     };
