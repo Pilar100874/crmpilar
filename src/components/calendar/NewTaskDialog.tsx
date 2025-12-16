@@ -350,6 +350,8 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
       setAssignedTo("me");
       setObservation("");
     } else if (open && !editingTask) {
+      // IMPORTANTE: Atualizar tanto o state date quanto o input visual
+      setDate(initialDate || new Date());
       setDateInput(format(initialDate || new Date(), "dd/MM/yyyy"));
     }
   }, [open, initialDate, editingTask]);
