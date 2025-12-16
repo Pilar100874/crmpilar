@@ -829,7 +829,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
             <div className="grid grid-cols-3 gap-3">
               {/* Campo de data editável */}
               <div className="space-y-2">
-                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen} modal={false}>
                   <div className="relative">
                     <Input
                       placeholder="dd/mm/aaaa"
@@ -908,7 +908,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
 
               {/* Seletor de hora */}
               <div className="space-y-2">
-                <Popover open={hourPickerOpen} onOpenChange={setHourPickerOpen}>
+                <Popover open={hourPickerOpen} onOpenChange={setHourPickerOpen} modal={false}>
                   <div className="relative">
                     <Input
                       placeholder="HH"
@@ -962,7 +962,7 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
 
               {/* Seletor de minutos */}
               <div className="space-y-2">
-                <Popover open={minutePickerOpen} onOpenChange={setMinutePickerOpen}>
+                <Popover open={minutePickerOpen} onOpenChange={setMinutePickerOpen} modal={false}>
                   <div className="relative">
                     <Input
                       placeholder="MM"
