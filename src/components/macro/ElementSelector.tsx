@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, MousePointer2, MousePointerClick, Type, Check } from 'lucide-react';
@@ -95,23 +96,108 @@ function generateSelector(element: HTMLElement): string {
   return path.join(' > ');
 }
 
+// Modal renderizado via portal - independente de qualquer popup
+function TextInputModal({ 
+  elementInfo, 
+  onConfirm, 
+  onCancel 
+}: { 
+  elementInfo: ElementInfo;
+  onConfirm: (text: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Foca no input quando o modal abrir
+    const timer = setTimeout(() => inputRef.current?.focus(), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-[9999999] flex items-center justify-center"
+      style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onCancel();
+        }
+      }}
+    >
+      <div 
+        className="bg-background border rounded-xl shadow-2xl p-6 min-w-[350px] max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <Type className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg">Digitar Texto</h3>
+            <p className="text-sm text-muted-foreground">
+              Campo: {elementInfo.placeholder || elementInfo.tagName.toLowerCase()}
+            </p>
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium text-muted-foreground block mb-2">
+              Texto a ser digitado:
+            </label>
+            <Input
+              ref={inputRef}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && value.trim()) {
+                  onConfirm(value);
+                } else if (e.key === 'Escape') {
+                  onCancel();
+                }
+              }}
+              placeholder="Digite o texto aqui..."
+              className="h-11"
+            />
+          </div>
+          
+          <div className="flex gap-2 justify-end">
+            <Button
+              variant="outline"
+              onClick={onCancel}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => value.trim() && onConfirm(value)}
+              disabled={!value.trim()}
+            >
+              <Check className="h-4 w-4 mr-2" />
+              Confirmar
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelectorProps) {
   const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
-  // Novo: modo de input flutuante próprio
-  const [floatingInput, setFloatingInput] = useState<{
+  const [textInputModal, setTextInputModal] = useState<{
     element: HTMLElement;
     selector: string;
     info: ElementInfo;
-    position: { top: number; left: number };
   } | null>(null);
-  const [inputValue, setInputValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
+  
   const menuRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (selectedElement || floatingInput) return;
+    if (selectedElement || textInputModal) return;
     
     const target = e.target as HTMLElement;
     
@@ -121,7 +207,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     }
     
     setHoveredElement(target);
-  }, [selectedElement, floatingInput]);
+  }, [selectedElement, textInputModal]);
 
   const handleClick = useCallback((e: MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -135,8 +221,8 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     e.stopPropagation();
     e.stopImmediatePropagation();
     
-    // Só seleciona elemento se não estiver em modo input
-    if (!floatingInput) {
+    // Só seleciona elemento se não estiver em modo modal
+    if (!textInputModal) {
       const rect = target.getBoundingClientRect();
       setSelectedElement(target);
       setMenuPosition({
@@ -144,7 +230,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         left: rect.right + 8 + window.scrollX
       });
     }
-  }, [floatingInput]);
+  }, [textInputModal]);
 
   const handleAction = (action: 'click' | 'type') => {
     if (!selectedElement) return;
@@ -161,50 +247,38 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       className: element.className?.toString().slice(0, 100) || undefined,
     };
     
+    // Limpa o estado do menu ANTES de abrir modal ou executar ação
+    setSelectedElement(null);
+    setMenuPosition(null);
+    setHoveredElement(null);
+    
     if (action === 'click') {
-      setSelectedElement(null);
-      setMenuPosition(null);
-      setHoveredElement(null);
       onSelect(selector, elementInfo, element, 'click');
     } else {
-      // Abre input flutuante próprio - NÃO tenta digitar no campo real
-      const rect = element.getBoundingClientRect();
-      setFloatingInput({
+      // Abre modal para digitar - o popup pode fechar, não importa
+      setTextInputModal({
         element,
         selector,
-        info: elementInfo,
-        position: {
-          top: rect.bottom + 8 + window.scrollY,
-          left: rect.left + window.scrollX
-        }
+        info: elementInfo
       });
-      setInputValue('');
-      setSelectedElement(null);
-      setMenuPosition(null);
-      setHoveredElement(null);
-      
-      // Foca no nosso input após renderizar
-      setTimeout(() => inputRef.current?.focus(), 50);
     }
   };
 
-  const confirmInput = () => {
-    if (!floatingInput) return;
+  const handleTextConfirm = (text: string) => {
+    if (!textInputModal) return;
     
     onSelect(
-      floatingInput.selector, 
-      floatingInput.info, 
-      floatingInput.element, 
+      textInputModal.selector, 
+      textInputModal.info, 
+      textInputModal.element, 
       'type', 
-      inputValue
+      text
     );
-    setFloatingInput(null);
-    setInputValue('');
+    setTextInputModal(null);
   };
 
-  const cancelInput = () => {
-    setFloatingInput(null);
-    setInputValue('');
+  const handleTextCancel = () => {
+    setTextInputModal(null);
   };
 
   const cancelSelection = () => {
@@ -218,15 +292,18 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       setSelectedElement(null);
       setMenuPosition(null);
       setHoveredElement(null);
-      setFloatingInput(null);
-      setInputValue('');
+      setTextInputModal(null);
       return;
     }
 
-    // Bloqueia eventos apenas quando necessário
+    // Bloqueia eventos apenas quando não estamos no modal
     const blockEvent = (e: Event) => {
       const target = e.target as HTMLElement;
       if (target.closest('[data-element-selector]')) {
+        return;
+      }
+      // Não bloqueia se o modal de texto estiver aberto
+      if (document.querySelector('[data-text-input-modal]')) {
         return;
       }
       e.preventDefault();
@@ -249,15 +326,13 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
 
   // Highlight do elemento
   useEffect(() => {
-    const targetElement = floatingInput?.element || selectedElement || hoveredElement;
+    const targetElement = selectedElement || hoveredElement;
     if (!targetElement) return;
 
     const originalOutline = targetElement.style.outline;
     const originalOutlineOffset = targetElement.style.outlineOffset;
     
-    const color = floatingInput ? 'hsl(var(--primary))' : 
-                  selectedElement ? 'hsl(var(--destructive))' : 
-                  'hsl(var(--primary))';
+    const color = selectedElement ? 'hsl(var(--destructive))' : 'hsl(var(--primary))';
     
     targetElement.style.outline = `3px solid ${color}`;
     targetElement.style.outlineOffset = '2px';
@@ -266,140 +341,98 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       targetElement.style.outline = originalOutline;
       targetElement.style.outlineOffset = originalOutlineOffset;
     };
-  }, [hoveredElement, selectedElement, floatingInput]);
+  }, [hoveredElement, selectedElement]);
 
   if (!isActive) return null;
 
   return (
-    <div 
-      data-element-selector
-      className="fixed inset-0 z-[999999] pointer-events-none"
-    >
-      {/* Barra de instrução */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 pointer-events-auto">
-        <div className="bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-3">
-          <MousePointer2 className="h-5 w-5 animate-pulse" />
-          <span className="font-medium">
-            {floatingInput ? 'Digite o texto abaixo' : 
-             selectedElement ? 'Escolha a ação' : 
-             'Clique no elemento'}
-          </span>
-          {!floatingInput && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (selectedElement) {
-                  cancelSelection();
-                } else {
-                  onCancel();
-                }
-              }}
-              className="h-7 px-2 hover:bg-primary-foreground/20"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Menu de ações ao lado do elemento */}
-      {selectedElement && menuPosition && (
-        <div 
-          ref={menuRef}
-          className="fixed pointer-events-auto z-[9999999]"
-          style={{ 
-            top: menuPosition.top,
-            left: Math.min(menuPosition.left, window.innerWidth - 120)
-          }}
-        >
-          <div className="bg-background border rounded-lg shadow-xl p-1 flex flex-col gap-1">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="justify-start gap-2 h-8"
-              onClick={() => handleAction('click')}
-            >
-              <MousePointerClick className="h-4 w-4 text-primary" />
-              Clicar
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="justify-start gap-2 h-8"
-              onClick={() => handleAction('type')}
-            >
-              <Type className="h-4 w-4 text-primary" />
-              Digitar
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Input flutuante próprio - substitui a digitação no campo real */}
-      {floatingInput && (
-        <div 
-          className="fixed pointer-events-auto z-[9999999]"
-          style={{ 
-            top: floatingInput.position.top,
-            left: floatingInput.position.left,
-            minWidth: 250
-          }}
-        >
-          <div className="bg-background border rounded-lg shadow-xl p-3">
-            <div className="text-xs text-muted-foreground mb-2">
-              Campo: {floatingInput.info.placeholder || floatingInput.info.tagName.toLowerCase()}
-            </div>
-            <div className="flex gap-2">
-              <Input
-                ref={inputRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    confirmInput();
-                  } else if (e.key === 'Escape') {
-                    cancelInput();
+    <>
+      <div 
+        data-element-selector
+        className="fixed inset-0 z-[999999] pointer-events-none"
+      >
+        {/* Barra de instrução */}
+        {!textInputModal && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 pointer-events-auto">
+            <div className="bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-3">
+              <MousePointer2 className="h-5 w-5 animate-pulse" />
+              <span className="font-medium">
+                {selectedElement ? 'Escolha a ação' : 'Clique no elemento'}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (selectedElement) {
+                    cancelSelection();
+                  } else {
+                    onCancel();
                   }
                 }}
-                placeholder="Digite o texto..."
-                className="h-9"
-                autoFocus
-              />
-              <Button
-                size="sm"
-                variant="default"
-                onClick={confirmInput}
-                className="h-9 px-2"
-              >
-                <Check className="h-4 w-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={cancelInput}
-                className="h-9 px-2"
+                className="h-7 px-2 hover:bg-primary-foreground/20"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Info do elemento hover */}
-      {hoveredElement && !selectedElement && !floatingInput && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 pointer-events-none">
-          <div className="bg-background border rounded-lg shadow-lg px-3 py-2 text-sm">
-            <span className="text-muted-foreground">Elemento: </span>
-            <span className="font-mono text-primary">
-              {hoveredElement.tagName.toLowerCase()}
-              {hoveredElement.id ? `#${hoveredElement.id}` : ''}
-              {hoveredElement.getAttribute('placeholder') ? ` [${hoveredElement.getAttribute('placeholder')}]` : ''}
-            </span>
+        {/* Menu de ações ao lado do elemento */}
+        {selectedElement && menuPosition && (
+          <div 
+            ref={menuRef}
+            className="fixed pointer-events-auto z-[9999999]"
+            style={{ 
+              top: menuPosition.top,
+              left: Math.min(menuPosition.left, window.innerWidth - 120)
+            }}
+          >
+            <div className="bg-background border rounded-lg shadow-xl p-1 flex flex-col gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="justify-start gap-2 h-8"
+                onClick={() => handleAction('click')}
+              >
+                <MousePointerClick className="h-4 w-4 text-primary" />
+                Clicar
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="justify-start gap-2 h-8"
+                onClick={() => handleAction('type')}
+              >
+                <Type className="h-4 w-4 text-primary" />
+                Digitar
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Info do elemento hover */}
+        {hoveredElement && !selectedElement && !textInputModal && (
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 pointer-events-none">
+            <div className="bg-background border rounded-lg shadow-lg px-3 py-2 text-sm">
+              <span className="text-muted-foreground">Elemento: </span>
+              <span className="font-mono text-primary">
+                {hoveredElement.tagName.toLowerCase()}
+                {hoveredElement.id ? `#${hoveredElement.id}` : ''}
+                {hoveredElement.getAttribute('placeholder') ? ` [${hoveredElement.getAttribute('placeholder')}]` : ''}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modal de texto - via portal, independente de popups */}
+      {textInputModal && (
+        <TextInputModal
+          elementInfo={textInputModal.info}
+          onConfirm={handleTextConfirm}
+          onCancel={handleTextCancel}
+        />
       )}
-    </div>
+    </>
   );
 }
