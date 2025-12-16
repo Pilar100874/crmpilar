@@ -182,27 +182,33 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       className: element.className?.toString().slice(0, 100) || undefined,
     };
     
-    setSelectedElement(null);
-    setMenuPosition(null);
-    setHoveredElement(null);
-    
     if (action === 'click') {
+      setSelectedElement(null);
+      setMenuPosition(null);
+      setHoveredElement(null);
       // Notifica - o clique será executado pelo parent após remover listeners
       onSelect(selector, elementInfo, element, 'click');
     } else {
-      // Entra em modo digitação
+      // Entra em modo digitação - NÃO limpa estados ainda para não disparar eventos
       const isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
       if (isInput) {
         const input = element as HTMLInputElement;
+        // Primeiro entra em modo digitação
         setTypingMode({
           element,
           selector,
           info: elementInfo,
           initialValue: input.value
         });
-        // Foca o input
-        setTimeout(() => input.focus(), 10);
+        // Depois limpa o menu (já em modo seguro)
+        setSelectedElement(null);
+        setMenuPosition(null);
+        setHoveredElement(null);
+        // NÃO foca automaticamente - usuário clica no input
       } else {
+        setSelectedElement(null);
+        setMenuPosition(null);
+        setHoveredElement(null);
         onSelect(selector, elementInfo, element, 'click');
       }
     }
