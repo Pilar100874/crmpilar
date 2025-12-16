@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { ElementSelector, ElementInfo } from '@/components/macro/ElementSelector';
 import { 
   Plus, 
   Play, 
@@ -20,7 +21,8 @@ import {
   Type,
   GripVertical,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  MousePointer2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -47,6 +49,7 @@ export default function Macros() {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMacro, setEditingMacro] = useState<string | null>(null);
+  const [isSelectingElement, setIsSelectingElement] = useState(false);
   
   // Form state
   const [name, setName] = useState('');
@@ -115,15 +118,42 @@ export default function Macros() {
     resetForm();
   };
 
-  const addStep = (type: 'navigate' | 'typeText') => {
+  const addNavigateStep = (route: string) => {
+    const routeInfo = AVAILABLE_ROUTES.find(r => r.value === route);
     const newStep: MacroStep = {
       id: generateStepId(),
-      type,
-      value: '',
-      target: type === 'typeText' ? '' : undefined,
+      type: 'navigate',
+      value: route,
+      label: `Abrir: ${routeInfo?.label || route}`,
       enabled: true
     };
     setSteps([...steps, newStep]);
+  };
+
+  const startElementSelection = () => {
+    setIsDialogOpen(false); // Fecha dialog temporariamente
+    setTimeout(() => {
+      setIsSelectingElement(true);
+    }, 100);
+  };
+
+  const handleElementSelected = (selector: string, info: ElementInfo) => {
+    setIsSelectingElement(false);
+    
+    const newStep: MacroStep = {
+      id: generateStepId(),
+      type: 'typeText',
+      value: '',
+      target: selector,
+      label: `Digitar em: ${info.placeholder || info.text?.slice(0, 20) || info.tagName.toLowerCase()}`,
+      enabled: true
+    };
+    setSteps(prev => [...prev, newStep]);
+    
+    // Reabre o dialog
+    setTimeout(() => {
+      setIsDialogOpen(true);
+    }, 100);
   };
 
   const updateStep = (stepId: string, updates: Partial<MacroStep>) => {
@@ -271,24 +301,29 @@ export default function Macros() {
             </div>
 
             {/* Botões de adicionar passo */}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Select onValueChange={addNavigateStep}>
+                <SelectTrigger className="w-[200px]">
+                  <Navigation className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Abrir tela..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {AVAILABLE_ROUTES.map(route => (
+                    <SelectItem key={route.value} value={route.value}>
+                      {route.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
               <Button 
                 type="button" 
-                variant="outline" 
-                size="sm"
-                onClick={() => addStep('navigate')}
+                variant="outline"
+                onClick={startElementSelection}
+                className="gap-2"
               >
-                <Navigation className="h-4 w-4 mr-2" />
-                Abrir Tela
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm"
-                onClick={() => addStep('typeText')}
-              >
-                <Type className="h-4 w-4 mr-2" />
-                Digitar Texto
+                <MousePointer2 className="h-4 w-4" />
+                Selecionar campo na tela
               </Button>
             </div>
 
@@ -298,7 +333,12 @@ export default function Macros() {
               <ScrollArea className="h-[300px] border rounded-lg p-2">
                 {steps.length === 0 ? (
                   <div className="flex items-center justify-center h-full text-muted-foreground">
-                    Adicione passos usando os botões acima
+                    <div className="text-center">
+                      <p>Adicione passos usando os botões acima</p>
+                      <p className="text-sm mt-1">
+                        Use "Selecionar campo na tela" para escolher visualmente
+                      </p>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -367,16 +407,25 @@ export default function Macros() {
                             </Select>
                           ) : (
                             <div className="space-y-2">
-                              <Input
-                                placeholder="Seletor do campo (ex: input-nome, #email)"
-                                value={step.target || ''}
-                                onChange={(e) => updateStep(step.id, { target: e.target.value })}
-                              />
-                              <Input
-                                placeholder="Texto a digitar"
-                                value={step.value}
-                                onChange={(e) => updateStep(step.id, { value: e.target.value })}
-                              />
+                              <div>
+                                <Label className="text-xs text-muted-foreground">Texto a digitar</Label>
+                                <Input
+                                  placeholder="Digite o texto..."
+                                  value={step.value}
+                                  onChange={(e) => updateStep(step.id, { value: e.target.value })}
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs text-muted-foreground">
+                                  Elemento selecionado
+                                </Label>
+                                <Input
+                                  placeholder="Seletor do campo"
+                                  value={step.target || ''}
+                                  onChange={(e) => updateStep(step.id, { target: e.target.value })}
+                                  className="font-mono text-xs"
+                                />
+                              </div>
                             </div>
                           )}
                         </div>
@@ -408,6 +457,16 @@ export default function Macros() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Element Selector Overlay */}
+      <ElementSelector
+        isActive={isSelectingElement}
+        onSelect={handleElementSelected}
+        onCancel={() => {
+          setIsSelectingElement(false);
+          setIsDialogOpen(true);
+        }}
+      />
 
       {/* Status de execução */}
       {executionStatus?.isRunning && (
