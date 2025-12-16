@@ -162,7 +162,7 @@ export function FloatingMacroRecorder() {
   const executeTypeAction = () => {
     if (!pendingElement) return;
     
-    const { selector, info, element } = pendingElement;
+    const { selector, info } = pendingElement;
     const currentPath = window.location.pathname;
     const newSteps: MacroStep[] = [];
     
@@ -192,8 +192,38 @@ export function FloatingMacroRecorder() {
     
     setSteps(prev => [...prev, ...newSteps]);
     
+    // Re-encontra o elemento pelo seletor (pode ter mudado de referência)
+    const findElement = (): HTMLElement | null => {
+      // Tenta pelo seletor direto
+      try {
+        const el = document.querySelector(selector);
+        if (el) return el as HTMLElement;
+      } catch {}
+      
+      // Tenta por placeholder
+      if (info.placeholder) {
+        const inputs = document.querySelectorAll('input, textarea');
+        for (const input of inputs) {
+          if ((input as HTMLInputElement).placeholder === info.placeholder) {
+            return input as HTMLElement;
+          }
+        }
+      }
+      
+      return null;
+    };
+    
     // Executa a digitação no elemento
     try {
+      const element = findElement();
+      if (!element) {
+        toast.error('Elemento não encontrado. O popup pode ter fechado.');
+        setShowTextInput(false);
+        setTextToType('');
+        setPendingElement(null);
+        return;
+      }
+      
       const inputEl = element as HTMLInputElement | HTMLTextAreaElement;
       inputEl.focus();
       

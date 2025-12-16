@@ -119,8 +119,10 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
   }, []);
 
   const handleClick = useCallback((e: MouseEvent) => {
+    // Previne TODOS os comportamentos padrão para não fechar popups
     e.preventDefault();
     e.stopPropagation();
+    e.stopImmediatePropagation();
     
     const target = e.target as HTMLElement;
     
@@ -143,17 +145,32 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     onSelect(selector, elementInfo, target);
   }, [onSelect]);
 
+  // Previne eventos que poderiam fechar popups
+  const preventClose = useCallback((e: Event) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('[data-element-selector]')) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+    }
+  }, []);
+
   useEffect(() => {
     if (!isActive) return;
 
+    // Adiciona em capture phase para pegar primeiro
     document.addEventListener('mousemove', handleMouseMove, true);
     document.addEventListener('click', handleClick, true);
+    document.addEventListener('mousedown', preventClose, true);
+    document.addEventListener('pointerdown', preventClose, true);
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove, true);
       document.removeEventListener('click', handleClick, true);
+      document.removeEventListener('mousedown', preventClose, true);
+      document.removeEventListener('pointerdown', preventClose, true);
     };
-  }, [isActive, handleMouseMove, handleClick]);
+  }, [isActive, handleMouseMove, handleClick, preventClose]);
 
   // Highlight do elemento
   useEffect(() => {
