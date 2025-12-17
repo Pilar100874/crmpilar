@@ -22,7 +22,7 @@ interface MacroContextType {
   loadMacros: () => Promise<void>;
 }
 
-const MacroContext = createContext<MacroContextType | undefined>(undefined);
+const MacroContext = createContext<MacroContextType | null>(null);
 
 const STORAGE_KEY = 'macros_v2';
 
