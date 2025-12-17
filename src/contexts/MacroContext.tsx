@@ -8,6 +8,8 @@ import { Json } from '@/integrations/supabase/types';
 interface MacroContextType {
   macros: Macro[];
   executionStatus: MacroExecutionStatus | null;
+  showFloatingButton: boolean;
+  setShowFloatingButton: (show: boolean) => void;
   
   // CRUD
   saveMacro: (macro: Omit<Macro, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -25,6 +27,7 @@ interface MacroContextType {
 const MacroContext = createContext<MacroContextType | null>(null);
 
 const STORAGE_KEY = 'macros_v2';
+const FLOATING_BUTTON_KEY = 'macro_floating_button_visible';
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -39,6 +42,15 @@ export function MacroProvider({ children }: { children: ReactNode }) {
   const [macros, setMacros] = useState<Macro[]>([]);
   const [executionStatus, setExecutionStatus] = useState<MacroExecutionStatus | null>(null);
   const [userInfo, setUserInfo] = useState<{ usuarioId: string; estabelecimentoId: string } | null>(null);
+  const [showFloatingButton, setShowFloatingButtonState] = useState<boolean>(() => {
+    const stored = localStorage.getItem(FLOATING_BUTTON_KEY);
+    return stored === 'true';
+  });
+
+  const setShowFloatingButton = useCallback((show: boolean) => {
+    setShowFloatingButtonState(show);
+    localStorage.setItem(FLOATING_BUTTON_KEY, String(show));
+  }, []);
 
   // Carregar informações do usuário
   useEffect(() => {
@@ -213,6 +225,8 @@ export function MacroProvider({ children }: { children: ReactNode }) {
     <MacroContext.Provider value={{
       macros,
       executionStatus,
+      showFloatingButton,
+      setShowFloatingButton,
       saveMacro,
       updateMacro,
       deleteMacro,

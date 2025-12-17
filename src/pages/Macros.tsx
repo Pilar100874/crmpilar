@@ -12,7 +12,6 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Plus, 
   Play, 
   Trash2, 
   Edit, 
@@ -44,7 +43,7 @@ function generateStepId(): string {
 }
 
 export default function Macros() {
-  const { macros, saveMacro, updateMacro, deleteMacro, executeMacro, executionStatus } = useMacro();
+  const { macros, saveMacro, updateMacro, deleteMacro, executeMacro, executionStatus, showFloatingButton, setShowFloatingButton } = useMacro();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMacro, setEditingMacro] = useState<string | null>(null);
@@ -186,6 +185,7 @@ export default function Macros() {
     setSteps(newSteps);
   };
 
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -193,10 +193,18 @@ export default function Macros() {
           <h1 className="text-2xl font-bold">Macros</h1>
           <p className="text-muted-foreground">Automatize ações repetitivas</p>
         </div>
-        <Button onClick={openNewMacro}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Macro
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="show-floating"
+              checked={showFloatingButton}
+              onCheckedChange={setShowFloatingButton}
+            />
+            <Label htmlFor="show-floating" className="text-sm cursor-pointer">
+              Exibir botão flutuante
+            </Label>
+          </div>
+        </div>
       </div>
 
       {/* Lista de Macros */}
@@ -258,10 +266,9 @@ export default function Macros() {
           <Card className="col-span-full">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <p className="text-muted-foreground mb-4">Nenhuma macro criada</p>
-              <Button onClick={openNewMacro}>
-                <Plus className="h-4 w-4 mr-2" />
-                Criar primeira macro
-              </Button>
+              <p className="text-sm text-muted-foreground">
+                Ative o botão flutuante acima para gravar suas macros
+              </p>
             </CardContent>
           </Card>
         )}
