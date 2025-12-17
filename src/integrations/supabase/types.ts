@@ -2072,6 +2072,7 @@ export type Database = {
           id: string
           nome: string
           tags: string[] | null
+          tel: string | null
           telefone: string
           tipo_operador: boolean | null
         }
@@ -2084,6 +2085,7 @@ export type Database = {
           id?: string
           nome: string
           tags?: string[] | null
+          tel?: string | null
           telefone: string
           tipo_operador?: boolean | null
         }
@@ -2096,6 +2098,7 @@ export type Database = {
           id?: string
           nome?: string
           tags?: string[] | null
+          tel?: string | null
           telefone?: string
           tipo_operador?: boolean | null
         }
