@@ -180,14 +180,39 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       }
 
       // Permite scroll - não intercepta cliques em scrollbars
-      // Scrollbars não são elementos HTML, então o target será o container
-      // Verificamos se o clique foi na área de scroll (margem direita/inferior)
       const rect = target.getBoundingClientRect();
       const isOnVerticalScrollbar = e.clientX > rect.right - 20 && target.scrollHeight > target.clientHeight;
       const isOnHorizontalScrollbar = e.clientY > rect.bottom - 20 && target.scrollWidth > target.clientWidth;
       
       if (isOnVerticalScrollbar || isOnHorizontalScrollbar) {
-        return; // Permite o clique no scrollbar
+        return;
+      }
+
+      // Se o elemento está dentro de um dropdown/popover/portal do Radix, permite o clique
+      // para que o dropdown possa abrir/fechar normalmente
+      const isInRadixPortal = target.closest('[data-radix-popper-content-wrapper]') || 
+                              target.closest('[role="menu"]') ||
+                              target.closest('[role="menuitem"]') ||
+                              target.closest('[data-radix-menu-content]');
+      
+      // Se é um trigger de dropdown, permite o clique para abrir
+      const isDropdownTrigger = target.closest('[data-state]') && 
+                                 (target.closest('button') || target.getAttribute('role') === 'menuitem');
+
+      // Se clicou em item de menu com data-macro-id, seleciona para gravação
+      if (target.closest('[data-macro-id]') || target.getAttribute('data-macro-id')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const macroTarget = target.closest('[data-macro-id]') as HTMLElement || target;
+        setSelectedElement(macroTarget);
+        setHoveredElement(null);
+        return;
+      }
+
+      // Se está em portal Radix mas NÃO tem macro-id, permite interação normal
+      if (isInRadixPortal && !target.closest('[data-macro-id]')) {
+        // Não intercepta - permite dropdown funcionar
+        return;
       }
 
       e.preventDefault();
@@ -255,6 +280,13 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       
       if (!target || target.closest('[data-macro-recorder]') || target.closest('[data-element-selector]')) {
         setHoveredElement(null);
+        return;
+      }
+      
+      // Prioriza elementos com data-macro-id
+      const macroElement = target.closest('[data-macro-id]') as HTMLElement;
+      if (macroElement) {
+        setHoveredElement(macroElement);
         return;
       }
       

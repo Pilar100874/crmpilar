@@ -23,9 +23,14 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
   }
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen} modal={!insideDialog}>
+    <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+          data-macro-id="tools-dropdown-trigger"
+        >
           <Wrench className="h-4 w-4" />
           <span>Ferramentas</span>
         </Button>
@@ -33,8 +38,9 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
       <DropdownMenuContent 
         align="start" 
         className="w-56 bg-popover"
-        style={insideDialog ? { zIndex: 9999 } : undefined}
+        style={{ zIndex: 9999 }}
         sideOffset={5}
+        onCloseAutoFocus={(e) => e.preventDefault()}
       >
         {toolsFerramentas.length > 0 && (
           <>
@@ -51,6 +57,7 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
                     setOpen(false);
                   }}
                   className="gap-2 cursor-pointer"
+                  data-macro-id={`tool-${ferramenta.ferramenta_id}`}
                 >
                   <Icon className="h-4 w-4" />
                   <span>{ferramenta.nome}</span>
@@ -79,6 +86,7 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
                     setOpen(false);
                   }}
                   className="gap-2 cursor-pointer"
+                  data-macro-id={`tool-${ferramenta.ferramenta_id}`}
                 >
                   <Icon className="h-4 w-4" />
                   <span>{ferramenta.nome}</span>
