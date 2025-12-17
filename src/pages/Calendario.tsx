@@ -32,7 +32,7 @@ import {
 } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { getEstabelecimentoId, isAnyAdmin } from "@/lib/estabelecimentoUtils";
 import { CalendarioMobileHeader } from "./CalendarioMobileHeader";
 
 // Utilitário para aplicar alpha em cores HSL, gerando hsla()
@@ -619,12 +619,12 @@ export default function Calendario() {
 
       console.log("Verificando admin para usuário:", user.id, user.email);
 
-      // Verifica se é administrador pelo padrão de email (admin_*@sistema.local)
-      const adminCheck = user.email?.startsWith("admin_") && user.email?.endsWith("@sistema.local");
+      // Verifica se é administrador usando a função isAnyAdmin que checa user_roles
+      const adminCheck = await isAnyAdmin();
       setIsAdmin(adminCheck);
       
       if (adminCheck) {
-        console.log("Usuário é admin via padrão de email:", user.email);
+        console.log("Usuário é admin via user_roles");
       } else {
         console.log("Usuário não é admin");
       }
@@ -696,21 +696,29 @@ export default function Calendario() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) return;
+
       let query = (supabase as any)
         .from('calendario_tarefas')
-        .select('*');
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId);
 
-      // Se admin selecionou usuários específicos, mostrar admin + usuários selecionados
-      // Se admin não selecionou nada, mostrar apenas suas tarefas
+      // Se admin e não selecionou usuários específicos, mostrar todas as tarefas do estabelecimento
+      // Se admin selecionou usuários específicos, filtrar por esses usuários
       // Se não é admin, mostrar apenas suas tarefas
       console.log("Filtrando tarefas - isAdmin:", isAdmin, "selectedUserIds:", selectedUserIds, "currentAdminId:", currentAdminId);
       
-      if (isAdmin && selectedUserIds.length > 0) {
-        const allIds = currentAdminId ? [currentAdminId, ...selectedUserIds] : selectedUserIds;
-        console.log("Buscando tarefas para IDs:", allIds);
-        query = query.in('user_id', allIds);
+      if (isAdmin) {
+        if (selectedUserIds.length > 0) {
+          console.log("Admin: Buscando tarefas para IDs selecionados:", selectedUserIds);
+          query = query.in('user_id', selectedUserIds);
+        } else {
+          console.log("Admin: Buscando todas as tarefas do estabelecimento");
+          // Não adiciona filtro de user_id, mostra todas do estabelecimento
+        }
       } else {
-        console.log("Buscando tarefas apenas para usuário atual:", user.id);
+        console.log("Usuário comum: Buscando tarefas apenas para usuário atual:", user.id);
         query = query.eq('user_id', user.id);
       }
 
@@ -2731,6 +2739,50 @@ export default function Calendario() {
                   className="pl-10 h-9 text-sm border-border/40"
                 />
               </div>
+
+              {/* Filtro de usuário para administradores */}
+              {isAdmin && usuarios.length > 0 && (
+                <Select
+                  value={selectedUserIds.length === 1 ? selectedUserIds[0] : selectedUserIds.length > 1 ? "multiple" : "all"}
+                  onValueChange={(value) => {
+                    if (value === "all") {
+                      setSelectedUserIds([]);
+                    } else if (value !== "multiple") {
+                      setSelectedUserIds([value]);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[180px] h-9 text-xs">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-3.5 h-3.5" />
+                      <SelectValue placeholder="Todos os usuários">
+                        {selectedUserIds.length === 0 
+                          ? "Todos os usuários"
+                          : selectedUserIds.length === 1
+                            ? usuarios.find(u => u.auth_user_id === selectedUserIds[0])?.nome || "Usuário"
+                            : `${selectedUserIds.length} usuários`
+                        }
+                      </SelectValue>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Todos os usuários
+                      </div>
+                    </SelectItem>
+                    {usuarios.filter(u => u.auth_user_id).map((usuario) => (
+                      <SelectItem key={usuario.id} value={usuario.auth_user_id!}>
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          {usuario.nome}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
               <Button
                 variant={filterBy === "my" ? "default" : "ghost"}
