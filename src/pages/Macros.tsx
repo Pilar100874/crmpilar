@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useMacro } from '@/contexts/MacroContext';
 import { MacroStep } from '@/types/macro';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,8 @@ import {
   GripVertical,
   ChevronUp,
   ChevronDown,
-  MousePointer2
+  MousePointer2,
+  Keyboard
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -58,6 +59,44 @@ export default function Macros() {
   const [description, setDescription] = useState('');
   const [shortcut, setShortcut] = useState('');
   const [steps, setSteps] = useState<MacroStep[]>([]);
+  const [isRecordingShortcut, setIsRecordingShortcut] = useState(false);
+
+  // Captura atalho de teclado
+  const handleShortcutKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!isRecordingShortcut) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Ignora teclas modificadoras sozinhas
+    if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+    
+    const parts: string[] = [];
+    if (e.ctrlKey || e.metaKey) parts.push('CTRL');
+    if (e.shiftKey) parts.push('SHIFT');
+    if (e.altKey) parts.push('ALT');
+    
+    // Converte a tecla para formato legível
+    let key = e.key.toUpperCase();
+    if (key === ' ') key = 'SPACE';
+    if (key === 'ESCAPE') key = 'ESC';
+    if (key === 'ARROWUP') key = 'UP';
+    if (key === 'ARROWDOWN') key = 'DOWN';
+    if (key === 'ARROWLEFT') key = 'LEFT';
+    if (key === 'ARROWRIGHT') key = 'RIGHT';
+    
+    parts.push(key);
+    
+    setShortcut(parts.join('+'));
+    setIsRecordingShortcut(false);
+  }, [isRecordingShortcut]);
+
+  useEffect(() => {
+    if (isRecordingShortcut) {
+      window.addEventListener('keydown', handleShortcutKeyDown);
+      return () => window.removeEventListener('keydown', handleShortcutKeyDown);
+    }
+  }, [isRecordingShortcut, handleShortcutKeyDown]);
 
   const resetForm = () => {
     setName('');
@@ -305,12 +344,25 @@ export default function Macros() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="shortcut">Atalho</Label>
-                <Input
-                  id="shortcut"
-                  value={shortcut}
-                  onChange={(e) => setShortcut(e.target.value.toUpperCase())}
-                  placeholder="Ex: CTRL+SHIFT+O"
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="shortcut"
+                    value={isRecordingShortcut ? 'Pressione as teclas...' : shortcut}
+                    onChange={(e) => setShortcut(e.target.value.toUpperCase())}
+                    placeholder="Ex: CTRL+SHIFT+O"
+                    readOnly={isRecordingShortcut}
+                    className={isRecordingShortcut ? 'border-primary animate-pulse' : ''}
+                  />
+                  <Button
+                    type="button"
+                    variant={isRecordingShortcut ? 'destructive' : 'outline'}
+                    size="icon"
+                    onClick={() => setIsRecordingShortcut(!isRecordingShortcut)}
+                    title={isRecordingShortcut ? 'Cancelar gravação' : 'Gravar atalho'}
+                  >
+                    <Keyboard className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
 
