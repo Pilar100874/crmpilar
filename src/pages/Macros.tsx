@@ -46,8 +46,12 @@ function generateStepId(): string {
   return `step-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-export default function Macros() {
-  const { 
+interface MacrosProps {
+  embedded?: boolean;
+}
+
+export default function Macros({ embedded = false }: MacrosProps) {
+  const {
     macros, 
     saveMacro, 
     updateMacro, 
@@ -205,13 +209,15 @@ export default function Macros() {
 
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Macros</h1>
-          <p className="text-muted-foreground">Automatize ações repetitivas</p>
-        </div>
-        <div className="flex items-center gap-6">
+    <div className={embedded ? "space-y-6" : "container mx-auto p-6 space-y-6"}>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        {!embedded && (
+          <div>
+            <h1 className="text-2xl font-bold">Macros</h1>
+            <p className="text-muted-foreground">Automatize ações repetitivas</p>
+          </div>
+        )}
+        <div className={`flex items-center gap-6 ${embedded ? 'w-full justify-between' : ''}`}>
           <div className="flex items-center gap-2">
             <Switch
               id="show-floating"
