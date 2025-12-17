@@ -214,7 +214,7 @@ export default function Atendimento() {
   const [agendaDate, setAgendaDate] = useState(new Date());
   
   type SortCriterion = 
-    | { type: 'field'; field: 'created_at' | 'time' }
+    | { type: 'field'; field: 'created_at' | 'time' | 'dias_atraso' }
     | { type: 'origem_filter'; origem: string; subItem?: string };
   
   const [taskSortOrder, setTaskSortOrder] = useState<SortCriterion[]>([
@@ -222,7 +222,7 @@ export default function Atendimento() {
     { type: 'field', field: 'created_at' }
   ]);
   const [showSortDialog, setShowSortDialog] = useState(false);
-  const [newSortField, setNewSortField] = useState<'created_at' | 'time' | ''>('');
+  const [newSortField, setNewSortField] = useState<'created_at' | 'time' | 'dias_atraso' | ''>('');
   const [newOrigemFilter, setNewOrigemFilter] = useState({ origem: '', subItem: '' });
   const [availableOrigens, setAvailableOrigens] = useState<string[]>([]);
   const [availableSubItems, setAvailableSubItems] = useState<string[]>([]);
@@ -1106,8 +1106,8 @@ export default function Atendimento() {
     }
   };
 
-  const getAvailableSortFields = (): Array<'created_at' | 'time'> => {
-    const allFields: Array<'created_at' | 'time'> = ['created_at', 'time'];
+  const getAvailableSortFields = (): Array<'created_at' | 'time' | 'dias_atraso'> => {
+    const allFields: Array<'created_at' | 'time' | 'dias_atraso'> = ['created_at', 'time', 'dias_atraso'];
     return allFields.filter(field => 
       !taskSortOrder.some(c => c.type === 'field' && c.field === field)
     );
@@ -1118,6 +1118,7 @@ export default function Atendimento() {
       switch (criterion.field) {
         case 'created_at': return 'Data de Entrada';
         case 'time': return 'Horário';
+        case 'dias_atraso': return 'Dias de Atraso';
         default: return criterion.field;
       }
     } else {
@@ -2373,7 +2374,21 @@ ${recentMessages}
 
   // Filtered tasks based on global filter and contact filters
   const filteredTasks = useMemo(() => {
-    let tasks = todayTasks;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Calculate delay days for each task based on data_original
+    let tasks = todayTasks.map(task => {
+      let diasAtraso = 0;
+      if (task.data_original) {
+        const dataOriginal = new Date(task.data_original);
+        dataOriginal.setHours(0, 0, 0, 0);
+        const diffTime = today.getTime() - dataOriginal.getTime();
+        diasAtraso = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        if (diasAtraso < 0) diasAtraso = 0;
+      }
+      return { ...task, diasAtraso };
+    });
     
     // Apply global filter
     if (globalFilter) {
@@ -2408,8 +2423,36 @@ ${recentMessages}
       });
     }
     
+    // Apply sorting based on taskSortOrder including dias_atraso
+    tasks.sort((a, b) => {
+      for (const criterion of taskSortOrder) {
+        if (criterion.type === 'field') {
+          if (criterion.field === 'dias_atraso') {
+            const diff = (b.diasAtraso || 0) - (a.diasAtraso || 0); // Descending - more delayed first
+            if (diff !== 0) return diff;
+          } else if (criterion.field === 'time') {
+            const timeA = a.time || '99:99';
+            const timeB = b.time || '99:99';
+            const diff = timeA.localeCompare(timeB);
+            if (diff !== 0) return diff;
+          } else if (criterion.field === 'created_at') {
+            const dateA = new Date(a.created_at || 0).getTime();
+            const dateB = new Date(b.created_at || 0).getTime();
+            const diff = dateA - dateB;
+            if (diff !== 0) return diff;
+          }
+        } else if (criterion.type === 'origem_filter') {
+          const matchesA = a.origem === criterion.origem && (!criterion.subItem || a.origem_sub_item === criterion.subItem);
+          const matchesB = b.origem === criterion.origem && (!criterion.subItem || b.origem_sub_item === criterion.subItem);
+          if (matchesA && !matchesB) return -1;
+          if (!matchesA && matchesB) return 1;
+        }
+      }
+      return 0;
+    });
+    
     return tasks;
-  }, [todayTasks, globalFilter, agendaFilterPossuiTel, agendaFilterPossuiWhatsapp, agendaFilterPossuiEmail]);
+  }, [todayTasks, globalFilter, agendaFilterPossuiTel, agendaFilterPossuiWhatsapp, agendaFilterPossuiEmail, taskSortOrder]);
 
   // Filtered emails based on global filter and folder
   const filteredEmails = useMemo(() => {
@@ -3870,6 +3913,11 @@ ${recentMessages}
                                {task.origem}
                              </Badge>
                            )}
+                           {task.diasAtraso > 0 && (
+                             <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full flex items-center font-medium">
+                               {task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado
+                             </span>
+                           )}
                          </div>
                        </div>
                      </div>
@@ -5200,6 +5248,11 @@ function MobileListContent({
                     <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
                       <Clock className="w-2.5 h-2.5 mr-0.5" />
                       {task.time}
+                    </Badge>
+                  )}
+                  {task.diasAtraso > 0 && (
+                    <Badge className="text-[10px] px-1.5 py-0 bg-red-100 text-red-700 border-0">
+                      {task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado
                     </Badge>
                   )}
                 </div>
