@@ -62,6 +62,7 @@ interface Contact {
   name: string;
   company: string;
   phone: string;
+  tel: string;
   email: string;
   position: string;
   responsible: string;
@@ -123,7 +124,8 @@ export default function Contatos() {
   const [tableColumns, setTableColumns] = useState<TableColumn[]>([
     { id: "actions", label: "Ações", visible: true, width: 120, locked: true },
     { id: "name", label: "Nome", visible: true, width: 250, locked: true },
-    { id: "phone", label: "Telefone/WhatsApp", visible: true, width: 180 },
+    { id: "phone", label: "WhatsApp", visible: true, width: 180 },
+    { id: "tel", label: "Telefone", visible: true, width: 150 },
     { id: "email", label: "E-mail", visible: true, width: 250 },
     { id: "position", label: "Cargo", visible: true, width: 150 },
   ]);
@@ -174,6 +176,7 @@ export default function Contatos() {
   const [contactFields, setContactFields] = useState<CustomField[]>([
     { id: "name", label: "Nome de contato", type: "text", category: "contact", required: true, locked: true },
     { id: "phone", label: "WhatsApp", type: "phone", category: "contact", required: true, locked: true },
+    { id: "tel", label: "Telefone", type: "phone", category: "contact", required: false, locked: true },
     { id: "email", label: "E-mail", type: "email", category: "contact", required: true, locked: true },
     { id: "position", label: "Cargo", type: "text", category: "contact", required: true, locked: true },
   ]);
@@ -487,6 +490,7 @@ export default function Contatos() {
         name: r.nome,
         company: r.empresas?.nome_fantasia || r.custom_fields?.company_name || '',
         phone: r.telefone,
+        tel: r.tel || '',
         email: r.email,
         position: r.custom_fields?.position || '',
         responsible: r.custom_fields?.responsible || '',
@@ -1265,6 +1269,7 @@ export default function Contatos() {
         estabelecimento_id: estabId,
         nome: formData.name,
         telefone: formData.phone,
+        tel: formData.tel || null,
         email: formData.email,
         empresa_id: null, // Mantém null pois usamos tabela de junção
         tipo_operador: empresasVinculadas.length > 0 ? true : false, // true = cliente, false = prospect
@@ -1276,7 +1281,7 @@ export default function Contatos() {
 
       // Adicionar campos personalizados do contato
       contactFields.forEach((field) => {
-        if (!['name', 'phone', 'email', 'position'].includes(field.id)) {
+        if (!['name', 'phone', 'tel', 'email', 'position'].includes(field.id)) {
           const value = formData[field.id];
           if (value !== undefined && value !== '') {
             contatoPayload.custom_fields[field.id] = value;
@@ -1359,13 +1364,14 @@ export default function Contatos() {
     const baseFormData: Record<string, any> = {
       name: contact.name,
       phone: contact.phone,
+      tel: contact.tel,
       email: contact.email,
       position: contact.position,
     };
 
     // Adicionar campos personalizados do contato
     contactFields.forEach(f => {
-      if (!['name', 'phone', 'email', 'position'].includes(f.id)) {
+      if (!['name', 'phone', 'tel', 'email', 'position'].includes(f.id)) {
         baseFormData[f.id] = contact.customFields?.[f.id] || '';
       }
     });
@@ -1488,6 +1494,7 @@ export default function Contatos() {
     const baseFormData: Record<string, any> = {
       name: duplicateContact.nome,
       phone: duplicateContact.telefone,
+      tel: duplicateContact.tel || "",
       email: duplicateContact.email,
       position: duplicateContact.custom_fields?.position || "",
     };
@@ -1505,6 +1512,7 @@ export default function Contatos() {
       id: duplicateContact.id,
       name: duplicateContact.nome,
       phone: duplicateContact.telefone,
+      tel: duplicateContact.tel || "",
       email: duplicateContact.email,
       position: duplicateContact.custom_fields?.position || "",
       customFields: duplicateContact.custom_fields || {},
@@ -1751,6 +1759,11 @@ export default function Contatos() {
           .from('customers')
           .update({ email: trimmedValue })
           .eq('id', editingCell.contactId);
+      } else if (editingCell.field === 'tel') {
+        await supabase
+          .from('customers')
+          .update({ tel: trimmedValue })
+          .eq('id', editingCell.contactId);
       } else {
         // Custom field
         updatedCustomFields[editingCell.field] = trimmedValue;
@@ -1786,6 +1799,7 @@ export default function Contatos() {
       const matchesSearch = 
         contact.name.toLowerCase().includes(searchTerm) ||
         contact.phone.includes(searchTerm) ||
+        (contact.tel || '').includes(searchTerm) ||
         contact.email.toLowerCase().includes(searchTerm);
       
       if (!matchesSearch) {
@@ -2048,6 +2062,7 @@ export default function Contatos() {
                                     setFormData({
                                       name: contact.name,
                                       phone: contact.phone,
+                                      tel: contact.tel,
                                       email: contact.email,
                                       position: contact.position,
                                       ...contact.customFields
@@ -2139,9 +2154,10 @@ export default function Contatos() {
                               <span className={`truncate ${column.id === 'name' ? 'font-medium text-primary' : ''}`}>
                                 {column.id === 'name' && contact.name}
                                 {column.id === 'phone' && contact.phone}
+                                {column.id === 'tel' && (contact.tel || "-")}
                                 {column.id === 'email' && contact.email}
                                 {column.id === 'position' && (contact.position || "-")}
-                                {!['name', 'phone', 'email', 'position'].includes(column.id) && (contact.customFields?.[column.id] || "-")}
+                                {!['name', 'phone', 'tel', 'email', 'position'].includes(column.id) && (contact.customFields?.[column.id] || "-")}
                               </span>
                               <Button
                                 size="icon"
@@ -2152,6 +2168,7 @@ export default function Contatos() {
                                   let value = "";
                                   if (column.id === 'name') value = contact.name;
                                   else if (column.id === 'phone') value = contact.phone;
+                                  else if (column.id === 'tel') value = contact.tel || "";
                                   else if (column.id === 'email') value = contact.email;
                                   else if (column.id === 'position') value = contact.position;
                                   else value = contact.customFields?.[column.id] || "";
