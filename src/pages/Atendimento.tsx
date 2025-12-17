@@ -192,7 +192,7 @@ export default function Atendimento() {
   const [showNovoContatoDialog, setShowNovoContatoDialog] = useState(false);
   
   // Tab states
-  const [activeTab, setActiveTab] = useState("chat");
+  const [activeTab, setActiveTab] = useState("agenda");
   const [todayTasks, setTodayTasks] = useState<any[]>([]);
   const [userEmails, setUserEmails] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
@@ -3251,19 +3251,19 @@ ${recentMessages}
           <div className="px-3 py-2.5 bg-gradient-to-b from-slate-50/80 to-white border-b border-border/20">
             <ExpandableTabs
               tabs={[
+                { title: "Agenda", icon: CalendarDays, badge: todayTasksCount },
                 { 
                   title: "Chats", 
                   icon: MessageSquare, 
                   badge: activeConversationsCount
                 },
-                { title: "Agenda", icon: CalendarDays, badge: todayTasksCount },
                 { title: "E-mails", icon: Inbox, badge: unreadEmailsCount },
                 { title: "Orçamentos", icon: FileText, badge: orcamentosEmAndamentoCount },
               ]}
-              activeIndex={activeTab === "chat" ? 0 : activeTab === "agenda" ? 1 : activeTab === "email" ? 2 : activeTab === "orcamento" ? 3 : null}
+              activeIndex={activeTab === "agenda" ? 0 : activeTab === "chat" ? 1 : activeTab === "email" ? 2 : activeTab === "orcamento" ? 3 : null}
               onChange={(index) => {
-                if (index === 0) setActiveTab("chat");
-                else if (index === 1) setActiveTab("agenda");
+                if (index === 0) setActiveTab("agenda");
+                else if (index === 1) setActiveTab("chat");
                 else if (index === 2) setActiveTab("email");
                 else if (index === 3) setActiveTab("orcamento");
               }}
