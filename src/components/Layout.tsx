@@ -135,14 +135,6 @@ const menuItems: MenuItem[] = [
   { id: "Marketplaces", title: "Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
   { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
-  { 
-    id: "Admin",
-    title: "Admin",
-    icon: LucideIcons.ShieldCheck,
-    subItems: [
-      { id: "Macros", title: "Macros", url: "/macros", icon: LucideIcons.Zap },
-    ]
-  },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
 
@@ -446,7 +438,7 @@ export default function Layout({ children }: LayoutProps) {
   const visibleMenus = menuItems
     .filter((item) => {
       // Menus que sempre devem aparecer para usuários autenticados
-      const alwaysVisibleMenus = ["Configurações", "Avisos", "Admin"];
+      const alwaysVisibleMenus = ["Configurações", "Avisos"];
       if (alwaysVisibleMenus.includes(item.id)) {
         return true;
       }

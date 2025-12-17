@@ -42,11 +42,8 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "Ads", label: "Ads", category: "Principal" },
   { id: "Robô de Preços", label: "Robô de Preços", category: "Principal" },
   
-  // Admin
-  { id: "Admin", label: "Admin (Categoria)", category: "Admin" },
-  { id: "Macros", label: "Macros", category: "Admin" },
-  
   { id: "Configurações", label: "Configurações", category: "Sistema" },
+  { id: "Macros", label: "Macros", category: "Sistema" },
   { id: "Avisos", label: "Avisos", category: "Sistema" },
 ];
 
@@ -69,4 +66,4 @@ export const getMenusByCategory = () => {
 };
 
 // Ordem das categorias para exibição
-export const CATEGORY_ORDER = ['Dashboards', 'Chats', 'Vendas', 'Principal', 'Admin', 'Sistema'];
+export const CATEGORY_ORDER = ['Dashboards', 'Chats', 'Vendas', 'Principal', 'Sistema'];

@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Store, Megaphone, FileText, Plus, Send, Users, TrendingUp, 
   Search, Link2, File, Bell, ShieldCheck, ChevronRight, ArrowLeft,
-  Settings, Check, Mail
+  Settings, Check, Mail, Zap
 } from "lucide-react";
+import MacrosPage from "@/pages/Macros";
 import { EstabelecimentosCRUD } from "@/components/config/EstabelecimentosCRUD";
 import { WhatsAppConfigCRUD } from "@/components/config/WhatsAppConfigCRUD";
 import { SubMenuHeader } from "@/components/SubMenuHeader";
@@ -68,6 +69,14 @@ const CONFIG_SECTIONS: ConfigSection[] = [
     bgColor: "bg-cyan-500/10",
     iconColor: "text-cyan-500",
   },
+  {
+    id: "macros",
+    title: "Macros",
+    description: "Automatize ações repetitivas",
+    icon: Zap,
+    bgColor: "bg-yellow-500/10",
+    iconColor: "text-yellow-500",
+  },
 ];
 
 export default function Config() {
@@ -90,6 +99,11 @@ export default function Config() {
   const handleSectionClick = (sectionId: string) => {
     if (sectionId === "email-config") {
       navigate("/email-config");
+      return;
+    }
+    if (sectionId === "macros") {
+      setActiveSection(sectionId);
+      setSearchParams({ secao: sectionId });
       return;
     }
     setActiveSection(sectionId);
@@ -131,6 +145,8 @@ export default function Config() {
         return <CampanhasContent />;
       case "conteudos":
         return <ConteudosContent />;
+      case "macros":
+        return <MacrosPage embedded />;
       default:
         return null;
     }
