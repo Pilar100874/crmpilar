@@ -3945,23 +3945,25 @@ ${recentMessages}
                              </span>
                            )}
                            {(() => {
-                             // Check for open budgets: by cliente_id OR by empresa_id through customer_empresas
-                             const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
-                             const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
-                             const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
-                             const totalBudgetCount = customerBudgetCount + empresaBudgetCount;
-                             
-                             if (totalBudgetCount > 0) {
-                               return (
-                                 <button
-                                   onClick={(e) => {
-                                     e.stopPropagation();
-                                     // Find first open budget for this customer or their linked empresas
-                                     const firstOrcamento = orcamentos.find(o => 
-                                       o.status !== 'cancelado' && 
-                                       o.status !== 'ganho' &&
-                                       (o.cliente_id === task.contact_id || empresaIds.includes(o.empresa_id))
-                                     );
+                              // Check for open budgets: by cliente_id, by empresa_id directly, OR by empresa_id through customer_empresas
+                              const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
+                              // Also check if contact_id IS an empresa_id directly
+                              const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
+                              const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
+                              const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
+                              const totalBudgetCount = customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount;
+                              
+                              if (totalBudgetCount > 0) {
+                                return (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      // Find first open budget for this customer, empresa directly, or linked empresas
+                                      const firstOrcamento = orcamentos.find(o => 
+                                        o.status !== 'cancelado' && 
+                                        o.status !== 'ganho' &&
+                                        (o.cliente_id === task.contact_id || o.empresa_id === task.contact_id || empresaIds.includes(o.empresa_id))
+                                      );
                                      if (firstOrcamento) {
                                        setActiveTab('orcamento');
                                        setSelectedOrcamentoId(firstOrcamento.id);
@@ -5324,11 +5326,13 @@ function MobileListContent({
                     </Badge>
                   )}
                   {(() => {
-                    // Check for open budgets: by cliente_id OR by empresa_id through customer_empresas
+                    // Check for open budgets: by cliente_id, by empresa_id directly, OR by empresa_id through customer_empresas
                     const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
+                    // Also check if contact_id IS an empresa_id directly
+                    const directEmpresaBudgetCount = task.contact_id ? (orcamentosAbertosPerEmpresa[task.contact_id] || 0) : 0;
                     const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
                     const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
-                    const totalBudgetCount = customerBudgetCount + empresaBudgetCount;
+                    const totalBudgetCount = customerBudgetCount + directEmpresaBudgetCount + empresaBudgetCount;
                     
                     if (totalBudgetCount > 0) {
                       return (
@@ -5338,7 +5342,7 @@ function MobileListContent({
                             const firstOrcamento = orcamentos.find(o => 
                               o.status !== 'cancelado' && 
                               o.status !== 'ganho' &&
-                              (o.cliente_id === task.contact_id || empresaIds.includes(o.empresa_id))
+                              (o.cliente_id === task.contact_id || o.empresa_id === task.contact_id || empresaIds.includes(o.empresa_id))
                             );
                             if (firstOrcamento) {
                               setActiveTab('orcamento');
