@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -47,6 +48,7 @@ export default function Macros() {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMacro, setEditingMacro] = useState<string | null>(null);
+  const [macroToDelete, setMacroToDelete] = useState<string | null>(null);
   
   // Form state
   const [name, setName] = useState('');
@@ -253,7 +255,7 @@ export default function Macros() {
                 <Button 
                   size="sm" 
                   variant="destructive"
-                  onClick={() => deleteMacro(macro.id)}
+                  onClick={() => setMacroToDelete(macro.id)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -494,6 +496,32 @@ export default function Macros() {
           </div>
         </div>
       )}
+
+      {/* Dialog de confirmação de exclusão */}
+      <AlertDialog open={!!macroToDelete} onOpenChange={(open) => !open && setMacroToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir macro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. A macro será permanentemente excluída.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (macroToDelete) {
+                  deleteMacro(macroToDelete);
+                  setMacroToDelete(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
