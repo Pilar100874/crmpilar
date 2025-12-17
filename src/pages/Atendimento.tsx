@@ -2268,25 +2268,24 @@ ${recentMessages}
       });
     }
     
-    // Apply contact filters
-    if (agendaFilterPossuiTel) {
+    // Apply contact filters (OR logic - show tasks that match ANY active filter)
+    const hasAnyContactFilter = agendaFilterPossuiTel || agendaFilterPossuiWhatsapp || agendaFilterPossuiEmail;
+    
+    if (hasAnyContactFilter) {
       tasks = tasks.filter((task) => {
+        // If task has no linked customer, don't filter it out
+        if (!task.customers) return true;
+        
         const tel = task.customers?.tel;
-        return tel && tel.trim() !== '';
-      });
-    }
-    
-    if (agendaFilterPossuiWhatsapp) {
-      tasks = tasks.filter((task) => {
         const telefone = task.customers?.telefone;
-        return telefone && telefone.trim() !== '';
-      });
-    }
-    
-    if (agendaFilterPossuiEmail) {
-      tasks = tasks.filter((task) => {
         const email = task.customers?.email;
-        return email && email.trim() !== '';
+        
+        // Check each active filter (OR logic)
+        if (agendaFilterPossuiTel && tel && tel.trim() !== '') return true;
+        if (agendaFilterPossuiWhatsapp && telefone && telefone.trim() !== '') return true;
+        if (agendaFilterPossuiEmail && email && email.trim() !== '') return true;
+        
+        return false;
       });
     }
     
