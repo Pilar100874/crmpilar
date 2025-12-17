@@ -22,7 +22,7 @@ function generateStepId(): string {
 }
 
 export function FloatingMacroRecorder() {
-  const { saveMacro } = useMacro();
+  const { saveMacro, showFloatingButton } = useMacro();
   
   const [isVisible, setIsVisible] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -165,6 +165,11 @@ export function FloatingMacroRecorder() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Não exibe se o botão flutuante está desabilitado
+  if (!showFloatingButton) {
+    return null;
+  }
 
   if (!isVisible && !isRecording) {
     return (
