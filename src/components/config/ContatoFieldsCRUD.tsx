@@ -209,8 +209,9 @@ export const ContatoFieldsCRUD = ({ onChanged, estabelecimentoId: estabeleciment
       const mainFields = [
         { field_id: "name", field_label: "Nome", field_type: "text", field_order: 0, required: true, locked: false },
         { field_id: "phone", field_label: "WhatsApp", field_type: "phone", field_order: 1, required: true, locked: false },
-        { field_id: "email", field_label: "E-mail", field_type: "email", field_order: 2, required: false, locked: false },
-        { field_id: "position", field_label: "Cargo", field_type: "text", field_order: 3, required: false, locked: false },
+        { field_id: "tel", field_label: "Telefone", field_type: "phone", field_order: 2, required: false, locked: false },
+        { field_id: "email", field_label: "E-mail", field_type: "email", field_order: 3, required: false, locked: false },
+        { field_id: "position", field_label: "Cargo", field_type: "text", field_order: 4, required: false, locked: false },
       ];
 
       console.log('📋 Main contact fields to check:', mainFields.map(f => f.field_id).join(', '));
