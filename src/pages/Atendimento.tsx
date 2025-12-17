@@ -850,38 +850,66 @@ export default function Atendimento() {
       const currentUsuarioId = usuarioData.id;
       const userSegmentoId = usuarioData.segmento_id;
 
-      // Load all vinculos for this establishment
-      const { data: vinculosData } = await supabase
+      const linkedToUser = new Set<string>();
+      const userSegments = new Set<string>();
+      const contactSegments: Record<string, string[]> = {};
+
+      // Add user's own segment if exists
+      if (userSegmentoId) {
+        userSegments.add(userSegmentoId);
+      }
+
+      // Load customer vinculos (customers linked to user)
+      const { data: customerVinculosData } = await supabase
         .from('customer_vinculos')
-        .select('customer_id, usuario_id, segmento_id')
+        .select('customer_id, usuario_id')
         .eq('estabelecimento_id', estabId);
 
-      if (vinculosData) {
-        const linkedToUser = new Set<string>();
-        const userSegments = new Set<string>();
-        const customerSegments: Record<string, string[]> = {};
-
-        // Add user's own segment if exists
-        if (userSegmentoId) {
-          userSegments.add(userSegmentoId);
-        }
-
-        vinculosData.forEach(v => {
-          // Check if customer is linked to current user
+      if (customerVinculosData) {
+        customerVinculosData.forEach(v => {
           if (v.usuario_id === currentUsuarioId) {
             linkedToUser.add(v.customer_id);
           }
-          // Collect all segments per customer
+        });
+      }
+
+      // Load empresa vinculos (empresas linked to user AND empresa segments)
+      const { data: empresaVinculosData } = await supabase
+        .from('empresa_vinculos')
+        .select('empresa_id, usuario_id, segmento_id')
+        .eq('estabelecimento_id', estabId);
+
+      if (empresaVinculosData) {
+        empresaVinculosData.forEach(v => {
+          // Check if empresa is linked to current user
+          if (v.usuario_id === currentUsuarioId) {
+            linkedToUser.add(v.empresa_id);
+          }
+          // Collect segments per empresa (contact_id can be empresa_id)
           if (v.segmento_id) {
-            if (!customerSegments[v.customer_id]) {
-              customerSegments[v.customer_id] = [];
+            if (!contactSegments[v.empresa_id]) {
+              contactSegments[v.empresa_id] = [];
             }
-            customerSegments[v.customer_id].push(v.segmento_id);
+            contactSegments[v.empresa_id].push(v.segmento_id);
           }
         });
-
-        setCustomerVinculos({ linkedToUser, userSegments, customerSegments });
       }
+
+      // Load customer segments from customer_segmentos table
+      const { data: customerSegmentosData } = await supabase
+        .from('customer_segmentos')
+        .select('customer_id, segmento_id');
+
+      if (customerSegmentosData) {
+        customerSegmentosData.forEach(cs => {
+          if (!contactSegments[cs.customer_id]) {
+            contactSegments[cs.customer_id] = [];
+          }
+          contactSegments[cs.customer_id].push(cs.segmento_id);
+        });
+      }
+
+      setCustomerVinculos({ linkedToUser, userSegments, customerSegments: contactSegments });
     } catch (error) {
       console.error("Erro ao carregar vínculos:", error);
     }
