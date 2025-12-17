@@ -232,6 +232,13 @@ export default function Atendimento() {
   const [agendaFilterPossuiWhatsapp, setAgendaFilterPossuiWhatsapp] = useState(false);
   const [agendaFilterPossuiEmail, setAgendaFilterPossuiEmail] = useState(false);
   
+  // Customer vinculos (for task legends)
+  const [customerVinculos, setCustomerVinculos] = useState<{
+    linkedToUser: Set<string>;
+    userSegments: Set<string>;
+    customerSegments: Record<string, string[]>;
+  }>({ linkedToUser: new Set(), userSegments: new Set(), customerSegments: {} });
+  
   // Tab counters
   const [activeConversationsCount, setActiveConversationsCount] = useState(0);
   const [todayTasksCount, setTodayTasksCount] = useState(0);
@@ -362,6 +369,7 @@ export default function Atendimento() {
     loadWebhooksForAutoResponse();
     loadAvailableUsers();
     loadTodayTasks();
+    loadCustomerVinculos();
     loadUserEmails();
     loadOrcamentos();
     loadRadialImportReports();
@@ -817,6 +825,63 @@ export default function Atendimento() {
       if (aiAtendimentoWebhooks.length > 0) {
         setSelectedAIWebhook(aiAtendimentoWebhooks[0].id);
       }
+    }
+  };
+
+  // Load customer vinculos for legends
+  const loadCustomerVinculos = async () => {
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+
+      // Get usuario_id from usuarios table using auth user id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: usuarioData } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .eq('estabelecimento_id', estabId)
+        .maybeSingle();
+
+      if (!usuarioData) return;
+
+      const currentUsuarioId = usuarioData.id;
+
+      // Load all vinculos for this establishment
+      const { data: vinculosData } = await supabase
+        .from('customer_vinculos')
+        .select('customer_id, usuario_id, segmento_id')
+        .eq('estabelecimento_id', estabId);
+
+      if (vinculosData) {
+        const linkedToUser = new Set<string>();
+        const userSegments = new Set<string>();
+        const customerSegments: Record<string, string[]> = {};
+
+        vinculosData.forEach(v => {
+          // Check if customer is linked to current user
+          if (v.usuario_id === currentUsuarioId) {
+            linkedToUser.add(v.customer_id);
+          }
+          // Collect user's segments
+          if (v.usuario_id === currentUsuarioId && v.segmento_id) {
+            userSegments.add(v.segmento_id);
+          }
+          // Collect all segments per customer
+          if (v.segmento_id) {
+            if (!customerSegments[v.customer_id]) {
+              customerSegments[v.customer_id] = [];
+            }
+            customerSegments[v.customer_id].push(v.segmento_id);
+          }
+        });
+
+        setCustomerVinculos({ linkedToUser, userSegments, customerSegments });
+      }
+    } catch (error) {
+      console.error("Erro ao carregar vínculos:", error);
     }
   };
 
@@ -2995,6 +3060,7 @@ ${recentMessages}
                 emailFolder={emailFolder}
                 setEmailFolder={setEmailFolder}
                 setShowComposeEmail={setShowComposeEmail}
+                customerVinculos={customerVinculos}
               />
             </div>
 
@@ -3751,6 +3817,19 @@ ${recentMessages}
                           {task.origem && (
                             <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-white/50">
                               {task.origem}
+                            </Badge>
+                          )}
+                          {/* Vinculo badges */}
+                          {task.contact_id && customerVinculos.linkedToUser.has(task.contact_id) && (
+                            <Badge className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary border-primary/30">
+                              <User className="w-2.5 h-2.5 mr-0.5" />
+                              Meu Cliente
+                            </Badge>
+                          )}
+                          {task.contact_id && !customerVinculos.linkedToUser.has(task.contact_id) && 
+                           customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg)) && (
+                            <Badge className="text-[10px] px-1.5 py-0 bg-blue-100 text-blue-700 border-blue-200">
+                              Mesmo Segmento
                             </Badge>
                           )}
                         </div>
@@ -4840,6 +4919,11 @@ interface MobileListContentProps {
   emailFolder: string;
   setEmailFolder: (folder: string) => void;
   setShowComposeEmail: (show: boolean) => void;
+  customerVinculos: {
+    linkedToUser: Set<string>;
+    userSegments: Set<string>;
+    customerSegments: Record<string, string[]>;
+  };
 }
 
 function MobileListContent({
@@ -4876,6 +4960,7 @@ function MobileListContent({
   emailFolder,
   setEmailFolder,
   setShowComposeEmail,
+  customerVinculos,
 }: MobileListContentProps) {
   return (
     <div className="h-full flex flex-col bg-white/80">
@@ -5054,12 +5139,27 @@ function MobileListContent({
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate">{task.contact_name}</p>
                 <p className="text-xs text-muted-foreground truncate">{task.title}</p>
-                {task.time && (
-                  <Badge className="mt-1 text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
-                    <Clock className="w-2.5 h-2.5 mr-0.5" />
-                    {task.time}
-                  </Badge>
-                )}
+                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                  {task.time && (
+                    <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
+                      <Clock className="w-2.5 h-2.5 mr-0.5" />
+                      {task.time}
+                    </Badge>
+                  )}
+                  {/* Vinculo badges */}
+                  {task.contact_id && customerVinculos.linkedToUser.has(task.contact_id) && (
+                    <Badge className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary border-primary/30">
+                      <User className="w-2.5 h-2.5 mr-0.5" />
+                      Meu
+                    </Badge>
+                  )}
+                  {task.contact_id && !customerVinculos.linkedToUser.has(task.contact_id) && 
+                   customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg)) && (
+                    <Badge className="text-[10px] px-1.5 py-0 bg-blue-100 text-blue-700 border-blue-200">
+                      Segmento
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
           </div>
