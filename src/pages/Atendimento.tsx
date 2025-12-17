@@ -227,6 +227,11 @@ export default function Atendimento() {
   const [availableOrigens, setAvailableOrigens] = useState<string[]>([]);
   const [availableSubItems, setAvailableSubItems] = useState<string[]>([]);
   
+  // Agenda contact filters
+  const [agendaFilterPossuiTel, setAgendaFilterPossuiTel] = useState(false);
+  const [agendaFilterPossuiWhatsapp, setAgendaFilterPossuiWhatsapp] = useState(false);
+  const [agendaFilterPossuiEmail, setAgendaFilterPossuiEmail] = useState(false);
+  
   // Tab counters
   const [activeConversationsCount, setActiveConversationsCount] = useState(0);
   const [todayTasksCount, setTodayTasksCount] = useState(0);
@@ -825,7 +830,16 @@ export default function Atendimento() {
 
       const { data: tasksData, error } = await supabase
         .from('calendario_tarefas')
-        .select('*')
+        .select(`
+          *,
+          customers:contact_id (
+            id,
+            nome,
+            telefone,
+            tel,
+            email
+          )
+        `)
         .eq('user_id', user.id)
         .eq('date', dateStr);
 
@@ -2238,19 +2252,46 @@ ${recentMessages}
     });
   }, [conversations, searchTerm, globalFilter]);
 
-  // Filtered tasks based on global filter
+  // Filtered tasks based on global filter and contact filters
   const filteredTasks = useMemo(() => {
-    if (!globalFilter) return todayTasks;
+    let tasks = todayTasks;
     
-    return todayTasks.filter((task) => {
-      if (globalFilter.type === 'customer') {
-        return task.contact_id === globalFilter.id;
-      }
-      // For empresa, we'd need to check if customer is linked to empresa
-      // This would require additional data - for now, filter by contact_name matching
-      return task.contact_name?.toLowerCase().includes(globalFilter.nome.toLowerCase());
-    });
-  }, [todayTasks, globalFilter]);
+    // Apply global filter
+    if (globalFilter) {
+      tasks = tasks.filter((task) => {
+        if (globalFilter.type === 'customer') {
+          return task.contact_id === globalFilter.id;
+        }
+        // For empresa, we'd need to check if customer is linked to empresa
+        // This would require additional data - for now, filter by contact_name matching
+        return task.contact_name?.toLowerCase().includes(globalFilter.nome.toLowerCase());
+      });
+    }
+    
+    // Apply contact filters
+    if (agendaFilterPossuiTel) {
+      tasks = tasks.filter((task) => {
+        const tel = task.customers?.tel;
+        return tel && tel.trim() !== '';
+      });
+    }
+    
+    if (agendaFilterPossuiWhatsapp) {
+      tasks = tasks.filter((task) => {
+        const telefone = task.customers?.telefone;
+        return telefone && telefone.trim() !== '';
+      });
+    }
+    
+    if (agendaFilterPossuiEmail) {
+      tasks = tasks.filter((task) => {
+        const email = task.customers?.email;
+        return email && email.trim() !== '';
+      });
+    }
+    
+    return tasks;
+  }, [todayTasks, globalFilter, agendaFilterPossuiTel, agendaFilterPossuiWhatsapp, agendaFilterPossuiEmail]);
 
   // Filtered emails based on global filter and folder
   const filteredEmails = useMemo(() => {
@@ -3421,7 +3462,7 @@ ${recentMessages}
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <Button 
                   variant="secondary" 
                   size="sm" 
@@ -3441,6 +3482,52 @@ ${recentMessages}
                 >
                   <PhoneCall className="w-4 h-4 text-orange-600" />
                 </Button>
+                
+                {/* Contact Filters */}
+                <div className="flex items-center gap-1 ml-2 border-l pl-2 border-orange-200">
+                  <Button
+                    variant={agendaFilterPossuiTel ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAgendaFilterPossuiTel(!agendaFilterPossuiTel)}
+                    className={`h-7 px-2 text-[10px] rounded-full ${
+                      agendaFilterPossuiTel 
+                        ? "bg-orange-500 hover:bg-orange-600 text-white" 
+                        : "border-orange-200 hover:bg-orange-50 text-orange-600"
+                    }`}
+                    title="Filtrar por possui telefone"
+                  >
+                    <Phone className="w-3 h-3 mr-1" />
+                    Tel
+                  </Button>
+                  <Button
+                    variant={agendaFilterPossuiWhatsapp ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAgendaFilterPossuiWhatsapp(!agendaFilterPossuiWhatsapp)}
+                    className={`h-7 px-2 text-[10px] rounded-full ${
+                      agendaFilterPossuiWhatsapp 
+                        ? "bg-green-500 hover:bg-green-600 text-white" 
+                        : "border-orange-200 hover:bg-orange-50 text-orange-600"
+                    }`}
+                    title="Filtrar por possui WhatsApp"
+                  >
+                    <MessageSquare className="w-3 h-3 mr-1" />
+                    Whats
+                  </Button>
+                  <Button
+                    variant={agendaFilterPossuiEmail ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setAgendaFilterPossuiEmail(!agendaFilterPossuiEmail)}
+                    className={`h-7 px-2 text-[10px] rounded-full ${
+                      agendaFilterPossuiEmail 
+                        ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                        : "border-orange-200 hover:bg-orange-50 text-orange-600"
+                    }`}
+                    title="Filtrar por possui Email"
+                  >
+                    <Mail className="w-3 h-3 mr-1" />
+                    Email
+                  </Button>
+                </div>
                 
                 <Dialog open={showSortDialog} onOpenChange={setShowSortDialog}>
                   <DialogTrigger asChild>
