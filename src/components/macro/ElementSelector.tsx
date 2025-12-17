@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Type, MousePointerClick } from 'lucide-react';
 
 interface ElementSelectorProps {
@@ -102,19 +102,6 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     selector: string;
     info: ElementInfo;
   } | null>(null);
-  
-  const overlayRef = useRef<HTMLDivElement>(null);
-
-  const getElementAtPoint = useCallback((x: number, y: number): HTMLElement | null => {
-    if (overlayRef.current) {
-      overlayRef.current.style.pointerEvents = 'none';
-    }
-    const element = document.elementFromPoint(x, y) as HTMLElement;
-    if (overlayRef.current) {
-      overlayRef.current.style.pointerEvents = 'auto';
-    }
-    return element;
-  }, []);
 
   const executeAction = useCallback((action: 'click' | 'type') => {
     if (!selectedElement) return;
@@ -168,6 +155,40 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     setHoveredElement(null);
   }, []);
 
+  // Click handler - usando capture para interceptar antes dos elementos
+  useEffect(() => {
+    if (!isActive || isTypingMode) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      
+      // Ignora cliques no recorder ou no selector UI
+      if (target.closest('[data-macro-recorder]') || target.closest('[data-element-selector]')) {
+        return;
+      }
+
+      // Permite scroll - não intercepta cliques em scrollbars
+      // Scrollbars não são elementos HTML, então o target será o container
+      // Verificamos se o clique foi na área de scroll (margem direita/inferior)
+      const rect = target.getBoundingClientRect();
+      const isOnVerticalScrollbar = e.clientX > rect.right - 20 && target.scrollHeight > target.clientHeight;
+      const isOnHorizontalScrollbar = e.clientY > rect.bottom - 20 && target.scrollWidth > target.clientWidth;
+      
+      if (isOnVerticalScrollbar || isOnHorizontalScrollbar) {
+        return; // Permite o clique no scrollbar
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+      
+      setSelectedElement(target);
+      setHoveredElement(null);
+    };
+
+    document.addEventListener('click', handleClick, true);
+    return () => document.removeEventListener('click', handleClick, true);
+  }, [isActive, isTypingMode]);
+
   // Keyboard handler
   useEffect(() => {
     if (!isActive) return;
@@ -199,7 +220,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         return;
       }
 
-      // No modo digitação, Enter confirma
+      // No modo digitação, Ctrl+Enter confirma
       if (isTypingMode && e.key === 'Enter' && e.ctrlKey) {
         e.preventDefault();
         confirmTyping();
@@ -210,41 +231,24 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [isActive, selectedElement, isTypingMode, executeAction, confirmTyping, cancelTyping, onCancel]);
 
-  // Click handler via overlay
-  const handleOverlayClick = useCallback((e: React.MouseEvent) => {
-    if (isTypingMode) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    const element = getElementAtPoint(e.clientX, e.clientY);
-    
-    if (!element || element.closest('[data-macro-recorder]') || element.closest('[data-element-selector]')) {
-      return;
-    }
-
-    setSelectedElement(element);
-    setHoveredElement(null);
-  }, [getElementAtPoint, isTypingMode]);
-
   // Mouse move para highlight
   useEffect(() => {
     if (!isActive || selectedElement || isTypingMode) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const element = getElementAtPoint(e.clientX, e.clientY);
+      const target = e.target as HTMLElement;
       
-      if (!element || element.closest('[data-macro-recorder]') || element.closest('[data-element-selector]')) {
+      if (!target || target.closest('[data-macro-recorder]') || target.closest('[data-element-selector]')) {
         setHoveredElement(null);
         return;
       }
       
-      setHoveredElement(element);
+      setHoveredElement(target);
     };
 
     document.addEventListener('mousemove', handleMouseMove);
     return () => document.removeEventListener('mousemove', handleMouseMove);
-  }, [isActive, selectedElement, isTypingMode, getElementAtPoint]);
+  }, [isActive, selectedElement, isTypingMode]);
 
   // Cleanup
   useEffect(() => {
@@ -280,26 +284,20 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
     };
   }, [hoveredElement, selectedElement, typingData]);
 
+  // Adiciona cursor crosshair ao body durante seleção
+  useEffect(() => {
+    if (!isActive || isTypingMode) return;
+    
+    document.body.style.cursor = 'crosshair';
+    return () => {
+      document.body.style.cursor = '';
+    };
+  }, [isActive, isTypingMode]);
+
   if (!isActive) return null;
 
   return (
     <>
-      {/* Overlay transparente */}
-      <div
-        ref={overlayRef}
-        data-element-selector
-        onClick={handleOverlayClick}
-        onMouseDown={(e) => { if (!isTypingMode) { e.preventDefault(); e.stopPropagation(); } }}
-        onPointerDown={(e) => { if (!isTypingMode) { e.preventDefault(); e.stopPropagation(); } }}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 999998,
-          cursor: isTypingMode ? 'default' : 'crosshair',
-          pointerEvents: isTypingMode ? 'none' : 'auto',
-        }}
-      />
-
       {/* UI - Instruções */}
       <div
         data-element-selector
@@ -315,7 +313,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         {!isTypingMode && !selectedElement && (
           <div className="bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg text-center">
             <p className="font-medium">Clique no elemento para selecionar</p>
-            <p className="text-xs opacity-80 mt-1">ESC para cancelar</p>
+            <p className="text-xs opacity-80 mt-1">ESC para cancelar • Scroll habilitado</p>
           </div>
         )}
 
