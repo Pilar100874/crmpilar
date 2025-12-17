@@ -166,18 +166,6 @@ export default function Macros() {
     setSteps([...steps, newStep]);
   };
 
-  const addTypeStep = () => {
-    const newStep: MacroStep = {
-      id: generateStepId(),
-      type: 'typeText',
-      value: '',
-      target: '',
-      label: 'Digitar texto',
-      enabled: true
-    };
-    setSteps([...steps, newStep]);
-  };
-
   const updateStep = (stepId: string, updates: Partial<MacroStep>) => {
     setSteps(steps.map(s => s.id === stepId ? { ...s, ...updates } : s));
   };
@@ -350,16 +338,6 @@ export default function Macros() {
                   ))}
                 </SelectContent>
               </Select>
-              
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={addTypeStep}
-                className="gap-2"
-              >
-                <Type className="h-4 w-4" />
-                Adicionar campo de texto
-              </Button>
             </div>
 
             {/* Lista de passos */}
