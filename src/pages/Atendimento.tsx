@@ -2558,6 +2558,20 @@ ${recentMessages}
     return { orcamentosAbertosPerCustomer: customerMap, orcamentosAbertosPerEmpresa: empresaMap };
   }, [orcamentos]);
 
+  // Count unread emails per contact email
+  const emailsNaoLidosPerEmail = useMemo(() => {
+    const emailMap: Record<string, number> = {};
+    userEmails
+      .filter(e => !e.read && (e.folder === 'inbox' || !e.folder))
+      .forEach(e => {
+        const fromEmail = e.from_email?.toLowerCase();
+        if (fromEmail) {
+          emailMap[fromEmail] = (emailMap[fromEmail] || 0) + 1;
+        }
+      });
+    return emailMap;
+  }, [userEmails]);
+
   // Ferramentas dinâmicas baseadas na aba ativa - MUST be before any conditional returns
   const currentTabType = activeTab as TabType;
   const dynamicRadialTools = useMemo(() => {
@@ -3171,6 +3185,7 @@ ${recentMessages}
                 orcamentosAbertosPerEmpresa={orcamentosAbertosPerEmpresa}
                 orcamentos={orcamentos}
                 setActiveTab={setActiveTab}
+                emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
               />
             </div>
 
@@ -3992,10 +4007,45 @@ ${recentMessages}
                                    )}
                                  </button>
                                );
-                             }
-                             return null;
-                           })()}
-                         </div>
+                              }
+                              return null;
+                            })()}
+                            {(() => {
+                              // Check for unread emails by customer email
+                              const customerEmail = task.customers?.email?.toLowerCase();
+                              const unreadCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
+                              
+                              if (unreadCount > 0) {
+                                return (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveTab('email');
+                                          }}
+                                          className="relative text-[10px] text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-full flex items-center font-medium transition-colors"
+                                        >
+                                          <Mail className="w-3 h-3 mr-1" />
+                                          Email
+                                          {unreadCount > 1 && (
+                                            <span className="ml-1 bg-blue-500 text-white text-[8px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
+                                              {unreadCount}
+                                            </span>
+                                          )}
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>{unreadCount} email{unreadCount > 1 ? 's' : ''} não lido{unreadCount > 1 ? 's' : ''}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                );
+                              }
+                              return null;
+                            })()}
+                          </div>
                        </div>
                      </div>
                    </div>
@@ -5091,6 +5141,7 @@ interface MobileListContentProps {
   orcamentosAbertosPerEmpresa: Record<string, number>;
   orcamentos: any[];
   setActiveTab: (tab: string) => void;
+  emailsNaoLidosPerEmail: Record<string, number>;
 }
 
 function MobileListContent({
@@ -5132,6 +5183,7 @@ function MobileListContent({
   orcamentosAbertosPerEmpresa,
   orcamentos,
   setActiveTab,
+  emailsNaoLidosPerEmail,
 }: MobileListContentProps) {
   return (
     <div className="h-full flex flex-col bg-white/80">
@@ -5379,6 +5431,41 @@ function MobileListContent({
                             </span>
                           )}
                         </button>
+                      );
+                    }
+                    return null;
+                  })()}
+                  {(() => {
+                    // Check for unread emails by customer email
+                    const customerEmail = task.customers?.email?.toLowerCase();
+                    const unreadCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
+                    
+                    if (unreadCount > 0) {
+                      return (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveTab('email');
+                                }}
+                                className="relative text-[10px] text-blue-600 bg-blue-50 hover:bg-blue-100 px-1.5 py-0.5 rounded-full flex items-center font-medium transition-colors"
+                              >
+                                <Mail className="w-2.5 h-2.5 mr-0.5" />
+                                Email
+                                {unreadCount > 1 && (
+                                  <span className="ml-0.5 bg-blue-500 text-white text-[8px] px-1 py-0.5 rounded-full min-w-[14px] text-center">
+                                    {unreadCount}
+                                  </span>
+                                )}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{unreadCount} email{unreadCount > 1 ? 's' : ''} não lido{unreadCount > 1 ? 's' : ''}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       );
                     }
                     return null;
