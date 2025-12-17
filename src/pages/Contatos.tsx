@@ -383,7 +383,7 @@ export default function Contatos() {
         newColumns.push({
           id: campo.field_id,
           label: campo.field_label,
-          visible: savedColumn?.visible ?? (campo.field_id === 'name' || campo.field_id === 'phone' || campo.field_id === 'email' || campo.field_id === 'position'),
+          visible: savedColumn?.visible ?? (campo.field_id === 'name' || campo.field_id === 'phone' || campo.field_id === 'tel' || campo.field_id === 'email' || campo.field_id === 'position'),
           width: savedColumn?.width ?? 180,
           locked: campo.field_id === 'name',
         });
