@@ -237,6 +237,7 @@ async function executeSelectDropdownItem(step: MacroStep): Promise<void> {
   
   // Foca e digita no campo
   searchField.focus();
+  searchField.click();
   const inputEl = searchField as HTMLInputElement;
   
   const nativeSetter = Object.getOwnPropertyDescriptor(
@@ -252,18 +253,77 @@ async function executeSelectDropdownItem(step: MacroStep): Promise<void> {
   
   inputEl.dispatchEvent(new Event('input', { bubbles: true }));
   inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+  inputEl.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
   
-  // Aguarda dropdown aparecer e clica no item
-  await new Promise(resolve => setTimeout(resolve, 500));
+  // Aguarda dropdown aparecer
+  await new Promise(resolve => setTimeout(resolve, 800));
   
   const dropdownItem = await waitForElement(() => {
-    // Procura por items de dropdown que contenham o texto
-    const items = document.querySelectorAll('[role="option"], [role="menuitem"], [data-value], li[class*="option"], div[class*="option"], div[class*="item"], [class*="dropdown"] li, [class*="listbox"] li, [class*="menu"] li, [class*="combobox"] li');
+    // Busca ampla por itens de dropdown - inclui portals e popovers
+    const selectors = [
+      // Radix UI / shadcn
+      '[data-radix-popper-content-wrapper] [role="option"]',
+      '[data-radix-popper-content-wrapper] [role="listitem"]',
+      '[data-radix-popper-content-wrapper] [cmdk-item]',
+      '[data-radix-menu-content] [role="menuitem"]',
+      // Portals genéricos
+      '[data-portal] [role="option"]',
+      '[data-portal] li',
+      // Popovers
+      '[data-state="open"] [role="option"]',
+      '[data-state="open"] [role="listitem"]',
+      // Command/Combobox shadcn
+      '[cmdk-list] [cmdk-item]',
+      '[cmdk-group] [cmdk-item]',
+      // Classes comuns
+      '.popover-content li',
+      '.dropdown-content li',
+      '[class*="popover"] li',
+      '[class*="dropdown"] li',
+      '[class*="listbox"] li',
+      '[class*="menu"] [role="menuitem"]',
+      // Genéricos
+      '[role="listbox"] [role="option"]',
+      '[role="menu"] [role="menuitem"]',
+      'ul[role="listbox"] li',
+      'div[role="listbox"] > div'
+    ];
     
-    for (const item of items) {
-      const text = item.textContent?.trim();
-      if (text && text.toLowerCase().includes(step.value!.toLowerCase())) {
-        return item as HTMLElement;
+    for (const selector of selectors) {
+      try {
+        const items = document.querySelectorAll(selector);
+        for (const item of items) {
+          const text = item.textContent?.trim();
+          if (text && text.toLowerCase().includes(step.value!.toLowerCase())) {
+            // Verifica se o elemento está visível
+            const rect = item.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              return item as HTMLElement;
+            }
+          }
+        }
+      } catch {
+        // Seletor inválido, continua
+      }
+    }
+    
+    // Fallback: busca qualquer elemento com o texto que seja clicável
+    const allElements = document.querySelectorAll('*');
+    for (const el of allElements) {
+      const text = el.textContent?.trim();
+      const rect = el.getBoundingClientRect();
+      
+      // Elemento visível com texto correspondente
+      if (text && 
+          text.toLowerCase() === step.value!.toLowerCase() && 
+          rect.width > 0 && 
+          rect.height > 0 &&
+          rect.width < 500 && // Não é um container grande
+          rect.height < 100) {
+        const style = window.getComputedStyle(el);
+        if (style.display !== 'none' && style.visibility !== 'hidden') {
+          return el as HTMLElement;
+        }
       }
     }
     
@@ -272,7 +332,9 @@ async function executeSelectDropdownItem(step: MacroStep): Promise<void> {
   
   if (!dropdownItem) throw new Error(`Item do dropdown não encontrado: ${step.value}`);
   
+  // Clica no item
   dropdownItem.click();
+  await new Promise(resolve => setTimeout(resolve, 300));
   await new Promise(resolve => setTimeout(resolve, 300));
 }
 
