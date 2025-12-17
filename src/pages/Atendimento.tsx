@@ -950,7 +950,19 @@ export default function Atendimento() {
       if (contactIds.length > 0) {
         const { data: customersData } = await supabase
           .from('customers')
-          .select('id, nome, telefone, tel, email')
+          .select(`
+            id, nome, telefone, tel, email,
+            customer_empresas (
+              empresa_id,
+              is_primary,
+              cargo,
+              empresas:empresa_id (
+                id,
+                nome,
+                nome_fantasia
+              )
+            )
+          `)
           .in('id', contactIds);
         
         if (customersData) {
