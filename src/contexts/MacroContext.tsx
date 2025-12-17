@@ -122,6 +122,13 @@ export function MacroProvider({ children }: { children: ReactNode }) {
 
   // Salvar macro
   const saveMacro = useCallback(async (macroData: Omit<Macro, 'id' | 'createdAt' | 'updatedAt'>) => {
+    // Verificar se já existe macro com mesmo nome
+    const existingMacro = macros.find(m => m.name.toLowerCase().trim() === macroData.name.toLowerCase().trim());
+    if (existingMacro) {
+      toast.error('Já existe uma macro com este nome');
+      return;
+    }
+
     const now = new Date().toISOString();
     const newMacro: Macro = {
       ...macroData,
@@ -156,6 +163,13 @@ export function MacroProvider({ children }: { children: ReactNode }) {
 
   // Atualizar macro
   const updateMacro = useCallback(async (macro: Macro) => {
+    // Verificar se já existe outra macro com mesmo nome
+    const existingMacro = macros.find(m => m.id !== macro.id && m.name.toLowerCase().trim() === macro.name.toLowerCase().trim());
+    if (existingMacro) {
+      toast.error('Já existe uma macro com este nome');
+      return;
+    }
+
     const updatedMacro = { ...macro, updatedAt: new Date().toISOString() };
 
     if (userInfo && isValidUUID(macro.id)) {
