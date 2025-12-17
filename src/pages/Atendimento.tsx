@@ -2572,6 +2572,20 @@ ${recentMessages}
     return emailMap;
   }, [userEmails]);
 
+  // Count unread chats per customer phone
+  const chatsNaoLidosPerPhone = useMemo(() => {
+    const phoneMap: Record<string, number> = {};
+    conversations
+      .filter(c => c.chat_status === 'em_fila' || c.chat_status === 'novo')
+      .forEach(c => {
+        const customerPhone = normalizePhone(c.customer?.telefone);
+        if (customerPhone) {
+          phoneMap[customerPhone] = (phoneMap[customerPhone] || 0) + 1;
+        }
+      });
+    return phoneMap;
+  }, [conversations]);
+
   // Ferramentas dinâmicas baseadas na aba ativa - MUST be before any conditional returns
   const currentTabType = activeTab as TabType;
   const dynamicRadialTools = useMemo(() => {
@@ -3186,6 +3200,7 @@ ${recentMessages}
                 orcamentos={orcamentos}
                 setActiveTab={setActiveTab}
                 emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
+                chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
               />
             </div>
 
@@ -4038,6 +4053,41 @@ ${recentMessages}
                                       </TooltipTrigger>
                                       <TooltipContent>
                                         <p>{unreadCount} email{unreadCount > 1 ? 's' : ''} não lido{unreadCount > 1 ? 's' : ''}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                );
+                              }
+                              return null;
+                            })()}
+                            {(() => {
+                              // Check for unread chats by customer phone
+                              const customerPhone = normalizePhone(task.customers?.telefone);
+                              const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
+                              
+                              if (unreadChatsCount > 0) {
+                                return (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveTab('chat');
+                                          }}
+                                          className="relative text-[10px] text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-full flex items-center font-medium transition-colors"
+                                        >
+                                          <MessageSquare className="w-3 h-3 mr-1" />
+                                          Chat
+                                          {unreadChatsCount > 1 && (
+                                            <span className="ml-1 bg-purple-500 text-white text-[8px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
+                                              {unreadChatsCount}
+                                            </span>
+                                          )}
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>{unreadChatsCount} chat{unreadChatsCount > 1 ? 's' : ''} pendente{unreadChatsCount > 1 ? 's' : ''}</p>
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
@@ -5142,6 +5192,7 @@ interface MobileListContentProps {
   orcamentos: any[];
   setActiveTab: (tab: string) => void;
   emailsNaoLidosPerEmail: Record<string, number>;
+  chatsNaoLidosPerPhone: Record<string, number>;
 }
 
 function MobileListContent({
@@ -5184,6 +5235,7 @@ function MobileListContent({
   orcamentos,
   setActiveTab,
   emailsNaoLidosPerEmail,
+  chatsNaoLidosPerPhone,
 }: MobileListContentProps) {
   return (
     <div className="h-full flex flex-col bg-white/80">
@@ -5463,6 +5515,41 @@ function MobileListContent({
                             </TooltipTrigger>
                             <TooltipContent>
                               <p>{unreadCount} email{unreadCount > 1 ? 's' : ''} não lido{unreadCount > 1 ? 's' : ''}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      );
+                    }
+                    return null;
+                  })()}
+                  {(() => {
+                    // Check for unread chats by customer phone
+                    const customerPhone = normalizePhone(task.customers?.telefone);
+                    const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
+                    
+                    if (unreadChatsCount > 0) {
+                      return (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveTab('chat');
+                                }}
+                                className="relative text-[10px] text-purple-600 bg-purple-50 hover:bg-purple-100 px-1.5 py-0.5 rounded-full flex items-center font-medium transition-colors"
+                              >
+                                <MessageSquare className="w-2.5 h-2.5 mr-0.5" />
+                                Chat
+                                {unreadChatsCount > 1 && (
+                                  <span className="ml-0.5 bg-purple-500 text-white text-[8px] px-1 py-0.5 rounded-full min-w-[14px] text-center">
+                                    {unreadChatsCount}
+                                  </span>
+                                )}
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{unreadChatsCount} chat{unreadChatsCount > 1 ? 's' : ''} pendente{unreadChatsCount > 1 ? 's' : ''}</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
