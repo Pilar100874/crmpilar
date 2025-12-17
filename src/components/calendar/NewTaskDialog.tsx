@@ -58,6 +58,7 @@ interface NewTaskDialogProps {
     description?: string;
     isAllDay?: boolean;
     userId?: string;
+    dataOriginal?: Date;
   };
 }
 
@@ -825,7 +826,14 @@ export function NewTaskDialog({ open, onOpenChange, onSave, initialDate, editing
 
           {/* Grid de data e hora */}
           <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
-            <Label className="text-sm font-semibold">Data e Horário</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">Data e Horário</Label>
+              {editingTask?.dataOriginal && (
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                  Criada em: {format(editingTask.dataOriginal, "dd/MM/yyyy", { locale: ptBR })}
+                </span>
+              )}
+            </div>
             <div className="grid grid-cols-3 gap-3">
               {/* Campo de data editável */}
               <div className="space-y-2">

@@ -62,6 +62,7 @@ interface Task {
   isAllDay?: boolean;
   userId?: string;
   userName?: string;
+  dataOriginal?: Date;
 }
 
 type ViewMode = "day" | "week" | "month" | "list" | "table";
@@ -781,6 +782,10 @@ export default function Calendario() {
             isAllDay: task.is_all_day || false,
             userId: task.user_id,
             userName: usuariosMap.get(task.user_id) || 'Usuário não identificado',
+            dataOriginal: task.data_original ? (() => {
+              const [y, mo, d] = (task.data_original || "").split("-").map(Number);
+              return new Date(y, (mo || 1) - 1, d || 1, 12, 0, 0, 0);
+            })() : undefined,
           };
         });
         
@@ -3175,6 +3180,7 @@ export default function Calendario() {
           description: editingTask.description,
           isAllDay: editingTask.isAllDay,
           userId: editingTask.userId,
+          dataOriginal: editingTask.dataOriginal,
         } : undefined}
       />
 
