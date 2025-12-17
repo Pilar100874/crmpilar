@@ -8081,6 +8081,7 @@ export type Database = {
           porta_smtp: number | null
           ramal: string | null
           ramal_senha: string | null
+          segmento_id: string | null
           senha_email: string | null
           senha_hash: string
           senha_sip: string | null
@@ -8108,6 +8109,7 @@ export type Database = {
           porta_smtp?: number | null
           ramal?: string | null
           ramal_senha?: string | null
+          segmento_id?: string | null
           senha_email?: string | null
           senha_hash: string
           senha_sip?: string | null
@@ -8135,6 +8137,7 @@ export type Database = {
           porta_smtp?: number | null
           ramal?: string | null
           ramal_senha?: string | null
+          segmento_id?: string | null
           senha_email?: string | null
           senha_hash?: string
           senha_sip?: string | null
@@ -8158,6 +8161,13 @@ export type Database = {
             columns: ["grupo_acesso_id"]
             isOneToOne: false
             referencedRelation: "grupos_acesso"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuarios_segmento_id_fkey"
+            columns: ["segmento_id"]
+            isOneToOne: false
+            referencedRelation: "segmentos"
             referencedColumns: ["id"]
           },
           {
