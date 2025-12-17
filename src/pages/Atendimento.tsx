@@ -3781,62 +3781,64 @@ ${recentMessages}
                   <p className="text-xs text-muted-foreground mt-1">{globalFilter ? 'para este filtro' : 'para esta data'}</p>
                 </div>
               ) : (
-                 filteredTasks.map((task) => (
-                  <div 
-                    key={task.id} 
-                    className={`p-3 rounded-xl cursor-pointer transition-all duration-200 ${
-                      selectedTaskId === task.id 
-                        ? "bg-orange-100 border border-orange-200 shadow-sm" 
-                        : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
-                    }`}
-                    onClick={() => {
-                      setSelectedTaskId(task.id);
-                      if (!showClientDetailsAgenda) {
-                        setShowClientDetailsAgenda(true);
-                      }
-                    }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        task.status === 'concluida' 
-                          ? 'bg-green-100 text-green-600' 
-                          : 'bg-orange-100 text-orange-500'
-                      }`}>
-                        <CheckCircle2 className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate">{task.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">{task.contact_name}</p>
-                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                          {task.time && (
-                            <span className="text-[10px] text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full flex items-center font-medium">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {task.time}
-                            </span>
-                          )}
-                          {task.origem && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-white/50">
-                              {task.origem}
-                            </Badge>
-                          )}
-                          {/* Vinculo badges */}
-                          {task.contact_id && customerVinculos.linkedToUser.has(task.contact_id) && (
-                            <Badge className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary border-primary/30">
-                              <User className="w-2.5 h-2.5 mr-0.5" />
-                              Meu Cliente
-                            </Badge>
-                          )}
-                          {task.contact_id && !customerVinculos.linkedToUser.has(task.contact_id) && 
-                           customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg)) && (
-                            <Badge className="text-[10px] px-1.5 py-0 bg-blue-100 text-blue-700 border-blue-200">
-                              Mesmo Segmento
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
+                 filteredTasks.map((task) => {
+                   const isLinkedToUser = task.contact_id && customerVinculos.linkedToUser.has(task.contact_id);
+                   const isSameSegment = task.contact_id && !isLinkedToUser && 
+                     customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg));
+                   
+                   return (
+                   <div 
+                     key={task.id} 
+                     className={`relative rounded-xl cursor-pointer transition-all duration-200 overflow-hidden ${
+                       selectedTaskId === task.id 
+                         ? "bg-orange-100 border border-orange-200 shadow-sm" 
+                         : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
+                     }`}
+                     onClick={() => {
+                       setSelectedTaskId(task.id);
+                       if (!showClientDetailsAgenda) {
+                         setShowClientDetailsAgenda(true);
+                       }
+                     }}
+                   >
+                     {/* Tarja lateral indicando vínculo */}
+                     {(isLinkedToUser || isSameSegment) && (
+                       <div 
+                         className={`absolute left-0 top-0 bottom-0 w-1 ${
+                           isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
+                         }`}
+                         title={isLinkedToUser ? 'Meu Cliente' : 'Mesmo Segmento'}
+                       />
+                     )}
+                     
+                     <div className="flex items-start gap-3 p-3 pl-4">
+                       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                         task.status === 'concluida' 
+                           ? 'bg-green-100 text-green-600' 
+                           : 'bg-orange-100 text-orange-500'
+                       }`}>
+                         <CheckCircle2 className="w-4 h-4" />
+                       </div>
+                       <div className="flex-1 min-w-0">
+                         <p className="font-semibold text-sm truncate">{task.title}</p>
+                         <p className="text-xs text-muted-foreground truncate">{task.contact_name}</p>
+                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                           {task.time && (
+                             <span className="text-[10px] text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full flex items-center font-medium">
+                               <Clock className="w-3 h-3 mr-1" />
+                               {task.time}
+                             </span>
+                           )}
+                           {task.origem && (
+                             <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-white/50">
+                               {task.origem}
+                             </Badge>
+                           )}
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 );})
               )}
             </div>
             </div>
@@ -5120,17 +5122,31 @@ function MobileListContent({
           </div>
         ))}
 
-        {activeTab === "agenda" && filteredTasks.map((task) => (
+        {activeTab === "agenda" && filteredTasks.map((task) => {
+          const isLinkedToUser = task.contact_id && customerVinculos.linkedToUser.has(task.contact_id);
+          const isSameSegment = task.contact_id && !isLinkedToUser && 
+            customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg));
+          
+          return (
           <div
             key={task.id}
             onClick={() => setSelectedTaskId(task.id)}
-            className={`p-3 rounded-xl cursor-pointer transition-all ${
+            className={`relative rounded-xl cursor-pointer transition-all overflow-hidden ${
               selectedTaskId === task.id
                 ? "bg-orange-100 border border-orange-200"
                 : "bg-white/60 hover:bg-white border border-transparent"
             }`}
           >
-            <div className="flex items-start gap-3">
+            {/* Tarja lateral indicando vínculo */}
+            {(isLinkedToUser || isSameSegment) && (
+              <div 
+                className={`absolute left-0 top-0 bottom-0 w-1 ${
+                  isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
+                }`}
+              />
+            )}
+            
+            <div className="flex items-start gap-3 p-3 pl-4">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                 selectedTaskId === task.id ? "bg-orange-500 text-white" : "bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600"
               }`}>
@@ -5146,24 +5162,11 @@ function MobileListContent({
                       {task.time}
                     </Badge>
                   )}
-                  {/* Vinculo badges */}
-                  {task.contact_id && customerVinculos.linkedToUser.has(task.contact_id) && (
-                    <Badge className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary border-primary/30">
-                      <User className="w-2.5 h-2.5 mr-0.5" />
-                      Meu
-                    </Badge>
-                  )}
-                  {task.contact_id && !customerVinculos.linkedToUser.has(task.contact_id) && 
-                   customerVinculos.customerSegments[task.contact_id]?.some(seg => customerVinculos.userSegments.has(seg)) && (
-                    <Badge className="text-[10px] px-1.5 py-0 bg-blue-100 text-blue-700 border-blue-200">
-                      Segmento
-                    </Badge>
-                  )}
                 </div>
               </div>
             </div>
           </div>
-        ))}
+        );})}
 
         {activeTab === "email" && filteredEmails.map((email) => (
           <div
