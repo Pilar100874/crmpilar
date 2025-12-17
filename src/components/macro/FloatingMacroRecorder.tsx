@@ -80,7 +80,7 @@ export function FloatingMacroRecorder() {
     setIsVisible(false);
   };
 
-  const handleElementSelected = (selector: string, info: ElementInfo, element: HTMLElement, action: 'click' | 'type', typedValue?: string) => {
+  const handleElementSelected = (selector: string, info: ElementInfo, element: HTMLElement, action: 'click' | 'type' | 'selectDropdown', typedValue?: string) => {
     // Adiciona navegação se mudou de tela
     const currentPath = window.location.pathname;
     if (lastCapturedPath !== currentPath) {
@@ -117,6 +117,22 @@ export function FloatingMacroRecorder() {
         // Reativa seleção para próximo elemento
         setTimeout(() => setIsSelectingElement(true), 200);
       }, 50);
+    } else if (action === 'selectDropdown') {
+      // Ação de selecionar item de dropdown
+      if (typedValue) {
+        setSteps(prev => [...prev, {
+          id: generateStepId(),
+          type: 'selectDropdownItem',
+          value: typedValue,
+          target: selector,
+          label: `Selecionar "${typedValue.slice(0, 12)}${typedValue.length > 12 ? '...' : ''}" em: ${elementLabel}`,
+          enabled: true,
+          waitForElement: true,
+          waitTimeout: 5000
+        }]);
+        toast.success('Seleção de dropdown capturada!');
+      }
+      setTimeout(() => setIsSelectingElement(true), 300);
     } else {
       // Ação de digitar - o ElementSelector já capturou o texto
       if (typedValue) {
