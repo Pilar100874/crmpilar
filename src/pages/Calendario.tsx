@@ -2784,14 +2784,6 @@ export default function Calendario() {
                 </Select>
               )}
 
-              <Button
-                variant={filterBy === "my" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setFilterBy("my")}
-                className="h-9 px-4 text-xs font-medium"
-              >
-                Minhas
-              </Button>
 
               <Button 
                 variant="ghost" 
