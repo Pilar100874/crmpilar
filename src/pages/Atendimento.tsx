@@ -3803,17 +3803,20 @@ ${recentMessages}
                        }
                      }}
                    >
-                     {/* Tarja lateral indicando vínculo */}
-                     {(isLinkedToUser || isSameSegment) && (
-                       <div 
-                         className={`absolute left-0 top-0 bottom-0 w-1 ${
-                           isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
-                         }`}
-                         title={isLinkedToUser ? 'Meu Cliente' : 'Mesmo Segmento'}
-                       />
-                     )}
-                     
-                     <div className="flex items-start gap-3 p-3 pl-4">
+                      {/* Tarja lateral indicando vínculo */}
+                      {(isLinkedToUser || isSameSegment) && (
+                        <div 
+                          className={`absolute left-0 top-0 bottom-0 w-5 flex items-center justify-center rounded-l-xl ${
+                            isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
+                          }`}
+                        >
+                          <span className="text-[8px] font-semibold text-white whitespace-nowrap transform -rotate-90">
+                            {isLinkedToUser ? 'Meu Cliente' : 'Mesmo Seg.'}
+                          </span>
+                        </div>
+                      )}
+                      
+                      <div className={`flex items-start gap-3 p-3 ${(isLinkedToUser || isSameSegment) ? 'pl-7' : 'pl-4'}`}>
                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                          task.status === 'concluida' 
                            ? 'bg-green-100 text-green-600' 
@@ -5142,13 +5145,17 @@ function MobileListContent({
             {/* Tarja lateral indicando vínculo */}
             {(isLinkedToUser || isSameSegment) && (
               <div 
-                className={`absolute left-0 top-0 bottom-0 w-1 ${
+                className={`absolute left-0 top-0 bottom-0 w-5 flex items-center justify-center rounded-l-xl ${
                   isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
                 }`}
-              />
+              >
+                <span className="text-[8px] font-semibold text-white whitespace-nowrap transform -rotate-90">
+                  {isLinkedToUser ? 'Meu Cliente' : 'Mesmo Seg.'}
+                </span>
+              </div>
             )}
             
-            <div className="flex items-start gap-3 p-3 pl-4">
+            <div className={`flex items-start gap-3 p-3 ${(isLinkedToUser || isSameSegment) ? 'pl-7' : 'pl-4'}`}>
               <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                 selectedTaskId === task.id ? "bg-orange-500 text-white" : "bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600"
               }`}>
