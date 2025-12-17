@@ -234,6 +234,15 @@ export default function Contatos() {
     tags: "",
   });
 
+  // Campos base obrigatórios de contato (sempre devem existir)
+  const baseContactFields: CustomField[] = [
+    { id: "name", label: "Nome de contato", type: "text", category: "contact", required: true, locked: true },
+    { id: "phone", label: "WhatsApp", type: "phone", category: "contact", required: true, locked: true },
+    { id: "tel", label: "Telefone", type: "phone", category: "contact", required: false, locked: true },
+    { id: "email", label: "E-mail", type: "email", category: "contact", required: true, locked: true },
+    { id: "position", label: "Cargo", type: "text", category: "contact", required: true, locked: true },
+  ];
+
   // Carregar campos customizados de contato do banco
   const loadContactFields = async (estabId: string) => {
     try {
@@ -264,8 +273,36 @@ export default function Contatos() {
           };
         });
         
-        console.log("✅ Campos customizados carregados:", mappedFields.length);
-        setContactFields(mappedFields);
+        // Garantir que os campos base sempre existam
+        const baseFieldIds = baseContactFields.map(f => f.id);
+        const missingBaseFields = baseContactFields.filter(
+          baseField => !mappedFields.some(f => f.id === baseField.id)
+        );
+        
+        // Adicionar campos base faltantes no início, na ordem correta
+        const finalFields = [...missingBaseFields, ...mappedFields];
+        
+        // Reordenar para manter campos base na ordem correta no início
+        const sortedFields = finalFields.sort((a, b) => {
+          const aBaseIndex = baseFieldIds.indexOf(a.id);
+          const bBaseIndex = baseFieldIds.indexOf(b.id);
+          
+          // Se ambos são campos base, ordenar pela ordem base
+          if (aBaseIndex !== -1 && bBaseIndex !== -1) {
+            return aBaseIndex - bBaseIndex;
+          }
+          // Campos base vêm primeiro
+          if (aBaseIndex !== -1) return -1;
+          if (bBaseIndex !== -1) return 1;
+          // Manter ordem original para campos customizados
+          return 0;
+        });
+        
+        console.log("✅ Campos customizados carregados:", sortedFields.length);
+        setContactFields(sortedFields);
+      } else {
+        // Se não há campos no banco, usar os campos base
+        setContactFields(baseContactFields);
       }
     } catch (error) {
       console.error("❌ Erro ao carregar campos customizados:", error);
