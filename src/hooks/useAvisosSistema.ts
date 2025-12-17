@@ -154,6 +154,8 @@ export function useAvisosSistema() {
       if (error) throw error;
 
       toast.success('Aviso criado com sucesso');
+      // Recarregar lista imediatamente após criar
+      await carregarAvisos();
       return data;
     } catch (error) {
       console.error('Erro ao criar aviso:', error);
