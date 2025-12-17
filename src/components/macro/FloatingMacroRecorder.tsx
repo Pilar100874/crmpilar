@@ -12,10 +12,13 @@ import {
   Navigation,
   Type,
   Trash2,
-  MousePointerClick
+  MousePointerClick,
+  Play,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ElementSelector, ElementInfo } from './ElementSelector';
+import { runMacroSteps } from '@/services/macroEngine';
 
 function generateStepId(): string {
   return `step-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -27,6 +30,7 @@ export function FloatingMacroRecorder() {
   const [isVisible, setIsVisible] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isSelectingElement, setIsSelectingElement] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
   const [macroName, setMacroName] = useState('');
   const [steps, setSteps] = useState<MacroStep[]>([]);
   const [showNameInput, setShowNameInput] = useState(false);
@@ -59,6 +63,25 @@ export function FloatingMacroRecorder() {
     setShowNameInput(false);
     setMacroName('');
     setLastCapturedPath(null);
+  };
+
+  const testMacro = async () => {
+    if (steps.length === 0) {
+      toast.error('Nenhum passo para testar');
+      return;
+    }
+
+    setIsTesting(true);
+    toast.info('Testando macro...');
+
+    try {
+      await runMacroSteps(steps);
+      toast.success('Teste concluído com sucesso!');
+    } catch (error) {
+      toast.error(`Erro no teste: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   const saveMacroHandler = async () => {
@@ -199,8 +222,12 @@ export function FloatingMacroRecorder() {
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
               </span>
             )}
+            {isTesting && (
+              <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
+            )}
             <span className="font-medium text-sm">
-              {showNameInput ? 'Salvar Macro' : 
+              {isTesting ? 'Testando...' :
+               showNameInput ? 'Salvar Macro' : 
                isSelectingElement ? 'Selecione o elemento' :
                isRecording ? 'Gravando' : 'Macro'}
             </span>
@@ -213,6 +240,7 @@ export function FloatingMacroRecorder() {
               if (isRecording) cancelRecording();
               setIsVisible(false);
             }}
+            disabled={isTesting}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -221,19 +249,36 @@ export function FloatingMacroRecorder() {
         {/* Nome da macro */}
         {showNameInput && (
           <div className="space-y-3">
+            {/* Botão de testar antes de salvar */}
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="w-full gap-2 text-orange-600 border-orange-300 hover:bg-orange-50"
+              onClick={testMacro}
+              disabled={isTesting}
+            >
+              {isTesting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+              {isTesting ? 'Executando...' : 'Testar Macro'}
+            </Button>
+
             <Input
               placeholder="Nome da macro..."
               value={macroName}
               onChange={(e) => setMacroName(e.target.value)}
               autoFocus
               onKeyDown={(e) => e.key === 'Enter' && saveMacroHandler()}
+              disabled={isTesting}
             />
             <div className="flex gap-2">
-              <Button size="sm" className="flex-1" onClick={saveMacroHandler}>
+              <Button size="sm" className="flex-1" onClick={saveMacroHandler} disabled={isTesting}>
                 <Save className="h-4 w-4 mr-1" />
                 Salvar
               </Button>
-              <Button size="sm" variant="outline" onClick={cancelRecording}>
+              <Button size="sm" variant="outline" onClick={cancelRecording} disabled={isTesting}>
                 Cancelar
               </Button>
             </div>
