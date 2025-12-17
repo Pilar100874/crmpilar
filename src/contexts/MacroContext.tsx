@@ -10,6 +10,11 @@ interface MacroContextType {
   executionStatus: MacroExecutionStatus | null;
   showFloatingButton: boolean;
   setShowFloatingButton: (show: boolean) => void;
+  showQuickAccessMenu: boolean;
+  setShowQuickAccessMenu: (show: boolean) => void;
+  quickAccessMacroIds: string[];
+  setQuickAccessMacroIds: (ids: string[]) => void;
+  toggleQuickAccessMacro: (id: string) => void;
   
   // CRUD
   saveMacro: (macro: Omit<Macro, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -28,6 +33,8 @@ const MacroContext = createContext<MacroContextType | null>(null);
 
 const STORAGE_KEY = 'macros_v2';
 const FLOATING_BUTTON_KEY = 'macro_floating_button_visible';
+const QUICK_ACCESS_MENU_KEY = 'macro_quick_access_menu_visible';
+const QUICK_ACCESS_MACROS_KEY = 'macro_quick_access_ids';
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -46,10 +53,36 @@ export function MacroProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem(FLOATING_BUTTON_KEY);
     return stored === 'true';
   });
+  const [showQuickAccessMenu, setShowQuickAccessMenuState] = useState<boolean>(() => {
+    const stored = localStorage.getItem(QUICK_ACCESS_MENU_KEY);
+    return stored === 'true';
+  });
+  const [quickAccessMacroIds, setQuickAccessMacroIdsState] = useState<string[]>(() => {
+    const stored = localStorage.getItem(QUICK_ACCESS_MACROS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  });
 
   const setShowFloatingButton = useCallback((show: boolean) => {
     setShowFloatingButtonState(show);
     localStorage.setItem(FLOATING_BUTTON_KEY, String(show));
+  }, []);
+
+  const setShowQuickAccessMenu = useCallback((show: boolean) => {
+    setShowQuickAccessMenuState(show);
+    localStorage.setItem(QUICK_ACCESS_MENU_KEY, String(show));
+  }, []);
+
+  const setQuickAccessMacroIds = useCallback((ids: string[]) => {
+    setQuickAccessMacroIdsState(ids);
+    localStorage.setItem(QUICK_ACCESS_MACROS_KEY, JSON.stringify(ids));
+  }, []);
+
+  const toggleQuickAccessMacro = useCallback((id: string) => {
+    setQuickAccessMacroIdsState(prev => {
+      const newIds = prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id];
+      localStorage.setItem(QUICK_ACCESS_MACROS_KEY, JSON.stringify(newIds));
+      return newIds;
+    });
   }, []);
 
   // Carregar informações do usuário
@@ -241,6 +274,11 @@ export function MacroProvider({ children }: { children: ReactNode }) {
       executionStatus,
       showFloatingButton,
       setShowFloatingButton,
+      showQuickAccessMenu,
+      setShowQuickAccessMenu,
+      quickAccessMacroIds,
+      setQuickAccessMacroIds,
+      toggleQuickAccessMacro,
       saveMacro,
       updateMacro,
       deleteMacro,

@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
 import { 
   Play, 
   Trash2, 
@@ -21,7 +23,8 @@ import {
   GripVertical,
   ChevronUp,
   ChevronDown,
-  Keyboard
+  Keyboard,
+  Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -44,7 +47,20 @@ function generateStepId(): string {
 }
 
 export default function Macros() {
-  const { macros, saveMacro, updateMacro, deleteMacro, executeMacro, executionStatus, showFloatingButton, setShowFloatingButton } = useMacro();
+  const { 
+    macros, 
+    saveMacro, 
+    updateMacro, 
+    deleteMacro, 
+    executeMacro, 
+    executionStatus, 
+    showFloatingButton, 
+    setShowFloatingButton,
+    showQuickAccessMenu,
+    setShowQuickAccessMenu,
+    quickAccessMacroIds,
+    toggleQuickAccessMacro
+  } = useMacro();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMacro, setEditingMacro] = useState<string | null>(null);
@@ -195,7 +211,7 @@ export default function Macros() {
           <h1 className="text-2xl font-bold">Macros</h1>
           <p className="text-muted-foreground">Automatize ações repetitivas</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <Switch
               id="show-floating"
@@ -203,7 +219,19 @@ export default function Macros() {
               onCheckedChange={setShowFloatingButton}
             />
             <Label htmlFor="show-floating" className="text-sm cursor-pointer">
-              Exibir botão flutuante
+              Botão gravador
+            </Label>
+          </div>
+          <Separator orientation="vertical" className="h-6" />
+          <div className="flex items-center gap-2">
+            <Switch
+              id="show-quick-access"
+              checked={showQuickAccessMenu}
+              onCheckedChange={setShowQuickAccessMenu}
+            />
+            <Label htmlFor="show-quick-access" className="text-sm cursor-pointer flex items-center gap-1">
+              <Zap className="h-3 w-3" />
+              Menu de atalhos rápidos
             </Label>
           </div>
         </div>
@@ -233,6 +261,27 @@ export default function Macros() {
                 {macro.shortcut && (
                   <Badge variant="secondary">{macro.shortcut}</Badge>
                 )}
+                {quickAccessMacroIds.includes(macro.id) && (
+                  <Badge variant="default" className="bg-primary/20 text-primary">
+                    <Zap className="h-3 w-3 mr-1" />
+                    Atalho
+                  </Badge>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 mb-3 p-2 bg-muted/50 rounded-md">
+                <Checkbox
+                  id={`quick-access-${macro.id}`}
+                  checked={quickAccessMacroIds.includes(macro.id)}
+                  onCheckedChange={() => toggleQuickAccessMacro(macro.id)}
+                />
+                <Label 
+                  htmlFor={`quick-access-${macro.id}`} 
+                  className="text-xs cursor-pointer flex items-center gap-1"
+                >
+                  <Zap className="h-3 w-3" />
+                  Incluir no menu de atalhos
+                </Label>
               </div>
               
               <div className="flex gap-2">

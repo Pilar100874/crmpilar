@@ -49,6 +49,7 @@ import logo from "@/assets/logo_branco_sidebar.png";
 import { EstabelecimentoSelector } from "@/components/EstabelecimentoSelector";
 import { UsuarioSelector } from "@/components/UsuarioSelector";
 import { FloatingMacroRecorder } from "@/components/macro/FloatingMacroRecorder";
+import { FloatingMacroQuickAccess } from "@/components/macro/FloatingMacroQuickAccess";
 import { IncomingCallNotification } from "@/components/softphone/IncomingCallNotification";
 import { ChatAvisosFloatingButton } from "@/components/chat-interno/ChatAvisosFloatingButton";
 import { ChatInternoProvider } from "@/contexts/ChatInternoContext";
@@ -1065,6 +1066,7 @@ export default function Layout({ children }: LayoutProps) {
       </ChatInternoProvider>
       
       <FloatingMacroRecorder />
+      <FloatingMacroQuickAccess />
       <ChangePasswordDialog
         open={showChangePasswordDialog}
         onOpenChange={setShowChangePasswordDialog}
