@@ -2528,17 +2528,21 @@ ${recentMessages}
     setTodayTasksCount(filteredTasks.length);
   }, [filteredTasks]);
 
-  // Count open budgets per customer for agenda display
-  const orcamentosAbertosPerCustomer = useMemo(() => {
-    const countMap: Record<string, number> = {};
+  // Count open budgets per customer and per empresa for agenda display
+  const { orcamentosAbertosPerCustomer, orcamentosAbertosPerEmpresa } = useMemo(() => {
+    const customerMap: Record<string, number> = {};
+    const empresaMap: Record<string, number> = {};
     orcamentos
       .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
       .forEach(o => {
         if (o.cliente_id) {
-          countMap[o.cliente_id] = (countMap[o.cliente_id] || 0) + 1;
+          customerMap[o.cliente_id] = (customerMap[o.cliente_id] || 0) + 1;
+        }
+        if (o.empresa_id) {
+          empresaMap[o.empresa_id] = (empresaMap[o.empresa_id] || 0) + 1;
         }
       });
-    return countMap;
+    return { orcamentosAbertosPerCustomer: customerMap, orcamentosAbertosPerEmpresa: empresaMap };
   }, [orcamentos]);
 
   // Ferramentas dinâmicas baseadas na aba ativa - MUST be before any conditional returns
@@ -3151,6 +3155,7 @@ ${recentMessages}
                 setShowComposeEmail={setShowComposeEmail}
                 customerVinculos={customerVinculos}
                 orcamentosAbertosPerCustomer={orcamentosAbertosPerCustomer}
+                orcamentosAbertosPerEmpresa={orcamentosAbertosPerEmpresa}
                 orcamentos={orcamentos}
                 setActiveTab={setActiveTab}
               />
@@ -3927,34 +3932,45 @@ ${recentMessages}
                                {task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado
                              </span>
                            )}
-                           {task.contact_id && orcamentosAbertosPerCustomer[task.contact_id] > 0 && (
-                             <button
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 // Find first open budget for this customer
-                                 const firstOrcamento = orcamentos.find(o => 
-                                   o.cliente_id === task.contact_id && 
-                                   o.status !== 'cancelado' && 
-                                   o.status !== 'ganho'
-                                 );
-                                 if (firstOrcamento) {
-                                   setActiveTab('orcamento');
-                                   setSelectedOrcamentoId(firstOrcamento.id);
-                                   setOrcamentoSheetOpen(true);
-                                 }
-                               }}
-                               className="relative text-[10px] text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full flex items-center font-medium transition-colors"
-                               title="Ver orçamentos em aberto"
-                             >
-                               <FileText className="w-3 h-3 mr-1" />
-                               Orçamento
-                               {orcamentosAbertosPerCustomer[task.contact_id] > 1 && (
-                                 <span className="ml-1 bg-emerald-500 text-white text-[8px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
-                                   {orcamentosAbertosPerCustomer[task.contact_id]}
-                                 </span>
-                               )}
-                             </button>
-                           )}
+                           {(() => {
+                             // Check for open budgets: by cliente_id OR by empresa_id through customer_empresas
+                             const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
+                             const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
+                             const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
+                             const totalBudgetCount = customerBudgetCount + empresaBudgetCount;
+                             
+                             if (totalBudgetCount > 0) {
+                               return (
+                                 <button
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     // Find first open budget for this customer or their linked empresas
+                                     const firstOrcamento = orcamentos.find(o => 
+                                       o.status !== 'cancelado' && 
+                                       o.status !== 'ganho' &&
+                                       (o.cliente_id === task.contact_id || empresaIds.includes(o.empresa_id))
+                                     );
+                                     if (firstOrcamento) {
+                                       setActiveTab('orcamento');
+                                       setSelectedOrcamentoId(firstOrcamento.id);
+                                       setOrcamentoSheetOpen(true);
+                                     }
+                                   }}
+                                   className="relative text-[10px] text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full flex items-center font-medium transition-colors"
+                                   title="Ver orçamentos em aberto"
+                                 >
+                                   <FileText className="w-3 h-3 mr-1" />
+                                   Orçamento
+                                   {totalBudgetCount > 1 && (
+                                     <span className="ml-1 bg-emerald-500 text-white text-[8px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
+                                       {totalBudgetCount}
+                                     </span>
+                                   )}
+                                 </button>
+                               );
+                             }
+                             return null;
+                           })()}
                          </div>
                        </div>
                      </div>
@@ -5048,6 +5064,7 @@ interface MobileListContentProps {
     customerSegments: Record<string, string[]>;
   };
   orcamentosAbertosPerCustomer: Record<string, number>;
+  orcamentosAbertosPerEmpresa: Record<string, number>;
   orcamentos: any[];
   setActiveTab: (tab: string) => void;
 }
@@ -5088,6 +5105,7 @@ function MobileListContent({
   setShowComposeEmail,
   customerVinculos,
   orcamentosAbertosPerCustomer,
+  orcamentosAbertosPerEmpresa,
   orcamentos,
   setActiveTab,
 }: MobileListContentProps) {
@@ -5293,32 +5311,43 @@ function MobileListContent({
                       {task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado
                     </Badge>
                   )}
-                  {task.contact_id && orcamentosAbertosPerCustomer[task.contact_id] > 0 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const firstOrcamento = orcamentos.find(o => 
-                          o.cliente_id === task.contact_id && 
-                          o.status !== 'cancelado' && 
-                          o.status !== 'ganho'
-                        );
-                        if (firstOrcamento) {
-                          setActiveTab('orcamento');
-                          setSelectedOrcamentoId(firstOrcamento.id);
-                          setOrcamentoSheetOpen(true);
-                        }
-                      }}
-                      className="relative text-[10px] text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded-full flex items-center font-medium transition-colors"
-                    >
-                      <FileText className="w-2.5 h-2.5 mr-0.5" />
-                      Orç.
-                      {orcamentosAbertosPerCustomer[task.contact_id] > 1 && (
-                        <span className="ml-0.5 bg-emerald-500 text-white text-[8px] px-1 py-0.5 rounded-full min-w-[14px] text-center">
-                          {orcamentosAbertosPerCustomer[task.contact_id]}
-                        </span>
-                      )}
-                    </button>
-                  )}
+                  {(() => {
+                    // Check for open budgets: by cliente_id OR by empresa_id through customer_empresas
+                    const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
+                    const empresaIds = task.customers?.customer_empresas?.map((ce: any) => ce.empresa_id || ce.empresas?.id).filter(Boolean) || [];
+                    const empresaBudgetCount = empresaIds.reduce((acc: number, empId: string) => acc + (orcamentosAbertosPerEmpresa[empId] || 0), 0);
+                    const totalBudgetCount = customerBudgetCount + empresaBudgetCount;
+                    
+                    if (totalBudgetCount > 0) {
+                      return (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const firstOrcamento = orcamentos.find(o => 
+                              o.status !== 'cancelado' && 
+                              o.status !== 'ganho' &&
+                              (o.cliente_id === task.contact_id || empresaIds.includes(o.empresa_id))
+                            );
+                            if (firstOrcamento) {
+                              setActiveTab('orcamento');
+                              setSelectedOrcamentoId(firstOrcamento.id);
+                              setOrcamentoSheetOpen(true);
+                            }
+                          }}
+                          className="relative text-[10px] text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded-full flex items-center font-medium transition-colors"
+                        >
+                          <FileText className="w-2.5 h-2.5 mr-0.5" />
+                          Orç.
+                          {totalBudgetCount > 1 && (
+                            <span className="ml-0.5 bg-emerald-500 text-white text-[8px] px-1 py-0.5 rounded-full min-w-[14px] text-center">
+                              {totalBudgetCount}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
               </div>
             </div>
