@@ -828,18 +828,10 @@ export default function Atendimento() {
 
       const dateStr = format(date, 'yyyy-MM-dd');
 
+      // Fetch tasks first
       const { data: tasksData, error } = await supabase
         .from('calendario_tarefas')
-        .select(`
-          *,
-          customers:contact_id (
-            id,
-            nome,
-            telefone,
-            tel,
-            email
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .eq('date', dateStr);
 
@@ -848,8 +840,37 @@ export default function Atendimento() {
         return;
       }
 
+      // Get unique contact_ids that are not null
+      const contactIds = [...new Set(
+        (tasksData || [])
+          .map(t => t.contact_id)
+          .filter(Boolean)
+      )];
+
+      // Fetch customers separately if there are any contact_ids
+      let customersMap: Record<string, any> = {};
+      if (contactIds.length > 0) {
+        const { data: customersData } = await supabase
+          .from('customers')
+          .select('id, nome, telefone, tel, email')
+          .in('id', contactIds);
+        
+        if (customersData) {
+          customersMap = customersData.reduce((acc, c) => {
+            acc[c.id] = c;
+            return acc;
+          }, {} as Record<string, any>);
+        }
+      }
+
+      // Merge customers into tasks
+      const tasksWithCustomers = (tasksData || []).map(task => ({
+        ...task,
+        customers: task.contact_id ? customersMap[task.contact_id] || null : null
+      }));
+
       // Apply custom sorting
-      const sortedTasks = sortTasks(tasksData || []);
+      const sortedTasks = sortTasks(tasksWithCustomers);
       setTodayTasks(sortedTasks);
       setTodayTasksCount(sortedTasks.length);
     } catch (error) {
