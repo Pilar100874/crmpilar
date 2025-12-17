@@ -834,13 +834,13 @@ export default function Atendimento() {
       const estabId = await getEstabelecimentoId();
       if (!estabId) return;
 
-      // Get usuario_id from usuarios table using auth user id
+      // Get usuario with segmento_id from usuarios table using auth user id
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data: usuarioData } = await supabase
         .from('usuarios')
-        .select('id')
+        .select('id, segmento_id')
         .eq('auth_user_id', user.id)
         .eq('estabelecimento_id', estabId)
         .maybeSingle();
@@ -848,6 +848,7 @@ export default function Atendimento() {
       if (!usuarioData) return;
 
       const currentUsuarioId = usuarioData.id;
+      const userSegmentoId = usuarioData.segmento_id;
 
       // Load all vinculos for this establishment
       const { data: vinculosData } = await supabase
@@ -860,14 +861,15 @@ export default function Atendimento() {
         const userSegments = new Set<string>();
         const customerSegments: Record<string, string[]> = {};
 
+        // Add user's own segment if exists
+        if (userSegmentoId) {
+          userSegments.add(userSegmentoId);
+        }
+
         vinculosData.forEach(v => {
           // Check if customer is linked to current user
           if (v.usuario_id === currentUsuarioId) {
             linkedToUser.add(v.customer_id);
-          }
-          // Collect user's segments
-          if (v.usuario_id === currentUsuarioId && v.segmento_id) {
-            userSegments.add(v.segmento_id);
           }
           // Collect all segments per customer
           if (v.segmento_id) {
