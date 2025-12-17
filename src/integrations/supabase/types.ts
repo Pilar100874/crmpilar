@@ -905,6 +905,7 @@ export type Database = {
           contact_id: string | null
           contact_name: string
           created_at: string
+          data_original: string | null
           date: string
           description: string | null
           estabelecimento_id: string
@@ -923,6 +924,7 @@ export type Database = {
           contact_id?: string | null
           contact_name: string
           created_at?: string
+          data_original?: string | null
           date: string
           description?: string | null
           estabelecimento_id: string
@@ -941,6 +943,7 @@ export type Database = {
           contact_id?: string | null
           contact_name?: string
           created_at?: string
+          data_original?: string | null
           date?: string
           description?: string | null
           estabelecimento_id?: string
