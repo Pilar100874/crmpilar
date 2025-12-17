@@ -361,6 +361,13 @@ export async function runMacro(macro: Macro): Promise<void> {
   isExecutionCancelled = false;
   
   const enabledSteps = macro.steps.filter(s => s.enabled !== false);
+  await runMacroSteps(enabledSteps);
+}
+
+export async function runMacroSteps(steps: MacroStep[]): Promise<void> {
+  isExecutionCancelled = false;
+  
+  const enabledSteps = steps.filter(s => s.enabled !== false);
   const totalSteps = enabledSteps.length;
   
   for (let i = 0; i < totalSteps; i++) {
