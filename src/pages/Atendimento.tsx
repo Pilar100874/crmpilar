@@ -3970,20 +3970,84 @@ ${recentMessages}
                                {task.origem}
                              </Badge>
                            )}
-                            {task.diasAtraso > 0 && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
-                                      {task.diasAtraso}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>{task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
+                            {/* Stacked indicators in top-right corner */}
+                            <div className="absolute top-2 right-2 flex flex-col gap-1 items-center">
+                              {task.diasAtraso > 0 && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm cursor-default">
+                                        {task.diasAtraso}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                              {(() => {
+                                const customerEmail = task.customers?.email?.toLowerCase();
+                                const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
+                                if (unreadEmailCount > 0) {
+                                  const firstUnreadEmail = userEmails.find(e => !e.read && e.from_email?.toLowerCase() === customerEmail);
+                                  return (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setActiveTab('email');
+                                              if (firstUnreadEmail) setSelectedEmailId(firstUnreadEmail.id);
+                                            }}
+                                            className="bg-blue-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:bg-blue-600 transition-colors"
+                                          >
+                                            {unreadEmailCount}
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>{unreadEmailCount} email{unreadEmailCount > 1 ? 's' : ''} não lido{unreadEmailCount > 1 ? 's' : ''}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  );
+                                }
+                                return null;
+                              })()}
+                              {(() => {
+                                const customerPhone = normalizePhone(task.customers?.telefone);
+                                const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
+                                if (unreadChatsCount > 0) {
+                                  const firstUnreadChat = conversations.find(c => 
+                                    (c.chat_status === 'em_fila' || c.chat_status === 'novo') && 
+                                    normalizePhone(c.customer?.telefone) === customerPhone
+                                  );
+                                  return (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setActiveTab('chat');
+                                              if (firstUnreadChat) setSelectedConversation(firstUnreadChat.id);
+                                            }}
+                                            className="bg-purple-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:bg-purple-600 transition-colors"
+                                          >
+                                            {unreadChatsCount}
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>{unreadChatsCount} chat{unreadChatsCount > 1 ? 's' : ''} pendente{unreadChatsCount > 1 ? 's' : ''}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
                            {(() => {
                               // Check for open budgets: by cliente_id, by empresa_id directly, OR by empresa_id through customer_empresas
                               const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
@@ -4022,76 +4086,6 @@ ${recentMessages}
                                    )}
                                  </button>
                                );
-                              }
-                              return null;
-                            })()}
-                            {(() => {
-                              // Check for unread emails by customer email
-                              const customerEmail = task.customers?.email?.toLowerCase();
-                              const unreadCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
-                              
-                              if (unreadCount > 0) {
-                                return (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setActiveTab('email');
-                                          }}
-                                          className="relative text-[10px] text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-full flex items-center font-medium transition-colors"
-                                        >
-                                          <Mail className="w-3 h-3 mr-1" />
-                                          Email
-                                          {unreadCount > 1 && (
-                                            <span className="ml-1 bg-blue-500 text-white text-[8px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
-                                              {unreadCount}
-                                            </span>
-                                          )}
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>{unreadCount} email{unreadCount > 1 ? 's' : ''} não lido{unreadCount > 1 ? 's' : ''}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                );
-                              }
-                              return null;
-                            })()}
-                            {(() => {
-                              // Check for unread chats by customer phone
-                              const customerPhone = normalizePhone(task.customers?.telefone);
-                              const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
-                              
-                              if (unreadChatsCount > 0) {
-                                return (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setActiveTab('chat');
-                                          }}
-                                          className="relative text-[10px] text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-full flex items-center font-medium transition-colors"
-                                        >
-                                          <MessageSquare className="w-3 h-3 mr-1" />
-                                          Chat
-                                          {unreadChatsCount > 1 && (
-                                            <span className="ml-1 bg-purple-500 text-white text-[8px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
-                                              {unreadChatsCount}
-                                            </span>
-                                          )}
-                                        </button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>{unreadChatsCount} chat{unreadChatsCount > 1 ? 's' : ''} pendente{unreadChatsCount > 1 ? 's' : ''}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                );
                               }
                               return null;
                             })()}
@@ -5434,20 +5428,77 @@ function MobileListContent({
                       {task.time}
                     </Badge>
                   )}
-                  {task.diasAtraso > 0 && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="absolute top-2 right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm">
-                            {task.diasAtraso}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
+                  {/* Stacked indicators in top-right corner */}
+                  <div className="absolute top-2 right-2 flex flex-col gap-1 items-center">
+                    {task.diasAtraso > 0 && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm cursor-default">
+                              {task.diasAtraso}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                    {(() => {
+                      const customerEmail = task.customers?.email?.toLowerCase();
+                      const unreadEmailCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
+                      if (unreadEmailCount > 0) {
+                        return (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveTab('email');
+                                  }}
+                                  className="bg-blue-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:bg-blue-600 transition-colors"
+                                >
+                                  {unreadEmailCount}
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{unreadEmailCount} email{unreadEmailCount > 1 ? 's' : ''} não lido{unreadEmailCount > 1 ? 's' : ''}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      }
+                      return null;
+                    })()}
+                    {(() => {
+                      const customerPhone = normalizePhone(task.customers?.telefone);
+                      const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
+                      if (unreadChatsCount > 0) {
+                        return (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveTab('chat');
+                                  }}
+                                  className="bg-purple-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:bg-purple-600 transition-colors"
+                                >
+                                  {unreadChatsCount}
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{unreadChatsCount} chat{unreadChatsCount > 1 ? 's' : ''} pendente{unreadChatsCount > 1 ? 's' : ''}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
                   {(() => {
                     // Check for open budgets: by cliente_id, by empresa_id directly, OR by empresa_id through customer_empresas
                     const customerBudgetCount = task.contact_id ? (orcamentosAbertosPerCustomer[task.contact_id] || 0) : 0;
@@ -5483,76 +5534,6 @@ function MobileListContent({
                             </span>
                           )}
                         </button>
-                      );
-                    }
-                    return null;
-                  })()}
-                  {(() => {
-                    // Check for unread emails by customer email
-                    const customerEmail = task.customers?.email?.toLowerCase();
-                    const unreadCount = customerEmail ? (emailsNaoLidosPerEmail[customerEmail] || 0) : 0;
-                    
-                    if (unreadCount > 0) {
-                      return (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveTab('email');
-                                }}
-                                className="relative text-[10px] text-blue-600 bg-blue-50 hover:bg-blue-100 px-1.5 py-0.5 rounded-full flex items-center font-medium transition-colors"
-                              >
-                                <Mail className="w-2.5 h-2.5 mr-0.5" />
-                                Email
-                                {unreadCount > 1 && (
-                                  <span className="ml-0.5 bg-blue-500 text-white text-[8px] px-1 py-0.5 rounded-full min-w-[14px] text-center">
-                                    {unreadCount}
-                                  </span>
-                                )}
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{unreadCount} email{unreadCount > 1 ? 's' : ''} não lido{unreadCount > 1 ? 's' : ''}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      );
-                    }
-                    return null;
-                  })()}
-                  {(() => {
-                    // Check for unread chats by customer phone
-                    const customerPhone = normalizePhone(task.customers?.telefone);
-                    const unreadChatsCount = customerPhone ? (chatsNaoLidosPerPhone[customerPhone] || 0) : 0;
-                    
-                    if (unreadChatsCount > 0) {
-                      return (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setActiveTab('chat');
-                                }}
-                                className="relative text-[10px] text-purple-600 bg-purple-50 hover:bg-purple-100 px-1.5 py-0.5 rounded-full flex items-center font-medium transition-colors"
-                              >
-                                <MessageSquare className="w-2.5 h-2.5 mr-0.5" />
-                                Chat
-                                {unreadChatsCount > 1 && (
-                                  <span className="ml-0.5 bg-purple-500 text-white text-[8px] px-1 py-0.5 rounded-full min-w-[14px] text-center">
-                                    {unreadChatsCount}
-                                  </span>
-                                )}
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{unreadChatsCount} chat{unreadChatsCount > 1 ? 's' : ''} pendente{unreadChatsCount > 1 ? 's' : ''}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
                       );
                     }
                     return null;
