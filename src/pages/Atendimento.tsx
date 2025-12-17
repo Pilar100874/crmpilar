@@ -2528,6 +2528,19 @@ ${recentMessages}
     setTodayTasksCount(filteredTasks.length);
   }, [filteredTasks]);
 
+  // Count open budgets per customer for agenda display
+  const orcamentosAbertosPerCustomer = useMemo(() => {
+    const countMap: Record<string, number> = {};
+    orcamentos
+      .filter(o => o.status !== 'cancelado' && o.status !== 'ganho')
+      .forEach(o => {
+        if (o.cliente_id) {
+          countMap[o.cliente_id] = (countMap[o.cliente_id] || 0) + 1;
+        }
+      });
+    return countMap;
+  }, [orcamentos]);
+
   // Ferramentas dinâmicas baseadas na aba ativa - MUST be before any conditional returns
   const currentTabType = activeTab as TabType;
   const dynamicRadialTools = useMemo(() => {
@@ -3137,6 +3150,9 @@ ${recentMessages}
                 setEmailFolder={setEmailFolder}
                 setShowComposeEmail={setShowComposeEmail}
                 customerVinculos={customerVinculos}
+                orcamentosAbertosPerCustomer={orcamentosAbertosPerCustomer}
+                orcamentos={orcamentos}
+                setActiveTab={setActiveTab}
               />
             </div>
 
@@ -3891,13 +3907,6 @@ ${recentMessages}
                       )}
                       
                       <div className={`flex items-start gap-3 p-3 ${(isLinkedToUser || isSameSegment) ? 'pl-7' : 'pl-4'}`}>
-                       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                         task.status === 'concluida' 
-                           ? 'bg-green-100 text-green-600' 
-                           : 'bg-orange-100 text-orange-500'
-                       }`}>
-                         <CheckCircle2 className="w-4 h-4" />
-                       </div>
                        <div className="flex-1 min-w-0">
                          <p className="font-semibold text-sm truncate">{task.title}</p>
                          <p className="text-xs text-muted-foreground truncate">{task.contact_name}</p>
@@ -3917,6 +3926,34 @@ ${recentMessages}
                              <span className="text-[10px] text-red-600 bg-red-50 px-2 py-0.5 rounded-full flex items-center font-medium">
                                {task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado
                              </span>
+                           )}
+                           {task.contact_id && orcamentosAbertosPerCustomer[task.contact_id] > 0 && (
+                             <button
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 // Find first open budget for this customer
+                                 const firstOrcamento = orcamentos.find(o => 
+                                   o.cliente_id === task.contact_id && 
+                                   o.status !== 'cancelado' && 
+                                   o.status !== 'ganho'
+                                 );
+                                 if (firstOrcamento) {
+                                   setActiveTab('orcamento');
+                                   setSelectedOrcamentoId(firstOrcamento.id);
+                                   setOrcamentoSheetOpen(true);
+                                 }
+                               }}
+                               className="relative text-[10px] text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full flex items-center font-medium transition-colors"
+                               title="Ver orçamentos em aberto"
+                             >
+                               <FileText className="w-3 h-3 mr-1" />
+                               Orçamento
+                               {orcamentosAbertosPerCustomer[task.contact_id] > 1 && (
+                                 <span className="ml-1 bg-emerald-500 text-white text-[8px] px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
+                                   {orcamentosAbertosPerCustomer[task.contact_id]}
+                                 </span>
+                               )}
+                             </button>
                            )}
                          </div>
                        </div>
@@ -5010,6 +5047,9 @@ interface MobileListContentProps {
     userSegments: Set<string>;
     customerSegments: Record<string, string[]>;
   };
+  orcamentosAbertosPerCustomer: Record<string, number>;
+  orcamentos: any[];
+  setActiveTab: (tab: string) => void;
 }
 
 function MobileListContent({
@@ -5047,6 +5087,9 @@ function MobileListContent({
   setEmailFolder,
   setShowComposeEmail,
   customerVinculos,
+  orcamentosAbertosPerCustomer,
+  orcamentos,
+  setActiveTab,
 }: MobileListContentProps) {
   return (
     <div className="h-full flex flex-col bg-white/80">
@@ -5235,11 +5278,6 @@ function MobileListContent({
             )}
             
             <div className={`flex items-start gap-3 p-3 ${(isLinkedToUser || isSameSegment) ? 'pl-7' : 'pl-4'}`}>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                selectedTaskId === task.id ? "bg-orange-500 text-white" : "bg-gradient-to-br from-orange-100 to-orange-200 text-orange-600"
-              }`}>
-                <CalendarIcon className="w-5 h-5" />
-              </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate">{task.contact_name}</p>
                 <p className="text-xs text-muted-foreground truncate">{task.title}</p>
@@ -5254,6 +5292,32 @@ function MobileListContent({
                     <Badge className="text-[10px] px-1.5 py-0 bg-red-100 text-red-700 border-0">
                       {task.diasAtraso} {task.diasAtraso === 1 ? 'dia' : 'dias'} atrasado
                     </Badge>
+                  )}
+                  {task.contact_id && orcamentosAbertosPerCustomer[task.contact_id] > 0 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const firstOrcamento = orcamentos.find(o => 
+                          o.cliente_id === task.contact_id && 
+                          o.status !== 'cancelado' && 
+                          o.status !== 'ganho'
+                        );
+                        if (firstOrcamento) {
+                          setActiveTab('orcamento');
+                          setSelectedOrcamentoId(firstOrcamento.id);
+                          setOrcamentoSheetOpen(true);
+                        }
+                      }}
+                      className="relative text-[10px] text-emerald-600 bg-emerald-50 hover:bg-emerald-100 px-1.5 py-0.5 rounded-full flex items-center font-medium transition-colors"
+                    >
+                      <FileText className="w-2.5 h-2.5 mr-0.5" />
+                      Orç.
+                      {orcamentosAbertosPerCustomer[task.contact_id] > 1 && (
+                        <span className="ml-0.5 bg-emerald-500 text-white text-[8px] px-1 py-0.5 rounded-full min-w-[14px] text-center">
+                          {orcamentosAbertosPerCustomer[task.contact_id]}
+                        </span>
+                      )}
+                    </button>
                   )}
                 </div>
               </div>
