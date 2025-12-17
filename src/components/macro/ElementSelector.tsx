@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Type, MousePointerClick } from 'lucide-react';
+import { Type, MousePointerClick, ListFilter } from 'lucide-react';
 
 interface ElementSelectorProps {
   isActive: boolean;
-  onSelect: (selector: string, elementInfo: ElementInfo, element: HTMLElement, action: 'click' | 'type', typedValue?: string) => void;
+  onSelect: (selector: string, elementInfo: ElementInfo, element: HTMLElement, action: 'click' | 'type' | 'selectDropdown', typedValue?: string) => void;
   onCancel: () => void;
 }
 
@@ -97,13 +97,14 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
   const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null);
   const [isTypingMode, setIsTypingMode] = useState(false);
+  const [isDropdownMode, setIsDropdownMode] = useState(false);
   const [typingData, setTypingData] = useState<{
     element: HTMLElement;
     selector: string;
     info: ElementInfo;
   } | null>(null);
 
-  const executeAction = useCallback((action: 'click' | 'type') => {
+  const executeAction = useCallback((action: 'click' | 'type' | 'selectDropdown') => {
     if (!selectedElement) return;
     
     const element = selectedElement;
@@ -122,9 +123,16 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       setSelectedElement(null);
       setHoveredElement(null);
       onSelect(selector, elementInfo, element, 'click');
+    } else if (action === 'selectDropdown') {
+      // Para dropdown, entra em modo de digitação marcando como dropdown
+      setTypingData({ element, selector, info: elementInfo });
+      setIsTypingMode(true);
+      setIsDropdownMode(true);
+      setSelectedElement(null);
     } else {
       setTypingData({ element, selector, info: elementInfo });
       setIsTypingMode(true);
+      setIsDropdownMode(false);
       setSelectedElement(null);
     }
   }, [selectedElement, onSelect]);
@@ -141,16 +149,20 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
       typedValue = element.textContent || '';
     }
     
+    const wasDropdownMode = isDropdownMode;
+    
     setTypingData(null);
     setIsTypingMode(false);
+    setIsDropdownMode(false);
     setHoveredElement(null);
     
-    onSelect(selector, info, element, 'type', typedValue);
-  }, [typingData, onSelect]);
+    onSelect(selector, info, element, wasDropdownMode ? 'selectDropdown' : 'type', typedValue);
+  }, [typingData, isDropdownMode, onSelect]);
 
   const cancelTyping = useCallback(() => {
     setTypingData(null);
     setIsTypingMode(false);
+    setIsDropdownMode(false);
     setSelectedElement(null);
     setHoveredElement(null);
   }, []);
@@ -208,7 +220,7 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         return;
       }
 
-      // Se tem elemento selecionado, C = clicar, D = digitar
+      // Se tem elemento selecionado, C = clicar, D = digitar, S = selecionar dropdown
       if (selectedElement && !isTypingMode) {
         if (e.key.toLowerCase() === 'c') {
           e.preventDefault();
@@ -216,6 +228,9 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         } else if (e.key.toLowerCase() === 'd') {
           e.preventDefault();
           executeAction('type');
+        } else if (e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          executeAction('selectDropdown');
         }
         return;
       }
@@ -320,26 +335,41 @@ export function ElementSelector({ isActive, onSelect, onCancel }: ElementSelecto
         {!isTypingMode && selectedElement && (
           <div className="bg-orange-500 text-white px-4 py-3 rounded-lg shadow-lg text-center">
             <p className="font-medium mb-2">Elemento selecionado!</p>
-            <div className="flex justify-center gap-4 text-sm">
+            <div className="flex flex-wrap justify-center gap-3 text-sm">
               <div className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded">
                 <MousePointerClick className="h-4 w-4" />
-                <span>Pressione <kbd className="font-bold bg-white/30 px-1 rounded">C</kbd> para Clicar</span>
+                <span><kbd className="font-bold bg-white/30 px-1 rounded">C</kbd> Clicar</span>
               </div>
               <div className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded">
                 <Type className="h-4 w-4" />
-                <span>Pressione <kbd className="font-bold bg-white/30 px-1 rounded">D</kbd> para Digitar</span>
+                <span><kbd className="font-bold bg-white/30 px-1 rounded">D</kbd> Digitar</span>
+              </div>
+              <div className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded">
+                <ListFilter className="h-4 w-4" />
+                <span><kbd className="font-bold bg-white/30 px-1 rounded">S</kbd> Selecionar Dropdown</span>
               </div>
             </div>
             <p className="text-xs opacity-80 mt-2">ESC para cancelar seleção</p>
           </div>
         )}
 
-        {isTypingMode && (
+        {isTypingMode && !isDropdownMode && (
           <div className="bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg text-center">
             <p className="font-medium mb-1">Modo Digitação Ativo</p>
             <p className="text-sm">Digite no campo destacado em verde</p>
             <p className="text-xs opacity-80 mt-2">
               <kbd className="font-bold bg-white/30 px-1 rounded">Ctrl+Enter</kbd> para confirmar • 
+              <kbd className="font-bold bg-white/30 px-1 rounded ml-1">ESC</kbd> para cancelar
+            </p>
+          </div>
+        )}
+
+        {isTypingMode && isDropdownMode && (
+          <div className="bg-purple-600 text-white px-4 py-3 rounded-lg shadow-lg text-center">
+            <p className="font-medium mb-1">Modo Seleção de Dropdown</p>
+            <p className="text-sm">Digite para buscar e selecione o item desejado</p>
+            <p className="text-xs opacity-80 mt-2">
+              <kbd className="font-bold bg-white/30 px-1 rounded">Ctrl+Enter</kbd> para confirmar seleção • 
               <kbd className="font-bold bg-white/30 px-1 rounded ml-1">ESC</kbd> para cancelar
             </p>
           </div>

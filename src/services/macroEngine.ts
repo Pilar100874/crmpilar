@@ -95,11 +95,24 @@ async function executeTypeText(step: MacroStep): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 100));
 }
 
-// Clicar em um elemento
-async function executeClick(step: MacroStep): Promise<void> {
-  const target = step.target || step.value;
-  if (!target) throw new Error('Seletor do elemento não definido');
+// Função auxiliar para aguardar elemento aparecer
+async function waitForElement(
+  findFn: () => HTMLElement | null,
+  timeout: number = 5000
+): Promise<HTMLElement | null> {
+  const startTime = Date.now();
   
+  while (Date.now() - startTime < timeout) {
+    const element = findFn();
+    if (element) return element;
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  return null;
+}
+
+// Função para encontrar elemento por diversos métodos
+function findElement(target: string): HTMLElement | null {
   let element: HTMLElement | null = null;
   
   // Primeiro verifica se é um seletor :contains() (não é CSS válido)
@@ -136,15 +149,46 @@ async function executeClick(step: MacroStep): Promise<void> {
     }
   }
   
-  // Tenta por texto em qualquer elemento clicável
+  // Tenta por texto em qualquer elemento clicável (incluindo itens de dropdown)
   if (!element) {
-    const clickables = document.querySelectorAll('button, a, [role="button"], [onclick]');
+    const clickables = document.querySelectorAll('button, a, [role="button"], [role="option"], [role="menuitem"], [data-value], li, [onclick], div[class*="option"], div[class*="item"]');
     for (const el of clickables) {
-      if (el.textContent?.trim().includes(target)) {
+      const text = el.textContent?.trim();
+      if (text && text === target) {
         element = el as HTMLElement;
         break;
       }
     }
+  }
+  
+  // Tenta por texto parcial em elementos clicáveis
+  if (!element) {
+    const clickables = document.querySelectorAll('button, a, [role="button"], [role="option"], [role="menuitem"], [data-value], li, [onclick], div[class*="option"], div[class*="item"]');
+    for (const el of clickables) {
+      const text = el.textContent?.trim();
+      if (text && text.includes(target)) {
+        element = el as HTMLElement;
+        break;
+      }
+    }
+  }
+  
+  return element;
+}
+
+// Clicar em um elemento
+async function executeClick(step: MacroStep): Promise<void> {
+  const target = step.target || step.value;
+  if (!target) throw new Error('Seletor do elemento não definido');
+  
+  let element: HTMLElement | null = null;
+  
+  // Se deve aguardar elemento aparecer
+  if (step.waitForElement) {
+    const timeout = step.waitTimeout || 5000;
+    element = await waitForElement(() => findElement(target), timeout);
+  } else {
+    element = findElement(target);
   }
   
   if (!element) throw new Error(`Elemento não encontrado: ${target}`);
@@ -153,6 +197,82 @@ async function executeClick(step: MacroStep): Promise<void> {
   element.focus();
   element.click();
   
+  await new Promise(resolve => setTimeout(resolve, 300));
+}
+
+// Selecionar item de dropdown (digita e aguarda resultado)
+async function executeSelectDropdownItem(step: MacroStep): Promise<void> {
+  if (!step.target) throw new Error('Seletor do campo de busca não definido');
+  if (!step.value) throw new Error('Valor para selecionar não definido');
+  
+  // Primeiro, encontra o campo de busca
+  let searchField: HTMLElement | null = null;
+  
+  try {
+    const escapedTarget = CSS.escape(step.target);
+    searchField = document.querySelector(`[data-macro-id="${escapedTarget}"]`);
+  } catch {
+    // Seletor inválido
+  }
+  
+  if (!searchField) {
+    try {
+      searchField = document.querySelector(step.target);
+    } catch {
+      // Seletor inválido
+    }
+  }
+  
+  if (!searchField) {
+    const inputs = document.querySelectorAll('input, textarea');
+    for (const input of inputs) {
+      if ((input as HTMLInputElement).placeholder?.toLowerCase().includes(step.target.toLowerCase())) {
+        searchField = input as HTMLElement;
+        break;
+      }
+    }
+  }
+  
+  if (!searchField) throw new Error(`Campo de busca não encontrado: ${step.target}`);
+  
+  // Foca e digita no campo
+  searchField.focus();
+  const inputEl = searchField as HTMLInputElement;
+  
+  const nativeSetter = Object.getOwnPropertyDescriptor(
+    window.HTMLInputElement.prototype,
+    'value'
+  )?.set;
+  
+  if (nativeSetter) {
+    nativeSetter.call(inputEl, step.value);
+  } else {
+    inputEl.value = step.value;
+  }
+  
+  inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+  inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+  
+  // Aguarda dropdown aparecer e clica no item
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const dropdownItem = await waitForElement(() => {
+    // Procura por items de dropdown que contenham o texto
+    const items = document.querySelectorAll('[role="option"], [role="menuitem"], [data-value], li[class*="option"], div[class*="option"], div[class*="item"], [class*="dropdown"] li, [class*="listbox"] li, [class*="menu"] li, [class*="combobox"] li');
+    
+    for (const item of items) {
+      const text = item.textContent?.trim();
+      if (text && text.toLowerCase().includes(step.value!.toLowerCase())) {
+        return item as HTMLElement;
+      }
+    }
+    
+    return null;
+  }, step.waitTimeout || 5000);
+  
+  if (!dropdownItem) throw new Error(`Item do dropdown não encontrado: ${step.value}`);
+  
+  dropdownItem.click();
   await new Promise(resolve => setTimeout(resolve, 300));
 }
 
@@ -166,6 +286,9 @@ async function executeStep(step: MacroStep): Promise<void> {
       break;
     case 'click':
       await executeClick(step);
+      break;
+    case 'selectDropdownItem':
+      await executeSelectDropdownItem(step);
       break;
     default:
       throw new Error(`Tipo de step desconhecido: ${step.type}`);
@@ -228,6 +351,8 @@ export function getStepLabel(step: MacroStep): string {
       return `Digitar "${step.value}" em ${step.target}`;
     case 'click':
       return `Clicar em: ${step.target || step.value}`;
+    case 'selectDropdownItem':
+      return `Selecionar "${step.value}" no dropdown ${step.target}`;
     default:
       return `Step: ${step.type}`;
   }

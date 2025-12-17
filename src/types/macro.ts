@@ -1,6 +1,6 @@
 // Tipos para o sistema de Macros - Versão Simplificada
 
-export type MacroStepType = 'navigate' | 'typeText' | 'click';
+export type MacroStepType = 'navigate' | 'typeText' | 'click' | 'selectDropdownItem';
 
 export interface MacroStep {
   id: string;
@@ -9,6 +9,8 @@ export interface MacroStep {
   target?: string; // seletor do elemento para typeText
   label?: string;
   enabled?: boolean;
+  waitForElement?: boolean; // aguarda elemento aparecer antes de clicar
+  waitTimeout?: number; // timeout em ms para aguardar elemento (default: 5000)
 }
 
 export interface Macro {
