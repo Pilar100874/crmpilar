@@ -3210,6 +3210,9 @@ ${recentMessages}
                 setActiveTab={setActiveTab}
                 emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
                 chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
+                setShowFluxoAtendimento={setShowFluxoAtendimento}
+                setShowEnvioMassa={setShowEnvioMassa}
+                setShowConfigDatas={setShowConfigDatas}
               />
             </div>
 
@@ -5202,6 +5205,29 @@ ${recentMessages}
       </div>
       )}
     </RadialMenu>
+    
+    {/* Global Dialogs - render regardless of mobile/desktop */}
+    <FluxoAtendimentoDialog
+      open={showFluxoAtendimento}
+      onOpenChange={setShowFluxoAtendimento}
+      tasks={filteredTasks}
+      estabelecimentoId={estabelecimentoId}
+      usuarioId={usuarioId}
+      onTaskCompleted={loadTodayTasks}
+    />
+    <ConfigDatasProximoContatoDialog
+      open={showConfigDatas}
+      onOpenChange={setShowConfigDatas}
+      estabelecimentoId={estabelecimentoId}
+    />
+    <EnvioMassaDialog
+      open={showEnvioMassa}
+      onOpenChange={setShowEnvioMassa}
+      tasks={filteredTasks}
+      estabelecimentoId={estabelecimentoId}
+      usuarioId={usuarioId}
+      onComplete={loadTodayTasks}
+    />
     </>
   );
 }
@@ -5253,6 +5279,9 @@ interface MobileListContentProps {
   setActiveTab: (tab: string) => void;
   emailsNaoLidosPerEmail: Record<string, number>;
   chatsNaoLidosPerPhone: Record<string, number>;
+  setShowFluxoAtendimento: (show: boolean) => void;
+  setShowEnvioMassa: (show: boolean) => void;
+  setShowConfigDatas: (show: boolean) => void;
 }
 
 function MobileListContent({
@@ -5296,6 +5325,9 @@ function MobileListContent({
   setActiveTab,
   emailsNaoLidosPerEmail,
   chatsNaoLidosPerPhone,
+  setShowFluxoAtendimento,
+  setShowEnvioMassa,
+  setShowConfigDatas,
 }: MobileListContentProps) {
   return (
     <div className="h-full flex flex-col bg-white/80">
@@ -5356,8 +5388,37 @@ function MobileListContent({
             <Button variant="secondary" size="sm" onClick={handleToday} className="h-10 w-10 p-0 rounded-xl">
               <CalendarDays className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="sm" onClick={showPredictiveDialer} className="h-10 w-10 p-0 rounded-xl">
+            <Button variant="outline" size="sm" onClick={() => showPredictiveDialer()} className="h-10 w-10 p-0 rounded-xl">
               <PhoneCall className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowFluxoAtendimento(true)}
+              disabled={filteredTasks.length === 0}
+              className="h-10 w-10 p-0 rounded-xl"
+              title="Fluxo de Atendimento"
+            >
+              <Play className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowEnvioMassa(true)}
+              disabled={filteredTasks.length === 0}
+              className="h-10 w-10 p-0 rounded-xl"
+              title="Envio em Massa"
+            >
+              <Users className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowConfigDatas(true)}
+              className="h-10 w-10 p-0 rounded-xl"
+              title="Configurar Datas Padrão"
+            >
+              <Settings2 className="w-4 h-4" />
             </Button>
             <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
           </div>
@@ -5979,9 +6040,10 @@ function MobileMainContent({
           <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-lg border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400">
             <Trash2 className="w-3.5 h-3.5" />
           </Button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   // Orçamento content
   if (activeTab === "orcamento" && orcamentoSheetOpen && estabelecimentoId) {
@@ -6012,4 +6074,3 @@ function MobileMainContent({
     </div>
   );
 }
-
