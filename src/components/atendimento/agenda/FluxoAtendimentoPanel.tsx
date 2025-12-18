@@ -538,6 +538,25 @@ export function FluxoAtendimentoPanel({
             contactName={currentTask.contact_name}
             estabelecimentoId={estabelecimentoId}
             isFullView={true}
+            onEventClick={(event) => {
+              // Navegar para o item correspondente
+              if (event.type === 'tarefa' || event.type === 'atendimento') {
+                // Encontrar a tarefa na lista e navegar para ela
+                const taskIndex = tasks.findIndex(t => t.id === event.originalId);
+                if (taskIndex !== -1) {
+                  setCurrentIndex(taskIndex);
+                  toast.success(`Navegando para: ${tasks[taskIndex].title}`);
+                } else {
+                  toast.info("Esta tarefa não está na lista atual");
+                }
+              } else if (event.type === 'orcamento') {
+                window.open(`/orcamentos?id=${event.originalId}`, '_blank');
+              } else if (event.type === 'chat') {
+                window.open(`/chat?conversation=${event.originalId}`, '_blank');
+              } else if (event.type === 'email') {
+                window.open(`/email?id=${event.originalId}`, '_blank');
+              }
+            }}
           />
         </TabsContent>
       </Tabs>

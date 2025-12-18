@@ -25,6 +25,7 @@ interface TimelineEvent {
   metadata?: Record<string, any>;
   icon?: any;
   color?: string;
+  originalId?: string;
 }
 
 interface CustomerHistoryTimelineProps {
@@ -32,6 +33,7 @@ interface CustomerHistoryTimelineProps {
   contactName?: string;
   estabelecimentoId: string;
   isFullView?: boolean;
+  onEventClick?: (event: TimelineEvent) => void;
 }
 
 const TYPE_CONFIG = {
@@ -63,7 +65,8 @@ export function CustomerHistoryTimeline({
   contactId,
   contactName,
   estabelecimentoId,
-  isFullView = false
+  isFullView = false,
+  onEventClick
 }: CustomerHistoryTimelineProps) {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +115,8 @@ export function CustomerHistoryTimeline({
             description: conv.motivo_encerramento || undefined,
             date: new Date(conv.created_at || ''),
             status: conv.chat_status || 'aberto',
-            metadata: { canal: conv.canal }
+            metadata: { canal: conv.canal },
+            originalId: conv.id
           });
         });
       }
@@ -146,7 +150,8 @@ export function CustomerHistoryTimeline({
               date: new Date(reg.created_at || ''),
               status: flagInfo?.nome,
               color: flagInfo?.cor,
-              metadata: { tipo_contato: reg.tipo_contato, flag_cor: flagInfo?.cor, proximo_contato: reg.data_proximo_contato }
+              metadata: { tipo_contato: reg.tipo_contato, flag_cor: flagInfo?.cor, proximo_contato: reg.data_proximo_contato, tarefa_id: reg.tarefa_id },
+              originalId: reg.tarefa_id
             });
           });
 
@@ -157,7 +162,8 @@ export function CustomerHistoryTimeline({
               title: tarefa.title,
               description: tarefa.description || `Origem: ${tarefa.origem}`,
               date: new Date(tarefa.date),
-              status: tarefa.status
+              status: tarefa.status,
+              originalId: tarefa.id
             });
           });
         }
@@ -212,7 +218,8 @@ export function CustomerHistoryTimeline({
             date: new Date(orc.created_at || ''),
             status: 'criado',
             icon: FileText,
-            color: '#a855f7'
+            color: '#a855f7',
+            originalId: orc.id
           });
 
           if (orc.data_envio) {
@@ -224,7 +231,8 @@ export function CustomerHistoryTimeline({
               date: new Date(orc.data_envio),
               status: 'enviado',
               icon: Send,
-              color: '#3b82f6'
+              color: '#3b82f6',
+              originalId: orc.id
             });
           }
 
@@ -237,7 +245,8 @@ export function CustomerHistoryTimeline({
               date: new Date(orc.data_visualizacao),
               status: 'visualizado',
               icon: Eye,
-              color: '#06b6d4'
+              color: '#06b6d4',
+              originalId: orc.id
             });
           }
 
@@ -264,7 +273,8 @@ export function CustomerHistoryTimeline({
               date: new Date(orc.updated_at),
               status: orc.status,
               icon: config.icon,
-              color: config.color
+              color: config.color,
+              originalId: orc.id
             });
           }
         });
@@ -294,7 +304,8 @@ export function CustomerHistoryTimeline({
               description: email.from_email === customer.email ? 'Recebido' : 'Enviado',
               date: new Date(email.date),
               status: email.read ? 'lido' : 'não lido',
-              metadata: { folder: email.folder }
+              metadata: { folder: email.folder },
+              originalId: email.id
             });
           });
         }
@@ -400,8 +411,12 @@ export function CustomerHistoryTimeline({
                       )}>
                         {isLeft && (
                           <div 
-                            className="bg-card rounded-xl border p-4 shadow-sm hover:shadow-md transition-all text-right"
+                            className={cn(
+                              "bg-card rounded-xl border p-4 shadow-sm hover:shadow-md transition-all text-right",
+                              onEventClick && "cursor-pointer hover:scale-[1.02]"
+                            )}
                             style={{ borderColor: `${eventColor}30` }}
+                            onClick={() => onEventClick?.(event)}
                           >
                             <div className="flex items-center justify-end gap-2 mb-2">
                               <span className="text-xs font-semibold text-foreground">{event.title}</span>
@@ -458,8 +473,12 @@ export function CustomerHistoryTimeline({
                       )}>
                         {!isLeft && (
                           <div 
-                            className="bg-card rounded-xl border p-4 shadow-sm hover:shadow-md transition-all"
+                            className={cn(
+                              "bg-card rounded-xl border p-4 shadow-sm hover:shadow-md transition-all",
+                              onEventClick && "cursor-pointer hover:scale-[1.02]"
+                            )}
                             style={{ borderColor: `${eventColor}30` }}
+                            onClick={() => onEventClick?.(event)}
                           >
                             <div className="flex items-center gap-2 mb-2">
                               <Badge 
