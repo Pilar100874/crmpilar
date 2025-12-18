@@ -51,6 +51,7 @@ interface FluxoAtendimentoPanelProps {
   onCurrentTaskChange?: (task: Task | null) => void;
   showDetails?: boolean;
   onToggleDetails?: () => void;
+  initialTaskIndex?: number;
 }
 
 const TIPOS_CONTATO = [
@@ -68,9 +69,10 @@ export function FluxoAtendimentoPanel({
   onClose,
   onCurrentTaskChange,
   showDetails,
-  onToggleDetails
+  onToggleDetails,
+  initialTaskIndex = 0
 }: FluxoAtendimentoPanelProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(initialTaskIndex);
   const [flags, setFlags] = useState<AtendimentoFlag[]>([]);
   const [configDatas, setConfigDatas] = useState<ConfigProximaData[]>([]);
   const [selectedFlag, setSelectedFlag] = useState<string | null>(null);
@@ -83,6 +85,11 @@ export function FluxoAtendimentoPanel({
   const currentTask = tasks[currentIndex];
   const isLastTask = currentIndex === tasks.length - 1;
   const progress = tasks.length > 0 ? ((currentIndex + 1) / tasks.length) * 100 : 0;
+
+  // Reset to initialTaskIndex when it changes
+  useEffect(() => {
+    setCurrentIndex(initialTaskIndex);
+  }, [initialTaskIndex]);
 
   useEffect(() => {
     if (estabelecimentoId) {
