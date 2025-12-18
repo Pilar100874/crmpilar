@@ -52,6 +52,7 @@ interface FluxoAtendimentoPanelProps {
   showDetails?: boolean;
   onToggleDetails?: () => void;
   initialTaskIndex?: number;
+  onNavigateToItem?: (type: 'chat' | 'orcamento' | 'email', id: string) => void;
 }
 
 const TIPOS_CONTATO = [
@@ -70,7 +71,8 @@ export function FluxoAtendimentoPanel({
   onCurrentTaskChange,
   showDetails,
   onToggleDetails,
-  initialTaskIndex = 0
+  initialTaskIndex = 0,
+  onNavigateToItem
 }: FluxoAtendimentoPanelProps) {
   const [currentIndex, setCurrentIndex] = useState(initialTaskIndex);
   const [flags, setFlags] = useState<AtendimentoFlag[]>([]);
@@ -549,12 +551,18 @@ export function FluxoAtendimentoPanel({
                 } else {
                   toast.info("Esta tarefa não está na lista atual");
                 }
-              } else if (event.type === 'orcamento') {
-                window.open(`/orcamentos?id=${event.originalId}`, '_blank');
-              } else if (event.type === 'chat') {
-                window.open(`/chat?conversation=${event.originalId}`, '_blank');
-              } else if (event.type === 'email') {
-                window.open(`/email?id=${event.originalId}`, '_blank');
+              } else if (event.type === 'orcamento' && event.originalId) {
+                if (onNavigateToItem) {
+                  onNavigateToItem('orcamento', event.originalId);
+                }
+              } else if (event.type === 'chat' && event.originalId) {
+                if (onNavigateToItem) {
+                  onNavigateToItem('chat', event.originalId);
+                }
+              } else if (event.type === 'email' && event.originalId) {
+                if (onNavigateToItem) {
+                  onNavigateToItem('email', event.originalId);
+                }
               }
             }}
           />
