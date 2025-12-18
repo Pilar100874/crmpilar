@@ -3147,6 +3147,25 @@ ${recentMessages}
                   }}
                   onCurrentTaskChange={setFluxoCurrentTask}
                   initialTaskIndex={fluxoInitialIndex}
+                  onNavigateToItem={(type, id) => {
+                    setAgendaViewMode('default');
+                    if (type === 'chat') {
+                      setActiveTab('chat');
+                      setSelectedConversation(id);
+                      setMobileView('main');
+                    } else if (type === 'orcamento') {
+                      setActiveTab('orcamento');
+                      setSelectedOrcamentoId(id);
+                      const orc = orcamentos.find(o => o.id === id);
+                      if (orc) setSelectedOrcamentoData(orc);
+                      setOrcamentoSheetOpen(true);
+                      setMobileView('main');
+                    } else if (type === 'email') {
+                      setActiveTab('email');
+                      setSelectedEmailId(id);
+                      setMobileView('main');
+                    }
+                  }}
                 />
               </div>
             )}
@@ -4913,6 +4932,22 @@ ${recentMessages}
             showDetails={showClientDetailsFluxo}
             onToggleDetails={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
             initialTaskIndex={fluxoInitialIndex}
+            onNavigateToItem={(type, id) => {
+              setAgendaViewMode('default');
+              if (type === 'chat') {
+                setActiveTab('chat');
+                setSelectedConversation(id);
+              } else if (type === 'orcamento') {
+                setActiveTab('orcamento');
+                setSelectedOrcamentoId(id);
+                const orc = orcamentos.find(o => o.id === id);
+                if (orc) setSelectedOrcamentoData(orc);
+                setOrcamentoSheetOpen(true);
+              } else if (type === 'email') {
+                setActiveTab('email');
+                setSelectedEmailId(id);
+              }
+            }}
           />
         ) : activeTab === "agenda" && agendaViewMode === 'massa' ? (
           /* Envio em Massa Panel */
