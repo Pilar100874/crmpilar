@@ -338,85 +338,172 @@ export function CustomerHistoryTimeline({
 
   if (!contactId && !contactName) return null;
 
+  // Agrupar eventos por mês/ano
+  const groupEventsByMonth = (events: TimelineEvent[]) => {
+    const groups: { [key: string]: TimelineEvent[] } = {};
+    events.forEach(event => {
+      const key = format(event.date, "MMMM yyyy", { locale: ptBR });
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(event);
+    });
+    return groups;
+  };
+
   const renderTimeline = () => (
     <>
       {loading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
       ) : filteredEvents.length === 0 ? (
-        <div className="text-center py-6 text-muted-foreground">
-          <Clock className="w-8 h-8 mx-auto mb-2 opacity-30" />
-          <p className="text-xs">Nenhum histórico encontrado</p>
+        <div className="text-center py-12 text-muted-foreground">
+          <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">Nenhum histórico encontrado</p>
         </div>
       ) : (
-        <ScrollArea className={isFullView ? "flex-1" : "h-[300px]"}>
-          <div className="relative pl-6 pr-2">
-            <div className="absolute left-[9px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/50 via-border to-border" />
+        <ScrollArea className={isFullView ? "flex-1" : "h-[400px]"}>
+          <div className="relative py-6">
+            {/* Linha central vertical */}
+            <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-border -translate-x-1/2" />
             
-            <div className="space-y-0">
-              {filteredEvents.map((event) => {
-                const config = TYPE_CONFIG[event.type];
-                const Icon = event.icon || config.icon;
-                const eventColor = event.color || config.color;
+            {/* Marcador START */}
+            <div className="relative flex justify-center mb-8">
+              <div className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg z-10">
+                Início
+              </div>
+            </div>
+            
+            {Object.entries(groupEventsByMonth(filteredEvents)).map(([monthYear, monthEvents], groupIndex) => (
+              <div key={monthYear} className="mb-8">
+                {/* Cabeçalho do mês - alternando lado */}
+                <div className={cn(
+                  "relative flex items-center mb-4",
+                  groupIndex % 2 === 0 ? "justify-start pl-[52%]" : "justify-end pr-[52%]"
+                )}>
+                  <div className="text-lg font-bold text-primary capitalize">
+                    {monthYear}
+                  </div>
+                </div>
                 
-                return (
-                  <div key={event.id} className="relative pb-4">
-                    <div 
-                      className="absolute -left-6 w-5 h-5 rounded-full flex items-center justify-center border-2 border-background shadow-sm z-10"
-                      style={{ backgroundColor: eventColor }}
-                    >
-                      <Icon className="w-2.5 h-2.5 text-white" />
-                    </div>
-                    
-                    <div className="absolute -left-1 top-2 w-3 h-0.5" style={{ backgroundColor: eventColor }} />
-                    
-                    <div 
-                      className="ml-4 rounded-lg border p-3 text-xs transition-all hover:shadow-md bg-card hover:bg-muted/30"
-                      style={{ borderLeftColor: eventColor, borderLeftWidth: '3px' }}
-                    >
-                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-1.5">
-                        <Calendar className="w-3 h-3" />
-                        <span className="font-medium">{format(event.date, "dd MMM yyyy", { locale: ptBR })}</span>
-                        <span>•</span>
-                        <span>{format(event.date, "HH:mm", { locale: ptBR })}</span>
-                      </div>
-                      
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-foreground">{event.title}</p>
-                          {event.description && (
-                            <p className="text-muted-foreground mt-0.5 line-clamp-2">{event.description}</p>
-                          )}
-                        </div>
-                        {event.status && (
-                          <Badge 
-                            variant="outline" 
-                            className="text-[9px] shrink-0 capitalize"
-                            style={{ borderColor: eventColor, color: eventColor }}
+                {monthEvents.map((event, eventIndex) => {
+                  const config = TYPE_CONFIG[event.type];
+                  const Icon = event.icon || config.icon;
+                  const eventColor = event.color || config.color;
+                  const isLeft = (groupIndex + eventIndex) % 2 === 0;
+                  
+                  return (
+                    <div key={event.id} className="relative flex items-start mb-6">
+                      {/* Conteúdo lado esquerdo */}
+                      <div className={cn(
+                        "w-[calc(50%-24px)] pr-6",
+                        !isLeft && "invisible"
+                      )}>
+                        {isLeft && (
+                          <div 
+                            className="bg-card rounded-xl border p-4 shadow-sm hover:shadow-md transition-all text-right"
+                            style={{ borderColor: `${eventColor}30` }}
                           >
-                            {event.status}
-                          </Badge>
+                            <div className="flex items-center justify-end gap-2 mb-2">
+                              <span className="text-xs font-semibold text-foreground">{event.title}</span>
+                              <Badge 
+                                variant="outline" 
+                                className="text-[10px] capitalize"
+                                style={{ borderColor: eventColor, color: eventColor }}
+                              >
+                                {config.label}
+                              </Badge>
+                            </div>
+                            {event.description && (
+                              <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{event.description}</p>
+                            )}
+                            <div className="flex items-center justify-end gap-1 text-[10px] text-muted-foreground">
+                              <span>{format(event.date, "dd MMM", { locale: ptBR })}</span>
+                              <span>•</span>
+                              <span>{format(event.date, "HH:mm", { locale: ptBR })}</span>
+                            </div>
+                            {event.metadata?.proximo_contato && (
+                              <div className="flex items-center justify-end gap-1 mt-2 text-[10px] text-primary">
+                                <span>Próximo: {format(new Date(event.metadata.proximo_contato), "dd/MM/yyyy", { locale: ptBR })}</span>
+                                <ArrowRight className="w-3 h-3" />
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
                       
-                      {event.metadata?.proximo_contato && (
-                        <div className="flex items-center gap-1 mt-2 text-[10px] text-primary">
-                          <ArrowRight className="w-3 h-3" />
-                          <span>Próximo: {format(new Date(event.metadata.proximo_contato), "dd/MM/yyyy", { locale: ptBR })}</span>
+                      {/* Linha horizontal + Círculo central */}
+                      <div className="relative flex items-center justify-center w-12 shrink-0">
+                        {/* Linha horizontal conectora */}
+                        <div 
+                          className={cn(
+                            "absolute top-4 h-0.5 w-6",
+                            isLeft ? "right-6" : "left-6"
+                          )}
+                          style={{ backgroundColor: eventColor }}
+                        />
+                        
+                        {/* Círculo com ícone */}
+                        <div 
+                          className="relative w-10 h-10 rounded-full flex items-center justify-center border-4 border-background shadow-lg z-10"
+                          style={{ backgroundColor: eventColor }}
+                        >
+                          <Icon className="w-4 h-4 text-white" />
                         </div>
-                      )}
+                      </div>
+                      
+                      {/* Conteúdo lado direito */}
+                      <div className={cn(
+                        "w-[calc(50%-24px)] pl-6",
+                        isLeft && "invisible"
+                      )}>
+                        {!isLeft && (
+                          <div 
+                            className="bg-card rounded-xl border p-4 shadow-sm hover:shadow-md transition-all"
+                            style={{ borderColor: `${eventColor}30` }}
+                          >
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge 
+                                variant="outline" 
+                                className="text-[10px] capitalize"
+                                style={{ borderColor: eventColor, color: eventColor }}
+                              >
+                                {config.label}
+                              </Badge>
+                              <span className="text-xs font-semibold text-foreground">{event.title}</span>
+                            </div>
+                            {event.description && (
+                              <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{event.description}</p>
+                            )}
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <span>{format(event.date, "dd MMM", { locale: ptBR })}</span>
+                              <span>•</span>
+                              <span>{format(event.date, "HH:mm", { locale: ptBR })}</span>
+                            </div>
+                            {event.metadata?.proximo_contato && (
+                              <div className="flex items-center gap-1 mt-2 text-[10px] text-primary">
+                                <ArrowRight className="w-3 h-3" />
+                                <span>Próximo: {format(new Date(event.metadata.proximo_contato), "dd/MM/yyyy", { locale: ptBR })}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-              
-              <div className="relative">
-                <div className="absolute -left-6 w-5 h-5 rounded-full bg-muted border-2 border-background flex items-center justify-center">
+                  );
+                })}
+              </div>
+            ))}
+            
+            {/* Marcador FIM */}
+            <div className="relative flex justify-center mt-4">
+              <div className="relative flex items-center justify-center w-12">
+                <div className="w-8 h-8 rounded-full bg-muted border-4 border-background flex items-center justify-center shadow-md">
                   <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
                 </div>
-                <p className="ml-4 text-[10px] text-muted-foreground py-1">Início do histórico</p>
               </div>
+            </div>
+            <div className="relative flex justify-center mt-2">
+              <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Fim do histórico</span>
             </div>
           </div>
         </ScrollArea>
