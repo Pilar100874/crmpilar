@@ -4,8 +4,9 @@ import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   MessageSquare, Phone, Mail, Receipt, Calendar, 
-  Clock, User, ChevronDown, ChevronUp, Loader2,
-  Users, CheckCircle2, XCircle, ArrowRight
+  Clock, ChevronDown, ChevronUp, Loader2,
+  ArrowRight, Send, Eye, CheckCircle, XCircle,
+  FileText, AlertCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,8 @@ interface TimelineEvent {
   date: Date;
   status?: string;
   metadata?: Record<string, any>;
+  icon?: any;
+  color?: string;
 }
 
 interface CustomerHistoryTimelineProps {
@@ -32,37 +35,27 @@ interface CustomerHistoryTimelineProps {
 const TYPE_CONFIG = {
   chat: {
     icon: MessageSquare,
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-500/10',
-    borderColor: 'border-blue-500/30',
+    color: '#3b82f6',
     label: 'Chat'
   },
   atendimento: {
     icon: Phone,
-    color: 'text-green-500',
-    bgColor: 'bg-green-500/10',
-    borderColor: 'border-green-500/30',
+    color: '#22c55e',
     label: 'Atendimento'
   },
   orcamento: {
     icon: Receipt,
-    color: 'text-purple-500',
-    bgColor: 'bg-purple-500/10',
-    borderColor: 'border-purple-500/30',
+    color: '#a855f7',
     label: 'Orçamento'
   },
   email: {
     icon: Mail,
-    color: 'text-orange-500',
-    bgColor: 'bg-orange-500/10',
-    borderColor: 'border-orange-500/30',
+    color: '#f97316',
     label: 'Email'
   },
   tarefa: {
     icon: Calendar,
-    color: 'text-amber-500',
-    bgColor: 'bg-amber-500/10',
-    borderColor: 'border-amber-500/30',
+    color: '#eab308',
     label: 'Tarefa'
   }
 };
@@ -165,6 +158,7 @@ export function CustomerHistoryTimeline({
                 description: reg.observacao || (flagInfo?.nome ? `Resultado: ${flagInfo.nome}` : undefined),
                 date: new Date(reg.created_at || ''),
                 status: flagInfo?.nome,
+                color: flagInfo?.cor,
                 metadata: { 
                   tipo_contato: reg.tipo_contato,
                   flag_cor: flagInfo?.cor,
@@ -188,30 +182,90 @@ export function CustomerHistoryTimeline({
         }
       }
 
-      // Buscar orçamentos
+      // Buscar orçamentos com todos os eventos do ciclo de vida
       if (customerId) {
         const { data: orcamentos } = await supabase
           .from('orcamentos')
-          .select('id, status, etapa, valor_total, created_at')
+          .select('id, status, etapa, valor_total, created_at, data_envio, data_visualizacao, updated_at')
           .eq('cliente_id', customerId)
           .order('created_at', { ascending: false })
-          .limit(10);
+          .limit(20);
 
         if (orcamentos) {
           orcamentos.forEach(orc => {
+            const valorStr = orc.valor_total ? `R$ ${orc.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '';
+            
+            // Evento de criação
             allEvents.push({
-              id: `orc-${orc.id}`,
+              id: `orc-create-${orc.id}`,
               type: 'orcamento',
-              title: `Orçamento - ${orc.etapa || orc.status}`,
-              description: orc.valor_total ? `R$ ${orc.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : undefined,
+              title: 'Orçamento Criado',
+              description: valorStr,
               date: new Date(orc.created_at || ''),
-              status: orc.status
+              status: 'criado',
+              icon: FileText,
+              color: '#a855f7'
             });
+
+            // Evento de envio
+            if (orc.data_envio) {
+              allEvents.push({
+                id: `orc-send-${orc.id}`,
+                type: 'orcamento',
+                title: 'Orçamento Enviado',
+                description: valorStr,
+                date: new Date(orc.data_envio),
+                status: 'enviado',
+                icon: Send,
+                color: '#3b82f6'
+              });
+            }
+
+            // Evento de visualização
+            if (orc.data_visualizacao) {
+              allEvents.push({
+                id: `orc-view-${orc.id}`,
+                type: 'orcamento',
+                title: 'Orçamento Visualizado',
+                description: valorStr,
+                date: new Date(orc.data_visualizacao),
+                status: 'visualizado',
+                icon: Eye,
+                color: '#06b6d4'
+              });
+            }
+
+            // Evento de status final (aprovado/rejeitado/negociando)
+            if (orc.status && orc.status !== 'rascunho' && orc.updated_at && orc.updated_at !== orc.created_at) {
+              const statusConfig: Record<string, { title: string; icon: any; color: string }> = {
+                'aprovado': { title: 'Orçamento Aprovado', icon: CheckCircle, color: '#22c55e' },
+                'rejeitado': { title: 'Orçamento Rejeitado', icon: XCircle, color: '#ef4444' },
+                'negociando': { title: 'Em Negociação', icon: MessageSquare, color: '#f97316' },
+                'pendente': { title: 'Aguardando Resposta', icon: AlertCircle, color: '#eab308' },
+              };
+              
+              const config = statusConfig[orc.status.toLowerCase()] || { 
+                title: `Orçamento ${orc.etapa || orc.status}`, 
+                icon: Receipt, 
+                color: '#a855f7' 
+              };
+
+              allEvents.push({
+                id: `orc-status-${orc.id}`,
+                type: 'orcamento',
+                title: config.title,
+                description: valorStr,
+                date: new Date(orc.updated_at),
+                status: orc.status,
+                icon: config.icon,
+                color: config.color
+              });
+            }
           });
         }
       }
 
-      // Buscar emails (se houver customer com email)
+      // Buscar emails
       if (customerId) {
         const { data: customer } = await supabase
           .from('customers')
@@ -257,36 +311,6 @@ export function CustomerHistoryTimeline({
     ? events.filter(e => e.type === filter)
     : events;
 
-  const getStatusBadge = (event: TimelineEvent) => {
-    if (!event.status) return null;
-    
-    const statusMap: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline', label: string }> = {
-      'em_atendimento': { variant: 'default', label: 'Em atendimento' },
-      'aberto': { variant: 'outline', label: 'Aberto' },
-      'fechado': { variant: 'secondary', label: 'Fechado' },
-      'pendente': { variant: 'outline', label: 'Pendente' },
-      'concluido': { variant: 'secondary', label: 'Concluído' },
-      'aprovado': { variant: 'default', label: 'Aprovado' },
-      'rejeitado': { variant: 'destructive', label: 'Rejeitado' },
-    };
-
-    const config = statusMap[event.status.toLowerCase()] || { variant: 'outline' as const, label: event.status };
-    
-    return (
-      <Badge 
-        variant={config.variant} 
-        className="text-[10px] ml-auto"
-        style={event.metadata?.flag_cor ? { 
-          backgroundColor: event.metadata.flag_cor,
-          color: 'white',
-          borderColor: event.metadata.flag_cor
-        } : undefined}
-      >
-        {config.label}
-      </Badge>
-    );
-  };
-
   if (!contactId && !contactName) {
     return null;
   }
@@ -315,7 +339,7 @@ export function CustomerHistoryTimeline({
       
       <CollapsibleContent className="mt-3">
         {/* Filtros */}
-        <div className="flex gap-1 mb-3 flex-wrap">
+        <div className="flex gap-1 mb-4 flex-wrap">
           <Button
             variant={filter === null ? "default" : "outline"}
             size="sm"
@@ -348,66 +372,100 @@ export function CustomerHistoryTimeline({
             <p className="text-xs">Nenhum histórico encontrado</p>
           </div>
         ) : (
-          <ScrollArea className="h-[300px] pr-2">
-            <div className="relative">
-              {/* Linha vertical da timeline */}
-              <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-border" />
+          <ScrollArea className="h-[350px] pr-2">
+            <div className="relative pl-6">
+              {/* Linha vertical central da timeline */}
+              <div className="absolute left-[9px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/50 via-border to-border" />
               
-              <div className="space-y-3">
+              <div className="space-y-0">
                 {filteredEvents.map((event, index) => {
                   const config = TYPE_CONFIG[event.type];
-                  const Icon = config.icon;
+                  const Icon = event.icon || config.icon;
+                  const eventColor = event.color || config.color;
+                  const isLeft = index % 2 === 0;
                   
                   return (
                     <div 
                       key={event.id}
-                      className="relative pl-8"
+                      className="relative pb-4"
                     >
-                      {/* Ícone na timeline */}
-                      <div className={cn(
-                        "absolute left-0 w-6 h-6 rounded-full flex items-center justify-center",
-                        config.bgColor,
-                        "border-2 border-background"
-                      )}>
-                        <Icon className={cn("w-3 h-3", config.color)} />
+                      {/* Círculo do ícone na linha */}
+                      <div 
+                        className="absolute -left-6 w-5 h-5 rounded-full flex items-center justify-center border-2 border-background shadow-sm z-10"
+                        style={{ backgroundColor: eventColor }}
+                      >
+                        <Icon className="w-2.5 h-2.5 text-white" />
                       </div>
                       
+                      {/* Linha horizontal conectora */}
+                      <div 
+                        className="absolute -left-1 top-2 w-3 h-0.5"
+                        style={{ backgroundColor: eventColor }}
+                      />
+                      
                       {/* Card do evento */}
-                      <div className={cn(
-                        "rounded-lg border p-2.5 text-xs",
-                        config.borderColor,
-                        "hover:bg-muted/50 transition-colors"
-                      )}>
+                      <div 
+                        className={cn(
+                          "ml-4 rounded-lg border p-3 text-xs transition-all hover:shadow-md",
+                          "bg-card hover:bg-muted/30"
+                        )}
+                        style={{ borderLeftColor: eventColor, borderLeftWidth: '3px' }}
+                      >
+                        {/* Data no topo */}
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-1.5">
+                          <Calendar className="w-3 h-3" />
+                          <span className="font-medium">
+                            {format(event.date, "dd MMM yyyy", { locale: ptBR })}
+                          </span>
+                          <span>•</span>
+                          <span>{format(event.date, "HH:mm", { locale: ptBR })}</span>
+                        </div>
+                        
+                        {/* Título e Status */}
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{event.title}</p>
+                            <p className="font-semibold text-foreground">{event.title}</p>
                             {event.description && (
                               <p className="text-muted-foreground mt-0.5 line-clamp-2">
                                 {event.description}
                               </p>
                             )}
                           </div>
-                          {getStatusBadge(event)}
-                        </div>
-                        
-                        <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
-                          <Calendar className="w-3 h-3" />
-                          <span>
-                            {format(event.date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                          </span>
-                          {event.metadata?.proximo_contato && (
-                            <>
-                              <ArrowRight className="w-3 h-3" />
-                              <span>
-                                Próximo: {format(new Date(event.metadata.proximo_contato), "dd/MM/yyyy", { locale: ptBR })}
-                              </span>
-                            </>
+                          {event.status && (
+                            <Badge 
+                              variant="outline" 
+                              className="text-[9px] shrink-0 capitalize"
+                              style={{ 
+                                borderColor: eventColor,
+                                color: eventColor
+                              }}
+                            >
+                              {event.status}
+                            </Badge>
                           )}
                         </div>
+                        
+                        {/* Próximo contato se houver */}
+                        {event.metadata?.proximo_contato && (
+                          <div className="flex items-center gap-1 mt-2 text-[10px] text-primary">
+                            <ArrowRight className="w-3 h-3" />
+                            <span>
+                              Próximo: {format(new Date(event.metadata.proximo_contato), "dd/MM/yyyy", { locale: ptBR })}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
                 })}
+                
+                {/* Marcador de fim */}
+                <div className="relative">
+                  <div className="absolute -left-6 w-5 h-5 rounded-full bg-muted border-2 border-background flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
+                  </div>
+                  <p className="ml-4 text-[10px] text-muted-foreground py-1">Início do histórico</p>
+                </div>
               </div>
             </div>
           </ScrollArea>
