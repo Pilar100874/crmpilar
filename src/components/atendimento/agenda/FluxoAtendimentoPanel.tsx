@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -79,7 +79,6 @@ export function FluxoAtendimentoPanel({
   const [proximaData, setProximaData] = useState<Date>(addDays(new Date(), 3));
   const [isRecording, setIsRecording] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
 
   const currentTask = tasks[currentIndex];
   const isLastTask = currentIndex === tasks.length - 1;
@@ -129,46 +128,74 @@ export function FluxoAtendimentoPanel({
     if (data) setConfigDatas(data);
   };
 
+  const recognitionRef = useRef<any>(null);
+
   const startVoiceRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks: BlobPart[] = [];
+      // Check for Web Speech API support
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        toast.error('Reconhecimento de voz não suportado neste navegador');
+        return;
+      }
 
-      recorder.ondataavailable = (e) => chunks.push(e.data);
-      recorder.onstop = async () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const base64 = (reader.result as string).split(',')[1];
-          try {
-            const { data, error } = await supabase.functions.invoke('voice-to-text', {
-              body: { audio: base64 }
-            });
-            if (data?.text) {
-              setObservacao(prev => prev ? `${prev} ${data.text}` : data.text);
-            }
-          } catch (err) {
-            console.error('Erro na transcrição:', err);
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'pt-BR';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      let finalTranscript = '';
+
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
           }
-        };
-        reader.readAsDataURL(blob);
-        stream.getTracks().forEach(track => track.stop());
+        }
+        
+        // Update observation with final transcript
+        if (finalTranscript) {
+          setObservacao(prev => prev ? `${prev} ${finalTranscript.trim()}` : finalTranscript.trim());
+          finalTranscript = '';
+        }
       };
 
-      recorder.start();
-      setMediaRecorder(recorder);
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'not-allowed') {
+          toast.error('Permissão de microfone negada');
+        } else {
+          toast.error('Erro no reconhecimento de voz');
+        }
+        setIsRecording(false);
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognition.start();
+      recognitionRef.current = recognition;
       setIsRecording(true);
+      toast.success('Gravação iniciada - fale agora');
     } catch (err) {
-      toast.error('Não foi possível acessar o microfone');
+      console.error('Error starting voice recording:', err);
+      toast.error('Não foi possível iniciar o reconhecimento de voz');
     }
   };
 
   const stopVoiceRecording = () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-      setMediaRecorder(null);
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
       setIsRecording(false);
+      toast.success('Gravação finalizada');
     }
   };
 
