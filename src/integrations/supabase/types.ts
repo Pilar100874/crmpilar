@@ -606,6 +606,140 @@ export type Database = {
           },
         ]
       }
+      atendimento_config_proxima_data: {
+        Row: {
+          created_at: string | null
+          dias_padrao: number
+          estabelecimento_id: string
+          id: string
+          tipo_contato: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dias_padrao?: number
+          estabelecimento_id: string
+          id?: string
+          tipo_contato: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dias_padrao?: number
+          estabelecimento_id?: string
+          id?: string
+          tipo_contato?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atendimento_config_proxima_data_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      atendimento_flags: {
+        Row: {
+          ativo: boolean | null
+          cor: string | null
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          ordem: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          ordem?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          cor?: string | null
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          ordem?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atendimento_flags_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      atendimento_registros: {
+        Row: {
+          created_at: string | null
+          data_proximo_contato: string
+          envio_massa: boolean | null
+          estabelecimento_id: string
+          flag_id: string | null
+          id: string
+          observacao: string | null
+          tarefa_id: string
+          tipo_contato: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data_proximo_contato: string
+          envio_massa?: boolean | null
+          estabelecimento_id: string
+          flag_id?: string | null
+          id?: string
+          observacao?: string | null
+          tarefa_id: string
+          tipo_contato: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data_proximo_contato?: string
+          envio_massa?: boolean | null
+          estabelecimento_id?: string
+          flag_id?: string | null
+          id?: string
+          observacao?: string | null
+          tarefa_id?: string
+          tipo_contato?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atendimento_registros_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendimento_registros_flag_id_fkey"
+            columns: ["flag_id"]
+            isOneToOne: false
+            referencedRelation: "atendimento_flags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendimento_registros_tarefa_id_fkey"
+            columns: ["tarefa_id"]
+            isOneToOne: false
+            referencedRelation: "calendario_tarefas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automacoes_vendas: {
         Row: {
           ativo: boolean | null
