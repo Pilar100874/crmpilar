@@ -46,6 +46,8 @@ import { ToolsDropdown } from "@/components/atendimento/ToolsDropdown";
 import { FluxoAtendimentoDialog } from "@/components/atendimento/agenda/FluxoAtendimentoDialog";
 import { ConfigDatasProximoContatoDialog } from "@/components/atendimento/agenda/ConfigDatasProximoContatoDialog";
 import { EnvioMassaDialog } from "@/components/atendimento/agenda/EnvioMassaDialog";
+import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAtendimentoPanel";
+import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
 
 interface Conversation {
   id: string;
@@ -241,6 +243,7 @@ export default function Atendimento() {
   const [showFluxoAtendimento, setShowFluxoAtendimento] = useState(false);
   const [showConfigDatas, setShowConfigDatas] = useState(false);
   const [showEnvioMassa, setShowEnvioMassa] = useState(false);
+  const [agendaViewMode, setAgendaViewMode] = useState<'normal' | 'fluxo' | 'massa'>('normal');
 
   // Customer vinculos (for task legends)
   const [customerVinculos, setCustomerVinculos] = useState<{
@@ -3213,6 +3216,8 @@ ${recentMessages}
                 setShowFluxoAtendimento={setShowFluxoAtendimento}
                 setShowEnvioMassa={setShowEnvioMassa}
                 setShowConfigDatas={setShowConfigDatas}
+                agendaViewMode={agendaViewMode}
+                setAgendaViewMode={setAgendaViewMode}
               />
             </div>
 
@@ -4977,34 +4982,60 @@ ${recentMessages}
             }
           />
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
-            <div className="text-center">
-              {activeTab === "chat" && (
-                <>
-                  <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
-                  <p className="text-lg font-medium mb-2">Selecione uma conversa</p>
-                  <p className="text-sm">Escolha uma conversa da lista para começar o atendimento</p>
-                </>
-              )}
-              {activeTab === "agenda" && (
-                <>
-                  <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
-                  <p className="text-lg font-medium mb-2">Selecione uma tarefa</p>
-                  <p className="text-sm">Escolha uma tarefa da agenda para ver os detalhes</p>
-                </>
-              )}
-              {activeTab === "orcamento" && (
-                <>
-                  <Receipt className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
-                  <p className="text-lg font-medium mb-2">Selecione um orçamento</p>
-                  <p className="text-sm">Escolha um orçamento da lista para gerenciar</p>
-                </>
-              )}
-            </div>
-          </div>
+          <>
+            {/* Agenda Fluxo/Massa Panels */}
+            {activeTab === "agenda" && agendaViewMode === 'fluxo' && (
+              <div className="flex-1 h-full">
+                <FluxoAtendimentoPanel
+                  tasks={filteredTasks}
+                  estabelecimentoId={estabelecimentoId}
+                  usuarioId={usuarioId}
+                  onTaskCompleted={loadTodayTasks}
+                  onClose={() => setAgendaViewMode('normal')}
+                />
+              </div>
+            )}
+            {activeTab === "agenda" && agendaViewMode === 'massa' && (
+              <div className="flex-1 h-full">
+                <EnvioMassaPanel
+                  tasks={filteredTasks}
+                  estabelecimentoId={estabelecimentoId}
+                  usuarioId={usuarioId}
+                  onComplete={loadTodayTasks}
+                  onClose={() => setAgendaViewMode('normal')}
+                />
+              </div>
+            )}
+            {/* Default Empty States */}
+            {!(activeTab === "agenda" && agendaViewMode !== 'normal') && (
+              <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
+                <div className="text-center">
+                  {activeTab === "chat" && (
+                    <>
+                      <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+                      <p className="text-lg font-medium mb-2">Selecione uma conversa</p>
+                      <p className="text-sm">Escolha uma conversa da lista para começar o atendimento</p>
+                    </>
+                  )}
+                  {activeTab === "agenda" && agendaViewMode === 'normal' && (
+                    <>
+                      <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+                      <p className="text-lg font-medium mb-2">Selecione uma tarefa</p>
+                      <p className="text-sm">Escolha uma tarefa da agenda para ver os detalhes</p>
+                    </>
+                  )}
+                  {activeTab === "orcamento" && (
+                    <>
+                      <Receipt className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+                      <p className="text-lg font-medium mb-2">Selecione um orçamento</p>
+                      <p className="text-sm">Escolha um orçamento da lista para gerenciar</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
-      </div>
-      )}
 
       {/* Right Sidebar - Company Details Panel - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && activeTab === "chat" && selectedConversation && selectedConv && showClientDetailsChat && (
@@ -5282,6 +5313,8 @@ interface MobileListContentProps {
   setShowFluxoAtendimento: (show: boolean) => void;
   setShowEnvioMassa: (show: boolean) => void;
   setShowConfigDatas: (show: boolean) => void;
+  agendaViewMode: 'normal' | 'fluxo' | 'massa';
+  setAgendaViewMode: (mode: 'normal' | 'fluxo' | 'massa') => void;
 }
 
 function MobileListContent({
@@ -5328,6 +5361,8 @@ function MobileListContent({
   setShowFluxoAtendimento,
   setShowEnvioMassa,
   setShowConfigDatas,
+  agendaViewMode,
+  setAgendaViewMode,
 }: MobileListContentProps) {
   return (
     <div className="h-full flex flex-col bg-white/80">
@@ -5392,9 +5427,9 @@ function MobileListContent({
               <PhoneCall className="w-4 h-4" />
             </Button>
             <Button 
-              variant="outline" 
+              variant={agendaViewMode === 'fluxo' ? "default" : "outline"}
               size="sm" 
-              onClick={() => setShowFluxoAtendimento(true)}
+              onClick={() => setAgendaViewMode(agendaViewMode === 'fluxo' ? 'normal' : 'fluxo')}
               disabled={filteredTasks.length === 0}
               className="h-10 w-10 p-0 rounded-xl"
               title="Fluxo de Atendimento"
@@ -5402,9 +5437,9 @@ function MobileListContent({
               <Play className="w-4 h-4" />
             </Button>
             <Button 
-              variant="outline" 
+              variant={agendaViewMode === 'massa' ? "default" : "outline"}
               size="sm" 
-              onClick={() => setShowEnvioMassa(true)}
+              onClick={() => setAgendaViewMode(agendaViewMode === 'massa' ? 'normal' : 'massa')}
               disabled={filteredTasks.length === 0}
               className="h-10 w-10 p-0 rounded-xl"
               title="Envio em Massa"
