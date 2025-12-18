@@ -246,6 +246,7 @@ export default function Atendimento() {
   const [showEnvioMassa, setShowEnvioMassa] = useState(false);
   const [agendaViewMode, setAgendaViewMode] = useState<'default' | 'fluxo' | 'massa'>('default');
   const [fluxoCurrentTask, setFluxoCurrentTask] = useState<any | null>(null);
+  const [fluxoInitialIndex, setFluxoInitialIndex] = useState(0);
 
   // Customer vinculos (for task legends)
   const [customerVinculos, setCustomerVinculos] = useState<{
@@ -4009,10 +4010,9 @@ ${recentMessages}
                          : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
                      }`}
                      onClick={() => {
-                       setSelectedTaskId(task.id);
-                       if (!showClientDetailsAgenda) {
-                         setShowClientDetailsAgenda(true);
-                       }
+                       const taskIndex = filteredTasks.findIndex(t => t.id === task.id);
+                       setFluxoInitialIndex(taskIndex >= 0 ? taskIndex : 0);
+                       setAgendaViewMode('fluxo');
                      }}
                    >
                       {/* Tarja lateral indicando vínculo */}
@@ -4874,10 +4874,12 @@ ${recentMessages}
             onClose={() => {
               setAgendaViewMode('default');
               setFluxoCurrentTask(null);
+              setFluxoInitialIndex(0);
             }}
             onCurrentTaskChange={setFluxoCurrentTask}
             showDetails={showClientDetailsFluxo}
             onToggleDetails={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
+            initialTaskIndex={fluxoInitialIndex}
           />
         ) : activeTab === "agenda" && agendaViewMode === 'massa' ? (
           /* Envio em Massa Panel */
