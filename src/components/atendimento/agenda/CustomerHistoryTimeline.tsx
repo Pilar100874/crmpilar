@@ -87,13 +87,28 @@ export function CustomerHistoryTimeline({
     setLoading(true);
     try {
       const allEvents: TimelineEvent[] = [];
+      let customerId = contactId;
+
+      // Se não temos contactId, tentar buscar pelo nome
+      if (!customerId && contactName) {
+        const { data: customer } = await supabase
+          .from('customers')
+          .select('id, email, telefone')
+          .eq('estabelecimento_id', estabelecimentoId)
+          .eq('nome', contactName)
+          .maybeSingle();
+        
+        if (customer) {
+          customerId = customer.id;
+        }
+      }
 
       // Buscar conversas/chats
-      if (contactId) {
+      if (customerId) {
         const { data: conversations } = await supabase
           .from('conversations')
           .select('id, canal, chat_status, created_at, updated_at, motivo_encerramento')
-          .eq('customer_id', contactId)
+          .eq('customer_id', customerId)
           .order('created_at', { ascending: false })
           .limit(20);
 
@@ -112,23 +127,25 @@ export function CustomerHistoryTimeline({
         }
       }
 
-      // Buscar registros de atendimento
+      // Buscar tarefas e registros de atendimento
       if (contactName) {
         const { data: tarefas } = await supabase
           .from('calendario_tarefas')
-          .select('id, contact_name, title, date, status, origem')
+          .select('id, contact_name, title, date, status, origem, description')
           .eq('estabelecimento_id', estabelecimentoId)
           .eq('contact_name', contactName)
           .order('date', { ascending: false })
-          .limit(20);
+          .limit(30);
 
-        if (tarefas) {
+        if (tarefas && tarefas.length > 0) {
           const tarefaIds = tarefas.map(t => t.id);
           
+          // Buscar registros de atendimento associados
           const { data: registros } = await supabase
             .from('atendimento_registros')
             .select(`
               id, 
+              tarefa_id,
               tipo_contato, 
               observacao, 
               created_at,
@@ -157,13 +174,13 @@ export function CustomerHistoryTimeline({
             });
           }
 
-          // Adicionar tarefas pendentes
-          tarefas.filter(t => t.status === 'pendente').forEach(tarefa => {
+          // Adicionar todas as tarefas ao histórico
+          tarefas.forEach(tarefa => {
             allEvents.push({
               id: `tarefa-${tarefa.id}`,
               type: 'tarefa',
               title: tarefa.title,
-              description: `Origem: ${tarefa.origem}`,
+              description: tarefa.description || `Origem: ${tarefa.origem}`,
               date: new Date(tarefa.date),
               status: tarefa.status
             });
@@ -172,11 +189,11 @@ export function CustomerHistoryTimeline({
       }
 
       // Buscar orçamentos
-      if (contactId) {
+      if (customerId) {
         const { data: orcamentos } = await supabase
           .from('orcamentos')
           .select('id, status, etapa, valor_total, created_at')
-          .eq('cliente_id', contactId)
+          .eq('cliente_id', customerId)
           .order('created_at', { ascending: false })
           .limit(10);
 
@@ -191,6 +208,38 @@ export function CustomerHistoryTimeline({
               status: orc.status
             });
           });
+        }
+      }
+
+      // Buscar emails (se houver customer com email)
+      if (customerId) {
+        const { data: customer } = await supabase
+          .from('customers')
+          .select('email')
+          .eq('id', customerId)
+          .maybeSingle();
+
+        if (customer?.email) {
+          const { data: emails } = await supabase
+            .from('emails')
+            .select('id, subject, from_email, to_email, date, read, folder')
+            .or(`from_email.eq.${customer.email},to_email.eq.${customer.email}`)
+            .order('date', { ascending: false })
+            .limit(10);
+
+          if (emails) {
+            emails.forEach(email => {
+              allEvents.push({
+                id: `email-${email.id}`,
+                type: 'email',
+                title: email.subject || 'Sem assunto',
+                description: email.from_email === customer.email ? 'Recebido' : 'Enviado',
+                date: new Date(email.date),
+                status: email.read ? 'lido' : 'não lido',
+                metadata: { folder: email.folder }
+              });
+            });
+          }
         }
       }
 
