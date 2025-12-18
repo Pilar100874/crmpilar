@@ -5637,37 +5637,102 @@ function MobileListContent({
         )}
 
         {activeTab === "email" && (
-          <div className="flex items-center gap-2">
-            <Select value={emailFolder} onValueChange={setEmailFolder}>
-              <SelectTrigger className="w-28 h-10 bg-white/70 rounded-xl text-xs">
-                <SelectValue placeholder="Pasta" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="inbox">Entrada</SelectItem>
-                <SelectItem value="sent">Enviados</SelectItem>
-                <SelectItem value="drafts">Rascunhos</SelectItem>
-                <SelectItem value="starred">Favoritos</SelectItem>
-                <SelectItem value="archive">Arquivo</SelectItem>
-                <SelectItem value="trash">Lixeira</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar..."
-                className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="space-y-3">
+            {/* Card Principal */}
+            <div className="bg-white dark:bg-muted/30 rounded-2xl shadow-sm border border-border/40 overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-blue-50 via-blue-50/50 to-transparent dark:from-blue-950/30 dark:via-blue-950/20 dark:to-transparent px-4 py-3 border-b border-border/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                      <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <span className="font-semibold text-sm text-foreground">E-mails</span>
+                  </div>
+                  <button 
+                    onClick={() => setShowComposeEmail(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Novo
+                  </button>
+                </div>
+              </div>
+              
+              {/* Corpo */}
+              <div className="p-3 space-y-3">
+                {/* Seletor de Pasta */}
+                <div className="flex items-center justify-center">
+                  <div className="inline-flex items-center bg-muted/50 rounded-xl p-1 gap-1">
+                    {[
+                      { value: 'inbox', label: 'Entrada', icon: Inbox },
+                      { value: 'sent', label: 'Enviados', icon: Send },
+                      { value: 'starred', label: 'Favoritos', icon: Star },
+                      { value: 'archive', label: 'Arquivo', icon: Archive },
+                    ].map((folder) => (
+                      <button
+                        key={folder.value}
+                        onClick={() => setEmailFolder(folder.value)}
+                        className={cn(
+                          "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all",
+                          emailFolder === folder.value
+                            ? "bg-white dark:bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <folder.icon className="w-3.5 h-3.5" />
+                        {folder.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Busca */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar e-mails..."
+                    className="pl-10 h-10 rounded-xl text-sm bg-muted/30 border-border/40 focus:bg-white dark:focus:bg-background"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
-            <Button 
-              size="sm" 
-              onClick={() => setShowComposeEmail(true)}
-              className="h-10 w-10 p-0 rounded-xl bg-primary hover:bg-primary/90"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-            <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
+            
+            {/* Card de Filtros */}
+            <div className="bg-white dark:bg-muted/30 rounded-2xl shadow-sm border border-border/40 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-muted-foreground pl-1">Mais pastas:</span>
+                <div className="flex items-center gap-1.5">
+                  <button 
+                    onClick={() => setEmailFolder('drafts')}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-transparent transition-all",
+                      emailFolder === 'drafts'
+                        ? "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800"
+                        : "bg-muted/50 text-muted-foreground hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:text-amber-700 dark:hover:text-amber-400"
+                    )}
+                  >
+                    <File className="w-3 h-3" />
+                    Rascunhos
+                  </button>
+                  <button 
+                    onClick={() => setEmailFolder('trash')}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-transparent transition-all",
+                      emailFolder === 'trash'
+                        ? "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
+                        : "bg-muted/50 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-400"
+                    )}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Lixeira
+                  </button>
+                </div>
+                <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
+              </div>
+            </div>
           </div>
         )}
 
