@@ -46,6 +46,8 @@ import { ToolsDropdown } from "@/components/atendimento/ToolsDropdown";
 import { FluxoAtendimentoDialog } from "@/components/atendimento/agenda/FluxoAtendimentoDialog";
 import { ConfigDatasProximoContatoDialog } from "@/components/atendimento/agenda/ConfigDatasProximoContatoDialog";
 import { EnvioMassaDialog } from "@/components/atendimento/agenda/EnvioMassaDialog";
+import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAtendimentoPanel";
+import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
 
 interface Conversation {
   id: string;
@@ -241,6 +243,7 @@ export default function Atendimento() {
   const [showFluxoAtendimento, setShowFluxoAtendimento] = useState(false);
   const [showConfigDatas, setShowConfigDatas] = useState(false);
   const [showEnvioMassa, setShowEnvioMassa] = useState(false);
+  const [agendaViewMode, setAgendaViewMode] = useState<'default' | 'fluxo' | 'massa'>('default');
 
   // Customer vinculos (for task legends)
   const [customerVinculos, setCustomerVinculos] = useState<{
@@ -3746,7 +3749,7 @@ ${recentMessages}
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setShowFluxoAtendimento(true)}
+                  onClick={() => setAgendaViewMode('fluxo')}
                   disabled={filteredTasks.length === 0}
                   className="h-8 px-3 rounded-full border-orange-200 hover:bg-orange-50"
                   title="Iniciar Fluxo de Atendimento Sequencial"
@@ -3759,7 +3762,7 @@ ${recentMessages}
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setShowEnvioMassa(true)}
+                  onClick={() => setAgendaViewMode('massa')}
                   disabled={filteredTasks.length === 0}
                   className="h-8 px-3 rounded-full border-orange-200 hover:bg-orange-50"
                   title="Envio em Massa"
@@ -4859,6 +4862,24 @@ ${recentMessages}
               </div>
             </div>
           </>
+        ) : activeTab === "agenda" && agendaViewMode === 'fluxo' ? (
+          /* Fluxo de Atendimento Panel */
+          <FluxoAtendimentoPanel
+            tasks={filteredTasks}
+            estabelecimentoId={estabelecimentoId}
+            usuarioId={usuarioId}
+            onTaskCompleted={loadTodayTasks}
+            onClose={() => setAgendaViewMode('default')}
+          />
+        ) : activeTab === "agenda" && agendaViewMode === 'massa' ? (
+          /* Envio em Massa Panel */
+          <EnvioMassaPanel
+            tasks={filteredTasks}
+            estabelecimentoId={estabelecimentoId}
+            usuarioId={usuarioId}
+            onComplete={loadTodayTasks}
+            onClose={() => setAgendaViewMode('default')}
+          />
         ) : activeTab === "agenda" && selectedTaskId && selectedTaskData ? (
           /* Agenda Task Content */
           <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
@@ -4991,6 +5012,26 @@ ${recentMessages}
                   <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
                   <p className="text-lg font-medium mb-2">Selecione uma tarefa</p>
                   <p className="text-sm">Escolha uma tarefa da agenda para ver os detalhes</p>
+                  <div className="flex gap-2 mt-4 justify-center">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setAgendaViewMode('fluxo')}
+                      className="gap-2"
+                    >
+                      <Play className="h-4 w-4" />
+                      Iniciar Fluxo
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setAgendaViewMode('massa')}
+                      className="gap-2"
+                    >
+                      <Users className="h-4 w-4" />
+                      Envio em Massa
+                    </Button>
+                  </div>
                 </>
               )}
               {activeTab === "orcamento" && (
