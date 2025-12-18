@@ -244,6 +244,7 @@ export default function Atendimento() {
   const [showConfigDatas, setShowConfigDatas] = useState(false);
   const [showEnvioMassa, setShowEnvioMassa] = useState(false);
   const [agendaViewMode, setAgendaViewMode] = useState<'default' | 'fluxo' | 'massa'>('default');
+  const [fluxoCurrentTask, setFluxoCurrentTask] = useState<any | null>(null);
 
   // Customer vinculos (for task legends)
   const [customerVinculos, setCustomerVinculos] = useState<{
@@ -4869,7 +4870,11 @@ ${recentMessages}
             estabelecimentoId={estabelecimentoId}
             usuarioId={usuarioId}
             onTaskCompleted={loadTodayTasks}
-            onClose={() => setAgendaViewMode('default')}
+            onClose={() => {
+              setAgendaViewMode('default');
+              setFluxoCurrentTask(null);
+            }}
+            onCurrentTaskChange={setFluxoCurrentTask}
           />
         ) : activeTab === "agenda" && agendaViewMode === 'massa' ? (
           /* Envio em Massa Panel */
@@ -5069,7 +5074,7 @@ ${recentMessages}
       )}
 
       {/* Right Sidebar - Agenda Details Panel */}
-      {!orcamentoSheetOpen && activeTab === "agenda" && selectedTaskId && selectedTaskData && showClientDetailsAgenda && (
+      {!orcamentoSheetOpen && activeTab === "agenda" && selectedTaskId && selectedTaskData && showClientDetailsAgenda && agendaViewMode === 'default' && (
         <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="agenda"
@@ -5084,6 +5089,26 @@ ${recentMessages}
             dataHora={format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) + (selectedTaskData.time ? ` às ${selectedTaskData.time}` : "")}
             companies={selectedTaskData.customers?.customer_empresas || []}
             onCompaniesUpdated={() => loadSelectedTask(selectedTaskId || '')}
+            onSetGlobalFilter={setGlobalFilter}
+          />
+        </div>
+      )}
+
+      {/* Right Sidebar - Fluxo Details Panel */}
+      {!orcamentoSheetOpen && activeTab === "agenda" && agendaViewMode === 'fluxo' && fluxoCurrentTask && (
+        <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
+          <UnifiedDetailsPanel
+            type="agenda"
+            nome={fluxoCurrentTask.contact_name}
+            telefone={fluxoCurrentTask.customers?.telefone}
+            whatsapp={fluxoCurrentTask.customers?.telefone}
+            email={fluxoCurrentTask.customers?.email}
+            customerId={fluxoCurrentTask.customers?.id || fluxoCurrentTask.contact_id}
+            protocolo={fluxoCurrentTask.id?.slice(0, 8).toUpperCase()}
+            status={fluxoCurrentTask.status === "concluido" ? "Concluído" : "Pendente"}
+            titulo={fluxoCurrentTask.title}
+            dataHora={format(new Date(fluxoCurrentTask.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) + (fluxoCurrentTask.time ? ` às ${fluxoCurrentTask.time}` : "")}
+            companies={fluxoCurrentTask.customers?.customer_empresas || []}
             onSetGlobalFilter={setGlobalFilter}
           />
         </div>
