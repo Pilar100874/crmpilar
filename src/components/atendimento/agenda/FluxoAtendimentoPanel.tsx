@@ -276,26 +276,30 @@ export function FluxoAtendimentoPanel({
 
   if (tasks.length === 0) {
     return (
-      <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
-        <div className="px-4 py-3 border-b bg-gradient-to-r from-orange-50 to-transparent flex items-center justify-between">
+      <div className="flex-1 flex flex-col h-full min-h-0 bg-background">
+        <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-              <Play className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Play className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-sm">Fluxo de Atendimento</h3>
+              <h3 className="font-medium text-sm">Fluxo de Atendimento</h3>
               <p className="text-xs text-muted-foreground">Nenhuma tarefa disponível</p>
             </div>
           </div>
-          <Button size="sm" variant="ghost" onClick={onClose}>
+          <Button size="icon" variant="ghost" onClick={onClose} className="h-8 w-8 rounded-lg">
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
-            <p className="text-lg font-medium mb-2">Nenhuma tarefa para hoje</p>
-            <p className="text-sm text-muted-foreground">Todas as tarefas foram concluídas</p>
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto">
+              <CalendarIcon className="w-8 h-8 text-muted-foreground/40" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground/80">Nenhuma tarefa para hoje</p>
+              <p className="text-sm text-muted-foreground mt-1">Todas as tarefas foram concluídas</p>
+            </div>
           </div>
         </div>
       </div>
@@ -305,34 +309,34 @@ export function FluxoAtendimentoPanel({
   if (!currentTask) return null;
 
   return (
-    <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
-      {/* Header */}
-      <div className="px-4 py-3 border-b bg-gradient-to-r from-orange-50 to-transparent">
+    <div className="flex-1 flex flex-col h-full min-h-0 bg-background">
+      {/* Header Minimalista */}
+      <div className="px-6 py-4 border-b border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-              <Play className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Play className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold text-sm">Fluxo de Atendimento</h3>
+              <h3 className="font-medium text-sm">Fluxo de Atendimento</h3>
               <p className="text-xs text-muted-foreground">
-                {currentIndex + 1} de {tasks.length} tarefas
+                Tarefa {currentIndex + 1} de {tasks.length}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground tabular-nums">
               {Math.round(progress)}%
-            </Badge>
-            <Button size="sm" variant="ghost" onClick={onClose}>
+            </span>
+            <Button size="icon" variant="ghost" onClick={onClose} className="h-8 w-8 rounded-lg">
               <X className="h-4 w-4" />
             </Button>
             {onToggleDetails && (
               <Button 
-                size="sm" 
+                size="icon" 
                 variant="ghost" 
                 onClick={onToggleDetails}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 rounded-lg"
                 title={showDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
               >
                 {showDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -340,10 +344,10 @@ export function FluxoAtendimentoPanel({
             )}
           </div>
         </div>
-        {/* Progress bar */}
-        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-3">
+        {/* Progress bar elegante */}
+        <div className="w-full h-1 bg-muted rounded-full overflow-hidden mt-4">
           <div 
-            className="h-full bg-primary transition-all duration-300"
+            className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -351,13 +355,19 @@ export function FluxoAtendimentoPanel({
 
       {/* Content with Tabs */}
       <Tabs defaultValue="atendimento" className="flex-1 flex flex-col min-h-0">
-        <div className="px-4 pt-2">
-          <TabsList className="w-full grid grid-cols-2 h-9">
-            <TabsTrigger value="atendimento" className="gap-1.5 text-xs">
+        <div className="px-6 pt-4">
+          <TabsList className="w-full grid grid-cols-2 h-10 bg-muted/50 p-1 rounded-lg">
+            <TabsTrigger 
+              value="atendimento" 
+              className="gap-2 text-xs rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            >
               <FileText className="h-3.5 w-3.5" />
               Atendimento
             </TabsTrigger>
-            <TabsTrigger value="historico" className="gap-1.5 text-xs">
+            <TabsTrigger 
+              value="historico" 
+              className="gap-2 text-xs rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm"
+            >
               <Clock className="h-3.5 w-3.5" />
               Histórico
             </TabsTrigger>
@@ -365,26 +375,34 @@ export function FluxoAtendimentoPanel({
         </div>
         
         {/* Tab Atendimento */}
-        <TabsContent value="atendimento" className="flex-1 overflow-y-auto mt-0 p-4 space-y-4">
+        <TabsContent value="atendimento" className="flex-1 overflow-y-auto mt-0 px-6 py-4 space-y-5">
           {/* Info da tarefa atual */}
-          <Card className="p-4 bg-muted/50">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-lg">{currentTask.contact_name}</span>
+          <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Users className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="font-semibold text-base">{currentTask.contact_name}</span>
+                <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{currentTask.title}</p>
+                {currentTask.description && (
+                  <p className="text-sm text-foreground/70 mt-2">{currentTask.description}</p>
+                )}
+                <div className="flex items-center gap-2 mt-3">
+                  <Badge variant="secondary" className="text-xs font-normal">{currentTask.origem}</Badge>
+                  {currentTask.time && (
+                    <span className="text-xs text-muted-foreground">{currentTask.time}</span>
+                  )}
+                </div>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground">{currentTask.title}</p>
-            {currentTask.description && (
-              <p className="text-sm mt-2">{currentTask.description}</p>
-            )}
-            <div className="flex gap-2 text-xs text-muted-foreground mt-2">
-              <Badge variant="secondary">{currentTask.origem}</Badge>
-              {currentTask.time && <span>{currentTask.time}</span>}
-            </div>
-          </Card>
+          </div>
 
           {/* Tipo de contato */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Tipo de Contato</label>
+          <div className="space-y-3">
+            <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Tipo de Contato
+            </label>
             <div className="flex flex-wrap gap-2">
               {TIPOS_CONTATO.map(tipo => (
                 <Button
@@ -392,7 +410,12 @@ export function FluxoAtendimentoPanel({
                   variant={tipoContato === tipo.id ? "default" : "outline"}
                   size="sm"
                   onClick={() => setTipoContato(tipo.id)}
-                  className="gap-2"
+                  className={cn(
+                    "gap-2 h-9 rounded-lg transition-all",
+                    tipoContato === tipo.id 
+                      ? "shadow-sm" 
+                      : "border-border/60 hover:border-border hover:bg-muted/50"
+                  )}
                 >
                   <tipo.icon className="h-4 w-4" />
                   {tipo.label}
@@ -402,11 +425,11 @@ export function FluxoAtendimentoPanel({
           </div>
 
           {/* Flags de resultado */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium flex items-center gap-2">
+          <div className="space-y-3">
+            <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-2">
               Resultado do Contato
               {!selectedFlag && (
-                <span className="text-destructive text-xs flex items-center gap-1">
+                <span className="text-destructive text-[10px] flex items-center gap-1 normal-case tracking-normal">
                   <AlertCircle className="h-3 w-3" /> Obrigatório
                 </span>
               )}
@@ -415,16 +438,21 @@ export function FluxoAtendimentoPanel({
               {flags.map(flag => (
                 <Button
                   key={flag.id}
-                  variant={selectedFlag === flag.id ? "default" : "outline"}
+                  variant="outline"
                   size="sm"
                   onClick={() => setSelectedFlag(flag.id)}
+                  className={cn(
+                    "h-9 rounded-lg transition-all border-2",
+                    selectedFlag === flag.id && "ring-2 ring-offset-2 ring-offset-background"
+                  )}
                   style={{
-                    backgroundColor: selectedFlag === flag.id ? flag.cor : undefined,
+                    backgroundColor: selectedFlag === flag.id ? flag.cor : 'transparent',
                     borderColor: flag.cor,
-                    color: selectedFlag === flag.id ? 'white' : flag.cor
+                    color: selectedFlag === flag.id ? 'white' : flag.cor,
+                    ['--tw-ring-color' as any]: flag.cor,
                   }}
                 >
-                  {selectedFlag === flag.id && <Check className="h-3 w-3 mr-1" />}
+                  {selectedFlag === flag.id && <Check className="h-3.5 w-3.5 mr-1.5" />}
                   {flag.nome}
                 </Button>
               ))}
@@ -432,40 +460,54 @@ export function FluxoAtendimentoPanel({
           </div>
 
           {/* Observação */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium flex items-center justify-between">
-              Observação (opcional)
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Observação
+              </label>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
                 className={cn(
-                  "gap-1",
-                  isRecording && "text-destructive animate-pulse"
+                  "h-8 gap-1.5 text-xs rounded-lg",
+                  isRecording && "text-destructive bg-destructive/10"
                 )}
               >
-                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                {isRecording ? "Parar" : "Gravar"}
+                {isRecording ? (
+                  <>
+                    <MicOff className="h-3.5 w-3.5" />
+                    <span className="animate-pulse">Gravando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Mic className="h-3.5 w-3.5" />
+                    Gravar
+                  </>
+                )}
               </Button>
-            </label>
+            </div>
             <Textarea
               value={observacao}
               onChange={(e) => setObservacao(e.target.value)}
               placeholder="Detalhes do atendimento..."
               rows={3}
+              className="resize-none rounded-lg border-border/60 focus:border-primary/50 bg-background"
             />
           </div>
 
           {/* Data próximo contato */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium flex items-center gap-2">
-              Data do Próximo Contato
-              <AlertCircle className="h-3 w-3 text-destructive" />
+          <div className="space-y-3">
+            <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Próximo Contato
             </label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start gap-2">
-                  <CalendarIcon className="h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start gap-2 h-10 rounded-lg border-border/60 hover:border-border font-normal"
+                >
+                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                   {format(proximaData, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                 </Button>
               </PopoverTrigger>
@@ -483,7 +525,7 @@ export function FluxoAtendimentoPanel({
         </TabsContent>
         
         {/* Tab Histórico */}
-        <TabsContent value="historico" className="flex-1 overflow-hidden mt-0 p-4">
+        <TabsContent value="historico" className="flex-1 overflow-hidden mt-0 px-6 py-4">
           <CustomerHistoryTimeline
             contactId={currentTask.contact_id}
             contactName={currentTask.contact_name}
@@ -493,19 +535,25 @@ export function FluxoAtendimentoPanel({
         </TabsContent>
       </Tabs>
 
-      {/* Footer Actions */}
-      <div className="px-4 py-3 border-t bg-muted/30 flex justify-between">
-        <div className="flex gap-2">
+      {/* Footer Actions - Minimalista */}
+      <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between bg-muted/20">
+        <div className="flex items-center gap-2">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => setCurrentIndex(prev => Math.max(0, prev - 1))}
             disabled={currentIndex === 0}
+            className="h-9 rounded-lg"
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
             Anterior
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleSkip}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleSkip}
+            className="h-9 rounded-lg text-muted-foreground hover:text-foreground"
+          >
             Pular
           </Button>
         </div>
@@ -513,14 +561,14 @@ export function FluxoAtendimentoPanel({
           size="sm"
           onClick={handleSaveAndNext}
           disabled={!canProceed || isSaving}
-          className="gap-2"
+          className="h-9 gap-2 rounded-lg shadow-sm"
         >
           {isSaving ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <>
               <Check className="h-4 w-4" />
-              {isLastTask ? "Finalizar" : "Salvar e Próximo"}
+              {isLastTask ? "Finalizar" : "Próximo"}
               {!isLastTask && <ChevronRight className="h-4 w-4" />}
             </>
           )}
