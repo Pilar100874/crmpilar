@@ -183,13 +183,49 @@ export function CustomerHistoryTimeline({
       }
 
       // Buscar orçamentos com todos os eventos do ciclo de vida
+      // Orçamentos podem estar vinculados ao cliente OU à empresa do cliente
+      let empresaIds: string[] = [];
+      
       if (customerId) {
-        const { data: orcamentos } = await supabase
+        // Buscar empresas vinculadas ao cliente
+        const { data: customerEmpresas } = await supabase
+          .from('customer_empresas')
+          .select('empresa_id')
+          .eq('customer_id', customerId);
+        
+        if (customerEmpresas) {
+          empresaIds = customerEmpresas.map(ce => ce.empresa_id);
+        }
+
+        // Também verificar empresa diretamente no customer
+        const { data: customerDirect } = await supabase
+          .from('customers')
+          .select('empresa_id')
+          .eq('id', customerId)
+          .maybeSingle();
+        
+        if (customerDirect?.empresa_id && !empresaIds.includes(customerDirect.empresa_id)) {
+          empresaIds.push(customerDirect.empresa_id);
+        }
+      }
+
+      // Buscar orçamentos por cliente_id OU empresa_id
+      if (customerId || empresaIds.length > 0) {
+        let query = supabase
           .from('orcamentos')
           .select('id, status, etapa, valor_total, created_at, data_envio, data_visualizacao, updated_at')
-          .eq('cliente_id', customerId)
           .order('created_at', { ascending: false })
           .limit(20);
+        
+        if (customerId && empresaIds.length > 0) {
+          query = query.or(`cliente_id.eq.${customerId},empresa_id.in.(${empresaIds.join(',')})`);
+        } else if (customerId) {
+          query = query.eq('cliente_id', customerId);
+        } else if (empresaIds.length > 0) {
+          query = query.in('empresa_id', empresaIds);
+        }
+        
+        const { data: orcamentos } = await query;
 
         if (orcamentos) {
           orcamentos.forEach(orc => {
