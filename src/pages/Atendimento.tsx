@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -43,6 +43,10 @@ import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
 import type { Atendente } from "@/types/atendimento";
 import { useFerramentasAtendimento, type TabType } from "@/hooks/useFerramentasAtendimento";
 import { ToolsDropdown } from "@/components/atendimento/ToolsDropdown";
+import { FluxoAtendimentoDialog } from "@/components/atendimento/agenda/FluxoAtendimentoDialog";
+import { ConfigDatasProximoContatoDialog } from "@/components/atendimento/agenda/ConfigDatasProximoContatoDialog";
+import { EnvioMassaDialog } from "@/components/atendimento/agenda/EnvioMassaDialog";
+
 interface Conversation {
   id: string;
   customer_id: string;
@@ -233,6 +237,11 @@ export default function Atendimento() {
   const [agendaFilterPossuiWhatsapp, setAgendaFilterPossuiWhatsapp] = useState(false);
   const [agendaFilterPossuiEmail, setAgendaFilterPossuiEmail] = useState(false);
   
+  // Fluxo de atendimento states
+  const [showFluxoAtendimento, setShowFluxoAtendimento] = useState(false);
+  const [showConfigDatas, setShowConfigDatas] = useState(false);
+  const [showEnvioMassa, setShowEnvioMassa] = useState(false);
+
   // Customer vinculos (for task legends)
   const [customerVinculos, setCustomerVinculos] = useState<{
     linkedToUser: Set<string>;
@@ -3709,6 +3718,42 @@ ${recentMessages}
                   <PhoneCall className="w-4 h-4 text-orange-600" />
                 </Button>
                 
+                {/* Fluxo de Atendimento */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowFluxoAtendimento(true)}
+                  disabled={filteredTasks.length === 0}
+                  className="h-8 px-3 rounded-full border-orange-200 hover:bg-orange-50"
+                  title="Iniciar Fluxo de Atendimento Sequencial"
+                >
+                  <Play className="w-4 h-4 text-orange-600 mr-1" />
+                  <span className="text-xs text-orange-600">Fluxo</span>
+                </Button>
+                
+                {/* Envio em Massa */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowEnvioMassa(true)}
+                  disabled={filteredTasks.length === 0}
+                  className="h-8 px-3 rounded-full border-orange-200 hover:bg-orange-50"
+                  title="Envio em Massa"
+                >
+                  <Users className="w-4 h-4 text-orange-600 mr-1" />
+                  <span className="text-xs text-orange-600">Massa</span>
+                </Button>
+                
+                {/* Config Datas */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowConfigDatas(true)}
+                  className="h-8 w-8 p-0 rounded-full border-orange-200 hover:bg-orange-50"
+                  title="Configurar Datas Padrão"
+                >
+                  <Settings2 className="w-4 h-4 text-orange-600" />
+                </Button>
                 {/* Contact Filters */}
                 <div className="flex items-center gap-1 ml-2 border-l pl-2 border-orange-200">
                   <Button
@@ -5913,10 +5958,21 @@ function MobileMainContent({
           <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-lg border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400">
             <Trash2 className="w-3.5 h-3.5" />
           </Button>
-        </div>
       </div>
-    );
-  }
+    </div>
+  );
+
+  // Empty state
+  return (
+    <div className="h-full flex items-center justify-center text-muted-foreground bg-muted/20">
+      <div className="text-center">
+        <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
+        <p className="text-lg font-medium mb-2">Selecione um item</p>
+        <p className="text-sm">Escolha um item da lista</p>
+      </div>
+    </div>
+  );
+}
 
   // Orçamento content
   if (activeTab === "orcamento" && orcamentoSheetOpen && estabelecimentoId) {
