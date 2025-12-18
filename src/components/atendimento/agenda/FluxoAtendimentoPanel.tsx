@@ -276,8 +276,8 @@ export function FluxoAtendimentoPanel({
 
   if (tasks.length === 0) {
     return (
-      <div className="flex-1 flex flex-col h-full min-h-0 bg-background">
-        <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between">
+      <div className="flex flex-col bg-background h-full max-h-[100dvh] md:max-h-full">
+        <div className="px-6 py-4 border-b border-border/50 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
               <Play className="w-4 h-4 text-primary" />
@@ -291,7 +291,7 @@ export function FluxoAtendimentoPanel({
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <div className="flex-1 flex items-center justify-center p-8">
+        <div className="flex-1 flex items-center justify-center p-8 overflow-auto">
           <div className="text-center space-y-3">
             <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto">
               <CalendarIcon className="w-8 h-8 text-muted-foreground/40" />
@@ -309,9 +309,9 @@ export function FluxoAtendimentoPanel({
   if (!currentTask) return null;
 
   return (
-    <div className="flex-1 flex flex-col h-full min-h-0 bg-background">
-      {/* Header Minimalista */}
-      <div className="px-6 py-4 border-b border-border/50">
+    <div className="flex flex-col bg-background h-full max-h-[100dvh] md:max-h-full">
+      {/* Header Minimalista - Fixo */}
+      <div className="px-6 py-4 border-b border-border/50 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -354,8 +354,8 @@ export function FluxoAtendimentoPanel({
       </div>
 
       {/* Content with Tabs */}
-      <Tabs defaultValue="atendimento" className="flex-1 flex flex-col min-h-0">
-        <div className="px-6 pt-4">
+      <Tabs defaultValue="atendimento" className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="px-6 pt-4 flex-shrink-0">
           <TabsList className="w-full grid grid-cols-2 h-10 bg-muted/50 p-1 rounded-lg">
             <TabsTrigger 
               value="atendimento" 
@@ -497,7 +497,7 @@ export function FluxoAtendimentoPanel({
           </div>
 
           {/* Data próximo contato */}
-          <div className="space-y-3">
+          <div className="space-y-3 pb-4">
             <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Próximo Contato
             </label>
@@ -535,8 +535,8 @@ export function FluxoAtendimentoPanel({
         </TabsContent>
       </Tabs>
 
-      {/* Footer Actions - Minimalista */}
-      <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between bg-muted/20">
+      {/* Footer Actions - Fixo no mobile */}
+      <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between bg-background flex-shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
