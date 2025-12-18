@@ -3432,6 +3432,27 @@ ${recentMessages}
             open={showPredictiveDialer}
             onOpenChange={setShowPredictiveDialer}
           />
+          <FluxoAtendimentoDialog
+            open={showFluxoAtendimento}
+            onOpenChange={setShowFluxoAtendimento}
+            tasks={filteredTasks}
+            estabelecimentoId={estabelecimentoId}
+            usuarioId={usuarioId}
+            onTaskCompleted={loadTodayTasks}
+          />
+          <ConfigDatasProximoContatoDialog
+            open={showConfigDatas}
+            onOpenChange={setShowConfigDatas}
+            estabelecimentoId={estabelecimentoId}
+          />
+          <EnvioMassaDialog
+            open={showEnvioMassa}
+            onOpenChange={setShowEnvioMassa}
+            tasks={filteredTasks}
+            estabelecimentoId={estabelecimentoId}
+            usuarioId={usuarioId}
+            onComplete={loadTodayTasks}
+          />
           <NovoContatoDialog 
             open={showNovoContatoDialog}
             onOpenChange={setShowNovoContatoDialog}
