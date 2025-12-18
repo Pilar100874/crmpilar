@@ -45,6 +45,7 @@ interface FluxoAtendimentoPanelProps {
   usuarioId: string;
   onTaskCompleted: () => void;
   onClose: () => void;
+  onCurrentTaskChange?: (task: Task | null) => void;
 }
 
 const TIPOS_CONTATO = [
@@ -59,7 +60,8 @@ export function FluxoAtendimentoPanel({
   estabelecimentoId,
   usuarioId,
   onTaskCompleted,
-  onClose
+  onClose,
+  onCurrentTaskChange
 }: FluxoAtendimentoPanelProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flags, setFlags] = useState<AtendimentoFlag[]>([]);
@@ -94,6 +96,11 @@ export function FluxoAtendimentoPanel({
     setSelectedFlag(null);
     setObservacao("");
   }, [currentIndex]);
+
+  // Notify parent of current task changes
+  useEffect(() => {
+    onCurrentTaskChange?.(currentTask || null);
+  }, [currentTask, onCurrentTaskChange]);
 
   const loadFlags = async () => {
     const { data } = await supabase
