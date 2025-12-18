@@ -5983,18 +5983,6 @@ function MobileMainContent({
     </div>
   );
 
-  // Empty state
-  return (
-    <div className="h-full flex items-center justify-center text-muted-foreground bg-muted/20">
-      <div className="text-center">
-        <MessageSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
-        <p className="text-lg font-medium mb-2">Selecione um item</p>
-        <p className="text-sm">Escolha um item da lista</p>
-      </div>
-    </div>
-  );
-}
-
   // Orçamento content
   if (activeTab === "orcamento" && orcamentoSheetOpen && estabelecimentoId) {
     return (
@@ -6024,3 +6012,4 @@ function MobileMainContent({
     </div>
   );
 }
+
