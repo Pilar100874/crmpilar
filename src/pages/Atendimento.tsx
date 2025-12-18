@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -5514,132 +5515,123 @@ function MobileListContent({
         )}
 
         {activeTab === "agenda" && (
-          <div className="space-y-4">
-            {/* Card de Data */}
-            <div className="relative bg-gradient-to-br from-white via-white to-primary/5 rounded-2xl p-4 shadow-lg border border-white/80 backdrop-blur-sm">
-              <div className="absolute -top-1 -right-1 w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full blur-xl" />
-              <div className="flex items-center justify-between relative">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handlePreviousDay} 
-                  className="h-10 w-10 p-0 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-all hover:scale-105 active:scale-95"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </Button>
-                
-                <div className="text-center flex-1 mx-3">
-                  <p className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                    {format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
-                  </p>
-                  <p className="text-xs text-muted-foreground capitalize mt-0.5 font-medium">
-                    {format(agendaDate, "EEEE", { locale: ptBR })}
-                  </p>
+          <div className="space-y-3">
+            {/* Card Principal - Data e Ações */}
+            <div className="bg-white dark:bg-muted/30 rounded-2xl shadow-sm border border-border/40 overflow-hidden">
+              {/* Header com Data */}
+              <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 px-4 py-3 border-b border-border/30">
+                <div className="flex items-center justify-between">
+                  <button 
+                    onClick={handlePreviousDay} 
+                    className="w-8 h-8 rounded-full bg-white dark:bg-background shadow-sm border border-border/40 flex items-center justify-center hover:bg-primary/5 hover:border-primary/30 transition-all active:scale-95"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-foreground/70" />
+                  </button>
+                  
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-foreground">
+                      {format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
+                    </p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {format(agendaDate, "EEEE, yyyy", { locale: ptBR })}
+                    </p>
+                  </div>
+                  
+                  <button 
+                    onClick={handleNextDay} 
+                    className="w-8 h-8 rounded-full bg-white dark:bg-background shadow-sm border border-border/40 flex items-center justify-center hover:bg-primary/5 hover:border-primary/30 transition-all active:scale-95"
+                  >
+                    <ChevronRight className="w-4 h-4 text-foreground/70" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* Corpo com Ações */}
+              <div className="p-3 space-y-3">
+                {/* Toggle Fluxo/Massa */}
+                <div className="flex items-center justify-center">
+                  <div className="inline-flex items-center bg-muted/50 rounded-xl p-1 gap-1">
+                    <button 
+                      onClick={() => setAgendaViewMode('fluxo')}
+                      disabled={filteredTasks.length === 0}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all disabled:opacity-50",
+                        agendaViewMode === 'fluxo' 
+                          ? "bg-primary text-primary-foreground shadow-sm" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-background"
+                      )}
+                    >
+                      <Play className="w-3.5 h-3.5" fill={agendaViewMode === 'fluxo' ? 'currentColor' : 'none'} />
+                      Fluxo
+                    </button>
+                    <button 
+                      onClick={() => setAgendaViewMode('massa')}
+                      disabled={filteredTasks.length === 0}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all disabled:opacity-50",
+                        agendaViewMode === 'massa' 
+                          ? "bg-primary text-primary-foreground shadow-sm" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-background"
+                      )}
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      Massa
+                    </button>
+                  </div>
                 </div>
                 
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleNextDay} 
-                  className="h-10 w-10 p-0 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-all hover:scale-105 active:scale-95"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
+                {/* Ações Rápidas */}
+                <div className="flex items-center justify-center gap-2">
+                  <button 
+                    onClick={handleToday} 
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-medium text-muted-foreground hover:text-foreground transition-all"
+                    title="Ir para hoje"
+                  >
+                    <CalendarDays className="w-3.5 h-3.5" />
+                    Hoje
+                  </button>
+                  
+                  <button 
+                    onClick={() => showPredictiveDialer()} 
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-green-50 dark:bg-green-950/30 hover:bg-green-100 dark:hover:bg-green-950/50 text-xs font-medium text-green-700 dark:text-green-400 transition-all"
+                    title="Discador preditivo"
+                  >
+                    <PhoneCall className="w-3.5 h-3.5" />
+                    Discador
+                  </button>
+                  
+                  <button 
+                    onClick={() => setShowConfigDatas(true)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted text-xs font-medium text-muted-foreground hover:text-foreground transition-all"
+                    title="Configurações de datas"
+                  >
+                    <Settings2 className="w-3.5 h-3.5" />
+                    Config
+                  </button>
+                </div>
               </div>
             </div>
             
-            {/* Ações Fluxo/Massa */}
-            <div className="flex items-center justify-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleToday} 
-                className="h-10 w-10 p-0 rounded-xl bg-white shadow-md hover:shadow-lg border border-border/30 transition-all hover:scale-105 active:scale-95"
-                title="Ir para hoje"
-              >
-                <CalendarDays className="w-4 h-4 text-primary" />
-              </Button>
-              
-              <div className="flex items-center gap-2 bg-white rounded-2xl px-2 py-2 shadow-md border border-border/30">
-                <Button 
-                  variant={agendaViewMode === 'fluxo' ? "default" : "ghost"}
-                  size="sm" 
-                  onClick={() => setAgendaViewMode('fluxo')}
-                  disabled={filteredTasks.length === 0}
-                  className={`h-9 px-4 rounded-xl text-xs font-semibold gap-2 transition-all ${
-                    agendaViewMode === 'fluxo' 
-                      ? 'bg-gradient-to-r from-primary to-primary/80 text-white shadow-md hover:shadow-lg' 
-                      : 'hover:bg-primary/10 text-muted-foreground hover:text-primary'
-                  }`}
-                >
-                  <Play className="w-3.5 h-3.5" fill={agendaViewMode === 'fluxo' ? 'currentColor' : 'none'} />
-                  Fluxo
-                </Button>
-                <div className="w-px h-5 bg-border/50" />
-                <Button 
-                  variant={agendaViewMode === 'massa' ? "default" : "ghost"}
-                  size="sm" 
-                  onClick={() => setAgendaViewMode('massa')}
-                  disabled={filteredTasks.length === 0}
-                  className={`h-9 px-4 rounded-xl text-xs font-semibold gap-2 transition-all ${
-                    agendaViewMode === 'massa' 
-                      ? 'bg-gradient-to-r from-primary to-primary/80 text-white shadow-md hover:shadow-lg' 
-                      : 'hover:bg-primary/10 text-muted-foreground hover:text-primary'
-                  }`}
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  Massa
-                </Button>
+            {/* Card de Filtros */}
+            <div className="bg-white dark:bg-muted/30 rounded-2xl shadow-sm border border-border/40 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-muted-foreground pl-1">Filtrar por:</span>
+                <div className="flex items-center gap-1.5">
+                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/50 hover:bg-green-50 dark:hover:bg-green-950/30 text-muted-foreground hover:text-green-700 dark:hover:text-green-400 border border-transparent hover:border-green-200 dark:hover:border-green-800 transition-all">
+                    <Phone className="w-3 h-3" />
+                    Tel
+                  </button>
+                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-muted-foreground hover:text-emerald-700 dark:hover:text-emerald-400 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800 transition-all">
+                    <MessageSquare className="w-3 h-3" />
+                    Whats
+                  </button>
+                  <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-muted/50 hover:bg-blue-50 dark:hover:bg-blue-950/30 text-muted-foreground hover:text-blue-700 dark:hover:text-blue-400 border border-transparent hover:border-blue-200 dark:hover:border-blue-800 transition-all">
+                    <Mail className="w-3 h-3" />
+                    Email
+                  </button>
+                </div>
+                <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
               </div>
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => showPredictiveDialer()} 
-                className="h-10 w-10 p-0 rounded-xl bg-white shadow-md hover:shadow-lg border border-border/30 transition-all hover:scale-105 active:scale-95"
-                title="Discador preditivo"
-              >
-                <PhoneCall className="w-4 h-4 text-green-600" />
-              </Button>
-            </div>
-
-            {/* Filtros por tipo de contato */}
-            <div className="flex items-center justify-center gap-2">
-              <div className="flex items-center gap-1.5 bg-white/90 rounded-2xl px-3 py-2 shadow-sm border border-border/20">
-                <span className="text-[10px] text-muted-foreground font-medium mr-1">Filtrar:</span>
-                <Badge 
-                  variant="outline" 
-                  className="h-7 px-3 rounded-xl text-[11px] font-medium gap-1.5 cursor-pointer hover:bg-green-50 hover:text-green-700 hover:border-green-200 border-border/40 transition-all"
-                >
-                  <Phone className="w-3 h-3" />
-                  Tel
-                </Badge>
-                <Badge 
-                  variant="outline" 
-                  className="h-7 px-3 rounded-xl text-[11px] font-medium gap-1.5 cursor-pointer hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 border-border/40 transition-all"
-                >
-                  <MessageSquare className="w-3 h-3" />
-                  Whats
-                </Badge>
-                <Badge 
-                  variant="outline" 
-                  className="h-7 px-3 rounded-xl text-[11px] font-medium gap-1.5 cursor-pointer hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 border-border/40 transition-all"
-                >
-                  <Mail className="w-3 h-3" />
-                  Email
-                </Badge>
-              </div>
-              
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowConfigDatas(true)}
-                className="h-9 w-9 p-0 rounded-xl bg-white/80 hover:bg-white border border-border/30 transition-all"
-                title="Configurações"
-              >
-                <Settings2 className="w-4 h-4 text-muted-foreground" />
-              </Button>
-              <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
             </div>
           </div>
         )}
