@@ -6,6 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { format, addDays } from "date-fns";
@@ -13,7 +14,7 @@ import { ptBR } from "date-fns/locale";
 import { 
   Phone, MessageSquare, Mail, Users, CalendarIcon, 
   ChevronLeft, ChevronRight, Check, Mic, MicOff, 
-  Loader2, AlertCircle, X, Play
+  Loader2, AlertCircle, X, Play, Clock, FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CustomerHistoryTimeline } from "./CustomerHistoryTimeline";
@@ -321,130 +322,149 @@ export function FluxoAtendimentoPanel({
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Info da tarefa atual */}
-        <Card className="p-4 bg-muted/50">
-          <div className="flex items-center gap-2 mb-2">
-            <Users className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-lg">{currentTask.contact_name}</span>
-          </div>
-          <p className="text-sm text-muted-foreground">{currentTask.title}</p>
-          {currentTask.description && (
-            <p className="text-sm mt-2">{currentTask.description}</p>
-          )}
-          <div className="flex gap-2 text-xs text-muted-foreground mt-2">
-            <Badge variant="secondary">{currentTask.origem}</Badge>
-            {currentTask.time && <span>{currentTask.time}</span>}
-          </div>
-        </Card>
-
-        {/* Tipo de contato */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Tipo de Contato</label>
-          <div className="flex flex-wrap gap-2">
-            {TIPOS_CONTATO.map(tipo => (
-              <Button
-                key={tipo.id}
-                variant={tipoContato === tipo.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTipoContato(tipo.id)}
-                className="gap-2"
-              >
-                <tipo.icon className="h-4 w-4" />
-                {tipo.label}
-              </Button>
-            ))}
-          </div>
+      {/* Content with Tabs */}
+      <Tabs defaultValue="atendimento" className="flex-1 flex flex-col min-h-0">
+        <div className="px-4 pt-2">
+          <TabsList className="w-full grid grid-cols-2 h-9">
+            <TabsTrigger value="atendimento" className="gap-1.5 text-xs">
+              <FileText className="h-3.5 w-3.5" />
+              Atendimento
+            </TabsTrigger>
+            <TabsTrigger value="historico" className="gap-1.5 text-xs">
+              <Clock className="h-3.5 w-3.5" />
+              Histórico
+            </TabsTrigger>
+          </TabsList>
         </div>
-
-        {/* Flags de resultado */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium flex items-center gap-2">
-            Resultado do Contato
-            {!selectedFlag && (
-              <span className="text-destructive text-xs flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" /> Obrigatório
-              </span>
+        
+        {/* Tab Atendimento */}
+        <TabsContent value="atendimento" className="flex-1 overflow-y-auto mt-0 p-4 space-y-4">
+          {/* Info da tarefa atual */}
+          <Card className="p-4 bg-muted/50">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="h-5 w-5 text-primary" />
+              <span className="font-semibold text-lg">{currentTask.contact_name}</span>
+            </div>
+            <p className="text-sm text-muted-foreground">{currentTask.title}</p>
+            {currentTask.description && (
+              <p className="text-sm mt-2">{currentTask.description}</p>
             )}
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {flags.map(flag => (
-              <Button
-                key={flag.id}
-                variant={selectedFlag === flag.id ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedFlag(flag.id)}
-                style={{
-                  backgroundColor: selectedFlag === flag.id ? flag.cor : undefined,
-                  borderColor: flag.cor,
-                  color: selectedFlag === flag.id ? 'white' : flag.cor
-                }}
-              >
-                {selectedFlag === flag.id && <Check className="h-3 w-3 mr-1" />}
-                {flag.nome}
-              </Button>
-            ))}
+            <div className="flex gap-2 text-xs text-muted-foreground mt-2">
+              <Badge variant="secondary">{currentTask.origem}</Badge>
+              {currentTask.time && <span>{currentTask.time}</span>}
+            </div>
+          </Card>
+
+          {/* Tipo de contato */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Tipo de Contato</label>
+            <div className="flex flex-wrap gap-2">
+              {TIPOS_CONTATO.map(tipo => (
+                <Button
+                  key={tipo.id}
+                  variant={tipoContato === tipo.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setTipoContato(tipo.id)}
+                  className="gap-2"
+                >
+                  <tipo.icon className="h-4 w-4" />
+                  {tipo.label}
+                </Button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Observação */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium flex items-center justify-between">
-            Observação (opcional)
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-              className={cn(
-                "gap-1",
-                isRecording && "text-destructive animate-pulse"
+          {/* Flags de resultado */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2">
+              Resultado do Contato
+              {!selectedFlag && (
+                <span className="text-destructive text-xs flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" /> Obrigatório
+                </span>
               )}
-            >
-              {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              {isRecording ? "Parar" : "Gravar"}
-            </Button>
-          </label>
-          <Textarea
-            value={observacao}
-            onChange={(e) => setObservacao(e.target.value)}
-            placeholder="Detalhes do atendimento..."
-            rows={3}
-          />
-        </div>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {flags.map(flag => (
+                <Button
+                  key={flag.id}
+                  variant={selectedFlag === flag.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedFlag(flag.id)}
+                  style={{
+                    backgroundColor: selectedFlag === flag.id ? flag.cor : undefined,
+                    borderColor: flag.cor,
+                    color: selectedFlag === flag.id ? 'white' : flag.cor
+                  }}
+                >
+                  {selectedFlag === flag.id && <Check className="h-3 w-3 mr-1" />}
+                  {flag.nome}
+                </Button>
+              ))}
+            </div>
+          </div>
 
-        {/* Data próximo contato */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium flex items-center gap-2">
-            Data do Próximo Contato
-            <AlertCircle className="h-3 w-3 text-destructive" />
-          </label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                {format(proximaData, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+          {/* Observação */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center justify-between">
+              Observação (opcional)
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                className={cn(
+                  "gap-1",
+                  isRecording && "text-destructive animate-pulse"
+                )}
+              >
+                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                {isRecording ? "Parar" : "Gravar"}
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={proximaData}
-                onSelect={(date) => date && setProximaData(date)}
-                disabled={(date) => date < new Date()}
-                locale={ptBR}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+            </label>
+            <Textarea
+              value={observacao}
+              onChange={(e) => setObservacao(e.target.value)}
+              placeholder="Detalhes do atendimento..."
+              rows={3}
+            />
+          </div>
 
-        {/* Timeline do Histórico do Cliente */}
-        <CustomerHistoryTimeline
-          contactId={currentTask.contact_id}
-          contactName={currentTask.contact_name}
-          estabelecimentoId={estabelecimentoId}
-        />
-      </div>
+          {/* Data próximo contato */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2">
+              Data do Próximo Contato
+              <AlertCircle className="h-3 w-3 text-destructive" />
+            </label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  {format(proximaData, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={proximaData}
+                  onSelect={(date) => date && setProximaData(date)}
+                  disabled={(date) => date < new Date()}
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        </TabsContent>
+        
+        {/* Tab Histórico */}
+        <TabsContent value="historico" className="flex-1 overflow-hidden mt-0 p-4">
+          <CustomerHistoryTimeline
+            contactId={currentTask.contact_id}
+            contactName={currentTask.contact_name}
+            estabelecimentoId={estabelecimentoId}
+            isFullView={true}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Footer Actions */}
       <div className="px-4 py-3 border-t bg-muted/30 flex justify-between">
