@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { format, addDays } from "date-fns";
@@ -15,6 +16,7 @@ import {
   Loader2, AlertCircle, X, Play
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CustomerHistoryTimeline } from "./CustomerHistoryTimeline";
 
 interface Task {
   id: string;
@@ -435,6 +437,13 @@ export function FluxoAtendimentoPanel({
             </PopoverContent>
           </Popover>
         </div>
+
+        {/* Timeline do Histórico do Cliente */}
+        <CustomerHistoryTimeline
+          contactId={currentTask.contact_id}
+          contactName={currentTask.contact_name}
+          estabelecimentoId={estabelecimentoId}
+        />
       </div>
 
       {/* Footer Actions */}
