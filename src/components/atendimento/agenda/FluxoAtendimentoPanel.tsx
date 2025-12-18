@@ -46,6 +46,8 @@ interface FluxoAtendimentoPanelProps {
   onTaskCompleted: () => void;
   onClose: () => void;
   onCurrentTaskChange?: (task: Task | null) => void;
+  showDetails?: boolean;
+  onToggleDetails?: () => void;
 }
 
 const TIPOS_CONTATO = [
@@ -61,7 +63,9 @@ export function FluxoAtendimentoPanel({
   usuarioId,
   onTaskCompleted,
   onClose,
-  onCurrentTaskChange
+  onCurrentTaskChange,
+  showDetails,
+  onToggleDetails
 }: FluxoAtendimentoPanelProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flags, setFlags] = useState<AtendimentoFlag[]>([]);
@@ -290,6 +294,17 @@ export function FluxoAtendimentoPanel({
             <Badge variant="outline">
               {Math.round(progress)}%
             </Badge>
+            {onToggleDetails && (
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={onToggleDetails}
+                className="h-8 w-8 p-0"
+                title={showDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
+              >
+                {showDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </Button>
+            )}
             <Button size="sm" variant="ghost" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>

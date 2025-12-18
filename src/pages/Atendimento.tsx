@@ -118,6 +118,7 @@ export default function Atendimento() {
   const [showClientDetailsAgenda, setShowClientDetailsAgenda] = useState(!isMobile);
   const [showClientDetailsEmail, setShowClientDetailsEmail] = useState(!isMobile);
   const [showClientDetailsOrcamento, setShowClientDetailsOrcamento] = useState(!isMobile);
+  const [showClientDetailsFluxo, setShowClientDetailsFluxo] = useState(!isMobile);
   
   // Estados específicos por aba
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -4875,6 +4876,8 @@ ${recentMessages}
               setFluxoCurrentTask(null);
             }}
             onCurrentTaskChange={setFluxoCurrentTask}
+            showDetails={showClientDetailsFluxo}
+            onToggleDetails={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
           />
         ) : activeTab === "agenda" && agendaViewMode === 'massa' ? (
           /* Envio em Massa Panel */
@@ -5095,7 +5098,7 @@ ${recentMessages}
       )}
 
       {/* Right Sidebar - Fluxo Details Panel */}
-      {!orcamentoSheetOpen && activeTab === "agenda" && agendaViewMode === 'fluxo' && fluxoCurrentTask && (
+      {!orcamentoSheetOpen && activeTab === "agenda" && agendaViewMode === 'fluxo' && fluxoCurrentTask && showClientDetailsFluxo && (
         <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="agenda"
