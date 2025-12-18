@@ -5514,83 +5514,80 @@ function MobileListContent({
         )}
 
         {activeTab === "agenda" && (
-          <div className="space-y-3">
-            {/* Linha 1: Data e navegação */}
-            <div className="flex items-center justify-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handlePreviousDay} 
-                className="h-9 w-9 p-0 rounded-full bg-white/60 hover:bg-white border border-primary/20 text-primary"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <div className="flex-1 text-center bg-white/80 rounded-2xl py-2 px-4 border border-primary/20 shadow-sm">
-                <p className="text-sm font-bold text-primary">
-                  {format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
-                </p>
-                <p className="text-[10px] text-primary/70 capitalize">
-                  {format(agendaDate, "EEEE", { locale: ptBR })}
-                </p>
+          <div className="space-y-4">
+            {/* Card de Data */}
+            <div className="relative bg-gradient-to-br from-white via-white to-primary/5 rounded-2xl p-4 shadow-lg border border-white/80 backdrop-blur-sm">
+              <div className="absolute -top-1 -right-1 w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full blur-xl" />
+              <div className="flex items-center justify-between relative">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handlePreviousDay} 
+                  className="h-10 w-10 p-0 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-all hover:scale-105 active:scale-95"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+                
+                <div className="text-center flex-1 mx-3">
+                  <p className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                    {format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
+                  </p>
+                  <p className="text-xs text-muted-foreground capitalize mt-0.5 font-medium">
+                    {format(agendaDate, "EEEE", { locale: ptBR })}
+                  </p>
+                </div>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleNextDay} 
+                  className="h-10 w-10 p-0 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary transition-all hover:scale-105 active:scale-95"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleNextDay} 
-                className="h-9 w-9 p-0 rounded-full bg-white/60 hover:bg-white border border-primary/20 text-primary"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
             </div>
             
-            {/* Linha 2: Ações principais */}
-            <div className="flex items-center justify-center gap-2">
+            {/* Ações Fluxo/Massa */}
+            <div className="flex items-center justify-center gap-3">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={handleToday} 
-                className="h-8 w-8 p-0 rounded-full bg-white/70 hover:bg-white border border-border/40"
-                title="Hoje"
+                className="h-10 w-10 p-0 rounded-xl bg-white shadow-md hover:shadow-lg border border-border/30 transition-all hover:scale-105 active:scale-95"
+                title="Ir para hoje"
               >
-                <CalendarDays className="w-4 h-4 text-muted-foreground" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => showPredictiveDialer()} 
-                className="h-8 w-8 p-0 rounded-full bg-white/70 hover:bg-white border border-border/40"
-                title="Discador"
-              >
-                <PhoneCall className="w-4 h-4 text-muted-foreground" />
+                <CalendarDays className="w-4 h-4 text-primary" />
               </Button>
               
-              <div className="flex items-center gap-1.5 bg-white/80 rounded-full px-1 py-1 border border-primary/20 shadow-sm">
+              <div className="flex items-center gap-2 bg-white rounded-2xl px-2 py-2 shadow-md border border-border/30">
                 <Button 
                   variant={agendaViewMode === 'fluxo' ? "default" : "ghost"}
                   size="sm" 
                   onClick={() => setAgendaViewMode('fluxo')}
                   disabled={filteredTasks.length === 0}
-                  className={`h-7 px-3 rounded-full text-xs gap-1.5 ${
+                  className={`h-9 px-4 rounded-xl text-xs font-semibold gap-2 transition-all ${
                     agendaViewMode === 'fluxo' 
-                      ? 'bg-primary text-white shadow-sm' 
-                      : 'hover:bg-primary/10 text-muted-foreground'
+                      ? 'bg-gradient-to-r from-primary to-primary/80 text-white shadow-md hover:shadow-lg' 
+                      : 'hover:bg-primary/10 text-muted-foreground hover:text-primary'
                   }`}
                 >
-                  <Play className="w-3 h-3" />
+                  <Play className="w-3.5 h-3.5" fill={agendaViewMode === 'fluxo' ? 'currentColor' : 'none'} />
                   Fluxo
                 </Button>
+                <div className="w-px h-5 bg-border/50" />
                 <Button 
                   variant={agendaViewMode === 'massa' ? "default" : "ghost"}
                   size="sm" 
                   onClick={() => setAgendaViewMode('massa')}
                   disabled={filteredTasks.length === 0}
-                  className={`h-7 px-3 rounded-full text-xs gap-1.5 ${
+                  className={`h-9 px-4 rounded-xl text-xs font-semibold gap-2 transition-all ${
                     agendaViewMode === 'massa' 
-                      ? 'bg-primary text-white shadow-sm' 
-                      : 'hover:bg-primary/10 text-muted-foreground'
+                      ? 'bg-gradient-to-r from-primary to-primary/80 text-white shadow-md hover:shadow-lg' 
+                      : 'hover:bg-primary/10 text-muted-foreground hover:text-primary'
                   }`}
                 >
-                  <Users className="w-3 h-3" />
+                  <Users className="w-3.5 h-3.5" />
                   Massa
                 </Button>
               </div>
@@ -5598,29 +5595,51 @@ function MobileListContent({
               <Button 
                 variant="ghost" 
                 size="sm" 
+                onClick={() => showPredictiveDialer()} 
+                className="h-10 w-10 p-0 rounded-xl bg-white shadow-md hover:shadow-lg border border-border/30 transition-all hover:scale-105 active:scale-95"
+                title="Discador preditivo"
+              >
+                <PhoneCall className="w-4 h-4 text-green-600" />
+              </Button>
+            </div>
+
+            {/* Filtros por tipo de contato */}
+            <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center gap-1.5 bg-white/90 rounded-2xl px-3 py-2 shadow-sm border border-border/20">
+                <span className="text-[10px] text-muted-foreground font-medium mr-1">Filtrar:</span>
+                <Badge 
+                  variant="outline" 
+                  className="h-7 px-3 rounded-xl text-[11px] font-medium gap-1.5 cursor-pointer hover:bg-green-50 hover:text-green-700 hover:border-green-200 border-border/40 transition-all"
+                >
+                  <Phone className="w-3 h-3" />
+                  Tel
+                </Badge>
+                <Badge 
+                  variant="outline" 
+                  className="h-7 px-3 rounded-xl text-[11px] font-medium gap-1.5 cursor-pointer hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 border-border/40 transition-all"
+                >
+                  <MessageSquare className="w-3 h-3" />
+                  Whats
+                </Badge>
+                <Badge 
+                  variant="outline" 
+                  className="h-7 px-3 rounded-xl text-[11px] font-medium gap-1.5 cursor-pointer hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 border-border/40 transition-all"
+                >
+                  <Mail className="w-3 h-3" />
+                  Email
+                </Badge>
+              </div>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
                 onClick={() => setShowConfigDatas(true)}
-                className="h-8 w-8 p-0 rounded-full bg-white/70 hover:bg-white border border-border/40"
-                title="Configurar Datas"
+                className="h-9 w-9 p-0 rounded-xl bg-white/80 hover:bg-white border border-border/30 transition-all"
+                title="Configurações"
               >
                 <Settings2 className="w-4 h-4 text-muted-foreground" />
               </Button>
               <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
-            </div>
-
-            {/* Linha 3: Filtros rápidos por tipo */}
-            <div className="flex items-center justify-center gap-1.5 bg-white/60 rounded-full px-2 py-1.5 border border-border/30">
-              <Badge variant="outline" className="h-6 px-2.5 rounded-full text-[10px] gap-1 cursor-pointer hover:bg-primary/10 border-border/50">
-                <Phone className="w-3 h-3" />
-                Tel
-              </Badge>
-              <Badge variant="outline" className="h-6 px-2.5 rounded-full text-[10px] gap-1 cursor-pointer hover:bg-primary/10 border-border/50">
-                <MessageSquare className="w-3 h-3" />
-                Whats
-              </Badge>
-              <Badge variant="outline" className="h-6 px-2.5 rounded-full text-[10px] gap-1 cursor-pointer hover:bg-primary/10 border-border/50">
-                <Mail className="w-3 h-3" />
-                Email
-              </Badge>
             </div>
           </div>
         )}
