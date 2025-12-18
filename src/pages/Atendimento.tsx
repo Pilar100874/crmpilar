@@ -5514,54 +5514,114 @@ function MobileListContent({
         )}
 
         {activeTab === "agenda" && (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handlePreviousDay} className="h-10 w-10 p-0 rounded-xl">
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <div className="flex-1 text-center bg-white/70 rounded-xl py-2 px-3">
-              <p className="text-sm font-bold text-orange-700">
-                {format(agendaDate, "dd/MM/yyyy", { locale: ptBR })}
-              </p>
+          <div className="space-y-3">
+            {/* Linha 1: Data e navegação */}
+            <div className="flex items-center justify-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handlePreviousDay} 
+                className="h-9 w-9 p-0 rounded-full bg-white/60 hover:bg-white border border-primary/20 text-primary"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <div className="flex-1 text-center bg-white/80 rounded-2xl py-2 px-4 border border-primary/20 shadow-sm">
+                <p className="text-sm font-bold text-primary">
+                  {format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
+                </p>
+                <p className="text-[10px] text-primary/70 capitalize">
+                  {format(agendaDate, "EEEE", { locale: ptBR })}
+                </p>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleNextDay} 
+                className="h-9 w-9 p-0 rounded-full bg-white/60 hover:bg-white border border-primary/20 text-primary"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
-            <Button variant="outline" size="sm" onClick={handleNextDay} className="h-10 w-10 p-0 rounded-xl">
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-            <Button variant="secondary" size="sm" onClick={handleToday} className="h-10 w-10 p-0 rounded-xl">
-              <CalendarDays className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => showPredictiveDialer()} className="h-10 w-10 p-0 rounded-xl">
-              <PhoneCall className="w-4 h-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setAgendaViewMode('fluxo')}
-              disabled={filteredTasks.length === 0}
-              className="h-10 w-10 p-0 rounded-xl"
-              title="Fluxo de Atendimento"
-            >
-              <Play className="w-4 h-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setAgendaViewMode('massa')}
-              disabled={filteredTasks.length === 0}
-              className="h-10 w-10 p-0 rounded-xl"
-              title="Envio em Massa"
-            >
-              <Users className="w-4 h-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowConfigDatas(true)}
-              className="h-10 w-10 p-0 rounded-xl"
-              title="Configurar Datas Padrão"
-            >
-              <Settings2 className="w-4 h-4" />
-            </Button>
-            <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
+            
+            {/* Linha 2: Ações principais */}
+            <div className="flex items-center justify-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleToday} 
+                className="h-8 w-8 p-0 rounded-full bg-white/70 hover:bg-white border border-border/40"
+                title="Hoje"
+              >
+                <CalendarDays className="w-4 h-4 text-muted-foreground" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => showPredictiveDialer()} 
+                className="h-8 w-8 p-0 rounded-full bg-white/70 hover:bg-white border border-border/40"
+                title="Discador"
+              >
+                <PhoneCall className="w-4 h-4 text-muted-foreground" />
+              </Button>
+              
+              <div className="flex items-center gap-1.5 bg-white/80 rounded-full px-1 py-1 border border-primary/20 shadow-sm">
+                <Button 
+                  variant={agendaViewMode === 'fluxo' ? "default" : "ghost"}
+                  size="sm" 
+                  onClick={() => setAgendaViewMode('fluxo')}
+                  disabled={filteredTasks.length === 0}
+                  className={`h-7 px-3 rounded-full text-xs gap-1.5 ${
+                    agendaViewMode === 'fluxo' 
+                      ? 'bg-primary text-white shadow-sm' 
+                      : 'hover:bg-primary/10 text-muted-foreground'
+                  }`}
+                >
+                  <Play className="w-3 h-3" />
+                  Fluxo
+                </Button>
+                <Button 
+                  variant={agendaViewMode === 'massa' ? "default" : "ghost"}
+                  size="sm" 
+                  onClick={() => setAgendaViewMode('massa')}
+                  disabled={filteredTasks.length === 0}
+                  className={`h-7 px-3 rounded-full text-xs gap-1.5 ${
+                    agendaViewMode === 'massa' 
+                      ? 'bg-primary text-white shadow-sm' 
+                      : 'hover:bg-primary/10 text-muted-foreground'
+                  }`}
+                >
+                  <Users className="w-3 h-3" />
+                  Massa
+                </Button>
+              </div>
+              
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowConfigDatas(true)}
+                className="h-8 w-8 p-0 rounded-full bg-white/70 hover:bg-white border border-border/40"
+                title="Configurar Datas"
+              >
+                <Settings2 className="w-4 h-4 text-muted-foreground" />
+              </Button>
+              <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
+            </div>
+
+            {/* Linha 3: Filtros rápidos por tipo */}
+            <div className="flex items-center justify-center gap-1.5 bg-white/60 rounded-full px-2 py-1.5 border border-border/30">
+              <Badge variant="outline" className="h-6 px-2.5 rounded-full text-[10px] gap-1 cursor-pointer hover:bg-primary/10 border-border/50">
+                <Phone className="w-3 h-3" />
+                Tel
+              </Badge>
+              <Badge variant="outline" className="h-6 px-2.5 rounded-full text-[10px] gap-1 cursor-pointer hover:bg-primary/10 border-border/50">
+                <MessageSquare className="w-3 h-3" />
+                Whats
+              </Badge>
+              <Badge variant="outline" className="h-6 px-2.5 rounded-full text-[10px] gap-1 cursor-pointer hover:bg-primary/10 border-border/50">
+                <Mail className="w-3 h-3" />
+                Email
+              </Badge>
+            </div>
           </div>
         )}
 
