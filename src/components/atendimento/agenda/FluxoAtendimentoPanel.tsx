@@ -294,6 +294,9 @@ export function FluxoAtendimentoPanel({
             <Badge variant="outline">
               {Math.round(progress)}%
             </Badge>
+            <Button size="sm" variant="ghost" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
             {onToggleDetails && (
               <Button 
                 size="sm" 
@@ -305,9 +308,6 @@ export function FluxoAtendimentoPanel({
                 {showDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
               </Button>
             )}
-            <Button size="sm" variant="ghost" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </div>
         {/* Progress bar */}
