@@ -408,63 +408,97 @@ export function FluxoAtendimentoPanel({
           </div>
 
           {/* Tipo de contato */}
-          <div className="space-y-3">
-            <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Tipo de Contato
+          <div className="space-y-4">
+            <label className="text-sm font-semibold text-foreground">
+              Como foi o contato?
             </label>
-            <div className="flex flex-wrap gap-2">
-              {TIPOS_CONTATO.map(tipo => (
-                <Button
-                  key={tipo.id}
-                  variant={tipoContato === tipo.id ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setTipoContato(tipo.id)}
-                  className={cn(
-                    "gap-2 h-9 rounded-lg transition-all",
-                    tipoContato === tipo.id 
-                      ? "shadow-sm" 
-                      : "border-border/60 hover:border-border hover:bg-muted/50"
-                  )}
-                >
-                  <tipo.icon className="h-4 w-4" />
-                  {tipo.label}
-                </Button>
-              ))}
+            <div className="grid grid-cols-4 gap-2">
+              {TIPOS_CONTATO.map(tipo => {
+                const isSelected = tipoContato === tipo.id;
+                const IconComponent = tipo.icon;
+                return (
+                  <button
+                    key={tipo.id}
+                    onClick={() => setTipoContato(tipo.id)}
+                    className={cn(
+                      "flex flex-col items-center gap-2 py-3 px-2 rounded-xl transition-all duration-200",
+                      isSelected 
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-[1.02]" 
+                        : "bg-white dark:bg-muted/50 border border-border/60 hover:border-primary/40 hover:bg-primary/5 hover:scale-[1.01]"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center transition-all",
+                      isSelected 
+                        ? "bg-white/20" 
+                        : "bg-muted/50"
+                    )}>
+                      <IconComponent className={cn(
+                        "h-5 w-5",
+                        isSelected ? "text-primary-foreground" : "text-muted-foreground"
+                      )} />
+                    </div>
+                    <span className={cn(
+                      "text-xs font-medium",
+                      isSelected ? "text-primary-foreground" : "text-foreground"
+                    )}>
+                      {tipo.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           {/* Flags de resultado */}
-          <div className="space-y-3">
-            <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground flex items-center gap-2">
-              Resultado do Contato
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-foreground">
+                Resultado do Contato
+              </label>
               {!selectedFlag && (
-                <span className="text-destructive text-[10px] flex items-center gap-1 normal-case tracking-normal">
-                  <AlertCircle className="h-3 w-3" /> Obrigatório
+                <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1 rounded-full">
+                  <AlertCircle className="h-3.5 w-3.5" /> Selecione uma opção
                 </span>
               )}
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {flags.map(flag => (
-                <Button
-                  key={flag.id}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedFlag(flag.id)}
-                  className={cn(
-                    "h-9 rounded-lg transition-all border-2",
-                    selectedFlag === flag.id && "ring-2 ring-offset-2 ring-offset-background"
-                  )}
-                  style={{
-                    backgroundColor: selectedFlag === flag.id ? flag.cor : 'transparent',
-                    borderColor: flag.cor,
-                    color: selectedFlag === flag.id ? 'white' : flag.cor,
-                    ['--tw-ring-color' as any]: flag.cor,
-                  }}
-                >
-                  {selectedFlag === flag.id && <Check className="h-3.5 w-3.5 mr-1.5" />}
-                  {flag.nome}
-                </Button>
-              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {flags.map(flag => {
+                const isSelected = selectedFlag === flag.id;
+                return (
+                  <button
+                    key={flag.id}
+                    onClick={() => setSelectedFlag(flag.id)}
+                    className={cn(
+                      "relative group flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 overflow-hidden",
+                      isSelected 
+                        ? "text-white shadow-lg scale-[1.02]" 
+                        : "bg-white dark:bg-muted/50 border-2 hover:scale-[1.01] hover:shadow-md"
+                    )}
+                    style={{
+                      backgroundColor: isSelected ? flag.cor : undefined,
+                      borderColor: isSelected ? flag.cor : flag.cor + '40',
+                      color: isSelected ? 'white' : flag.cor,
+                      boxShadow: isSelected ? `0 4px 20px -4px ${flag.cor}60` : undefined,
+                    }}
+                  >
+                    {isSelected && (
+                      <div 
+                        className="absolute inset-0 opacity-20"
+                        style={{
+                          background: `linear-gradient(135deg, white 0%, transparent 50%, ${flag.cor} 100%)`
+                        }}
+                      />
+                    )}
+                    <span className="relative flex items-center gap-2">
+                      {isSelected && (
+                        <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
+                      )}
+                      {flag.nome}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
