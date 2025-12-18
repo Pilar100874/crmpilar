@@ -3132,6 +3132,38 @@ ${recentMessages}
 
           {/* Mobile Content Area */}
           <div className="flex-1 overflow-hidden relative">
+            {/* Fluxo de Atendimento Panel - Mobile Fullscreen */}
+            {activeTab === "agenda" && agendaViewMode === 'fluxo' && (
+              <div className="absolute inset-0 z-20 bg-background">
+                <FluxoAtendimentoPanel
+                  tasks={filteredTasks}
+                  estabelecimentoId={estabelecimentoId}
+                  usuarioId={usuarioId}
+                  onTaskCompleted={loadTodayTasks}
+                  onClose={() => {
+                    setAgendaViewMode('default');
+                    setFluxoCurrentTask(null);
+                    setFluxoInitialIndex(0);
+                  }}
+                  onCurrentTaskChange={setFluxoCurrentTask}
+                  initialTaskIndex={fluxoInitialIndex}
+                />
+              </div>
+            )}
+            
+            {/* Envio em Massa Panel - Mobile Fullscreen */}
+            {activeTab === "agenda" && agendaViewMode === 'massa' && (
+              <div className="absolute inset-0 z-20 bg-background">
+                <EnvioMassaPanel
+                  tasks={filteredTasks}
+                  estabelecimentoId={estabelecimentoId}
+                  usuarioId={usuarioId}
+                  onComplete={loadTodayTasks}
+                  onClose={() => setAgendaViewMode('default')}
+                />
+              </div>
+            )}
+            
             {/* Lista */}
             <div
               className={`absolute inset-0 transition-transform duration-300 ease-out ${
@@ -3216,8 +3248,9 @@ ${recentMessages}
                 setActiveTab={setActiveTab}
                 emailsNaoLidosPerEmail={emailsNaoLidosPerEmail}
                 chatsNaoLidosPerPhone={chatsNaoLidosPerPhone}
-                setShowFluxoAtendimento={setShowFluxoAtendimento}
-                setShowEnvioMassa={setShowEnvioMassa}
+                agendaViewMode={agendaViewMode}
+                setAgendaViewMode={setAgendaViewMode}
+                setFluxoInitialIndex={setFluxoInitialIndex}
                 setShowConfigDatas={setShowConfigDatas}
               />
             </div>
@@ -5350,8 +5383,9 @@ interface MobileListContentProps {
   setActiveTab: (tab: string) => void;
   emailsNaoLidosPerEmail: Record<string, number>;
   chatsNaoLidosPerPhone: Record<string, number>;
-  setShowFluxoAtendimento: (show: boolean) => void;
-  setShowEnvioMassa: (show: boolean) => void;
+  agendaViewMode: 'default' | 'fluxo' | 'massa';
+  setAgendaViewMode: (mode: 'default' | 'fluxo' | 'massa') => void;
+  setFluxoInitialIndex: (index: number) => void;
   setShowConfigDatas: (show: boolean) => void;
 }
 
@@ -5396,8 +5430,9 @@ function MobileListContent({
   setActiveTab,
   emailsNaoLidosPerEmail,
   chatsNaoLidosPerPhone,
-  setShowFluxoAtendimento,
-  setShowEnvioMassa,
+  agendaViewMode,
+  setAgendaViewMode,
+  setFluxoInitialIndex,
   setShowConfigDatas,
 }: MobileListContentProps) {
   return (
@@ -5465,7 +5500,7 @@ function MobileListContent({
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => setShowFluxoAtendimento(true)}
+              onClick={() => setAgendaViewMode('fluxo')}
               disabled={filteredTasks.length === 0}
               className="h-10 w-10 p-0 rounded-xl"
               title="Fluxo de Atendimento"
@@ -5475,7 +5510,7 @@ function MobileListContent({
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={() => setShowEnvioMassa(true)}
+              onClick={() => setAgendaViewMode('massa')}
               disabled={filteredTasks.length === 0}
               className="h-10 w-10 p-0 rounded-xl"
               title="Envio em Massa"
@@ -5595,7 +5630,11 @@ function MobileListContent({
           return (
           <div
             key={task.id}
-            onClick={() => setSelectedTaskId(task.id)}
+            onClick={() => {
+              const taskIndex = filteredTasks.findIndex(t => t.id === task.id);
+              setFluxoInitialIndex(taskIndex >= 0 ? taskIndex : 0);
+              setAgendaViewMode('fluxo');
+            }}
             className={`relative rounded-xl cursor-pointer transition-all overflow-hidden ${
               selectedTaskId === task.id
                 ? "bg-orange-100 border border-orange-200"
