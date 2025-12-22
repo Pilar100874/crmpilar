@@ -3749,17 +3749,54 @@ ${recentMessages}
                   </Button>
                 </div>
                 
-                {/* Search Input + Global Filter */}
+                {/* Search Input + Global Filter + New Button */}
                 <div className="flex items-center gap-2">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar conversas..."
+                      placeholder={
+                        activeTab === "agenda" ? "Buscar tarefas..." :
+                        activeTab === "chat" ? "Buscar conversas..." :
+                        activeTab === "email" ? "Buscar e-mails..." :
+                        "Buscar orçamentos..."
+                      }
                       className="pl-10 h-10 rounded-xl text-sm bg-white/80 border-border/40 focus:bg-white focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => {
+                          if (activeTab === "agenda") setShowCustomerSearchForTask(true);
+                          else if (activeTab === "chat") setShowCustomerSearchForChat(true);
+                          else if (activeTab === "email") setShowComposeEmail(true);
+                          else if (activeTab === "orcamento") {
+                            if (selectedOrcamentoId && orcamentoSheetOpen) {
+                              setShowNovoOrcamentoConfirm(true);
+                            } else {
+                              setOrcamentoSheetOpen(false);
+                              setSelectedOrcamentoId(null);
+                              setInitialEmpresaForOrcamento(globalFilter?.type === 'empresa' ? globalFilter.id : null);
+                              setTimeout(() => setOrcamentoSheetOpen(true), 100);
+                            }
+                          }
+                        }}
+                        className="h-10 w-10 rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+                      >
+                        <Plus className="h-4 w-4 text-primary" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {activeTab === "agenda" ? "Nova Tarefa" :
+                       activeTab === "chat" ? "Nova Conversa" :
+                       activeTab === "email" ? "Novo E-mail" :
+                       "Novo Orçamento"}
+                    </TooltipContent>
+                  </Tooltip>
                   <GlobalClientFilter 
                     activeFilter={globalFilter} 
                     onFilterChange={setGlobalFilter}
@@ -3815,25 +3852,13 @@ ${recentMessages}
 
             {/* Chat Tab */}
           <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2 bg-gradient-to-b from-slate-50/30 to-white">
-            {/* Nova Conversa Button */}
-            <div className="mb-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowCustomerSearchForChat(true)}
-                className="w-full h-8 text-xs border-dashed border-primary/30 hover:bg-primary/5 hover:border-primary/50 text-primary"
-              >
-                <Plus className="w-3.5 h-3.5 mr-1.5" />
-                Nova Conversa
-              </Button>
-            </div>
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
                   <MessageSquare className="w-8 h-8 text-primary/40" />
                 </div>
                 <p className="text-sm font-medium">Nenhuma conversa</p>
-                <p className="text-xs text-muted-foreground mt-1">Clique em "Nova Conversa" para iniciar</p>
+                <p className="text-xs text-muted-foreground mt-1">Use o botão + para iniciar</p>
               </div>
             ) : (
               <div className="space-y-1.5">
@@ -4033,16 +4058,6 @@ ${recentMessages}
 
                 {/* Quick Actions */}
                 <div className="flex items-center gap-1">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setShowCustomerSearchForTask(true)}
-                    className="h-7 px-2 rounded-lg border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs"
-                    title="Nova Tarefa"
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Nova
-                  </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
