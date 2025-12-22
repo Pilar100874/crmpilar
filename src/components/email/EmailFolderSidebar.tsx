@@ -30,12 +30,12 @@ interface EmailFolderSidebarProps {
 }
 
 const folders = [
-  { id: "inbox", label: "Caixa de Entrada", icon: Inbox, color: "from-orange-500 to-orange-600" },
-  { id: "starred", label: "Com Estrela", icon: Star, color: "from-amber-500 to-amber-600" },
-  { id: "sent", label: "Enviados", icon: Send, color: "from-orange-400 to-orange-500" },
-  { id: "drafts", label: "Rascunhos", icon: FileText, color: "from-slate-500 to-slate-600" },
-  { id: "archive", label: "Arquivo", icon: Archive, color: "from-orange-600 to-orange-700" },
-  { id: "trash", label: "Lixeira", icon: Trash2, color: "from-red-500 to-red-600" },
+  { id: "inbox", label: "Caixa de Entrada", icon: Inbox },
+  { id: "starred", label: "Com Estrela", icon: Star },
+  { id: "sent", label: "Enviados", icon: Send },
+  { id: "drafts", label: "Rascunhos", icon: FileText },
+  { id: "archive", label: "Arquivo", icon: Archive },
+  { id: "trash", label: "Lixeira", icon: Trash2 },
 ];
 
 export function EmailFolderSidebar({
@@ -59,23 +59,21 @@ export function EmailFolderSidebar({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-orange-50/80 via-white to-white dark:from-orange-950/20 dark:via-background dark:to-background">
+    <div className="flex flex-col h-full">
       {/* Compose Button */}
-      <div className="p-4">
+      <div className="p-3">
         <Button 
           onClick={onComposeClick}
-          className="w-full h-12 gap-3 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 shadow-lg shadow-orange-500/25 rounded-xl font-medium text-sm transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/30 hover:scale-[1.02]"
+          className="w-full h-10 gap-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium text-sm shadow-sm"
         >
-          <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center">
-            <Edit3 className="w-4 h-4" />
-          </div>
+          <Edit3 className="w-4 h-4" />
           Escrever
         </Button>
       </div>
       
       {/* Folders List */}
       <ScrollArea className="flex-1 px-2">
-        <div className="space-y-1 pb-4">
+        <div className="space-y-0.5 pb-4">
           {folders.map((folder) => {
             const FolderIcon = folder.icon;
             const isActive = activeFolder === folder.id;
@@ -86,31 +84,24 @@ export function EmailFolderSidebar({
                 key={folder.id}
                 onClick={() => onFolderChange(folder.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all duration-200",
+                  "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all",
                   isActive 
-                    ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white shadow-md shadow-orange-500/25" 
-                    : "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100"
+                    ? "bg-orange-500 text-white" 
+                    : "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-muted-foreground hover:text-foreground"
                 )}
               >
-                <div className={cn(
-                  "w-9 h-9 rounded-xl flex items-center justify-center transition-all",
-                  isActive 
-                    ? "bg-white/20" 
-                    : `bg-gradient-to-br ${folder.color} bg-opacity-10`
-                )}>
-                  <FolderIcon className={cn(
-                    "w-4 h-4",
-                    isActive ? "text-white" : "text-white"
-                  )} />
-                </div>
-                <span className="flex-1 text-left font-medium">{folder.label}</span>
+                <FolderIcon className={cn(
+                  "w-4 h-4 flex-shrink-0",
+                  isActive ? "text-white" : "text-orange-500"
+                )} />
+                <span className="flex-1 text-left font-medium truncate">{folder.label}</span>
                 {count > 0 && (
                   <Badge 
                     className={cn(
-                      "text-[11px] px-2 py-0.5 font-semibold min-w-[24px] justify-center",
+                      "text-[10px] px-1.5 py-0 min-w-[18px] justify-center font-semibold",
                       isActive 
-                        ? "bg-white/25 text-white border-0 hover:bg-white/30" 
-                        : "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 border-0 hover:bg-orange-200 dark:hover:bg-orange-900"
+                        ? "bg-white/25 text-white border-0" 
+                        : "bg-orange-100 text-orange-600 dark:bg-orange-900/50 dark:text-orange-300 border-0"
                     )}
                   >
                     {count}
@@ -123,15 +114,15 @@ export function EmailFolderSidebar({
       </ScrollArea>
       
       {/* Refresh Button */}
-      <div className="p-3 border-t border-orange-100/50 dark:border-orange-900/30">
+      <div className="p-2 border-t border-border/50">
         <Button 
           variant="ghost" 
           size="sm" 
-          className="w-full gap-2 text-slate-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30 rounded-xl h-10"
+          className="w-full gap-2 text-muted-foreground hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/30 rounded-lg h-9 text-xs"
           onClick={onRefresh}
         >
-          <RefreshCw className="w-4 h-4" />
-          <span className="font-medium">Atualizar</span>
+          <RefreshCw className="w-3.5 h-3.5" />
+          Atualizar
         </Button>
       </div>
     </div>
