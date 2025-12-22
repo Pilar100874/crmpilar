@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageSquare, Calendar, Mail, Receipt, User, ChevronLeft, Phone, Building2 } from "lucide-react";
+import { MessageSquare, Calendar, Mail, Receipt, User, ChevronLeft, Phone, Building2, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -101,6 +101,7 @@ export function MobileAtendimentoLayout({
             >
               <Building2 className="h-4 w-4 mr-1" />
               Detalhes
+              <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           )}
         </div>
