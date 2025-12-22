@@ -94,14 +94,12 @@ export function MobileAtendimentoLayout({
           </div>
           {mobileView === "main" && detailsContent && (
             <Button
-              size="sm"
+              size="icon"
               variant="ghost"
               onClick={handleShowDetails}
-              className="h-8 px-3 rounded-full text-xs"
+              className="h-8 w-8 rounded-full"
             >
-              <Building2 className="h-4 w-4 mr-1" />
-              Detalhes
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <ChevronRight className="h-5 w-5" />
             </Button>
           )}
         </div>
