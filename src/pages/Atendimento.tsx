@@ -3727,166 +3727,168 @@ ${recentMessages}
             <div className={`flex flex-col transition-all duration-300 ${
               showClientDetailsAgenda && selectedTaskData ? 'w-[calc(100%-320px)]' : 'w-full'
             }`}>
-            {/* Agenda Controls - Modern Design */}
-            <div className="flex-shrink-0 px-3 py-3 bg-gradient-to-r from-orange-50 to-transparent border-b border-orange-100/50 space-y-2">
-              {/* Date Navigation + Toggle Button */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 flex-1">
+            {/* Agenda Controls - Modern Card Design */}
+            <div className="flex-shrink-0 p-4 bg-gradient-to-r from-amber-50/80 via-orange-50/50 to-transparent dark:from-amber-950/20 dark:via-orange-950/10 dark:to-transparent border-b border-orange-100/50 dark:border-orange-900/30">
+              <div className="flex items-center gap-4">
+                {/* Date Navigation Card */}
+                <div className="flex items-center gap-2 bg-white dark:bg-card rounded-2xl shadow-sm border border-orange-100 dark:border-orange-900/30 px-2 py-1">
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     size="sm" 
                     onClick={handlePreviousDay}
-                    className="h-8 w-8 p-0 rounded-full bg-white/70 hover:bg-white border-orange-200"
+                    className="h-9 w-9 p-0 rounded-xl hover:bg-orange-50 dark:hover:bg-orange-950/30"
                   >
-                    <ChevronLeft className="w-4 h-4 text-orange-600" />
+                    <ChevronLeft className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                   </Button>
                   
-                  <div className="flex-1 text-center bg-white/70 rounded-xl py-1.5 px-3">
-                    <p className="text-sm font-bold text-orange-700">
+                  <div className="flex flex-col items-center min-w-[140px] py-1">
+                    <p className="text-sm font-bold text-foreground">
                       {format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
                     </p>
-                    <p className="text-[10px] text-orange-500 capitalize">
-                      {format(agendaDate, "EEEE", { locale: ptBR })}
+                    <p className="text-[10px] text-muted-foreground capitalize">
+                      {format(agendaDate, "EEEE, yyyy", { locale: ptBR })}
                     </p>
                   </div>
                   
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     size="sm" 
                     onClick={handleNextDay}
-                    className="h-8 w-8 p-0 rounded-full bg-white/70 hover:bg-white border-orange-200"
+                    className="h-9 w-9 p-0 rounded-xl hover:bg-orange-50 dark:hover:bg-orange-950/30"
                   >
-                    <ChevronRight className="w-4 h-4 text-orange-600" />
+                    <ChevronRight className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                   </Button>
                 </div>
 
-                {/* Toggle Details Button */}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    const newState = !showClientDetailsAgenda;
-                    setShowClientDetailsAgenda(newState);
-                    // Em tablets, coordenar com o painel de conversas
-                    if (isTablet && newState && showConversationsList) {
-                      setShowConversationsList(false);
-                    }
-                  }}
-                  className="h-8 w-8 p-0"
-                  title={showClientDetailsAgenda ? "Ocultar detalhes" : "Mostrar detalhes"}
-                >
-                  {showClientDetailsAgenda ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                </Button>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-1.5 flex-wrap">
+                {/* Today Button */}
                 <Button 
-                  variant="secondary" 
+                  variant="outline" 
                   size="sm" 
                   onClick={handleToday}
-                  className="h-8 w-8 p-0 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-600"
-                  title="Hoje"
+                  className="h-9 px-4 rounded-xl border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
                 >
-                  <CalendarDays className="w-4 h-4" />
+                  <CalendarDays className="w-4 h-4 mr-2" />
+                  Hoje
                 </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShowPredictiveDialer(true)}
-                  className="h-8 w-8 p-0 rounded-full border-orange-200 hover:bg-orange-50"
-                  title="Discador Preditivo"
-                >
-                  <PhoneCall className="w-4 h-4 text-orange-600" />
-                </Button>
-                
-                {/* Fluxo de Atendimento */}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setAgendaViewMode('fluxo')}
-                  disabled={filteredTasks.length === 0}
-                  className="h-8 px-3 rounded-full border-orange-200 hover:bg-orange-50"
-                  title="Iniciar Fluxo de Atendimento Sequencial"
-                >
-                  <Play className="w-4 h-4 text-orange-600 mr-1" />
-                  <span className="text-xs text-orange-600">Fluxo</span>
-                </Button>
-                
-                {/* Envio em Massa */}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setAgendaViewMode('massa')}
-                  disabled={filteredTasks.length === 0}
-                  className="h-8 px-3 rounded-full border-orange-200 hover:bg-orange-50"
-                  title="Envio em Massa"
-                >
-                  <Users className="w-4 h-4 text-orange-600 mr-1" />
-                  <span className="text-xs text-orange-600">Massa</span>
-                </Button>
-                
-                {/* Config Datas */}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setShowConfigDatas(true)}
-                  className="h-8 w-8 p-0 rounded-full border-orange-200 hover:bg-orange-50"
-                  title="Configurar Datas Padrão"
-                >
-                  <Settings2 className="w-4 h-4 text-orange-600" />
-                </Button>
-                {/* Contact Filters */}
-                <div className="flex items-center gap-1 ml-2 border-l pl-2 border-orange-200">
+
+                {/* Action Buttons Group */}
+                <div className="flex items-center gap-1 bg-white dark:bg-card rounded-xl border border-orange-100 dark:border-orange-900/30 p-1">
+                  {/* Fluxo */}
+                  <Button 
+                    variant={agendaViewMode === 'fluxo' ? "default" : "ghost"}
+                    size="sm" 
+                    onClick={() => setAgendaViewMode('fluxo')}
+                    disabled={filteredTasks.length === 0}
+                    className={cn(
+                      "h-8 px-3 rounded-lg text-xs font-medium transition-all",
+                      agendaViewMode === 'fluxo'
+                        ? "bg-orange-500 hover:bg-orange-600 text-white shadow-sm"
+                        : "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
+                    )}
+                  >
+                    <Play className="w-3.5 h-3.5 mr-1.5" fill={agendaViewMode === 'fluxo' ? 'currentColor' : 'none'} />
+                    Fluxo
+                  </Button>
+                  
+                  {/* Massa */}
+                  <Button 
+                    variant={agendaViewMode === 'massa' ? "default" : "ghost"}
+                    size="sm" 
+                    onClick={() => setAgendaViewMode('massa')}
+                    disabled={filteredTasks.length === 0}
+                    className={cn(
+                      "h-8 px-3 rounded-lg text-xs font-medium transition-all",
+                      agendaViewMode === 'massa'
+                        ? "bg-orange-500 hover:bg-orange-600 text-white shadow-sm"
+                        : "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
+                    )}
+                  >
+                    <Users className="w-3.5 h-3.5 mr-1.5" />
+                    Massa
+                  </Button>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="flex items-center gap-1.5">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowPredictiveDialer(true)}
+                    className="h-9 px-3 rounded-xl border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-950/30 text-green-600 dark:text-green-400"
+                  >
+                    <PhoneCall className="w-4 h-4 mr-2" />
+                    Discador
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowConfigDatas(true)}
+                    className="h-9 w-9 p-0 rounded-xl border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                    title="Configurar Datas Padrão"
+                  >
+                    <Settings2 className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                  </Button>
+                </div>
+
+                {/* Separator */}
+                <div className="w-px h-8 bg-orange-200 dark:bg-orange-800" />
+
+                {/* Contact Type Filters */}
+                <div className="flex items-center gap-1 bg-white dark:bg-card rounded-xl border border-orange-100 dark:border-orange-900/30 p-1">
                   <Button
-                    variant={agendaFilterPossuiTel ? "default" : "outline"}
+                    variant={agendaFilterPossuiTel ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setAgendaFilterPossuiTel(!agendaFilterPossuiTel)}
-                    className={`h-7 px-2 text-[10px] rounded-full ${
+                    className={cn(
+                      "h-8 px-3 rounded-lg text-xs font-medium transition-all",
                       agendaFilterPossuiTel 
-                        ? "bg-orange-500 hover:bg-orange-600 text-white" 
-                        : "border-orange-200 hover:bg-orange-50 text-orange-600"
-                    }`}
-                    title="Filtrar por possui telefone"
+                        ? "bg-green-500 hover:bg-green-600 text-white shadow-sm" 
+                        : "hover:bg-green-50 dark:hover:bg-green-950/30 text-green-600 dark:text-green-400"
+                    )}
                   >
-                    <Phone className="w-3 h-3 mr-1" />
+                    <Phone className="w-3.5 h-3.5 mr-1.5" />
                     Tel
                   </Button>
                   <Button
-                    variant={agendaFilterPossuiWhatsapp ? "default" : "outline"}
+                    variant={agendaFilterPossuiWhatsapp ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setAgendaFilterPossuiWhatsapp(!agendaFilterPossuiWhatsapp)}
-                    className={`h-7 px-2 text-[10px] rounded-full ${
+                    className={cn(
+                      "h-8 px-3 rounded-lg text-xs font-medium transition-all",
                       agendaFilterPossuiWhatsapp 
-                        ? "bg-green-500 hover:bg-green-600 text-white" 
-                        : "border-orange-200 hover:bg-orange-50 text-orange-600"
-                    }`}
-                    title="Filtrar por possui WhatsApp"
+                        ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm" 
+                        : "hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400"
+                    )}
                   >
-                    <MessageSquare className="w-3 h-3 mr-1" />
+                    <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
                     Whats
                   </Button>
                   <Button
-                    variant={agendaFilterPossuiEmail ? "default" : "outline"}
+                    variant={agendaFilterPossuiEmail ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setAgendaFilterPossuiEmail(!agendaFilterPossuiEmail)}
-                    className={`h-7 px-2 text-[10px] rounded-full ${
+                    className={cn(
+                      "h-8 px-3 rounded-lg text-xs font-medium transition-all",
                       agendaFilterPossuiEmail 
-                        ? "bg-blue-500 hover:bg-blue-600 text-white" 
-                        : "border-orange-200 hover:bg-orange-50 text-orange-600"
-                    }`}
-                    title="Filtrar por possui Email"
+                        ? "bg-blue-500 hover:bg-blue-600 text-white shadow-sm" 
+                        : "hover:bg-blue-50 dark:hover:bg-blue-950/30 text-blue-600 dark:text-blue-400"
+                    )}
                   >
-                    <Mail className="w-3 h-3 mr-1" />
+                    <Mail className="w-3.5 h-3.5 mr-1.5" />
                     Email
                   </Button>
                 </div>
-                
+                {/* Sort Button */}
                 <Dialog open={showSortDialog} onOpenChange={setShowSortDialog}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-full border-orange-200 hover:bg-orange-50" title="Ordenação">
-                      <ArrowUpDown className="w-4 h-4 text-orange-600" />
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-9 w-9 p-0 rounded-xl border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/30" 
+                      title="Ordenação"
+                    >
+                      <ArrowUpDown className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
