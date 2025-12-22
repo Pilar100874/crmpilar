@@ -3631,20 +3631,7 @@ ${recentMessages}
             />
           </div>
           
-          {/* Email Folders - Vertical list below tabs when email is active */}
-          {activeTab === "email" && (
-            <EmailFolderSidebar
-              emails={userEmails}
-              activeFolder={emailFolder}
-              onFolderChange={(folder) => {
-                setEmailFolder(folder);
-                setSelectedEmailId(null);
-                setSelectedEmailData(null);
-              }}
-              onComposeClick={() => setShowComposeEmail(true)}
-              onRefresh={() => loadUserEmails()}
-            />
-          )}
+          {/* Email tab now uses EmailPanel with its own sidebar */}
 
             {/* Chat Tab */}
           <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2 bg-gradient-to-b from-slate-50/30 to-white">
