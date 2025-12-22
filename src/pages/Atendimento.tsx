@@ -3443,8 +3443,8 @@ ${recentMessages}
             <div className="flex-shrink-0 bg-card/95 backdrop-blur-sm border-t border-border/50 px-1 py-1 pb-safe">
               <div className="flex justify-around">
                 {[
-                  { id: "agenda", label: "Agenda", icon: CalendarIcon, badge: todayTasksCount },
                   { id: "chat", label: "Chats", icon: MessageSquare, badge: activeConversationsCount },
+                  { id: "agenda", label: "Agenda", icon: CalendarIcon, badge: todayTasksCount },
                   { id: "email", label: "E-mails", icon: Mail, badge: unreadEmailsCount },
                   { id: "orcamento", label: "Orçamentos", icon: FileText, badge: orcamentosEmAndamentoCount },
                 ].map((tab) => {
@@ -5783,7 +5783,11 @@ function MobileListContent({
           return (
           <div
             key={task.id}
-            onClick={() => setSelectedTaskId(task.id)}
+            onClick={() => {
+              const taskIndex = filteredTasks.findIndex(t => t.id === task.id);
+              setFluxoInitialIndex(taskIndex >= 0 ? taskIndex : 0);
+              setAgendaViewMode('fluxo');
+            }}
             className={`relative rounded-xl cursor-pointer transition-all overflow-hidden ${
               selectedTaskId === task.id
                 ? "bg-orange-100 border border-orange-200"
