@@ -3135,41 +3135,85 @@ ${recentMessages}
           <div className="flex-1 overflow-hidden relative">
             {/* Fluxo de Atendimento Panel - Mobile Fullscreen */}
             {activeTab === "agenda" && agendaViewMode === 'fluxo' && (
-              <div className="absolute inset-0 z-20 bg-background">
-                <FluxoAtendimentoPanel
-                  tasks={filteredTasks}
-                  estabelecimentoId={estabelecimentoId}
-                  usuarioId={usuarioId}
-                  onTaskCompleted={loadTodayTasks}
-                  onClose={() => {
-                    setAgendaViewMode('default');
-                    setFluxoCurrentTask(null);
-                    setFluxoInitialIndex(0);
-                  }}
-                  onCurrentTaskChange={setFluxoCurrentTask}
-                  showDetails={showClientDetailsFluxo}
-                  onToggleDetails={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
-                  initialTaskIndex={fluxoInitialIndex}
-                  onNavigateToItem={(type, id) => {
-                    setAgendaViewMode('default');
-                    if (type === 'chat') {
-                      setActiveTab('chat');
-                      setSelectedConversation(id);
-                      setMobileView('main');
-                    } else if (type === 'orcamento') {
-                      setActiveTab('orcamento');
-                      setSelectedOrcamentoId(id);
-                      const orc = orcamentos.find(o => o.id === id);
-                      if (orc) setSelectedOrcamentoData(orc);
-                      setOrcamentoSheetOpen(true);
-                      setMobileView('main');
-                    } else if (type === 'email') {
-                      setActiveTab('email');
-                      setSelectedEmailId(id);
-                      setMobileView('main');
-                    }
-                  }}
-                />
+              <div className="absolute inset-0 z-20 bg-background overflow-hidden">
+                {/* Fluxo Panel */}
+                <div 
+                  className={`absolute inset-0 transition-transform duration-300 ease-out ${
+                    showClientDetailsFluxo ? '-translate-x-full' : 'translate-x-0'
+                  }`}
+                >
+                  <FluxoAtendimentoPanel
+                    tasks={filteredTasks}
+                    estabelecimentoId={estabelecimentoId}
+                    usuarioId={usuarioId}
+                    onTaskCompleted={loadTodayTasks}
+                    onClose={() => {
+                      setAgendaViewMode('default');
+                      setFluxoCurrentTask(null);
+                      setFluxoInitialIndex(0);
+                    }}
+                    onCurrentTaskChange={setFluxoCurrentTask}
+                    showDetails={showClientDetailsFluxo}
+                    onToggleDetails={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
+                    initialTaskIndex={fluxoInitialIndex}
+                    onNavigateToItem={(type, id) => {
+                      setAgendaViewMode('default');
+                      if (type === 'chat') {
+                        setActiveTab('chat');
+                        setSelectedConversation(id);
+                        setMobileView('main');
+                      } else if (type === 'orcamento') {
+                        setActiveTab('orcamento');
+                        setSelectedOrcamentoId(id);
+                        const orc = orcamentos.find(o => o.id === id);
+                        if (orc) setSelectedOrcamentoData(orc);
+                        setOrcamentoSheetOpen(true);
+                        setMobileView('main');
+                      } else if (type === 'email') {
+                        setActiveTab('email');
+                        setSelectedEmailId(id);
+                        setMobileView('main');
+                      }
+                    }}
+                  />
+                </div>
+                
+                {/* Details Panel - Mobile Fluxo */}
+                <div 
+                  className={`absolute inset-0 transition-transform duration-300 ease-out bg-card flex flex-col ${
+                    showClientDetailsFluxo ? 'translate-x-0' : 'translate-x-full'
+                  }`}
+                >
+                  <div className="flex-shrink-0 px-3 py-2.5 border-b border-border/50 flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setShowClientDetailsFluxo(false)}
+                      className="h-8 w-8 p-0 rounded-full"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                    <span className="font-medium text-sm">Detalhes do Cliente</span>
+                  </div>
+                  <div className="flex-1 overflow-auto">
+                    {fluxoCurrentTask && (
+                      <UnifiedDetailsPanel
+                        type="agenda"
+                        nome={fluxoCurrentTask.contact_name}
+                        telefone={fluxoCurrentTask.customers?.telefone}
+                        whatsapp={fluxoCurrentTask.customers?.telefone}
+                        email={fluxoCurrentTask.customers?.email}
+                        customerId={fluxoCurrentTask.customers?.id || fluxoCurrentTask.contact_id}
+                        protocolo={fluxoCurrentTask.id?.slice(0, 8).toUpperCase()}
+                        status={fluxoCurrentTask.status === "concluido" ? "Concluído" : "Pendente"}
+                        titulo={fluxoCurrentTask.title}
+                        dataHora={format(new Date(fluxoCurrentTask.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) + (fluxoCurrentTask.time ? ` às ${fluxoCurrentTask.time}` : "")}
+                        companies={fluxoCurrentTask.customers?.customer_empresas || []}
+                        onSetGlobalFilter={setGlobalFilter}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
             )}
             
