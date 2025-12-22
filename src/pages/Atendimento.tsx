@@ -3147,6 +3147,8 @@ ${recentMessages}
                     setFluxoInitialIndex(0);
                   }}
                   onCurrentTaskChange={setFluxoCurrentTask}
+                  showDetails={showClientDetailsFluxo}
+                  onToggleDetails={() => setShowClientDetailsFluxo(!showClientDetailsFluxo)}
                   initialTaskIndex={fluxoInitialIndex}
                   onNavigateToItem={(type, id) => {
                     setAgendaViewMode('default');
