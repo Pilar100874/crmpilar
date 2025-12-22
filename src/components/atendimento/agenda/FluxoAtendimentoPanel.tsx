@@ -349,6 +349,7 @@ export function FluxoAtendimentoPanel({
               >
                 <Building2 className="h-4 w-4 mr-1" />
                 Detalhes
+                <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             )}
           </div>
