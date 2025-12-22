@@ -49,7 +49,7 @@ import { ConfigDatasProximoContatoDialog } from "@/components/atendimento/agenda
 import { EnvioMassaDialog } from "@/components/atendimento/agenda/EnvioMassaDialog";
 import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAtendimentoPanel";
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
-import { CustomerSearchCreateDialog } from "@/components/atendimento/CustomerSearchCreateDialog";
+import { CustomerSearchCreatePanel } from "@/components/atendimento/CustomerSearchCreatePanel";
 
 interface Conversation {
   id: string;
@@ -5310,6 +5310,29 @@ ${recentMessages}
               />
             }
           />
+        ) : (showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
+          <CustomerSearchCreatePanel
+            onSelect={
+              showCustomerSearchForTask ? handleCreateTaskFromContact :
+              showCustomerSearchForChat ? handleCreateConversationFromContact :
+              showCustomerSearchForEmail ? handleCreateEmailFromContact :
+              handleCreateOrcamentoFromContact
+            }
+            onClose={() => {
+              setShowCustomerSearchForTask(false);
+              setShowCustomerSearchForChat(false);
+              setShowCustomerSearchForEmail(false);
+              setShowCustomerSearchForOrcamento(false);
+            }}
+            mode={showCustomerSearchForChat ? "customer" : "both"}
+            title="Puxar ou criar cadastro"
+            description={
+              showCustomerSearchForTask ? "Selecione ou crie um contato para a nova tarefa" :
+              showCustomerSearchForChat ? "Selecione ou crie um contato para iniciar a conversa" :
+              showCustomerSearchForEmail ? "Selecione ou crie um contato para enviar o e-mail" :
+              "Selecione ou crie um contato para o orçamento"
+            }
+          />
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
             <div className="text-center">
@@ -5516,45 +5539,6 @@ ${recentMessages}
         onOpenChange={setShowPredictiveDialer}
       />
 
-      {/* Customer Search Dialog - Para criar nova tarefa */}
-      <CustomerSearchCreateDialog
-        open={showCustomerSearchForTask}
-        onOpenChange={setShowCustomerSearchForTask}
-        onSelect={handleCreateTaskFromContact}
-        mode="both"
-        title="Puxar ou criar cadastro"
-        description="Selecione ou crie um contato para a nova tarefa"
-      />
-
-      {/* Customer Search Dialog - Para criar nova conversa */}
-      <CustomerSearchCreateDialog
-        open={showCustomerSearchForChat}
-        onOpenChange={setShowCustomerSearchForChat}
-        onSelect={handleCreateConversationFromContact}
-        mode="customer"
-        title="Puxar ou criar cadastro"
-        description="Selecione ou crie um contato para iniciar a conversa"
-      />
-
-      {/* Customer Search Dialog - Para criar novo email */}
-      <CustomerSearchCreateDialog
-        open={showCustomerSearchForEmail}
-        onOpenChange={setShowCustomerSearchForEmail}
-        onSelect={handleCreateEmailFromContact}
-        mode="both"
-        title="Puxar ou criar cadastro"
-        description="Selecione ou crie um contato para enviar o e-mail"
-      />
-
-      {/* Customer Search Dialog - Para criar novo orçamento */}
-      <CustomerSearchCreateDialog
-        open={showCustomerSearchForOrcamento}
-        onOpenChange={setShowCustomerSearchForOrcamento}
-        onSelect={handleCreateOrcamentoFromContact}
-        mode="both"
-        title="Puxar ou criar cadastro"
-        description="Selecione ou crie um contato para o orçamento"
-      />
 
       <AlertDialog open={!!confirmDeleteOrcamento} onOpenChange={(open) => !open && setConfirmDeleteOrcamento(null)}>
         <AlertDialogContent>
