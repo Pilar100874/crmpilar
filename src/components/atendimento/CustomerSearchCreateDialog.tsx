@@ -9,8 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
-import { Search, User, Building2, Plus, Phone, Mail, Loader2 } from "lucide-react";
+import { Search, User, Building2, Plus, Phone, Mail, Loader2, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCNPJLookup } from "@/hooks/useCNPJLookup";
+import { useAddressLookup } from "@/hooks/useAddressLookup";
 
 // Custom debounce hook
 function useDebounceValue<T>(value: T, delay: number): T {
@@ -31,6 +33,41 @@ function useDebounceValue<T>(value: T, delay: number): T {
 
   return debouncedValue;
 }
+
+// Máscaras
+const maskCNPJ = (value: string): string => {
+  const numbers = value.replace(/\D/g, '').slice(0, 14);
+  return numbers
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2');
+};
+
+const maskCEP = (value: string): string => {
+  const numbers = value.replace(/\D/g, '').slice(0, 8);
+  return numbers.replace(/^(\d{5})(\d)/, '$1-$2');
+};
+
+const maskPhone = (value: string): string => {
+  const numbers = value.replace(/\D/g, '').slice(0, 11);
+  if (numbers.length <= 10) {
+    return numbers
+      .replace(/^(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{4})(\d)/, '$1-$2');
+  }
+  return numbers
+    .replace(/^(\d{2})(\d)/, '($1) $2')
+    .replace(/(\d{5})(\d)/, '$1-$2');
+};
+
+const maskCPF = (value: string): string => {
+  const numbers = value.replace(/\D/g, '').slice(0, 11);
+  return numbers
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+};
 
 interface Customer {
   id: string;
@@ -75,20 +112,33 @@ export function CustomerSearchCreateDialog({
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
+
+  // Hooks para busca de dados
+  const { lookupCNPJ, loading: cnpjLoading } = useCNPJLookup();
+  const { lookupCEP, loading: cepLoading } = useAddressLookup();
   
-  // Form states for creating new
+  // Form states for creating new customer
   const [newCustomer, setNewCustomer] = useState({
     nome: "",
     telefone: "",
-    email: ""
+    tel: "",
+    email: "",
+    cargo: ""
   });
   
+  // Form states for creating new empresa - campos completos como no cadastro
   const [newEmpresa, setNewEmpresa] = useState({
+    cnpj: "",
     nome: "",
     nome_fantasia: "",
-    cnpj: "",
+    cep: "",
+    endereco: "",
+    bairro: "",
+    cidade: "",
+    estado: "",
     telefone: "",
-    email: ""
+    email: "",
+    inscricao: ""
   });
 
   // Search customers/empresas
@@ -147,10 +197,60 @@ export function CustomerSearchCreateDialog({
       setCustomers([]);
       setEmpresas([]);
       setActiveTab('search');
-      setNewCustomer({ nome: "", telefone: "", email: "" });
-      setNewEmpresa({ nome: "", nome_fantasia: "", cnpj: "", telefone: "", email: "" });
+      setNewCustomer({ nome: "", telefone: "", tel: "", email: "", cargo: "" });
+      setNewEmpresa({ 
+        cnpj: "", nome: "", nome_fantasia: "", cep: "", endereco: "", 
+        bairro: "", cidade: "", estado: "", telefone: "", email: "", inscricao: "" 
+      });
     }
   }, [open]);
+
+  // Buscar CNPJ automaticamente
+  const handleCNPJChange = async (value: string) => {
+    const maskedValue = maskCNPJ(value);
+    setNewEmpresa(prev => ({ ...prev, cnpj: maskedValue }));
+
+    const cleanCNPJ = value.replace(/\D/g, '');
+    if (cleanCNPJ.length === 14) {
+      const data = await lookupCNPJ(cleanCNPJ);
+      if (data) {
+        setNewEmpresa(prev => ({
+          ...prev,
+          nome: data.nome || prev.nome,
+          nome_fantasia: data.fantasia || prev.nome_fantasia,
+          cep: data.cep ? maskCEP(data.cep) : prev.cep,
+          endereco: data.logradouro + (data.numero ? ', ' + data.numero : '') || prev.endereco,
+          bairro: data.bairro || prev.bairro,
+          cidade: data.municipio || prev.cidade,
+          estado: data.uf || prev.estado,
+          telefone: data.telefone ? maskPhone(data.telefone) : prev.telefone,
+          email: data.email || prev.email
+        }));
+        toast.success("Dados preenchidos automaticamente via CNPJ");
+      }
+    }
+  };
+
+  // Buscar CEP automaticamente
+  const handleCEPChange = async (value: string) => {
+    const maskedValue = maskCEP(value);
+    setNewEmpresa(prev => ({ ...prev, cep: maskedValue }));
+
+    const cleanCEP = value.replace(/\D/g, '');
+    if (cleanCEP.length === 8) {
+      const data = await lookupCEP(cleanCEP);
+      if (data) {
+        setNewEmpresa(prev => ({
+          ...prev,
+          endereco: data.logradouro || prev.endereco,
+          bairro: data.bairro || prev.bairro,
+          cidade: data.localidade || prev.cidade,
+          estado: data.uf || prev.estado
+        }));
+        toast.success("Endereço preenchido automaticamente");
+      }
+    }
+  };
 
   const handleCreateCustomer = async () => {
     if (!newCustomer.nome.trim()) {
@@ -178,6 +278,7 @@ export function CustomerSearchCreateDialog({
           estabelecimento_id: estabId,
           nome: newCustomer.nome.trim(),
           telefone: newCustomer.telefone.trim() || "",
+          tel: newCustomer.tel.trim() || null,
           email: newCustomer.email.trim() || ""
         })
         .select()
@@ -236,9 +337,14 @@ export function CustomerSearchCreateDialog({
         .from('empresas')
         .insert({
           estabelecimento_id: estabId,
+          cnpj: newEmpresa.cnpj.replace(/\D/g, '') || null,
           nome: newEmpresa.nome.trim() || null,
           nome_fantasia: newEmpresa.nome_fantasia.trim() || null,
-          cnpj: newEmpresa.cnpj.trim() || null,
+          cep: newEmpresa.cep.replace(/\D/g, '') || null,
+          endereco: newEmpresa.endereco.trim() || null,
+          bairro: newEmpresa.bairro.trim() || null,
+          cidade: newEmpresa.cidade.trim() || null,
+          estado: newEmpresa.estado.trim() || null,
           telefone: newEmpresa.telefone.trim() || null,
           email: newEmpresa.email.trim() || null
         })
@@ -281,7 +387,7 @@ export function CustomerSearchCreateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5 text-primary" />
@@ -290,7 +396,7 @@ export function CustomerSearchCreateDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'search' | 'create')} className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'search' | 'create')} className="w-full flex-1 flex flex-col min-h-0">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="search" className="flex items-center gap-2">
               <Search className="h-4 w-4" />
@@ -302,7 +408,7 @@ export function CustomerSearchCreateDialog({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="search" className="space-y-4 mt-4">
+          <TabsContent value="search" className="space-y-4 mt-4 flex-1 flex flex-col min-h-0">
             {/* Search Type Toggle */}
             {mode === 'both' && (
               <div className="flex gap-1 p-1 bg-muted rounded-lg">
@@ -340,7 +446,7 @@ export function CustomerSearchCreateDialog({
             </div>
 
             {/* Results */}
-            <ScrollArea className="h-[300px] pr-4">
+            <ScrollArea className="flex-1 pr-4">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -438,154 +544,261 @@ export function CustomerSearchCreateDialog({
             </ScrollArea>
           </TabsContent>
 
-          <TabsContent value="create" className="space-y-4 mt-4">
-            {/* Create Type Toggle */}
-            {mode === 'both' && (
-              <div className="flex gap-1 p-1 bg-muted rounded-lg">
-                <Button
-                  size="sm"
-                  variant={searchType === 'customer' ? "default" : "ghost"}
-                  onClick={() => setSearchType('customer')}
-                  className="flex-1"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  Pessoa
-                </Button>
-                <Button
-                  size="sm"
-                  variant={searchType === 'empresa' ? "default" : "ghost"}
-                  onClick={() => setSearchType('empresa')}
-                  className="flex-1"
-                >
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Empresa
-                </Button>
-              </div>
-            )}
+          <TabsContent value="create" className="mt-4 flex-1 overflow-hidden">
+            <ScrollArea className="h-full pr-4">
+              {/* Create Type Toggle */}
+              {mode === 'both' && (
+                <div className="flex gap-1 p-1 bg-muted rounded-lg mb-4">
+                  <Button
+                    size="sm"
+                    variant={searchType === 'customer' ? "default" : "ghost"}
+                    onClick={() => setSearchType('customer')}
+                    className="flex-1"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Pessoa
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={searchType === 'empresa' ? "default" : "ghost"}
+                    onClick={() => setSearchType('empresa')}
+                    className="flex-1"
+                  >
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Empresa
+                  </Button>
+                </div>
+              )}
 
-            {/* Create Customer Form */}
-            {(searchType === 'customer' || mode === 'customer') && mode !== 'empresa' && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="nome">Nome *</Label>
-                  <Input
-                    id="nome"
-                    placeholder="Nome completo"
-                    value={newCustomer.nome}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, nome: e.target.value })}
-                  />
+              {/* Create Customer Form */}
+              {(searchType === 'customer' || mode === 'customer') && mode !== 'empresa' && (
+                <div className="space-y-4 pb-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="nome">Nome *</Label>
+                    <Input
+                      id="nome"
+                      placeholder="Nome completo"
+                      value={newCustomer.nome}
+                      onChange={(e) => setNewCustomer({ ...newCustomer, nome: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="telefone">WhatsApp</Label>
+                      <Input
+                        id="telefone"
+                        placeholder="(00) 00000-0000"
+                        value={newCustomer.telefone}
+                        onChange={(e) => setNewCustomer({ ...newCustomer, telefone: maskPhone(e.target.value) })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tel">Telefone</Label>
+                      <Input
+                        id="tel"
+                        placeholder="(00) 0000-0000"
+                        value={newCustomer.tel}
+                        onChange={(e) => setNewCustomer({ ...newCustomer, tel: maskPhone(e.target.value) })}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">E-mail</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="email@exemplo.com"
+                        value={newCustomer.email}
+                        onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cargo">Cargo</Label>
+                      <Input
+                        id="cargo"
+                        placeholder="Cargo/Função"
+                        value={newCustomer.cargo}
+                        onChange={(e) => setNewCustomer({ ...newCustomer, cargo: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={handleCreateCustomer}
+                    disabled={creating || !newCustomer.nome.trim()}
+                  >
+                    {creating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Criando...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar Pessoa
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="telefone">Telefone</Label>
-                  <Input
-                    id="telefone"
-                    placeholder="(00) 00000-0000"
-                    value={newCustomer.telefone}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, telefone: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="email@exemplo.com"
-                    value={newCustomer.email}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
-                  />
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={handleCreateCustomer}
-                  disabled={creating || !newCustomer.nome.trim()}
-                >
-                  {creating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Criando...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar Pessoa
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+              )}
 
-            {/* Create Empresa Form */}
-            {(searchType === 'empresa' || mode === 'empresa') && mode !== 'customer' && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              {/* Create Empresa Form - CNPJ primeiro com busca automática */}
+              {(searchType === 'empresa' || mode === 'empresa') && mode !== 'customer' && (
+                <div className="space-y-4 pb-4">
+                  {/* CNPJ - Primeiro campo com busca automática */}
                   <div className="space-y-2">
-                    <Label htmlFor="empresa-nome">Razão Social</Label>
+                    <Label htmlFor="empresa-cnpj" className="flex items-center gap-2">
+                      CNPJ
+                      {cnpjLoading && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+                    </Label>
                     <Input
-                      id="empresa-nome"
-                      placeholder="Razão Social"
-                      value={newEmpresa.nome}
-                      onChange={(e) => setNewEmpresa({ ...newEmpresa, nome: e.target.value })}
+                      id="empresa-cnpj"
+                      placeholder="00.000.000/0000-00"
+                      value={newEmpresa.cnpj}
+                      onChange={(e) => handleCNPJChange(e.target.value)}
+                      className={cnpjLoading ? "border-primary" : ""}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Digite o CNPJ para preencher automaticamente
+                    </p>
+                  </div>
+
+                  {/* Nome e Nome Fantasia */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="empresa-nome">Razão Social</Label>
+                      <Input
+                        id="empresa-nome"
+                        placeholder="Razão Social"
+                        value={newEmpresa.nome}
+                        onChange={(e) => setNewEmpresa({ ...newEmpresa, nome: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="empresa-fantasia">Nome Fantasia *</Label>
+                      <Input
+                        id="empresa-fantasia"
+                        placeholder="Nome Fantasia"
+                        value={newEmpresa.nome_fantasia}
+                        onChange={(e) => setNewEmpresa({ ...newEmpresa, nome_fantasia: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* CEP com busca automática */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="empresa-cep" className="flex items-center gap-2">
+                        CEP
+                        {cepLoading && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+                      </Label>
+                      <Input
+                        id="empresa-cep"
+                        placeholder="00000-000"
+                        value={newEmpresa.cep}
+                        onChange={(e) => handleCEPChange(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="empresa-estado">UF</Label>
+                      <Input
+                        id="empresa-estado"
+                        placeholder="UF"
+                        value={newEmpresa.estado}
+                        onChange={(e) => setNewEmpresa({ ...newEmpresa, estado: e.target.value.toUpperCase().slice(0, 2) })}
+                        maxLength={2}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Endereço */}
+                  <div className="space-y-2">
+                    <Label htmlFor="empresa-endereco">Endereço</Label>
+                    <Input
+                      id="empresa-endereco"
+                      placeholder="Rua, número, complemento"
+                      value={newEmpresa.endereco}
+                      onChange={(e) => setNewEmpresa({ ...newEmpresa, endereco: e.target.value })}
                     />
                   </div>
+
+                  {/* Bairro e Cidade */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="empresa-bairro">Bairro</Label>
+                      <Input
+                        id="empresa-bairro"
+                        placeholder="Bairro"
+                        value={newEmpresa.bairro}
+                        onChange={(e) => setNewEmpresa({ ...newEmpresa, bairro: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="empresa-cidade">Cidade</Label>
+                      <Input
+                        id="empresa-cidade"
+                        placeholder="Cidade"
+                        value={newEmpresa.cidade}
+                        onChange={(e) => setNewEmpresa({ ...newEmpresa, cidade: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Telefone e Email */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="empresa-telefone">Telefone</Label>
+                      <Input
+                        id="empresa-telefone"
+                        placeholder="(00) 0000-0000"
+                        value={newEmpresa.telefone}
+                        onChange={(e) => setNewEmpresa({ ...newEmpresa, telefone: maskPhone(e.target.value) })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="empresa-email">E-mail</Label>
+                      <Input
+                        id="empresa-email"
+                        type="email"
+                        placeholder="email@empresa.com"
+                        value={newEmpresa.email}
+                        onChange={(e) => setNewEmpresa({ ...newEmpresa, email: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Inscrição */}
                   <div className="space-y-2">
-                    <Label htmlFor="empresa-fantasia">Nome Fantasia *</Label>
+                    <Label htmlFor="empresa-inscricao">Inscrição Estadual</Label>
                     <Input
-                      id="empresa-fantasia"
-                      placeholder="Nome Fantasia"
-                      value={newEmpresa.nome_fantasia}
-                      onChange={(e) => setNewEmpresa({ ...newEmpresa, nome_fantasia: e.target.value })}
+                      id="empresa-inscricao"
+                      placeholder="Inscrição Estadual"
+                      value={newEmpresa.inscricao}
+                      onChange={(e) => setNewEmpresa({ ...newEmpresa, inscricao: e.target.value })}
                     />
                   </div>
+
+                  <Button
+                    className="w-full"
+                    onClick={handleCreateEmpresa}
+                    disabled={creating || (!newEmpresa.nome?.trim() && !newEmpresa.nome_fantasia?.trim())}
+                  >
+                    {creating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Criando...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Criar Empresa
+                      </>
+                    )}
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="empresa-cnpj">CNPJ</Label>
-                  <Input
-                    id="empresa-cnpj"
-                    placeholder="00.000.000/0000-00"
-                    value={newEmpresa.cnpj}
-                    onChange={(e) => setNewEmpresa({ ...newEmpresa, cnpj: e.target.value })}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="empresa-telefone">Telefone</Label>
-                    <Input
-                      id="empresa-telefone"
-                      placeholder="(00) 0000-0000"
-                      value={newEmpresa.telefone}
-                      onChange={(e) => setNewEmpresa({ ...newEmpresa, telefone: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="empresa-email">E-mail</Label>
-                    <Input
-                      id="empresa-email"
-                      type="email"
-                      placeholder="email@empresa.com"
-                      value={newEmpresa.email}
-                      onChange={(e) => setNewEmpresa({ ...newEmpresa, email: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <Button
-                  className="w-full"
-                  onClick={handleCreateEmpresa}
-                  disabled={creating || (!newEmpresa.nome?.trim() && !newEmpresa.nome_fantasia?.trim())}
-                >
-                  {creating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Criando...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Criar Empresa
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+              )}
+            </ScrollArea>
           </TabsContent>
         </Tabs>
       </DialogContent>
