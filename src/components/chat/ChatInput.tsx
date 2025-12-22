@@ -979,26 +979,22 @@ export default function ChatInput({
     </TooltipProvider>
   );
 
-  // Agent Assist - Context Response
-  if (conversationId) {
-    allItems.push(
-      <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" onClick={() => { handleGenerateContextResponse(); }} isLoading={isGeneratingContextResponse} disabled={disabled || conversationMessages.length === 0} />
-    );
-  }
+  // Agent Assist - Context Response (always show, will show toast if no messages)
+  allItems.push(
+    <ToolbarBtn key="context" icon={Sparkles} title="Sugestão Contextual" onClick={() => { handleGenerateContextResponse(); }} isLoading={isGeneratingContextResponse} disabled={disabled} />
+  );
 
   // Agent Assist - Summary
-  if (conversationId && onSummaryGenerated) {
+  if (onSummaryGenerated) {
     allItems.push(
-      <ToolbarBtn key="summary" icon={FileText} title="Gerar Resumo" onClick={() => { handleGenerateSummary(); }} isLoading={isGeneratingSummary} disabled={disabled || conversationMessages.length === 0} />
+      <ToolbarBtn key="summary" icon={FileText} title="Gerar Resumo" onClick={() => { handleGenerateSummary(); }} isLoading={isGeneratingSummary} disabled={disabled} />
     );
   }
 
-  // Agent Assist - KB Articles
-  if (conversationId) {
-    allItems.push(
-      <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" onClick={() => { handleSuggestKBArticles(); }} isLoading={isSuggestingKBArticles} disabled={disabled || conversationMessages.length === 0} />
-    );
-  }
+  // Agent Assist - KB Articles (always show, will show toast if no messages)
+  allItems.push(
+    <ToolbarBtn key="kb" icon={BookOpen} title="Artigos KB" onClick={() => { handleSuggestKBArticles(); }} isLoading={isSuggestingKBArticles} disabled={disabled} />
+  );
 
   // Real-time translation with popover
   if (onToggleRealTimeTranslation && onTranslationLanguageChange) {
