@@ -3272,6 +3272,7 @@ ${recentMessages}
                 setAgendaViewMode={setAgendaViewMode}
                 setFluxoInitialIndex={setFluxoInitialIndex}
                 setShowConfigDatas={setShowConfigDatas}
+                onRefreshEmails={() => loadUserEmails()}
               />
             </div>
 
@@ -5440,6 +5441,7 @@ interface MobileListContentProps {
   setAgendaViewMode: (mode: 'default' | 'fluxo' | 'massa') => void;
   setFluxoInitialIndex: (index: number) => void;
   setShowConfigDatas: (show: boolean) => void;
+  onRefreshEmails: () => void;
 }
 
 function MobileListContent({
@@ -5487,6 +5489,7 @@ function MobileListContent({
   setAgendaViewMode,
   setFluxoInitialIndex,
   setShowConfigDatas,
+  onRefreshEmails,
 }: MobileListContentProps) {
   return (
     <div className="h-full flex flex-col bg-white/80">
@@ -5654,101 +5657,63 @@ function MobileListContent({
         )}
 
         {activeTab === "email" && (
-          <div className="space-y-3">
-            {/* Card Principal */}
-            <div className="bg-white dark:bg-muted/30 rounded-2xl shadow-sm border border-border/40 overflow-hidden">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-blue-50 via-blue-50/50 to-transparent dark:from-blue-950/30 dark:via-blue-950/20 dark:to-transparent px-4 py-3 border-b border-border/30">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-                      <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <span className="font-semibold text-sm text-foreground">E-mails</span>
-                  </div>
-                  <button 
-                    onClick={() => setShowComposeEmail(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-all"
+          <div className="space-y-2">
+            {/* Botão Novo Email */}
+            <Button 
+              onClick={() => setShowComposeEmail(true)}
+              className="w-full h-10 gap-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium text-sm shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Novo E-mail
+            </Button>
+            
+            {/* Pastas Unificadas */}
+            <div className="bg-white dark:bg-muted/30 rounded-xl border border-border/40 p-1.5">
+              <div className="flex flex-wrap gap-1">
+                {[
+                  { value: 'inbox', label: 'Entrada', icon: Inbox },
+                  { value: 'starred', label: 'Favoritos', icon: Star },
+                  { value: 'sent', label: 'Enviados', icon: Send },
+                  { value: 'drafts', label: 'Rascunhos', icon: FileText },
+                  { value: 'archive', label: 'Arquivo', icon: Archive },
+                  { value: 'trash', label: 'Lixeira', icon: Trash2 },
+                ].map((folder) => (
+                  <button
+                    key={folder.value}
+                    onClick={() => setEmailFolder(folder.value)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex-1 min-w-[calc(33%-4px)] justify-center",
+                      emailFolder === folder.value
+                        ? "bg-orange-500 text-white shadow-sm"
+                        : "text-muted-foreground hover:bg-orange-50 dark:hover:bg-orange-950/30 hover:text-orange-600"
+                    )}
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    Novo
+                    <folder.icon className="w-3.5 h-3.5" />
+                    <span className="truncate">{folder.label}</span>
                   </button>
-                </div>
-              </div>
-              
-              {/* Corpo */}
-              <div className="p-3 space-y-3">
-                {/* Seletor de Pasta */}
-                <div className="flex items-center justify-center">
-                  <div className="inline-flex items-center bg-muted/50 rounded-xl p-1 gap-1">
-                    {[
-                      { value: 'inbox', label: 'Entrada', icon: Inbox },
-                      { value: 'sent', label: 'Enviados', icon: Send },
-                      { value: 'starred', label: 'Favoritos', icon: Star },
-                      { value: 'archive', label: 'Arquivo', icon: Archive },
-                    ].map((folder) => (
-                      <button
-                        key={folder.value}
-                        onClick={() => setEmailFolder(folder.value)}
-                        className={cn(
-                          "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all",
-                          emailFolder === folder.value
-                            ? "bg-white dark:bg-background text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        <folder.icon className="w-3.5 h-3.5" />
-                        {folder.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Busca */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar e-mails..."
-                    className="pl-10 h-10 rounded-xl text-sm bg-muted/30 border-border/40 focus:bg-white dark:focus:bg-background"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
+                ))}
               </div>
             </div>
             
-            {/* Card de Filtros */}
-            <div className="bg-white dark:bg-muted/30 rounded-2xl shadow-sm border border-border/40 p-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium text-muted-foreground pl-1">Mais pastas:</span>
-                <div className="flex items-center gap-1.5">
-                  <button 
-                    onClick={() => setEmailFolder('drafts')}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-transparent transition-all",
-                      emailFolder === 'drafts'
-                        ? "bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800"
-                        : "bg-muted/50 text-muted-foreground hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:text-amber-700 dark:hover:text-amber-400"
-                    )}
-                  >
-                    <File className="w-3 h-3" />
-                    Rascunhos
-                  </button>
-                  <button 
-                    onClick={() => setEmailFolder('trash')}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-transparent transition-all",
-                      emailFolder === 'trash'
-                        ? "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
-                        : "bg-muted/50 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700 dark:hover:text-red-400"
-                    )}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    Lixeira
-                  </button>
-                </div>
-                <GlobalClientFilter activeFilter={globalFilter} onFilterChange={setGlobalFilter} compact />
+            {/* Busca e Filtro */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar e-mails..."
+                  className="pl-10 h-9 rounded-lg text-sm bg-white dark:bg-muted/30 border-border/40"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onRefreshEmails}
+                className="h-9 w-9 p-0 rounded-lg border-orange-200 hover:bg-orange-50"
+              >
+                <RefreshCw className="w-4 h-4 text-orange-600" />
+              </Button>
             </div>
           </div>
         )}
