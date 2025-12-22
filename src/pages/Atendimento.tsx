@@ -273,6 +273,8 @@ export default function Atendimento() {
   // Customer search/create dialogs
   const [showCustomerSearchForTask, setShowCustomerSearchForTask] = useState(false);
   const [showCustomerSearchForChat, setShowCustomerSearchForChat] = useState(false);
+  const [showCustomerSearchForEmail, setShowCustomerSearchForEmail] = useState(false);
+  const [showCustomerSearchForOrcamento, setShowCustomerSearchForOrcamento] = useState(false);
 
   // Ferramentas dinâmicas por aba
   const { getRadialMenuItems, getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId || null);
@@ -1601,6 +1603,33 @@ export default function Atendimento() {
       console.error("Erro ao criar conversa:", error);
       toast.error("Erro ao criar conversa");
     }
+  };
+
+  // Criar email a partir de um contato selecionado
+  const handleCreateEmailFromContact = async (type: 'customer' | 'empresa', data: any) => {
+    const email = data.email || '';
+    setComposeEmailDefaults({ to: email, subject: '', body: '' });
+    setComposeEmailMode('compose');
+    setShowComposeEmail(true);
+    if (email) {
+      toast.success(`E-mail pré-preenchido para ${data.nome || data.nome_fantasia || 'contato'}`);
+    }
+  };
+
+  // Criar orçamento a partir de um contato selecionado
+  const handleCreateOrcamentoFromContact = async (type: 'customer' | 'empresa', data: any) => {
+    setOrcamentoSheetOpen(false);
+    setSelectedOrcamentoId(null);
+    if (type === 'empresa') {
+      setInitialEmpresaForOrcamento(data.id);
+    } else {
+      setInitialEmpresaForOrcamento(data.empresa_id || null);
+    }
+    setTimeout(() => {
+      setOrcamentoSheetOpen(true);
+      setActiveTab('orcamento');
+    }, 100);
+    toast.success(`Orçamento iniciado para ${data.nome || data.nome_fantasia || 'contato'}`);
   };
 
   // Load dados do orçamento selecionado
@@ -3773,29 +3802,15 @@ ${recentMessages}
                         onClick={() => {
                           if (activeTab === "agenda") setShowCustomerSearchForTask(true);
                           else if (activeTab === "chat") setShowCustomerSearchForChat(true);
-                          else if (activeTab === "email") setShowComposeEmail(true);
-                          else if (activeTab === "orcamento") {
-                            if (selectedOrcamentoId && orcamentoSheetOpen) {
-                              setShowNovoOrcamentoConfirm(true);
-                            } else {
-                              setOrcamentoSheetOpen(false);
-                              setSelectedOrcamentoId(null);
-                              setInitialEmpresaForOrcamento(globalFilter?.type === 'empresa' ? globalFilter.id : null);
-                              setTimeout(() => setOrcamentoSheetOpen(true), 100);
-                            }
-                          }
+                          else if (activeTab === "email") setShowCustomerSearchForEmail(true);
+                          else if (activeTab === "orcamento") setShowCustomerSearchForOrcamento(true);
                         }}
                         className="h-10 w-10 rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary/50"
                       >
                         <Plus className="h-4 w-4 text-primary" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      {activeTab === "agenda" ? "Nova Tarefa" :
-                       activeTab === "chat" ? "Nova Conversa" :
-                       activeTab === "email" ? "Novo E-mail" :
-                       "Novo Orçamento"}
-                    </TooltipContent>
+                    <TooltipContent>Puxar ou criar cadastro</TooltipContent>
                   </Tooltip>
                   <GlobalClientFilter 
                     activeFilter={globalFilter} 
@@ -5507,7 +5522,7 @@ ${recentMessages}
         onOpenChange={setShowCustomerSearchForTask}
         onSelect={handleCreateTaskFromContact}
         mode="both"
-        title="Nova Tarefa"
+        title="Puxar ou criar cadastro"
         description="Selecione ou crie um contato para a nova tarefa"
       />
 
@@ -5517,8 +5532,28 @@ ${recentMessages}
         onOpenChange={setShowCustomerSearchForChat}
         onSelect={handleCreateConversationFromContact}
         mode="customer"
-        title="Nova Conversa"
+        title="Puxar ou criar cadastro"
         description="Selecione ou crie um contato para iniciar a conversa"
+      />
+
+      {/* Customer Search Dialog - Para criar novo email */}
+      <CustomerSearchCreateDialog
+        open={showCustomerSearchForEmail}
+        onOpenChange={setShowCustomerSearchForEmail}
+        onSelect={handleCreateEmailFromContact}
+        mode="both"
+        title="Puxar ou criar cadastro"
+        description="Selecione ou crie um contato para enviar o e-mail"
+      />
+
+      {/* Customer Search Dialog - Para criar novo orçamento */}
+      <CustomerSearchCreateDialog
+        open={showCustomerSearchForOrcamento}
+        onOpenChange={setShowCustomerSearchForOrcamento}
+        onSelect={handleCreateOrcamentoFromContact}
+        mode="both"
+        title="Puxar ou criar cadastro"
+        description="Selecione ou crie um contato para o orçamento"
       />
 
       <AlertDialog open={!!confirmDeleteOrcamento} onOpenChange={(open) => !open && setConfirmDeleteOrcamento(null)}>
