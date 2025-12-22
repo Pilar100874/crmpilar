@@ -4037,6 +4037,25 @@ ${recentMessages}
                     </div>
                   </DialogContent>
                 </Dialog>
+
+                {/* Toggle Details Button */}
+                <div className="ml-auto">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      const newState = !showClientDetailsAgenda;
+                      setShowClientDetailsAgenda(newState);
+                      if (isTablet && newState && showConversationsList) {
+                        setShowConversationsList(false);
+                      }
+                    }}
+                    className="h-9 w-9 p-0 rounded-xl hover:bg-orange-50 dark:hover:bg-orange-950/30"
+                    title={showClientDetailsAgenda ? "Ocultar detalhes" : "Mostrar detalhes"}
+                  >
+                    {showClientDetailsAgenda ? <ChevronRight className="h-4 w-4 text-orange-600" /> : <ChevronLeft className="h-4 w-4 text-orange-600" />}
+                  </Button>
+                </div>
               </div>
             </div>
 
