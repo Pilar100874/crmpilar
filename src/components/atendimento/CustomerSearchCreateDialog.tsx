@@ -166,6 +166,12 @@ export function CustomerSearchCreateDialog({
         return;
       }
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
       const { data, error } = await supabase
         .from('customers')
         .insert({
@@ -182,7 +188,20 @@ export function CustomerSearchCreateDialog({
         return;
       }
 
-      toast.success("Contato criado com sucesso!");
+      // Vincular o customer ao usuário que criou
+      const { error: vinculoError } = await supabase
+        .from('customer_vinculos')
+        .insert({
+          customer_id: data.id,
+          estabelecimento_id: estabId,
+          usuario_id: user.id
+        });
+
+      if (vinculoError) {
+        console.error("Erro ao vincular contato ao usuário:", vinculoError);
+      }
+
+      toast.success("Contato criado e vinculado com sucesso!");
       onSelect('customer', data);
       onOpenChange(false);
     } catch (error) {
@@ -207,6 +226,12 @@ export function CustomerSearchCreateDialog({
         return;
       }
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
       const { data, error } = await supabase
         .from('empresas')
         .insert({
@@ -225,7 +250,20 @@ export function CustomerSearchCreateDialog({
         return;
       }
 
-      toast.success("Empresa criada com sucesso!");
+      // Vincular a empresa ao usuário que criou
+      const { error: vinculoError } = await supabase
+        .from('empresa_vinculos')
+        .insert({
+          empresa_id: data.id,
+          estabelecimento_id: estabId,
+          usuario_id: user.id
+        });
+
+      if (vinculoError) {
+        console.error("Erro ao vincular empresa ao usuário:", vinculoError);
+      }
+
+      toast.success("Empresa criada e vinculada com sucesso!");
       onSelect('empresa', data);
       onOpenChange(false);
     } catch (error) {
