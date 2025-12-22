@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CustomerHistoryTimeline } from "./CustomerHistoryTimeline";
+import { EmbeddedChatPanel } from "./EmbeddedChatPanel";
+import { EmbeddedEmailPanel } from "./EmbeddedEmailPanel";
 
 interface Task {
   id: string;
@@ -513,7 +515,7 @@ export function FluxoAtendimentoPanel({
             </div>
           </div>
 
-          {/* Área de contato expandível - Email/WhatsApp */}
+          {/* Área de contato expandível - Email/WhatsApp com componentes completos */}
           {(tipoContato === 'email' || tipoContato === 'whatsapp') && (
             <Collapsible open={showContactArea} onOpenChange={setShowContactArea}>
               <CollapsibleTrigger asChild>
@@ -556,42 +558,23 @@ export function FluxoAtendimentoPanel({
               </CollapsibleTrigger>
               
               <CollapsibleContent className="pt-2">
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-2.5">
-                  {tipoContato === 'email' && (
-                    <div className="space-y-1">
-                      <Label className="text-[10px] text-muted-foreground">Assunto</Label>
-                      <Input
-                        value={emailSubject}
-                        onChange={(e) => setEmailSubject(e.target.value)}
-                        placeholder="Assunto do email..."
-                        className="h-8 text-xs"
-                      />
-                    </div>
-                  )}
-                  <div className="space-y-1">
-                    <Label className="text-[10px] text-muted-foreground">Mensagem</Label>
-                    <Textarea
-                      value={contactMessage}
-                      onChange={(e) => setContactMessage(e.target.value)}
-                      placeholder={tipoContato === 'email' ? "Escreva sua mensagem..." : "Mensagem para WhatsApp..."}
-                      rows={3}
-                      className="resize-none text-xs min-h-[70px]"
-                    />
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={handleSendContact}
-                    disabled={isSendingContact || !contactMessage.trim()}
-                    className="w-full h-8 gap-1.5 text-xs"
-                  >
-                    {isSendingContact ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Send className="h-3.5 w-3.5" />
-                    )}
-                    {tipoContato === 'email' ? 'Enviar Email' : 'Abrir WhatsApp'}
-                  </Button>
-                </div>
+                {tipoContato === 'whatsapp' && currentTask.customers?.telefone && (
+                  <EmbeddedChatPanel
+                    customerPhone={currentTask.customers.telefone}
+                    customerName={currentTask.contact_name}
+                    customerId={currentTask.contact_id}
+                    estabelecimentoId={estabelecimentoId}
+                  />
+                )}
+                {tipoContato === 'email' && currentTask.customers?.email && (
+                  <EmbeddedEmailPanel
+                    customerEmail={currentTask.customers.email}
+                    customerName={currentTask.contact_name}
+                    customerId={currentTask.contact_id}
+                    estabelecimentoId={estabelecimentoId}
+                    userId={usuarioId}
+                  />
+                )}
               </CollapsibleContent>
             </Collapsible>
           )}
