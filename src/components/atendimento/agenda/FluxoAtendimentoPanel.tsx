@@ -2,11 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { format, addDays } from "date-fns";
@@ -14,7 +17,8 @@ import { ptBR } from "date-fns/locale";
 import { 
   Phone, MessageSquare, Mail, Users, CalendarIcon, 
   ChevronLeft, ChevronRight, Check, Mic, MicOff, 
-  Loader2, AlertCircle, X, Play, Clock, FileText, Building2
+  Loader2, AlertCircle, X, Play, Clock, FileText, Building2,
+  Send, ChevronDown, ChevronUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CustomerHistoryTimeline } from "./CustomerHistoryTimeline";
@@ -29,6 +33,12 @@ interface Task {
   origem: string;
   status: string;
   contact_id?: string;
+  customers?: {
+    id?: string;
+    nome?: string;
+    email?: string;
+    telefone?: string;
+  };
 }
 
 interface AtendimentoFlag {
@@ -83,6 +93,12 @@ export function FluxoAtendimentoPanel({
   const [proximaData, setProximaData] = useState<Date>(addDays(new Date(), 3));
   const [isRecording, setIsRecording] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Estados para área de contato expandida
+  const [showContactArea, setShowContactArea] = useState(false);
+  const [contactMessage, setContactMessage] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [isSendingContact, setIsSendingContact] = useState(false);
 
   const currentTask = tasks[currentIndex];
   const isLastTask = currentIndex === tasks.length - 1;
@@ -110,6 +126,9 @@ export function FluxoAtendimentoPanel({
   useEffect(() => {
     setSelectedFlag(null);
     setObservacao("");
+    setShowContactArea(false);
+    setContactMessage("");
+    setEmailSubject("");
   }, [currentIndex]);
 
   // Notify parent of current task changes
@@ -206,6 +225,58 @@ export function FluxoAtendimentoPanel({
       setIsRecording(false);
       toast.success('Gravação finalizada');
     }
+  };
+
+  // Função para enviar mensagem/email via recurso correspondente
+  const handleSendContact = async () => {
+    if (!currentTask || !contactMessage.trim()) {
+      toast.error("Digite uma mensagem");
+      return;
+    }
+
+    const customerEmail = currentTask.customers?.email;
+    const customerPhone = currentTask.customers?.telefone;
+
+    if (tipoContato === 'email' && !customerEmail) {
+      toast.error("Este contato não possui email cadastrado");
+      return;
+    }
+
+    if (tipoContato === 'whatsapp' && !customerPhone) {
+      toast.error("Este contato não possui telefone cadastrado");
+      return;
+    }
+
+    setIsSendingContact(true);
+    try {
+      if (tipoContato === 'email') {
+        // Simular envio de email - pode ser substituído por integração real
+        console.log('Enviando email para:', customerEmail, 'Assunto:', emailSubject, 'Mensagem:', contactMessage);
+        toast.success(`Email enviado para ${customerEmail}`);
+      } else if (tipoContato === 'whatsapp') {
+        // Abrir WhatsApp com mensagem pré-preenchida
+        const whatsappUrl = `https://wa.me/${customerPhone.replace(/\D/g, '')}?text=${encodeURIComponent(contactMessage)}`;
+        window.open(whatsappUrl, '_blank');
+        toast.success(`WhatsApp aberto para ${customerPhone}`);
+      }
+
+      // Limpar campos após envio
+      setContactMessage("");
+      setEmailSubject("");
+      setShowContactArea(false);
+    } catch (error) {
+      console.error('Erro ao enviar:', error);
+      toast.error('Erro ao enviar mensagem');
+    } finally {
+      setIsSendingContact(false);
+    }
+  };
+
+  // Verificar se o tipo de contato tem recurso disponível
+  const hasContactResource = (tipo: string) => {
+    if (tipo === 'email') return !!currentTask?.customers?.email;
+    if (tipo === 'whatsapp') return !!currentTask?.customers?.telefone;
+    return false;
   };
 
   const canProceed = selectedFlag !== null && proximaData !== null;
@@ -410,12 +481,21 @@ export function FluxoAtendimentoPanel({
               {TIPOS_CONTATO.map(tipo => {
                 const isSelected = tipoContato === tipo.id;
                 const IconComponent = tipo.icon;
+                const hasResource = hasContactResource(tipo.id);
                 return (
                   <button
                     key={tipo.id}
-                    onClick={() => setTipoContato(tipo.id)}
+                    onClick={() => {
+                      setTipoContato(tipo.id);
+                      // Abrir área de contato automaticamente se tiver recurso
+                      if (hasResource) {
+                        setShowContactArea(true);
+                      } else {
+                        setShowContactArea(false);
+                      }
+                    }}
                     className={cn(
-                      "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-medium transition-all",
+                      "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-medium transition-all relative",
                       isSelected 
                         ? "bg-primary text-primary-foreground shadow-sm" 
                         : "bg-muted/50 border border-border/60 hover:border-primary/40 hover:bg-primary/5"
@@ -423,11 +503,98 @@ export function FluxoAtendimentoPanel({
                   >
                     <IconComponent className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline">{tipo.label}</span>
+                    {/* Indicador de recurso disponível */}
+                    {hasResource && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-green-500" />
+                    )}
                   </button>
                 );
               })}
             </div>
           </div>
+
+          {/* Área de contato expandível - Email/WhatsApp */}
+          {(tipoContato === 'email' || tipoContato === 'whatsapp') && (
+            <Collapsible open={showContactArea} onOpenChange={setShowContactArea}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "w-full justify-between h-8 text-xs rounded-lg transition-all",
+                    showContactArea 
+                      ? "bg-primary/10 text-primary border border-primary/20" 
+                      : "bg-muted/50 border border-border/60 hover:border-primary/40"
+                  )}
+                  disabled={!hasContactResource(tipoContato)}
+                >
+                  <span className="flex items-center gap-1.5">
+                    {tipoContato === 'email' ? (
+                      <>
+                        <Mail className="h-3.5 w-3.5" />
+                        {currentTask.customers?.email ? (
+                          <span className="truncate max-w-[150px]">{currentTask.customers.email}</span>
+                        ) : (
+                          <span className="text-muted-foreground">Email não disponível</span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        {currentTask.customers?.telefone ? (
+                          <span className="truncate max-w-[150px]">{currentTask.customers.telefone}</span>
+                        ) : (
+                          <span className="text-muted-foreground">Telefone não disponível</span>
+                        )}
+                      </>
+                    )}
+                  </span>
+                  {hasContactResource(tipoContato) && (
+                    showContactArea ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent className="pt-2">
+                <div className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-2.5">
+                  {tipoContato === 'email' && (
+                    <div className="space-y-1">
+                      <Label className="text-[10px] text-muted-foreground">Assunto</Label>
+                      <Input
+                        value={emailSubject}
+                        onChange={(e) => setEmailSubject(e.target.value)}
+                        placeholder="Assunto do email..."
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  )}
+                  <div className="space-y-1">
+                    <Label className="text-[10px] text-muted-foreground">Mensagem</Label>
+                    <Textarea
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      placeholder={tipoContato === 'email' ? "Escreva sua mensagem..." : "Mensagem para WhatsApp..."}
+                      rows={3}
+                      className="resize-none text-xs min-h-[70px]"
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={handleSendContact}
+                    disabled={isSendingContact || !contactMessage.trim()}
+                    className="w-full h-8 gap-1.5 text-xs"
+                  >
+                    {isSendingContact ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Send className="h-3.5 w-3.5" />
+                    )}
+                    {tipoContato === 'email' ? 'Enviar Email' : 'Abrir WhatsApp'}
+                  </Button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          )}
 
           {/* Flags de resultado - grid compacto */}
           <div className="space-y-2">
