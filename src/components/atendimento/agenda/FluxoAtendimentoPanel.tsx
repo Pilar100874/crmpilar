@@ -69,7 +69,7 @@ interface FluxoAtendimentoPanelProps {
 
 const TIPOS_CONTATO = [
   { id: 'telefone', label: 'Telefone', icon: Phone },
-  { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
+  { id: 'whatsapp', label: 'Chats', icon: MessageSquare },
   { id: 'email', label: 'E-mail', icon: Mail },
   { id: 'presencial', label: 'Presencial', icon: Users },
 ];
