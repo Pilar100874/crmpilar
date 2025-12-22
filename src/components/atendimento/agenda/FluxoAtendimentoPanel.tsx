@@ -67,11 +67,11 @@ interface FluxoAtendimentoPanelProps {
   onNavigateToItem?: (type: 'chat' | 'orcamento' | 'email', id: string) => void;
 }
 
-const TIPOS_CONTATO = [
-  { id: 'telefone', label: 'Telefone', icon: Phone },
-  { id: 'whatsapp', label: 'Chats', icon: MessageSquare },
-  { id: 'email', label: 'E-mail', icon: Mail },
-  { id: 'presencial', label: 'Presencial', icon: Users },
+const ALL_TIPOS_CONTATO = [
+  { id: 'telefone', label: 'Telefone', icon: Phone, requiresData: 'telefone' },
+  { id: 'whatsapp', label: 'Chats', icon: MessageSquare, requiresData: 'telefone' },
+  { id: 'email', label: 'E-mail', icon: Mail, requiresData: 'email' },
+  { id: 'presencial', label: 'Presencial', icon: Users, requiresData: null },
 ];
 
 export function FluxoAtendimentoPanel({
@@ -476,11 +476,20 @@ export function FluxoAtendimentoPanel({
             </div>
           </div>
 
-          {/* Tipo de contato - compacto inline */}
+          {/* Tipo de contato - compacto inline - filtrado por dados disponíveis */}
           <div className="space-y-2">
             <label className="text-xs font-medium text-muted-foreground">Tipo de contato</label>
             <div className="flex gap-1.5">
-              {TIPOS_CONTATO.map(tipo => {
+              {ALL_TIPOS_CONTATO
+                .filter(tipo => {
+                  // Sempre mostrar presencial e telefone
+                  if (tipo.requiresData === null) return true;
+                  // Mostrar apenas se o cliente tiver o dado requerido
+                  if (tipo.requiresData === 'email') return !!currentTask?.customers?.email;
+                  if (tipo.requiresData === 'telefone') return !!currentTask?.customers?.telefone;
+                  return false;
+                })
+                .map(tipo => {
                 const isSelected = tipoContato === tipo.id;
                 const IconComponent = tipo.icon;
                 const hasResource = hasContactResource(tipo.id);
