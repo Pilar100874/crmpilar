@@ -14,7 +14,7 @@ import { ptBR } from "date-fns/locale";
 import { 
   Phone, MessageSquare, Mail, Users, CalendarIcon, 
   ChevronLeft, ChevronRight, Check, Mic, MicOff, 
-  Loader2, AlertCircle, X, Play, Clock, FileText
+  Loader2, AlertCircle, X, Play, Clock, FileText, Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CustomerHistoryTimeline } from "./CustomerHistoryTimeline";
@@ -342,13 +342,13 @@ export function FluxoAtendimentoPanel({
             </Button>
             {onToggleDetails && (
               <Button 
-                size="icon" 
+                size="sm" 
                 variant="ghost" 
                 onClick={onToggleDetails}
-                className="h-8 w-8 rounded-lg"
-                title={showDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
+                className="h-8 px-3 rounded-full text-xs"
               >
-                {showDetails ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                <Building2 className="h-4 w-4 mr-1" />
+                Detalhes
               </Button>
             )}
           </div>
