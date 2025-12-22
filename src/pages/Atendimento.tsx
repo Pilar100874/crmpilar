@@ -49,6 +49,7 @@ import { ConfigDatasProximoContatoDialog } from "@/components/atendimento/agenda
 import { EnvioMassaDialog } from "@/components/atendimento/agenda/EnvioMassaDialog";
 import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAtendimentoPanel";
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
+import { CustomerSearchCreateDialog } from "@/components/atendimento/CustomerSearchCreateDialog";
 
 interface Conversation {
   id: string;
@@ -268,6 +269,10 @@ export default function Atendimento() {
 
   // Global client filter
   const [globalFilter, setGlobalFilter] = useState<GlobalFilter | null>(null);
+
+  // Customer search/create dialogs
+  const [showCustomerSearchForTask, setShowCustomerSearchForTask] = useState(false);
+  const [showCustomerSearchForChat, setShowCustomerSearchForChat] = useState(false);
 
   // Ferramentas dinâmicas por aba
   const { getRadialMenuItems, getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId || null);
@@ -1481,6 +1486,120 @@ export default function Atendimento() {
     } catch (error) {
       console.error("Erro ao excluir orçamento:", error);
       toast.error("Erro ao excluir orçamento");
+    }
+  };
+
+  // Criar tarefa a partir de um contato selecionado
+  const handleCreateTaskFromContact = async (type: 'customer' | 'empresa', data: any) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) {
+        toast.error("Estabelecimento não encontrado");
+        return;
+      }
+
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const contactName = type === 'customer' 
+        ? data.nome 
+        : (data.nome_fantasia || data.nome || 'Empresa');
+
+      const { error } = await supabase
+        .from('calendario_tarefas')
+        .insert({
+          user_id: user.id,
+          estabelecimento_id: estabId,
+          title: `Contato - ${contactName}`,
+          contact_name: contactName,
+          contact_id: data.id,
+          date: today,
+          origem: 'manual',
+          status: 'pendente'
+        });
+
+      if (error) {
+        toast.error("Erro ao criar tarefa: " + error.message);
+        return;
+      }
+
+      toast.success("Tarefa criada com sucesso!");
+      loadTodayTasks(agendaDate);
+    } catch (error) {
+      console.error("Erro ao criar tarefa:", error);
+      toast.error("Erro ao criar tarefa");
+    }
+  };
+
+  // Criar conversa a partir de um contato selecionado
+  const handleCreateConversationFromContact = async (type: 'customer' | 'empresa', data: any) => {
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) {
+        toast.error("Estabelecimento não encontrado");
+        return;
+      }
+
+      // Se for empresa, verificar se tem pelo menos um contato vinculado
+      if (type === 'empresa') {
+        toast.error("Para iniciar conversa, selecione uma pessoa. Empresas não podem ter conversas diretas.");
+        return;
+      }
+
+      // Verificar se o cliente tem telefone
+      if (!data.telefone) {
+        toast.error("O contato não possui telefone cadastrado para iniciar uma conversa");
+        return;
+      }
+
+      // Verificar se já existe uma conversa ativa com esse cliente
+      const { data: existingConv } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('customer_id', data.id)
+        .eq('estabelecimento_id', estabId)
+        .neq('chat_status', 'encerrado')
+        .maybeSingle();
+
+      if (existingConv) {
+        // Selecionar a conversa existente
+        setSelectedConversation(existingConv.id);
+        setActiveTab('chat');
+        toast.info("Conversa existente selecionada");
+        return;
+      }
+
+      // Criar nova conversa
+      const { data: newConv, error } = await supabase
+        .from('conversations')
+        .insert({
+          customer_id: data.id,
+          estabelecimento_id: estabId,
+          canal: 'whatsapp',
+          status: 'active',
+          chat_status: 'novo',
+          bot_active: false
+        })
+        .select()
+        .single();
+
+      if (error) {
+        toast.error("Erro ao criar conversa: " + error.message);
+        return;
+      }
+
+      // Selecionar a nova conversa
+      setSelectedConversation(newConv.id);
+      setActiveTab('chat');
+      loadConversations();
+      toast.success("Conversa iniciada!");
+    } catch (error) {
+      console.error("Erro ao criar conversa:", error);
+      toast.error("Erro ao criar conversa");
     }
   };
 
@@ -3902,6 +4021,16 @@ ${recentMessages}
 
                 {/* Quick Actions */}
                 <div className="flex items-center gap-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowCustomerSearchForTask(true)}
+                    className="h-7 px-2 rounded-lg border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs"
+                    title="Nova Tarefa"
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Nova
+                  </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
