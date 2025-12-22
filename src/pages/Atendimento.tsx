@@ -3815,13 +3815,25 @@ ${recentMessages}
 
             {/* Chat Tab */}
           <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2 bg-gradient-to-b from-slate-50/30 to-white">
+            {/* Nova Conversa Button */}
+            <div className="mb-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCustomerSearchForChat(true)}
+                className="w-full h-8 text-xs border-dashed border-primary/30 hover:bg-primary/5 hover:border-primary/50 text-primary"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                Nova Conversa
+              </Button>
+            </div>
             {filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
                   <MessageSquare className="w-8 h-8 text-primary/40" />
                 </div>
                 <p className="text-sm font-medium">Nenhuma conversa</p>
-                <p className="text-xs text-muted-foreground mt-1">Use o botão direito para acessar opções</p>
+                <p className="text-xs text-muted-foreground mt-1">Clique em "Nova Conversa" para iniciar</p>
               </div>
             ) : (
               <div className="space-y-1.5">
@@ -5474,7 +5486,26 @@ ${recentMessages}
         onOpenChange={setShowPredictiveDialer}
       />
 
-      {/* Confirmation Dialogs for Orçamento */}
+      {/* Customer Search Dialog - Para criar nova tarefa */}
+      <CustomerSearchCreateDialog
+        open={showCustomerSearchForTask}
+        onOpenChange={setShowCustomerSearchForTask}
+        onSelect={handleCreateTaskFromContact}
+        mode="both"
+        title="Nova Tarefa"
+        description="Selecione ou crie um contato para a nova tarefa"
+      />
+
+      {/* Customer Search Dialog - Para criar nova conversa */}
+      <CustomerSearchCreateDialog
+        open={showCustomerSearchForChat}
+        onOpenChange={setShowCustomerSearchForChat}
+        onSelect={handleCreateConversationFromContact}
+        mode="customer"
+        title="Nova Conversa"
+        description="Selecione ou crie um contato para iniciar a conversa"
+      />
+
       <AlertDialog open={!!confirmDeleteOrcamento} onOpenChange={(open) => !open && setConfirmDeleteOrcamento(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
