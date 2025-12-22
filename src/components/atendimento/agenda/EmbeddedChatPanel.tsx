@@ -197,7 +197,7 @@ export function EmbeddedChatPanel({
   }
 
   return (
-    <div className="flex flex-col h-full max-h-[400px] bg-background rounded-lg border border-border/50">
+    <div className="flex flex-col h-full max-h-[400px] bg-background rounded-lg border border-border/50 overflow-visible">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/50 bg-muted/30">
         <div className="flex items-center gap-2">
@@ -239,7 +239,7 @@ export function EmbeddedChatPanel({
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-2 border-t border-border/50">
+      <div className="p-2 border-t border-border/50 relative z-[100] overflow-visible">
         <ChatInput
           onSendMessage={handleSendMessage}
           disabled={false}

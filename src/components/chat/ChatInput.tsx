@@ -776,7 +776,7 @@ export default function ChatInput({
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
-          <PopoverContent className="w-56 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+          <PopoverContent className="w-56 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
             <div className="space-y-3">
               <Label className="text-sm font-medium">Traduzir para</Label>
               <Select value={targetLanguage} onValueChange={setTargetLanguage}>
@@ -814,7 +814,7 @@ export default function ChatInput({
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Redirecionar para Bot</Label>
                 <Select value={selectedBotRedirect || ""} onValueChange={onBotRedirectChange}>
@@ -850,7 +850,7 @@ export default function ChatInput({
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">Resposta Automática</Label>
@@ -886,7 +886,7 @@ export default function ChatInput({
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Transferir para</Label>
                 <Select value={selectedTransferUser || ""} onValueChange={onTransferUserChange}>
@@ -921,7 +921,7 @@ export default function ChatInput({
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
-          <PopoverContent className="w-72 p-3 rounded-xl shadow-xl border-border/50 bg-popover" align="start" sideOffset={8}>
+          <PopoverContent className="w-72 p-3 rounded-xl shadow-xl border-border/50 bg-popover z-[9999]" align="start" sideOffset={8}>
             <div className="space-y-3">
               <Label className="text-sm font-medium">Relatórios Importados</Label>
               {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
@@ -1013,7 +1013,7 @@ export default function ChatInput({
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">Tradução em Tempo Real</Label>
@@ -1068,11 +1068,11 @@ export default function ChatInput({
       />
       
       {/* Main container with elegant styling */}
-      <div className="relative">
+      <div className="relative overflow-visible">
         {/* Main input container */}
-        <div className="relative z-50 bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2">
+        <div className="relative z-[100] bg-card/80 backdrop-blur-sm border border-border/40 rounded-2xl shadow-lg p-2 overflow-visible">
           {/* Input row */}
-          <div className="flex items-end gap-2 overflow-visible">
+          <div className="flex items-end gap-2 overflow-visible relative z-[100]">
             {/* Expandable Tools Menu - positioned to expand upward */}
             <div ref={menuRef} className="relative">
               {/* All items */}

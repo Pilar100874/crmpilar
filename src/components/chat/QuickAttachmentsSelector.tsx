@@ -117,7 +117,7 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
             <TooltipContent>Anexos rápidos</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <PopoverContent className="w-[500px] p-0 rounded-2xl" align="end">
+        <PopoverContent className="w-[500px] p-0 rounded-2xl z-[9999]" align="end">
           <div className="p-4 border-b bg-muted/30 space-y-3">
             <div>
               <h4 className="font-semibold text-lg">📎 Anexos Rápidos</h4>
