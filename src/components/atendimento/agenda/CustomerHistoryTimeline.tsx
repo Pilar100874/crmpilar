@@ -485,13 +485,18 @@ export function CustomerHistoryTimeline({
   );
 
   const renderFilters = () => (
-    <div className={cn("flex flex-wrap gap-2 mb-3", isFullView && "mb-4")}>
-      {/* Filtro por tipo */}
-      <div className="flex gap-1 flex-wrap">
+    <div className={cn("flex flex-col gap-3 mb-3", isFullView && "mb-4")}>
+      {/* Filtro por tipo - chips horizontais com scroll */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
         <Button
           variant={typeFilter === null ? "default" : "outline"}
           size="sm"
-          className="h-7 text-xs px-2"
+          className={cn(
+            "h-8 text-xs px-3 rounded-full shrink-0 transition-all",
+            typeFilter === null 
+              ? "bg-primary text-primary-foreground shadow-md" 
+              : "bg-muted/50 border-0 hover:bg-muted"
+          )}
           onClick={() => setTypeFilter(null)}
         >
           Todos
@@ -501,20 +506,27 @@ export function CustomerHistoryTimeline({
             key={type}
             variant={typeFilter === type ? "default" : "outline"}
             size="sm"
-            className="h-7 text-xs px-2 gap-1"
+            className={cn(
+              "h-8 text-xs px-3 gap-1.5 rounded-full shrink-0 transition-all",
+              typeFilter === type 
+                ? "shadow-md" 
+                : "bg-muted/50 border-0 hover:bg-muted"
+            )}
+            style={typeFilter === type ? { backgroundColor: config.color, color: 'white' } : undefined}
             onClick={() => setTypeFilter(type)}
           >
-            <config.icon className="w-3 h-3" />
-            {config.label}
+            <config.icon className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{config.label}</span>
           </Button>
         ))}
       </div>
       
-      {/* Filtros avançados (apenas em fullView) */}
+      {/* Filtros avançados - linha separada em mobile */}
       {isFullView && (
-        <div className="flex gap-2 ml-auto">
+        <div className="flex gap-2 flex-wrap">
           <Select value={periodFilter} onValueChange={setPeriodFilter}>
-            <SelectTrigger className="h-7 w-[140px] text-xs">
+            <SelectTrigger className="h-8 flex-1 min-w-[130px] max-w-[160px] text-xs rounded-full bg-muted/50 border-0">
+              <Clock className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
               <SelectValue placeholder="Período" />
             </SelectTrigger>
             <SelectContent>
@@ -527,7 +539,8 @@ export function CustomerHistoryTimeline({
           </Select>
           
           <Select value={limitFilter} onValueChange={setLimitFilter}>
-            <SelectTrigger className="h-7 w-[100px] text-xs">
+            <SelectTrigger className="h-8 flex-1 min-w-[100px] max-w-[120px] text-xs rounded-full bg-muted/50 border-0">
+              <Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" />
               <SelectValue placeholder="Limite" />
             </SelectTrigger>
             <SelectContent>
