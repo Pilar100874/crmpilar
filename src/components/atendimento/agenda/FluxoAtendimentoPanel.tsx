@@ -384,35 +384,30 @@ export function FluxoAtendimentoPanel({
         </div>
         
         {/* Tab Atendimento */}
-        <TabsContent value="atendimento" className="flex-1 overflow-y-auto mt-0 px-6 py-4 space-y-5">
-          {/* Info da tarefa atual */}
-          <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Users className="h-5 w-5 text-primary" />
+        <TabsContent value="atendimento" className="flex-1 overflow-y-auto mt-0 px-4 py-3 space-y-3">
+          {/* Info da tarefa atual - compacto */}
+          <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Users className="h-4 w-4 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <span className="font-semibold text-base">{currentTask.contact_name}</span>
-                <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{currentTask.title}</p>
-                {currentTask.description && (
-                  <p className="text-sm text-foreground/70 mt-2">{currentTask.description}</p>
-                )}
-                <div className="flex items-center gap-2 mt-3">
-                  <Badge variant="secondary" className="text-xs font-normal">{currentTask.origem}</Badge>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-sm">{currentTask.contact_name}</span>
+                  <Badge variant="secondary" className="text-[10px] font-normal h-4">{currentTask.origem}</Badge>
                   {currentTask.time && (
-                    <span className="text-xs text-muted-foreground">{currentTask.time}</span>
+                    <span className="text-[10px] text-muted-foreground">{currentTask.time}</span>
                   )}
                 </div>
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{currentTask.title}</p>
               </div>
             </div>
           </div>
 
-          {/* Tipo de contato */}
-          <div className="space-y-4">
-            <label className="text-sm font-semibold text-foreground">
-              Como foi o contato?
-            </label>
-            <div className="grid grid-cols-4 gap-2">
+          {/* Tipo de contato - compacto inline */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Tipo de contato</label>
+            <div className="flex gap-1.5">
               {TIPOS_CONTATO.map(tipo => {
                 const isSelected = tipoContato === tipo.id;
                 const IconComponent = tipo.icon;
@@ -421,48 +416,31 @@ export function FluxoAtendimentoPanel({
                     key={tipo.id}
                     onClick={() => setTipoContato(tipo.id)}
                     className={cn(
-                      "flex flex-col items-center gap-2 py-3 px-2 rounded-xl transition-all duration-200",
+                      "flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-medium transition-all",
                       isSelected 
-                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-[1.02]" 
-                        : "bg-white dark:bg-muted/50 border border-border/60 hover:border-primary/40 hover:bg-primary/5 hover:scale-[1.01]"
+                        ? "bg-primary text-primary-foreground shadow-sm" 
+                        : "bg-muted/50 border border-border/60 hover:border-primary/40 hover:bg-primary/5"
                     )}
                   >
-                    <div className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center transition-all",
-                      isSelected 
-                        ? "bg-white/20" 
-                        : "bg-muted/50"
-                    )}>
-                      <IconComponent className={cn(
-                        "h-5 w-5",
-                        isSelected ? "text-primary-foreground" : "text-muted-foreground"
-                      )} />
-                    </div>
-                    <span className={cn(
-                      "text-xs font-medium",
-                      isSelected ? "text-primary-foreground" : "text-foreground"
-                    )}>
-                      {tipo.label}
-                    </span>
+                    <IconComponent className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">{tipo.label}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Flags de resultado */}
-          <div className="space-y-4">
+          {/* Flags de resultado - grid compacto */}
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-foreground">
-                Resultado do Contato
-              </label>
+              <label className="text-xs font-medium text-muted-foreground">Resultado</label>
               {!selectedFlag && (
-                <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1 rounded-full">
-                  <AlertCircle className="h-3.5 w-3.5" /> Selecione uma opção
+                <span className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" /> Obrigatório
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
               {flags.map(flag => {
                 const isSelected = selectedFlag === flag.id;
                 return (
@@ -470,100 +448,91 @@ export function FluxoAtendimentoPanel({
                     key={flag.id}
                     onClick={() => setSelectedFlag(flag.id)}
                     className={cn(
-                      "relative group flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium text-sm transition-all duration-200 overflow-hidden",
+                      "flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs font-medium transition-all",
                       isSelected 
-                        ? "text-white shadow-lg scale-[1.02]" 
-                        : "bg-white dark:bg-muted/50 border-2 hover:scale-[1.01] hover:shadow-md"
+                        ? "text-white shadow-sm" 
+                        : "bg-muted/50 border hover:shadow-sm"
                     )}
                     style={{
                       backgroundColor: isSelected ? flag.cor : undefined,
                       borderColor: isSelected ? flag.cor : flag.cor + '40',
                       color: isSelected ? 'white' : flag.cor,
-                      boxShadow: isSelected ? `0 4px 20px -4px ${flag.cor}60` : undefined,
                     }}
                   >
-                    {isSelected && (
-                      <div 
-                        className="absolute inset-0 opacity-20"
-                        style={{
-                          background: `linear-gradient(135deg, white 0%, transparent 50%, ${flag.cor} 100%)`
-                        }}
-                      />
-                    )}
-                    <span className="relative flex items-center gap-2">
-                      {isSelected && (
-                        <Check className="h-4 w-4 animate-in zoom-in-50 duration-200" />
-                      )}
-                      {flag.nome}
-                    </span>
+                    {isSelected && <Check className="h-3 w-3" />}
+                    <span className="truncate">{flag.nome}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Observação */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Observação
-              </label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-                className={cn(
-                  "h-8 gap-1.5 text-xs rounded-lg",
-                  isRecording && "text-destructive bg-destructive/10"
-                )}
-              >
-                {isRecording ? (
-                  <>
-                    <MicOff className="h-3.5 w-3.5" />
-                    <span className="animate-pulse">Gravando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Mic className="h-3.5 w-3.5" />
-                    Gravar
-                  </>
-                )}
-              </Button>
-            </div>
-            <Textarea
-              value={observacao}
-              onChange={(e) => setObservacao(e.target.value)}
-              placeholder="Detalhes do atendimento..."
-              rows={3}
-              className="resize-none rounded-lg border-border/60 focus:border-primary/50 bg-background"
-            />
-          </div>
-
-          {/* Data próximo contato */}
-          <div className="space-y-3 pb-4">
-            <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Próximo Contato
-            </label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start gap-2 h-10 rounded-lg border-border/60 hover:border-border font-normal"
+          {/* Observação e Data em row no desktop */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Observação */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground">Observação</label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                  className={cn(
+                    "h-6 px-2 gap-1 text-[10px] rounded",
+                    isRecording && "text-destructive bg-destructive/10"
+                  )}
                 >
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                  {format(proximaData, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  {isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
+                  {isRecording ? "Parar" : "Voz"}
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={proximaData}
-                  onSelect={(date) => date && setProximaData(date)}
-                  disabled={(date) => date < new Date()}
-                  locale={ptBR}
-                />
-              </PopoverContent>
-            </Popover>
+              </div>
+              <Textarea
+                value={observacao}
+                onChange={(e) => setObservacao(e.target.value)}
+                placeholder="Detalhes..."
+                rows={2}
+                className="resize-none rounded-lg text-xs min-h-[60px]"
+              />
+            </div>
+
+            {/* Data próximo contato */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Próximo Contato</label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start gap-2 h-9 rounded-lg text-xs font-normal"
+                  >
+                    <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                    {format(proximaData, "dd/MM/yyyy", { locale: ptBR })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={proximaData}
+                    onSelect={(date) => date && setProximaData(date)}
+                    disabled={(date) => date < new Date()}
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
+              {/* Atalhos de data */}
+              <div className="flex gap-1">
+                {[1, 3, 7, 15].map(days => (
+                  <Button
+                    key={days}
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1 h-6 text-[10px] px-1"
+                    onClick={() => setProximaData(addDays(new Date(), days))}
+                  >
+                    {days}d
+                  </Button>
+                ))}
+              </div>
+            </div>
           </div>
         </TabsContent>
         
