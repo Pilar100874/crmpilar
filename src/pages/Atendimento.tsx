@@ -4717,8 +4717,31 @@ ${recentMessages}
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
       <div className="flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border">
-        {/* Chat Content */}
-        {activeTab === "chat" && selectedConversation && selectedConv ? (
+        {/* Customer Search Panel - Tem prioridade sobre outros conteúdos */}
+        {(showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
+          <CustomerSearchCreatePanel
+            onSelect={
+              showCustomerSearchForTask ? handleCreateTaskFromContact :
+              showCustomerSearchForChat ? handleCreateConversationFromContact :
+              showCustomerSearchForEmail ? handleCreateEmailFromContact :
+              handleCreateOrcamentoFromContact
+            }
+            onClose={() => {
+              setShowCustomerSearchForTask(false);
+              setShowCustomerSearchForChat(false);
+              setShowCustomerSearchForEmail(false);
+              setShowCustomerSearchForOrcamento(false);
+            }}
+            mode={showCustomerSearchForChat ? "customer" : "both"}
+            title="Puxar ou criar cadastro"
+            description={
+              showCustomerSearchForTask ? "Selecione ou crie um contato para a nova tarefa" :
+              showCustomerSearchForChat ? "Selecione ou crie um contato para iniciar a conversa" :
+              showCustomerSearchForEmail ? "Selecione ou crie um contato para enviar o e-mail" :
+              "Selecione ou crie um contato para o orçamento"
+            }
+          />
+        ) : activeTab === "chat" && selectedConversation && selectedConv ? (
           <>
             <div className="px-3 md:px-4 py-2.5 md:py-3 border-b bg-card shadow-sm flex-shrink-0">
               <div className="flex items-center justify-between">
@@ -5308,29 +5331,6 @@ ${recentMessages}
                 onSelectTool={handleToolSelect} 
                 tabType="email" 
               />
-            }
-          />
-        ) : (showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
-          <CustomerSearchCreatePanel
-            onSelect={
-              showCustomerSearchForTask ? handleCreateTaskFromContact :
-              showCustomerSearchForChat ? handleCreateConversationFromContact :
-              showCustomerSearchForEmail ? handleCreateEmailFromContact :
-              handleCreateOrcamentoFromContact
-            }
-            onClose={() => {
-              setShowCustomerSearchForTask(false);
-              setShowCustomerSearchForChat(false);
-              setShowCustomerSearchForEmail(false);
-              setShowCustomerSearchForOrcamento(false);
-            }}
-            mode={showCustomerSearchForChat ? "customer" : "both"}
-            title="Puxar ou criar cadastro"
-            description={
-              showCustomerSearchForTask ? "Selecione ou crie um contato para a nova tarefa" :
-              showCustomerSearchForChat ? "Selecione ou crie um contato para iniciar a conversa" :
-              showCustomerSearchForEmail ? "Selecione ou crie um contato para enviar o e-mail" :
-              "Selecione ou crie um contato para o orçamento"
             }
           />
         ) : (
