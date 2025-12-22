@@ -3443,8 +3443,8 @@ ${recentMessages}
             <div className="flex-shrink-0 bg-card/95 backdrop-blur-sm border-t border-border/50 px-1 py-1 pb-safe">
               <div className="flex justify-around">
                 {[
-                  { id: "chat", label: "Chats", icon: MessageSquare, badge: activeConversationsCount },
                   { id: "agenda", label: "Agenda", icon: CalendarIcon, badge: todayTasksCount },
+                  { id: "chat", label: "Chats", icon: MessageSquare, badge: activeConversationsCount },
                   { id: "email", label: "E-mails", icon: Mail, badge: unreadEmailsCount },
                   { id: "orcamento", label: "Orçamentos", icon: FileText, badge: orcamentosEmAndamentoCount },
                 ].map((tab) => {
