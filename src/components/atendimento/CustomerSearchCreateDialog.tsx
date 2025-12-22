@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
-import { Search, User, Building2, Plus, Phone, Mail, Loader2, MapPin } from "lucide-react";
+import { Search, User, Building2, Plus, Phone, Mail, Loader2, MapPin, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { useAddressLookup } from "@/hooks/useAddressLookup";
@@ -386,29 +386,32 @@ export function CustomerSearchCreateDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
-            {title}
-          </DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col">
+        <SheetHeader className="p-4 pb-2 border-b">
+          <div className="flex items-center justify-between">
+            <SheetTitle className="flex items-center gap-2">
+              <User className="h-5 w-5 text-primary" />
+              {title}
+            </SheetTitle>
+          </div>
+          <SheetDescription className="text-left">{description}</SheetDescription>
+        </SheetHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'search' | 'create')} className="w-full flex-1 flex flex-col min-h-0">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="search" className="flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              Buscar
-            </TabsTrigger>
-            <TabsTrigger value="create" className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Criar Novo
-            </TabsTrigger>
-          </TabsList>
+        <div className="flex-1 flex flex-col min-h-0 p-4">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'search' | 'create')} className="w-full flex-1 flex flex-col min-h-0">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="search" className="flex items-center gap-2">
+                <Search className="h-4 w-4" />
+                Buscar
+              </TabsTrigger>
+              <TabsTrigger value="create" className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Criar Novo
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="search" className="space-y-4 mt-4 flex-1 flex flex-col min-h-0">
+          <TabsContent value="search" className="space-y-4 flex-1 flex flex-col min-h-0 mt-0">
             {/* Search Type Toggle */}
             {mode === 'both' && (
               <div className="flex gap-1 p-1 bg-muted rounded-lg">
@@ -801,7 +804,8 @@ export function CustomerSearchCreateDialog({
             </ScrollArea>
           </TabsContent>
         </Tabs>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
