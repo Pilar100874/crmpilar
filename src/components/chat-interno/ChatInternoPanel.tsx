@@ -362,13 +362,24 @@ export function ChatInternoPanel({ isOpen, onClose }: ChatInternoPanelProps) {
                 <MessageCircle className="h-5 w-5 text-primary" />
                 <span className="font-semibold">Chat Interno</span>
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setShowNovaConversa(true)}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => setShowNovaConversa(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={onClose}
+                  className="md:hidden"
+                  title="Fechar"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </>
           )}
         </div>
