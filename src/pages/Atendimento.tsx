@@ -3633,17 +3633,19 @@ ${recentMessages}
           
           {/* Email Folders - Vertical list below tabs when email is active */}
           {activeTab === "email" && (
-            <EmailFolderSidebar
-              emails={userEmails}
-              activeFolder={emailFolder}
-              onFolderChange={(folder) => {
-                setEmailFolder(folder);
-                setSelectedEmailId(null);
-                setSelectedEmailData(null);
-              }}
-              onComposeClick={() => setShowComposeEmail(true)}
-              onRefresh={() => loadUserEmails()}
-            />
+            <div className="flex-1 overflow-hidden">
+              <EmailFolderSidebar
+                emails={userEmails}
+                activeFolder={emailFolder}
+                onFolderChange={(folder) => {
+                  setEmailFolder(folder);
+                  setSelectedEmailId(null);
+                  setSelectedEmailData(null);
+                }}
+                onComposeClick={() => setShowComposeEmail(true)}
+                onRefresh={() => loadUserEmails()}
+              />
+            </div>
           )}
 
             {/* Chat Tab */}
