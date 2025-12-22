@@ -3758,18 +3758,19 @@ ${recentMessages}
                   >
                     <ChevronRight className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                   </Button>
-                </div>
 
-                {/* Today Button */}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleToday}
-                  className="h-8 px-3 rounded-lg border-orange-200 dark:border-orange-800 hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs"
-                >
-                  <CalendarDays className="w-3.5 h-3.5 mr-1.5" />
-                  Hoje
-                </Button>
+                  <div className="w-px h-6 bg-orange-200 dark:bg-orange-800 mx-1" />
+
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleToday}
+                    className="h-7 px-2 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-medium"
+                  >
+                    <CalendarDays className="w-3.5 h-3.5 mr-1" />
+                    Hoje
+                  </Button>
+                </div>
 
                 {/* Action Buttons Group - Fluxo/Massa */}
                 <div className="flex items-center gap-0.5 bg-white dark:bg-card rounded-lg border border-orange-100 dark:border-orange-900/30 p-0.5">
