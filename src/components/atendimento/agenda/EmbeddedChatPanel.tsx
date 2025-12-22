@@ -197,7 +197,7 @@ export function EmbeddedChatPanel({
   }
 
   return (
-    <div className="flex flex-col h-full max-h-[400px] bg-background rounded-lg border border-border/50 overflow-visible">
+    <div className="flex flex-col h-full max-h-[600px] min-h-[500px] bg-background rounded-lg border border-border/50 overflow-visible">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border/50 bg-muted/30">
         <div className="flex items-center gap-2">
