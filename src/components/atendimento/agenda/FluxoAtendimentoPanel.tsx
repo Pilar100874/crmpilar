@@ -320,10 +320,13 @@ export function FluxoAtendimentoPanel({
   return (
     <div className="flex flex-col bg-background h-full max-h-[100dvh] md:max-h-full">
       {/* Header Minimalista - Fixo */}
-      <div className="px-6 py-4 border-b border-border/50 flex-shrink-0">
+      <div className="px-3 py-2.5 border-b border-border/50 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="ghost" onClick={onClose} className="h-8 w-8 p-0 rounded-full">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Play className="w-4 h-4 text-primary" />
             </div>
             <div>
@@ -337,9 +340,6 @@ export function FluxoAtendimentoPanel({
             <span className="text-xs font-medium text-muted-foreground tabular-nums">
               {Math.round(progress)}%
             </span>
-            <Button size="icon" variant="ghost" onClick={onClose} className="h-8 w-8 rounded-lg">
-              <X className="h-4 w-4" />
-            </Button>
             {onToggleDetails && (
               <Button 
                 size="icon" 
