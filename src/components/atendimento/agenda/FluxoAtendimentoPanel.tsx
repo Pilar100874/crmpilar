@@ -467,42 +467,41 @@ export function FluxoAtendimentoPanel({
             </div>
           </div>
 
-          {/* Observação e Data em row no desktop */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Observação */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-muted-foreground">Observação</label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-                  className={cn(
-                    "h-6 px-2 gap-1 text-[10px] rounded",
-                    isRecording && "text-destructive bg-destructive/10"
-                  )}
-                >
-                  {isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
-                  {isRecording ? "Parar" : "Voz"}
-                </Button>
-              </div>
-              <Textarea
-                value={observacao}
-                onChange={(e) => setObservacao(e.target.value)}
-                placeholder="Detalhes..."
-                rows={2}
-                className="resize-none rounded-lg text-xs min-h-[60px]"
-              />
+          {/* Observação - linha separada */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-muted-foreground">Observação</label>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+                className={cn(
+                  "h-6 px-2 gap-1 text-[10px] rounded",
+                  isRecording && "text-destructive bg-destructive/10"
+                )}
+              >
+                {isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
+                {isRecording ? "Parar" : "Voz"}
+              </Button>
             </div>
+            <Textarea
+              value={observacao}
+              onChange={(e) => setObservacao(e.target.value)}
+              placeholder="Detalhes..."
+              rows={2}
+              className="resize-none rounded-lg text-xs min-h-[60px]"
+            />
+          </div>
 
-            {/* Data próximo contato */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Próximo Contato</label>
+          {/* Data próximo contato */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Próximo Contato</label>
+            <div className="flex gap-2">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button 
                     variant="outline" 
-                    className="w-full justify-start gap-2 h-9 rounded-lg text-xs font-normal"
+                    className="flex-1 justify-start gap-2 h-9 rounded-lg text-xs font-normal"
                   >
                     <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
                     {format(proximaData, "dd/MM/yyyy", { locale: ptBR })}
@@ -518,14 +517,14 @@ export function FluxoAtendimentoPanel({
                   />
                 </PopoverContent>
               </Popover>
-              {/* Atalhos de data */}
+              {/* Atalhos de data inline */}
               <div className="flex gap-1">
                 {[1, 3, 7, 15].map(days => (
                   <Button
                     key={days}
                     variant="ghost"
                     size="sm"
-                    className="flex-1 h-6 text-[10px] px-1"
+                    className="h-9 w-9 text-[10px] px-0"
                     onClick={() => setProximaData(addDays(new Date(), days))}
                   >
                     {days}d
