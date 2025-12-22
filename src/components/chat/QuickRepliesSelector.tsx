@@ -82,7 +82,7 @@ export default function QuickRepliesSelector({ onSelect, disabled }: QuickReplie
           <TooltipContent>Textos prontos</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <PopoverContent className="w-80 p-0 rounded-xl shadow-xl border-border/50" align="start" sideOffset={8}>
+      <PopoverContent className="w-80 p-0 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
         <div className="p-3 border-b border-border/50 bg-muted/30 rounded-t-xl">
           <h4 className="font-semibold text-sm">Textos Prontos</h4>
         </div>
