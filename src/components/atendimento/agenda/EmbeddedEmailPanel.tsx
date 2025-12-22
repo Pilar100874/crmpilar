@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Mail, Send, RefreshCw, Inbox, ArrowUpRight, ArrowDownLeft, Paperclip, X, FileText, FileSpreadsheet } from "lucide-react";
+import { Loader2, Mail, Send, RefreshCw, Inbox, ArrowUpRight, ArrowDownLeft, Paperclip, X, FileText, FileSpreadsheet, ArrowLeft, Reply, Star } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "@/lib/toast-config";
@@ -55,6 +55,7 @@ export function EmbeddedEmailPanel({
   const [body, setBody] = useState("");
   const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
   const [showCompose, setShowCompose] = useState(true);
+  const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -272,8 +273,100 @@ export function EmbeddedEmailPanel({
             </Button>
           </div>
         </div>
+      ) : selectedEmail ? (
+        /* Email Detail View */
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Email Detail Header */}
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-border/50 bg-muted/20">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setSelectedEmail(null)}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs text-muted-foreground">Voltar ao histórico</span>
+          </div>
+          
+          {/* Email Content */}
+          <ScrollArea className="flex-1 p-3">
+            <div className="space-y-3">
+              {/* Subject */}
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="text-sm font-semibold leading-tight">
+                  {selectedEmail.subject || "(Sem assunto)"}
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 flex-shrink-0"
+                  onClick={async () => {
+                    await supabase
+                      .from("emails")
+                      .update({ starred: !selectedEmail.starred })
+                      .eq("id", selectedEmail.id);
+                    setSelectedEmail({ ...selectedEmail, starred: !selectedEmail.starred });
+                    loadEmails();
+                  }}
+                >
+                  <Star className={cn(
+                    "h-4 w-4",
+                    selectedEmail.starred ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
+                  )} />
+                </Button>
+              </div>
+              
+              {/* From/To Info */}
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-10">De:</span>
+                  <span className="font-medium">{selectedEmail.from_email}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-10">Para:</span>
+                  <span className="font-medium">{selectedEmail.to_email}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-10">Data:</span>
+                  <span>{format(new Date(selectedEmail.date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                </div>
+              </div>
+              
+              {/* Email Body */}
+              <div className="pt-3 border-t border-border/50">
+                <div 
+                  className="text-xs leading-relaxed prose prose-sm max-w-none dark:prose-invert"
+                  dangerouslySetInnerHTML={{ 
+                    __html: selectedEmail.body.includes('<') 
+                      ? selectedEmail.body 
+                      : selectedEmail.body.replace(/\n/g, '<br/>') 
+                  }}
+                />
+              </div>
+            </div>
+          </ScrollArea>
+          
+          {/* Reply Button */}
+          <div className="p-2 border-t border-border/50">
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full h-8 text-xs gap-1.5"
+              onClick={() => {
+                setSubject(`Re: ${selectedEmail.subject}`);
+                setBody(`\n\n---\nEm ${format(new Date(selectedEmail.date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}, ${selectedEmail.from_email} escreveu:\n\n${selectedEmail.body.replace(/<[^>]*>/g, '')}`);
+                setSelectedEmail(null);
+                setShowCompose(true);
+              }}
+            >
+              <Reply className="h-3.5 w-3.5" />
+              Responder
+            </Button>
+          </div>
+        </div>
       ) : (
-        /* Email History */
+        /* Email History List */
         <ScrollArea className="flex-1 p-2" ref={scrollRef}>
           {emails.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-8 text-center">
@@ -294,6 +387,17 @@ export function EmbeddedEmailPanel({
                       "p-2.5 rounded-lg border border-border/50 transition-colors hover:bg-muted/30 cursor-pointer",
                       !email.read && "bg-primary/5 border-primary/20"
                     )}
+                    onClick={async () => {
+                      setSelectedEmail(email);
+                      // Mark as read
+                      if (!email.read) {
+                        await supabase
+                          .from("emails")
+                          .update({ read: true })
+                          .eq("id", email.id);
+                        loadEmails();
+                      }
+                    }}
                   >
                     <div className="flex items-start gap-2">
                       <div className={cn(
@@ -308,12 +412,20 @@ export function EmbeddedEmailPanel({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-medium truncate">
+                          <p className={cn(
+                            "text-xs truncate",
+                            !email.read ? "font-semibold" : "font-medium"
+                          )}>
                             {email.subject || "(Sem assunto)"}
                           </p>
-                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                            {format(new Date(email.date), "dd/MM HH:mm", { locale: ptBR })}
-                          </span>
+                          <div className="flex items-center gap-1">
+                            {email.starred && (
+                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            )}
+                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                              {format(new Date(email.date), "dd/MM HH:mm", { locale: ptBR })}
+                            </span>
+                          </div>
                         </div>
                         <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">
                           {email.body.replace(/<[^>]*>/g, '').slice(0, 100)}...
