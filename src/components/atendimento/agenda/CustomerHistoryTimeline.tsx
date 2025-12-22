@@ -373,156 +373,110 @@ export function CustomerHistoryTimeline({
         </div>
       ) : (
         <ScrollArea className={isFullView ? "flex-1" : "h-[400px]"}>
-          <div className="relative py-6">
-            {/* Linha central vertical */}
-            <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-border -translate-x-1/2" />
-            
-            {/* Marcador START */}
-            <div className="relative flex justify-center mb-8">
-              <div className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg z-10">
-                Início
-              </div>
-            </div>
-            
+          <div className="py-4 pr-2">
             {Object.entries(groupEventsByMonth(filteredEvents)).map(([monthYear, monthEvents], groupIndex) => (
-              <div key={monthYear} className="mb-8">
-                {/* Cabeçalho do mês - alternando lado */}
-                <div className={cn(
-                  "relative flex items-center mb-4",
-                  groupIndex % 2 === 0 ? "justify-start pl-[52%]" : "justify-end pr-[52%]"
-                )}>
-                  <div className="text-lg font-bold text-primary capitalize">
+              <div key={monthYear} className="mb-6">
+                {/* Cabeçalho do mês */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
+                  <span className="text-xs font-bold text-primary uppercase tracking-wider">
                     {monthYear}
-                  </div>
+                  </span>
+                  <div className="h-px flex-1 bg-gradient-to-l from-primary/50 to-transparent" />
                 </div>
                 
-                {monthEvents.map((event, eventIndex) => {
-                  const config = TYPE_CONFIG[event.type];
-                  const Icon = event.icon || config.icon;
-                  const eventColor = event.color || config.color;
-                  const isLeft = (groupIndex + eventIndex) % 2 === 0;
+                {/* Eventos do mês */}
+                <div className="relative pl-6">
+                  {/* Linha vertical da timeline */}
+                  <div className="absolute left-[7px] top-3 bottom-3 w-0.5 bg-gradient-to-b from-primary/40 via-border to-transparent rounded-full" />
                   
-                  return (
-                    <div key={event.id} className="relative flex items-start mb-6">
-                      {/* Conteúdo lado esquerdo */}
-                      <div className={cn(
-                        "w-[calc(50%-24px)] pr-6",
-                        !isLeft && "invisible"
-                      )}>
-                        {isLeft && (
-                          <div 
-                            className={cn(
-                              "bg-card rounded-xl border p-4 shadow-sm hover:shadow-md transition-all text-right",
-                              onEventClick && "cursor-pointer hover:scale-[1.02]"
-                            )}
-                            style={{ borderColor: `${eventColor}30` }}
-                            onClick={() => onEventClick?.(event)}
-                          >
-                            <div className="flex items-center justify-end gap-2 mb-2">
-                              <span className="text-xs font-semibold text-foreground">{event.title}</span>
-                              <Badge 
-                                variant="outline" 
-                                className="text-[10px] capitalize"
-                                style={{ borderColor: eventColor, color: eventColor }}
-                              >
-                                {config.label}
-                              </Badge>
-                            </div>
-                            {event.description && (
-                              <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{event.description}</p>
-                            )}
-                            <div className="flex items-center justify-end gap-1 text-[10px] text-muted-foreground">
-                              <span>{format(event.date, "dd MMM", { locale: ptBR })}</span>
-                              <span>•</span>
-                              <span>{format(event.date, "HH:mm", { locale: ptBR })}</span>
-                            </div>
-                            {event.metadata?.proximo_contato && (
-                              <div className="flex items-center justify-end gap-1 mt-2 text-[10px] text-primary">
-                                <span>Próximo: {format(new Date(event.metadata.proximo_contato), "dd/MM/yyyy", { locale: ptBR })}</span>
-                                <ArrowRight className="w-3 h-3" />
-                              </div>
-                            )}
-                          </div>
+                  {monthEvents.map((event, eventIndex) => {
+                    const config = TYPE_CONFIG[event.type];
+                    const Icon = event.icon || config.icon;
+                    const eventColor = event.color || config.color;
+                    
+                    return (
+                      <div 
+                        key={event.id} 
+                        className={cn(
+                          "relative flex gap-4 mb-4 last:mb-0 group",
+                          onEventClick && "cursor-pointer"
                         )}
-                      </div>
-                      
-                      {/* Linha horizontal + Círculo central */}
-                      <div className="relative flex items-center justify-center w-12 shrink-0">
-                        {/* Linha horizontal conectora */}
+                        onClick={() => onEventClick?.(event)}
+                      >
+                        {/* Círculo do ícone */}
                         <div 
-                          className={cn(
-                            "absolute top-4 h-0.5 w-6",
-                            isLeft ? "right-6" : "left-6"
-                          )}
-                          style={{ backgroundColor: eventColor }}
-                        />
-                        
-                        {/* Círculo com ícone */}
-                        <div 
-                          className="relative w-10 h-10 rounded-full flex items-center justify-center border-4 border-background shadow-lg z-10"
+                          className="relative shrink-0 w-4 h-4 rounded-full flex items-center justify-center -ml-[7px] mt-1 ring-4 ring-background transition-transform group-hover:scale-110"
                           style={{ backgroundColor: eventColor }}
                         >
-                          <Icon className="w-4 h-4 text-white" />
+                          <Icon className="w-2 h-2 text-white" />
                         </div>
-                      </div>
-                      
-                      {/* Conteúdo lado direito */}
-                      <div className={cn(
-                        "w-[calc(50%-24px)] pl-6",
-                        isLeft && "invisible"
-                      )}>
-                        {!isLeft && (
-                          <div 
-                            className={cn(
-                              "bg-card rounded-xl border p-4 shadow-sm hover:shadow-md transition-all",
-                              onEventClick && "cursor-pointer hover:scale-[1.02]"
-                            )}
-                            style={{ borderColor: `${eventColor}30` }}
-                            onClick={() => onEventClick?.(event)}
-                          >
-                            <div className="flex items-center gap-2 mb-2">
+                        
+                        {/* Card do evento */}
+                        <div 
+                          className={cn(
+                            "flex-1 bg-card/80 backdrop-blur-sm rounded-lg border p-3 transition-all",
+                            "hover:shadow-md hover:bg-card hover:border-primary/30"
+                          )}
+                          style={{ borderColor: `${eventColor}20` }}
+                        >
+                          {/* Header do card */}
+                          <div className="flex items-start justify-between gap-2 mb-1.5">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <Badge 
-                                variant="outline" 
-                                className="text-[10px] capitalize"
-                                style={{ borderColor: eventColor, color: eventColor }}
+                                variant="secondary" 
+                                className="text-[10px] font-medium px-1.5 py-0 h-4"
+                                style={{ 
+                                  backgroundColor: `${eventColor}15`, 
+                                  color: eventColor,
+                                  borderColor: `${eventColor}30`
+                                }}
                               >
                                 {config.label}
                               </Badge>
-                              <span className="text-xs font-semibold text-foreground">{event.title}</span>
+                              <span className="text-xs font-semibold text-foreground line-clamp-1">
+                                {event.title}
+                              </span>
                             </div>
-                            {event.description && (
-                              <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{event.description}</p>
-                            )}
-                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                              <span>{format(event.date, "dd MMM", { locale: ptBR })}</span>
-                              <span>•</span>
-                              <span>{format(event.date, "HH:mm", { locale: ptBR })}</span>
-                            </div>
+                            <span className="text-[10px] text-muted-foreground shrink-0">
+                              {format(event.date, "HH:mm", { locale: ptBR })}
+                            </span>
+                          </div>
+                          
+                          {/* Descrição */}
+                          {event.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 mb-1.5">
+                              {event.description}
+                            </p>
+                          )}
+                          
+                          {/* Footer com data e próximo contato */}
+                          <div className="flex items-center justify-between gap-2 text-[10px]">
+                            <span className="text-muted-foreground">
+                              {format(event.date, "dd 'de' MMMM", { locale: ptBR })}
+                            </span>
                             {event.metadata?.proximo_contato && (
-                              <div className="flex items-center gap-1 mt-2 text-[10px] text-primary">
+                              <div className="flex items-center gap-1 text-primary font-medium">
                                 <ArrowRight className="w-3 h-3" />
-                                <span>Próximo: {format(new Date(event.metadata.proximo_contato), "dd/MM/yyyy", { locale: ptBR })}</span>
+                                <span>{format(new Date(event.metadata.proximo_contato), "dd/MM", { locale: ptBR })}</span>
                               </div>
                             )}
                           </div>
-                        )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             ))}
             
-            {/* Marcador FIM */}
-            <div className="relative flex justify-center mt-4">
-              <div className="relative flex items-center justify-center w-12">
-                <div className="w-8 h-8 rounded-full bg-muted border-4 border-background flex items-center justify-center shadow-md">
-                  <div className="w-2 h-2 rounded-full bg-muted-foreground/50" />
-                </div>
-              </div>
-            </div>
-            <div className="relative flex justify-center mt-2">
-              <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Fim do histórico</span>
+            {/* Marcador de fim */}
+            <div className="flex items-center gap-3 mt-2">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent to-muted-foreground/20" />
+              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">
+                Fim do histórico
+              </span>
+              <div className="h-px flex-1 bg-gradient-to-l from-transparent to-muted-foreground/20" />
             </div>
           </div>
         </ScrollArea>
