@@ -49,7 +49,7 @@ import { ConfigDatasProximoContatoDialog } from "@/components/atendimento/agenda
 import { EnvioMassaDialog } from "@/components/atendimento/agenda/EnvioMassaDialog";
 import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAtendimentoPanel";
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
-import { CustomerSearchCreatePanel } from "@/components/atendimento/CustomerSearchCreatePanel";
+import { ListasPanel } from "@/components/atendimento/ListasPanel";
 
 interface Conversation {
   id: string;
@@ -4717,22 +4717,15 @@ ${recentMessages}
       {/* Main Content Area - Esconde quando orçamento está aberto */}
       {!orcamentoSheetOpen && (
       <div className="flex-1 flex flex-col h-full min-h-0 min-w-0 border-r border-border">
-        {/* Customer Search Panel - Tem prioridade sobre outros conteúdos */}
+        {/* Listas Panel - Tem prioridade sobre outros conteúdos */}
         {(showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) ? (
-          <CustomerSearchCreatePanel
-            onSelect={
-              showCustomerSearchForTask ? handleCreateTaskFromContact :
-              showCustomerSearchForChat ? handleCreateConversationFromContact :
-              showCustomerSearchForEmail ? handleCreateEmailFromContact :
-              handleCreateOrcamentoFromContact
-            }
+          <ListasPanel
             onClose={() => {
               setShowCustomerSearchForTask(false);
               setShowCustomerSearchForChat(false);
               setShowCustomerSearchForEmail(false);
               setShowCustomerSearchForOrcamento(false);
             }}
-            mode={showCustomerSearchForChat ? "customer" : "both"}
             title="Puxar ou criar cadastro"
             description={
               showCustomerSearchForTask ? "Selecione ou crie um contato para a nova tarefa" :
@@ -4740,6 +4733,7 @@ ${recentMessages}
               showCustomerSearchForEmail ? "Selecione ou crie um contato para enviar o e-mail" :
               "Selecione ou crie um contato para o orçamento"
             }
+            defaultTab="contatos"
           />
         ) : activeTab === "chat" && selectedConversation && selectedConv ? (
           <>
