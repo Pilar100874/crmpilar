@@ -1299,6 +1299,18 @@ export default function Contatos() {
 
         if (empresaErr) throw empresaErr;
         novaEmpresaId = novaEmpresa?.id;
+
+        // Vincular automaticamente a empresa ao usuário que criou
+        if (novaEmpresaId) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from('empresa_vinculos').insert({
+              empresa_id: novaEmpresaId,
+              estabelecimento_id: estabId,
+              usuario_id: user.id
+            });
+          }
+        }
       }
 
       // Preparar dados do contato
@@ -1358,6 +1370,16 @@ export default function Contatos() {
           await supabase.from('customer_segmentos').insert(
             segmentosSelecionados.map((sid) => ({ customer_id: contatoId, segmento_id: sid }))
           );
+        }
+
+        // Vincular automaticamente o contato ao usuário que criou
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('customer_vinculos').insert({
+            customer_id: contatoId,
+            estabelecimento_id: estabId,
+            usuario_id: user.id
+          });
         }
       }
 
