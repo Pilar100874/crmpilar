@@ -2,21 +2,17 @@ import React, { useState } from 'react';
 import { 
   User, 
   Building2, 
-  Link2,
   X,
   LucideIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Import existing components
 import Contatos from '@/pages/Contatos';
 import Empresas from '@/pages/Empresas';
-import VinculosEmpresas from '@/pages/VinculosEmpresas';
-import VinculosContatos from '@/pages/VinculosContatos';
 
 interface TabItem {
   id: string;
@@ -28,18 +24,16 @@ interface TabItem {
 const tabItems: TabItem[] = [
   { id: 'contatos', label: 'Contatos', icon: User, description: 'Gestão de contatos' },
   { id: 'empresas', label: 'Empresas', icon: Building2, description: 'Gestão de empresas' },
-  { id: 'vinculos-empresas', label: 'Vínculo Empresas', icon: Link2, description: 'Vínculo Empresas X Usuário / Segmento' },
-  { id: 'vinculos-contatos', label: 'Vínculo Contatos', icon: Link2, description: 'Vínculo Contatos X Usuário / Segmento' },
 ];
 
 interface ListasPanelProps {
   onClose: () => void;
   title?: string;
   description?: string;
-  defaultTab?: 'contatos' | 'empresas' | 'vinculos-empresas' | 'vinculos-contatos';
+  defaultTab?: 'contatos' | 'empresas';
 }
 
-type TabId = 'contatos' | 'empresas' | 'vinculos-empresas' | 'vinculos-contatos';
+type TabId = 'contatos' | 'empresas';
 
 export function ListasPanel({
   onClose,
@@ -61,10 +55,6 @@ export function ListasPanel({
         return <Contatos />;
       case 'empresas':
         return <Empresas />;
-      case 'vinculos-empresas':
-        return <VinculosEmpresas />;
-      case 'vinculos-contatos':
-        return <VinculosContatos />;
       default:
         return null;
     }
