@@ -47,9 +47,9 @@ export function ListasPanel({
   const renderContent = () => {
     switch (activeTab) {
       case 'contatos':
-        return <Contatos />;
+        return <Contatos hideAdminButtons />;
       case 'empresas':
-        return <Empresas />;
+        return <Empresas hideAdminButtons />;
       default:
         return null;
     }

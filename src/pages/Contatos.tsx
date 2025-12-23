@@ -94,7 +94,11 @@ interface SearchFilters {
   [key: string]: string; // Permite campos dinâmicos customizados
 }
 
-export default function Contatos() {
+interface ContatosProps {
+  hideAdminButtons?: boolean;
+}
+
+export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const location = useLocation();
   const [showForm, setShowForm] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);
@@ -1944,14 +1948,16 @@ export default function Contatos() {
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">Gerencie seus contatos e clientes</p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowImportPanel(true)} 
-                className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10"
-              >
-                <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
-                Importação
-              </Button>
+              {!hideAdminButtons && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowImportPanel(true)} 
+                  className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10"
+                >
+                  <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
+                  Importação
+                </Button>
+              )}
               <Button onClick={() => {
                 setShouldCheckDuplicate(true);
                 setIsClosingForm(false);
@@ -1973,30 +1979,32 @@ export default function Contatos() {
           </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            <TableColumnsConfig
-              columns={tableColumns} 
-              onColumnsChange={handleColumnsChange}
-              fieldsConfigComponent={
-                estabelecimentoId ? (
-                  <ContatoFieldsCRUD 
-                    estabelecimentoId={estabelecimentoId} 
-                    onChanged={async () => {
-                      console.log('🔄 ContatoFieldsCRUD onChange triggered');
-                      // Recarregar campos customizados no formulário
-                      await loadContactFields(estabelecimentoId);
-                      // Recarregar colunas da tabela
-                      await loadTableColumns(estabelecimentoId);
-                      // Recarregar lista de contatos
-                      await loadContacts();
-                    }}
-                  />
-                ) : (
-                  <div className="text-center text-muted-foreground">
-                    Carregando configurações...
-                  </div>
-                )
-              }
-            />
+            {!hideAdminButtons && (
+              <TableColumnsConfig
+                columns={tableColumns} 
+                onColumnsChange={handleColumnsChange}
+                fieldsConfigComponent={
+                  estabelecimentoId ? (
+                    <ContatoFieldsCRUD 
+                      estabelecimentoId={estabelecimentoId} 
+                      onChanged={async () => {
+                        console.log('🔄 ContatoFieldsCRUD onChange triggered');
+                        // Recarregar campos customizados no formulário
+                        await loadContactFields(estabelecimentoId);
+                        // Recarregar colunas da tabela
+                        await loadTableColumns(estabelecimentoId);
+                        // Recarregar lista de contatos
+                        await loadContacts();
+                      }}
+                    />
+                  ) : (
+                    <div className="text-center text-muted-foreground">
+                      Carregando configurações...
+                    </div>
+                  )
+                }
+              />
+            )}
             
             <div className="flex-1 w-full sm:max-w-md">
               <div className="relative">
