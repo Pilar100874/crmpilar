@@ -825,6 +825,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
         if (error) throw error;
         empresaId = inserted!.id;
 
+        // Vincular automaticamente a empresa ao usuário que criou
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('empresa_vinculos').insert({
+            empresa_id: empresaId,
+            estabelecimento_id: estabId,
+            usuario_id: user.id
+          });
+        }
+
         if (contatosVinculados.length > 0) {
           await supabase
             .from('customer_empresas')
@@ -875,6 +885,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           .maybeSingle();
 
         if (contatoErr) throw contatoErr;
+
+        // Vincular automaticamente o contato ao usuário que criou
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && novoContato) {
+          await supabase.from('customer_vinculos').insert({
+            customer_id: novoContato.id,
+            estabelecimento_id: estabId,
+            usuario_id: user.id
+          });
+        }
 
         await supabase
           .from('customer_empresas')
