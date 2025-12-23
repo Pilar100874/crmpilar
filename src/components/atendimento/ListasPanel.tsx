@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   Building2, 
@@ -7,7 +7,9 @@ import {
   Search,
   Phone,
   Mail,
-  Loader2
+  Loader2,
+  Plus,
+  Pencil
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -60,7 +62,7 @@ export function ListasPanel({
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null);
+  const [editingItem, setEditingItem] = useState<{ id: string; tipo: 'contato' | 'empresa' } | null>(null);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId');
 
@@ -137,8 +139,8 @@ export function ListasPanel({
     }
   };
 
-  const handleSelectResult = (result: SearchResult) => {
-    setSelectedResult(result);
+  const handleEditResult = (result: SearchResult) => {
+    setEditingItem({ id: result.id, tipo: result.tipo });
     if (result.tipo === 'contato') {
       setActiveTab('contatos');
     } else {
@@ -176,6 +178,36 @@ export function ListasPanel({
           </Button>
         </div>
 
+        {/* Botões criar na parte superior */}
+        <div className="px-4 pt-4 flex gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            className="flex-1 gap-2"
+            onClick={() => {
+              setEditingItem(null);
+              setActiveTab('contatos');
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            <User className="h-4 w-4" />
+            Criar Contato
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            className="flex-1 gap-2"
+            onClick={() => {
+              setEditingItem(null);
+              setActiveTab('empresas');
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            <Building2 className="h-4 w-4" />
+            Criar Empresa
+          </Button>
+        </div>
+
         {/* Campo de busca */}
         <div className="px-4 pt-4">
           <div className="relative">
@@ -194,19 +226,18 @@ export function ListasPanel({
 
         {/* Resultados da busca */}
         {searchResults.length > 0 && (
-          <div className="px-4 pt-2 flex-1 overflow-auto">
+          <div className="px-4 pt-3 flex-1 overflow-auto">
             <p className="text-xs text-muted-foreground mb-2">{searchResults.length} resultado(s) encontrado(s)</p>
-            <ScrollArea className="h-[200px]">
-              <div className="space-y-2">
+            <ScrollArea className="h-[calc(100%-24px)]">
+              <div className="space-y-2 pb-4">
                 {searchResults.map((result) => (
                   <div
                     key={`${result.tipo}-${result.id}`}
-                    className="p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() => handleSelectResult(result)}
+                    className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-2">
                       <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center",
+                        "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
                         result.tipo === 'contato' ? 'bg-blue-500/10' : 'bg-amber-500/10'
                       )}>
                         {result.tipo === 'contato' ? (
@@ -230,7 +261,7 @@ export function ListasPanel({
                             </span>
                           )}
                           {result.email && (
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 truncate">
                               <Mail className="h-3 w-3" />
                               {result.email}
                             </span>
@@ -240,6 +271,15 @@ export function ListasPanel({
                           )}
                         </div>
                       </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 gap-1.5"
+                        onClick={() => handleEditResult(result)}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Editar
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -248,33 +288,26 @@ export function ListasPanel({
           </div>
         )}
 
-        {/* Seleção inicial */}
-        <div className={cn(
-          "flex-1 flex items-center justify-center p-4",
-          searchResults.length > 0 && "pt-2"
-        )}>
-          <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-            {tabItems.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <Button
-                  key={tab.id}
-                  variant="outline"
-                  className="h-32 flex-col gap-3 hover:bg-primary/10 hover:border-primary transition-all"
-                  onClick={() => {
-                    setSelectedResult(null);
-                    setActiveTab(tab.id as TabId);
-                  }}
-                >
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <span className="font-medium">{tab.label}</span>
-                </Button>
-              );
-            })}
+        {/* Mensagem quando não há busca */}
+        {searchResults.length === 0 && searchTerm.length < 2 && (
+          <div className="flex-1 flex items-center justify-center p-4">
+            <div className="text-center text-muted-foreground">
+              <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">Digite para buscar contatos ou empresas</p>
+              <p className="text-xs mt-1">Pesquise por nome, telefone, email, CNPJ...</p>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Mensagem quando não encontra resultados */}
+        {searchResults.length === 0 && searchTerm.length >= 2 && !isSearching && (
+          <div className="flex-1 flex items-center justify-center p-4">
+            <div className="text-center text-muted-foreground">
+              <p className="text-sm">Nenhum resultado encontrado</p>
+              <p className="text-xs mt-1">Tente outro termo ou crie um novo cadastro</p>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -290,7 +323,7 @@ export function ListasPanel({
             size="sm" 
             onClick={() => {
               setActiveTab(null);
-              setSelectedResult(null);
+              setEditingItem(null);
             }}
             className="h-8 px-2"
           >
@@ -299,7 +332,7 @@ export function ListasPanel({
           <div>
             <h2 className="text-sm sm:text-base font-semibold flex items-center gap-2">
               {currentTabItem && <currentTabItem.icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
-              {currentTabItem?.label}
+              {editingItem ? `Editar ${currentTabItem?.label?.slice(0, -1)}` : `Novo ${currentTabItem?.label?.slice(0, -1)}`}
             </h2>
           </div>
         </div>
