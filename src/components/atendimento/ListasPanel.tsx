@@ -6,9 +6,8 @@ import {
   LucideIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 // Import existing components
 import Contatos from '@/pages/Contatos';
@@ -41,13 +40,9 @@ export function ListasPanel({
   description = "Gerencie contatos e empresas",
   defaultTab = 'contatos'
 }: ListasPanelProps) {
-  const handleTabChange = (value: string) => {
-    setActiveTab(value as TabId);
-  };
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [activeTab, setActiveTab] = useState<TabId | null>(null);
 
-  const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
-  const CurrentIcon = currentTabItem.icon;
+  const currentTabItem = tabItems.find(t => t.id === activeTab);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -60,70 +55,83 @@ export function ListasPanel({
     }
   };
 
+  // Tela inicial com botões de seleção
+  if (!activeTab) {
+    return (
+      <div className="h-full flex flex-col bg-background">
+        {/* Header */}
+        <div className="border-b bg-card px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between shrink-0">
+          <div>
+            <h2 className="text-sm sm:text-base font-semibold">
+              {title}
+            </h2>
+            <p className="text-muted-foreground text-xs mt-0.5">
+              {description}
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Seleção inicial */}
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+            {tabItems.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <Button
+                  key={tab.id}
+                  variant="outline"
+                  className="h-32 flex-col gap-3 hover:bg-primary/10 hover:border-primary transition-all"
+                  onClick={() => setActiveTab(tab.id as TabId)}
+                >
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <span className="font-medium">{tab.label}</span>
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Tela com conteúdo selecionado
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Header */}
       <div className="border-b bg-card px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between shrink-0">
-        <div>
-          <h2 className="text-sm sm:text-base font-semibold flex items-center gap-2">
-            <CurrentIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-            {title}
-          </h2>
-          <p className="text-muted-foreground text-xs mt-0.5">
-            {description}
-          </p>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setActiveTab(null)}
+            className="h-8 px-2"
+          >
+            ← Voltar
+          </Button>
+          <div>
+            <h2 className="text-sm sm:text-base font-semibold flex items-center gap-2">
+              {currentTabItem && <currentTabItem.icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />}
+              {currentTabItem?.label}
+            </h2>
+          </div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
           <X className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="flex-1 overflow-hidden min-h-0">
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="h-full flex flex-col">
-          {/* Mobile: Select dropdown */}
-          <div className="border-b bg-muted/30 p-2 sm:p-3 shrink-0">
-            <Select value={activeTab} onValueChange={handleTabChange}>
-              <SelectTrigger className="w-full bg-background h-9">
-                <SelectValue>
-                  <div className="flex items-center gap-2">
-                    <CurrentIcon className="h-4 w-4" />
-                    <span className="text-sm">{currentTabItem.label}</span>
-                  </div>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="bg-popover">
-                {tabItems.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <SelectItem key={tab.id} value={tab.id}>
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4" />
-                        <span>{tab.label}</span>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+      {/* Content area */}
+      <div className="flex-1 overflow-auto min-h-0">
+        <ScrollArea className="h-full">
+          <div className="p-2 sm:p-4">
+            {renderContent()}
           </div>
-
-          {/* Content area */}
-          <div className="flex-1 overflow-auto min-h-0">
-            {tabItems.map((tab) => (
-              <TabsContent 
-                key={tab.id} 
-                value={tab.id} 
-                className="mt-0 h-full"
-              >
-                <ScrollArea className="h-full">
-                  <div className="p-2 sm:p-4">
-                    {activeTab === tab.id && renderContent()}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-            ))}
-          </div>
-        </Tabs>
+        </ScrollArea>
       </div>
     </div>
   );
