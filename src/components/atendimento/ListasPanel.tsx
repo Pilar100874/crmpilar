@@ -18,16 +18,6 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 // Import existing components
 import Contatos from '@/pages/Contatos';
@@ -50,8 +40,6 @@ interface ListasPanelProps {
   title?: string;
   description?: string;
   defaultTab?: 'contatos' | 'empresas';
-  isEditing?: boolean;
-  onEditingChange?: (editing: boolean) => void;
 }
 
 type TabId = 'contatos' | 'empresas';
@@ -69,17 +57,13 @@ export function ListasPanel({
   onClose,
   title = "Puxar ou criar cadastro",
   description = "Gerencie contatos e empresas",
-  defaultTab = 'contatos',
-  isEditing = false,
-  onEditingChange
+  defaultTab = 'contatos'
 }: ListasPanelProps) {
   const [activeTab, setActiveTab] = useState<TabId | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [editingItem, setEditingItem] = useState<{ id: string; tipo: 'contato' | 'empresa' } | null>(null);
-  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
-  const [pendingClose, setPendingClose] = useState(false);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId');
 
@@ -168,33 +152,12 @@ export function ListasPanel({
   const renderContent = () => {
     switch (activeTab) {
       case 'contatos':
-        return <Contatos hideAdminButtons onEditingChange={onEditingChange} />;
+        return <Contatos hideAdminButtons />;
       case 'empresas':
-        return <Empresas hideAdminButtons onEditingChange={onEditingChange} />;
+        return <Empresas hideAdminButtons />;
       default:
         return null;
     }
-  };
-
-  const handleClose = () => {
-    if (isEditing) {
-      setShowUnsavedDialog(true);
-      setPendingClose(true);
-    } else {
-      onClose();
-    }
-  };
-
-  const handleConfirmClose = () => {
-    setShowUnsavedDialog(false);
-    setPendingClose(false);
-    onEditingChange?.(false);
-    onClose();
-  };
-
-  const handleCancelClose = () => {
-    setShowUnsavedDialog(false);
-    setPendingClose(false);
   };
 
   // Tela inicial com botões de seleção e busca
@@ -399,7 +362,7 @@ export function ListasPanel({
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={handleClose} 
+          onClick={onClose} 
           className="h-8 w-8 rounded-full hover:bg-muted shrink-0"
         >
           <X className="h-4 w-4" />
@@ -414,22 +377,6 @@ export function ListasPanel({
           </div>
         </ScrollArea>
       </div>
-
-      {/* Dialog de confirmação para alterações não salvas */}
-      <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Alterações não salvas</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você tem alterações não salvas. Deseja sair sem salvar?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelClose}>Continuar editando</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmClose}>Sair sem salvar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

@@ -67,10 +67,9 @@ interface Contato {
 
 interface EmpresasProps {
   hideAdminButtons?: boolean;
-  onEditingChange?: (editing: boolean) => void;
 }
 
-export default function Empresas({ hideAdminButtons = false, onEditingChange }: EmpresasProps) {
+export default function Empresas({ hideAdminButtons = false }: EmpresasProps) {
   const location = useLocation();
   const [showForm, setShowForm] = useState(false);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
@@ -132,11 +131,6 @@ export default function Empresas({ hideAdminButtons = false, onEditingChange }: 
 
   // Estado de ordenação
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
-
-  // Notificar quando entra/sai do modo de edição
-  useEffect(() => {
-    onEditingChange?.(showForm);
-  }, [showForm, onEditingChange]);
 
   useEffect(() => {
     localStorage.setItem("empresasTableColumns", JSON.stringify(tableColumns));

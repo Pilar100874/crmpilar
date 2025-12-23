@@ -96,10 +96,9 @@ interface SearchFilters {
 
 interface ContatosProps {
   hideAdminButtons?: boolean;
-  onEditingChange?: (editing: boolean) => void;
 }
 
-export default function Contatos({ hideAdminButtons = false, onEditingChange }: ContatosProps) {
+export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const location = useLocation();
   const [showForm, setShowForm] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);
@@ -137,11 +136,6 @@ export default function Contatos({ hideAdminButtons = false, onEditingChange }: 
 
   // Estado de ordenação
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
-
-  // Notificar quando entra/sai do modo de edição
-  useEffect(() => {
-    onEditingChange?.(showForm);
-  }, [showForm, onEditingChange]);
 
   // Salvar configurações de colunas no localStorage
   useEffect(() => {
