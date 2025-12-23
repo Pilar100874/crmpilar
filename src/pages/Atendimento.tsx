@@ -3377,6 +3377,28 @@ ${recentMessages}
               </div>
             )}
             
+            {/* Listas Panel - Mobile Fullscreen - Puxar ou criar cadastro */}
+            {(showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) && (
+              <div className="absolute inset-0 z-30 bg-background">
+                <ListasPanel
+                  onClose={() => {
+                    setShowCustomerSearchForTask(false);
+                    setShowCustomerSearchForChat(false);
+                    setShowCustomerSearchForEmail(false);
+                    setShowCustomerSearchForOrcamento(false);
+                  }}
+                  title="Puxar ou criar cadastro"
+                  description={
+                    showCustomerSearchForTask ? "Selecione ou crie um contato para a nova tarefa" :
+                    showCustomerSearchForChat ? "Selecione ou crie um contato para iniciar a conversa" :
+                    showCustomerSearchForEmail ? "Selecione ou crie um contato para enviar o e-mail" :
+                    "Selecione ou crie um contato para o orçamento"
+                  }
+                  defaultTab="contatos"
+                />
+              </div>
+            )}
+            
             {/* Lista */}
             <div
               className={`absolute inset-0 transition-transform duration-300 ease-out ${
@@ -3466,6 +3488,12 @@ ${recentMessages}
                 setFluxoInitialIndex={setFluxoInitialIndex}
                 setShowConfigDatas={setShowConfigDatas}
                 onRefreshEmails={() => loadUserEmails()}
+                onShowCustomerSearch={() => {
+                  if (activeTab === "agenda") setShowCustomerSearchForTask(true);
+                  else if (activeTab === "chat") setShowCustomerSearchForChat(true);
+                  else if (activeTab === "email") setShowCustomerSearchForEmail(true);
+                  else if (activeTab === "orcamento") setShowCustomerSearchForOrcamento(true);
+                }}
               />
             </div>
 
@@ -5675,6 +5703,7 @@ interface MobileListContentProps {
   setFluxoInitialIndex: (index: number) => void;
   setShowConfigDatas: (show: boolean) => void;
   onRefreshEmails: () => void;
+  onShowCustomerSearch: () => void;
 }
 
 function MobileListContent({
@@ -5723,32 +5752,44 @@ function MobileListContent({
   setFluxoInitialIndex,
   setShowConfigDatas,
   onRefreshEmails,
+  onShowCustomerSearch,
 }: MobileListContentProps) {
   return (
     <div className="h-full flex flex-col bg-white/80">
       {/* Header */}
       <div className="px-4 pt-4 pb-3 bg-gradient-to-br from-primary/15 via-primary/8 to-transparent safe-area-top">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
-            {activeTab === "chat" && <MessageSquare className="h-5 w-5 text-white" />}
-            {activeTab === "agenda" && <CalendarIcon className="h-5 w-5 text-white" />}
-            {activeTab === "email" && <Mail className="h-5 w-5 text-white" />}
-            {activeTab === "orcamento" && <Receipt className="h-5 w-5 text-white" />}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/25">
+              {activeTab === "chat" && <MessageSquare className="h-5 w-5 text-white" />}
+              {activeTab === "agenda" && <CalendarIcon className="h-5 w-5 text-white" />}
+              {activeTab === "email" && <Mail className="h-5 w-5 text-white" />}
+              {activeTab === "orcamento" && <Receipt className="h-5 w-5 text-white" />}
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-foreground">
+                {activeTab === "chat" && "Conversas"}
+                {activeTab === "agenda" && "Agenda"}
+                {activeTab === "email" && "E-mails"}
+                {activeTab === "orcamento" && "Orçamentos"}
+              </h2>
+              <p className="text-[10px] text-muted-foreground">
+                {activeTab === "chat" && `${filteredConversations.length} conversas`}
+                {activeTab === "agenda" && format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
+                {activeTab === "email" && `${filteredEmails.length} emails`}
+                {activeTab === "orcamento" && `${filteredOrcamentos.length} orçamentos`}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-base font-bold text-foreground">
-              {activeTab === "chat" && "Conversas"}
-              {activeTab === "agenda" && "Agenda"}
-              {activeTab === "email" && "E-mails"}
-              {activeTab === "orcamento" && "Orçamentos"}
-            </h2>
-            <p className="text-[10px] text-muted-foreground">
-              {activeTab === "chat" && `${filteredConversations.length} conversas`}
-              {activeTab === "agenda" && format(agendaDate, "dd 'de' MMMM", { locale: ptBR })}
-              {activeTab === "email" && `${filteredEmails.length} emails`}
-              {activeTab === "orcamento" && `${filteredOrcamentos.length} orçamentos`}
-            </p>
-          </div>
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={onShowCustomerSearch}
+            className="h-10 w-10 rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+            title="Puxar ou criar cadastro"
+          >
+            <Plus className="h-4 w-4 text-primary" />
+          </Button>
         </div>
 
         {/* Search/Filter */}
