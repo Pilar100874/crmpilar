@@ -65,7 +65,11 @@ interface Contato {
   custom_fields: any;
 }
 
-export default function Empresas() {
+interface EmpresasProps {
+  hideAdminButtons?: boolean;
+}
+
+export default function Empresas({ hideAdminButtons = false }: EmpresasProps) {
   const location = useLocation();
   const [showForm, setShowForm] = useState(false);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
@@ -1326,39 +1330,43 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
                 <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                 Nova Empresa
               </Button>
-              <Button 
-                onClick={() => setImportDialogOpen(true)} 
-                variant="outline" 
-                className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10"
-              >
-                <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
-                Importar via API
-              </Button>
+              {!hideAdminButtons && (
+                <Button 
+                  onClick={() => setImportDialogOpen(true)} 
+                  variant="outline" 
+                  className="gap-2 shadow-sm text-xs sm:text-sm h-9 sm:h-10"
+                >
+                  <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
+                  Importar via API
+                </Button>
+              )}
             </div>
           </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            <TableColumnsConfig 
-              columns={tableColumns} 
-              onColumnsChange={handleColumnsChange}
-              fieldsTabLabel="Campos da Empresa"
-              fieldsConfigComponent={
-                estabelecimentoId ? (
-                  <EmpresaFieldsCRUD 
-                    estabelecimentoId={estabelecimentoId} 
-                    onChanged={async () => {
-                      if (estabelecimentoId) {
-                        await loadFieldConfigs(estabelecimentoId);
-                      }
-                    }}
-                  />
-                ) : (
-                  <div className="text-center text-muted-foreground">
-                    Carregando configurações...
-                  </div>
-                )
-              }
-            />
+            {!hideAdminButtons && (
+              <TableColumnsConfig 
+                columns={tableColumns} 
+                onColumnsChange={handleColumnsChange}
+                fieldsTabLabel="Campos da Empresa"
+                fieldsConfigComponent={
+                  estabelecimentoId ? (
+                    <EmpresaFieldsCRUD 
+                      estabelecimentoId={estabelecimentoId} 
+                      onChanged={async () => {
+                        if (estabelecimentoId) {
+                          await loadFieldConfigs(estabelecimentoId);
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="text-center text-muted-foreground">
+                      Carregando configurações...
+                    </div>
+                  )
+                }
+              />
+            )}
             
             <div className="flex-1 w-full sm:max-w-md">
               <div className="relative">
