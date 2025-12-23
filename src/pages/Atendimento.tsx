@@ -275,6 +275,7 @@ export default function Atendimento() {
   const [showCustomerSearchForChat, setShowCustomerSearchForChat] = useState(false);
   const [showCustomerSearchForEmail, setShowCustomerSearchForEmail] = useState(false);
   const [showCustomerSearchForOrcamento, setShowCustomerSearchForOrcamento] = useState(false);
+  const [isListasPanelEditing, setIsListasPanelEditing] = useState(false);
 
   // Ferramentas dinâmicas por aba
   const { getRadialMenuItems, getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId || null);
@@ -420,6 +421,14 @@ export default function Atendimento() {
 
   // Fechar POSView e limpar conteúdo ao trocar de aba
   useEffect(() => {
+    // Fechar ListasPanel ao trocar de aba (se não estiver editando)
+    if (!isListasPanelEditing) {
+      setShowCustomerSearchForTask(false);
+      setShowCustomerSearchForChat(false);
+      setShowCustomerSearchForEmail(false);
+      setShowCustomerSearchForOrcamento(false);
+    }
+    
     // Limpar conversa quando não estiver na aba chat
     if (activeTab !== 'chat') {
       setSelectedConversation(null);
@@ -443,7 +452,7 @@ export default function Atendimento() {
       setOrcamentoSheetOpen(false);
       setSelectedOrcamentoId(null);
     }
-  }, [activeTab]);
+  }, [activeTab, isListasPanelEditing]);
 
 
   const loadWebhooksForAutoResponse = async () => {
@@ -3379,13 +3388,14 @@ ${recentMessages}
             
             {/* Listas Panel - Mobile Fullscreen - Puxar ou criar cadastro */}
             {(showCustomerSearchForTask || showCustomerSearchForChat || showCustomerSearchForEmail || showCustomerSearchForOrcamento) && (
-              <div className="absolute inset-0 z-30 bg-background">
+              <div className="absolute inset-0 z-30 bg-background pointer-events-auto">
                 <ListasPanel
                   onClose={() => {
                     setShowCustomerSearchForTask(false);
                     setShowCustomerSearchForChat(false);
                     setShowCustomerSearchForEmail(false);
                     setShowCustomerSearchForOrcamento(false);
+                    setIsListasPanelEditing(false);
                   }}
                   title="Puxar ou criar cadastro"
                   description={
@@ -3395,6 +3405,8 @@ ${recentMessages}
                     "Selecione ou crie um contato para o orçamento"
                   }
                   defaultTab="contatos"
+                  isEditing={isListasPanelEditing}
+                  onEditingChange={setIsListasPanelEditing}
                 />
               </div>
             )}
@@ -4753,6 +4765,7 @@ ${recentMessages}
               setShowCustomerSearchForChat(false);
               setShowCustomerSearchForEmail(false);
               setShowCustomerSearchForOrcamento(false);
+              setIsListasPanelEditing(false);
             }}
             title="Puxar ou criar cadastro"
             description={
@@ -4762,6 +4775,8 @@ ${recentMessages}
               "Selecione ou crie um contato para o orçamento"
             }
             defaultTab="contatos"
+            isEditing={isListasPanelEditing}
+            onEditingChange={setIsListasPanelEditing}
           />
         ) : activeTab === "chat" && selectedConversation && selectedConv ? (
           <>
