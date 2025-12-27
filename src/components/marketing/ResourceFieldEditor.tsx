@@ -7,20 +7,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
-import { ResourceField, FieldType, FIELD_TYPE_LABELS, FieldOption, FormStep } from './types';
+import { ResourceField, FieldType, FIELD_TYPE_LABELS, FieldOption } from './types';
 
 interface ResourceFieldEditorProps {
   field: ResourceField;
   onChange: (field: ResourceField) => void;
   onRemove: () => void;
-  steps?: FormStep[];
 }
 
 export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
   field,
   onChange,
   onRemove,
-  steps = [],
 }) => {
   const needsOptions = ['dropdown', 'text_selection', 'image'].includes(field.type);
 
@@ -110,28 +108,6 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
               </div>
             </div>
           </div>
-
-          {steps.length > 0 && (
-            <div className="space-y-1.5">
-              <Label className="text-xs">Etapa do Formulário</Label>
-              <Select
-                value={field.stepId || 'none'}
-                onValueChange={(value) => onChange({ ...field, stepId: value === 'none' ? undefined : value })}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Selecione uma etapa" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sem etapa definida</SelectItem>
-                  {steps.map((step) => (
-                    <SelectItem key={step.id} value={step.id}>
-                      Etapa {step.number}: {step.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           <div className="space-y-1.5">
             <Label className="text-xs">Texto de Apoio</Label>
