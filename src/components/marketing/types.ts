@@ -64,7 +64,8 @@ export interface MarketingResource {
   steps?: FormStep[]; // Etapas do formulário
   returnType: ReturnType;
   saveLocation?: string;
-  n8nWebhookUrl?: string;
+  n8nWebhookUrl?: string; // Webhook para gerar conteúdo
+  n8nPublishWebhookUrl?: string; // Webhook para publicar conteúdo
   publishChannels?: PublishChannel[]; // Canais habilitados para publicação
   autoPublishEnabled?: boolean; // Se publicação automática está ativada
   createdAt: string;

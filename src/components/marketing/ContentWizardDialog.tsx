@@ -353,7 +353,38 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     setIsPublishing(true);
 
     try {
-      // Get user's estabelecimento_id
+      // If there's a publish webhook, call it first
+      if (resource.n8nPublishWebhookUrl && selectedChannels.length > 0) {
+        const publishPayload = {
+          resourceId: resource.id,
+          resourceName: resource.name,
+          returnType: resource.returnType,
+          content: result.content,
+          contentType: result.type,
+          channels: selectedChannels,
+          fields: resource.fields.map((field) => ({
+            name: field.name,
+            label: field.label,
+            type: field.type,
+            value: fieldValues[field.id],
+          })),
+          timestamp: new Date().toISOString(),
+        };
+
+        const response = await fetch(resource.n8nPublishWebhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(publishPayload),
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao publicar via n8n');
+        }
+      }
+
+      // Get user's estabelecimento_id and save to database
       const { data: userData } = await supabase.auth.getUser();
       if (userData?.user) {
         const { data: usuarioData } = await supabase
