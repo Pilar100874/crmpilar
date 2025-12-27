@@ -76,6 +76,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
   const [returnType, setReturnType] = useState<ReturnType>('text');
   const [saveLocation, setSaveLocation] = useState('');
   const [n8nWebhookUrl, setN8nWebhookUrl] = useState('');
+  const [n8nPublishWebhookUrl, setN8nPublishWebhookUrl] = useState('');
   const [activeFieldTab, setActiveFieldTab] = useState('basic');
   const [publishChannels, setPublishChannels] = useState<PublishChannel[]>([]);
   const [autoPublishEnabled, setAutoPublishEnabled] = useState(false);
@@ -89,6 +90,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       setReturnType(resource.returnType);
       setSaveLocation(resource.saveLocation || '');
       setN8nWebhookUrl(resource.n8nWebhookUrl || '');
+      setN8nPublishWebhookUrl(resource.n8nPublishWebhookUrl || '');
       setPublishChannels(resource.publishChannels || []);
       setAutoPublishEnabled(resource.autoPublishEnabled || false);
     } else {
@@ -99,6 +101,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       setReturnType('text');
       setSaveLocation('');
       setN8nWebhookUrl('');
+      setN8nPublishWebhookUrl('');
       setPublishChannels([]);
       setAutoPublishEnabled(false);
     }
@@ -144,6 +147,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       returnType,
       saveLocation,
       n8nWebhookUrl,
+      n8nPublishWebhookUrl,
       publishChannels,
       autoPublishEnabled,
       createdAt: resource?.createdAt || new Date().toISOString(),
@@ -219,18 +223,30 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">URL Webhook n8n</Label>
-                <Input
-                  value={n8nWebhookUrl}
-                  onChange={(e) => setN8nWebhookUrl(e.target.value)}
-                  placeholder="https://n8n.exemplo.com/webhook/..."
-                  className="h-11"
-                />
-                <p className="text-xs text-muted-foreground">
-                  O resultado será salvo automaticamente na pasta correspondente ao tipo de retorno
-                </p>
-              </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">URL Webhook n8n (Geração)</Label>
+                  <Input
+                    value={n8nWebhookUrl}
+                    onChange={(e) => setN8nWebhookUrl(e.target.value)}
+                    placeholder="https://n8n.exemplo.com/webhook/gerar..."
+                    className="h-11"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Webhook para gerar o conteúdo
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">URL Webhook n8n (Publicação)</Label>
+                  <Input
+                    value={n8nPublishWebhookUrl}
+                    onChange={(e) => setN8nPublishWebhookUrl(e.target.value)}
+                    placeholder="https://n8n.exemplo.com/webhook/publicar..."
+                    className="h-11"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Webhook para publicar nos canais (opcional)
+                  </p>
+                </div>
               </div>
             </div>
 
