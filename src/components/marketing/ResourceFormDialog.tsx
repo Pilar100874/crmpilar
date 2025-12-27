@@ -247,41 +247,42 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Selecione os canais disponíveis para este recurso:</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {(Object.keys(CHANNEL_CONFIG) as PublishChannel[]).map((channel) => {
-                    const config = CHANNEL_CONFIG[channel];
-                    const isSelected = publishChannels.includes(channel);
-                    return (
-                      <button
-                        key={channel}
-                        type="button"
-                        onClick={() => togglePublishChannel(channel)}
-                        className={`p-3 rounded-lg border-2 transition-all flex items-center gap-2 relative ${
-                          isSelected
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <div className={`p-1.5 rounded-full ${config.color} text-white`}>
-                          <ChannelIcon channel={channel} />
-                        </div>
-                        <span className="text-sm font-medium">{config.label}</span>
-                        {isSelected && (
-                          <Check className="h-4 w-4 text-primary absolute top-1 right-1" />
-                        )}
-                      </button>
-                    );
-                  })}
+              {autoPublishEnabled && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Selecione os canais para publicação automática:</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                    {(Object.keys(CHANNEL_CONFIG) as PublishChannel[]).map((channel) => {
+                      const config = CHANNEL_CONFIG[channel];
+                      const isSelected = publishChannels.includes(channel);
+                      return (
+                        <button
+                          key={channel}
+                          type="button"
+                          onClick={() => togglePublishChannel(channel)}
+                          className={`p-3 rounded-lg border-2 transition-all flex items-center gap-2 relative ${
+                            isSelected
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                        >
+                          <div className={`p-1.5 rounded-full ${config.color} text-white`}>
+                            <ChannelIcon channel={channel} />
+                          </div>
+                          <span className="text-sm font-medium">{config.label}</span>
+                          {isSelected && (
+                            <Check className="h-4 w-4 text-primary absolute top-1 right-1" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {publishChannels.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {publishChannels.length} canal(is) selecionado(s)
+                    </p>
+                  )}
                 </div>
-                {publishChannels.length > 0 && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {publishChannels.length} canal(is) selecionado(s)
-                    {autoPublishEnabled && ' - Publicação automática ativada'}
-                  </p>
-                )}
-              </div>
+              )}
             </div>
 
             {/* Fields Section */}
