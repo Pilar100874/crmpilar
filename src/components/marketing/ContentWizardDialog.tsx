@@ -97,6 +97,8 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   // Preset states
   const [isSavingPreset, setIsSavingPreset] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [showNewPresetInput, setShowNewPresetInput] = useState(false);
+  const [newPresetName, setNewPresetName] = useState('');
 
   // Load estabelecimento_id
   useEffect(() => {
@@ -130,13 +132,44 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
 
         if (error) throw error;
         toast.success('Preset atualizado com sucesso!');
-      } else {
-        // This shouldn't happen when there's no preset, but handle gracefully
-        toast.error('Nenhum preset para atualizar');
       }
     } catch (error) {
       console.error('Error saving preset:', error);
       toast.error('Erro ao salvar preset');
+    } finally {
+      setIsSavingPreset(false);
+    }
+  };
+
+  const handleSaveNewPreset = async () => {
+    if (!estabelecimentoId) {
+      toast.error('Estabelecimento não encontrado');
+      return;
+    }
+
+    if (!newPresetName.trim()) {
+      toast.error('Digite um nome para o preset');
+      return;
+    }
+
+    setIsSavingPreset(true);
+    try {
+      const { error } = await supabase
+        .from('marketing_resource_presets')
+        .insert({
+          estabelecimento_id: estabelecimentoId,
+          resource_id: resource.id,
+          nome: newPresetName.trim(),
+          field_values: fieldValues,
+        });
+
+      if (error) throw error;
+      toast.success('Preset criado com sucesso!');
+      setShowNewPresetInput(false);
+      setNewPresetName('');
+    } catch (error) {
+      console.error('Error creating preset:', error);
+      toast.error('Erro ao criar preset');
     } finally {
       setIsSavingPreset(false);
     }
@@ -770,28 +803,79 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
               <span className="truncate">{resource.name}</span>
             </DialogTitle>
             
-            {/* Save preset button - only show when using a preset */}
-            {initialPresetId && (
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-xs text-muted-foreground">
-                  Preset: {initialPresetName}
-                </span>
+            {/* Save preset button */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {initialPresetId ? (
+                <>
+                  <span className="text-xs text-muted-foreground">
+                    Preset: {initialPresetName}
+                  </span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-1"
+                    onClick={handleSavePreset}
+                    disabled={isSavingPreset || Object.keys(fieldValues).length === 0}
+                  >
+                    {isSavingPreset ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    Salvar
+                  </Button>
+                </>
+              ) : showNewPresetInput ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={newPresetName}
+                    onChange={(e) => setNewPresetName(e.target.value)}
+                    placeholder="Nome do preset"
+                    className="h-8 w-40 text-sm"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveNewPreset();
+                      if (e.key === 'Escape') {
+                        setShowNewPresetInput(false);
+                        setNewPresetName('');
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSaveNewPreset}
+                    disabled={isSavingPreset || !newPresetName.trim()}
+                  >
+                    {isSavingPreset ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowNewPresetInput(false);
+                      setNewPresetName('');
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
                 <Button 
                   variant="outline" 
                   size="sm" 
                   className="gap-1"
-                  onClick={handleSavePreset}
-                  disabled={isSavingPreset || Object.keys(fieldValues).length === 0}
+                  onClick={() => setShowNewPresetInput(true)}
+                  disabled={Object.keys(fieldValues).length === 0}
                 >
-                  {isSavingPreset ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-                  Salvar
+                  <Save className="h-4 w-4" />
+                  Salvar Preset
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
           <div className="pt-3">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
