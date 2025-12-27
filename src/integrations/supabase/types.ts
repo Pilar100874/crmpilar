@@ -4122,6 +4122,7 @@ export type Database = {
           publish_channels: string[] | null
           return_type: string
           save_location: string | null
+          steps: Json | null
           updated_at: string
         }
         Insert: {
@@ -4136,6 +4137,7 @@ export type Database = {
           publish_channels?: string[] | null
           return_type: string
           save_location?: string | null
+          steps?: Json | null
           updated_at?: string
         }
         Update: {
@@ -4150,6 +4152,7 @@ export type Database = {
           publish_channels?: string[] | null
           return_type?: string
           save_location?: string | null
+          steps?: Json | null
           updated_at?: string
         }
         Relationships: [
