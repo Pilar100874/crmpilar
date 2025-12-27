@@ -51,6 +51,8 @@ export interface MarketingResource {
   returnType: ReturnType;
   saveLocation?: string;
   n8nWebhookUrl?: string;
+  publishChannels?: PublishChannel[]; // Canais habilitados para publicação
+  autoPublishEnabled?: boolean; // Se publicação automática está ativada
   createdAt: string;
   updatedAt: string;
 }
