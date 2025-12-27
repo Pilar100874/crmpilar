@@ -4109,6 +4109,39 @@ export type Database = {
           },
         ]
       }
+      marketing_resource_presets: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          field_values: Json
+          id: string
+          nome: string
+          resource_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          field_values?: Json
+          id?: string
+          nome: string
+          resource_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          field_values?: Json
+          id?: string
+          nome?: string
+          resource_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketing_resources: {
         Row: {
           auto_publish_enabled: boolean | null
