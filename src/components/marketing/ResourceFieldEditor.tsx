@@ -4,11 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
-import { ResourceField, FieldType, FIELD_TYPE_LABELS, FieldOption, FIELD_TYPE_CATEGORIES } from './types';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { ResourceField, FieldType, FIELD_TYPE_LABELS, FieldOption } from './types';
 
 interface ResourceFieldEditorProps {
   field: ResourceField;
@@ -53,21 +52,6 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
     } else {
       handleUpdateOption(index, { audioUrl: url });
     }
-  };
-
-  // Get field types for the selected category tab
-  const getFieldTypesByCategory = (category: string): FieldType[] => {
-    return FIELD_TYPE_CATEGORIES[category as keyof typeof FIELD_TYPE_CATEGORIES]?.types || [];
-  };
-
-  // Find which category the current field type belongs to
-  const getCurrentCategory = (): string => {
-    for (const [category, config] of Object.entries(FIELD_TYPE_CATEGORIES)) {
-      if (config.types.includes(field.type)) {
-        return category;
-      }
-    }
-    return 'basic';
   };
 
   const renderSelectionOptions = () => {
@@ -265,45 +249,12 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
             </div>
           </div>
 
-          {/* Tipo do Campo com Tabs */}
-          <div className="space-y-2">
-            <Label className="text-xs">Tipo do Campo</Label>
-            <Tabs value={getCurrentCategory()} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 h-8">
-                <TabsTrigger value="basic" className="text-xs px-2">Básico</TabsTrigger>
-                <TabsTrigger value="media" className="text-xs px-2">Mídia</TabsTrigger>
-                <TabsTrigger value="selection" className="text-xs px-2">Seleção</TabsTrigger>
-                <TabsTrigger value="product" className="text-xs px-2">Produto</TabsTrigger>
-              </TabsList>
-              
-              {Object.entries(FIELD_TYPE_CATEGORIES).map(([category, config]) => (
-                <TabsContent key={category} value={category} className="mt-2">
-                  {'description' in config && (
-                    <p className="text-xs text-muted-foreground mb-2">{config.description}</p>
-                  )}
-                  <div className="flex flex-wrap gap-2">
-                    {config.types.map((type) => (
-                      <Button
-                        key={type}
-                        type="button"
-                        variant={field.type === type ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => onChange({ ...field, type, options: [] })}
-                        className="h-8 text-xs"
-                      >
-                        {type === 'media_image' && <ImageIcon className="h-3 w-3 mr-1" />}
-                        {type === 'media_audio' && <Music className="h-3 w-3 mr-1" />}
-                        {type === 'media_video' && <Video className="h-3 w-3 mr-1" />}
-                        {type === 'selection_image' && <ImageIcon className="h-3 w-3 mr-1" />}
-                        {type === 'selection_audio' && <Music className="h-3 w-3 mr-1" />}
-                        {type === 'selection_text' && <FileText className="h-3 w-3 mr-1" />}
-                        {FIELD_TYPE_LABELS[type]}
-                      </Button>
-                    ))}
-                  </div>
-                </TabsContent>
-              ))}
-            </Tabs>
+          {/* Tipo do Campo - Apenas exibição */}
+          <div className="flex items-center gap-2">
+            <Label className="text-xs">Tipo:</Label>
+            <Badge variant="secondary" className="text-xs">
+              {FIELD_TYPE_LABELS[field.type]}
+            </Badge>
           </div>
 
           <div className="flex items-center gap-4">
