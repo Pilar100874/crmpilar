@@ -41,12 +41,17 @@ const mapDBToResource = (db: DBMarketingResource): MarketingResource => ({
   updatedAt: db.updated_at,
 });
 
+interface WizardState {
+  resource: MarketingResource;
+  initialFieldValues?: Record<string, any>;
+}
+
 const MarketingRecursos: React.FC = () => {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [resources, setResources] = useState<MarketingResource[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<MarketingResource | undefined>();
-  const [wizardResource, setWizardResource] = useState<MarketingResource | null>(null);
+  const [wizardState, setWizardState] = useState<WizardState | null>(null);
   const [testResource, setTestResource] = useState<MarketingResource | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -178,7 +183,10 @@ const MarketingRecursos: React.FC = () => {
         onCreateNew={() => setIsFormOpen(true)}
         onEdit={handleEditResource}
         onDelete={handleDeleteResource}
-        onUseResource={setWizardResource}
+        onUseResource={(resource, preset) => setWizardState({ 
+          resource, 
+          initialFieldValues: preset?.field_values 
+        })}
         onTestResource={setTestResource}
       />
 
@@ -189,11 +197,12 @@ const MarketingRecursos: React.FC = () => {
         resource={editingResource}
       />
 
-      {wizardResource && (
+      {wizardState && (
         <ContentWizardDialog
-          open={!!wizardResource}
-          onClose={() => setWizardResource(null)}
-          resource={wizardResource}
+          open={!!wizardState}
+          onClose={() => setWizardState(null)}
+          resource={wizardState.resource}
+          initialFieldValues={wizardState.initialFieldValues}
         />
       )}
 

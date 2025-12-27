@@ -19,8 +19,6 @@ import {
   X,
   Upload,
   Save,
-  FolderOpen,
-  Trash2,
 } from 'lucide-react';
 import {
   Dialog,
@@ -35,13 +33,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { DynamicFieldRenderer } from './DynamicFieldRenderer';
@@ -54,18 +45,12 @@ import {
   FormStep,
 } from './types';
 
-interface Preset {
-  id: string;
-  nome: string;
-  descricao: string | null;
-  field_values: Record<string, any>;
-  created_at: string;
-}
 
 interface ContentWizardDialogProps {
   open: boolean;
   onClose: () => void;
   resource: MarketingResource;
+  initialFieldValues?: Record<string, any>;
 }
 
 const ChannelIcon: React.FC<{ channel: PublishChannel }> = ({ channel }) => {
@@ -95,9 +80,10 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   open,
   onClose,
   resource,
+  initialFieldValues,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
+  const [fieldValues, setFieldValues] = useState<Record<string, any>>(initialFieldValues || {});
   const [selectedChannels, setSelectedChannels] = useState<PublishChannel[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
@@ -105,13 +91,12 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   const [isPublished, setIsPublished] = useState(false);
   
   // Preset states
-  const [presets, setPresets] = useState<Preset[]>([]);
   const [showSavePreset, setShowSavePreset] = useState(false);
   const [presetName, setPresetName] = useState('');
   const [isSavingPreset, setIsSavingPreset] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
 
-  // Load estabelecimento_id and presets
+  // Load estabelecimento_id
   useEffect(() => {
     const storedId = localStorage.getItem('estabelecimentoId');
     if (storedId) {
@@ -119,36 +104,12 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     }
   }, []);
 
+  // Reset field values when opening with initial values
   useEffect(() => {
-    if (open && estabelecimentoId && resource.id) {
-      loadPresets();
+    if (open && initialFieldValues) {
+      setFieldValues(initialFieldValues);
     }
-  }, [open, estabelecimentoId, resource.id]);
-
-  const loadPresets = async () => {
-    if (!estabelecimentoId) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('marketing_resource_presets')
-        .select('*')
-        .eq('estabelecimento_id', estabelecimentoId)
-        .eq('resource_id', resource.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      setPresets((data || []).map(p => ({
-        id: p.id,
-        nome: p.nome,
-        descricao: p.descricao,
-        field_values: p.field_values as Record<string, any>,
-        created_at: p.created_at,
-      })));
-    } catch (error) {
-      console.error('Error loading presets:', error);
-    }
-  };
+  }, [open, initialFieldValues]);
 
   const handleSavePreset = async () => {
     if (!presetName.trim() || !estabelecimentoId) {
@@ -172,36 +133,11 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
       toast.success('Preset salvo com sucesso!');
       setPresetName('');
       setShowSavePreset(false);
-      loadPresets();
     } catch (error) {
       console.error('Error saving preset:', error);
       toast.error('Erro ao salvar preset');
     } finally {
       setIsSavingPreset(false);
-    }
-  };
-
-  const handleLoadPreset = (preset: Preset) => {
-    setFieldValues(preset.field_values);
-    toast.success(`Preset "${preset.nome}" carregado`);
-  };
-
-  const handleDeletePreset = async (presetId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    try {
-      const { error } = await supabase
-        .from('marketing_resource_presets')
-        .delete()
-        .eq('id', presetId);
-
-      if (error) throw error;
-
-      toast.success('Preset excluído');
-      loadPresets();
-    } catch (error) {
-      console.error('Error deleting preset:', error);
-      toast.error('Erro ao excluir preset');
     }
   };
 
@@ -833,52 +769,8 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
               <span className="truncate">{resource.name}</span>
             </DialogTitle>
             
-            {/* Preset buttons */}
+            {/* Save preset button */}
             <div className="flex items-center gap-2 flex-shrink-0">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1">
-                    <FolderOpen className="h-4 w-4" />
-                    Carregar
-                    {presets.length > 0 && (
-                      <Badge variant="secondary" className="ml-1 h-5 px-1.5">
-                        {presets.length}
-                      </Badge>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  {presets.length === 0 ? (
-                    <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-                      Nenhum preset salvo
-                    </div>
-                  ) : (
-                    presets.map((preset) => (
-                      <DropdownMenuItem
-                        key={preset.id}
-                        onClick={() => handleLoadPreset(preset)}
-                        className="flex items-center justify-between cursor-pointer"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{preset.nome}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(preset.created_at).toLocaleDateString('pt-BR')}
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 shrink-0 hover:bg-destructive/10 hover:text-destructive"
-                          onClick={(e) => handleDeletePreset(preset.id, e)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </DropdownMenuItem>
-                    ))
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
               {!showSavePreset ? (
                 <Button 
                   variant="outline" 
@@ -888,7 +780,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
                   disabled={Object.keys(fieldValues).length === 0}
                 >
                   <Save className="h-4 w-4" />
-                  Salvar
+                  Salvar Preset
                 </Button>
               ) : (
                 <div className="flex items-center gap-2">
