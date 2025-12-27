@@ -104,7 +104,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs">Placeholder</Label>
+            <Label className="text-xs">Texto de Apoio</Label>
             <Input
               value={field.placeholder || ''}
               onChange={(e) => onChange({ ...field, placeholder: e.target.value })}
