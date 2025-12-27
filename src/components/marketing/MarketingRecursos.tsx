@@ -3,7 +3,7 @@ import { ResourcesList } from './ResourcesList';
 import { ResourceFormDialog } from './ResourceFormDialog';
 import { ContentWizardDialog } from './ContentWizardDialog';
 import { WebhookTestDialog } from './WebhookTestDialog';
-import { MarketingResource, ResourceField, PublishChannel, ReturnType } from './types';
+import { MarketingResource, ResourceField, PublishChannel, ReturnType, FormStep } from './types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
@@ -15,6 +15,7 @@ interface DBMarketingResource {
   description: string | null;
   return_type: string;
   fields: ResourceField[];
+  steps: FormStep[] | null;
   save_location: string | null;
   n8n_webhook_url: string | null;
   publish_channels: string[] | null;
@@ -29,6 +30,7 @@ const mapDBToResource = (db: DBMarketingResource): MarketingResource => ({
   description: db.description || undefined,
   returnType: db.return_type as ReturnType,
   fields: db.fields || [],
+  steps: db.steps || [],
   saveLocation: db.save_location || undefined,
   n8nWebhookUrl: db.n8n_webhook_url || undefined,
   publishChannels: (db.publish_channels || []) as PublishChannel[],
@@ -97,6 +99,7 @@ const MarketingRecursos: React.FC = () => {
         description: resource.description || null,
         return_type: resource.returnType,
         fields: resource.fields as any,
+        steps: resource.steps as any,
         save_location: resource.saveLocation || null,
         n8n_webhook_url: resource.n8nWebhookUrl || null,
         publish_channels: resource.publishChannels || [],
