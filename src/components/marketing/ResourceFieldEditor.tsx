@@ -1,5 +1,5 @@
-import React from 'react';
-import { Plus, Trash2, GripVertical, Upload, Image as ImageIcon, Music, FileText, Video } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Plus, Trash2, GripVertical, Upload, Image as ImageIcon, Music, FileText, Video, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,16 +11,26 @@ import { ResourceField, FieldType, FIELD_TYPE_LABELS, FieldOption } from './type
 
 interface ResourceFieldEditorProps {
   field: ResourceField;
+  allFields: ResourceField[];
   onChange: (field: ResourceField) => void;
   onRemove: () => void;
 }
 
 export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
   field,
+  allFields,
   onChange,
   onRemove,
 }) => {
   const needsOptions = ['dropdown', 'selection_image', 'selection_audio', 'selection_video', 'selection_text'].includes(field.type);
+
+  // Check if field name is duplicate
+  const isDuplicateName = useMemo(() => {
+    if (!field.name.trim()) return false;
+    return allFields.some(
+      (f) => f.id !== field.id && f.name.trim().toLowerCase() === field.name.trim().toLowerCase()
+    );
+  }, [field.name, field.id, allFields]);
 
   const handleAddOption = () => {
     const newOption: FieldOption = {
@@ -274,12 +284,23 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Nome do Campo</Label>
-              <Input
-                value={field.name}
-                onChange={(e) => onChange({ ...field, name: e.target.value })}
-                placeholder="nome_campo"
-                className="h-9"
-              />
+              <div className="relative">
+                <Input
+                  value={field.name}
+                  onChange={(e) => onChange({ ...field, name: e.target.value })}
+                  placeholder="nome_campo"
+                  className={`h-9 ${isDuplicateName ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                />
+                {isDuplicateName && (
+                  <AlertCircle className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
+                )}
+              </div>
+              {isDuplicateName && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Nome duplicado
+                </p>
+              )}
             </div>
 
             <div className="space-y-1.5">
