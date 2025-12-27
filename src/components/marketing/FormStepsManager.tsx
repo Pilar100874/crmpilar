@@ -188,26 +188,32 @@ export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
                           </div>
                         )}
 
-                        {/* Add field buttons */}
-                        <div className="pt-2 border-t border-dashed">
-                          <p className="text-xs text-muted-foreground mb-2">Adicionar campo:</p>
-                          <div className="flex flex-wrap gap-1">
-                            {Object.entries(FIELD_TYPE_CATEGORIES).flatMap(([_, category]) =>
-                              category.types.map((type) => (
-                                <Button
-                                  key={type}
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 text-xs"
-                                  onClick={() => handleAddFieldToStep(step.id, type)}
-                                >
-                                  <Plus className="h-3 w-3 mr-1" />
-                                  {FIELD_TYPE_LABELS[type]}
-                                </Button>
-                              ))
-                            )}
-                          </div>
+                        {/* Add field buttons by category */}
+                        <div className="pt-2 border-t border-dashed space-y-3">
+                          <p className="text-xs text-muted-foreground">Adicionar campo:</p>
+                          {Object.entries(FIELD_TYPE_CATEGORIES).map(([categoryKey, category]) => (
+                            <div key={categoryKey} className="space-y-1.5">
+                              <p className="text-xs font-medium text-primary">{category.label}</p>
+                              {'description' in category && (
+                                <p className="text-xs text-muted-foreground">{category.description}</p>
+                              )}
+                              <div className="flex flex-wrap gap-1">
+                                {category.types.map((type) => (
+                                  <Button
+                                    key={type}
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs"
+                                    onClick={() => handleAddFieldToStep(step.id, type)}
+                                  >
+                                    <Plus className="h-3 w-3 mr-1" />
+                                    {FIELD_TYPE_LABELS[type]}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </CardContent>
