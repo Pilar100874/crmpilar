@@ -1,26 +1,30 @@
-import React from 'react';
-import { Plus, Trash2, GripVertical, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Trash2, GripVertical, Info, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FormStep, ResourceField } from './types';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { FormStep, ResourceField, FieldType, FIELD_TYPE_LABELS, FIELD_TYPE_DESCRIPTIONS, FIELD_TYPE_CATEGORIES } from './types';
+import { ResourceFieldEditor } from './ResourceFieldEditor';
 
 interface FormStepsManagerProps {
   steps: FormStep[];
   fields: ResourceField[];
   onStepsChange: (steps: FormStep[]) => void;
-  onFieldStepChange: (fieldId: string, stepId: string | undefined) => void;
+  onFieldsChange: (fields: ResourceField[]) => void;
 }
 
 export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
   steps,
   fields,
   onStepsChange,
-  onFieldStepChange,
+  onFieldsChange,
 }) => {
+  const [openSteps, setOpenSteps] = useState<Record<string, boolean>>({});
+
   const handleAddStep = () => {
     const newStep: FormStep = {
       id: crypto.randomUUID(),
@@ -29,6 +33,7 @@ export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
       description: '',
     };
     onStepsChange([...steps, newStep]);
+    setOpenSteps(prev => ({ ...prev, [newStep.id]: true }));
   };
 
   const handleUpdateStep = (index: number, updates: Partial<FormStep>) => {
@@ -39,12 +44,9 @@ export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
 
   const handleRemoveStep = (index: number) => {
     const stepToRemove = steps[index];
-    // Remove step assignment from fields
-    fields.forEach((field) => {
-      if (field.stepId === stepToRemove.id) {
-        onFieldStepChange(field.id, undefined);
-      }
-    });
+    // Remove fields belonging to this step
+    const newFields = fields.filter(f => f.stepId !== stepToRemove.id);
+    onFieldsChange(newFields);
     
     const newSteps = steps.filter((_, i) => i !== index).map((step, i) => ({
       ...step,
@@ -53,12 +55,32 @@ export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
     onStepsChange(newSteps);
   };
 
+  const handleAddFieldToStep = (stepId: string, type: FieldType) => {
+    const newField: ResourceField = {
+      id: crypto.randomUUID(),
+      name: '',
+      label: FIELD_TYPE_LABELS[type],
+      type,
+      required: false,
+      stepId,
+    };
+    onFieldsChange([...fields, newField]);
+  };
+
+  const handleUpdateField = (fieldId: string, updatedField: ResourceField) => {
+    onFieldsChange(fields.map(f => f.id === fieldId ? updatedField : f));
+  };
+
+  const handleRemoveField = (fieldId: string) => {
+    onFieldsChange(fields.filter(f => f.id !== fieldId));
+  };
+
   const getFieldsForStep = (stepId: string) => {
     return fields.filter((f) => f.stepId === stepId);
   };
 
-  const getUnassignedFields = () => {
-    return fields.filter((f) => !f.stepId || !steps.find((s) => s.id === f.stepId));
+  const toggleStep = (stepId: string) => {
+    setOpenSteps(prev => ({ ...prev, [stepId]: !prev[stepId] }));
   };
 
   return (
@@ -90,86 +112,110 @@ export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
         </div>
       ) : (
         <div className="space-y-3">
-          {steps.map((step, index) => (
-            <Card key={step.id} className="border-primary/20">
-              <CardHeader className="py-3 px-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 cursor-move">
-                    <GripVertical className="h-4 w-4 text-muted-foreground" />
-                    <Badge variant="secondary" className="h-6 w-6 p-0 flex items-center justify-center rounded-full">
-                      {step.number}
-                    </Badge>
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <Input
-                      value={step.title}
-                      onChange={(e) => handleUpdateStep(index, { title: e.target.value })}
-                      placeholder="Título da etapa"
-                      className="h-8 font-medium"
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => handleRemoveStep(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="py-3 px-4 pt-0 space-y-3">
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">
-                    Texto informativo (exibido no início da etapa)
-                  </Label>
-                  <Textarea
-                    value={step.description || ''}
-                    onChange={(e) => handleUpdateStep(index, { description: e.target.value })}
-                    placeholder="Ex: Nesta etapa, você irá fornecer as informações básicas do produto..."
-                    rows={2}
-                    className="resize-none text-sm"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">
-                    Campos nesta etapa ({getFieldsForStep(step.id).length})
-                  </Label>
-                  {getFieldsForStep(step.id).length === 0 ? (
-                    <p className="text-xs text-muted-foreground/70 italic">
-                      Nenhum campo atribuído a esta etapa
-                    </p>
-                  ) : (
-                    <div className="flex flex-wrap gap-1">
-                      {getFieldsForStep(step.id).map((field) => (
-                        <Badge key={field.id} variant="outline" className="text-xs">
-                          {field.label || field.name || 'Campo sem nome'}
+          {steps.map((step, index) => {
+            const stepFields = getFieldsForStep(step.id);
+            const isOpen = openSteps[step.id] ?? true;
+            
+            return (
+              <Collapsible key={step.id} open={isOpen} onOpenChange={() => toggleStep(step.id)}>
+                <Card className="border-primary/20">
+                  <CardHeader className="py-3 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 cursor-move">
+                        <GripVertical className="h-4 w-4 text-muted-foreground" />
+                        <Badge variant="secondary" className="h-6 w-6 p-0 flex items-center justify-center rounded-full">
+                          {step.number}
                         </Badge>
-                      ))}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <Input
+                          value={step.title}
+                          onChange={(e) => handleUpdateStep(index, { title: e.target.value })}
+                          placeholder="Título da etapa"
+                          className="h-8 font-medium"
+                        />
+                      </div>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => handleRemoveStep(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                  </CardHeader>
+                  
+                  <CollapsibleContent>
+                    <CardContent className="py-3 px-4 pt-0 space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">
+                          Texto informativo (exibido no início da etapa)
+                        </Label>
+                        <Textarea
+                          value={step.description || ''}
+                          onChange={(e) => handleUpdateStep(index, { description: e.target.value })}
+                          placeholder="Ex: Nesta etapa, você irá fornecer as informações básicas do produto..."
+                          rows={2}
+                          className="resize-none text-sm"
+                        />
+                      </div>
 
-      {getUnassignedFields().length > 0 && steps.length > 0 && (
-        <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-          <p className="text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2">
-            <Info className="h-4 w-4" />
-            {getUnassignedFields().length} campo(s) não atribuído(s) a nenhuma etapa
-          </p>
-          <div className="flex flex-wrap gap-1 mt-2">
-            {getUnassignedFields().map((field) => (
-              <Badge key={field.id} variant="secondary" className="text-xs">
-                {field.label || field.name || 'Campo sem nome'}
-              </Badge>
-            ))}
-          </div>
+                      {/* Fields in this step */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs text-muted-foreground">
+                            Campos desta etapa ({stepFields.length})
+                          </Label>
+                        </div>
+                        
+                        {stepFields.length > 0 && (
+                          <div className="space-y-2 pl-4 border-l-2 border-primary/20">
+                            {stepFields.map((field) => (
+                              <ResourceFieldEditor
+                                key={field.id}
+                                field={field}
+                                onChange={(updated) => handleUpdateField(field.id, updated)}
+                                onRemove={() => handleRemoveField(field.id)}
+                              />
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Add field buttons */}
+                        <div className="pt-2 border-t border-dashed">
+                          <p className="text-xs text-muted-foreground mb-2">Adicionar campo:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {Object.entries(FIELD_TYPE_CATEGORIES).flatMap(([_, category]) =>
+                              category.types.map((type) => (
+                                <Button
+                                  key={type}
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 text-xs"
+                                  onClick={() => handleAddFieldToStep(step.id, type)}
+                                >
+                                  <Plus className="h-3 w-3 mr-1" />
+                                  {FIELD_TYPE_LABELS[type]}
+                                </Button>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            );
+          })}
         </div>
       )}
     </div>

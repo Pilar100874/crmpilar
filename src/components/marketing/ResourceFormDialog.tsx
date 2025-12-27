@@ -104,9 +104,6 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
     }
   }, [resource, open]);
 
-  const handleFieldStepChange = (fieldId: string, stepId: string | undefined) => {
-    setFields(fields.map(f => f.id === fieldId ? { ...f, stepId } : f));
-  };
 
   const togglePublishChannel = (channel: PublishChannel) => {
     setPublishChannels((prev) =>
@@ -311,84 +308,99 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
                 steps={steps}
                 fields={fields}
                 onStepsChange={setSteps}
-                onFieldStepChange={handleFieldStepChange}
+                onFieldsChange={setFields}
               />
             </div>
 
-            {/* Fields Section */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <List className="h-4 w-4 text-primary" />
-                  <h3 className="font-semibold">Campos do Formulário</h3>
-                  <Badge variant="secondary" className="ml-2">
-                    {fields.length} campo{fields.length !== 1 ? 's' : ''}
-                  </Badge>
+            {/* Fields Section - Only show if there are steps */}
+            {steps.length === 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <List className="h-4 w-4 text-primary" />
+                    <h3 className="font-semibold">Campos do Formulário</h3>
+                    <Badge variant="secondary" className="ml-2">
+                      {fields.length} campo{fields.length !== 1 ? 's' : ''}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
 
-              {/* Field Type Selector */}
-              <Card className="bg-muted/30 border-dashed">
-                <CardContent className="p-4">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Clique em um tipo de campo para adicioná-lo ao formulário:
-                  </p>
-                  <Tabs value={activeFieldTab} onValueChange={setActiveFieldTab}>
-                    <TabsList className="grid grid-cols-4 mb-4">
+                {/* Field Type Selector */}
+                <Card className="bg-muted/30 border-dashed">
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Clique em um tipo de campo para adicioná-lo ao formulário:
+                    </p>
+                    <Tabs value={activeFieldTab} onValueChange={setActiveFieldTab}>
+                      <TabsList className="grid grid-cols-4 mb-4">
+                        {Object.entries(FIELD_TYPE_CATEGORIES).map(([key, category]) => (
+                          <TabsTrigger key={key} value={key} className="gap-2 text-xs sm:text-sm">
+                            <CategoryIcon category={key} />
+                            <span className="hidden sm:inline">{category.label}</span>
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+
                       {Object.entries(FIELD_TYPE_CATEGORIES).map(([key, category]) => (
-                        <TabsTrigger key={key} value={key} className="gap-2 text-xs sm:text-sm">
-                          <CategoryIcon category={key} />
-                          <span className="hidden sm:inline">{category.label}</span>
-                        </TabsTrigger>
+                        <TabsContent key={key} value={key} className="mt-0">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {category.types.map((type) => (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={() => handleAddField(type)}
+                                className="flex flex-col items-start p-3 rounded-lg border bg-background hover:bg-accent hover:border-primary/50 transition-all text-left group"
+                              >
+                                <span className="font-medium text-sm group-hover:text-primary transition-colors">
+                                  {FIELD_TYPE_LABELS[type]}
+                                </span>
+                                <span className="text-xs text-muted-foreground mt-0.5">
+                                  {FIELD_TYPE_DESCRIPTIONS[type]}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </TabsContent>
                       ))}
-                    </TabsList>
+                    </Tabs>
+                  </CardContent>
+                </Card>
 
-                    {Object.entries(FIELD_TYPE_CATEGORIES).map(([key, category]) => (
-                      <TabsContent key={key} value={key} className="mt-0">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                          {category.types.map((type) => (
-                            <button
-                              key={type}
-                              type="button"
-                              onClick={() => handleAddField(type)}
-                              className="flex flex-col items-start p-3 rounded-lg border bg-background hover:bg-accent hover:border-primary/50 transition-all text-left group"
-                            >
-                              <span className="font-medium text-sm group-hover:text-primary transition-colors">
-                                {FIELD_TYPE_LABELS[type]}
-                              </span>
-                              <span className="text-xs text-muted-foreground mt-0.5">
-                                {FIELD_TYPE_DESCRIPTIONS[type]}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      </TabsContent>
+                {/* Added Fields */}
+                {fields.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg bg-muted/20">
+                    <Plus className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm font-medium">Nenhum campo adicionado</p>
+                    <p className="text-xs mt-1">Selecione um tipo de campo acima para começar</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {fields.map((field, index) => (
+                      <ResourceFieldEditor
+                        key={field.id}
+                        field={field}
+                        onChange={(updated) => handleUpdateField(index, updated)}
+                        onRemove={() => handleRemoveField(index)}
+                      />
                     ))}
-                  </Tabs>
-                </CardContent>
-              </Card>
+                  </div>
+                )}
+              </div>
+            )}
 
-              {/* Added Fields */}
-              {fields.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg bg-muted/20">
-                  <Plus className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm font-medium">Nenhum campo adicionado</p>
-                  <p className="text-xs mt-1">Selecione um tipo de campo acima para começar</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {fields.map((field, index) => (
-                    <ResourceFieldEditor
-                      key={field.id}
-                      field={field}
-                      onChange={(updated) => handleUpdateField(index, updated)}
-                      onRemove={() => handleRemoveField(index)}
-                      steps={steps}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Info when steps are used */}
+            {steps.length > 0 && (
+              <div className="text-center py-6 text-muted-foreground border-2 border-dashed rounded-lg bg-muted/20">
+                <Layers className="h-6 w-6 mx-auto mb-2 opacity-50" />
+                <p className="text-sm font-medium">Campos organizados por etapas</p>
+                <p className="text-xs mt-1">
+                  Adicione campos diretamente dentro de cada etapa acima
+                </p>
+                <Badge variant="secondary" className="mt-2">
+                  {fields.length} campo{fields.length !== 1 ? 's' : ''} no total
+                </Badge>
+              </div>
+            )}
           </div>
         </ScrollArea>
 
