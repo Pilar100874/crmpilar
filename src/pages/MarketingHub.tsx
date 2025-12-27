@@ -7,7 +7,8 @@ import {
   PanelLeft,
   PanelLeftClose,
   LucideIcon,
-  Wand2
+  Wand2,
+  FolderOpen
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,6 +22,7 @@ import MarketingCanvas from './MarketingCanvas';
 import MarketingAutomacoes from './MarketingAutomacoes';
 import MarketingCampanhas from './MarketingCampanhas';
 import MarketingRecursos from '@/components/marketing/MarketingRecursos';
+import MarketingGaleria from '@/components/marketing/MarketingGaleria';
 
 interface TabItem {
   id: string;
@@ -31,6 +33,7 @@ interface TabItem {
 
 const tabItems: TabItem[] = [
   { id: 'recursos', label: 'Recursos IA', icon: Wand2, description: 'Crie conteúdo com IA e n8n' },
+  { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Fluxos automatizados de marketing' },
   { id: 'campanhas', label: 'Campanhas', icon: Megaphone, description: 'Gestão de campanhas' },
   { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
@@ -47,6 +50,8 @@ const MarketingHub: React.FC = () => {
     switch (activeTab) {
       case 'recursos':
         return <MarketingRecursos />;
+      case 'galeria':
+        return <MarketingGaleria />;
       case 'canvas':
         return <MarketingCanvas onClose={() => setActiveTab('recursos')} />;
       case 'automacoes':
