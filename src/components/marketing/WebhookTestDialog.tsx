@@ -86,8 +86,6 @@ export const WebhookTestDialog: React.FC<WebhookTestDialogProps> = ({
         return 'https://example.com/audio-sample.mp3';
       case 'dropdown':
         return field.options?.[0]?.value || 'option1';
-      case 'image_selection':
-        return field.options?.[0]?.imageUrl || 'https://via.placeholder.com/100';
       case 'text_selection':
         return field.options?.[0]?.value || 'Opção 1';
       case 'product_name':

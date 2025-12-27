@@ -6,7 +6,6 @@ export type FieldType =
   | 'image' 
   | 'audio' 
   | 'dropdown' 
-  | 'image_selection' 
   | 'text_selection'
   | 'number'
   | 'date'
@@ -87,7 +86,7 @@ export const FIELD_TYPE_CATEGORIES = {
   },
   selection: {
     label: 'Seleção',
-    types: ['dropdown', 'image_selection', 'text_selection'] as FieldType[],
+    types: ['dropdown', 'text_selection'] as FieldType[],
   },
   product: {
     label: 'Produto',
@@ -98,10 +97,9 @@ export const FIELD_TYPE_CATEGORIES = {
 export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   text: 'Texto Curto',
   textarea: 'Texto Longo',
-  image: 'Imagem (Upload/URL)',
+  image: 'Imagem',
   audio: 'Upload de Áudio',
   dropdown: 'Lista Suspensa',
-  image_selection: 'Seleção de Imagens',
   text_selection: 'Seleção de Textos',
   number: 'Número',
   date: 'Data',
@@ -113,11 +111,10 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
 export const FIELD_TYPE_DESCRIPTIONS: Record<FieldType, string> = {
   text: 'Campo de texto simples',
   textarea: 'Área de texto maior',
-  image: 'Upload de arquivo ou URL',
+  image: 'Upload, URL ou seleção de imagens',
   audio: 'Upload de arquivo de áudio',
   dropdown: 'Lista de opções',
-  image_selection: 'Escolha entre imagens',
-  text_selection: 'Escolha entre textos',
+  text_selection: 'Escolha entre textos pré-definidos',
   number: 'Valor numérico',
   date: 'Seletor de data',
   checkbox: 'Opção sim/não',
