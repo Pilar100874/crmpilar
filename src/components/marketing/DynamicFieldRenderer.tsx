@@ -220,9 +220,22 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
                 </button>
               ))}
             </div>
+            
+            {/* Preview da imagem selecionada */}
+            {value && (
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-3">
+                  <p className="text-xs text-muted-foreground mb-2">Imagem selecionada:</p>
+                  <img 
+                    src={value} 
+                    alt="Preview" 
+                    className="w-full max-h-64 object-contain rounded-lg"
+                  />
+                </CardContent>
+              </Card>
+            )}
           </div>
         );
-
       case 'media_image':
         return (
           <div className="space-y-4">
@@ -382,9 +395,67 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
                 ))}
               </div>
             </ScrollArea>
+            
+            {/* Player do áudio selecionado */}
+            {value && (
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-3">
+                  <p className="text-xs text-muted-foreground mb-2">Áudio selecionado:</p>
+                  <audio controls src={value} className="w-full" />
+                </CardContent>
+              </Card>
+            )}
           </div>
         );
 
+      case 'selection_video':
+        return (
+          <div className="space-y-3">
+            <ScrollArea className="max-h-80 border rounded-lg">
+              <div className="p-2 space-y-3">
+                {field.options?.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => onChange(option.videoUrl || option.value)}
+                    className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
+                      value === (option.videoUrl || option.value)
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="font-medium text-sm">{option.label}</span>
+                      {value === (option.videoUrl || option.value) && (
+                        <Check className="h-4 w-4 text-primary shrink-0" />
+                      )}
+                    </div>
+                    {option.videoUrl && (
+                      <video 
+                        controls 
+                        className="w-full max-h-32 rounded-lg" 
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <source src={option.videoUrl} />
+                      </video>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+            
+            {/* Player do vídeo selecionado */}
+            {value && (
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-3">
+                  <p className="text-xs text-muted-foreground mb-2">Vídeo selecionado:</p>
+                  <video controls src={value} className="w-full max-h-64 rounded-lg" />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        );
+        
       case 'selection_text':
         return (
           <div className="space-y-3">

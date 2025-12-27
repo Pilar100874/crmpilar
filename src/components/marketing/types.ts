@@ -8,6 +8,7 @@ export type FieldType =
   | 'media_video'    // Mídia - Vídeo (usuário faz upload no wizard)
   | 'selection_image'  // Seleção de imagens (criador define as opções)
   | 'selection_audio'  // Seleção de áudios (criador define as opções)
+  | 'selection_video'  // Seleção de vídeos (criador define as opções)
   | 'selection_text'   // Seleção de textos longos (criador define as opções)
   | 'dropdown' 
   | 'number'
@@ -33,6 +34,7 @@ export interface FieldOption {
   value: string;
   imageUrl?: string;
   audioUrl?: string;
+  videoUrl?: string;
 }
 
 export interface ResourceField {
@@ -101,7 +103,7 @@ export const FIELD_TYPE_CATEGORIES = {
   selection: {
     label: 'Seleção',
     description: 'Você define as opções agora, usuário escolhe depois',
-    types: ['selection_image', 'selection_audio', 'selection_text', 'dropdown'] as FieldType[],
+    types: ['selection_image', 'selection_audio', 'selection_video', 'selection_text', 'dropdown'] as FieldType[],
   },
   product: {
     label: 'Produto',
@@ -117,6 +119,7 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   media_video: 'Upload de Vídeo',
   selection_image: 'Seleção de Imagens',
   selection_audio: 'Seleção de Áudios',
+  selection_video: 'Seleção de Vídeos',
   selection_text: 'Seleção de Textos',
   dropdown: 'Lista Suspensa',
   number: 'Número',
@@ -134,6 +137,7 @@ export const FIELD_TYPE_DESCRIPTIONS: Record<FieldType, string> = {
   media_video: 'Usuário faz upload de vídeo ao usar',
   selection_image: 'Defina imagens para o usuário escolher',
   selection_audio: 'Defina áudios para o usuário escolher',
+  selection_video: 'Defina vídeos para o usuário escolher',
   selection_text: 'Defina textos longos para o usuário escolher',
   dropdown: 'Lista de opções',
   number: 'Valor numérico',

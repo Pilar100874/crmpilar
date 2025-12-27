@@ -20,7 +20,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
   onChange,
   onRemove,
 }) => {
-  const needsOptions = ['dropdown', 'selection_image', 'selection_audio', 'selection_text'].includes(field.type);
+  const needsOptions = ['dropdown', 'selection_image', 'selection_audio', 'selection_video', 'selection_text'].includes(field.type);
 
   const handleAddOption = () => {
     const newOption: FieldOption = {
@@ -45,12 +45,14 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
     onChange({ ...field, options: newOptions });
   };
 
-  const handleFileUpload = (index: number, file: File, type: 'image' | 'audio') => {
+  const handleFileUpload = (index: number, file: File, type: 'image' | 'audio' | 'video') => {
     const url = URL.createObjectURL(file);
     if (type === 'image') {
       handleUpdateOption(index, { imageUrl: url });
-    } else {
+    } else if (type === 'audio') {
       handleUpdateOption(index, { audioUrl: url });
+    } else {
+      handleUpdateOption(index, { videoUrl: url });
     }
   };
 
@@ -63,6 +65,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
           <Label className="text-xs font-medium">
             {field.type === 'selection_image' && 'Imagens para Seleção'}
             {field.type === 'selection_audio' && 'Áudios para Seleção'}
+            {field.type === 'selection_video' && 'Vídeos para Seleção'}
             {field.type === 'selection_text' && 'Textos para Seleção'}
             {field.type === 'dropdown' && 'Opções'}
           </Label>
@@ -203,6 +206,46 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
                   )}
                 </div>
               )}
+
+              {/* Seleção de Vídeo - upload de vídeo */}
+              {field.type === 'selection_video' && (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      value={option.videoUrl || ''}
+                      onChange={(e) => handleUpdateOption(index, { videoUrl: e.target.value })}
+                      placeholder="URL do Vídeo ou faça upload"
+                      className="h-8 text-sm flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 relative shrink-0"
+                      asChild
+                    >
+                      <label className="cursor-pointer">
+                        <Upload className="h-3 w-3 mr-1" />
+                        Upload
+                        <input
+                          type="file"
+                          accept="video/*"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(index, file, 'video');
+                          }}
+                        />
+                      </label>
+                    </Button>
+                  </div>
+                  {option.videoUrl && (
+                    <video controls className="w-full max-h-32 rounded-lg">
+                      <source src={option.videoUrl} />
+                    </video>
+                  )}
+                </div>
+              )}
             </div>
           ))}
 
@@ -210,6 +253,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
             <div className="text-center py-4 text-muted-foreground text-sm border border-dashed rounded-lg">
               {field.type === 'selection_image' && 'Adicione imagens para o usuário escolher'}
               {field.type === 'selection_audio' && 'Adicione áudios para o usuário escolher'}
+              {field.type === 'selection_video' && 'Adicione vídeos para o usuário escolher'}
               {field.type === 'selection_text' && 'Adicione textos para o usuário escolher'}
               {field.type === 'dropdown' && 'Adicione opções para a lista'}
             </div>
