@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Plus, Trash2, GripVertical, Upload, Image as ImageIcon } from 'lucide-react';
+import React from 'react';
+import { Plus, Trash2, GripVertical, Upload, Image as ImageIcon, Music, FileText, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
-import { ResourceField, FieldType, FIELD_TYPE_LABELS, FieldOption } from './types';
+import { ResourceField, FieldType, FIELD_TYPE_LABELS, FieldOption, FIELD_TYPE_CATEGORIES } from './types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface ResourceFieldEditorProps {
   field: ResourceField;
@@ -20,7 +21,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
   onChange,
   onRemove,
 }) => {
-  const needsOptions = ['dropdown', 'text_selection', 'image'].includes(field.type);
+  const needsOptions = ['dropdown', 'selection_image', 'selection_audio', 'selection_text'].includes(field.type);
 
   const handleAddOption = () => {
     const newOption: FieldOption = {
@@ -45,9 +46,193 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
     onChange({ ...field, options: newOptions });
   };
 
-  const handleImageUpload = (index: number, file: File) => {
+  const handleFileUpload = (index: number, file: File, type: 'image' | 'audio') => {
     const url = URL.createObjectURL(file);
-    handleUpdateOption(index, { imageUrl: url });
+    if (type === 'image') {
+      handleUpdateOption(index, { imageUrl: url });
+    } else {
+      handleUpdateOption(index, { audioUrl: url });
+    }
+  };
+
+  // Get field types for the selected category tab
+  const getFieldTypesByCategory = (category: string): FieldType[] => {
+    return FIELD_TYPE_CATEGORIES[category as keyof typeof FIELD_TYPE_CATEGORIES]?.types || [];
+  };
+
+  // Find which category the current field type belongs to
+  const getCurrentCategory = (): string => {
+    for (const [category, config] of Object.entries(FIELD_TYPE_CATEGORIES)) {
+      if (config.types.includes(field.type)) {
+        return category;
+      }
+    }
+    return 'basic';
+  };
+
+  const renderSelectionOptions = () => {
+    if (!needsOptions) return null;
+
+    return (
+      <div className="space-y-2 pt-2 border-t">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs font-medium">
+            {field.type === 'selection_image' && 'Imagens para Seleção'}
+            {field.type === 'selection_audio' && 'Áudios para Seleção'}
+            {field.type === 'selection_text' && 'Textos para Seleção'}
+            {field.type === 'dropdown' && 'Opções'}
+          </Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleAddOption}
+            className="h-7 text-xs"
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            Adicionar
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          {(field.options || []).map((option, index) => (
+            <div key={option.id} className="space-y-2 p-3 bg-background rounded-lg border">
+              <div className="flex gap-2">
+                <Input
+                  value={option.label}
+                  onChange={(e) => handleUpdateOption(index, { label: e.target.value })}
+                  placeholder="Título/Label"
+                  className="h-8 text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemoveOption(index)}
+                  className="h-8 w-8 p-0 text-destructive shrink-0"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+              
+              {/* Dropdown - apenas valor texto */}
+              {field.type === 'dropdown' && (
+                <Input
+                  value={option.value}
+                  onChange={(e) => handleUpdateOption(index, { value: e.target.value })}
+                  placeholder="Valor"
+                  className="h-8 text-sm"
+                />
+              )}
+
+              {/* Seleção de Texto - textarea para texto longo */}
+              {field.type === 'selection_text' && (
+                <Textarea
+                  value={option.value}
+                  onChange={(e) => handleUpdateOption(index, { value: e.target.value })}
+                  placeholder="Digite o texto completo aqui..."
+                  rows={4}
+                  className="text-sm"
+                />
+              )}
+              
+              {/* Seleção de Imagem - upload de imagem */}
+              {field.type === 'selection_image' && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 flex gap-2">
+                    <Input
+                      value={option.imageUrl || ''}
+                      onChange={(e) => handleUpdateOption(index, { imageUrl: e.target.value })}
+                      placeholder="URL da Imagem ou faça upload"
+                      className="h-8 text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 relative shrink-0"
+                      asChild
+                    >
+                      <label className="cursor-pointer">
+                        <Upload className="h-3 w-3 mr-1" />
+                        Upload
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(index, file, 'image');
+                          }}
+                        />
+                      </label>
+                    </Button>
+                  </div>
+                  {option.imageUrl && (
+                    <div className="w-12 h-12 rounded border overflow-hidden shrink-0">
+                      <img 
+                        src={option.imageUrl} 
+                        alt={option.label} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Seleção de Áudio - upload de áudio */}
+              {field.type === 'selection_audio' && (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      value={option.audioUrl || ''}
+                      onChange={(e) => handleUpdateOption(index, { audioUrl: e.target.value })}
+                      placeholder="URL do Áudio ou faça upload"
+                      className="h-8 text-sm flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 relative shrink-0"
+                      asChild
+                    >
+                      <label className="cursor-pointer">
+                        <Upload className="h-3 w-3 mr-1" />
+                        Upload
+                        <input
+                          type="file"
+                          accept="audio/*"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(index, file, 'audio');
+                          }}
+                        />
+                      </label>
+                    </Button>
+                  </div>
+                  {option.audioUrl && (
+                    <audio controls className="w-full h-8">
+                      <source src={option.audioUrl} />
+                    </audio>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {(field.options?.length || 0) === 0 && (
+            <div className="text-center py-4 text-muted-foreground text-sm border border-dashed rounded-lg">
+              {field.type === 'selection_image' && 'Adicione imagens para o usuário escolher'}
+              {field.type === 'selection_audio' && 'Adicione áudios para o usuário escolher'}
+              {field.type === 'selection_text' && 'Adicione textos para o usuário escolher'}
+              {field.type === 'dropdown' && 'Adicione opções para a lista'}
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -58,7 +243,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
         </div>
 
         <div className="flex-1 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Nome do Campo</Label>
               <Input
@@ -78,34 +263,56 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
                 className="h-9"
               />
             </div>
+          </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs">Tipo</Label>
-              <Select
-                value={field.type}
-                onValueChange={(value: FieldType) => onChange({ ...field, type: value })}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(FIELD_TYPE_LABELS).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Tipo do Campo com Tabs */}
+          <div className="space-y-2">
+            <Label className="text-xs">Tipo do Campo</Label>
+            <Tabs value={getCurrentCategory()} className="w-full">
+              <TabsList className="grid w-full grid-cols-4 h-8">
+                <TabsTrigger value="basic" className="text-xs px-2">Básico</TabsTrigger>
+                <TabsTrigger value="media" className="text-xs px-2">Mídia</TabsTrigger>
+                <TabsTrigger value="selection" className="text-xs px-2">Seleção</TabsTrigger>
+                <TabsTrigger value="product" className="text-xs px-2">Produto</TabsTrigger>
+              </TabsList>
+              
+              {Object.entries(FIELD_TYPE_CATEGORIES).map(([category, config]) => (
+                <TabsContent key={category} value={category} className="mt-2">
+                  {'description' in config && (
+                    <p className="text-xs text-muted-foreground mb-2">{config.description}</p>
+                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {config.types.map((type) => (
+                      <Button
+                        key={type}
+                        type="button"
+                        variant={field.type === type ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => onChange({ ...field, type, options: [] })}
+                        className="h-8 text-xs"
+                      >
+                        {type === 'media_image' && <ImageIcon className="h-3 w-3 mr-1" />}
+                        {type === 'media_audio' && <Music className="h-3 w-3 mr-1" />}
+                        {type === 'media_video' && <Video className="h-3 w-3 mr-1" />}
+                        {type === 'selection_image' && <ImageIcon className="h-3 w-3 mr-1" />}
+                        {type === 'selection_audio' && <Music className="h-3 w-3 mr-1" />}
+                        {type === 'selection_text' && <FileText className="h-3 w-3 mr-1" />}
+                        {FIELD_TYPE_LABELS[type]}
+                      </Button>
+                    ))}
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
 
-            <div className="flex items-end gap-3">
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={field.required}
-                  onCheckedChange={(checked) => onChange({ ...field, required: checked })}
-                />
-                <Label className="text-xs">Obrigatório</Label>
-              </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={field.required}
+                onCheckedChange={(checked) => onChange({ ...field, required: checked })}
+              />
+              <Label className="text-xs">Obrigatório</Label>
             </div>
           </div>
 
@@ -119,107 +326,19 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
             />
           </div>
 
-          {needsOptions && (
-            <div className="space-y-2 pt-2 border-t">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-medium">Opções</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddOption}
-                  className="h-7 text-xs"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Adicionar
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                {(field.options || []).map((option, index) => (
-                  <div key={option.id} className="space-y-2 p-3 bg-background rounded-lg border">
-                    <div className="flex gap-2">
-                      <Input
-                        value={option.label}
-                        onChange={(e) => handleUpdateOption(index, { label: e.target.value })}
-                        placeholder="Título/Label"
-                        className="h-8 text-sm"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveOption(index)}
-                        className="h-8 w-8 p-0 text-destructive shrink-0"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    
-                    {field.type === 'text_selection' ? (
-                      <Textarea
-                        value={option.value}
-                        onChange={(e) => handleUpdateOption(index, { value: e.target.value })}
-                        placeholder="Digite o texto completo aqui..."
-                        rows={3}
-                        className="text-sm"
-                      />
-                    ) : (
-                      <Input
-                        value={option.value}
-                        onChange={(e) => handleUpdateOption(index, { value: e.target.value })}
-                        placeholder="Valor"
-                        className="h-8 text-sm"
-                      />
-                    )}
-                    
-                    {field.type === 'image' && (
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 flex gap-2">
-                          <Input
-                            value={option.imageUrl || ''}
-                            onChange={(e) => handleUpdateOption(index, { imageUrl: e.target.value })}
-                            placeholder="URL da Imagem"
-                            className="h-8 text-sm"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-8 relative shrink-0"
-                            asChild
-                          >
-                            <label className="cursor-pointer">
-                              <Upload className="h-3 w-3 mr-1" />
-                              Upload
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) handleImageUpload(index, file);
-                                }}
-                              />
-                            </label>
-                          </Button>
-                        </div>
-                        {option.imageUrl && (
-                          <div className="w-10 h-10 rounded border overflow-hidden shrink-0">
-                            <img 
-                              src={option.imageUrl} 
-                              alt={option.label} 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+          {/* Info para tipos de mídia */}
+          {['media_image', 'media_audio', 'media_video'].includes(field.type) && (
+            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-xs text-blue-600 dark:text-blue-400">
+                {field.type === 'media_image' && '📷 O usuário irá fazer upload de uma imagem ao usar este recurso.'}
+                {field.type === 'media_audio' && '🎵 O usuário irá fazer upload de um áudio ao usar este recurso.'}
+                {field.type === 'media_video' && '🎬 O usuário irá fazer upload de um vídeo ao usar este recurso.'}
+              </p>
             </div>
           )}
+
+          {/* Opções para tipos de seleção */}
+          {renderSelectionOptions()}
         </div>
 
         <Button
