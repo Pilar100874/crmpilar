@@ -15,6 +15,9 @@ import {
   Linkedin,
   Mail,
   Info,
+  RefreshCw,
+  X,
+  Upload,
 } from 'lucide-react';
 import {
   Dialog,
@@ -77,7 +80,9 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
   const [selectedChannels, setSelectedChannels] = useState<PublishChannel[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [result, setResult] = useState<{ type: ReturnType; content: string } | null>(null);
+  const [isPublished, setIsPublished] = useState(false);
 
   // Build wizard steps: form steps (if any) + channels + review + result
   const wizardSteps = useMemo(() => {
@@ -211,6 +216,22 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
         content: contentResult,
       });
 
+      toast.success('Conteúdo gerado com sucesso!');
+    } catch (error) {
+      console.error('Error sending to n8n:', error);
+      toast.error('Erro ao gerar conteúdo. Verifique a URL do webhook.');
+      setResult(null);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!result) return;
+
+    setIsPublishing(true);
+
+    try {
       // Get user's estabelecimento_id
       const { data: userData } = await supabase.auth.getUser();
       if (userData?.user) {
@@ -227,9 +248,14 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
             resource_id: resource.id,
             resource_name: resource.name,
             content_type: resource.returnType,
-            content_url: resource.returnType !== 'text' ? contentResult : null,
-            text_content: resource.returnType === 'text' ? contentResult : null,
-            input_data: payload.fields,
+            content_url: resource.returnType !== 'text' ? result.content : null,
+            text_content: resource.returnType === 'text' ? result.content : null,
+            input_data: resource.fields.map((field) => ({
+              name: field.name,
+              label: field.label,
+              type: field.type,
+              value: fieldValues[field.id],
+            })),
             channels: selectedChannels,
             status: 'completed',
             created_by: userData.user.id,
@@ -237,14 +263,21 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
         }
       }
 
-      toast.success('Conteúdo gerado com sucesso!');
+      setIsPublished(true);
+      toast.success('Conteúdo publicado com sucesso!');
     } catch (error) {
-      console.error('Error sending to n8n:', error);
-      toast.error('Erro ao gerar conteúdo. Verifique a URL do webhook.');
-      setResult(null);
+      console.error('Error publishing:', error);
+      toast.error('Erro ao publicar conteúdo');
     } finally {
-      setIsProcessing(false);
+      setIsPublishing(false);
     }
+  };
+
+  const handleRegenerate = () => {
+    setResult(null);
+    setIsPublished(false);
+    // Go back to review step
+    setCurrentStepIndex(wizardSteps.length - 2);
   };
 
   const handleClose = () => {
@@ -252,6 +285,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     setFieldValues({});
     setSelectedChannels([]);
     setResult(null);
+    setIsPublished(false);
     onClose();
   };
 
@@ -509,10 +543,19 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
             ) : result ? (
               <div className="w-full space-y-4">
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-600 mb-3">
-                    <Check className="h-6 w-6" />
+                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-3 ${
+                    isPublished ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+                  }`}>
+                    {isPublished ? <Check className="h-6 w-6" /> : <Image className="h-6 w-6" />}
                   </div>
-                  <h3 className="font-semibold">Conteúdo Gerado!</h3>
+                  <h3 className="font-semibold">
+                    {isPublished ? 'Conteúdo Publicado!' : 'Conteúdo Gerado - O que deseja fazer?'}
+                  </h3>
+                  {!isPublished && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Revise o resultado abaixo e escolha uma ação
+                    </p>
+                  )}
                 </div>
 
                 <Card>
@@ -548,21 +591,16 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
                       {selectedChannels.map((channel) => (
                         <Badge 
                           key={channel} 
-                          variant={resource.autoPublishEnabled ? "default" : "secondary"}
+                          variant={isPublished ? "default" : "secondary"}
                           className="flex items-center gap-1"
                         >
                           {CHANNEL_CONFIG[channel].label}
-                          {resource.autoPublishEnabled && (
-                            <span className="text-xs ml-1">(Auto)</span>
+                          {isPublished && (
+                            <Check className="h-3 w-3 ml-1" />
                           )}
                         </Badge>
                       ))}
                     </div>
-                    {resource.autoPublishEnabled && selectedChannels.length > 0 && (
-                      <p className="text-xs text-green-600">
-                        ✓ Publicação automática ativada para {selectedChannels.length} canal(is)
-                      </p>
-                    )}
                   </div>
                 )}
               </div>
@@ -571,7 +609,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
                 <p>Erro ao gerar conteúdo</p>
                 <Button
                   variant="outline"
-                  onClick={goToPrevStep}
+                  onClick={handleRegenerate}
                   className="mt-4"
                 >
                   Tentar Novamente
@@ -664,11 +702,48 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
         )}
 
         {isResultStep && (
-          <div className="px-6 py-4 border-t bg-muted/30 flex justify-end">
-            <Button onClick={handleClose} className="gap-2">
-              <Check className="h-4 w-4" />
-              Concluir
-            </Button>
+          <div className="px-6 py-4 border-t bg-muted/30 flex justify-between">
+            {!isPublished && result && !isProcessing ? (
+              <>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleClose}
+                    className="gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleRegenerate}
+                    className="gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Regenerar
+                  </Button>
+                </div>
+                <Button 
+                  onClick={handlePublish} 
+                  disabled={isPublishing}
+                  className="gap-2"
+                >
+                  {isPublishing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  Publicar
+                </Button>
+              </>
+            ) : (
+              <div className="w-full flex justify-end">
+                <Button onClick={handleClose} className="gap-2">
+                  <Check className="h-4 w-4" />
+                  Concluir
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </DialogContent>
