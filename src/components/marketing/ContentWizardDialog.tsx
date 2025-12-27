@@ -205,9 +205,9 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     }
   };
 
-  // Build wizard steps: form steps (if any) + channels + review + result
+  // Build wizard steps: form steps → review → result → channels (if has publish channels)
   const wizardSteps = useMemo(() => {
-    const steps: { id: string; type: 'form' | 'channels' | 'review' | 'result'; label: string; formStep?: FormStep }[] = [];
+    const steps: { id: string; type: 'form' | 'channels' | 'review' | 'result' | 'publish'; label: string; formStep?: FormStep }[] = [];
     
     // Add form steps
     if (resource.steps && resource.steps.length > 0) {
@@ -228,20 +228,54 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
       });
     }
     
-    // Add channels step
-    steps.push({ id: 'channels', type: 'channels', label: 'Canais' });
-    
-    // Add review step
+    // Add review step (shows JSON of 1st webhook)
     steps.push({ id: 'review', type: 'review', label: 'Revisar' });
     
-    // Add result step
+    // Add result step (content generation)
     steps.push({ id: 'result', type: 'result', label: 'Resultado' });
     
+    // Add channels + publish step (only if has publish channels configured)
+    const hasPublishChannels = (resource.publishChannels || []).length > 0;
+    if (hasPublishChannels) {
+      steps.push({ id: 'publish', type: 'publish', label: 'Publicar' });
+    }
+    
     return steps;
-  }, [resource.steps, resource.fields.length]);
+  }, [resource.steps, resource.fields.length, resource.publishChannels]);
 
   const currentStep = wizardSteps[currentStepIndex];
   const progress = ((currentStepIndex + 1) / wizardSteps.length) * 100;
+
+  // Generate payload for 1st webhook (generation)
+  const generatePayload = useMemo(() => ({
+    resourceId: resource.id,
+    resourceName: resource.name,
+    returnType: resource.returnType,
+    fields: resource.fields.map((field) => ({
+      name: field.name,
+      label: field.label,
+      type: field.type,
+      value: fieldValues[field.id],
+    })),
+    timestamp: new Date().toISOString(),
+  }), [resource, fieldValues]);
+
+  // Generate payload for 2nd webhook (publishing)
+  const publishPayload = useMemo(() => ({
+    resourceId: resource.id,
+    resourceName: resource.name,
+    returnType: resource.returnType,
+    content: result?.content || '',
+    contentType: result?.type || resource.returnType,
+    channels: selectedChannels,
+    fields: resource.fields.map((field) => ({
+      name: field.name,
+      label: field.label,
+      type: field.type,
+      value: fieldValues[field.id],
+    })),
+    timestamp: new Date().toISOString(),
+  }), [resource, result, selectedChannels, fieldValues]);
 
   const handleFieldChange = (fieldId: string, value: any) => {
     setFieldValues((prev) => ({ ...prev, [fieldId]: value }));
@@ -475,80 +509,6 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
           </div>
         );
 
-      case 'channels':
-        const availableChannels = resource.publishChannels || [];
-        const hasChannelsConfigured = availableChannels.length > 0;
-        
-        if (!hasChannelsConfigured) {
-          return (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-2">
-                Nenhum canal de publicação configurado para este recurso.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Configure os canais na edição do recurso de marketing.
-              </p>
-            </div>
-          );
-        }
-        
-        return (
-          <div className="space-y-6">
-            <div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Selecione em quais canais deseja publicar o resultado
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {availableChannels.map((channel) => {
-                  const config = CHANNEL_CONFIG[channel];
-                  const isSelected = selectedChannels.includes(channel);
-                  return (
-                    <button
-                      key={channel}
-                      type="button"
-                      onClick={() => toggleChannel(channel)}
-                      className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 relative ${
-                        isSelected
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <div className={`p-2 rounded-full ${config.color} text-white`}>
-                        <ChannelIcon channel={channel} />
-                      </div>
-                      <span className="text-sm font-medium">{config.label}</span>
-                      {isSelected && (
-                        <Check className="h-4 w-4 text-primary absolute top-2 right-2" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {selectedChannels.length > 0 && resource.autoPublishEnabled && (
-              <div className="border-t pt-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Check className="h-4 w-4 text-green-500" />
-                  <h4 className="font-medium text-sm text-green-600">Publicação Automática Ativada</h4>
-                </div>
-                <p className="text-xs text-muted-foreground mb-4">
-                  O conteúdo será publicado automaticamente nos canais selecionados após a geração.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedChannels.map((channel) => {
-                    const config = CHANNEL_CONFIG[channel];
-                    return (
-                      <Badge key={channel} className={`${config.color} text-white`}>
-                        {config.label}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        );
 
       case 'review':
         const getFieldValue = (fieldId: string) => {
@@ -568,7 +528,6 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
           const val = fieldValues[field.id];
           if (!val) return null;
           
-          // Check if it's a media type that should show preview
           const mediaTypes = ['media_image', 'media_audio', 'media_video', 'selection_image', 'selection_audio', 'selection_video', 'product_image'];
           if (!mediaTypes.includes(field.type)) return null;
           
@@ -649,39 +608,39 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
             </div>
 
             <div className="space-y-3">
-              <h4 className="font-medium text-sm">Canais Selecionados</h4>
-              <div className="flex flex-wrap gap-2">
-                {selectedChannels.length === 0 ? (
-                  <span className="text-sm text-muted-foreground">Nenhum canal selecionado</span>
-                ) : (
-                  selectedChannels.map((channel) => (
-                    <Badge 
-                      key={channel} 
-                      variant={resource.autoPublishEnabled ? "default" : "secondary"} 
-                      className="flex items-center gap-1"
-                    >
-                      <ChannelIcon channel={channel} />
-                      {CHANNEL_CONFIG[channel].label}
-                      {resource.autoPublishEnabled && (
-                        <span className="text-xs ml-1">(Auto)</span>
-                      )}
-                    </Badge>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-3">
               <h4 className="font-medium text-sm">Tipo de Retorno</h4>
               <Badge variant="outline" className="flex items-center gap-2 w-fit">
                 <ReturnTypeIcon type={resource.returnType} />
                 {RETURN_TYPE_LABELS[resource.returnType]}
               </Badge>
             </div>
+
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <Send className="h-4 w-4" />
+                JSON - Webhook de Geração (1º)
+              </h4>
+              <Card>
+                <CardContent className="p-3">
+                  <ScrollArea className="h-48">
+                    <pre className="text-xs bg-muted p-3 rounded-lg overflow-auto whitespace-pre-wrap break-all">
+                      {JSON.stringify(generatePayload, null, 2)}
+                    </pre>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+              {resource.n8nWebhookUrl && (
+                <p className="text-xs text-muted-foreground truncate">
+                  URL: {resource.n8nWebhookUrl}
+                </p>
+              )}
+            </div>
           </div>
         );
 
       case 'result':
+        const hasPublishStep = wizardSteps.some(s => s.type === 'publish');
+        
         return (
           <div className="flex flex-col items-center justify-center py-8">
             {isProcessing ? (
@@ -695,19 +654,15 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
             ) : result ? (
               <div className="w-full space-y-4">
                 <div className="text-center mb-6">
-                  <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-3 ${
-                    isPublished ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
-                  }`}>
-                    {isPublished ? <Check className="h-6 w-6" /> : <Image className="h-6 w-6" />}
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-3 bg-green-100 text-green-600">
+                    <Check className="h-6 w-6" />
                   </div>
-                  <h3 className="font-semibold">
-                    {isPublished ? 'Conteúdo Publicado!' : 'Conteúdo Gerado - O que deseja fazer?'}
-                  </h3>
-                  {!isPublished && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Revise o resultado abaixo e escolha uma ação
-                    </p>
-                  )}
+                  <h3 className="font-semibold">Conteúdo Gerado com Sucesso!</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {hasPublishStep 
+                      ? 'Revise o resultado e prossiga para selecionar os canais de publicação'
+                      : 'Revise o resultado abaixo'}
+                  </p>
                 </div>
 
                 <Card>
@@ -735,26 +690,6 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
                     )}
                   </CardContent>
                 </Card>
-
-                {selectedChannels.length > 0 && (
-                  <div className="text-center text-sm text-muted-foreground space-y-3">
-                    <p>Canais selecionados:</p>
-                    <div className="flex justify-center flex-wrap gap-2">
-                      {selectedChannels.map((channel) => (
-                        <Badge 
-                          key={channel} 
-                          variant={isPublished ? "default" : "secondary"}
-                          className="flex items-center gap-1"
-                        >
-                          {CHANNEL_CONFIG[channel].label}
-                          {isPublished && (
-                            <Check className="h-3 w-3 ml-1" />
-                          )}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="text-center text-muted-foreground">
@@ -771,6 +706,96 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
           </div>
         );
 
+      case 'publish':
+        const availableChannels = resource.publishChannels || [];
+        
+        return (
+          <div className="space-y-6">
+            {/* Content preview */}
+            {result && (
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Conteúdo Gerado</h4>
+                <Card>
+                  <CardContent className="p-3">
+                    {result.type === 'image' && result.content && (
+                      <img src={result.content} alt="Generated" className="w-full max-h-40 object-contain rounded-lg" />
+                    )}
+                    {result.type === 'audio' && result.content && (
+                      <audio controls src={result.content} className="w-full" />
+                    )}
+                    {result.type === 'video' && result.content && (
+                      <video controls src={result.content} className="w-full max-h-40 rounded-lg" />
+                    )}
+                    {result.type === 'text' && (
+                      <p className="whitespace-pre-wrap text-sm line-clamp-3">{result.content}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Channel selection */}
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm">Selecione os Canais de Publicação</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {availableChannels.map((channel) => {
+                  const config = CHANNEL_CONFIG[channel];
+                  const isSelected = selectedChannels.includes(channel);
+                  return (
+                    <button
+                      key={channel}
+                      type="button"
+                      onClick={() => toggleChannel(channel)}
+                      className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 relative ${
+                        isSelected
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className={`p-2 rounded-full ${config.color} text-white`}>
+                        <ChannelIcon channel={channel} />
+                      </div>
+                      <span className="text-sm font-medium">{config.label}</span>
+                      {isSelected && (
+                        <Check className="h-4 w-4 text-primary absolute top-2 right-2" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* JSON preview for 2nd webhook */}
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                JSON - Webhook de Publicação (2º)
+              </h4>
+              <Card>
+                <CardContent className="p-3">
+                  <ScrollArea className="h-40">
+                    <pre className="text-xs bg-muted p-3 rounded-lg overflow-auto whitespace-pre-wrap break-all">
+                      {JSON.stringify(publishPayload, null, 2)}
+                    </pre>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+              {resource.n8nPublishWebhookUrl && (
+                <p className="text-xs text-muted-foreground truncate">
+                  URL: {resource.n8nPublishWebhookUrl}
+                </p>
+              )}
+            </div>
+
+            {isPublished && (
+              <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                <Check className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                <p className="font-medium text-green-700">Conteúdo Publicado com Sucesso!</p>
+              </div>
+            )}
+          </div>
+        );
+
       default:
         return null;
     }
@@ -782,17 +807,21 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     switch (currentStep.type) {
       case 'form':
         return validateCurrentStep();
-      case 'channels':
-        return true; // Channels are optional
       case 'review':
+        return true;
+      case 'result':
+        return !!result;
+      case 'publish':
         return true;
       default:
         return false;
     }
   };
 
-  const isLastFormStep = currentStep?.type === 'review';
+  const isReviewStep = currentStep?.type === 'review';
   const isResultStep = currentStep?.type === 'result';
+  const isPublishStep = currentStep?.type === 'publish';
+  const hasPublishStep = wizardSteps.some(s => s.type === 'publish');
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -905,7 +934,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
           <div className="px-6 py-6">{renderStepContent()}</div>
         </ScrollArea>
 
-        {!isResultStep && (
+        {!isResultStep && !isPublishStep && (
           <div className="px-6 py-4 border-t bg-muted/30 flex justify-between">
             <Button
               variant="outline"
@@ -916,7 +945,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
               {currentStepIndex === 0 ? 'Cancelar' : 'Voltar'}
             </Button>
             
-            {isLastFormStep ? (
+            {isReviewStep ? (
               <Button
                 onClick={handleSubmit}
                 disabled={!canProceed() || isProcessing}
@@ -944,29 +973,49 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
 
         {isResultStep && (
           <div className="px-6 py-4 border-t bg-muted/30 flex justify-between">
-            {!isPublished && result && !isProcessing ? (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={handleRegenerate}
+                className="gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Regenerar
+              </Button>
+            </div>
+            {hasPublishStep ? (
+              <Button
+                onClick={goToNextStep}
+                disabled={!result}
+                className="gap-2"
+              >
+                Selecionar Canais
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button onClick={handleClose} className="gap-2">
+                <Check className="h-4 w-4" />
+                Concluir
+              </Button>
+            )}
+          </div>
+        )}
+
+        {isPublishStep && (
+          <div className="px-6 py-4 border-t bg-muted/30 flex justify-between">
+            {!isPublished ? (
               <>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleClose}
-                    className="gap-2"
-                  >
-                    <X className="h-4 w-4" />
-                    Cancelar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleRegenerate}
-                    className="gap-2"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    Regenerar
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  onClick={goToPrevStep}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Voltar
+                </Button>
                 <Button 
                   onClick={handlePublish} 
-                  disabled={isPublishing}
+                  disabled={isPublishing || selectedChannels.length === 0}
                   className="gap-2"
                 >
                   {isPublishing ? (
@@ -974,7 +1023,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
                   ) : (
                     <Upload className="h-4 w-4" />
                   )}
-                  Publicar
+                  Publicar ({selectedChannels.length} canal{selectedChannels.length !== 1 ? 'is' : ''})
                 </Button>
               </>
             ) : (
