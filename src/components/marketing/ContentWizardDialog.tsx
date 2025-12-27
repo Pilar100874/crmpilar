@@ -826,15 +826,15 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b pr-12">
+          <div className="flex items-center justify-between gap-4">
+            <DialogTitle className="flex items-center gap-2 min-w-0 flex-shrink">
               <ReturnTypeIcon type={resource.returnType} />
-              {resource.name}
+              <span className="truncate">{resource.name}</span>
             </DialogTitle>
             
             {/* Preset buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1">
