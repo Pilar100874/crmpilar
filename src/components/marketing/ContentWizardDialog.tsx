@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -18,6 +18,9 @@ import {
   RefreshCw,
   X,
   Upload,
+  Save,
+  FolderOpen,
+  Trash2,
 } from 'lucide-react';
 import {
   Dialog,
@@ -30,6 +33,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { DynamicFieldRenderer } from './DynamicFieldRenderer';
@@ -41,6 +53,14 @@ import {
   RETURN_TYPE_LABELS,
   FormStep,
 } from './types';
+
+interface Preset {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  field_values: Record<string, any>;
+  created_at: string;
+}
 
 interface ContentWizardDialogProps {
   open: boolean;
@@ -83,6 +103,107 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   const [isPublishing, setIsPublishing] = useState(false);
   const [result, setResult] = useState<{ type: ReturnType; content: string } | null>(null);
   const [isPublished, setIsPublished] = useState(false);
+  
+  // Preset states
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [showSavePreset, setShowSavePreset] = useState(false);
+  const [presetName, setPresetName] = useState('');
+  const [isSavingPreset, setIsSavingPreset] = useState(false);
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+
+  // Load estabelecimento_id and presets
+  useEffect(() => {
+    const storedId = localStorage.getItem('estabelecimentoId');
+    if (storedId) {
+      setEstabelecimentoId(storedId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (open && estabelecimentoId && resource.id) {
+      loadPresets();
+    }
+  }, [open, estabelecimentoId, resource.id]);
+
+  const loadPresets = async () => {
+    if (!estabelecimentoId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('marketing_resource_presets')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('resource_id', resource.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setPresets((data || []).map(p => ({
+        id: p.id,
+        nome: p.nome,
+        descricao: p.descricao,
+        field_values: p.field_values as Record<string, any>,
+        created_at: p.created_at,
+      })));
+    } catch (error) {
+      console.error('Error loading presets:', error);
+    }
+  };
+
+  const handleSavePreset = async () => {
+    if (!presetName.trim() || !estabelecimentoId) {
+      toast.error('Digite um nome para o preset');
+      return;
+    }
+
+    setIsSavingPreset(true);
+    try {
+      const { error } = await supabase
+        .from('marketing_resource_presets')
+        .insert({
+          estabelecimento_id: estabelecimentoId,
+          resource_id: resource.id,
+          nome: presetName.trim(),
+          field_values: fieldValues,
+        });
+
+      if (error) throw error;
+
+      toast.success('Preset salvo com sucesso!');
+      setPresetName('');
+      setShowSavePreset(false);
+      loadPresets();
+    } catch (error) {
+      console.error('Error saving preset:', error);
+      toast.error('Erro ao salvar preset');
+    } finally {
+      setIsSavingPreset(false);
+    }
+  };
+
+  const handleLoadPreset = (preset: Preset) => {
+    setFieldValues(preset.field_values);
+    toast.success(`Preset "${preset.nome}" carregado`);
+  };
+
+  const handleDeletePreset = async (presetId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    try {
+      const { error } = await supabase
+        .from('marketing_resource_presets')
+        .delete()
+        .eq('id', presetId);
+
+      if (error) throw error;
+
+      toast.success('Preset excluído');
+      loadPresets();
+    } catch (error) {
+      console.error('Error deleting preset:', error);
+      toast.error('Erro ao excluir preset');
+    }
+  };
 
   // Build wizard steps: form steps (if any) + channels + review + result
   const wizardSteps = useMemo(() => {
@@ -646,10 +767,99 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle className="flex items-center gap-2">
-            <ReturnTypeIcon type={resource.returnType} />
-            {resource.name}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <ReturnTypeIcon type={resource.returnType} />
+              {resource.name}
+            </DialogTitle>
+            
+            {/* Preset buttons */}
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1">
+                    <FolderOpen className="h-4 w-4" />
+                    Carregar
+                    {presets.length > 0 && (
+                      <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                        {presets.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  {presets.length === 0 ? (
+                    <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                      Nenhum preset salvo
+                    </div>
+                  ) : (
+                    presets.map((preset) => (
+                      <DropdownMenuItem
+                        key={preset.id}
+                        onClick={() => handleLoadPreset(preset)}
+                        className="flex items-center justify-between cursor-pointer"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{preset.nome}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(preset.created_at).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                          onClick={(e) => handleDeletePreset(preset.id, e)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {!showSavePreset ? (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1"
+                  onClick={() => setShowSavePreset(true)}
+                  disabled={Object.keys(fieldValues).length === 0}
+                >
+                  <Save className="h-4 w-4" />
+                  Salvar
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Nome do preset"
+                    value={presetName}
+                    onChange={(e) => setPresetName(e.target.value)}
+                    className="h-8 w-32"
+                    onKeyDown={(e) => e.key === 'Enter' && handleSavePreset()}
+                  />
+                  <Button 
+                    size="sm" 
+                    onClick={handleSavePreset}
+                    disabled={isSavingPreset || !presetName.trim()}
+                  >
+                    {isSavingPreset ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      setShowSavePreset(false);
+                      setPresetName('');
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="pt-3">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
               <span className="text-primary font-medium">
