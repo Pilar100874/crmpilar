@@ -6,6 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { MarketingResource, ReturnType, RETURN_TYPE_LABELS, CHANNEL_CONFIG } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -55,6 +65,8 @@ const ResourceCard: React.FC<{
   const [presetsOpen, setPresetsOpen] = useState(false);
   const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
   const [editingPresetName, setEditingPresetName] = useState('');
+  const [deletePresetId, setDeletePresetId] = useState<string | null>(null);
+  const [deleteResourceOpen, setDeleteResourceOpen] = useState(false);
 
   const loadPresets = async () => {
     if (!estabelecimentoId || !resource.id) return;
@@ -84,23 +96,39 @@ const ResourceCard: React.FC<{
     }
   };
 
-  const handleDeletePreset = async (presetId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const confirmDeletePreset = async () => {
+    if (!deletePresetId) return;
     
     try {
       const { error } = await supabase
         .from('marketing_resource_presets')
         .delete()
-        .eq('id', presetId);
+        .eq('id', deletePresetId);
 
       if (error) throw error;
 
       toast.success('Preset excluído');
-      setPresets(prev => prev.filter(p => p.id !== presetId));
+      setPresets(prev => prev.filter(p => p.id !== deletePresetId));
     } catch (error) {
       console.error('Error deleting preset:', error);
       toast.error('Erro ao excluir preset');
+    } finally {
+      setDeletePresetId(null);
     }
+  };
+
+  const handleDeletePresetClick = (presetId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeletePresetId(presetId);
+  };
+
+  const handleDeleteResourceClick = () => {
+    setDeleteResourceOpen(true);
+  };
+
+  const confirmDeleteResource = () => {
+    onDelete(resource.id);
+    setDeleteResourceOpen(false);
   };
 
   const handleRenamePreset = async (presetId: string) => {
@@ -215,7 +243,7 @@ const ResourceCard: React.FC<{
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onDelete(resource.id)}
+                    onClick={handleDeleteResourceClick}
                     className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -321,7 +349,7 @@ const ResourceCard: React.FC<{
                           variant="ghost"
                           size="sm"
                           className="h-6 w-6 p-0 opacity-0 group-hover/preset:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                          onClick={(e) => handleDeletePreset(preset.id, e)}
+                          onClick={(e) => handleDeletePresetClick(preset.id, e)}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -343,6 +371,42 @@ const ResourceCard: React.FC<{
           </CollapsibleContent>
         </Collapsible>
       </CardContent>
+
+      {/* Delete Resource Confirmation */}
+      <AlertDialog open={deleteResourceOpen} onOpenChange={setDeleteResourceOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Recurso</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o recurso "{resource.name}"? Esta ação não pode ser desfeita e todos os presets associados serão perdidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteResource} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Preset Confirmation */}
+      <AlertDialog open={!!deletePresetId} onOpenChange={(open) => !open && setDeletePresetId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Preset</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este preset? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeletePreset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
