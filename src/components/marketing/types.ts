@@ -10,7 +10,9 @@ export type FieldType =
   | 'text_selection'
   | 'number'
   | 'date'
-  | 'checkbox';
+  | 'checkbox'
+  | 'product_name'
+  | 'product_image';
 
 export type ReturnType = 'image' | 'audio' | 'video' | 'text';
 
@@ -71,10 +73,30 @@ export interface ContentCreationSession {
   createdAt: string;
 }
 
+// Field type categories for better UI organization
+export const FIELD_TYPE_CATEGORIES = {
+  basic: {
+    label: 'Básicos',
+    types: ['text', 'textarea', 'number', 'date', 'checkbox'] as FieldType[],
+  },
+  media: {
+    label: 'Mídia',
+    types: ['image', 'audio'] as FieldType[],
+  },
+  selection: {
+    label: 'Seleção',
+    types: ['dropdown', 'image_selection', 'text_selection'] as FieldType[],
+  },
+  product: {
+    label: 'Produto',
+    types: ['product_name', 'product_image'] as FieldType[],
+  },
+};
+
 export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   text: 'Texto Curto',
   textarea: 'Texto Longo',
-  image: 'Upload de Imagem',
+  image: 'Imagem (Upload/URL)',
   audio: 'Upload de Áudio',
   dropdown: 'Lista Suspensa',
   image_selection: 'Seleção de Imagens',
@@ -82,6 +104,23 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   number: 'Número',
   date: 'Data',
   checkbox: 'Checkbox',
+  product_name: 'Nome do Produto',
+  product_image: 'Imagem do Produto',
+};
+
+export const FIELD_TYPE_DESCRIPTIONS: Record<FieldType, string> = {
+  text: 'Campo de texto simples',
+  textarea: 'Área de texto maior',
+  image: 'Upload de arquivo ou URL',
+  audio: 'Upload de arquivo de áudio',
+  dropdown: 'Lista de opções',
+  image_selection: 'Escolha entre imagens',
+  text_selection: 'Escolha entre textos',
+  number: 'Valor numérico',
+  date: 'Seletor de data',
+  checkbox: 'Opção sim/não',
+  product_name: 'Selecione um produto e use seu nome',
+  product_image: 'Selecione um produto e use uma de suas imagens',
 };
 
 export const RETURN_TYPE_LABELS: Record<ReturnType, string> = {

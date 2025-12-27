@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,13 +6,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ResourceField, FieldOption } from './types';
-import { Upload, Image as ImageIcon, Music, Check } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ResourceField } from './types';
+import { Upload, Image as ImageIcon, Music, Check, Link, Search, Package, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DynamicFieldRendererProps {
   field: ResourceField;
   value: any;
   onChange: (value: any) => void;
+}
+
+interface Produto {
+  id: string;
+  nome: string;
+  foto_url?: string | null;
 }
 
 export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
@@ -21,15 +30,69 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
   onChange,
 }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [imageInputMode, setImageInputMode] = useState<'upload' | 'url'>('upload');
+  const [imageUrl, setImageUrl] = useState('');
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [searchProduto, setSearchProduto] = useState('');
+  const [loadingProdutos, setLoadingProdutos] = useState(false);
+  const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
+
+  useEffect(() => {
+    if (field.type === 'product_name' || field.type === 'product_image') {
+      loadProdutos();
+    }
+  }, [field.type]);
+
+  const loadProdutos = async () => {
+    setLoadingProdutos(true);
+    try {
+      const { data } = await supabase
+        .from('produtos')
+        .select('id, nome, foto_url')
+        .limit(50);
+      
+      if (data) {
+        setProdutos(data as Produto[]);
+      }
+    } catch (error) {
+      console.error('Error loading produtos:', error);
+    } finally {
+      setLoadingProdutos(false);
+    }
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-      onChange(file);
+      onChange({ type: 'file', file, previewUrl: url });
     }
   };
+
+  const handleUrlChange = (url: string) => {
+    setImageUrl(url);
+    if (url) {
+      setPreviewUrl(url);
+      onChange({ type: 'url', url });
+    }
+  };
+
+  const handleSelectProduto = (produto: Produto) => {
+    setSelectedProduto(produto);
+    if (field.type === 'product_name') {
+      onChange({ productId: produto.id, productName: produto.nome, value: produto.nome });
+    }
+  };
+
+  const handleSelectProdutoImage = (produto: Produto, imageUrl: string) => {
+    setSelectedProduto(produto);
+    onChange({ productId: produto.id, productName: produto.nome, imageUrl, value: imageUrl });
+  };
+
+  const filteredProdutos = produtos.filter(p => 
+    p.nome.toLowerCase().includes(searchProduto.toLowerCase())
+  );
 
   const renderField = () => {
     switch (field.type) {
@@ -102,29 +165,58 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
 
       case 'image':
         return (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="relative"
-                asChild
-              >
-                <label>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Imagem
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    onChange={handleFileUpload}
-                  />
-                </label>
-              </Button>
-              {value && <span className="text-sm text-muted-foreground">Arquivo selecionado</span>}
-            </div>
+          <div className="space-y-3">
+            <Tabs value={imageInputMode} onValueChange={(v) => setImageInputMode(v as 'upload' | 'url')}>
+              <TabsList className="grid grid-cols-2 w-full max-w-xs">
+                <TabsTrigger value="upload" className="gap-2">
+                  <Upload className="h-3.5 w-3.5" />
+                  Upload
+                </TabsTrigger>
+                <TabsTrigger value="url" className="gap-2">
+                  <Link className="h-3.5 w-3.5" />
+                  URL
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="upload" className="mt-3">
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="relative"
+                    asChild
+                  >
+                    <label className="cursor-pointer">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Escolher Arquivo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={handleFileUpload}
+                      />
+                    </label>
+                  </Button>
+                  {value?.type === 'file' && (
+                    <span className="text-sm text-green-600 flex items-center gap-1">
+                      <Check className="h-4 w-4" />
+                      Arquivo selecionado
+                    </span>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="url" className="mt-3">
+                <Input
+                  value={imageUrl}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  placeholder="https://exemplo.com/imagem.jpg"
+                />
+              </TabsContent>
+            </Tabs>
+
             {previewUrl && (
-              <div className="relative w-32 h-32 rounded-lg overflow-hidden border">
+              <div className="relative w-40 h-40 rounded-lg overflow-hidden border bg-muted">
                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
               </div>
             )}
@@ -225,6 +317,148 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
                 )}
               </button>
             ))}
+          </div>
+        );
+
+      case 'product_name':
+        return (
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchProduto}
+                onChange={(e) => setSearchProduto(e.target.value)}
+                placeholder="Buscar produto..."
+                className="pl-9"
+              />
+            </div>
+
+            {loadingProdutos ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <ScrollArea className="h-48 border rounded-lg">
+                <div className="p-2 space-y-1">
+                  {filteredProdutos.map((produto) => (
+                    <button
+                      key={produto.id}
+                      type="button"
+                      onClick={() => handleSelectProduto(produto)}
+                      className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-all ${
+                        value?.productId === produto.id
+                          ? 'bg-primary/10 border border-primary'
+                          : 'hover:bg-muted'
+                      }`}
+                    >
+                      <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm truncate">{produto.nome}</span>
+                      {value?.productId === produto.id && (
+                        <Check className="h-4 w-4 text-primary ml-auto shrink-0" />
+                      )}
+                    </button>
+                  ))}
+                  {filteredProdutos.length === 0 && (
+                    <p className="text-center text-sm text-muted-foreground py-4">
+                      Nenhum produto encontrado
+                    </p>
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+
+            {selectedProduto && (
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-3">
+                  <p className="text-xs text-muted-foreground">Produto selecionado:</p>
+                  <p className="font-medium">{selectedProduto.nome}</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        );
+
+      case 'product_image':
+        return (
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchProduto}
+                onChange={(e) => setSearchProduto(e.target.value)}
+                placeholder="Buscar produto..."
+                className="pl-9"
+              />
+            </div>
+
+            {loadingProdutos ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <ScrollArea className="h-64 border rounded-lg">
+                <div className="p-2 space-y-3">
+                  {filteredProdutos.map((produto) => (
+                    <div key={produto.id} className="space-y-2">
+                      <div className="flex items-center gap-2 px-2">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{produto.nome}</span>
+                      </div>
+                      
+                      {produto.foto_url ? (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 px-2">
+                          <button
+                            type="button"
+                            onClick={() => handleSelectProdutoImage(produto, produto.foto_url!)}
+                            className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                              value?.imageUrl === produto.foto_url
+                                ? 'border-primary ring-2 ring-primary/20'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <img
+                              src={produto.foto_url}
+                              alt={produto.nome}
+                              className="w-full h-full object-cover"
+                            />
+                            {value?.imageUrl === produto.foto_url && (
+                              <div className="absolute top-1 right-1 bg-primary rounded-full p-0.5">
+                                <Check className="h-3 w-3 text-primary-foreground" />
+                              </div>
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground px-2">
+                          Sem imagem disponível
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                  {filteredProdutos.length === 0 && (
+                    <p className="text-center text-sm text-muted-foreground py-4">
+                      Nenhum produto encontrado
+                    </p>
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+
+            {value?.imageUrl && (
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-3 flex items-center gap-3">
+                  <img
+                    src={value.imageUrl}
+                    alt="Selecionada"
+                    className="w-16 h-16 rounded-lg object-cover"
+                  />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Imagem selecionada de:</p>
+                    <p className="font-medium">{value.productName}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         );
 
