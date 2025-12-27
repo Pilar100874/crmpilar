@@ -5,7 +5,13 @@ export type FieldType =
   | 'textarea' 
   | 'image' 
   | 'audio' 
-  | 'dropdown';
+  | 'dropdown' 
+  | 'text_selection'
+  | 'number'
+  | 'date'
+  | 'checkbox'
+  | 'product_name'
+  | 'product_image';
 
 export type ReturnType = 'image' | 'audio' | 'video' | 'text';
 
@@ -80,8 +86,8 @@ export interface ContentCreationSession {
 // Field type categories for better UI organization
 export const FIELD_TYPE_CATEGORIES = {
   basic: {
-    label: 'Texto',
-    types: ['text', 'textarea'] as FieldType[],
+    label: 'Básicos',
+    types: ['text', 'textarea', 'number', 'date', 'checkbox'] as FieldType[],
   },
   media: {
     label: 'Mídia',
@@ -89,7 +95,11 @@ export const FIELD_TYPE_CATEGORIES = {
   },
   selection: {
     label: 'Seleção',
-    types: ['dropdown'] as FieldType[],
+    types: ['dropdown', 'text_selection'] as FieldType[],
+  },
+  product: {
+    label: 'Produto',
+    types: ['product_name', 'product_image'] as FieldType[],
   },
 };
 
@@ -97,16 +107,28 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   text: 'Texto Curto',
   textarea: 'Texto Longo',
   image: 'Imagem',
-  audio: 'Áudio',
+  audio: 'Upload de Áudio',
   dropdown: 'Lista Suspensa',
+  text_selection: 'Seleção de Textos',
+  number: 'Número',
+  date: 'Data',
+  checkbox: 'Checkbox',
+  product_name: 'Nome do Produto',
+  product_image: 'Imagem do Produto',
 };
 
 export const FIELD_TYPE_DESCRIPTIONS: Record<FieldType, string> = {
   text: 'Campo de texto simples',
   textarea: 'Área de texto maior',
-  image: 'Upload ou seleção de imagens',
+  image: 'Upload, URL ou seleção de imagens',
   audio: 'Upload de arquivo de áudio',
   dropdown: 'Lista de opções',
+  text_selection: 'Escolha entre textos pré-definidos',
+  number: 'Valor numérico',
+  date: 'Seletor de data',
+  checkbox: 'Opção sim/não',
+  product_name: 'Selecione um produto e use seu nome',
+  product_image: 'Selecione um produto e use uma de suas imagens',
 };
 
 export const RETURN_TYPE_LABELS: Record<ReturnType, string> = {

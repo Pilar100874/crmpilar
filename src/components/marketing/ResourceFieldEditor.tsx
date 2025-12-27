@@ -156,12 +156,22 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
                       </Button>
                     </div>
                     
-                    <Input
-                      value={option.value}
-                      onChange={(e) => handleUpdateOption(index, { value: e.target.value })}
-                      placeholder="Valor"
-                      className="h-8 text-sm"
-                    />
+                    {field.type === 'text_selection' ? (
+                      <Textarea
+                        value={option.value}
+                        onChange={(e) => handleUpdateOption(index, { value: e.target.value })}
+                        placeholder="Digite o texto completo aqui..."
+                        rows={3}
+                        className="text-sm"
+                      />
+                    ) : (
+                      <Input
+                        value={option.value}
+                        onChange={(e) => handleUpdateOption(index, { value: e.target.value })}
+                        placeholder="Valor"
+                        className="h-8 text-sm"
+                      />
+                    )}
                     
                     {field.type === 'image' && (
                       <div className="flex items-center gap-2">

@@ -41,7 +41,9 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
   const [selectedProduto, setSelectedProduto] = useState<Produto | null>(null);
 
   useEffect(() => {
-    // Removed product loading as product types were removed
+    if (field.type === 'product_name' || field.type === 'product_image') {
+      loadProdutos();
+    }
   }, [field.type]);
 
   const loadProdutos = async () => {
@@ -98,7 +100,9 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
 
   const handleSelectProduto = (produto: Produto) => {
     setSelectedProduto(produto);
-    onChange({ productId: produto.id, productName: produto.nome, value: produto.nome });
+    if (field.type === 'product_name') {
+      onChange({ productId: produto.id, productName: produto.nome, value: produto.nome });
+    }
   };
 
   const handleSelectProdutoImage = (produto: Produto, imageUrl: string) => {
@@ -131,21 +135,39 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
           />
         );
 
-      case 'dropdown':
+      case 'number':
         return (
-          <Select value={value || ''} onValueChange={onChange}>
-            <SelectTrigger>
-              <SelectValue placeholder={field.placeholder || 'Selecione...'} />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options?.map((option) => (
-                <SelectItem key={option.id} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            type="number"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={field.placeholder}
+          />
         );
+
+      case 'date':
+        return (
+          <Input
+            type="date"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+          />
+        );
+
+      case 'checkbox':
+        return (
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={value || false}
+              onCheckedChange={onChange}
+            />
+            <span className="text-sm text-muted-foreground">
+              {field.placeholder || 'Ativar'}
+            </span>
+          </div>
+        );
+
+      case 'dropdown':
         return (
           <Select value={value || ''} onValueChange={onChange}>
             <SelectTrigger>
@@ -315,6 +337,190 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
             </div>
             {previewUrl && (
               <audio controls src={previewUrl} className="w-full" />
+            )}
+          </div>
+        );
+
+      case 'text_selection':
+        return (
+          <div className="space-y-3">
+            <ScrollArea className="max-h-64 border rounded-lg">
+              <div className="p-2 space-y-2">
+                {field.options?.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => onChange(option.value)}
+                    className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
+                      value === option.value
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <span className="font-medium text-sm block mb-1">{option.label}</span>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {option.value}
+                        </p>
+                      </div>
+                      {value === option.value && (
+                        <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+            {value && (
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-3">
+                  <p className="text-xs text-muted-foreground mb-1">Texto selecionado:</p>
+                  <p className="text-sm whitespace-pre-wrap">{value}</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        );
+
+      case 'product_name':
+        return (
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchProduto}
+                onChange={(e) => setSearchProduto(e.target.value)}
+                placeholder="Buscar produto..."
+                className="pl-9"
+              />
+            </div>
+
+            {loadingProdutos ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <ScrollArea className="h-48 border rounded-lg">
+                <div className="p-2 space-y-1">
+                  {filteredProdutos.map((produto) => (
+                    <button
+                      key={produto.id}
+                      type="button"
+                      onClick={() => handleSelectProduto(produto)}
+                      className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-all ${
+                        value?.productId === produto.id
+                          ? 'bg-primary/10 border border-primary'
+                          : 'hover:bg-muted'
+                      }`}
+                    >
+                      <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm truncate">{produto.nome}</span>
+                      {value?.productId === produto.id && (
+                        <Check className="h-4 w-4 text-primary ml-auto shrink-0" />
+                      )}
+                    </button>
+                  ))}
+                  {filteredProdutos.length === 0 && (
+                    <p className="text-center text-sm text-muted-foreground py-4">
+                      Nenhum produto encontrado
+                    </p>
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+
+            {selectedProduto && (
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-3">
+                  <p className="text-xs text-muted-foreground">Produto selecionado:</p>
+                  <p className="font-medium">{selectedProduto.nome}</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        );
+
+      case 'product_image':
+        return (
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchProduto}
+                onChange={(e) => setSearchProduto(e.target.value)}
+                placeholder="Buscar produto..."
+                className="pl-9"
+              />
+            </div>
+
+            {loadingProdutos ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <ScrollArea className="h-64 border rounded-lg">
+                <div className="p-2 space-y-3">
+                  {filteredProdutos.map((produto) => (
+                    <div key={produto.id} className="space-y-2">
+                      <div className="flex items-center gap-2 px-2">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{produto.nome}</span>
+                      </div>
+                      
+                      {produto.foto_url ? (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 px-2">
+                          <button
+                            type="button"
+                            onClick={() => handleSelectProdutoImage(produto, produto.foto_url!)}
+                            className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                              value?.imageUrl === produto.foto_url
+                                ? 'border-primary ring-2 ring-primary/20'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <img
+                              src={produto.foto_url}
+                              alt={produto.nome}
+                              className="w-full h-full object-cover"
+                            />
+                            {value?.imageUrl === produto.foto_url && (
+                              <div className="absolute top-1 right-1 bg-primary rounded-full p-0.5">
+                                <Check className="h-3 w-3 text-primary-foreground" />
+                              </div>
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground px-2">
+                          Sem imagem disponível
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                  {filteredProdutos.length === 0 && (
+                    <p className="text-center text-sm text-muted-foreground py-4">
+                      Nenhum produto encontrado
+                    </p>
+                  )}
+                </div>
+              </ScrollArea>
+            )}
+
+            {value?.imageUrl && (
+              <Card className="bg-primary/5 border-primary/20">
+                <CardContent className="p-3 flex items-center gap-3">
+                  <img
+                    src={value.imageUrl}
+                    alt="Selecionada"
+                    className="w-16 h-16 rounded-lg object-cover"
+                  />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Imagem selecionada de:</p>
+                    <p className="font-medium">{value.productName}</p>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
         );

@@ -332,7 +332,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
                       Clique em um tipo de campo para adicioná-lo ao formulário:
                     </p>
                     <Tabs value={activeFieldTab} onValueChange={setActiveFieldTab}>
-                      <TabsList className="grid grid-cols-3 mb-4">
+                      <TabsList className="grid grid-cols-4 mb-4">
                         {Object.entries(FIELD_TYPE_CATEGORIES).map(([key, category]) => (
                           <TabsTrigger key={key} value={key} className="gap-2 text-xs sm:text-sm">
                             <CategoryIcon category={key} />

@@ -74,12 +74,24 @@ export const WebhookTestDialog: React.FC<WebhookTestDialogProps> = ({
         return `Texto de exemplo para ${field.label}`;
       case 'textarea':
         return `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`;
+      case 'number':
+        return 42;
+      case 'date':
+        return new Date().toISOString().split('T')[0];
+      case 'checkbox':
+        return true;
       case 'image':
         return 'https://via.placeholder.com/300x200?text=Imagem+Teste';
       case 'audio':
         return 'https://example.com/audio-sample.mp3';
       case 'dropdown':
         return field.options?.[0]?.value || 'option1';
+      case 'text_selection':
+        return field.options?.[0]?.value || 'Opção 1';
+      case 'product_name':
+        return 'Produto Exemplo XYZ';
+      case 'product_image':
+        return 'https://via.placeholder.com/300x300?text=Produto';
       default:
         return 'valor_teste';
     }
