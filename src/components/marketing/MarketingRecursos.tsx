@@ -43,6 +43,8 @@ const mapDBToResource = (db: DBMarketingResource): MarketingResource => ({
 interface WizardState {
   resource: MarketingResource;
   initialFieldValues?: Record<string, any>;
+  presetId?: string;
+  presetName?: string;
 }
 
 const MarketingRecursos: React.FC = () => {
@@ -183,7 +185,9 @@ const MarketingRecursos: React.FC = () => {
         onDelete={handleDeleteResource}
         onUseResource={(resource, preset) => setWizardState({ 
           resource, 
-          initialFieldValues: preset?.field_values 
+          initialFieldValues: preset?.field_values,
+          presetId: preset?.id,
+          presetName: preset?.nome
         })}
       />
 
@@ -200,6 +204,8 @@ const MarketingRecursos: React.FC = () => {
           onClose={() => setWizardState(null)}
           resource={wizardState.resource}
           initialFieldValues={wizardState.initialFieldValues}
+          presetId={wizardState.presetId}
+          presetName={wizardState.presetName}
         />
       )}
     </div>

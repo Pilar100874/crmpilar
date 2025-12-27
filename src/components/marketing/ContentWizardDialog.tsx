@@ -51,6 +51,8 @@ interface ContentWizardDialogProps {
   onClose: () => void;
   resource: MarketingResource;
   initialFieldValues?: Record<string, any>;
+  presetId?: string;
+  presetName?: string;
 }
 
 const ChannelIcon: React.FC<{ channel: PublishChannel }> = ({ channel }) => {
@@ -81,6 +83,8 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   onClose,
   resource,
   initialFieldValues,
+  presetId: initialPresetId,
+  presetName: initialPresetName,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [fieldValues, setFieldValues] = useState<Record<string, any>>(initialFieldValues || {});
@@ -91,8 +95,6 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   const [isPublished, setIsPublished] = useState(false);
   
   // Preset states
-  const [showSavePreset, setShowSavePreset] = useState(false);
-  const [presetName, setPresetName] = useState('');
   const [isSavingPreset, setIsSavingPreset] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
 
@@ -112,27 +114,26 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   }, [open, initialFieldValues]);
 
   const handleSavePreset = async () => {
-    if (!presetName.trim() || !estabelecimentoId) {
-      toast.error('Digite um nome para o preset');
+    if (!estabelecimentoId) {
+      toast.error('Estabelecimento não encontrado');
       return;
     }
 
     setIsSavingPreset(true);
     try {
-      const { error } = await supabase
-        .from('marketing_resource_presets')
-        .insert({
-          estabelecimento_id: estabelecimentoId,
-          resource_id: resource.id,
-          nome: presetName.trim(),
-          field_values: fieldValues,
-        });
+      if (initialPresetId) {
+        // Update existing preset
+        const { error } = await supabase
+          .from('marketing_resource_presets')
+          .update({ field_values: fieldValues })
+          .eq('id', initialPresetId);
 
-      if (error) throw error;
-
-      toast.success('Preset salvo com sucesso!');
-      setPresetName('');
-      setShowSavePreset(false);
+        if (error) throw error;
+        toast.success('Preset atualizado com sucesso!');
+      } else {
+        // This shouldn't happen when there's no preset, but handle gracefully
+        toast.error('Nenhum preset para atualizar');
+      }
     } catch (error) {
       console.error('Error saving preset:', error);
       toast.error('Erro ao salvar preset');
@@ -769,48 +770,28 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
               <span className="truncate">{resource.name}</span>
             </DialogTitle>
             
-            {/* Save preset button */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {!showSavePreset ? (
+            {/* Save preset button - only show when using a preset */}
+            {initialPresetId && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-xs text-muted-foreground">
+                  Preset: {initialPresetName}
+                </span>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   className="gap-1"
-                  onClick={() => setShowSavePreset(true)}
-                  disabled={Object.keys(fieldValues).length === 0}
+                  onClick={handleSavePreset}
+                  disabled={isSavingPreset || Object.keys(fieldValues).length === 0}
                 >
-                  <Save className="h-4 w-4" />
-                  Salvar Preset
+                  {isSavingPreset ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  Salvar
                 </Button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Input
-                    placeholder="Nome do preset"
-                    value={presetName}
-                    onChange={(e) => setPresetName(e.target.value)}
-                    className="h-8 w-32"
-                    onKeyDown={(e) => e.key === 'Enter' && handleSavePreset()}
-                  />
-                  <Button 
-                    size="sm" 
-                    onClick={handleSavePreset}
-                    disabled={isSavingPreset || !presetName.trim()}
-                  >
-                    {isSavingPreset ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => {
-                      setShowSavePreset(false);
-                      setPresetName('');
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
           <div className="pt-3">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
