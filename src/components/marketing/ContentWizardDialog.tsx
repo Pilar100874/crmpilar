@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,6 +14,7 @@ import {
   Facebook,
   Linkedin,
   Mail,
+  Info,
 } from 'lucide-react';
 import {
   Dialog,
@@ -35,6 +36,7 @@ import {
   CHANNEL_CONFIG,
   ReturnType,
   RETURN_TYPE_LABELS,
+  FormStep,
 } from './types';
 
 interface ContentWizardDialogProps {
@@ -42,15 +44,6 @@ interface ContentWizardDialogProps {
   onClose: () => void;
   resource: MarketingResource;
 }
-
-type WizardStep = 'fields' | 'channels' | 'review' | 'result';
-
-const STEPS: { id: WizardStep; label: string }[] = [
-  { id: 'fields', label: 'Preencher Campos' },
-  { id: 'channels', label: 'Canais' },
-  { id: 'review', label: 'Revisar' },
-  { id: 'result', label: 'Resultado' },
-];
 
 const ChannelIcon: React.FC<{ channel: PublishChannel }> = ({ channel }) => {
   const icons: Record<PublishChannel, React.ReactNode> = {
@@ -80,14 +73,49 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   onClose,
   resource,
 }) => {
-  const [currentStep, setCurrentStep] = useState<WizardStep>('fields');
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
   const [selectedChannels, setSelectedChannels] = useState<PublishChannel[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<{ type: ReturnType; content: string } | null>(null);
 
-  const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep);
-  const progress = ((currentStepIndex + 1) / STEPS.length) * 100;
+  // Build wizard steps: form steps (if any) + channels + review + result
+  const wizardSteps = useMemo(() => {
+    const steps: { id: string; type: 'form' | 'channels' | 'review' | 'result'; label: string; formStep?: FormStep }[] = [];
+    
+    // Add form steps
+    if (resource.steps && resource.steps.length > 0) {
+      resource.steps.forEach((formStep) => {
+        steps.push({
+          id: `form-${formStep.id}`,
+          type: 'form',
+          label: formStep.title,
+          formStep,
+        });
+      });
+    } else if (resource.fields.length > 0) {
+      // If no steps defined but has fields, show all fields in one step
+      steps.push({
+        id: 'form-all',
+        type: 'form',
+        label: 'Preencher Campos',
+      });
+    }
+    
+    // Add channels step
+    steps.push({ id: 'channels', type: 'channels', label: 'Canais' });
+    
+    // Add review step
+    steps.push({ id: 'review', type: 'review', label: 'Revisar' });
+    
+    // Add result step
+    steps.push({ id: 'result', type: 'result', label: 'Resultado' });
+    
+    return steps;
+  }, [resource.steps, resource.fields.length]);
+
+  const currentStep = wizardSteps[currentStepIndex];
+  const progress = ((currentStepIndex + 1) / wizardSteps.length) * 100;
 
   const handleFieldChange = (fieldId: string, value: any) => {
     setFieldValues((prev) => ({ ...prev, [fieldId]: value }));
@@ -101,24 +129,37 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     );
   };
 
-  const validateFields = () => {
-    const missingRequired = resource.fields.filter(
+  const getFieldsForCurrentStep = () => {
+    if (currentStep?.type !== 'form') return [];
+    
+    if (currentStep.formStep) {
+      // Return fields belonging to this step
+      return resource.fields.filter((f) => f.stepId === currentStep.formStep?.id);
+    }
+    
+    // Return all fields (no steps defined)
+    return resource.fields;
+  };
+
+  const validateCurrentStep = () => {
+    if (currentStep?.type !== 'form') return true;
+    
+    const stepFields = getFieldsForCurrentStep();
+    const missingRequired = stepFields.filter(
       (field) => field.required && !fieldValues[field.id]
     );
     return missingRequired.length === 0;
   };
 
   const goToNextStep = () => {
-    const stepIndex = STEPS.findIndex((s) => s.id === currentStep);
-    if (stepIndex < STEPS.length - 1) {
-      setCurrentStep(STEPS[stepIndex + 1].id);
+    if (currentStepIndex < wizardSteps.length - 1) {
+      setCurrentStepIndex(currentStepIndex + 1);
     }
   };
 
   const goToPrevStep = () => {
-    const stepIndex = STEPS.findIndex((s) => s.id === currentStep);
-    if (stepIndex > 0) {
-      setCurrentStep(STEPS[stepIndex - 1].id);
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex(currentStepIndex - 1);
     }
   };
 
@@ -129,7 +170,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     }
 
     setIsProcessing(true);
-    setCurrentStep('result');
+    goToNextStep(); // Go to result step
 
     try {
       // Prepare payload
@@ -177,7 +218,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
           .from('usuarios')
           .select('estabelecimento_id')
           .eq('auth_user_id', userData.user.id)
-          .single();
+          .maybeSingle();
 
         if (usuarioData?.estabelecimento_id) {
           // Save to marketing_content table
@@ -207,7 +248,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   };
 
   const handleClose = () => {
-    setCurrentStep('fields');
+    setCurrentStepIndex(0);
     setFieldValues({});
     setSelectedChannels([]);
     setResult(null);
@@ -215,21 +256,36 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   };
 
   const renderStepContent = () => {
-    switch (currentStep) {
-      case 'fields':
+    if (!currentStep) return null;
+
+    switch (currentStep.type) {
+      case 'form':
+        const stepFields = getFieldsForCurrentStep();
+        const formStep = currentStep.formStep;
+        
         return (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              Preencha os campos abaixo para gerar seu conteúdo
-            </p>
-            {resource.fields.map((field) => (
-              <DynamicFieldRenderer
-                key={field.id}
-                field={field}
-                value={fieldValues[field.id]}
-                onChange={(value) => handleFieldChange(field.id, value)}
-              />
-            ))}
+            {formStep?.description && (
+              <div className="flex items-start gap-3 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <p className="text-sm text-foreground">{formStep.description}</p>
+              </div>
+            )}
+            
+            {stepFields.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Nenhum campo configurado nesta etapa</p>
+              </div>
+            ) : (
+              stepFields.map((field) => (
+                <DynamicFieldRenderer
+                  key={field.id}
+                  field={field}
+                  value={fieldValues[field.id]}
+                  onChange={(value) => handleFieldChange(field.id, value)}
+                />
+              ))
+            )}
           </div>
         );
 
@@ -440,7 +496,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
                 <p>Erro ao gerar conteúdo</p>
                 <Button
                   variant="outline"
-                  onClick={() => setCurrentStep('review')}
+                  onClick={goToPrevStep}
                   className="mt-4"
                 >
                   Tentar Novamente
@@ -456,9 +512,11 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   };
 
   const canProceed = () => {
-    switch (currentStep) {
-      case 'fields':
-        return validateFields();
+    if (!currentStep) return false;
+    
+    switch (currentStep.type) {
+      case 'form':
+        return validateCurrentStep();
       case 'channels':
         return true; // Channels are optional
       case 'review':
@@ -467,6 +525,9 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
         return false;
     }
   };
+
+  const isLastFormStep = currentStep?.type === 'review';
+  const isResultStep = currentStep?.type === 'result';
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -478,55 +539,63 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
           </DialogTitle>
           <div className="pt-3">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-              {STEPS.map((step, index) => (
-                <span
-                  key={step.id}
-                  className={currentStepIndex >= index ? 'text-primary font-medium' : ''}
-                >
-                  {step.label}
-                </span>
-              ))}
+              <span className="text-primary font-medium">
+                {currentStep?.label} ({currentStepIndex + 1}/{wizardSteps.length})
+              </span>
             </div>
             <Progress value={progress} className="h-1" />
           </div>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[50vh] px-6 py-4">
-          {renderStepContent()}
+        <ScrollArea className="max-h-[55vh]">
+          <div className="px-6 py-6">{renderStepContent()}</div>
         </ScrollArea>
 
-        <div className="px-6 py-4 border-t flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={currentStep === 'fields' ? handleClose : goToPrevStep}
-            disabled={isProcessing}
-          >
-            {currentStep === 'fields' ? (
-              'Cancelar'
+        {!isResultStep && (
+          <div className="px-6 py-4 border-t bg-muted/30 flex justify-between">
+            <Button
+              variant="outline"
+              onClick={currentStepIndex === 0 ? handleClose : goToPrevStep}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {currentStepIndex === 0 ? 'Cancelar' : 'Voltar'}
+            </Button>
+            
+            {isLastFormStep ? (
+              <Button
+                onClick={handleSubmit}
+                disabled={!canProceed() || isProcessing}
+                className="gap-2"
+              >
+                {isProcessing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                Gerar Conteúdo
+              </Button>
             ) : (
-              <>
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Voltar
-              </>
+              <Button
+                onClick={goToNextStep}
+                disabled={!canProceed()}
+                className="gap-2"
+              >
+                Próximo
+                <ArrowRight className="h-4 w-4" />
+              </Button>
             )}
-          </Button>
+          </div>
+        )}
 
-          {currentStep === 'result' ? (
-            <Button onClick={handleClose}>
+        {isResultStep && (
+          <div className="px-6 py-4 border-t bg-muted/30 flex justify-end">
+            <Button onClick={handleClose} className="gap-2">
+              <Check className="h-4 w-4" />
               Concluir
             </Button>
-          ) : currentStep === 'review' ? (
-            <Button onClick={handleSubmit} disabled={isProcessing}>
-              <Send className="h-4 w-4 mr-1" />
-              Gerar Conteúdo
-            </Button>
-          ) : (
-            <Button onClick={goToNextStep} disabled={!canProceed()}>
-              Próximo
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          )}
-        </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
