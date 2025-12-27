@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, X, Wand2, Image, FileText, List, Package, Sparkles } from 'lucide-react';
+import { Plus, Save, X, Wand2, Image, FileText, List, Package, Sparkles, Share2, Check, MessageCircle, Instagram, Facebook, Linkedin, Mail, Send } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -16,16 +16,19 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { ResourceFieldEditor } from './ResourceFieldEditor';
 import { 
   MarketingResource, 
   ResourceField, 
   ReturnType, 
   FieldType,
+  PublishChannel,
   RETURN_TYPE_LABELS, 
   FIELD_TYPE_LABELS,
   FIELD_TYPE_DESCRIPTIONS,
-  FIELD_TYPE_CATEGORIES 
+  FIELD_TYPE_CATEGORIES,
+  CHANNEL_CONFIG
 } from './types';
 
 interface ResourceFormDialogProps {
@@ -45,6 +48,19 @@ const CategoryIcon: React.FC<{ category: string }> = ({ category }) => {
   return <>{icons[category] || <FileText className="h-4 w-4" />}</>;
 };
 
+const ChannelIcon: React.FC<{ channel: PublishChannel }> = ({ channel }) => {
+  const icons: Record<PublishChannel, React.ReactNode> = {
+    whatsapp: <MessageCircle className="h-4 w-4" />,
+    instagram: <Instagram className="h-4 w-4" />,
+    facebook: <Facebook className="h-4 w-4" />,
+    twitter: <span className="text-sm font-bold">𝕏</span>,
+    linkedin: <Linkedin className="h-4 w-4" />,
+    telegram: <Send className="h-4 w-4" />,
+    email: <Mail className="h-4 w-4" />,
+  };
+  return <>{icons[channel]}</>;
+};
+
 export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
   open,
   onClose,
@@ -58,6 +74,8 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
   const [saveLocation, setSaveLocation] = useState('');
   const [n8nWebhookUrl, setN8nWebhookUrl] = useState('');
   const [activeFieldTab, setActiveFieldTab] = useState('basic');
+  const [publishChannels, setPublishChannels] = useState<PublishChannel[]>([]);
+  const [autoPublishEnabled, setAutoPublishEnabled] = useState(false);
 
   useEffect(() => {
     if (resource) {
@@ -67,6 +85,8 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       setReturnType(resource.returnType);
       setSaveLocation(resource.saveLocation || '');
       setN8nWebhookUrl(resource.n8nWebhookUrl || '');
+      setPublishChannels(resource.publishChannels || []);
+      setAutoPublishEnabled(resource.autoPublishEnabled || false);
     } else {
       setName('');
       setDescription('');
@@ -74,8 +94,18 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       setReturnType('text');
       setSaveLocation('');
       setN8nWebhookUrl('');
+      setPublishChannels([]);
+      setAutoPublishEnabled(false);
     }
   }, [resource, open]);
+
+  const togglePublishChannel = (channel: PublishChannel) => {
+    setPublishChannels((prev) =>
+      prev.includes(channel)
+        ? prev.filter((c) => c !== channel)
+        : [...prev, channel]
+    );
+  };
 
   const handleAddField = (type: FieldType) => {
     const newField: ResourceField = {
@@ -107,6 +137,8 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       returnType,
       saveLocation,
       n8nWebhookUrl,
+      publishChannels,
+      autoPublishEnabled,
       createdAt: resource?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -192,6 +224,63 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
                   O resultado será salvo automaticamente na pasta correspondente ao tipo de retorno
                 </p>
               </div>
+              </div>
+            </div>
+
+            {/* Publish Channels Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Share2 className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold">Canais de Publicação</h3>
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+                <div>
+                  <Label className="text-sm font-medium">Habilitar Publicação Automática</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Quando ativado, o conteúdo gerado será publicado automaticamente nos canais selecionados
+                  </p>
+                </div>
+                <Switch
+                  checked={autoPublishEnabled}
+                  onCheckedChange={setAutoPublishEnabled}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Selecione os canais disponíveis para este recurso:</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                  {(Object.keys(CHANNEL_CONFIG) as PublishChannel[]).map((channel) => {
+                    const config = CHANNEL_CONFIG[channel];
+                    const isSelected = publishChannels.includes(channel);
+                    return (
+                      <button
+                        key={channel}
+                        type="button"
+                        onClick={() => togglePublishChannel(channel)}
+                        className={`p-3 rounded-lg border-2 transition-all flex items-center gap-2 relative ${
+                          isSelected
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <div className={`p-1.5 rounded-full ${config.color} text-white`}>
+                          <ChannelIcon channel={channel} />
+                        </div>
+                        <span className="text-sm font-medium">{config.label}</span>
+                        {isSelected && (
+                          <Check className="h-4 w-4 text-primary absolute top-1 right-1" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {publishChannels.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {publishChannels.length} canal(is) selecionado(s)
+                    {autoPublishEnabled && ' - Publicação automática ativada'}
+                  </p>
+                )}
               </div>
             </div>
 
