@@ -365,24 +365,99 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
         );
 
       case 'review':
+        const getFieldValue = (fieldId: string) => {
+          const val = fieldValues[fieldId];
+          if (!val) return '-';
+          if (typeof val === 'object') {
+            if (val.productName) return val.productName;
+            if (val.file?.name) return val.file.name;
+            if (val.url) return val.url;
+            if (val.value) return val.value;
+            return 'Arquivo selecionado';
+          }
+          return val;
+        };
+
+        const getFieldPreviewUrl = (field: typeof resource.fields[0]) => {
+          const val = fieldValues[field.id];
+          if (!val) return null;
+          
+          // Check if it's a media type that should show preview
+          const mediaTypes = ['media_image', 'media_audio', 'media_video', 'selection_image', 'selection_audio', 'selection_video', 'product_image'];
+          if (!mediaTypes.includes(field.type)) return null;
+          
+          if (typeof val === 'string') return val;
+          if (typeof val === 'object') {
+            return val.previewUrl || val.url || val.imageUrl || val.audioUrl || val.videoUrl || val.value;
+          }
+          return null;
+        };
+
+        const getPreviewType = (field: typeof resource.fields[0]): 'image' | 'audio' | 'video' | null => {
+          if (['media_image', 'selection_image', 'product_image'].includes(field.type)) return 'image';
+          if (['media_audio', 'selection_audio'].includes(field.type)) return 'audio';
+          if (['media_video', 'selection_video'].includes(field.type)) return 'video';
+          return null;
+        };
+
         return (
           <div className="space-y-6">
             <div className="space-y-3">
               <h4 className="font-medium text-sm">Dados Preenchidos</h4>
               <Card>
-                <CardContent className="p-4 space-y-2">
-                  {resource.fields.map((field) => (
-                    <div key={field.id} className="flex items-start gap-2 text-sm">
-                      <span className="font-medium text-muted-foreground min-w-[120px]">
-                        {field.label}:
-                      </span>
-                      <span className="flex-1">
-                        {typeof fieldValues[field.id] === 'object'
-                          ? fieldValues[field.id]?.name || 'Arquivo selecionado'
-                          : fieldValues[field.id] || '-'}
-                      </span>
-                    </div>
-                  ))}
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-muted/50">
+                          <th className="text-left p-3 font-medium text-muted-foreground">Variável</th>
+                          <th className="text-left p-3 font-medium text-muted-foreground">Valor</th>
+                          <th className="text-left p-3 font-medium text-muted-foreground">Preview</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {resource.fields.map((field) => {
+                          const previewUrl = getFieldPreviewUrl(field);
+                          const previewType = getPreviewType(field);
+                          
+                          return (
+                            <tr key={field.id} className="border-b last:border-0">
+                              <td className="p-3">
+                                <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
+                                  {field.name || field.id}
+                                </code>
+                              </td>
+                              <td className="p-3 text-muted-foreground max-w-[200px] truncate">
+                                {getFieldValue(field.id)}
+                              </td>
+                              <td className="p-3">
+                                {previewUrl && previewType === 'image' && (
+                                  <img 
+                                    src={previewUrl} 
+                                    alt="Preview" 
+                                    className="w-16 h-16 object-cover rounded-lg border"
+                                  />
+                                )}
+                                {previewUrl && previewType === 'audio' && (
+                                  <audio controls src={previewUrl} className="h-8 w-32" />
+                                )}
+                                {previewUrl && previewType === 'video' && (
+                                  <video 
+                                    controls 
+                                    src={previewUrl} 
+                                    className="w-24 h-16 object-cover rounded-lg"
+                                  />
+                                )}
+                                {!previewUrl && (
+                                  <span className="text-muted-foreground text-xs">-</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </CardContent>
               </Card>
             </div>
