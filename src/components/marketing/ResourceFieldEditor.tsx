@@ -24,13 +24,18 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
 }) => {
   const needsOptions = ['dropdown', 'selection_image', 'selection_audio', 'selection_video', 'selection_text'].includes(field.type);
 
+  // Check if field name is empty
+  const isEmptyName = !field.name.trim();
+
   // Check if field name is duplicate
   const isDuplicateName = useMemo(() => {
-    if (!field.name.trim()) return false;
+    if (isEmptyName) return false;
     return allFields.some(
       (f) => f.id !== field.id && f.name.trim().toLowerCase() === field.name.trim().toLowerCase()
     );
-  }, [field.name, field.id, allFields]);
+  }, [field.name, field.id, allFields, isEmptyName]);
+
+  const hasNameError = isEmptyName || isDuplicateName;
 
   const handleAddOption = () => {
     const newOption: FieldOption = {
@@ -283,18 +288,26 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
         <div className="flex-1 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs">Nome do Campo</Label>
+              <Label className="text-xs">
+                Nome do Campo <span className="text-destructive">*</span>
+              </Label>
               <div className="relative">
                 <Input
                   value={field.name}
                   onChange={(e) => onChange({ ...field, name: e.target.value })}
                   placeholder="nome_campo"
-                  className={`h-9 ${isDuplicateName ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                  className={`h-9 ${hasNameError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 />
-                {isDuplicateName && (
+                {hasNameError && (
                   <AlertCircle className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />
                 )}
               </div>
+              {isEmptyName && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Nome obrigatório
+                </p>
+              )}
               {isDuplicateName && (
                 <p className="text-xs text-destructive flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
