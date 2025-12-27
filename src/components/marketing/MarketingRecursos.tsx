@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { ResourcesList } from './ResourcesList';
 import { ResourceFormDialog } from './ResourceFormDialog';
 import { ContentWizardDialog } from './ContentWizardDialog';
-import { WebhookTestDialog } from './WebhookTestDialog';
 import { MarketingResource, ResourceField, PublishChannel, ReturnType, FormStep } from './types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,7 +51,6 @@ const MarketingRecursos: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<MarketingResource | undefined>();
   const [wizardState, setWizardState] = useState<WizardState | null>(null);
-  const [testResource, setTestResource] = useState<MarketingResource | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -187,7 +185,6 @@ const MarketingRecursos: React.FC = () => {
           resource, 
           initialFieldValues: preset?.field_values 
         })}
-        onTestResource={setTestResource}
       />
 
       <ResourceFormDialog
@@ -203,14 +200,6 @@ const MarketingRecursos: React.FC = () => {
           onClose={() => setWizardState(null)}
           resource={wizardState.resource}
           initialFieldValues={wizardState.initialFieldValues}
-        />
-      )}
-
-      {testResource && (
-        <WebhookTestDialog
-          open={!!testResource}
-          onClose={() => setTestResource(null)}
-          resource={testResource}
         />
       )}
     </div>

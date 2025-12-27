@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Image, Music, Video, FileText, Play, FlaskConical, Loader2, FolderOpen } from 'lucide-react';
+import { Plus, Pencil, Trash2, Image, Music, Video, FileText, Play, Loader2, FolderOpen, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Input } from '@/components/ui/input';
 import { MarketingResource, ReturnType, RETURN_TYPE_LABELS, CHANNEL_CONFIG } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -23,7 +24,6 @@ interface ResourcesListProps {
   onEdit: (resource: MarketingResource) => void;
   onDelete: (resourceId: string) => void;
   onUseResource: (resource: MarketingResource, preset?: Preset) => void;
-  onTestResource: (resource: MarketingResource) => void;
 }
 
 const ReturnTypeIcon: React.FC<{ type: ReturnType }> = ({ type }) => {
@@ -48,12 +48,13 @@ const ResourceCard: React.FC<{
   onEdit: (resource: MarketingResource) => void;
   onDelete: (resourceId: string) => void;
   onUseResource: (resource: MarketingResource, preset?: Preset) => void;
-  onTestResource: (resource: MarketingResource) => void;
   estabelecimentoId: string | null;
-}> = ({ resource, onEdit, onDelete, onUseResource, onTestResource, estabelecimentoId }) => {
+}> = ({ resource, onEdit, onDelete, onUseResource, estabelecimentoId }) => {
   const [presets, setPresets] = useState<Preset[]>([]);
   const [loadingPresets, setLoadingPresets] = useState(false);
   const [presetsOpen, setPresetsOpen] = useState(false);
+  const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
+  const [editingPresetName, setEditingPresetName] = useState('');
 
   const loadPresets = async () => {
     if (!estabelecimentoId || !resource.id) return;
@@ -100,6 +101,44 @@ const ResourceCard: React.FC<{
       console.error('Error deleting preset:', error);
       toast.error('Erro ao excluir preset');
     }
+  };
+
+  const handleRenamePreset = async (presetId: string) => {
+    if (!editingPresetName.trim()) {
+      toast.error('Digite um nome para o preset');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('marketing_resource_presets')
+        .update({ nome: editingPresetName.trim() })
+        .eq('id', presetId);
+
+      if (error) throw error;
+
+      toast.success('Preset renomeado');
+      setPresets(prev => prev.map(p => 
+        p.id === presetId ? { ...p, nome: editingPresetName.trim() } : p
+      ));
+      setEditingPresetId(null);
+      setEditingPresetName('');
+    } catch (error) {
+      console.error('Error renaming preset:', error);
+      toast.error('Erro ao renomear preset');
+    }
+  };
+
+  const startEditing = (preset: Preset, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingPresetId(preset.id);
+    setEditingPresetName(preset.nome);
+  };
+
+  const cancelEditing = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingPresetId(null);
+    setEditingPresetName('');
   };
 
   useEffect(() => {
@@ -158,19 +197,6 @@ const ResourceCard: React.FC<{
           </span>
           <TooltipProvider delayDuration={0}>
             <div className="flex gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onTestResource(resource)}
-                    className="h-8 w-8 p-0 text-orange-500 hover:text-orange-600"
-                  >
-                    <FlaskConical className="h-3.5 w-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Testar Webhook</TooltipContent>
-              </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -239,30 +265,77 @@ const ResourceCard: React.FC<{
                     className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors group/preset"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">{preset.nome}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {new Date(preset.created_at).toLocaleDateString('pt-BR')}
-                      </p>
+                      {editingPresetId === preset.id ? (
+                        <div className="flex items-center gap-1">
+                          <Input
+                            value={editingPresetName}
+                            onChange={(e) => setEditingPresetName(e.target.value)}
+                            className="h-6 text-xs"
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleRenamePreset(preset.id);
+                              if (e.key === 'Escape') cancelEditing(e as any);
+                            }}
+                            autoFocus
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRenamePreset(preset.id);
+                            }}
+                          >
+                            <Check className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={cancelEditing}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-xs font-medium truncate">{preset.nome}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {new Date(preset.created_at).toLocaleDateString('pt-BR')}
+                          </p>
+                        </>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 opacity-0 group-hover/preset:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                        onClick={(e) => handleDeletePreset(preset.id, e)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="h-6 text-[10px] px-2"
-                        onClick={() => onUseResource(resource, preset)}
-                      >
-                        <Play className="h-3 w-3 mr-1" />
-                        Usar
-                      </Button>
-                    </div>
+                    {editingPresetId !== preset.id && (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 opacity-0 group-hover/preset:opacity-100 transition-opacity"
+                          onClick={(e) => startEditing(preset, e)}
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 opacity-0 group-hover/preset:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                          onClick={(e) => handleDeletePreset(preset.id, e)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="h-6 text-[10px] px-2"
+                          onClick={() => onUseResource(resource, preset)}
+                        >
+                          <Play className="h-3 w-3 mr-1" />
+                          Usar
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -273,14 +346,12 @@ const ResourceCard: React.FC<{
     </Card>
   );
 };
-
 export const ResourcesList: React.FC<ResourcesListProps> = ({
   resources,
   onCreateNew,
   onEdit,
   onDelete,
   onUseResource,
-  onTestResource,
 }) => {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
 
@@ -331,7 +402,6 @@ export const ResourcesList: React.FC<ResourcesListProps> = ({
               onEdit={onEdit}
               onDelete={onDelete}
               onUseResource={onUseResource}
-              onTestResource={onTestResource}
               estabelecimentoId={estabelecimentoId}
             />
           ))}
