@@ -1,5 +1,22 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, GripVertical, Info, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,7 +24,16 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { FormStep, ResourceField, FieldType, FIELD_TYPE_LABELS, FIELD_TYPE_DESCRIPTIONS, FIELD_TYPE_CATEGORIES } from './types';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from '@/components/ui/dropdown-menu';
+import { FormStep, ResourceField, FieldType, FIELD_TYPE_LABELS, FIELD_TYPE_CATEGORIES } from './types';
 import { ResourceFieldEditor } from './ResourceFieldEditor';
 
 interface FormStepsManagerProps {
@@ -17,6 +43,45 @@ interface FormStepsManagerProps {
   onFieldsChange: (fields: ResourceField[]) => void;
 }
 
+// Sortable field item component
+const SortableFieldItem: React.FC<{
+  field: ResourceField;
+  onUpdate: (field: ResourceField) => void;
+  onRemove: () => void;
+}> = ({ field, onUpdate, onRemove }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative">
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-6 cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+      >
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+      </div>
+      <ResourceFieldEditor
+        field={field}
+        onChange={onUpdate}
+        onRemove={onRemove}
+      />
+    </div>
+  );
+};
+
 export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
   steps,
   fields,
@@ -24,6 +89,15 @@ export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
   onFieldsChange,
 }) => {
   const [openSteps, setOpenSteps] = useState<Record<string, boolean>>({});
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const handleAddStep = () => {
     const newStep: FormStep = {
@@ -44,7 +118,6 @@ export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
 
   const handleRemoveStep = (index: number) => {
     const stepToRemove = steps[index];
-    // Remove fields belonging to this step
     const newFields = fields.filter(f => f.stepId !== stepToRemove.id);
     onFieldsChange(newFields);
     
@@ -82,6 +155,29 @@ export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
   const toggleStep = (stepId: string) => {
     setOpenSteps(prev => ({ ...prev, [stepId]: !prev[stepId] }));
   };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent, stepId: string) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over || active.id === over.id) return;
+
+    const stepFields = getFieldsForStep(stepId);
+    const oldIndex = stepFields.findIndex(f => f.id === active.id);
+    const newIndex = stepFields.findIndex(f => f.id === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const reorderedStepFields = arrayMove(stepFields, oldIndex, newIndex);
+      const otherFields = fields.filter(f => f.stepId !== stepId);
+      onFieldsChange([...otherFields, ...reorderedStepFields]);
+    }
+  };
+
+  const activeField = activeId ? fields.find(f => f.id === activeId) : null;
 
   return (
     <div className="space-y-4">
@@ -167,54 +263,82 @@ export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
                         />
                       </div>
 
-                      {/* Fields in this step */}
+                      {/* Fields in this step with drag and drop */}
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <Label className="text-xs text-muted-foreground">
                             Campos desta etapa ({stepFields.length})
                           </Label>
+                          
+                          {/* Modern dropdown for adding fields */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
+                                <Plus className="h-3.5 w-3.5" />
+                                Campo
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                              {Object.entries(FIELD_TYPE_CATEGORIES).map(([categoryKey, category]) => (
+                                <DropdownMenuSub key={categoryKey}>
+                                  <DropdownMenuSubTrigger className="text-sm">
+                                    {category.label}
+                                  </DropdownMenuSubTrigger>
+                                  <DropdownMenuSubContent className="w-48">
+                                    {category.types.map((type) => (
+                                      <DropdownMenuItem
+                                        key={type}
+                                        onClick={() => handleAddFieldToStep(step.id, type)}
+                                        className="text-sm"
+                                      >
+                                        {FIELD_TYPE_LABELS[type]}
+                                      </DropdownMenuItem>
+                                    ))}
+                                  </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                         
-                        {stepFields.length > 0 && (
-                          <div className="space-y-2 pl-4 border-l-2 border-primary/20">
-                            {stepFields.map((field) => (
-                              <ResourceFieldEditor
-                                key={field.id}
-                                field={field}
-                                onChange={(updated) => handleUpdateField(field.id, updated)}
-                                onRemove={() => handleRemoveField(field.id)}
-                              />
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Add field buttons by category */}
-                        <div className="pt-2 border-t border-dashed space-y-3">
-                          <p className="text-xs text-muted-foreground">Adicionar campo:</p>
-                          {Object.entries(FIELD_TYPE_CATEGORIES).map(([categoryKey, category]) => (
-                            <div key={categoryKey} className="space-y-1.5">
-                              <p className="text-xs font-medium text-primary">{category.label}</p>
-                              {'description' in category && (
-                                <p className="text-xs text-muted-foreground">{category.description}</p>
-                              )}
-                              <div className="flex flex-wrap gap-1">
-                                {category.types.map((type) => (
-                                  <Button
-                                    key={type}
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 text-xs"
-                                    onClick={() => handleAddFieldToStep(step.id, type)}
-                                  >
-                                    <Plus className="h-3 w-3 mr-1" />
-                                    {FIELD_TYPE_LABELS[type]}
-                                  </Button>
+                        {stepFields.length > 0 ? (
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragStart={handleDragStart}
+                            onDragEnd={(e) => handleDragEnd(e, step.id)}
+                          >
+                            <SortableContext
+                              items={stepFields.map(f => f.id)}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              <div className="space-y-2 pl-8 border-l-2 border-primary/20">
+                                {stepFields.map((field) => (
+                                  <SortableFieldItem
+                                    key={field.id}
+                                    field={field}
+                                    onUpdate={(updated) => handleUpdateField(field.id, updated)}
+                                    onRemove={() => handleRemoveField(field.id)}
+                                  />
                                 ))}
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                            </SortableContext>
+                            <DragOverlay>
+                              {activeField ? (
+                                <div className="bg-background border rounded-lg p-2 shadow-lg opacity-90">
+                                  <Badge variant="secondary" className="text-xs">
+                                    {FIELD_TYPE_LABELS[activeField.type]}
+                                  </Badge>
+                                  <span className="ml-2 text-sm">{activeField.label || 'Campo sem nome'}</span>
+                                </div>
+                              ) : null}
+                            </DragOverlay>
+                          </DndContext>
+                        ) : (
+                          <div className="text-center py-4 text-muted-foreground border border-dashed rounded-lg bg-muted/10">
+                            <p className="text-xs">Nenhum campo adicionado</p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </CollapsibleContent>
