@@ -180,25 +180,18 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">URL Webhook n8n</Label>
-                  <Input
-                    value={n8nWebhookUrl}
-                    onChange={(e) => setN8nWebhookUrl(e.target.value)}
-                    placeholder="https://n8n.exemplo.com/webhook/..."
-                    className="h-11"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Local para Salvar</Label>
-                  <Input
-                    value={saveLocation}
-                    onChange={(e) => setSaveLocation(e.target.value)}
-                    placeholder="Ex: storage/marketing/posts"
-                    className="h-11"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">URL Webhook n8n</Label>
+                <Input
+                  value={n8nWebhookUrl}
+                  onChange={(e) => setN8nWebhookUrl(e.target.value)}
+                  placeholder="https://n8n.exemplo.com/webhook/..."
+                  className="h-11"
+                />
+                <p className="text-xs text-muted-foreground">
+                  O resultado será salvo automaticamente na pasta correspondente ao tipo de retorno
+                </p>
+              </div>
               </div>
             </div>
 

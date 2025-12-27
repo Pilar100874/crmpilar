@@ -4056,6 +4056,59 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_content: {
+        Row: {
+          channels: string[] | null
+          content_type: string
+          content_url: string | null
+          created_at: string
+          created_by: string | null
+          estabelecimento_id: string | null
+          id: string
+          input_data: Json | null
+          resource_id: string | null
+          resource_name: string
+          status: string | null
+          text_content: string | null
+        }
+        Insert: {
+          channels?: string[] | null
+          content_type: string
+          content_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          input_data?: Json | null
+          resource_id?: string | null
+          resource_name: string
+          status?: string | null
+          text_content?: string | null
+        }
+        Update: {
+          channels?: string[] | null
+          content_type?: string
+          content_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          input_data?: Json | null
+          resource_id?: string | null
+          resource_name?: string
+          status?: string | null
+          text_content?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_content_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_logs: {
         Row: {
           conta_marketplace_id: string | null

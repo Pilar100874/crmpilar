@@ -27,6 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { DynamicFieldRenderer } from './DynamicFieldRenderer';
 import {
   MarketingResource,
@@ -160,12 +161,39 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
       }
 
       const data = await response.json();
+      const contentResult = data.result || data.url || data.text || '';
 
       // Set result based on return type
       setResult({
         type: resource.returnType,
-        content: data.result || data.url || data.text || '',
+        content: contentResult,
       });
+
+      // Get user's estabelecimento_id
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user) {
+        const { data: usuarioData } = await supabase
+          .from('usuarios')
+          .select('estabelecimento_id')
+          .eq('auth_user_id', userData.user.id)
+          .single();
+
+        if (usuarioData?.estabelecimento_id) {
+          // Save to marketing_content table
+          await supabase.from('marketing_content').insert({
+            estabelecimento_id: usuarioData.estabelecimento_id,
+            resource_id: resource.id,
+            resource_name: resource.name,
+            content_type: resource.returnType,
+            content_url: resource.returnType !== 'text' ? contentResult : null,
+            text_content: resource.returnType === 'text' ? contentResult : null,
+            input_data: payload.fields,
+            channels: selectedChannels,
+            status: 'completed',
+            created_by: userData.user.id,
+          });
+        }
+      }
 
       toast.success('Conteúdo gerado com sucesso!');
     } catch (error) {
