@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Plus, Trash2, GripVertical, Upload, Image as ImageIcon, Music, FileText, Video, AlertCircle } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Plus, Trash2, GripVertical, Upload, Image as ImageIcon, Music, FileText, Video, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ResourceField, FieldType, FIELD_TYPE_LABELS, FieldOption } from './types';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface ResourceFieldEditorProps {
   field: ResourceField;
@@ -23,6 +25,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
   onRemove,
 }) => {
   const needsOptions = ['dropdown', 'selection_image', 'selection_audio', 'selection_video', 'selection_text'].includes(field.type);
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
   // Check if field name is empty
   const isEmptyName = !field.name.trim();
@@ -60,14 +63,66 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
     onChange({ ...field, options: newOptions });
   };
 
-  const handleFileUpload = (index: number, file: File, type: 'image' | 'audio' | 'video') => {
-    const url = URL.createObjectURL(file);
-    if (type === 'image') {
-      handleUpdateOption(index, { imageUrl: url });
-    } else if (type === 'audio') {
-      handleUpdateOption(index, { audioUrl: url });
-    } else {
-      handleUpdateOption(index, { videoUrl: url });
+  const handleFileUpload = async (index: number, file: File, type: 'image' | 'audio' | 'video') => {
+    setUploadingIndex(index);
+    
+    try {
+      // Get user's estabelecimento_id
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) {
+        toast.error('Usuário não autenticado');
+        return;
+      }
+
+      const { data: usuarioData } = await supabase
+        .from('usuarios')
+        .select('estabelecimento_id')
+        .eq('auth_user_id', userData.user.id)
+        .maybeSingle();
+
+      if (!usuarioData?.estabelecimento_id) {
+        toast.error('Estabelecimento não encontrado');
+        return;
+      }
+
+      // Generate unique file name
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${usuarioData.estabelecimento_id}/marketing/${fileName}`;
+
+      // Upload to storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('marketing-assets')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        toast.error('Erro ao fazer upload do arquivo');
+        return;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('marketing-assets')
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      // Update option with permanent URL
+      if (type === 'image') {
+        handleUpdateOption(index, { imageUrl: publicUrl });
+      } else if (type === 'audio') {
+        handleUpdateOption(index, { audioUrl: publicUrl });
+      } else {
+        handleUpdateOption(index, { videoUrl: publicUrl });
+      }
+
+      toast.success('Arquivo enviado com sucesso!');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error('Erro ao fazer upload');
+    } finally {
+      setUploadingIndex(null);
     }
   };
 
