@@ -40,6 +40,14 @@ export interface ResourceField {
   placeholder?: string;
   options?: FieldOption[]; // For dropdown, image_selection, text_selection
   defaultValue?: string;
+  stepId?: string; // ID da etapa à qual o campo pertence
+}
+
+export interface FormStep {
+  id: string;
+  number: number;
+  title: string;
+  description?: string;
 }
 
 export interface MarketingResource {
@@ -47,6 +55,7 @@ export interface MarketingResource {
   name: string;
   description?: string;
   fields: ResourceField[];
+  steps?: FormStep[]; // Etapas do formulário
   returnType: ReturnType;
   saveLocation?: string;
   n8nWebhookUrl?: string;

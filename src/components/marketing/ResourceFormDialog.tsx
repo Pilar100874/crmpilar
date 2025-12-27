@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, X, Wand2, Image, FileText, List, Package, Sparkles, Share2, Check, MessageCircle, Instagram, Facebook, Linkedin, Mail, Send } from 'lucide-react';
+import { Plus, Save, X, Wand2, Image, FileText, List, Package, Sparkles, Share2, Check, MessageCircle, Instagram, Facebook, Linkedin, Mail, Send, Layers } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -18,12 +18,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ResourceFieldEditor } from './ResourceFieldEditor';
+import { FormStepsManager } from './FormStepsManager';
 import { 
   MarketingResource, 
   ResourceField, 
   ReturnType, 
   FieldType,
   PublishChannel,
+  FormStep,
   RETURN_TYPE_LABELS, 
   FIELD_TYPE_LABELS,
   FIELD_TYPE_DESCRIPTIONS,
@@ -70,6 +72,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [fields, setFields] = useState<ResourceField[]>([]);
+  const [steps, setSteps] = useState<FormStep[]>([]);
   const [returnType, setReturnType] = useState<ReturnType>('text');
   const [saveLocation, setSaveLocation] = useState('');
   const [n8nWebhookUrl, setN8nWebhookUrl] = useState('');
@@ -82,6 +85,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       setName(resource.name);
       setDescription(resource.description || '');
       setFields(resource.fields);
+      setSteps(resource.steps || []);
       setReturnType(resource.returnType);
       setSaveLocation(resource.saveLocation || '');
       setN8nWebhookUrl(resource.n8nWebhookUrl || '');
@@ -91,6 +95,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       setName('');
       setDescription('');
       setFields([]);
+      setSteps([]);
       setReturnType('text');
       setSaveLocation('');
       setN8nWebhookUrl('');
@@ -98,6 +103,10 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       setAutoPublishEnabled(false);
     }
   }, [resource, open]);
+
+  const handleFieldStepChange = (fieldId: string, stepId: string | undefined) => {
+    setFields(fields.map(f => f.id === fieldId ? { ...f, stepId } : f));
+  };
 
   const togglePublishChannel = (channel: PublishChannel) => {
     setPublishChannels((prev) =>
@@ -134,6 +143,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       name,
       description,
       fields,
+      steps,
       returnType,
       saveLocation,
       n8nWebhookUrl,
@@ -285,6 +295,26 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
               )}
             </div>
 
+            {/* Form Steps Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Layers className="h-4 w-4 text-primary" />
+                <h3 className="font-semibold">Etapas do Formulário</h3>
+                {steps.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {steps.length} etapa{steps.length !== 1 ? 's' : ''}
+                  </Badge>
+                )}
+              </div>
+              
+              <FormStepsManager
+                steps={steps}
+                fields={fields}
+                onStepsChange={setSteps}
+                onFieldStepChange={handleFieldStepChange}
+              />
+            </div>
+
             {/* Fields Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -353,6 +383,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
                       field={field}
                       onChange={(updated) => handleUpdateField(index, updated)}
                       onRemove={() => handleRemoveField(index)}
+                      steps={steps}
                     />
                   ))}
                 </div>
