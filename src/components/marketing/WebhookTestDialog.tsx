@@ -81,13 +81,20 @@ export const WebhookTestDialog: React.FC<WebhookTestDialogProps> = ({
       case 'checkbox':
         return true;
       case 'media_image':
-      case 'selection_image':
         return 'https://via.placeholder.com/300x200?text=Imagem+Teste';
+      case 'selection_image':
+        // Use actual image URL from first option if available
+        return field.options?.[0]?.imageUrl || 'https://via.placeholder.com/300x200?text=Imagem+Teste';
       case 'media_audio':
-      case 'selection_audio':
         return 'https://example.com/audio-sample.mp3';
+      case 'selection_audio':
+        // Use actual audio URL from first option if available
+        return field.options?.[0]?.audioUrl || 'https://example.com/audio-sample.mp3';
       case 'media_video':
         return 'https://example.com/video-sample.mp4';
+      case 'selection_video':
+        // Use actual video URL from first option if available
+        return field.options?.[0]?.videoUrl || 'https://example.com/video-sample.mp4';
       case 'dropdown':
         return field.options?.[0]?.value || 'option1';
       case 'selection_text':
