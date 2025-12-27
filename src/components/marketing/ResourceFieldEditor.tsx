@@ -202,21 +202,28 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
                       onChange={(e) => handleUpdateOption(index, { imageUrl: e.target.value })}
                       placeholder="URL da Imagem ou faça upload"
                       className="h-8 text-sm"
+                      disabled={uploadingIndex === index}
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       className="h-8 relative shrink-0"
+                      disabled={uploadingIndex === index}
                       asChild
                     >
                       <label className="cursor-pointer">
-                        <Upload className="h-3 w-3 mr-1" />
-                        Upload
+                        {uploadingIndex === index ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <Upload className="h-3 w-3 mr-1" />
+                        )}
+                        {uploadingIndex === index ? 'Enviando...' : 'Upload'}
                         <input
                           type="file"
                           accept="image/*"
                           className="absolute inset-0 opacity-0 cursor-pointer"
+                          disabled={uploadingIndex === index}
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) handleFileUpload(index, file, 'image');
@@ -246,21 +253,28 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
                       onChange={(e) => handleUpdateOption(index, { audioUrl: e.target.value })}
                       placeholder="URL do Áudio ou faça upload"
                       className="h-8 text-sm flex-1"
+                      disabled={uploadingIndex === index}
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       className="h-8 relative shrink-0"
+                      disabled={uploadingIndex === index}
                       asChild
                     >
                       <label className="cursor-pointer">
-                        <Upload className="h-3 w-3 mr-1" />
-                        Upload
+                        {uploadingIndex === index ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <Upload className="h-3 w-3 mr-1" />
+                        )}
+                        {uploadingIndex === index ? 'Enviando...' : 'Upload'}
                         <input
                           type="file"
                           accept="audio/*"
                           className="absolute inset-0 opacity-0 cursor-pointer"
+                          disabled={uploadingIndex === index}
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) handleFileUpload(index, file, 'audio');
@@ -286,21 +300,28 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
                       onChange={(e) => handleUpdateOption(index, { videoUrl: e.target.value })}
                       placeholder="URL do Vídeo ou faça upload"
                       className="h-8 text-sm flex-1"
+                      disabled={uploadingIndex === index}
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       className="h-8 relative shrink-0"
+                      disabled={uploadingIndex === index}
                       asChild
                     >
                       <label className="cursor-pointer">
-                        <Upload className="h-3 w-3 mr-1" />
-                        Upload
+                        {uploadingIndex === index ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <Upload className="h-3 w-3 mr-1" />
+                        )}
+                        {uploadingIndex === index ? 'Enviando...' : 'Upload'}
                         <input
                           type="file"
                           accept="video/*"
                           className="absolute inset-0 opacity-0 cursor-pointer"
+                          disabled={uploadingIndex === index}
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) handleFileUpload(index, file, 'video');
