@@ -4150,6 +4150,7 @@ export type Database = {
           estabelecimento_id: string
           fields: Json
           id: string
+          n8n_publish_webhook_url: string | null
           n8n_webhook_url: string | null
           name: string
           publish_channels: string[] | null
@@ -4165,6 +4166,7 @@ export type Database = {
           estabelecimento_id: string
           fields?: Json
           id?: string
+          n8n_publish_webhook_url?: string | null
           n8n_webhook_url?: string | null
           name: string
           publish_channels?: string[] | null
@@ -4180,6 +4182,7 @@ export type Database = {
           estabelecimento_id?: string
           fields?: Json
           id?: string
+          n8n_publish_webhook_url?: string | null
           n8n_webhook_url?: string | null
           name?: string
           publish_channels?: string[] | null

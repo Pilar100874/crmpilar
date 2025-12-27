@@ -18,6 +18,7 @@ interface DBMarketingResource {
   steps: FormStep[] | null;
   save_location: string | null;
   n8n_webhook_url: string | null;
+  n8n_publish_webhook_url: string | null;
   publish_channels: string[] | null;
   auto_publish_enabled: boolean | null;
   created_at: string;
@@ -33,6 +34,7 @@ const mapDBToResource = (db: DBMarketingResource): MarketingResource => ({
   steps: db.steps || [],
   saveLocation: db.save_location || undefined,
   n8nWebhookUrl: db.n8n_webhook_url || undefined,
+  n8nPublishWebhookUrl: db.n8n_publish_webhook_url || undefined,
   publishChannels: (db.publish_channels || []) as PublishChannel[],
   autoPublishEnabled: db.auto_publish_enabled || false,
   createdAt: db.created_at,
@@ -102,6 +104,7 @@ const MarketingRecursos: React.FC = () => {
         steps: resource.steps as any,
         save_location: resource.saveLocation || null,
         n8n_webhook_url: resource.n8nWebhookUrl || null,
+        n8n_publish_webhook_url: resource.n8nPublishWebhookUrl || null,
         publish_channels: resource.publishChannels || [],
         auto_publish_enabled: resource.autoPublishEnabled || false,
       };
