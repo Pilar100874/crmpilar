@@ -1,9 +1,10 @@
 import React from 'react';
-import { Plus, Pencil, Trash2, Image, Music, Video, FileText, Play } from 'lucide-react';
+import { Plus, Pencil, Trash2, Image, Music, Video, FileText, Play, FlaskConical, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MarketingResource, ReturnType, RETURN_TYPE_LABELS } from './types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { MarketingResource, ReturnType, RETURN_TYPE_LABELS, CHANNEL_CONFIG } from './types';
 
 interface ResourcesListProps {
   resources: MarketingResource[];
@@ -11,6 +12,7 @@ interface ResourcesListProps {
   onEdit: (resource: MarketingResource) => void;
   onDelete: (resourceId: string) => void;
   onUseResource: (resource: MarketingResource) => void;
+  onTestResource: (resource: MarketingResource) => void;
 }
 
 const ReturnTypeIcon: React.FC<{ type: ReturnType }> = ({ type }) => {
@@ -36,6 +38,7 @@ export const ResourcesList: React.FC<ResourcesListProps> = ({
   onEdit,
   onDelete,
   onUseResource,
+  onTestResource,
 }) => {
   return (
     <div className="space-y-4">
@@ -88,37 +91,87 @@ export const ResourcesList: React.FC<ResourcesListProps> = ({
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="pt-0 space-y-3">
+                {/* Channels badges */}
+                {resource.publishChannels && resource.publishChannels.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {resource.publishChannels.slice(0, 3).map((channel) => (
+                      <Badge
+                        key={channel}
+                        variant="secondary"
+                        className="text-[10px] px-1.5 py-0"
+                      >
+                        {CHANNEL_CONFIG[channel].label}
+                      </Badge>
+                    ))}
+                    {resource.publishChannels.length > 3 && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        +{resource.publishChannels.length - 3}
+                      </Badge>
+                    )}
+                    {resource.autoPublishEnabled && (
+                      <Badge variant="default" className="text-[10px] px-1.5 py-0 bg-green-500">
+                        Auto
+                      </Badge>
+                    )}
+                  </div>
+                )}
+                
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">
                     {resource.fields.length} campo{resource.fields.length !== 1 ? 's' : ''}
                   </span>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(resource)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDelete(resource.id)}
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => onUseResource(resource)}
-                      className="h-8"
-                    >
-                      <Play className="h-3.5 w-3.5 mr-1" />
-                      Usar
-                    </Button>
-                  </div>
+                  <TooltipProvider delayDuration={0}>
+                    <div className="flex gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onTestResource(resource)}
+                            className="h-8 w-8 p-0 text-orange-500 hover:text-orange-600"
+                          >
+                            <FlaskConical className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Testar Webhook</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEdit(resource)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Editar</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDelete(resource.id)}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Excluir</TooltipContent>
+                      </Tooltip>
+                      <Button
+                        size="sm"
+                        onClick={() => onUseResource(resource)}
+                        className="h-8"
+                      >
+                        <Play className="h-3.5 w-3.5 mr-1" />
+                        Usar
+                      </Button>
+                    </div>
+                  </TooltipProvider>
                 </div>
               </CardContent>
             </Card>

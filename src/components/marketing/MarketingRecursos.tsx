@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ResourcesList } from './ResourcesList';
 import { ResourceFormDialog } from './ResourceFormDialog';
 import { ContentWizardDialog } from './ContentWizardDialog';
+import { WebhookTestDialog } from './WebhookTestDialog';
 import { MarketingResource } from './types';
 import { toast } from 'sonner';
 
@@ -10,6 +11,7 @@ const MarketingRecursos: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<MarketingResource | undefined>();
   const [wizardResource, setWizardResource] = useState<MarketingResource | null>(null);
+  const [testResource, setTestResource] = useState<MarketingResource | null>(null);
 
   const handleSaveResource = (resource: MarketingResource) => {
     setResources((prev) => {
@@ -46,6 +48,7 @@ const MarketingRecursos: React.FC = () => {
         onEdit={handleEditResource}
         onDelete={handleDeleteResource}
         onUseResource={setWizardResource}
+        onTestResource={setTestResource}
       />
 
       <ResourceFormDialog
@@ -60,6 +63,14 @@ const MarketingRecursos: React.FC = () => {
           open={!!wizardResource}
           onClose={() => setWizardResource(null)}
           resource={wizardResource}
+        />
+      )}
+
+      {testResource && (
+        <WebhookTestDialog
+          open={!!testResource}
+          onClose={() => setTestResource(null)}
+          resource={testResource}
         />
       )}
     </div>
