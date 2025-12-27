@@ -31,7 +31,10 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
 }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [imageInputMode, setImageInputMode] = useState<'upload' | 'url'>('upload');
+  const [imageSelectionMode, setImageSelectionMode] = useState<'options' | 'upload' | 'url'>('options');
   const [imageUrl, setImageUrl] = useState('');
+  const [customImageUrl, setCustomImageUrl] = useState('');
+  const [customImagePreview, setCustomImagePreview] = useState<string | null>(null);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [searchProduto, setSearchProduto] = useState('');
   const [loadingProdutos, setLoadingProdutos] = useState(false);
@@ -74,6 +77,23 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
     setImageUrl(url);
     if (url) {
       setPreviewUrl(url);
+      onChange({ type: 'url', url });
+    }
+  };
+
+  const handleCustomImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setCustomImagePreview(url);
+      onChange({ type: 'file', file, previewUrl: url });
+    }
+  };
+
+  const handleCustomImageUrlChange = (url: string) => {
+    setCustomImageUrl(url);
+    if (url) {
+      setCustomImagePreview(url);
       onChange({ type: 'url', url });
     }
   };
@@ -254,39 +274,117 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
 
       case 'image_selection':
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {field.options?.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => onChange(option.value)}
-                className={`relative rounded-lg overflow-hidden border-2 transition-all ${
-                  value === option.value
-                    ? 'border-primary ring-2 ring-primary/20'
-                    : 'border-border hover:border-primary/50'
-                }`}
-              >
-                {option.imageUrl ? (
-                  <img
-                    src={option.imageUrl}
-                    alt={option.label}
-                    className="w-full aspect-square object-cover"
-                  />
-                ) : (
-                  <div className="w-full aspect-square bg-muted flex items-center justify-center">
-                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                  </div>
+          <div className="space-y-4">
+            <Tabs value={imageSelectionMode} onValueChange={(v) => setImageSelectionMode(v as 'options' | 'upload' | 'url')}>
+              <TabsList className="grid grid-cols-3 w-full max-w-md">
+                {field.options && field.options.length > 0 && (
+                  <TabsTrigger value="options" className="gap-2">
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    Opções
+                  </TabsTrigger>
                 )}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                  <span className="text-xs text-white font-medium">{option.label}</span>
+                <TabsTrigger value="upload" className="gap-2">
+                  <Upload className="h-3.5 w-3.5" />
+                  Upload
+                </TabsTrigger>
+                <TabsTrigger value="url" className="gap-2">
+                  <Link className="h-3.5 w-3.5" />
+                  URL
+                </TabsTrigger>
+              </TabsList>
+
+              {field.options && field.options.length > 0 && (
+                <TabsContent value="options" className="mt-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {field.options.map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => {
+                          setCustomImagePreview(null);
+                          onChange(option.value);
+                        }}
+                        className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                          value === option.value
+                            ? 'border-primary ring-2 ring-primary/20'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        {option.imageUrl ? (
+                          <img
+                            src={option.imageUrl}
+                            alt={option.label}
+                            className="w-full aspect-square object-cover"
+                          />
+                        ) : (
+                          <div className="w-full aspect-square bg-muted flex items-center justify-center">
+                            <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                          <span className="text-xs text-white font-medium">{option.label}</span>
+                        </div>
+                        {value === option.value && (
+                          <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </TabsContent>
+              )}
+
+              <TabsContent value="upload" className="mt-3">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="relative"
+                      asChild
+                    >
+                      <label className="cursor-pointer">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Escolher Arquivo
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          onChange={handleCustomImageUpload}
+                        />
+                      </label>
+                    </Button>
+                    {value?.type === 'file' && (
+                      <span className="text-sm text-green-600 flex items-center gap-1">
+                        <Check className="h-4 w-4" />
+                        Arquivo selecionado
+                      </span>
+                    )}
+                  </div>
+                  {customImagePreview && imageSelectionMode === 'upload' && (
+                    <div className="relative w-40 h-40 rounded-lg overflow-hidden border bg-muted">
+                      <img src={customImagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
                 </div>
-                {value === option.value && (
-                  <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
-                    <Check className="h-3 w-3 text-primary-foreground" />
-                  </div>
-                )}
-              </button>
-            ))}
+              </TabsContent>
+
+              <TabsContent value="url" className="mt-3">
+                <div className="space-y-3">
+                  <Input
+                    value={customImageUrl}
+                    onChange={(e) => handleCustomImageUrlChange(e.target.value)}
+                    placeholder="https://exemplo.com/imagem.jpg"
+                  />
+                  {customImagePreview && imageSelectionMode === 'url' && (
+                    <div className="relative w-40 h-40 rounded-lg overflow-hidden border bg-muted">
+                      <img src={customImagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         );
 
