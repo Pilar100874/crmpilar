@@ -4109,6 +4109,59 @@ export type Database = {
           },
         ]
       }
+      marketing_resources: {
+        Row: {
+          auto_publish_enabled: boolean | null
+          created_at: string
+          description: string | null
+          estabelecimento_id: string
+          fields: Json
+          id: string
+          n8n_webhook_url: string | null
+          name: string
+          publish_channels: string[] | null
+          return_type: string
+          save_location: string | null
+          updated_at: string
+        }
+        Insert: {
+          auto_publish_enabled?: boolean | null
+          created_at?: string
+          description?: string | null
+          estabelecimento_id: string
+          fields?: Json
+          id?: string
+          n8n_webhook_url?: string | null
+          name: string
+          publish_channels?: string[] | null
+          return_type: string
+          save_location?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auto_publish_enabled?: boolean | null
+          created_at?: string
+          description?: string | null
+          estabelecimento_id?: string
+          fields?: Json
+          id?: string
+          n8n_webhook_url?: string | null
+          name?: string
+          publish_channels?: string[] | null
+          return_type?: string
+          save_location?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_resources_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_logs: {
         Row: {
           conta_marketplace_id: string | null
