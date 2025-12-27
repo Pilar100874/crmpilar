@@ -80,13 +80,17 @@ export const WebhookTestDialog: React.FC<WebhookTestDialogProps> = ({
         return new Date().toISOString().split('T')[0];
       case 'checkbox':
         return true;
-      case 'image':
+      case 'media_image':
+      case 'selection_image':
         return 'https://via.placeholder.com/300x200?text=Imagem+Teste';
-      case 'audio':
+      case 'media_audio':
+      case 'selection_audio':
         return 'https://example.com/audio-sample.mp3';
+      case 'media_video':
+        return 'https://example.com/video-sample.mp4';
       case 'dropdown':
         return field.options?.[0]?.value || 'option1';
-      case 'text_selection':
+      case 'selection_text':
         return field.options?.[0]?.value || 'Opção 1';
       case 'product_name':
         return 'Produto Exemplo XYZ';
@@ -174,7 +178,7 @@ export const WebhookTestDialog: React.FC<WebhookTestDialogProps> = ({
   };
 
   const renderFieldValue = (field: { type: string; value: any; label: string }) => {
-    if (field.type === 'image' || field.type === 'product_image' || field.type === 'image_selection') {
+    if (field.type === 'media_image' || field.type === 'selection_image' || field.type === 'product_image') {
       return (
         <div className="space-y-2">
           <img

@@ -183,29 +183,51 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
           </Select>
         );
 
-      case 'image':
-        const hasOptions = field.options && field.options.length > 0;
-        const tabCount = hasOptions ? 3 : 2;
-        
+      case 'selection_image':
         return (
           <div className="space-y-4">
-            <Tabs 
-              value={hasOptions ? imageSelectionMode : imageInputMode} 
-              onValueChange={(v) => {
-                if (hasOptions) {
-                  setImageSelectionMode(v as 'options' | 'upload' | 'url');
-                } else {
-                  setImageInputMode(v as 'upload' | 'url');
-                }
-              }}
-            >
-              <TabsList className={`grid w-full max-w-md ${hasOptions ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                {hasOptions && (
-                  <TabsTrigger value="options" className="gap-2">
-                    <ImageIcon className="h-3.5 w-3.5" />
-                    Opções
-                  </TabsTrigger>
-                )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {field.options?.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => onChange(option.imageUrl || option.value)}
+                  className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                    value === (option.imageUrl || option.value)
+                      ? 'border-primary ring-2 ring-primary/20'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  {option.imageUrl ? (
+                    <img
+                      src={option.imageUrl}
+                      alt={option.label}
+                      className="w-full aspect-square object-cover"
+                    />
+                  ) : (
+                    <div className="w-full aspect-square bg-muted flex items-center justify-center">
+                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                    <span className="text-xs text-white font-medium">{option.label}</span>
+                  </div>
+                  {value === (option.imageUrl || option.value) && (
+                    <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
+                      <Check className="h-3 w-3 text-primary-foreground" />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'media_image':
+        return (
+          <div className="space-y-4">
+            <Tabs value={imageInputMode} onValueChange={(v) => setImageInputMode(v as 'upload' | 'url')}>
+              <TabsList className="grid w-full max-w-md grid-cols-2">
                 <TabsTrigger value="upload" className="gap-2">
                   <Upload className="h-3.5 w-3.5" />
                   Upload
@@ -215,49 +237,6 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
                   URL
                 </TabsTrigger>
               </TabsList>
-
-              {hasOptions && (
-                <TabsContent value="options" className="mt-3">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {field.options!.map((option) => (
-                      <button
-                        key={option.id}
-                        type="button"
-                        onClick={() => {
-                          setPreviewUrl(null);
-                          setCustomImagePreview(null);
-                          onChange(option.imageUrl || option.value);
-                        }}
-                        className={`relative rounded-lg overflow-hidden border-2 transition-all ${
-                          value === (option.imageUrl || option.value)
-                            ? 'border-primary ring-2 ring-primary/20'
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        {option.imageUrl ? (
-                          <img
-                            src={option.imageUrl}
-                            alt={option.label}
-                            className="w-full aspect-square object-cover"
-                          />
-                        ) : (
-                          <div className="w-full aspect-square bg-muted flex items-center justify-center">
-                            <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                          <span className="text-xs text-white font-medium">{option.label}</span>
-                        </div>
-                        {value === (option.imageUrl || option.value) && (
-                          <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
-                            <Check className="h-3 w-3 text-primary-foreground" />
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </TabsContent>
-              )}
 
               <TabsContent value="upload" className="mt-3">
                 <div className="space-y-3">
@@ -312,7 +291,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
           </div>
         );
 
-      case 'audio':
+      case 'media_audio':
         return (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -341,7 +320,72 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
           </div>
         );
 
-      case 'text_selection':
+      case 'media_video':
+        return (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="relative"
+                asChild
+              >
+                <label>
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  Upload Vídeo
+                  <input
+                    type="file"
+                    accept="video/*"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={handleFileUpload}
+                  />
+                </label>
+              </Button>
+              {value && <span className="text-sm text-muted-foreground">Arquivo selecionado</span>}
+            </div>
+            {previewUrl && (
+              <video controls src={previewUrl} className="w-full max-w-md rounded-lg" />
+            )}
+          </div>
+        );
+
+      case 'selection_audio':
+        return (
+          <div className="space-y-3">
+            <ScrollArea className="max-h-64 border rounded-lg">
+              <div className="p-2 space-y-2">
+                {field.options?.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => onChange(option.audioUrl || option.value)}
+                    className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
+                      value === (option.audioUrl || option.value)
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1">
+                        <span className="font-medium text-sm block mb-1">{option.label}</span>
+                        {option.audioUrl && (
+                          <audio controls className="w-full h-8" onClick={(e) => e.stopPropagation()}>
+                            <source src={option.audioUrl} />
+                          </audio>
+                        )}
+                      </div>
+                      {value === (option.audioUrl || option.value) && (
+                        <Check className="h-4 w-4 text-primary shrink-0" />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        );
+
+      case 'selection_text':
         return (
           <div className="space-y-3">
             <ScrollArea className="max-h-64 border rounded-lg">

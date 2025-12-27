@@ -3,10 +3,13 @@
 export type FieldType = 
   | 'text' 
   | 'textarea' 
-  | 'image' 
-  | 'audio' 
+  | 'media_image'    // Mídia - Imagem (usuário faz upload no wizard)
+  | 'media_audio'    // Mídia - Áudio (usuário faz upload no wizard)
+  | 'media_video'    // Mídia - Vídeo (usuário faz upload no wizard)
+  | 'selection_image'  // Seleção de imagens (criador define as opções)
+  | 'selection_audio'  // Seleção de áudios (criador define as opções)
+  | 'selection_text'   // Seleção de textos longos (criador define as opções)
   | 'dropdown' 
-  | 'text_selection'
   | 'number'
   | 'date'
   | 'checkbox'
@@ -29,6 +32,7 @@ export interface FieldOption {
   label: string;
   value: string;
   imageUrl?: string;
+  audioUrl?: string;
 }
 
 export interface ResourceField {
@@ -38,7 +42,7 @@ export interface ResourceField {
   type: FieldType;
   required: boolean;
   placeholder?: string;
-  options?: FieldOption[]; // For dropdown, image_selection, text_selection
+  options?: FieldOption[]; // For dropdown, selection types
   defaultValue?: string;
   stepId?: string; // ID da etapa à qual o campo pertence
 }
@@ -91,11 +95,13 @@ export const FIELD_TYPE_CATEGORIES = {
   },
   media: {
     label: 'Mídia',
-    types: ['image', 'audio'] as FieldType[],
+    description: 'O usuário faz upload no momento de usar o recurso',
+    types: ['media_image', 'media_audio', 'media_video'] as FieldType[],
   },
   selection: {
     label: 'Seleção',
-    types: ['dropdown', 'text_selection'] as FieldType[],
+    description: 'Você define as opções agora, usuário escolhe depois',
+    types: ['selection_image', 'selection_audio', 'selection_text', 'dropdown'] as FieldType[],
   },
   product: {
     label: 'Produto',
@@ -106,10 +112,13 @@ export const FIELD_TYPE_CATEGORIES = {
 export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   text: 'Texto Curto',
   textarea: 'Texto Longo',
-  image: 'Imagem',
-  audio: 'Upload de Áudio',
+  media_image: 'Upload de Imagem',
+  media_audio: 'Upload de Áudio',
+  media_video: 'Upload de Vídeo',
+  selection_image: 'Seleção de Imagens',
+  selection_audio: 'Seleção de Áudios',
+  selection_text: 'Seleção de Textos',
   dropdown: 'Lista Suspensa',
-  text_selection: 'Seleção de Textos',
   number: 'Número',
   date: 'Data',
   checkbox: 'Checkbox',
@@ -120,10 +129,13 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
 export const FIELD_TYPE_DESCRIPTIONS: Record<FieldType, string> = {
   text: 'Campo de texto simples',
   textarea: 'Área de texto maior',
-  image: 'Upload, URL ou seleção de imagens',
-  audio: 'Upload de arquivo de áudio',
+  media_image: 'Usuário faz upload de imagem ao usar',
+  media_audio: 'Usuário faz upload de áudio ao usar',
+  media_video: 'Usuário faz upload de vídeo ao usar',
+  selection_image: 'Defina imagens para o usuário escolher',
+  selection_audio: 'Defina áudios para o usuário escolher',
+  selection_text: 'Defina textos longos para o usuário escolher',
   dropdown: 'Lista de opções',
-  text_selection: 'Escolha entre textos pré-definidos',
   number: 'Valor numérico',
   date: 'Seletor de data',
   checkbox: 'Opção sim/não',
