@@ -29,6 +29,8 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { DynamicFieldRenderer } from './DynamicFieldRenderer';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   MarketingResource,
   PublishChannel,
@@ -83,6 +85,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   const [currentStep, setCurrentStep] = useState<WizardStep>('fields');
   const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
   const [selectedChannels, setSelectedChannels] = useState<PublishChannel[]>([]);
+  const [autoPublishChannels, setAutoPublishChannels] = useState<PublishChannel[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<{ type: ReturnType; content: string } | null>(null);
 
@@ -94,7 +97,18 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   };
 
   const toggleChannel = (channel: PublishChannel) => {
-    setSelectedChannels((prev) =>
+    setSelectedChannels((prev) => {
+      if (prev.includes(channel)) {
+        // Remove from auto-publish as well
+        setAutoPublishChannels((auto) => auto.filter((c) => c !== channel));
+        return prev.filter((c) => c !== channel);
+      }
+      return [...prev, channel];
+    });
+  };
+
+  const toggleAutoPublish = (channel: PublishChannel) => {
+    setAutoPublishChannels((prev) =>
       prev.includes(channel)
         ? prev.filter((c) => c !== channel)
         : [...prev, channel]
@@ -144,6 +158,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
           value: fieldValues[field.id],
         })),
         channels: selectedChannels,
+        autoPublishChannels: autoPublishChannels,
         timestamp: new Date().toISOString(),
       };
 
@@ -209,6 +224,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     setCurrentStep('fields');
     setFieldValues({});
     setSelectedChannels([]);
+    setAutoPublishChannels([]);
     setResult(null);
     onClose();
   };
@@ -234,36 +250,73 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
 
       case 'channels':
         return (
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              Selecione em quais canais deseja publicar o resultado
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {(Object.keys(CHANNEL_CONFIG) as PublishChannel[]).map((channel) => {
-                const config = CHANNEL_CONFIG[channel];
-                const isSelected = selectedChannels.includes(channel);
-                return (
-                  <button
-                    key={channel}
-                    type="button"
-                    onClick={() => toggleChannel(channel)}
-                    className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
-                      isSelected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className={`p-2 rounded-full ${config.color} text-white`}>
-                      <ChannelIcon channel={channel} />
-                    </div>
-                    <span className="text-sm font-medium">{config.label}</span>
-                    {isSelected && (
-                      <Check className="h-4 w-4 text-primary absolute top-2 right-2" />
-                    )}
-                  </button>
-                );
-              })}
+          <div className="space-y-6">
+            <div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Selecione em quais canais deseja publicar o resultado
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {(Object.keys(CHANNEL_CONFIG) as PublishChannel[]).map((channel) => {
+                  const config = CHANNEL_CONFIG[channel];
+                  const isSelected = selectedChannels.includes(channel);
+                  return (
+                    <button
+                      key={channel}
+                      type="button"
+                      onClick={() => toggleChannel(channel)}
+                      className={`p-4 rounded-lg border-2 transition-all flex flex-col items-center gap-2 relative ${
+                        isSelected
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className={`p-2 rounded-full ${config.color} text-white`}>
+                        <ChannelIcon channel={channel} />
+                      </div>
+                      <span className="text-sm font-medium">{config.label}</span>
+                      {isSelected && (
+                        <Check className="h-4 w-4 text-primary absolute top-2 right-2" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            {selectedChannels.length > 0 && (
+              <div className="border-t pt-4">
+                <h4 className="font-medium text-sm mb-3">Publicação Automática</h4>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Ative para publicar automaticamente após a geração do conteúdo
+                </p>
+                <div className="space-y-3">
+                  {selectedChannels.map((channel) => {
+                    const config = CHANNEL_CONFIG[channel];
+                    const isAutoPublish = autoPublishChannels.includes(channel);
+                    return (
+                      <div
+                        key={channel}
+                        className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-1.5 rounded-full ${config.color} text-white`}>
+                            <ChannelIcon channel={channel} />
+                          </div>
+                          <Label htmlFor={`auto-${channel}`} className="font-medium cursor-pointer">
+                            {config.label}
+                          </Label>
+                        </div>
+                        <Switch
+                          id={`auto-${channel}`}
+                          checked={isAutoPublish}
+                          onCheckedChange={() => toggleAutoPublish(channel)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -296,12 +349,22 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
                 {selectedChannels.length === 0 ? (
                   <span className="text-sm text-muted-foreground">Nenhum canal selecionado</span>
                 ) : (
-                  selectedChannels.map((channel) => (
-                    <Badge key={channel} variant="secondary" className="flex items-center gap-1">
-                      <ChannelIcon channel={channel} />
-                      {CHANNEL_CONFIG[channel].label}
-                    </Badge>
-                  ))
+                  selectedChannels.map((channel) => {
+                    const isAutoPublish = autoPublishChannels.includes(channel);
+                    return (
+                      <Badge 
+                        key={channel} 
+                        variant={isAutoPublish ? "default" : "secondary"} 
+                        className="flex items-center gap-1"
+                      >
+                        <ChannelIcon channel={channel} />
+                        {CHANNEL_CONFIG[channel].label}
+                        {isAutoPublish && (
+                          <span className="text-xs ml-1">(Auto)</span>
+                        )}
+                      </Badge>
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -363,15 +426,30 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
                 </Card>
 
                 {selectedChannels.length > 0 && (
-                  <div className="text-center text-sm text-muted-foreground">
-                    <p>Será publicado em:</p>
-                    <div className="flex justify-center gap-2 mt-2">
-                      {selectedChannels.map((channel) => (
-                        <Badge key={channel} variant="secondary">
-                          {CHANNEL_CONFIG[channel].label}
-                        </Badge>
-                      ))}
+                  <div className="text-center text-sm text-muted-foreground space-y-3">
+                    <p>Canais selecionados:</p>
+                    <div className="flex justify-center flex-wrap gap-2">
+                      {selectedChannels.map((channel) => {
+                        const isAutoPublish = autoPublishChannels.includes(channel);
+                        return (
+                          <Badge 
+                            key={channel} 
+                            variant={isAutoPublish ? "default" : "secondary"}
+                            className="flex items-center gap-1"
+                          >
+                            {CHANNEL_CONFIG[channel].label}
+                            {isAutoPublish && (
+                              <span className="text-xs ml-1">(Automático)</span>
+                            )}
+                          </Badge>
+                        );
+                      })}
                     </div>
+                    {autoPublishChannels.length > 0 && (
+                      <p className="text-xs text-green-600">
+                        ✓ Publicação automática ativada para {autoPublishChannels.length} canal(is)
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
