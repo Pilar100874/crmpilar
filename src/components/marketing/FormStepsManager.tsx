@@ -46,9 +46,10 @@ interface FormStepsManagerProps {
 // Sortable field item component
 const SortableFieldItem: React.FC<{
   field: ResourceField;
+  allFields: ResourceField[];
   onUpdate: (field: ResourceField) => void;
   onRemove: () => void;
-}> = ({ field, onUpdate, onRemove }) => {
+}> = ({ field, allFields, onUpdate, onRemove }) => {
   const {
     attributes,
     listeners,
@@ -75,6 +76,7 @@ const SortableFieldItem: React.FC<{
       </div>
       <ResourceFieldEditor
         field={field}
+        allFields={allFields}
         onChange={onUpdate}
         onRemove={onRemove}
       />
@@ -317,6 +319,7 @@ export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
                                   <SortableFieldItem
                                     key={field.id}
                                     field={field}
+                                    allFields={fields}
                                     onUpdate={(updated) => handleUpdateField(field.id, updated)}
                                     onRemove={() => handleRemoveField(field.id)}
                                   />
