@@ -1,8 +1,9 @@
-import React from 'react';
-import { Plus, Trash2, GripVertical } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Plus, Trash2, GripVertical, Upload, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
@@ -19,7 +20,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
   onChange,
   onRemove,
 }) => {
-  const needsOptions = ['dropdown', 'image_selection', 'text_selection'].includes(field.type);
+  const needsOptions = ['dropdown', 'text_selection', 'image'].includes(field.type);
 
   const handleAddOption = () => {
     const newOption: FieldOption = {
@@ -42,6 +43,11 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
   const handleRemoveOption = (index: number) => {
     const newOptions = (field.options || []).filter((_, i) => i !== index);
     onChange({ ...field, options: newOptions });
+  };
+
+  const handleImageUpload = (index: number, file: File) => {
+    const url = URL.createObjectURL(file);
+    handleUpdateOption(index, { imageUrl: url });
   };
 
   return (
@@ -129,38 +135,86 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
                 </Button>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {(field.options || []).map((option, index) => (
-                  <div key={option.id} className="flex gap-2">
-                    <Input
-                      value={option.label}
-                      onChange={(e) => handleUpdateOption(index, { label: e.target.value })}
-                      placeholder="Label"
-                      className="h-8 text-sm"
-                    />
-                    <Input
-                      value={option.value}
-                      onChange={(e) => handleUpdateOption(index, { value: e.target.value })}
-                      placeholder="Valor"
-                      className="h-8 text-sm"
-                    />
-                    {field.type === 'image_selection' && (
+                  <div key={option.id} className="space-y-2 p-3 bg-background rounded-lg border">
+                    <div className="flex gap-2">
                       <Input
-                        value={option.imageUrl || ''}
-                        onChange={(e) => handleUpdateOption(index, { imageUrl: e.target.value })}
-                        placeholder="URL da Imagem"
+                        value={option.label}
+                        onChange={(e) => handleUpdateOption(index, { label: e.target.value })}
+                        placeholder="Título/Label"
+                        className="h-8 text-sm"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveOption(index)}
+                        className="h-8 w-8 p-0 text-destructive shrink-0"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    
+                    {field.type === 'text_selection' ? (
+                      <Textarea
+                        value={option.value}
+                        onChange={(e) => handleUpdateOption(index, { value: e.target.value })}
+                        placeholder="Digite o texto completo aqui..."
+                        rows={3}
+                        className="text-sm"
+                      />
+                    ) : (
+                      <Input
+                        value={option.value}
+                        onChange={(e) => handleUpdateOption(index, { value: e.target.value })}
+                        placeholder="Valor"
                         className="h-8 text-sm"
                       />
                     )}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveOption(index)}
-                      className="h-8 w-8 p-0 text-destructive"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    
+                    {field.type === 'image' && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 flex gap-2">
+                          <Input
+                            value={option.imageUrl || ''}
+                            onChange={(e) => handleUpdateOption(index, { imageUrl: e.target.value })}
+                            placeholder="URL da Imagem"
+                            className="h-8 text-sm"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 relative shrink-0"
+                            asChild
+                          >
+                            <label className="cursor-pointer">
+                              <Upload className="h-3 w-3 mr-1" />
+                              Upload
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleImageUpload(index, file);
+                                }}
+                              />
+                            </label>
+                          </Button>
+                        </div>
+                        {option.imageUrl && (
+                          <div className="w-10 h-10 rounded border overflow-hidden shrink-0">
+                            <img 
+                              src={option.imageUrl} 
+                              alt={option.label} 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
