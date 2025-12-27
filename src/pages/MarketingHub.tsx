@@ -6,7 +6,8 @@ import {
   Megaphone,
   PanelLeft,
   PanelLeftClose,
-  LucideIcon
+  LucideIcon,
+  Wand2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,6 +20,7 @@ import { cn } from '@/lib/utils';
 import MarketingCanvas from './MarketingCanvas';
 import MarketingAutomacoes from './MarketingAutomacoes';
 import MarketingCampanhas from './MarketingCampanhas';
+import MarketingRecursos from '@/components/marketing/MarketingRecursos';
 
 interface TabItem {
   id: string;
@@ -28,13 +30,14 @@ interface TabItem {
 }
 
 const tabItems: TabItem[] = [
+  { id: 'recursos', label: 'Recursos IA', icon: Wand2, description: 'Crie conteúdo com IA e n8n' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Fluxos automatizados de marketing' },
   { id: 'campanhas', label: 'Campanhas', icon: Megaphone, description: 'Gestão de campanhas' },
   { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
 ];
 
 const MarketingHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('automacoes');
+  const [activeTab, setActiveTab] = useState('recursos');
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
   const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
@@ -42,8 +45,10 @@ const MarketingHub: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'recursos':
+        return <MarketingRecursos />;
       case 'canvas':
-        return <MarketingCanvas onClose={() => setActiveTab('automacoes')} />;
+        return <MarketingCanvas onClose={() => setActiveTab('recursos')} />;
       case 'automacoes':
         return <MarketingAutomacoes />;
       case 'campanhas':
