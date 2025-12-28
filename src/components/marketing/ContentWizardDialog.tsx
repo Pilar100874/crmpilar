@@ -319,25 +319,29 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
         timestamp: new Date().toISOString(),
       };
 
-      // Send to n8n
-      const response = await fetch(resource.n8nWebhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
       // Check if webhook has response enabled
       const webhookHasResponse = resource.webhookHasResponse ?? true;
 
+      // Use Edge Function proxy to avoid CORS issues
+      const { data: proxyResponse, error: proxyError } = await supabase.functions.invoke('n8n-proxy', {
+        body: {
+          webhookUrl: resource.n8nWebhookUrl,
+          payload,
+          expectResponse: webhookHasResponse,
+        },
+      });
+
+      if (proxyError) {
+        throw new Error(proxyError.message || 'Erro ao chamar proxy');
+      }
+
       if (webhookHasResponse) {
-        if (!response.ok) {
-          throw new Error('Erro ao enviar para n8n');
+        if (!proxyResponse?.success) {
+          throw new Error(proxyResponse?.error || 'Erro ao enviar para n8n');
         }
 
-        const data = await response.json();
-        const contentResult = data.result || data.url || data.text || '';
+        const data = proxyResponse.data;
+        const contentResult = data?.result || data?.url || data?.text || (typeof data === 'string' ? data : '');
 
         // Set result based on return type
         setResult({
