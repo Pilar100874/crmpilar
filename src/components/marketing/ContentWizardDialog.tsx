@@ -457,11 +457,11 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     }
   };
 
-  const handleRegenerate = () => {
+  const handleRegenerate = async () => {
     setResult(null);
     setIsPublished(false);
-    // Go back to review step
-    setCurrentStepIndex(wizardSteps.length - 2);
+    // Call submit again to regenerate
+    await handleSubmit();
   };
 
   const handleClose = () => {
