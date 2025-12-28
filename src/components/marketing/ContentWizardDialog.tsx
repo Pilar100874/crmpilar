@@ -93,12 +93,28 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   const [isPublishing, setIsPublishing] = useState(false);
   const [result, setResult] = useState<{ type: ReturnType; content: string } | null>(null);
   const [isPublished, setIsPublished] = useState(false);
+  const [isTestMode, setIsTestMode] = useState(false);
   
   // Preset states
   const [isSavingPreset, setIsSavingPreset] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [showNewPresetInput, setShowNewPresetInput] = useState(false);
   const [newPresetName, setNewPresetName] = useState('');
+
+  // Função para converter URL de produção para teste
+  const getWebhookUrl = (url: string | undefined, testMode: boolean): string => {
+    if (!url) return '';
+    if (testMode) {
+      // Converter /webhook/ para /webhook-test/
+      return url.replace('/webhook/', '/webhook-test/');
+    }
+    return url;
+  };
+
+  // Verifica se está usando URL de teste
+  const isUsingTestUrl = (url: string | undefined): boolean => {
+    return url?.includes('/webhook-test/') || false;
+  };
 
   // Estado para canais ativos do sistema
   const [activeSystemChannels, setActiveSystemChannels] = useState<string[]>([]);
@@ -347,10 +363,13 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
       // Check if webhook has response enabled
       const webhookHasResponse = resource.webhookHasResponse ?? true;
 
+      // Get the correct webhook URL (test or production)
+      const webhookUrl = getWebhookUrl(resource.n8nWebhookUrl, isTestMode);
+
       // Use Edge Function proxy to avoid CORS issues
       const { data: proxyResponse, error: proxyError } = await supabase.functions.invoke('n8n-proxy', {
         body: {
-          webhookUrl: resource.n8nWebhookUrl,
+          webhookUrl,
           payload,
           expectResponse: webhookHasResponse,
         },
@@ -653,9 +672,22 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
                 </CardContent>
               </Card>
               {resource.n8nWebhookUrl && (
-                <p className="text-xs text-muted-foreground truncate">
-                  URL: {resource.n8nWebhookUrl}
-                </p>
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground truncate">
+                    URL: {getWebhookUrl(resource.n8nWebhookUrl, isTestMode)}
+                  </p>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isTestMode}
+                      onChange={(e) => setIsTestMode(e.target.checked)}
+                      className="rounded border-input"
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      Modo Teste (usa webhook-test)
+                    </span>
+                  </label>
+                </div>
               )}
             </div>
           </div>
@@ -673,6 +705,27 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
                 <p className="text-xs text-muted-foreground">
                   Enviando para n8n e aguardando resposta
                 </p>
+                {isTestMode && (
+                  <div className="pt-2">
+                    <p className="text-xs text-amber-600 mb-2">
+                      Modo Teste: Clique em "Listen for test event" no n8n
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setIsProcessing(false);
+                        setResult(null);
+                        goToPrevStep();
+                        setTimeout(() => handleSubmit(), 100);
+                      }}
+                      className="gap-2"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Tentar Novamente
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : result ? (
               <div className="w-full space-y-4">
