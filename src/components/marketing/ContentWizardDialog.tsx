@@ -957,17 +957,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
         )}
 
         {isResultStep && (
-          <div className="px-6 py-4 border-t bg-muted/30 flex justify-between">
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={handleRegenerate}
-                className="gap-2"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Regenerar
-              </Button>
-            </div>
+          <div className="px-6 py-4 border-t bg-muted/30 flex justify-end">
             {hasPublishStep ? (
               <Button
                 onClick={goToNextStep}
