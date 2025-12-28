@@ -100,11 +100,33 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   const [showNewPresetInput, setShowNewPresetInput] = useState(false);
   const [newPresetName, setNewPresetName] = useState('');
 
-  // Load estabelecimento_id
+  // Estado para canais ativos do sistema
+  const [activeSystemChannels, setActiveSystemChannels] = useState<string[]>([]);
+
+  // Load estabelecimento_id e canais ativos
   useEffect(() => {
     const storedId = localStorage.getItem('estabelecimentoId');
     if (storedId) {
       setEstabelecimentoId(storedId);
+      
+      // Buscar canais ativos
+      const fetchActiveChannels = async () => {
+        const { data } = await supabase
+          .from('canais_atendimento')
+          .select('whatsapp_enabled, telegram_enabled, webchat_enabled')
+          .eq('estabelecimento_id', storedId)
+          .single();
+        
+        if (data) {
+          const active: string[] = [];
+          if (data.whatsapp_enabled) active.push('whatsapp');
+          if (data.telegram_enabled) active.push('telegram');
+          if (data.webchat_enabled) active.push('webchat');
+          setActiveSystemChannels(active);
+        }
+      };
+      
+      fetchActiveChannels();
     }
   }, []);
 
@@ -204,14 +226,17 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     // Add result step (content generation)
     steps.push({ id: 'result', type: 'result', label: 'Resultado' });
     
-    // Add channels + publish step (only if has publish channels configured)
-    const hasPublishChannels = (resource.publishChannels || []).length > 0;
-    if (hasPublishChannels) {
+    // Add channels + publish step (only if has publish channels configured AND at least one is active in the system)
+    const configuredChannels = resource.publishChannels || [];
+    const hasActivePublishChannels = configuredChannels.some(channel => 
+      activeSystemChannels.includes(channel)
+    );
+    if (hasActivePublishChannels) {
       steps.push({ id: 'publish', type: 'publish', label: 'Publicar' });
     }
     
     return steps;
-  }, [resource.steps, resource.fields.length, resource.publishChannels]);
+  }, [resource.steps, resource.fields.length, resource.publishChannels, activeSystemChannels]);
 
   const currentStep = wizardSteps[currentStepIndex];
   const progress = ((currentStepIndex + 1) / wizardSteps.length) * 100;
