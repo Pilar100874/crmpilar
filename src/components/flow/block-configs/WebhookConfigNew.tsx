@@ -277,45 +277,26 @@ export const WebhookConfigNew = ({ config, handleConfigChange, inputRefs, openVa
         <>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Aguardar Retorno</Label>
+              <Label>Salvar Respostas como Campos</Label>
               <Switch 
-                checked={config.hasReturn !== false}
-                onCheckedChange={(checked) => handleConfigChange("hasReturn", checked)}
+                checked={config.saveResponses || false}
+                onCheckedChange={(checked) => handleConfigChange("saveResponses", checked)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Roteamento por Resposta</Label>
+              <Switch 
+                checked={config.responseRouting || false}
+                onCheckedChange={(checked) => handleConfigChange("responseRouting", checked)}
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              {config.hasReturn !== false 
-                ? "O fluxo aguardará a resposta do webhook antes de continuar" 
-                : "O webhook será chamado sem aguardar resposta (fire and forget)"}
+              Dividir o fluxo com base nos códigos de status da resposta (200, 400, 500, etc)
             </p>
           </div>
-
-          {config.hasReturn !== false && (
-            <>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Salvar Respostas como Campos</Label>
-                  <Switch 
-                    checked={config.saveResponses || false}
-                    onCheckedChange={(checked) => handleConfigChange("saveResponses", checked)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Roteamento por Resposta</Label>
-                  <Switch 
-                    checked={config.responseRouting || false}
-                    onCheckedChange={(checked) => handleConfigChange("responseRouting", checked)}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Dividir o fluxo com base nos códigos de status da resposta (200, 400, 500, etc)
-                </p>
-              </div>
-            </>
-          )}
         </>
       )}
     </div>
