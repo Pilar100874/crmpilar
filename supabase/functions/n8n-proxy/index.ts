@@ -88,16 +88,27 @@ serve(async (req) => {
     console.log('n8n-proxy: n8n response status:', response.status);
 
     if (expectResponse) {
-      // Try to parse response as JSON
+      // Get response as text first, then try to parse
       const contentType = response.headers.get('content-type') || '';
+      const responseText = await response.text();
+      console.log('n8n-proxy: Raw response text:', responseText);
+      console.log('n8n-proxy: Content-Type:', contentType);
+      
       let responseData;
 
-      if (contentType.includes('application/json')) {
-        responseData = await response.json();
-        console.log('n8n-proxy: n8n response (JSON):', JSON.stringify(responseData));
+      // Try to parse as JSON if content-type suggests it or if it looks like JSON
+      if (contentType.includes('application/json') || (responseText.trim().startsWith('{') || responseText.trim().startsWith('['))) {
+        try {
+          responseData = JSON.parse(responseText);
+          console.log('n8n-proxy: Parsed as JSON:', JSON.stringify(responseData));
+        } catch (parseError) {
+          // If JSON parsing fails, use text as-is
+          console.log('n8n-proxy: JSON parse failed, using as text');
+          responseData = responseText;
+        }
       } else {
-        responseData = await response.text();
-        console.log('n8n-proxy: n8n response (text):', responseData);
+        responseData = responseText;
+        console.log('n8n-proxy: Using as text:', responseData);
       }
 
       if (!response.ok) {
