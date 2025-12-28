@@ -328,24 +328,48 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error('Erro ao enviar para n8n');
+      // Check if webhook has response enabled
+      const webhookHasResponse = resource.webhookHasResponse ?? true;
+
+      if (webhookHasResponse) {
+        if (!response.ok) {
+          throw new Error('Erro ao enviar para n8n');
+        }
+
+        const data = await response.json();
+        const contentResult = data.result || data.url || data.text || '';
+
+        // Set result based on return type
+        setResult({
+          type: resource.returnType,
+          content: contentResult,
+        });
+
+        toast.success('Conteúdo gerado com sucesso!');
+      } else {
+        // No response expected, just show success
+        setResult({
+          type: resource.returnType,
+          content: '',
+        });
+        toast.success('Dados enviados com sucesso!');
       }
-
-      const data = await response.json();
-      const contentResult = data.result || data.url || data.text || '';
-
-      // Set result based on return type
-      setResult({
-        type: resource.returnType,
-        content: contentResult,
-      });
-
-      toast.success('Conteúdo gerado com sucesso!');
     } catch (error) {
       console.error('Error sending to n8n:', error);
-      toast.error('Erro ao gerar conteúdo. Verifique a URL do webhook.');
-      setResult(null);
+      
+      // If webhook has no response, treat network errors differently
+      const webhookHasResponse = resource.webhookHasResponse ?? true;
+      if (!webhookHasResponse) {
+        // Even if there's an error, the request might have been sent
+        setResult({
+          type: resource.returnType,
+          content: '',
+        });
+        toast.success('Dados enviados!');
+      } else {
+        toast.error('Erro ao gerar conteúdo. Verifique a URL do webhook.');
+        setResult(null);
+      }
     } finally {
       setIsProcessing(false);
     }

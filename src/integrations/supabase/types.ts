@@ -4158,6 +4158,7 @@ export type Database = {
           save_location: string | null
           steps: Json | null
           updated_at: string
+          webhook_has_response: boolean | null
         }
         Insert: {
           auto_publish_enabled?: boolean | null
@@ -4174,6 +4175,7 @@ export type Database = {
           save_location?: string | null
           steps?: Json | null
           updated_at?: string
+          webhook_has_response?: boolean | null
         }
         Update: {
           auto_publish_enabled?: boolean | null
@@ -4190,6 +4192,7 @@ export type Database = {
           save_location?: string | null
           steps?: Json | null
           updated_at?: string
+          webhook_has_response?: boolean | null
         }
         Relationships: [
           {

@@ -20,6 +20,7 @@ interface DBMarketingResource {
   n8n_publish_webhook_url: string | null;
   publish_channels: string[] | null;
   auto_publish_enabled: boolean | null;
+  webhook_has_response: boolean | null;
   created_at: string;
   updated_at: string;
 }
@@ -36,6 +37,7 @@ const mapDBToResource = (db: DBMarketingResource): MarketingResource => ({
   n8nPublishWebhookUrl: db.n8n_publish_webhook_url || undefined,
   publishChannels: (db.publish_channels || []) as PublishChannel[],
   autoPublishEnabled: db.auto_publish_enabled || false,
+  webhookHasResponse: db.webhook_has_response ?? true,
   createdAt: db.created_at,
   updatedAt: db.updated_at,
 });
@@ -112,6 +114,7 @@ const MarketingRecursos: React.FC = () => {
         n8n_publish_webhook_url: resource.n8nPublishWebhookUrl || null,
         publish_channels: resource.publishChannels || [],
         auto_publish_enabled: resource.autoPublishEnabled || false,
+        webhook_has_response: resource.webhookHasResponse ?? true,
       };
 
       if (editingResource) {
