@@ -68,6 +68,7 @@ export interface MarketingResource {
   n8nPublishWebhookUrl?: string; // Webhook para publicar conteúdo
   publishChannels?: PublishChannel[]; // Canais habilitados para publicação
   autoPublishEnabled?: boolean; // Se publicação automática está ativada
+  webhookHasResponse?: boolean; // Se o webhook de geração terá retorno
   createdAt: string;
   updatedAt: string;
 }

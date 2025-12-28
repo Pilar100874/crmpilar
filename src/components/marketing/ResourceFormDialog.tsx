@@ -80,6 +80,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
   const [activeFieldTab, setActiveFieldTab] = useState('basic');
   const [publishChannels, setPublishChannels] = useState<PublishChannel[]>([]);
   const [autoPublishEnabled, setAutoPublishEnabled] = useState(false);
+  const [webhookHasResponse, setWebhookHasResponse] = useState(true);
 
   useEffect(() => {
     if (resource) {
@@ -93,6 +94,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       setN8nPublishWebhookUrl(resource.n8nPublishWebhookUrl || '');
       setPublishChannels(resource.publishChannels || []);
       setAutoPublishEnabled(resource.autoPublishEnabled || false);
+      setWebhookHasResponse(resource.webhookHasResponse ?? true);
     } else {
       setName('');
       setDescription('');
@@ -104,6 +106,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       setN8nPublishWebhookUrl('');
       setPublishChannels([]);
       setAutoPublishEnabled(false);
+      setWebhookHasResponse(true);
     }
   }, [resource, open]);
 
@@ -150,6 +153,7 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
       n8nPublishWebhookUrl,
       publishChannels,
       autoPublishEnabled,
+      webhookHasResponse,
       createdAt: resource?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -247,6 +251,20 @@ export const ResourceFormDialog: React.FC<ResourceFormDialogProps> = ({
                     Webhook para publicar nos canais (opcional)
                   </p>
                 </div>
+              </div>
+
+              {/* Webhook Has Response Toggle */}
+              <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+                <div>
+                  <Label className="text-sm font-medium">Webhook tem retorno</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Desabilite se o webhook de geração não retorna dados (ex: apenas dispara uma automação)
+                  </p>
+                </div>
+                <Switch
+                  checked={webhookHasResponse}
+                  onCheckedChange={setWebhookHasResponse}
+                />
               </div>
             </div>
 
