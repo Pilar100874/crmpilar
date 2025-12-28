@@ -5,6 +5,38 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function makeRequest(webhookUrl: string, payload: any, method: string) {
+  console.log('n8n-proxy: Sending', method, 'request to n8n...');
+  
+  if (method === 'GET') {
+    // For GET requests, append payload as query params
+    const url = new URL(webhookUrl);
+    if (payload) {
+      Object.entries(payload).forEach(([key, value]) => {
+        if (typeof value === 'object') {
+          url.searchParams.append(key, JSON.stringify(value));
+        } else {
+          url.searchParams.append(key, String(value));
+        }
+      });
+    }
+    return await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+  } else {
+    return await fetch(webhookUrl, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -12,10 +44,11 @@ serve(async (req) => {
   }
 
   try {
-    const { webhookUrl, payload, expectResponse = true } = await req.json();
+    const { webhookUrl, payload, expectResponse = true, httpMethod = 'AUTO' } = await req.json();
 
     console.log('n8n-proxy: Received request');
     console.log('n8n-proxy: webhookUrl:', webhookUrl);
+    console.log('n8n-proxy: httpMethod:', httpMethod);
     console.log('n8n-proxy: expectResponse:', expectResponse);
     console.log('n8n-proxy: payload:', JSON.stringify(payload));
 
@@ -27,15 +60,30 @@ serve(async (req) => {
       );
     }
 
-    // Make the request to n8n
-    console.log('n8n-proxy: Sending request to n8n...');
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+    let response;
+    const method = httpMethod.toUpperCase();
+
+    if (method === 'AUTO') {
+      // Try POST first, then GET if POST fails with method error
+      console.log('n8n-proxy: AUTO mode - trying POST first...');
+      response = await makeRequest(webhookUrl, payload, 'POST');
+      
+      // If POST fails with 404 and mentions GET, try GET
+      if (response.status === 404) {
+        const clonedResponse = response.clone();
+        try {
+          const errorBody = await clonedResponse.json();
+          if (errorBody?.message?.toLowerCase().includes('get')) {
+            console.log('n8n-proxy: POST failed, webhook suggests GET - retrying with GET...');
+            response = await makeRequest(webhookUrl, payload, 'GET');
+          }
+        } catch {
+          // If we can't parse error, just use original response
+        }
+      }
+    } else {
+      response = await makeRequest(webhookUrl, payload, method);
+    }
 
     console.log('n8n-proxy: n8n response status:', response.status);
 
