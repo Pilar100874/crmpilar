@@ -257,7 +257,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   const currentStep = wizardSteps[currentStepIndex];
   const progress = ((currentStepIndex + 1) / wizardSteps.length) * 100;
 
-  // Generate payload for 1st webhook (generation)
+  // Generate payload for 1st webhook (generation) - includes hidden fields with default values
   const generatePayload = useMemo(() => ({
     resourceId: resource.id,
     resourceName: resource.name,
@@ -266,7 +266,8 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
       name: field.name,
       label: field.label,
       type: field.type,
-      value: fieldValues[field.id],
+      value: field.hidden ? (fieldValues[field.id] ?? field.defaultValue ?? '') : fieldValues[field.id],
+      hidden: field.hidden || false,
     })),
     timestamp: new Date().toISOString(),
   }), [resource, fieldValues]);
@@ -304,12 +305,12 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     if (currentStep?.type !== 'form') return [];
     
     if (currentStep.formStep) {
-      // Return fields belonging to this step
-      return resource.fields.filter((f) => f.stepId === currentStep.formStep?.id);
+      // Return visible fields belonging to this step (exclude hidden fields)
+      return resource.fields.filter((f) => f.stepId === currentStep.formStep?.id && !f.hidden);
     }
     
-    // Return all fields (no steps defined)
-    return resource.fields;
+    // Return all visible fields (no steps defined, exclude hidden fields)
+    return resource.fields.filter((f) => !f.hidden);
   };
 
   const validateCurrentStep = () => {
@@ -344,7 +345,7 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
     goToNextStep(); // Go to result step
 
     try {
-      // Prepare payload
+      // Prepare payload - include hidden fields with their default values
       const payload = {
         resourceId: resource.id,
         resourceName: resource.name,
@@ -353,7 +354,8 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
           name: field.name,
           label: field.label,
           type: field.type,
-          value: fieldValues[field.id],
+          value: field.hidden ? (fieldValues[field.id] ?? field.defaultValue ?? '') : fieldValues[field.id],
+          hidden: field.hidden || false,
         })),
         channels: selectedChannels,
         autoPublishEnabled: resource.autoPublishEnabled || false,
