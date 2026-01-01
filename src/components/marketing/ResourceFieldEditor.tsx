@@ -411,15 +411,32 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
             </Badge>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2">
               <Switch
                 checked={field.required}
                 onCheckedChange={(checked) => onChange({ ...field, required: checked })}
+                disabled={field.hidden}
               />
               <Label className="text-xs">Obrigatório</Label>
             </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={field.hidden || false}
+                onCheckedChange={(checked) => onChange({ ...field, hidden: checked, required: checked ? false : field.required })}
+              />
+              <Label className="text-xs text-amber-600">Campo Oculto</Label>
+            </div>
           </div>
+
+          {field.hidden && (
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                👁️‍🗨️ Este campo não será exibido no wizard, mas seu valor será enviado ao webhook.
+                {field.defaultValue ? ` Valor padrão: "${field.defaultValue}"` : ' Configure um valor padrão ou opções.'}
+              </p>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label className="text-xs">Texto de Apoio</Label>

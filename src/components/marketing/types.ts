@@ -47,6 +47,7 @@ export interface ResourceField {
   options?: FieldOption[]; // For dropdown, selection types
   defaultValue?: string;
   stepId?: string; // ID da etapa à qual o campo pertence
+  hidden?: boolean; // Campo oculto - não aparece no wizard mas é enviado ao webhook
 }
 
 export interface FormStep {
