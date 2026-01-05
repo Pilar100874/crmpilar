@@ -1,87 +1,190 @@
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Truck, Map, Route } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const WatchLogisticaMenu = () => {
   const navigate = useNavigate();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (date: Date) => date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   const menuItems = [
     { 
       icon: Truck, 
-      label: 'Veículos Online', 
-      description: 'Status em tempo real',
+      label: 'Veículos', 
       path: '/watch/logistica/veiculos',
-      color: 'bg-green-500/10 text-green-500'
+      color: '#22c55e'
     },
     { 
       icon: Map, 
-      label: 'Mapa ao Vivo', 
-      description: 'Localização atual',
+      label: 'Mapa', 
       path: '/watch/logistica/mapa',
-      color: 'bg-blue-500/10 text-blue-500'
+      color: '#3b82f6'
     },
     { 
       icon: Route, 
-      label: 'Rotas do Dia', 
-      description: 'Trajetos realizados',
+      label: 'Rotas', 
       path: '/watch/logistica/rota',
-      color: 'bg-purple-500/10 text-purple-500'
+      color: '#a855f7'
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background p-2 max-w-[200px] mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <button 
-          onClick={() => navigate('/watch')}
-          className="p-1 rounded-full bg-muted/50 hover:bg-muted"
-        >
-          <ArrowLeft className="w-3 h-3" />
+    <div className="watch-container">
+      <div className="watch-frame">
+        {/* Time display */}
+        <div className="watch-time">
+          <span className="time-main">{formatTime(currentTime)}</span>
+        </div>
+
+        {/* Back button */}
+        <button onClick={() => navigate('/watch')} className="watch-back">
+          <ArrowLeft className="w-4 h-4" />
         </button>
-        <span className="text-[10px] font-medium">Logística</span>
-        <div className="w-5" />
-      </div>
 
-      {/* Menu Items */}
-      <div className="space-y-2">
-        {menuItems.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={index}
-              onClick={() => navigate(item.path)}
-              className="w-full bg-card rounded-xl p-3 border border-border/50 flex items-center gap-3 hover:bg-muted/50 transition-colors"
-            >
-              <div className={`p-2 rounded-lg ${item.color}`}>
-                <Icon className="w-5 h-5" />
-              </div>
-              <div className="text-left">
-                <div className="text-[11px] font-medium">{item.label}</div>
-                <div className="text-[9px] text-muted-foreground">{item.description}</div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+        {/* Title */}
+        <div className="watch-title">
+          <Truck className="w-5 h-5" />
+          <span>Logística</span>
+        </div>
 
-      {/* Quick Stats */}
-      <div className="mt-4 bg-muted/30 rounded-lg p-2">
-        <div className="text-[9px] font-medium mb-2">Resumo</div>
-        <div className="grid grid-cols-3 gap-1 text-center">
-          <div>
-            <div className="text-sm font-bold text-green-500">8</div>
-            <div className="text-[7px] text-muted-foreground">Online</div>
-          </div>
-          <div>
-            <div className="text-sm font-bold text-yellow-500">2</div>
-            <div className="text-[7px] text-muted-foreground">Parados</div>
-          </div>
-          <div>
-            <div className="text-sm font-bold text-muted-foreground">3</div>
-            <div className="text-[7px] text-muted-foreground">Offline</div>
-          </div>
+        {/* Menu Items */}
+        <div className="menu-grid">
+          {menuItems.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={index}
+                onClick={() => navigate(item.path)}
+                className="menu-item"
+                style={{ '--item-color': item.color } as React.CSSProperties}
+              >
+                <div className="menu-icon">
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="menu-label">{item.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
+
+      <style>{`
+        .watch-container {
+          min-height: 100vh;
+          min-height: 100dvh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #000;
+          padding: 0;
+          margin: 0;
+          overflow: hidden;
+        }
+
+        .watch-frame {
+          width: min(100vw, 100vh);
+          height: min(100vw, 100vh);
+          max-width: 450px;
+          max-height: 450px;
+          border-radius: 50%;
+          background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          box-shadow: 
+            inset 0 0 60px rgba(0, 0, 0, 0.5),
+            0 0 0 4px #2a2a3e,
+            0 0 0 6px #1a1a2e;
+          overflow: hidden;
+        }
+
+        .watch-time {
+          position: absolute;
+          top: 6%;
+          z-index: 1000;
+        }
+
+        .time-main {
+          font-size: clamp(10px, 3vw, 14px);
+          font-weight: 300;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .watch-back {
+          position: absolute;
+          top: 5%;
+          left: 20%;
+          background: rgba(255, 255, 255, 0.1);
+          border: none;
+          border-radius: 50%;
+          width: clamp(24px, 7vw, 32px);
+          height: clamp(24px, 7vw, 32px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          cursor: pointer;
+        }
+
+        .watch-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: white;
+          font-size: clamp(12px, 4vw, 18px);
+          font-weight: 600;
+          margin-bottom: 5%;
+        }
+
+        .menu-grid {
+          display: flex;
+          flex-direction: column;
+          gap: clamp(8px, 3vw, 14px);
+          width: 60%;
+        }
+
+        .menu-item {
+          display: flex;
+          align-items: center;
+          gap: clamp(8px, 3vw, 14px);
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: clamp(10px, 3vw, 16px);
+          padding: clamp(10px, 3vw, 16px);
+          cursor: pointer;
+          transition: all 0.2s;
+          color: white;
+        }
+
+        .menu-item:active {
+          transform: scale(0.95);
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-icon {
+          width: clamp(32px, 10vw, 44px);
+          height: clamp(32px, 10vw, 44px);
+          border-radius: 50%;
+          background: color-mix(in srgb, var(--item-color) 20%, transparent);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--item-color);
+        }
+
+        .menu-label {
+          font-size: clamp(11px, 3.5vw, 15px);
+          font-weight: 500;
+        }
+      `}</style>
     </div>
   );
 };

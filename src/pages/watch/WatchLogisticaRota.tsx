@@ -1,26 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, Route, Clock, Gauge, MapPin } from 'lucide-react';
 import { format, startOfDay, endOfDay, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { Veiculo, VeiculoPosicao, HistoricoEstatisticas } from '@/types/logistica';
-import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 
-const MapUpdater = ({ positions }: { positions: VeiculoPosicao[] }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    if (positions.length > 0) {
-      const bounds = L.latLngBounds(positions.map(p => [p.lat, p.lng]));
-      map.fitBounds(bounds, { padding: [20, 20], maxZoom: 15 });
-    }
-  }, [positions, map]);
-  
-  return null;
-};
+// Lazy load map components
+const RouteMapView = lazy(() => import('@/components/watch/WatchRouteMapView'));
 
 const WatchLogisticaRota = () => {
   const navigate = useNavigate();
@@ -31,10 +18,16 @@ const WatchLogisticaRota = () => {
   const [estatisticas, setEstatisticas] = useState<HistoricoEstatisticas | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setMapReady(true), 100);
+    return () => clearTimeout(timeout);
   }, []);
 
   const fetchData = async () => {
@@ -42,7 +35,6 @@ const WatchLogisticaRota = () => {
     
     setLoading(true);
     try {
-      // Fetch vehicle info
       const { data: veiculoData, error: veiculoError } = await supabase
         .from('veiculos')
         .select('*')
@@ -52,7 +44,6 @@ const WatchLogisticaRota = () => {
       if (veiculoError) throw veiculoError;
       setVeiculo(veiculoData as Veiculo);
 
-      // Fetch today's positions
       const today = new Date();
       const start = startOfDay(today);
       const end = endOfDay(today);
@@ -134,7 +125,7 @@ const WatchLogisticaRota = () => {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 60000); // Update every minute
+    const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, [veiculoId]);
 
@@ -147,12 +138,6 @@ const WatchLogisticaRota = () => {
     return `${mins}m`;
   };
 
-  const routeCoordinates = posicoes.map(p => [p.lat, p.lng] as [number, number]);
-  const lastPosition = posicoes.length > 0 ? posicoes[posicoes.length - 1] : null;
-  const defaultCenter: [number, number] = lastPosition 
-    ? [lastPosition.lat, lastPosition.lng]
-    : [-23.5505, -46.6333];
-
   return (
     <div className="watch-container">
       <div className="watch-frame">
@@ -162,7 +147,7 @@ const WatchLogisticaRota = () => {
         </div>
 
         {/* Back button */}
-        <button onClick={() => navigate(`/watch/logistica/mapa?veiculo=${veiculoId}`)} className="watch-back">
+        <button onClick={() => navigate('/watch/logistica')} className="watch-back">
           <ArrowLeft className="w-4 h-4" />
         </button>
 
@@ -201,57 +186,18 @@ const WatchLogisticaRota = () => {
               <Route className="w-8 h-8 opacity-50" />
               <span>Sem rota hoje</span>
             </div>
+          ) : mapReady ? (
+            <Suspense fallback={
+              <div className="loading-indicator">
+                <RefreshCw className="w-6 h-6 animate-spin" />
+              </div>
+            }>
+              <RouteMapView posicoes={posicoes} />
+            </Suspense>
           ) : (
-            <MapContainer
-              center={defaultCenter}
-              zoom={13}
-              style={{ width: '100%', height: '100%' }}
-              zoomControl={false}
-              attributionControl={false}
-            >
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              />
-              <MapUpdater positions={posicoes} />
-              
-              {/* Route polyline */}
-              <Polyline
-                positions={routeCoordinates}
-                pathOptions={{ 
-                  color: '#3b82f6', 
-                  weight: 3,
-                  opacity: 0.8
-                }}
-              />
-              
-              {/* Start marker */}
-              {posicoes.length > 0 && (
-                <CircleMarker
-                  center={[posicoes[0].lat, posicoes[0].lng]}
-                  radius={6}
-                  pathOptions={{ 
-                    fillColor: '#22c55e',
-                    fillOpacity: 1,
-                    color: 'white',
-                    weight: 2
-                  }}
-                />
-              )}
-              
-              {/* End marker (current position) */}
-              {lastPosition && (
-                <CircleMarker
-                  center={[lastPosition.lat, lastPosition.lng]}
-                  radius={8}
-                  pathOptions={{ 
-                    fillColor: '#ef4444',
-                    fillOpacity: 1,
-                    color: 'white',
-                    weight: 2
-                  }}
-                />
-              )}
-            </MapContainer>
+            <div className="loading-indicator">
+              <RefreshCw className="w-6 h-6 animate-spin" />
+            </div>
           )}
         </div>
 
@@ -359,9 +305,9 @@ const WatchLogisticaRota = () => {
         }
 
         .watch-map-container {
-          width: 80%;
-          height: 55%;
-          border-radius: 50%;
+          width: 75%;
+          height: 50%;
+          border-radius: 20px;
           overflow: hidden;
           border: 2px solid rgba(255, 255, 255, 0.1);
           margin-top: 3%;
@@ -406,10 +352,6 @@ const WatchLogisticaRota = () => {
 
         .refresh-btn:disabled {
           opacity: 0.5;
-        }
-
-        .leaflet-container {
-          background: #1a1a2e;
         }
       `}</style>
     </div>

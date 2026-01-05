@@ -1,66 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import { ArrowLeft, RefreshCw, MapPin } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { VeiculoComStatus, VeiculoPosicao } from '@/types/logistica';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 
-// Fix for default marker icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
-const createVehicleIcon = (status: 'movendo' | 'parado' | 'offline') => {
-  const colors = {
-    movendo: '#22c55e',
-    parado: '#fbbf24',
-    offline: '#6b7280'
-  };
-  
-  return L.divIcon({
-    className: 'custom-vehicle-icon',
-    html: `
-      <div style="
-        width: 24px;
-        height: 24px;
-        background: ${colors[status]};
-        border: 2px solid white;
-        border-radius: 50%;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      ">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
-          <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
-        </svg>
-      </div>
-    `,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
-  });
-};
-
-const MapUpdater = ({ veiculos }: { veiculos: VeiculoComStatus[] }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    const validVeiculos = veiculos.filter(v => v.ultima_posicao);
-    if (validVeiculos.length > 0) {
-      const bounds = L.latLngBounds(
-        validVeiculos.map(v => [v.ultima_posicao!.lat, v.ultima_posicao!.lng])
-      );
-      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
-    }
-  }, [veiculos, map]);
-  
-  return null;
-};
+// Lazy load map components to prevent SSR issues
+const MapComponents = lazy(() => import('@/components/watch/WatchMapView'));
 
 const WatchLogisticaMapa = () => {
   const navigate = useNavigate();
@@ -70,10 +15,17 @@ const WatchLogisticaMapa = () => {
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    // Delay map render to avoid hydration issues
+    const timeout = setTimeout(() => setMapReady(true), 100);
+    return () => clearTimeout(timeout);
   }, []);
 
   const fetchVeiculos = async () => {
@@ -131,16 +83,13 @@ const WatchLogisticaMapa = () => {
 
   useEffect(() => {
     fetchVeiculos();
-    const interval = setInterval(fetchVeiculos, 10000); // Update every 10s
+    const interval = setInterval(fetchVeiculos, 10000);
     return () => clearInterval(interval);
   }, [selectedVeiculoId]);
 
   const formatTime = (date: Date) => date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   const validVeiculos = veiculos.filter(v => v.ultima_posicao);
-  const defaultCenter: [number, number] = validVeiculos.length > 0 
-    ? [validVeiculos[0].ultima_posicao!.lat, validVeiculos[0].ultima_posicao!.lng]
-    : [-23.5505, -46.6333]; // São Paulo default
 
   return (
     <div className="watch-container">
@@ -151,9 +100,15 @@ const WatchLogisticaMapa = () => {
         </div>
 
         {/* Back button */}
-        <button onClick={() => navigate('/watch/logistica/veiculos')} className="watch-back">
+        <button onClick={() => navigate('/watch/logistica')} className="watch-back">
           <ArrowLeft className="w-4 h-4" />
         </button>
+
+        {/* Title */}
+        <div className="watch-title">
+          <MapPin className="w-4 h-4" />
+          <span>Mapa ao Vivo</span>
+        </div>
 
         {/* Map container */}
         <div className="watch-map-container">
@@ -161,36 +116,22 @@ const WatchLogisticaMapa = () => {
             <div className="loading-indicator">
               <RefreshCw className="w-6 h-6 animate-spin" />
             </div>
-          ) : (
-            <MapContainer
-              center={defaultCenter}
-              zoom={13}
-              style={{ width: '100%', height: '100%' }}
-              zoomControl={false}
-              attributionControl={false}
-            >
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          ) : mapReady ? (
+            <Suspense fallback={
+              <div className="loading-indicator">
+                <RefreshCw className="w-6 h-6 animate-spin" />
+              </div>
+            }>
+              <MapComponents 
+                veiculos={validVeiculos} 
+                selectedVeiculoId={selectedVeiculoId}
+                onVeiculoClick={(id) => navigate(`/watch/logistica/rota/${id}`)}
               />
-              <MapUpdater veiculos={validVeiculos} />
-              
-              {validVeiculos.map(veiculo => (
-                <Marker
-                  key={veiculo.id}
-                  position={[veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng]}
-                  icon={createVehicleIcon(veiculo.status)}
-                >
-                  <Popup>
-                    <div className="vehicle-popup">
-                      <strong>{veiculo.placa}</strong>
-                      <br />
-                      {veiculo.motorista && <span>{veiculo.motorista}<br /></span>}
-                      <span>{Math.round(veiculo.ultima_posicao!.velocidade)} km/h</span>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
+            </Suspense>
+          ) : (
+            <div className="loading-indicator">
+              <RefreshCw className="w-6 h-6 animate-spin" />
+            </div>
           )}
         </div>
 
@@ -203,16 +144,6 @@ const WatchLogisticaMapa = () => {
         <button onClick={fetchVeiculos} className="refresh-btn" disabled={loading}>
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
-
-        {/* Route button */}
-        {selectedVeiculoId && (
-          <button 
-            onClick={() => navigate(`/watch/logistica/rota/${selectedVeiculoId}`)} 
-            className="route-btn"
-          >
-            Rota
-          </button>
-        )}
       </div>
 
       <style>{`
@@ -279,10 +210,21 @@ const WatchLogisticaMapa = () => {
           z-index: 1000;
         }
 
+        .watch-title {
+          position: absolute;
+          top: 15%;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          color: white;
+          font-size: clamp(10px, 3vw, 14px);
+          font-weight: 500;
+        }
+
         .watch-map-container {
-          width: 85%;
-          height: 65%;
-          border-radius: 50%;
+          width: 75%;
+          height: 55%;
+          border-radius: 20px;
           overflow: hidden;
           border: 2px solid rgba(255, 255, 255, 0.1);
         }
@@ -299,7 +241,7 @@ const WatchLogisticaMapa = () => {
 
         .vehicle-count {
           position: absolute;
-          bottom: 20%;
+          bottom: 18%;
           font-size: clamp(8px, 2.5vw, 11px);
           color: rgba(255, 255, 255, 0.6);
           background: rgba(0, 0, 0, 0.5);
@@ -310,7 +252,6 @@ const WatchLogisticaMapa = () => {
         .refresh-btn {
           position: absolute;
           bottom: 8%;
-          right: 35%;
           background: rgba(255, 255, 255, 0.1);
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 50%;
@@ -322,30 +263,6 @@ const WatchLogisticaMapa = () => {
           color: rgba(255, 255, 255, 0.7);
           cursor: pointer;
           z-index: 1000;
-        }
-
-        .route-btn {
-          position: absolute;
-          bottom: 8%;
-          left: 35%;
-          background: rgba(59, 130, 246, 0.3);
-          border: 1px solid rgba(59, 130, 246, 0.5);
-          border-radius: 20px;
-          padding: 6px 12px;
-          font-size: clamp(8px, 2.5vw, 11px);
-          font-weight: 600;
-          color: #3b82f6;
-          cursor: pointer;
-          z-index: 1000;
-        }
-
-        .vehicle-popup {
-          font-size: 12px;
-          line-height: 1.4;
-        }
-
-        .leaflet-container {
-          background: #1a1a2e;
         }
       `}</style>
     </div>

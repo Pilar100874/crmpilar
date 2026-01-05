@@ -1,10 +1,18 @@
-import { ArrowLeft, MessageSquare, Clock, User, Circle, RefreshCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, MessageSquare, Clock, User, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 
 const WatchChats = () => {
   const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (date: Date) => date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   const stats = {
     ativos: 12,
@@ -13,11 +21,9 @@ const WatchChats = () => {
   };
 
   const chats = [
-    { id: 1, cliente: 'João Silva', mensagem: 'Preciso de ajuda com meu pedido', time: '2 min', unread: 3, status: 'aguardando' },
-    { id: 2, cliente: 'Maria Santos', mensagem: 'Qual o prazo de entrega?', time: '5 min', unread: 1, status: 'ativo' },
-    { id: 3, cliente: 'Pedro Costa', mensagem: 'Obrigado pelo atendimento!', time: '15 min', unread: 0, status: 'ativo' },
-    { id: 4, cliente: 'Ana Lima', mensagem: 'Gostaria de fazer um orçamento', time: '22 min', unread: 2, status: 'aguardando' },
-    { id: 5, cliente: 'Carlos Souza', mensagem: 'Vocês trabalham aos sábados?', time: '45 min', unread: 0, status: 'ativo' },
+    { id: 1, cliente: 'João Silva', mensagem: 'Preciso de ajuda...', time: '2m', unread: 3, status: 'aguardando' },
+    { id: 2, cliente: 'Maria Santos', mensagem: 'Qual o prazo?', time: '5m', unread: 1, status: 'ativo' },
+    { id: 3, cliente: 'Pedro Costa', mensagem: 'Obrigado!', time: '15m', unread: 0, status: 'ativo' },
   ];
 
   const handleRefresh = () => {
@@ -25,94 +31,305 @@ const WatchChats = () => {
     setTimeout(() => setIsRefreshing(false), 1000);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'aguardando': return 'bg-yellow-500';
-      case 'ativo': return 'bg-green-500';
-      default: return 'bg-muted';
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-background p-2 max-w-[200px] mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <button 
-          onClick={() => navigate('/watch')}
-          className="p-1 rounded-full bg-muted/50 hover:bg-muted"
-        >
-          <ArrowLeft className="w-3 h-3" />
-        </button>
-        <span className="text-[10px] font-medium">Chats</span>
-        <button 
-          onClick={handleRefresh}
-          className={`p-1 rounded-full bg-muted/50 hover:bg-muted ${isRefreshing ? 'animate-spin' : ''}`}
-        >
-          <RefreshCw className="w-3 h-3" />
-        </button>
-      </div>
+    <div className="watch-container">
+      <div className="watch-frame">
+        {/* Time display */}
+        <div className="watch-time">
+          <span className="time-main">{formatTime(currentTime)}</span>
+        </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-1 mb-2">
-        <div className="bg-green-500/10 rounded-lg p-1.5 text-center">
-          <div className="text-sm font-bold text-green-500">{stats.ativos}</div>
-          <div className="text-[7px] text-muted-foreground">Ativos</div>
-        </div>
-        <div className="bg-yellow-500/10 rounded-lg p-1.5 text-center">
-          <div className="text-sm font-bold text-yellow-500">{stats.aguardando}</div>
-          <div className="text-[7px] text-muted-foreground">Aguardando</div>
-        </div>
-        <div className="bg-primary/10 rounded-lg p-1.5 text-center">
-          <div className="text-sm font-bold text-primary">{stats.resolvidos}</div>
-          <div className="text-[7px] text-muted-foreground">Resolvidos</div>
-        </div>
-      </div>
+        {/* Back button */}
+        <button onClick={() => navigate('/watch')} className="watch-back">
+          <ArrowLeft className="w-4 h-4" />
+        </button>
 
-      {/* Chats List */}
-      <div className="text-[9px] font-medium mb-1 flex items-center gap-1">
-        <MessageSquare className="w-3 h-3" />
-        Conversas Ativas
-      </div>
-      <div className="space-y-1 max-h-[120px] overflow-y-auto">
-        {chats.map((chat) => (
-          <div 
-            key={chat.id}
-            className="bg-card rounded-lg p-1.5 border border-border/50 flex items-start gap-1.5"
-          >
-            <div className="relative flex-shrink-0">
-              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-                <User className="w-3 h-3" />
-              </div>
-              <div className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-background ${getStatusColor(chat.status)}`} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] font-medium truncate">{chat.cliente}</span>
-                <span className="text-[7px] text-muted-foreground flex items-center gap-0.5">
-                  <Clock className="w-2 h-2" />
-                  {chat.time}
-                </span>
-              </div>
-              <div className="text-[8px] text-muted-foreground truncate">{chat.mensagem}</div>
-            </div>
-            {chat.unread > 0 && (
-              <div className="flex-shrink-0 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[8px] flex items-center justify-center font-medium">
-                {chat.unread}
-              </div>
-            )}
+        {/* Refresh button */}
+        <button onClick={handleRefresh} className="watch-refresh" disabled={isRefreshing}>
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </button>
+
+        {/* Title */}
+        <div className="watch-title">
+          <MessageSquare className="w-5 h-5 text-pink-500" />
+          <span>Chats</span>
+        </div>
+
+        {/* Stats */}
+        <div className="stats-row">
+          <div className="stat-box green">
+            <span className="stat-value">{stats.ativos}</span>
+            <span className="stat-label">Ativos</span>
           </div>
-        ))}
+          <div className="stat-box yellow">
+            <span className="stat-value">{stats.aguardando}</span>
+            <span className="stat-label">Aguard.</span>
+          </div>
+          <div className="stat-box blue">
+            <span className="stat-value">{stats.resolvidos}</span>
+            <span className="stat-label">Resolv.</span>
+          </div>
+        </div>
+
+        {/* Chats List */}
+        <div className="chats-list">
+          {chats.map((chat) => (
+            <div key={chat.id} className="chat-item">
+              <div className="chat-avatar">
+                <User className="w-3 h-3" />
+                <div className={`chat-status ${chat.status}`} />
+              </div>
+              <div className="chat-info">
+                <div className="chat-header">
+                  <span className="chat-cliente">{chat.cliente}</span>
+                  <span className="chat-time">
+                    <Clock className="w-2 h-2" />
+                    {chat.time}
+                  </span>
+                </div>
+                <span className="chat-mensagem">{chat.mensagem}</span>
+              </div>
+              {chat.unread > 0 && (
+                <div className="chat-unread">{chat.unread}</div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="mt-2 grid grid-cols-2 gap-1">
-        <button className="bg-primary text-primary-foreground rounded-lg p-1.5 text-[8px] font-medium">
-          Ver Todos
-        </button>
-        <button className="bg-muted text-muted-foreground rounded-lg p-1.5 text-[8px] font-medium">
-          Aguardando ({stats.aguardando})
-        </button>
-      </div>
+      <style>{`
+        .watch-container {
+          min-height: 100vh;
+          min-height: 100dvh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #000;
+          padding: 0;
+          margin: 0;
+          overflow: hidden;
+        }
+
+        .watch-frame {
+          width: min(100vw, 100vh);
+          height: min(100vw, 100vh);
+          max-width: 450px;
+          max-height: 450px;
+          border-radius: 50%;
+          background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          box-shadow: 
+            inset 0 0 60px rgba(0, 0, 0, 0.5),
+            0 0 0 4px #2a2a3e,
+            0 0 0 6px #1a1a2e;
+          overflow: hidden;
+        }
+
+        .watch-time {
+          position: absolute;
+          top: 6%;
+          z-index: 1000;
+        }
+
+        .time-main {
+          font-size: clamp(10px, 3vw, 14px);
+          font-weight: 300;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .watch-back {
+          position: absolute;
+          top: 5%;
+          left: 20%;
+          background: rgba(255, 255, 255, 0.1);
+          border: none;
+          border-radius: 50%;
+          width: clamp(24px, 7vw, 32px);
+          height: clamp(24px, 7vw, 32px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          cursor: pointer;
+        }
+
+        .watch-refresh {
+          position: absolute;
+          top: 5%;
+          right: 20%;
+          background: rgba(255, 255, 255, 0.1);
+          border: none;
+          border-radius: 50%;
+          width: clamp(24px, 7vw, 32px);
+          height: clamp(24px, 7vw, 32px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          cursor: pointer;
+        }
+
+        .watch-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: clamp(12px, 4vw, 18px);
+          font-weight: 600;
+          color: white;
+          margin-bottom: 4%;
+        }
+
+        .stats-row {
+          display: flex;
+          gap: clamp(8px, 3vw, 14px);
+          margin-bottom: 4%;
+        }
+
+        .stat-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 2px;
+          padding: clamp(8px, 2.5vw, 14px);
+          border-radius: clamp(10px, 3vw, 16px);
+          min-width: clamp(50px, 16vw, 70px);
+        }
+
+        .stat-box.green {
+          background: rgba(34, 197, 94, 0.15);
+        }
+
+        .stat-box.green .stat-value {
+          color: #22c55e;
+        }
+
+        .stat-box.yellow {
+          background: rgba(251, 191, 36, 0.15);
+        }
+
+        .stat-box.yellow .stat-value {
+          color: #fbbf24;
+        }
+
+        .stat-box.blue {
+          background: rgba(59, 130, 246, 0.15);
+        }
+
+        .stat-box.blue .stat-value {
+          color: #3b82f6;
+        }
+
+        .stat-value {
+          font-size: clamp(12px, 4vw, 18px);
+          font-weight: 700;
+        }
+
+        .stat-label {
+          font-size: clamp(7px, 2vw, 9px);
+          color: rgba(255, 255, 255, 0.4);
+        }
+
+        .chats-list {
+          display: flex;
+          flex-direction: column;
+          gap: clamp(4px, 1.5vw, 8px);
+          width: 65%;
+        }
+
+        .chat-item {
+          display: flex;
+          align-items: center;
+          gap: clamp(8px, 2.5vw, 12px);
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: clamp(8px, 2.5vw, 12px);
+          padding: clamp(8px, 2.5vw, 12px);
+        }
+
+        .chat-avatar {
+          position: relative;
+          width: clamp(24px, 8vw, 32px);
+          height: clamp(24px, 8vw, 32px);
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: rgba(255, 255, 255, 0.6);
+          flex-shrink: 0;
+        }
+
+        .chat-status {
+          position: absolute;
+          bottom: -2px;
+          right: -2px;
+          width: clamp(8px, 2.5vw, 10px);
+          height: clamp(8px, 2.5vw, 10px);
+          border-radius: 50%;
+          border: 2px solid #1a1a2e;
+        }
+
+        .chat-status.aguardando {
+          background: #fbbf24;
+        }
+
+        .chat-status.ativo {
+          background: #22c55e;
+        }
+
+        .chat-info {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .chat-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 2px;
+        }
+
+        .chat-cliente {
+          font-size: clamp(9px, 2.8vw, 12px);
+          font-weight: 500;
+          color: white;
+        }
+
+        .chat-time {
+          display: flex;
+          align-items: center;
+          gap: 2px;
+          font-size: clamp(7px, 2vw, 9px);
+          color: rgba(255, 255, 255, 0.4);
+        }
+
+        .chat-mensagem {
+          font-size: clamp(8px, 2.2vw, 10px);
+          color: rgba(255, 255, 255, 0.5);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: block;
+        }
+
+        .chat-unread {
+          flex-shrink: 0;
+          width: clamp(16px, 5vw, 22px);
+          height: clamp(16px, 5vw, 22px);
+          border-radius: 50%;
+          background: #ec4899;
+          color: white;
+          font-size: clamp(8px, 2.2vw, 10px);
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      `}</style>
     </div>
   );
 };
