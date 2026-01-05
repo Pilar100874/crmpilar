@@ -230,10 +230,31 @@ const AIApiKeysManager: React.FC = () => {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
 
   useEffect(() => {
-    const storedId = localStorage.getItem('estabelecimentoId');
-    if (storedId) {
-      setEstabelecimentoId(storedId);
-    }
+    const fetchEstabelecimentoId = async () => {
+      // First try from localStorage
+      const storedId = localStorage.getItem('estabelecimentoId');
+      if (storedId) {
+        setEstabelecimentoId(storedId);
+        return;
+      }
+
+      // If not in localStorage, fetch from authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: usuario } = await supabase
+          .from('usuarios')
+          .select('estabelecimento_id')
+          .eq('id', user.id)
+          .single();
+        
+        if (usuario?.estabelecimento_id) {
+          setEstabelecimentoId(usuario.estabelecimento_id);
+          localStorage.setItem('estabelecimentoId', usuario.estabelecimento_id);
+        }
+      }
+    };
+
+    fetchEstabelecimentoId();
   }, []);
 
   useEffect(() => {
