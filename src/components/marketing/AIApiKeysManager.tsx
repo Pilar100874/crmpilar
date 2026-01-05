@@ -312,11 +312,11 @@ const AIApiKeysManager: React.FC = () => {
       return;
     }
 
-    // Get estabelecimento_id from the authenticated user's record
+    // Get estabelecimento_id from the authenticated user's record (by auth_user_id)
     const { data: usuario, error: userError } = await supabase
       .from('usuarios')
       .select('estabelecimento_id')
-      .eq('id', user.id)
+      .eq('auth_user_id', user.id)
       .single();
 
     if (userError || !usuario?.estabelecimento_id) {
