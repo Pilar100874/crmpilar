@@ -95,6 +95,9 @@ import EmailConfig from "./pages/EmailConfig";
 import OrcamentoReportConfig from "./pages/OrcamentoReportConfig";
 import Macros from "./pages/Macros";
 import WatchDashboard from "./pages/WatchDashboard";
+import WatchLogisticaVeiculos from "./pages/watch/WatchLogisticaVeiculos";
+import WatchLogisticaMapa from "./pages/watch/WatchLogisticaMapa";
+import WatchLogisticaRota from "./pages/watch/WatchLogisticaRota";
 import { MacroProvider } from "./contexts/MacroContext";
 
 const queryClient = new QueryClient();
@@ -214,6 +217,9 @@ const App = () => (
             <Route path="/pilar-rastreador" element={<PilarRastreador />} />
             <Route path="/pilar-rastreador-nativo" element={<PilarRastreadorNativo />} />
             <Route path="/watch" element={<WatchDashboard />} />
+            <Route path="/watch/logistica/veiculos" element={<WatchLogisticaVeiculos />} />
+            <Route path="/watch/logistica/mapa" element={<WatchLogisticaMapa />} />
+            <Route path="/watch/logistica/rota/:veiculoId" element={<WatchLogisticaRota />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
