@@ -11,7 +11,8 @@ import {
   FolderOpen,
   Key,
   Workflow,
-  Link2
+  Link2,
+  Server
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,6 +30,7 @@ import MarketingGaleria from '@/components/marketing/MarketingGaleria';
 import AIApiKeysManager from '@/components/marketing/AIApiKeysManager';
 import IntegrationCredentialsManager from '@/components/marketing/IntegrationCredentialsManager';
 import ResourceN8nGenerator from '@/components/marketing/ResourceN8nGenerator';
+import RailwayVariables from '@/components/marketing/RailwayVariables';
 
 interface TabItem {
   id: string;
@@ -41,6 +43,7 @@ const tabItems: TabItem[] = [
   { id: 'recursos', label: 'Recursos IA', icon: Wand2, description: 'Crie conteúdo com IA e n8n' },
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
   { id: 'n8n-generator', label: 'Gerador n8n', icon: Workflow, description: 'Gere workflows n8n com IA' },
+  { id: 'railway-env', label: 'Variáveis Railway', icon: Server, description: 'Variáveis de ambiente para n8n' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Fluxos automatizados de marketing' },
   { id: 'campanhas', label: 'Campanhas', icon: Megaphone, description: 'Gestão de campanhas' },
   { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
@@ -63,6 +66,8 @@ const MarketingHub: React.FC = () => {
         return <MarketingGaleria />;
       case 'n8n-generator':
         return <ResourceN8nGenerator />;
+      case 'railway-env':
+        return <RailwayVariables />;
       case 'canvas':
         return <MarketingCanvas onClose={() => setActiveTab('recursos')} />;
       case 'automacoes':
