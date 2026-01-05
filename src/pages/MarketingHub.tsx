@@ -28,7 +28,7 @@ import MarketingRecursos from '@/components/marketing/MarketingRecursos';
 import MarketingGaleria from '@/components/marketing/MarketingGaleria';
 import AIApiKeysManager from '@/components/marketing/AIApiKeysManager';
 import IntegrationCredentialsManager from '@/components/marketing/IntegrationCredentialsManager';
-import N8nWorkflowGenerator from '@/components/marketing/N8nWorkflowGenerator';
+import ResourceN8nGenerator from '@/components/marketing/ResourceN8nGenerator';
 
 interface TabItem {
   id: string;
@@ -62,7 +62,7 @@ const MarketingHub: React.FC = () => {
       case 'galeria':
         return <MarketingGaleria />;
       case 'n8n-generator':
-        return <N8nWorkflowGenerator />;
+        return <ResourceN8nGenerator />;
       case 'canvas':
         return <MarketingCanvas onClose={() => setActiveTab('recursos')} />;
       case 'automacoes':
