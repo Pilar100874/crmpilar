@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Key, Eye, EyeOff, Save, Trash2, Plus, CheckCircle2, XCircle, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
+import { Key, Eye, EyeOff, Save, Trash2, Plus, CheckCircle2, XCircle, AlertCircle, Loader2, ExternalLink, Gauge } from 'lucide-react';
+import AICreditsMonitor from './AICreditsMonitor';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -412,6 +413,9 @@ const AIApiKeysManager: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Monitor de Créditos */}
+      <AICreditsMonitor savedKeys={savedKeys} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {AI_PROVIDERS.map((provider) => {
