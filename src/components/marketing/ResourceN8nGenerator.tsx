@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Workflow, Wand2, Copy, Check, Loader2, Sparkles, RefreshCw, Download, AlertCircle, Server, FileCode, AtSign } from 'lucide-react';
+import { Workflow, Wand2, Copy, Check, Loader2, Sparkles, RefreshCw, Download, AlertCircle, Server, FileCode, AtSign, Bot, Database, Hash, Slash } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,20 @@ interface DBMarketingResource {
   auto_publish_enabled: boolean | null;
 }
 
+interface AIProvider {
+  id: string;
+  provider: string;
+  provider_display_name: string;
+}
+
+interface Integration {
+  id: string;
+  name: string;
+  database_type: string;
+}
+
+type MentionType = 'variable' | 'ai' | 'integration';
+
 const ResourceN8nGenerator: React.FC = () => {
   const [resources, setResources] = useState<MarketingResource[]>([]);
   const [selectedResourceId, setSelectedResourceId] = useState<string>('');
@@ -40,13 +54,18 @@ const ResourceN8nGenerator: React.FC = () => {
   const [isEnvCopied, setIsEnvCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showVariablePopover, setShowVariablePopover] = useState(false);
-  const [variableSearchTerm, setVariableSearchTerm] = useState('');
+  const [showMentionPopover, setShowMentionPopover] = useState(false);
+  const [mentionType, setMentionType] = useState<MentionType>('variable');
+  const [searchTerm, setSearchTerm] = useState('');
   const [cursorPosition, setCursorPosition] = useState(0);
+  const [aiProviders, setAIProviders] = useState<AIProvider[]>([]);
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     loadResources();
+    loadAIProviders();
+    loadIntegrations();
   }, []);
 
   const loadResources = async () => {
@@ -86,6 +105,42 @@ const ResourceN8nGenerator: React.FC = () => {
     }
   };
 
+  const loadAIProviders = async () => {
+    try {
+      const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+      if (!estabelecimentoId) return;
+
+      const { data, error } = await supabase
+        .from('ai_api_keys')
+        .select('id, provider, provider_display_name')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('is_active', true);
+
+      if (error) throw error;
+      setAIProviders(data || []);
+    } catch (err) {
+      console.error('Error loading AI providers:', err);
+    }
+  };
+
+  const loadIntegrations = async () => {
+    try {
+      const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+      if (!estabelecimentoId) return;
+
+      const { data, error } = await supabase
+        .from('database_connections')
+        .select('id, name, database_type')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('active', true);
+
+      if (error) throw error;
+      setIntegrations(data || []);
+    } catch (err) {
+      console.error('Error loading integrations:', err);
+    }
+  };
+
   const selectedResource = resources.find(r => r.id === selectedResourceId);
 
   // Get available variables from selected resource
@@ -98,53 +153,100 @@ const ResourceN8nGenerator: React.FC = () => {
     }));
   }, [selectedResource]);
 
-  // Filter variables based on search term
-  const filteredVariables = getAvailableVariables().filter(v =>
-    v.label.toLowerCase().includes(variableSearchTerm.toLowerCase()) ||
-    v.id.toLowerCase().includes(variableSearchTerm.toLowerCase())
-  );
+  // Filter items based on search term and mention type
+  const getFilteredItems = useCallback(() => {
+    const term = searchTerm.toLowerCase();
+    
+    if (mentionType === 'variable') {
+      return getAvailableVariables().filter(v =>
+        v.label.toLowerCase().includes(term) ||
+        v.id.toLowerCase().includes(term)
+      );
+    } else if (mentionType === 'ai') {
+      return aiProviders.filter(a =>
+        a.provider_display_name.toLowerCase().includes(term) ||
+        a.provider.toLowerCase().includes(term)
+      );
+    } else {
+      return integrations.filter(i =>
+        i.name.toLowerCase().includes(term) ||
+        i.database_type.toLowerCase().includes(term)
+      );
+    }
+  }, [mentionType, searchTerm, getAvailableVariables, aiProviders, integrations]);
 
-  // Handle text change and detect @ mentions
+  // Handle text change and detect mentions (@, #, /)
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     const cursorPos = e.target.selectionStart;
     setPromptText(value);
     setCursorPosition(cursorPos);
 
-    // Check if we should show the variable popover
     const textBeforeCursor = value.substring(0, cursorPos);
-    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
     
-    if (lastAtIndex !== -1) {
-      const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
-      // Only show popover if there's no space after @
-      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
-        setVariableSearchTerm(textAfterAt);
-        setShowVariablePopover(true);
+    // Check for @ (variables)
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    const lastHashIndex = textBeforeCursor.lastIndexOf('#');
+    const lastSlashIndex = textBeforeCursor.lastIndexOf('/');
+    
+    // Find the most recent trigger character
+    const triggers = [
+      { char: '@', index: lastAtIndex, type: 'variable' as MentionType },
+      { char: '#', index: lastHashIndex, type: 'ai' as MentionType },
+      { char: '/', index: lastSlashIndex, type: 'integration' as MentionType },
+    ].filter(t => t.index !== -1);
+    
+    if (triggers.length > 0) {
+      const mostRecent = triggers.reduce((a, b) => a.index > b.index ? a : b);
+      const textAfterTrigger = textBeforeCursor.substring(mostRecent.index + 1);
+      
+      // Only show popover if there's no space after the trigger
+      if (!textAfterTrigger.includes(' ') && !textAfterTrigger.includes('\n')) {
+        setMentionType(mostRecent.type);
+        setSearchTerm(textAfterTrigger);
+        setShowMentionPopover(true);
         return;
       }
     }
     
-    setShowVariablePopover(false);
-    setVariableSearchTerm('');
+    setShowMentionPopover(false);
+    setSearchTerm('');
   };
 
-  // Insert variable into prompt
-  const insertVariable = (variable: { id: string; label: string }) => {
+  // Get trigger character for current mention type
+  const getTriggerChar = (type: MentionType): string => {
+    switch (type) {
+      case 'variable': return '@';
+      case 'ai': return '#';
+      case 'integration': return '/';
+    }
+  };
+
+  // Insert mention into prompt
+  const insertMention = (item: any) => {
     const textBeforeCursor = promptText.substring(0, cursorPosition);
     const textAfterCursor = promptText.substring(cursorPosition);
+    const triggerChar = getTriggerChar(mentionType);
     
-    // Find the @ symbol position
-    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    // Find the trigger character position
+    const triggerIndex = textBeforeCursor.lastIndexOf(triggerChar);
     
-    if (lastAtIndex !== -1) {
-      const newText = textBeforeCursor.substring(0, lastAtIndex) + 
-                      `@${variable.label}` + 
-                      textAfterCursor;
+    if (triggerIndex !== -1) {
+      let insertText = '';
+      
+      if (mentionType === 'variable') {
+        insertText = `@${item.label}`;
+      } else if (mentionType === 'ai') {
+        insertText = `#${item.provider_display_name}`;
+      } else {
+        insertText = `/${item.name}`;
+      }
+      
+      const newText = textBeforeCursor.substring(0, triggerIndex) + insertText + textAfterCursor;
       setPromptText(newText);
       
-      // Move cursor after the inserted variable
-      const newCursorPos = lastAtIndex + variable.label.length + 1;
+      // Move cursor after the inserted mention
+      const newCursorPos = triggerIndex + insertText.length;
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus();
@@ -153,8 +255,24 @@ const ResourceN8nGenerator: React.FC = () => {
       }, 0);
     }
     
-    setShowVariablePopover(false);
-    setVariableSearchTerm('');
+    setShowMentionPopover(false);
+    setSearchTerm('');
+  };
+
+  // Direct insert (from clicking badges)
+  const directInsert = (type: MentionType, item: any) => {
+    let insertText = '';
+    
+    if (type === 'variable') {
+      insertText = `@${item.label} `;
+    } else if (type === 'ai') {
+      insertText = `#${item.provider_display_name} `;
+    } else {
+      insertText = `/${item.name} `;
+    }
+    
+    setPromptText(prev => prev + insertText);
+    textareaRef.current?.focus();
   };
 
   const buildResourceContext = (resource: MarketingResource): string => {
@@ -166,6 +284,14 @@ const ResourceN8nGenerator: React.FC = () => {
       CHANNEL_CONFIG[ch]?.label || ch
     ).join(', ');
 
+    const aiInfo = aiProviders.length > 0 
+      ? aiProviders.map(a => `- ${a.provider_display_name} (provider: ${a.provider})`).join('\n')
+      : 'Nenhuma IA configurada';
+
+    const integrationsInfo = integrations.length > 0
+      ? integrations.map(i => `- ${i.name} (tipo: ${i.database_type})`).join('\n')
+      : 'Nenhuma integração configurada';
+
     return `
 RECURSO DE MARKETING: "${resource.name}"
 ${resource.description ? `Descrição: ${resource.description}` : ''}
@@ -173,22 +299,40 @@ ${resource.description ? `Descrição: ${resource.description}` : ''}
 TIPO DE RETORNO: ${RETURN_TYPE_LABELS[resource.returnType]}
 - O workflow deve gerar conteúdo do tipo: ${resource.returnType}
 
-CAMPOS DE ENTRADA (variáveis disponíveis para uso):
+CAMPOS DE ENTRADA (variáveis disponíveis para uso com @):
 ${fieldsInfo}
+
+IAS DISPONÍVEIS (use com #):
+${aiInfo}
+
+INTEGRAÇÕES/BANCOS DE DADOS DISPONÍVEIS (use com /):
+${integrationsInfo}
 
 ${channelsInfo ? `CANAIS DE PUBLICAÇÃO: ${channelsInfo}` : 'SEM CANAIS DE PUBLICAÇÃO CONFIGURADOS'}
 ${resource.autoPublishEnabled ? '- Publicação automática ATIVADA: o workflow deve publicar automaticamente nos canais acima após gerar o conteúdo' : '- Publicação automática DESATIVADA: gerar apenas o conteúdo sem publicar'}
 `;
   };
 
-  // Parse prompt to replace @mentions with variable references
-  const parsePromptWithVariables = (prompt: string, resource: MarketingResource): string => {
+  // Parse prompt to replace mentions with proper references
+  const parsePromptWithMentions = (prompt: string, resource: MarketingResource): string => {
     let parsedPrompt = prompt;
     
+    // Replace @variable mentions
     resource.fields.forEach(field => {
-      // Replace @label with proper reference
       const regex = new RegExp(`@${field.label}`, 'gi');
       parsedPrompt = parsedPrompt.replace(regex, `{{entrada.${field.id}}}`);
+    });
+    
+    // Replace #AI mentions
+    aiProviders.forEach(ai => {
+      const regex = new RegExp(`#${ai.provider_display_name}`, 'gi');
+      parsedPrompt = parsedPrompt.replace(regex, `{{ia.${ai.provider}}}`);
+    });
+    
+    // Replace /integration mentions
+    integrations.forEach(int => {
+      const regex = new RegExp(`/${int.name}`, 'gi');
+      parsedPrompt = parsedPrompt.replace(regex, `{{integracao.${int.name}}}`);
     });
     
     return parsedPrompt;
@@ -212,7 +356,7 @@ ${resource.autoPublishEnabled ? '- Publicação automática ATIVADA: o workflow 
 
     try {
       const resourceContext = buildResourceContext(selectedResource);
-      const parsedPrompt = parsePromptWithVariables(promptText, selectedResource);
+      const parsedPrompt = parsePromptWithMentions(promptText, selectedResource);
       
       const fullPrompt = `Gere um workflow n8n completo baseado no recurso "${selectedResource.name}".
 
@@ -417,7 +561,7 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
           Gerador de Workflows n8n
         </h3>
         <p className="text-sm text-muted-foreground mt-1">
-          Selecione um Recurso de IA, descreva o que deseja e use <code className="bg-muted px-1 rounded">@variável</code> para referenciar os campos
+          Use <code className="bg-muted px-1 rounded">@variável</code>, <code className="bg-muted px-1 rounded">#IA</code> ou <code className="bg-muted px-1 rounded">/integração</code> para referenciar elementos
         </p>
       </div>
 
@@ -464,32 +608,80 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
 
               {selectedResource && (
                 <>
-                  {/* Variables available */}
-                  <div className="p-3 rounded-lg border bg-muted/30">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AtSign className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">Variáveis disponíveis</span>
+                  {/* Available mentions */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Variables */}
+                    <div className="p-3 rounded-lg border bg-muted/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AtSign className="h-4 w-4 text-blue-500" />
+                        <span className="text-sm font-medium">Variáveis</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedResource.fields.map((field) => (
+                          <Badge 
+                            key={field.id} 
+                            variant="secondary" 
+                            className="text-xs cursor-pointer hover:bg-blue-500 hover:text-white transition-colors"
+                            onClick={() => directInsert('variable', field)}
+                          >
+                            @{field.label}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedResource.fields.map((field) => (
-                        <Badge 
-                          key={field.id} 
-                          variant="secondary" 
-                          className="text-xs cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                          onClick={() => {
-                            const newText = promptText + `@${field.label} `;
-                            setPromptText(newText);
-                            textareaRef.current?.focus();
-                          }}
-                        >
-                          @{field.label}
-                        </Badge>
-                      ))}
+
+                    {/* AI Providers */}
+                    <div className="p-3 rounded-lg border bg-muted/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Bot className="h-4 w-4 text-purple-500" />
+                        <span className="text-sm font-medium">IAs</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {aiProviders.length === 0 ? (
+                          <span className="text-xs text-muted-foreground">Nenhuma IA configurada</span>
+                        ) : (
+                          aiProviders.map((ai) => (
+                            <Badge 
+                              key={ai.id} 
+                              variant="secondary" 
+                              className="text-xs cursor-pointer hover:bg-purple-500 hover:text-white transition-colors"
+                              onClick={() => directInsert('ai', ai)}
+                            >
+                              #{ai.provider_display_name}
+                            </Badge>
+                          ))
+                        )}
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Clique em uma variável ou digite @ para inserir no prompt
-                    </p>
+
+                    {/* Integrations */}
+                    <div className="p-3 rounded-lg border bg-muted/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Database className="h-4 w-4 text-green-500" />
+                        <span className="text-sm font-medium">Integrações</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {integrations.length === 0 ? (
+                          <span className="text-xs text-muted-foreground">Nenhuma integração</span>
+                        ) : (
+                          integrations.map((int) => (
+                            <Badge 
+                              key={int.id} 
+                              variant="secondary" 
+                              className="text-xs cursor-pointer hover:bg-green-500 hover:text-white transition-colors"
+                              onClick={() => directInsert('integration', int)}
+                            >
+                              /{int.name}
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    Clique nos itens acima ou digite <code className="bg-muted px-0.5 rounded">@</code> <code className="bg-muted px-0.5 rounded">#</code> <code className="bg-muted px-0.5 rounded">/</code> para inserir no prompt
+                  </p>
 
                   {/* Resource info */}
                   <div className="p-3 rounded-lg border bg-muted/30 space-y-2">
@@ -521,32 +713,42 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
                     )}
                   </div>
 
-                  {/* Prompt input with @ mention support */}
+                  {/* Prompt input with mention support */}
                   <div className="space-y-2 relative">
                     <label className="text-sm font-medium">Descreva o workflow</label>
                     <Textarea
                       ref={textareaRef}
                       value={promptText}
                       onChange={handlePromptChange}
-                      placeholder={`Ex: Crie um workflow que pegue o texto de @${selectedResource.fields[0]?.label || 'campo'} e gere uma imagem usando a referência de @${selectedResource.fields[1]?.label || 'referência'}, depois publique nos canais configurados`}
+                      placeholder={`Ex: Crie um workflow que use #OpenAI para processar @${selectedResource.fields[0]?.label || 'campo'} e buscar dados em /Integração, depois publique nos canais`}
                       className="min-h-[120px] resize-none"
                     />
                     
-                    {/* Variable autocomplete popover */}
-                    {showVariablePopover && filteredVariables.length > 0 && (
-                      <div className="absolute z-50 w-64 mt-1 bg-popover border rounded-md shadow-lg">
+                    {/* Mention autocomplete popover */}
+                    {showMentionPopover && getFilteredItems().length > 0 && (
+                      <div className="absolute z-50 w-72 mt-1 bg-popover border rounded-md shadow-lg">
                         <div className="p-2">
-                          <p className="text-xs text-muted-foreground mb-2">Selecione uma variável</p>
+                          <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                            {mentionType === 'variable' && <><AtSign className="h-3 w-3" /> Selecione uma variável</>}
+                            {mentionType === 'ai' && <><Bot className="h-3 w-3" /> Selecione uma IA</>}
+                            {mentionType === 'integration' && <><Database className="h-3 w-3" /> Selecione uma integração</>}
+                          </p>
                           <div className="space-y-1 max-h-48 overflow-y-auto">
-                            {filteredVariables.map((variable) => (
+                            {getFilteredItems().map((item: any) => (
                               <button
-                                key={variable.id}
+                                key={item.id}
                                 className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-muted flex items-center justify-between"
-                                onClick={() => insertVariable(variable)}
+                                onClick={() => insertMention(item)}
                               >
-                                <span className="font-medium">@{variable.label}</span>
+                                <span className="font-medium">
+                                  {mentionType === 'variable' && `@${item.label}`}
+                                  {mentionType === 'ai' && `#${item.provider_display_name}`}
+                                  {mentionType === 'integration' && `/${item.name}`}
+                                </span>
                                 <Badge variant="outline" className="text-xs">
-                                  {FIELD_TYPE_LABELS[variable.type]}
+                                  {mentionType === 'variable' && FIELD_TYPE_LABELS[item.type]}
+                                  {mentionType === 'ai' && item.provider}
+                                  {mentionType === 'integration' && item.database_type}
                                 </Badge>
                               </button>
                             ))}
