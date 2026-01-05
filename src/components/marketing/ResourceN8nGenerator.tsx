@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Workflow, Wand2, Copy, Check, Loader2, Sparkles, RefreshCw, Download, AlertCircle, Server, FileCode, AtSign, Bot, Database, Hash, Slash } from 'lucide-react';
+import { Workflow, Wand2, Copy, Check, Loader2, Sparkles, RefreshCw, Download, AlertCircle, Server, FileCode, AtSign, Bot, Database, Hash, Slash, Save, FolderOpen, X, Edit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,14 +10,35 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MarketingResource, FIELD_TYPE_LABELS, RETURN_TYPE_LABELS, CHANNEL_CONFIG, ResourceField, PublishChannel, PublishChannel as ChannelType } from './types';
 import { MessageSquare, Send } from 'lucide-react';
+import SavedWorkflowsList from './SavedWorkflowsList';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface EnvVariable {
   name: string;
   description: string;
   example: string;
+}
+
+interface SavedWorkflow {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  prompt_original: string;
+  workflow_json: any;
+  variaveis_ambiente: any;
+  created_at: string;
+  updated_at: string;
 }
 
 interface DBMarketingResource {
@@ -69,6 +90,15 @@ const ResourceN8nGenerator: React.FC = () => {
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [publishChannels, setPublishChannels] = useState<PublishChannelItem[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Save/Edit workflow states
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [workflowName, setWorkflowName] = useState('');
+  const [workflowDescription, setWorkflowDescription] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [editingWorkflow, setEditingWorkflow] = useState<SavedWorkflow | null>(null);
+  const [showSavedList, setShowSavedList] = useState(false);
+  const [savedListKey, setSavedListKey] = useState(0);
 
   // Get available publish channels
   const availableChannels: PublishChannelItem[] = [
@@ -589,6 +619,102 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
     }
   };
 
+  // Save workflow functions
+  const openSaveDialog = () => {
+    if (!generatedJson) {
+      toast.error('Gere um workflow primeiro');
+      return;
+    }
+    if (editingWorkflow) {
+      setWorkflowName(editingWorkflow.nome);
+      setWorkflowDescription(editingWorkflow.descricao || '');
+    } else {
+      setWorkflowName(selectedResource?.name ? `Workflow - ${selectedResource.name}` : 'Novo Workflow');
+      setWorkflowDescription('');
+    }
+    setShowSaveDialog(true);
+  };
+
+  const saveWorkflow = async () => {
+    if (!workflowName.trim()) {
+      toast.error('Digite um nome para o workflow');
+      return;
+    }
+
+    const estabelecimentoId = localStorage.getItem('estabelecimentoId');
+    if (!estabelecimentoId) {
+      toast.error('Estabelecimento não identificado');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      let jsonToSave: any;
+      try {
+        jsonToSave = JSON.parse(generatedJson);
+      } catch {
+        jsonToSave = generatedJson;
+      }
+
+      const workflowData = {
+        estabelecimento_id: estabelecimentoId,
+        nome: workflowName.trim(),
+        descricao: workflowDescription.trim() || null,
+        prompt_original: promptText,
+        workflow_json: jsonToSave,
+        variaveis_ambiente: JSON.parse(JSON.stringify(envVariables)),
+      };
+
+      if (editingWorkflow) {
+        const { error } = await supabase
+          .from('n8n_workflows_gerados')
+          .update(workflowData)
+          .eq('id', editingWorkflow.id);
+
+        if (error) throw error;
+        toast.success('Workflow atualizado!');
+      } else {
+        const { error } = await supabase
+          .from('n8n_workflows_gerados')
+          .insert(workflowData);
+
+        if (error) throw error;
+        toast.success('Workflow salvo!');
+      }
+
+      setShowSaveDialog(false);
+      setWorkflowName('');
+      setWorkflowDescription('');
+      setSavedListKey(prev => prev + 1); // Refresh saved list
+    } catch (err) {
+      console.error('Error saving workflow:', err);
+      toast.error('Erro ao salvar workflow');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const loadWorkflowForEdit = (workflow: SavedWorkflow) => {
+    setEditingWorkflow(workflow);
+    setPromptText(workflow.prompt_original);
+    
+    const jsonStr = typeof workflow.workflow_json === 'string' 
+      ? workflow.workflow_json 
+      : JSON.stringify(workflow.workflow_json, null, 2);
+    setGeneratedJson(jsonStr);
+    
+    setEnvVariables(workflow.variaveis_ambiente || []);
+    setShowSavedList(false);
+    toast.success(`Workflow "${workflow.nome}" carregado para edição`);
+  };
+
+  const clearEditing = () => {
+    setEditingWorkflow(null);
+    setPromptText('');
+    setGeneratedJson('');
+    setEnvVariables([]);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -599,15 +725,46 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Workflow className="h-5 w-5 text-primary" />
-          Gerador de Workflows n8n
-        </h3>
-        <p className="text-sm text-muted-foreground mt-1">
-          Use <code className="bg-muted px-1 rounded">@variável</code>, <code className="bg-muted px-1 rounded">#IA</code> ou <code className="bg-muted px-1 rounded">/integração</code> para referenciar elementos
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Workflow className="h-5 w-5 text-primary" />
+            Gerador de Workflows n8n
+            {editingWorkflow && (
+              <Badge variant="secondary" className="ml-2 flex items-center gap-1">
+                <Edit className="h-3 w-3" />
+                Editando: {editingWorkflow.nome}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-4 w-4 ml-1 hover:bg-destructive/20"
+                  onClick={clearEditing}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
+            )}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Use <code className="bg-muted px-1 rounded">@variável</code>, <code className="bg-muted px-1 rounded">#IA</code> ou <code className="bg-muted px-1 rounded">/integração</code> para referenciar elementos
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => setShowSavedList(!showSavedList)}
+        >
+          <FolderOpen className="h-4 w-4 mr-2" />
+          Workflows Salvos
+        </Button>
       </div>
+
+      {showSavedList && (
+        <Card>
+          <CardContent className="pt-6">
+            <SavedWorkflowsList key={savedListKey} onEdit={loadWorkflowForEdit} />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -888,7 +1045,7 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
                       <Download className="h-4 w-4 mr-1" />
                       Baixar
                     </Button>
-                    <Button variant="default" size="sm" onClick={copyToClipboard}>
+                    <Button variant="outline" size="sm" onClick={copyToClipboard}>
                       {isCopied ? (
                         <>
                           <Check className="h-4 w-4 mr-1" />
@@ -900,6 +1057,10 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
                           Copiar
                         </>
                       )}
+                    </Button>
+                    <Button variant="default" size="sm" onClick={openSaveDialog}>
+                      <Save className="h-4 w-4 mr-1" />
+                      {editingWorkflow ? 'Atualizar' : 'Salvar'}
                     </Button>
                   </div>
                 </div>
@@ -971,6 +1132,60 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
           </TabsContent>
         </Tabs>
       )}
+
+      {/* Save Workflow Dialog */}
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingWorkflow ? 'Atualizar Workflow' : 'Salvar Workflow'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingWorkflow 
+                ? 'Atualize as informações do workflow salvo'
+                : 'Salve este workflow para poder editar ou reutilizar depois'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Nome do Workflow</label>
+              <Input
+                value={workflowName}
+                onChange={(e) => setWorkflowName(e.target.value)}
+                placeholder="Ex: Gerador de Posts Instagram"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Descrição (opcional)</label>
+              <Textarea
+                value={workflowDescription}
+                onChange={(e) => setWorkflowDescription(e.target.value)}
+                placeholder="Descreva o que este workflow faz..."
+                className="resize-none"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSaveDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={saveWorkflow} disabled={isSaving || !workflowName.trim()}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  {editingWorkflow ? 'Atualizar' : 'Salvar'}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -4725,6 +4725,50 @@ export type Database = {
           },
         ]
       }
+      n8n_workflows_gerados: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          prompt_original: string
+          updated_at: string
+          variaveis_ambiente: Json | null
+          workflow_json: Json
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          prompt_original: string
+          updated_at?: string
+          variaveis_ambiente?: Json | null
+          workflow_json: Json
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          prompt_original?: string
+          updated_at?: string
+          variaveis_ambiente?: Json | null
+          workflow_json?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "n8n_workflows_gerados_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ncm_codigos: {
         Row: {
           codigo: string
