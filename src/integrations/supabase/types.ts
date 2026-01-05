@@ -3518,6 +3518,56 @@ export type Database = {
           },
         ]
       }
+      integration_credentials: {
+        Row: {
+          created_at: string
+          credentials_json: Json
+          display_name: string
+          estabelecimento_id: string
+          id: string
+          integration_name: string
+          integration_type: string
+          is_active: boolean | null
+          last_validated_at: string | null
+          updated_at: string
+          validation_status: string | null
+        }
+        Insert: {
+          created_at?: string
+          credentials_json?: Json
+          display_name: string
+          estabelecimento_id: string
+          id?: string
+          integration_name: string
+          integration_type: string
+          is_active?: boolean | null
+          last_validated_at?: string | null
+          updated_at?: string
+          validation_status?: string | null
+        }
+        Update: {
+          created_at?: string
+          credentials_json?: Json
+          display_name?: string
+          estabelecimento_id?: string
+          id?: string
+          integration_name?: string
+          integration_type?: string
+          is_active?: boolean | null
+          last_validated_at?: string | null
+          updated_at?: string
+          validation_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_credentials_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kb_anexos: {
         Row: {
           artigo_id: string
