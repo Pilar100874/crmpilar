@@ -89,6 +89,7 @@ import AdsAlerts from "./pages/ads/AdsAlerts";
 import AdsHub from "./pages/AdsHub";
 import RoboPrecos from "./pages/RoboPrecos";
 import AtendimentoConfig from "./pages/AtendimentoConfig";
+import RailwayEnvVariables from "./pages/RailwayEnvVariables";
 import LandingPage from "./pages/LandingPage";
 import Avisos from "./pages/Avisos";
 import EmailConfig from "./pages/EmailConfig";
@@ -215,6 +216,7 @@ const App = () => (
               <Route path="/ads/logs" element={<AdsLogs />} />
               <Route path="/ads/automation" element={<AdsAutomation />} />
               <Route path="/ads/automation/:id" element={<AdsAutomation />} />
+              <Route path="/railway-env" element={<RailwayEnvVariables />} />
             </Route>
             {/* Public routes (no layout) */}
             <Route path="/orcamento/:token" element={<OrcamentoPublico />} />

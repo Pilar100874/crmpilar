@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Workflow, Wand2, Copy, Check, Loader2, Sparkles, RefreshCw, Download, AlertCircle, Server, FileCode, AtSign, Bot, Database, Hash, Slash, Save, FolderOpen, X, Edit } from 'lucide-react';
+import { Workflow, Wand2, Copy, Check, Loader2, Sparkles, RefreshCw, Download, AlertCircle, Server, FileCode, AtSign, Bot, Database, Hash, Slash, Save, FolderOpen, X, Edit, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -749,13 +750,22 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
             Use <code className="bg-muted px-1 rounded">@variável</code>, <code className="bg-muted px-1 rounded">#IA</code> ou <code className="bg-muted px-1 rounded">/integração</code> para referenciar elementos
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => setShowSavedList(!showSavedList)}
-        >
-          <FolderOpen className="h-4 w-4 mr-2" />
-          Workflows Salvos
-        </Button>
+        <div className="flex gap-2">
+          <Link to="/railway-env">
+            <Button variant="outline">
+              <Server className="h-4 w-4 mr-2" />
+              Variáveis Railway
+              <ExternalLink className="h-3 w-3 ml-1" />
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            onClick={() => setShowSavedList(!showSavedList)}
+          >
+            <FolderOpen className="h-4 w-4 mr-2" />
+            Workflows Salvos
+          </Button>
+        </div>
       </div>
 
       {showSavedList && (
