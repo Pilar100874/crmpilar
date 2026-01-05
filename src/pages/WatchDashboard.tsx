@@ -107,7 +107,12 @@ const WatchDashboard = () => {
   const formatDate = (date: Date) => date.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric' });
 
   const handleMenuClick = (url: string) => {
-    navigate(url);
+    // For logistica, redirect to watch version
+    if (url === '/logistica') {
+      navigate('/watch/logistica/veiculos');
+    } else {
+      navigate(url);
+    }
   };
 
   const cycleViewMode = () => {
