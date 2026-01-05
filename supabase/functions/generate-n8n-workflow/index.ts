@@ -17,59 +17,84 @@ serve(async (req) => {
 
     console.log('Generating n8n workflow with context:', { promptLength: prompt?.length, resourceContext: !!resourceContext });
 
-    const systemPrompt = `Você é um especialista em n8n workflow automation. Gere workflows n8n válidos em JSON PURO.
+    const systemPrompt = `Você é um especialista em n8n workflow automation. Gere workflows n8n COMPLETOS e FUNCIONAIS.
 
 ${resourceContext || ''}
 
-REGRAS CRÍTICAS - SIGA TODAS:
-1. Retorne APENAS JSON puro, sem \`\`\`json ou \`\`\`
-2. TODAS as strings devem estar em UMA ÚNICA LINHA
-3. Use \\n para quebras de linha DENTRO de strings
-4. Mantenha textos CURTOS (máximo 200 caracteres)
+REGRAS CRÍTICAS:
+1. Retorne APENAS JSON puro, sem markdown
+2. TODAS as strings em UMA ÚNICA LINHA
+3. Use \\n para quebras de linha dentro de strings
 
-ESTRUTURA OBRIGATÓRIA DO WORKFLOW (copie exatamente):
+EXEMPLO COMPLETO DE WORKFLOW COM 3 NODES CONECTADOS:
 {
-  "name": "Nome do Workflow",
+  "name": "Meu Workflow",
   "nodes": [
     {
-      "id": "node1",
+      "id": "node_webhook",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [240, 300],
+      "parameters": {"httpMethod": "POST", "path": "meu-endpoint"},
+      "webhookId": "wh1"
+    },
+    {
+      "id": "node_openai",
+      "name": "OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [480, 300],
       "parameters": {
-        "httpMethod": "POST",
-        "path": "meu-webhook"
+        "modelId": {"__rl": true, "mode": "list", "value": "gpt-4o"},
+        "options": {}
       },
-      "webhookId": "webhook1"
+      "credentials": {"openAiApi": {"id": "cred_openai", "name": "OpenAI"}}
+    },
+    {
+      "id": "node_respond",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [720, 300],
+      "parameters": {"respondWith": "json", "responseBody": "={{ $json }}"}
     }
   ],
-  "connections": {},
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
+  "connections": {
+    "Webhook": {"main": [[{"node": "OpenAI", "type": "main", "index": 0}]]},
+    "OpenAI": {"main": [[{"node": "Respond to Webhook", "type": "main", "index": 0}]]}
   },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
   "pinData": {},
   "versionId": "1"
 }
 
-SE HOUVER MÚLTIPLOS NODES, USE CONNECTIONS ASSIM:
-"connections": {
-  "Webhook": {
-    "main": [[{"node": "OpenAI", "type": "main", "index": 0}]]
-  }
+IMPORTANTE - CONNECTIONS:
+- SEMPRE conecte os nodes na ordem correta
+- O nome no connections DEVE ser EXATAMENTE igual ao "name" do node
+- Cada node (exceto o último) deve ter uma conexão para o próximo
+
+NODES COMUNS:
+1. Webhook (trigger): n8n-nodes-base.webhook, typeVersion: 2
+2. OpenAI Chat: @n8n/n8n-nodes-langchain.openAi, typeVersion: 1.8
+3. HTTP Request: n8n-nodes-base.httpRequest, typeVersion: 4.2  
+4. Respond to Webhook: n8n-nodes-base.respondToWebhook, typeVersion: 1.1
+5. Set Data: n8n-nodes-base.set, typeVersion: 3.4
+6. Code: n8n-nodes-base.code, typeVersion: 2
+
+CREDENCIAIS (adicione no node que precisa):
+"credentials": {"openAiApi": {"id": "cred_openai", "name": "OpenAI"}}
+
+Para HTTP Request com API key:
+"parameters": {
+  "url": "https://api.exemplo.com",
+  "authentication": "genericCredentialType",
+  "genericAuthType": "httpHeaderAuth",
+  "options": {}
 }
 
-NODES DISPONÍVEIS:
-- n8n-nodes-base.webhook (typeVersion:2, adicione webhookId)
-- n8n-nodes-base.openAi (typeVersion:1)
-- n8n-nodes-base.httpRequest (typeVersion:4.2)
-- n8n-nodes-base.set (typeVersion:3.4)
-- n8n-nodes-base.respondToWebhook (typeVersion:1.1)
-
-VARIÁVEIS: ={{$env.NOME_VAR}}
-
-Após o JSON, adicione "---ENV_VARS---" e liste: NOME|Descrição|Exemplo`;
+Após o JSON, adicione "---ENV_VARS---" e liste as variáveis necessárias: NOME|Descrição|Exemplo`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
