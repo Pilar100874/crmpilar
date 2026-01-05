@@ -293,6 +293,65 @@ export type Database = {
           },
         ]
       }
+      ai_api_keys: {
+        Row: {
+          api_key: string | null
+          api_secret: string | null
+          base_url: string | null
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          is_active: boolean | null
+          last_validated_at: string | null
+          organization_id: string | null
+          project_id: string | null
+          provider: string
+          provider_display_name: string
+          updated_at: string
+          validation_status: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          api_secret?: string | null
+          base_url?: string | null
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          is_active?: boolean | null
+          last_validated_at?: string | null
+          organization_id?: string | null
+          project_id?: string | null
+          provider: string
+          provider_display_name: string
+          updated_at?: string
+          validation_status?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          api_secret?: string | null
+          base_url?: string | null
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          is_active?: boolean | null
+          last_validated_at?: string | null
+          organization_id?: string | null
+          project_id?: string | null
+          provider?: string
+          provider_display_name?: string
+          updated_at?: string
+          validation_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_api_keys_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_endpoints: {
         Row: {
           active: boolean | null
