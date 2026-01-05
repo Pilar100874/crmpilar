@@ -480,24 +480,58 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
 
   const parseGeneratedContent = (content: string) => {
     const parts = content.split('---ENV_VARS---');
-    const jsonPart = parts[0];
+    let jsonPart = parts[0];
     const envPart = parts[1] || '';
 
-    const jsonMatch = jsonPart.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const jsonStr = jsonMatch[0];
-      JSON.parse(jsonStr); // Validate
-      setGeneratedJson(jsonStr);
+    // Remove markdown code blocks if present
+    jsonPart = jsonPart.replace(/```json\s*/gi, '');
+    jsonPart = jsonPart.replace(/```\s*/g, '');
+    jsonPart = jsonPart.trim();
 
-      const envVarsFromJson = extractEnvVarsFromJson(jsonStr);
+    // Find the JSON object - handle nested braces correctly
+    let startIndex = jsonPart.indexOf('{');
+    if (startIndex === -1) {
+      throw new Error('Não foi possível encontrar o JSON do workflow');
+    }
+
+    let braceCount = 0;
+    let endIndex = startIndex;
+    
+    for (let i = startIndex; i < jsonPart.length; i++) {
+      if (jsonPart[i] === '{') braceCount++;
+      if (jsonPart[i] === '}') braceCount--;
+      if (braceCount === 0) {
+        endIndex = i;
+        break;
+      }
+    }
+
+    let jsonStr = jsonPart.substring(startIndex, endIndex + 1);
+
+    // Clean up common JSON issues
+    // Remove trailing commas before } or ]
+    jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1');
+    // Fix escaped quotes issues
+    jsonStr = jsonStr.replace(/\\"/g, '"').replace(/""/g, '"');
+
+    try {
+      // Validate and format JSON
+      const parsed = JSON.parse(jsonStr);
+      const cleanJson = JSON.stringify(parsed, null, 2);
+      setGeneratedJson(cleanJson);
+
+      const envVarsFromJson = extractEnvVarsFromJson(cleanJson);
       
       const explicitEnvVars: EnvVariable[] = [];
       if (envPart.trim()) {
         const lines = envPart.trim().split('\n');
         for (const line of lines) {
-          const [name, description, example] = line.split('|').map(s => s.trim());
-          if (name && !name.startsWith('#')) {
-            explicitEnvVars.push({ name, description: description || '', example: example || '' });
+          const parts = line.split('|').map(s => s.trim());
+          const name = parts[0];
+          const description = parts[1] || '';
+          const example = parts[2] || '';
+          if (name && !name.startsWith('#') && /^[A-Z_]+$/.test(name)) {
+            explicitEnvVars.push({ name, description, example });
           }
         }
       }
@@ -511,8 +545,9 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
 
       setEnvVariables(allEnvVars);
       toast.success('Workflow gerado com sucesso!');
-    } else {
-      throw new Error('Não foi possível extrair o JSON do workflow');
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError, 'JSON:', jsonStr.substring(0, 500));
+      throw new Error('O JSON gerado está inválido. Tente gerar novamente.');
     }
   };
 
