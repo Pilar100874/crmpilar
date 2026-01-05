@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { MarketingResource, FIELD_TYPE_LABELS, RETURN_TYPE_LABELS, CHANNEL_CONFIG, ResourceField, PublishChannel } from './types';
+import { MarketingResource, FIELD_TYPE_LABELS, RETURN_TYPE_LABELS, CHANNEL_CONFIG, ResourceField, PublishChannel, PublishChannel as ChannelType } from './types';
+import { MessageSquare, Send } from 'lucide-react';
 
 interface EnvVariable {
   name: string;
@@ -41,7 +42,13 @@ interface Integration {
   database_type: string;
 }
 
-type MentionType = 'variable' | 'ai' | 'integration';
+interface PublishChannelItem {
+  id: string;
+  name: string;
+  label: string;
+}
+
+type MentionType = 'variable' | 'ai' | 'integration' | 'channel';
 
 const ResourceN8nGenerator: React.FC = () => {
   const [resources, setResources] = useState<MarketingResource[]>([]);
@@ -60,7 +67,20 @@ const ResourceN8nGenerator: React.FC = () => {
   const [cursorPosition, setCursorPosition] = useState(0);
   const [aiProviders, setAIProviders] = useState<AIProvider[]>([]);
   const [integrations, setIntegrations] = useState<Integration[]>([]);
+  const [publishChannels, setPublishChannels] = useState<PublishChannelItem[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Get available publish channels
+  const availableChannels: PublishChannelItem[] = [
+    { id: 'whatsapp', name: 'whatsapp', label: 'WhatsApp' },
+    { id: 'instagram', name: 'instagram', label: 'Instagram' },
+    { id: 'facebook', name: 'facebook', label: 'Facebook' },
+    { id: 'telegram', name: 'telegram', label: 'Telegram' },
+    { id: 'email', name: 'email', label: 'Email' },
+    { id: 'sms', name: 'sms', label: 'SMS' },
+    { id: 'linkedin', name: 'linkedin', label: 'LinkedIn' },
+    { id: 'tiktok', name: 'tiktok', label: 'TikTok' },
+  ];
 
   useEffect(() => {
     loadResources();
@@ -167,15 +187,21 @@ const ResourceN8nGenerator: React.FC = () => {
         a.provider_display_name.toLowerCase().includes(term) ||
         a.provider.toLowerCase().includes(term)
       );
-    } else {
+    } else if (mentionType === 'integration') {
       return integrations.filter(i =>
         i.name.toLowerCase().includes(term) ||
         i.database_type.toLowerCase().includes(term)
       );
+    } else {
+      // channel
+      return availableChannels.filter(c =>
+        c.label.toLowerCase().includes(term) ||
+        c.name.toLowerCase().includes(term)
+      );
     }
   }, [mentionType, searchTerm, getAvailableVariables, aiProviders, integrations]);
 
-  // Handle text change and detect mentions (@, #, /)
+  // Handle text change and detect mentions (@, #, /, %)
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     const cursorPos = e.target.selectionStart;
@@ -184,16 +210,18 @@ const ResourceN8nGenerator: React.FC = () => {
 
     const textBeforeCursor = value.substring(0, cursorPos);
     
-    // Check for @ (variables)
+    // Check for @ (variables), # (ai), / (integrations), % (channels)
     const lastAtIndex = textBeforeCursor.lastIndexOf('@');
     const lastHashIndex = textBeforeCursor.lastIndexOf('#');
     const lastSlashIndex = textBeforeCursor.lastIndexOf('/');
+    const lastPercentIndex = textBeforeCursor.lastIndexOf('%');
     
     // Find the most recent trigger character
     const triggers = [
       { char: '@', index: lastAtIndex, type: 'variable' as MentionType },
       { char: '#', index: lastHashIndex, type: 'ai' as MentionType },
       { char: '/', index: lastSlashIndex, type: 'integration' as MentionType },
+      { char: '%', index: lastPercentIndex, type: 'channel' as MentionType },
     ].filter(t => t.index !== -1);
     
     if (triggers.length > 0) {
@@ -219,6 +247,7 @@ const ResourceN8nGenerator: React.FC = () => {
       case 'variable': return '@';
       case 'ai': return '#';
       case 'integration': return '/';
+      case 'channel': return '%';
     }
   };
 
@@ -238,8 +267,10 @@ const ResourceN8nGenerator: React.FC = () => {
         insertText = `@${item.label}`;
       } else if (mentionType === 'ai') {
         insertText = `#${item.provider_display_name}`;
-      } else {
+      } else if (mentionType === 'integration') {
         insertText = `/${item.name}`;
+      } else {
+        insertText = `%${item.label}`;
       }
       
       const newText = textBeforeCursor.substring(0, triggerIndex) + insertText + textAfterCursor;
@@ -267,8 +298,10 @@ const ResourceN8nGenerator: React.FC = () => {
       insertText = `@${item.label} `;
     } else if (type === 'ai') {
       insertText = `#${item.provider_display_name} `;
-    } else {
+    } else if (type === 'integration') {
       insertText = `/${item.name} `;
+    } else {
+      insertText = `%${item.label} `;
     }
     
     setPromptText(prev => prev + insertText);
@@ -292,6 +325,8 @@ const ResourceN8nGenerator: React.FC = () => {
       ? integrations.map(i => `- ${i.name} (tipo: ${i.database_type})`).join('\n')
       : 'Nenhuma integração configurada';
 
+    const allChannelsInfo = availableChannels.map(c => `- ${c.label} (id: ${c.name})`).join('\n');
+
     return `
 RECURSO DE MARKETING: "${resource.name}"
 ${resource.description ? `Descrição: ${resource.description}` : ''}
@@ -308,7 +343,10 @@ ${aiInfo}
 INTEGRAÇÕES/BANCOS DE DADOS DISPONÍVEIS (use com /):
 ${integrationsInfo}
 
-${channelsInfo ? `CANAIS DE PUBLICAÇÃO: ${channelsInfo}` : 'SEM CANAIS DE PUBLICAÇÃO CONFIGURADOS'}
+CANAIS DE PUBLICAÇÃO DISPONÍVEIS (use com %):
+${allChannelsInfo}
+
+${channelsInfo ? `CANAIS CONFIGURADOS NO RECURSO: ${channelsInfo}` : 'SEM CANAIS DE PUBLICAÇÃO CONFIGURADOS'}
 ${resource.autoPublishEnabled ? '- Publicação automática ATIVADA: o workflow deve publicar automaticamente nos canais acima após gerar o conteúdo' : '- Publicação automática DESATIVADA: gerar apenas o conteúdo sem publicar'}
 `;
   };
@@ -333,6 +371,12 @@ ${resource.autoPublishEnabled ? '- Publicação automática ATIVADA: o workflow 
     integrations.forEach(int => {
       const regex = new RegExp(`/${int.name}`, 'gi');
       parsedPrompt = parsedPrompt.replace(regex, `{{integracao.${int.name}}}`);
+    });
+    
+    // Replace %channel mentions
+    availableChannels.forEach(channel => {
+      const regex = new RegExp(`%${channel.label}`, 'gi');
+      parsedPrompt = parsedPrompt.replace(regex, `{{canal.${channel.name}}}`);
     });
     
     return parsedPrompt;
@@ -609,7 +653,7 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
               {selectedResource && (
                 <>
                   {/* Available mentions */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                     {/* Variables */}
                     <div className="p-3 rounded-lg border bg-muted/30">
                       <div className="flex items-center gap-2 mb-2">
@@ -677,10 +721,30 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
                         )}
                       </div>
                     </div>
+
+                    {/* Publish Channels */}
+                    <div className="p-3 rounded-lg border bg-muted/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Send className="h-4 w-4 text-orange-500" />
+                        <span className="text-sm font-medium">Canais</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {availableChannels.map((channel) => (
+                          <Badge 
+                            key={channel.id} 
+                            variant="secondary" 
+                            className="text-xs cursor-pointer hover:bg-orange-500 hover:text-white transition-colors"
+                            onClick={() => directInsert('channel', channel)}
+                          >
+                            %{channel.label}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   <p className="text-xs text-muted-foreground">
-                    Clique nos itens acima ou digite <code className="bg-muted px-0.5 rounded">@</code> <code className="bg-muted px-0.5 rounded">#</code> <code className="bg-muted px-0.5 rounded">/</code> para inserir no prompt
+                    Clique nos itens acima ou digite <code className="bg-muted px-0.5 rounded">@</code> <code className="bg-muted px-0.5 rounded">#</code> <code className="bg-muted px-0.5 rounded">/</code> <code className="bg-muted px-0.5 rounded">%</code> para inserir no prompt
                   </p>
 
                   {/* Resource info */}
@@ -732,6 +796,7 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
                             {mentionType === 'variable' && <><AtSign className="h-3 w-3" /> Selecione uma variável</>}
                             {mentionType === 'ai' && <><Bot className="h-3 w-3" /> Selecione uma IA</>}
                             {mentionType === 'integration' && <><Database className="h-3 w-3" /> Selecione uma integração</>}
+                            {mentionType === 'channel' && <><Send className="h-3 w-3" /> Selecione um canal</>}
                           </p>
                           <div className="space-y-1 max-h-48 overflow-y-auto">
                             {getFilteredItems().map((item: any) => (
@@ -744,11 +809,13 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
                                   {mentionType === 'variable' && `@${item.label}`}
                                   {mentionType === 'ai' && `#${item.provider_display_name}`}
                                   {mentionType === 'integration' && `/${item.name}`}
+                                  {mentionType === 'channel' && `%${item.label}`}
                                 </span>
                                 <Badge variant="outline" className="text-xs">
                                   {mentionType === 'variable' && FIELD_TYPE_LABELS[item.type]}
                                   {mentionType === 'ai' && item.provider}
                                   {mentionType === 'integration' && item.database_type}
+                                  {mentionType === 'channel' && 'Canal'}
                                 </Badge>
                               </button>
                             ))}
