@@ -305,10 +305,26 @@ const AIApiKeysManager: React.FC = () => {
   };
 
   const handleSave = async (provider: AIProvider) => {
-    if (!estabelecimentoId) {
-      toast.error('Estabelecimento não identificado');
+    // Verify user is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error('Você precisa estar logado para salvar chaves de API');
       return;
     }
+
+    // Get estabelecimento_id from the authenticated user's record
+    const { data: usuario, error: userError } = await supabase
+      .from('usuarios')
+      .select('estabelecimento_id')
+      .eq('id', user.id)
+      .single();
+
+    if (userError || !usuario?.estabelecimento_id) {
+      toast.error('Usuário não vinculado a um estabelecimento');
+      return;
+    }
+
+    const userEstabelecimentoId = usuario.estabelecimento_id;
 
     const requiredFields = provider.fields.filter(f => f.required);
     for (const field of requiredFields) {
@@ -323,7 +339,7 @@ const AIApiKeysManager: React.FC = () => {
       const existingKey = savedKeys.find(k => k.provider === provider.name);
 
       const payload = {
-        estabelecimento_id: estabelecimentoId,
+        estabelecimento_id: userEstabelecimentoId,
         provider: provider.name,
         provider_display_name: provider.displayName,
         api_key: formData.api_key || null,
