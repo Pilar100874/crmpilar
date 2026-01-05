@@ -95,6 +95,11 @@ import EmailConfig from "./pages/EmailConfig";
 import OrcamentoReportConfig from "./pages/OrcamentoReportConfig";
 import Macros from "./pages/Macros";
 import WatchDashboard from "./pages/WatchDashboard";
+import WatchDashboardHome from "./pages/watch/WatchDashboardHome";
+import WatchAgenda from "./pages/watch/WatchAgenda";
+import WatchVendas from "./pages/watch/WatchVendas";
+import WatchChats from "./pages/watch/WatchChats";
+import WatchLogisticaMenu from "./pages/watch/WatchLogisticaMenu";
 import WatchLogisticaVeiculos from "./pages/watch/WatchLogisticaVeiculos";
 import WatchLogisticaMapa from "./pages/watch/WatchLogisticaMapa";
 import WatchLogisticaRota from "./pages/watch/WatchLogisticaRota";
@@ -217,9 +222,14 @@ const App = () => (
             <Route path="/pilar-rastreador" element={<PilarRastreador />} />
             <Route path="/pilar-rastreador-nativo" element={<PilarRastreadorNativo />} />
             <Route path="/watch" element={<WatchDashboard />} />
+            <Route path="/watch/dashboard" element={<WatchDashboardHome />} />
+            <Route path="/watch/agenda" element={<WatchAgenda />} />
+            <Route path="/watch/vendas" element={<WatchVendas />} />
+            <Route path="/watch/chats" element={<WatchChats />} />
+            <Route path="/watch/logistica" element={<WatchLogisticaMenu />} />
             <Route path="/watch/logistica/veiculos" element={<WatchLogisticaVeiculos />} />
             <Route path="/watch/logistica/mapa" element={<WatchLogisticaMapa />} />
-            <Route path="/watch/logistica/rota/:veiculoId" element={<WatchLogisticaRota />} />
+            <Route path="/watch/logistica/rota" element={<WatchLogisticaRota />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
