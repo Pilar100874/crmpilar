@@ -94,6 +94,7 @@ import Avisos from "./pages/Avisos";
 import EmailConfig from "./pages/EmailConfig";
 import OrcamentoReportConfig from "./pages/OrcamentoReportConfig";
 import Macros from "./pages/Macros";
+import WatchDashboard from "./pages/WatchDashboard";
 import { MacroProvider } from "./contexts/MacroContext";
 
 const queryClient = new QueryClient();
@@ -212,6 +213,7 @@ const App = () => (
             <Route path="/webchat" element={<WebChat />} />
             <Route path="/pilar-rastreador" element={<PilarRastreador />} />
             <Route path="/pilar-rastreador-nativo" element={<PilarRastreadorNativo />} />
+            <Route path="/watch" element={<WatchDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
