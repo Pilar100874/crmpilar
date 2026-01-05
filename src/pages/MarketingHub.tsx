@@ -9,7 +9,9 @@ import {
   LucideIcon,
   Wand2,
   FolderOpen,
-  Key
+  Key,
+  Workflow,
+  Link2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -25,6 +27,8 @@ import MarketingCampanhas from './MarketingCampanhas';
 import MarketingRecursos from '@/components/marketing/MarketingRecursos';
 import MarketingGaleria from '@/components/marketing/MarketingGaleria';
 import AIApiKeysManager from '@/components/marketing/AIApiKeysManager';
+import IntegrationCredentialsManager from '@/components/marketing/IntegrationCredentialsManager';
+import N8nWorkflowGenerator from '@/components/marketing/N8nWorkflowGenerator';
 
 interface TabItem {
   id: string;
@@ -36,10 +40,12 @@ interface TabItem {
 const tabItems: TabItem[] = [
   { id: 'recursos', label: 'Recursos IA', icon: Wand2, description: 'Crie conteúdo com IA e n8n' },
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
+  { id: 'n8n-generator', label: 'Gerador n8n', icon: Workflow, description: 'Gere workflows n8n com IA' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Fluxos automatizados de marketing' },
   { id: 'campanhas', label: 'Campanhas', icon: Megaphone, description: 'Gestão de campanhas' },
   { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
   { id: 'api-keys', label: 'Chaves IA', icon: Key, description: 'Gerencie chaves de API de IA' },
+  { id: 'integrations', label: 'Integrações', icon: Link2, description: 'Google, MS SQL e outros' },
 ];
 
 const MarketingHub: React.FC = () => {
@@ -55,6 +61,8 @@ const MarketingHub: React.FC = () => {
         return <MarketingRecursos />;
       case 'galeria':
         return <MarketingGaleria />;
+      case 'n8n-generator':
+        return <N8nWorkflowGenerator />;
       case 'canvas':
         return <MarketingCanvas onClose={() => setActiveTab('recursos')} />;
       case 'automacoes':
@@ -63,6 +71,8 @@ const MarketingHub: React.FC = () => {
         return <MarketingCampanhas />;
       case 'api-keys':
         return <AIApiKeysManager />;
+      case 'integrations':
+        return <IntegrationCredentialsManager />;
       default:
         return null;
     }
