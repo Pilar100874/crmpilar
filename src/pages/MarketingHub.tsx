@@ -8,7 +8,8 @@ import {
   PanelLeftClose,
   LucideIcon,
   Wand2,
-  FolderOpen
+  FolderOpen,
+  Key
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -23,6 +24,7 @@ import MarketingAutomacoes from './MarketingAutomacoes';
 import MarketingCampanhas from './MarketingCampanhas';
 import MarketingRecursos from '@/components/marketing/MarketingRecursos';
 import MarketingGaleria from '@/components/marketing/MarketingGaleria';
+import AIApiKeysManager from '@/components/marketing/AIApiKeysManager';
 
 interface TabItem {
   id: string;
@@ -37,6 +39,7 @@ const tabItems: TabItem[] = [
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Fluxos automatizados de marketing' },
   { id: 'campanhas', label: 'Campanhas', icon: Megaphone, description: 'Gestão de campanhas' },
   { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
+  { id: 'api-keys', label: 'Chaves IA', icon: Key, description: 'Gerencie chaves de API de IA' },
 ];
 
 const MarketingHub: React.FC = () => {
@@ -58,6 +61,8 @@ const MarketingHub: React.FC = () => {
         return <MarketingAutomacoes />;
       case 'campanhas':
         return <MarketingCampanhas />;
+      case 'api-keys':
+        return <AIApiKeysManager />;
       default:
         return null;
     }
