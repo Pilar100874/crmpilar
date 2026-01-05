@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Workflow, Wand2, Copy, Check, Loader2, Sparkles, RefreshCw, Download, AlertCircle, Server, FileCode, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Workflow, Wand2, Copy, Check, Loader2, Sparkles, RefreshCw, Download, AlertCircle, Server, FileCode, AtSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { MarketingResource, FIELD_TYPE_LABELS, RETURN_TYPE_LABELS, CHANNEL_CONFIG, ResourceField, PublishChannel } from './types';
 
 interface EnvVariable {
@@ -30,6 +32,7 @@ interface DBMarketingResource {
 const ResourceN8nGenerator: React.FC = () => {
   const [resources, setResources] = useState<MarketingResource[]>([]);
   const [selectedResourceId, setSelectedResourceId] = useState<string>('');
+  const [promptText, setPromptText] = useState<string>('');
   const [generatedJson, setGeneratedJson] = useState<string>('');
   const [envVariables, setEnvVariables] = useState<EnvVariable[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -37,6 +40,10 @@ const ResourceN8nGenerator: React.FC = () => {
   const [isEnvCopied, setIsEnvCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showVariablePopover, setShowVariablePopover] = useState(false);
+  const [variableSearchTerm, setVariableSearchTerm] = useState('');
+  const [cursorPosition, setCursorPosition] = useState(0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     loadResources();
@@ -81,9 +88,78 @@ const ResourceN8nGenerator: React.FC = () => {
 
   const selectedResource = resources.find(r => r.id === selectedResourceId);
 
+  // Get available variables from selected resource
+  const getAvailableVariables = useCallback(() => {
+    if (!selectedResource) return [];
+    return selectedResource.fields.map(field => ({
+      id: field.id,
+      label: field.label,
+      type: field.type,
+    }));
+  }, [selectedResource]);
+
+  // Filter variables based on search term
+  const filteredVariables = getAvailableVariables().filter(v =>
+    v.label.toLowerCase().includes(variableSearchTerm.toLowerCase()) ||
+    v.id.toLowerCase().includes(variableSearchTerm.toLowerCase())
+  );
+
+  // Handle text change and detect @ mentions
+  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    const cursorPos = e.target.selectionStart;
+    setPromptText(value);
+    setCursorPosition(cursorPos);
+
+    // Check if we should show the variable popover
+    const textBeforeCursor = value.substring(0, cursorPos);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    
+    if (lastAtIndex !== -1) {
+      const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+      // Only show popover if there's no space after @
+      if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+        setVariableSearchTerm(textAfterAt);
+        setShowVariablePopover(true);
+        return;
+      }
+    }
+    
+    setShowVariablePopover(false);
+    setVariableSearchTerm('');
+  };
+
+  // Insert variable into prompt
+  const insertVariable = (variable: { id: string; label: string }) => {
+    const textBeforeCursor = promptText.substring(0, cursorPosition);
+    const textAfterCursor = promptText.substring(cursorPosition);
+    
+    // Find the @ symbol position
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    
+    if (lastAtIndex !== -1) {
+      const newText = textBeforeCursor.substring(0, lastAtIndex) + 
+                      `@${variable.label}` + 
+                      textAfterCursor;
+      setPromptText(newText);
+      
+      // Move cursor after the inserted variable
+      const newCursorPos = lastAtIndex + variable.label.length + 1;
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      }, 0);
+    }
+    
+    setShowVariablePopover(false);
+    setVariableSearchTerm('');
+  };
+
   const buildResourceContext = (resource: MarketingResource): string => {
     const fieldsInfo = resource.fields.map(f => 
-      `- ${f.label} (${FIELD_TYPE_LABELS[f.type]}): ${f.required ? 'Obrigatório' : 'Opcional'}${f.placeholder ? ` - "${f.placeholder}"` : ''}`
+      `- ${f.label} (ID: ${f.id}, Tipo: ${FIELD_TYPE_LABELS[f.type]}): ${f.required ? 'Obrigatório' : 'Opcional'}${f.placeholder ? ` - "${f.placeholder}"` : ''}`
     ).join('\n');
 
     const channelsInfo = (resource.publishChannels || []).map(ch => 
@@ -97,7 +173,7 @@ ${resource.description ? `Descrição: ${resource.description}` : ''}
 TIPO DE RETORNO: ${RETURN_TYPE_LABELS[resource.returnType]}
 - O workflow deve gerar conteúdo do tipo: ${resource.returnType}
 
-CAMPOS DE ENTRADA (o usuário preencherá estes dados):
+CAMPOS DE ENTRADA (variáveis disponíveis para uso):
 ${fieldsInfo}
 
 ${channelsInfo ? `CANAIS DE PUBLICAÇÃO: ${channelsInfo}` : 'SEM CANAIS DE PUBLICAÇÃO CONFIGURADOS'}
@@ -105,9 +181,27 @@ ${resource.autoPublishEnabled ? '- Publicação automática ATIVADA: o workflow 
 `;
   };
 
+  // Parse prompt to replace @mentions with variable references
+  const parsePromptWithVariables = (prompt: string, resource: MarketingResource): string => {
+    let parsedPrompt = prompt;
+    
+    resource.fields.forEach(field => {
+      // Replace @label with proper reference
+      const regex = new RegExp(`@${field.label}`, 'gi');
+      parsedPrompt = parsedPrompt.replace(regex, `{{entrada.${field.id}}}`);
+    });
+    
+    return parsedPrompt;
+  };
+
   const generateWorkflow = async () => {
     if (!selectedResource) {
       toast.error('Selecione um recurso primeiro');
+      return;
+    }
+
+    if (!promptText.trim()) {
+      toast.error('Descreva o que deseja que o workflow faça');
       return;
     }
 
@@ -118,64 +212,25 @@ ${resource.autoPublishEnabled ? '- Publicação automática ATIVADA: o workflow 
 
     try {
       const resourceContext = buildResourceContext(selectedResource);
+      const parsedPrompt = parsePromptWithVariables(promptText, selectedResource);
       
-      const systemPrompt = `Você é um especialista em n8n workflow automation. Sua tarefa é gerar workflows n8n válidos em formato JSON baseados em Recursos de Marketing de IA.
+      const fullPrompt = `Gere um workflow n8n completo baseado no recurso "${selectedResource.name}".
 
-CONTEXTO DO RECURSO:
-${resourceContext}
+INSTRUÇÕES DO USUÁRIO:
+${parsedPrompt}
 
-REGRAS IMPORTANTES:
-1. Gere APENAS o JSON válido do workflow, sem explicações antes ou depois
-2. O JSON deve seguir a estrutura exata do n8n v1.0+
-3. Use nodes oficiais do n8n
-4. Inclua todas as conexões necessárias entre nodes
+O workflow deve:
+1. Receber os dados via webhook (com todos os campos do recurso como entrada)
+2. Processar conforme as instruções acima
+3. Retornar o resultado no formato ${selectedResource.returnType}
+${selectedResource.publishChannels && selectedResource.publishChannels.length > 0 && selectedResource.autoPublishEnabled 
+  ? `4. Publicar automaticamente nos canais: ${selectedResource.publishChannels.map(ch => CHANNEL_CONFIG[ch]?.label).join(', ')}`
+  : ''}`;
 
-ESTRUTURA DO WORKFLOW:
-1. TRIGGER: Webhook que receberá os dados dos campos de entrada
-2. PROCESSAMENTO: 
-   - Para retorno "image": usar node de IA para gerar imagem (ex: OpenAI DALL-E, Stability AI)
-   - Para retorno "video": usar APIs de geração de vídeo
-   - Para retorno "audio": usar APIs de TTS/geração de áudio
-   - Para retorno "text": usar OpenAI/outro LLM para gerar texto
-3. PUBLICAÇÃO (se canais configurados):
-   - WhatsApp: usar node HTTP Request para API do WhatsApp Business
-   - Instagram: usar node HTTP Request para Instagram Graph API
-   - Facebook: usar node HTTP Request para Facebook Graph API
-   - Telegram: usar node Telegram
-   - Email: usar node Email/SMTP
-
-REGRA CRÍTICA - VARIÁVEIS DE AMBIENTE:
-- NUNCA use credenciais hardcoded
-- Use expressões n8n: ={{$env.NOME_VARIAVEL}}
-
-Variáveis comuns por serviço:
-- OpenAI: ={{$env.OPENAI_API_KEY}}
-- WhatsApp: ={{$env.WHATSAPP_TOKEN}}, ={{$env.WHATSAPP_PHONE_ID}}
-- Instagram: ={{$env.INSTAGRAM_ACCESS_TOKEN}}, ={{$env.INSTAGRAM_ACCOUNT_ID}}
-- Facebook: ={{$env.FACEBOOK_ACCESS_TOKEN}}, ={{$env.FACEBOOK_PAGE_ID}}
-- Telegram: ={{$env.TELEGRAM_BOT_TOKEN}}, ={{$env.TELEGRAM_CHAT_ID}}
-- Email SMTP: ={{$env.SMTP_HOST}}, ={{$env.SMTP_USER}}, ={{$env.SMTP_PASSWORD}}
-
-ESTRUTURA DO JSON:
-{
-  "name": "Nome do Workflow",
-  "nodes": [...],
-  "connections": {...},
-  "active": false,
-  "settings": { "executionOrder": "v1" },
-  "versionId": "1",
-  "id": "1"
-}
-
-Após o JSON, adicione uma seção separada por "---ENV_VARS---" listando todas as variáveis de ambiente necessárias no formato:
-NOME_VARIAVEL|Descrição|Exemplo de valor`;
-
-      const response = await supabase.functions.invoke('chat', {
+      const response = await supabase.functions.invoke('generate-n8n-workflow', {
         body: {
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Gere o workflow n8n completo para o recurso "${selectedResource.name}" que foi descrito acima.` }
-          ]
+          prompt: fullPrompt,
+          resourceContext
         }
       });
 
@@ -183,40 +238,16 @@ NOME_VARIAVEL|Descrição|Exemplo de valor`;
         throw new Error(response.error.message || 'Erro ao gerar workflow');
       }
 
-      const reader = response.data?.body?.getReader?.();
+      const data = response.data;
       
-      if (reader) {
-        const decoder = new TextDecoder();
-        let fullContent = '';
-        
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-          
-          for (const line of lines) {
-            if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
-              try {
-                const json = JSON.parse(line.slice(6));
-                const content = json.choices?.[0]?.delta?.content;
-                if (content) {
-                  fullContent += content;
-                }
-              } catch {
-                // Skip invalid JSON lines
-              }
-            }
-          }
-        }
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
-        parseGeneratedContent(fullContent);
+      if (data.content) {
+        parseGeneratedContent(data.content);
       } else {
-        const data = response.data;
-        if (typeof data === 'string') {
-          parseGeneratedContent(data);
-        }
+        throw new Error('Resposta inválida da API');
       }
     } catch (err) {
       console.error('Error generating workflow:', err);
@@ -386,7 +417,7 @@ NOME_VARIAVEL|Descrição|Exemplo de valor`;
           Gerador de Workflows n8n
         </h3>
         <p className="text-sm text-muted-foreground mt-1">
-          Selecione um Recurso de IA e gere automaticamente o workflow n8n com base nas suas configurações
+          Selecione um Recurso de IA, descreva o que deseja e use <code className="bg-muted px-1 rounded">@variável</code> para referenciar os campos
         </p>
       </div>
 
@@ -394,10 +425,10 @@ NOME_VARIAVEL|Descrição|Exemplo de valor`;
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-yellow-500" />
-            Selecione o Recurso
+            Configuração do Workflow
           </CardTitle>
           <CardDescription>
-            O workflow será gerado baseado nos campos, tipo de retorno e canais de publicação configurados
+            Selecione o recurso e descreva o fluxo desejado usando as variáveis disponíveis
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -410,41 +441,61 @@ NOME_VARIAVEL|Descrição|Exemplo de valor`;
             </Alert>
           ) : (
             <>
-              <Select value={selectedResourceId} onValueChange={setSelectedResourceId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione um recurso..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {resources.map((resource) => (
-                    <SelectItem key={resource.id} value={resource.id}>
-                      <div className="flex items-center gap-2">
-                        <span>{resource.name}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {RETURN_TYPE_LABELS[resource.returnType]}
-                        </Badge>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Recurso de IA</label>
+                <Select value={selectedResourceId} onValueChange={setSelectedResourceId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione um recurso..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {resources.map((resource) => (
+                      <SelectItem key={resource.id} value={resource.id}>
+                        <div className="flex items-center gap-2">
+                          <span>{resource.name}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {RETURN_TYPE_LABELS[resource.returnType]}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               {selectedResource && (
-                <Card className="bg-muted/50">
-                  <CardContent className="pt-4 space-y-3">
-                    <div>
-                      <span className="text-xs text-muted-foreground">Campos de entrada:</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {selectedResource.fields.map((field) => (
-                          <Badge key={field.id} variant="secondary" className="text-xs">
-                            {field.label}
-                          </Badge>
-                        ))}
-                      </div>
+                <>
+                  {/* Variables available */}
+                  <div className="p-3 rounded-lg border bg-muted/30">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AtSign className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium">Variáveis disponíveis</span>
                     </div>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedResource.fields.map((field) => (
+                        <Badge 
+                          key={field.id} 
+                          variant="secondary" 
+                          className="text-xs cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                          onClick={() => {
+                            const newText = promptText + `@${field.label} `;
+                            setPromptText(newText);
+                            textareaRef.current?.focus();
+                          }}
+                        >
+                          @{field.label}
+                        </Badge>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Clique em uma variável ou digite @ para inserir no prompt
+                    </p>
+                  </div>
 
-                    <div>
+                  {/* Resource info */}
+                  <div className="p-3 rounded-lg border bg-muted/30 space-y-2">
+                    <div className="flex items-center gap-2">
                       <span className="text-xs text-muted-foreground">Tipo de retorno:</span>
-                      <Badge className="ml-2 text-xs">
+                      <Badge className="text-xs">
                         {RETURN_TYPE_LABELS[selectedResource.returnType]}
                       </Badge>
                     </div>
@@ -468,27 +519,62 @@ NOME_VARIAVEL|Descrição|Exemplo de valor`;
                         )}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              )}
+                  </div>
 
-              <Button 
-                onClick={generateWorkflow} 
-                disabled={isGenerating || !selectedResourceId}
-                className="w-full"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Gerando workflow...
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="h-4 w-4 mr-2" />
-                    Gerar Workflow
-                  </>
-                )}
-              </Button>
+                  {/* Prompt input with @ mention support */}
+                  <div className="space-y-2 relative">
+                    <label className="text-sm font-medium">Descreva o workflow</label>
+                    <Textarea
+                      ref={textareaRef}
+                      value={promptText}
+                      onChange={handlePromptChange}
+                      placeholder={`Ex: Crie um workflow que pegue o texto de @${selectedResource.fields[0]?.label || 'campo'} e gere uma imagem usando a referência de @${selectedResource.fields[1]?.label || 'referência'}, depois publique nos canais configurados`}
+                      className="min-h-[120px] resize-none"
+                    />
+                    
+                    {/* Variable autocomplete popover */}
+                    {showVariablePopover && filteredVariables.length > 0 && (
+                      <div className="absolute z-50 w-64 mt-1 bg-popover border rounded-md shadow-lg">
+                        <div className="p-2">
+                          <p className="text-xs text-muted-foreground mb-2">Selecione uma variável</p>
+                          <div className="space-y-1 max-h-48 overflow-y-auto">
+                            {filteredVariables.map((variable) => (
+                              <button
+                                key={variable.id}
+                                className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-muted flex items-center justify-between"
+                                onClick={() => insertVariable(variable)}
+                              >
+                                <span className="font-medium">@{variable.label}</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {FIELD_TYPE_LABELS[variable.type]}
+                                </Badge>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <Button 
+                    onClick={generateWorkflow} 
+                    disabled={isGenerating || !selectedResourceId || !promptText.trim()}
+                    className="w-full"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Gerando workflow...
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="h-4 w-4 mr-2" />
+                        Gerar Workflow
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
             </>
           )}
         </CardContent>

@@ -230,3 +230,6 @@ verify_jwt = false
 
 [functions.n8n-proxy]
 verify_jwt = false
+
+[functions.generate-n8n-workflow]
+verify_jwt = false
