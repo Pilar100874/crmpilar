@@ -22,31 +22,50 @@ serve(async (req) => {
 ${resourceContext || ''}
 
 REGRAS CRÍTICAS - SIGA TODAS:
-1. Retorne APENAS JSON puro, sem \`\`\`json ou \`\`\` 
-2. TODAS as strings devem estar em UMA ÚNICA LINHA - NUNCA quebre strings em múltiplas linhas
+1. Retorne APENAS JSON puro, sem \`\`\`json ou \`\`\`
+2. TODAS as strings devem estar em UMA ÚNICA LINHA
 3. Use \\n para quebras de linha DENTRO de strings
-4. Escape aspas duplas com \\"
-5. Use aspas duplas para strings, NUNCA aspas simples
-6. NÃO inclua comentários
-7. NÃO use trailing commas
-8. Mantenha textos de prompts/descrições CURTOS (máximo 200 caracteres)
+4. Mantenha textos CURTOS (máximo 200 caracteres)
 
-EXEMPLO DE STRING CORRETA:
-"prompt": "Gere uma imagem de um produto. Use cores vibrantes e fundo branco."
+ESTRUTURA OBRIGATÓRIA DO WORKFLOW (copie exatamente):
+{
+  "name": "Nome do Workflow",
+  "nodes": [
+    {
+      "id": "node1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "meu-webhook"
+      },
+      "webhookId": "webhook1"
+    }
+  ],
+  "connections": {},
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "versionId": "1"
+}
 
-EXEMPLO ERRADO (NUNCA FAÇA ISSO):
-"prompt": "Gere uma imagem 
-de um produto"
-
-ESTRUTURA DO WORKFLOW:
-{"name":"Nome","nodes":[{"id":"uuid","name":"Node","type":"n8n-nodes-base.webhook","typeVersion":2,"position":[240,300],"parameters":{"httpMethod":"POST","path":"webhook-path"}}],"connections":{},"active":false,"settings":{"executionOrder":"v1"}}
+SE HOUVER MÚLTIPLOS NODES, USE CONNECTIONS ASSIM:
+"connections": {
+  "Webhook": {
+    "main": [[{"node": "OpenAI", "type": "main", "index": 0}]]
+  }
+}
 
 NODES DISPONÍVEIS:
-- n8n-nodes-base.webhook (typeVersion:2) - Trigger HTTP
-- n8n-nodes-base.openAi (typeVersion:1) - OpenAI API
-- n8n-nodes-base.httpRequest (typeVersion:4) - HTTP genérico
-- n8n-nodes-base.set (typeVersion:3) - Manipular dados
-- n8n-nodes-base.code (typeVersion:2) - JavaScript
+- n8n-nodes-base.webhook (typeVersion:2, adicione webhookId)
+- n8n-nodes-base.openAi (typeVersion:1)
+- n8n-nodes-base.httpRequest (typeVersion:4.2)
+- n8n-nodes-base.set (typeVersion:3.4)
+- n8n-nodes-base.respondToWebhook (typeVersion:1.1)
 
 VARIÁVEIS: ={{$env.NOME_VAR}}
 
