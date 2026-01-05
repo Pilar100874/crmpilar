@@ -40,7 +40,7 @@ export function TelegramConfigCRUD() {
       }
 
       const { data, error } = await supabase
-        .from("telegram_config")
+        .from("telegram_config" as any)
         .select("*")
         .eq("estabelecimento_id", estabelecimentoId)
         .maybeSingle();
@@ -51,11 +51,12 @@ export function TelegramConfigCRUD() {
       }
 
       if (data) {
+        const configData = data as any;
         setConfig({
-          id: data.id,
-          bot_token: data.bot_token || "",
-          bot_username: data.bot_username || "",
-          webhook_url: data.webhook_url || "",
+          id: configData.id,
+          bot_token: configData.bot_token || "",
+          bot_username: configData.bot_username || "",
+          webhook_url: configData.webhook_url || "",
         });
         setHasExistingConfig(true);
       }
@@ -99,14 +100,14 @@ export function TelegramConfigCRUD() {
 
       if (hasExistingConfig && config.id) {
         const { error } = await supabase
-          .from("telegram_config")
+          .from("telegram_config" as any)
           .update(configData)
           .eq("id", config.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("telegram_config")
+          .from("telegram_config" as any)
           .insert([configData]);
 
         if (error) throw error;
