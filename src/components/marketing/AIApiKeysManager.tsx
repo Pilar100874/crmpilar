@@ -169,6 +169,30 @@ const AI_PROVIDERS: AIProvider[] = [
     docsUrl: 'https://elevenlabs.io/app/settings/api-keys'
   },
   {
+    id: 'veo3',
+    name: 'veo3',
+    displayName: 'Google Veo 3 (Vídeo)',
+    icon: '🎬',
+    fields: [
+      { key: 'api_key', label: 'API Key (Vertex AI)', placeholder: '', type: 'apiKey', required: true },
+      { key: 'project_id', label: 'Project ID (GCP)', placeholder: 'my-project-123', type: 'text', required: true },
+      { key: 'base_url', label: 'Region Endpoint', placeholder: 'us-central1-aiplatform.googleapis.com', type: 'text' },
+    ],
+    docsUrl: 'https://console.cloud.google.com/vertex-ai'
+  },
+  {
+    id: 'seedream',
+    name: 'seedream',
+    displayName: 'Seedream (ByteDance)',
+    icon: '🌱',
+    fields: [
+      { key: 'api_key', label: 'Access Key ID', placeholder: 'AKLT...', type: 'apiKey', required: true },
+      { key: 'api_secret', label: 'Secret Access Key', placeholder: '', type: 'secret', required: true },
+      { key: 'base_url', label: 'Endpoint', placeholder: 'https://visual.volcengineapi.com', type: 'text' },
+    ],
+    docsUrl: 'https://www.volcengine.com/docs/6791/1347773'
+  },
+  {
     id: 'custom',
     name: 'custom',
     displayName: 'API Personalizada',
