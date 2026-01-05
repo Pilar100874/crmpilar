@@ -511,44 +511,79 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
     // Clean up common JSON issues
     // Remove trailing commas before } or ]
     jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1');
-    // Fix escaped quotes issues
-    jsonStr = jsonStr.replace(/\\"/g, '"').replace(/""/g, '"');
+    
+    // Fix multiline strings by replacing actual newlines in string values
+    // This regex finds string values and replaces newlines within them
+    jsonStr = jsonStr.replace(/"([^"]*?)[\n\r]+([^"]*?)"/g, (match) => {
+      return match.replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ');
+    });
+    
+    // Remove control characters except valid ones
+    jsonStr = jsonStr.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F]/g, ' ');
 
-    try {
-      // Validate and format JSON
-      const parsed = JSON.parse(jsonStr);
-      const cleanJson = JSON.stringify(parsed, null, 2);
-      setGeneratedJson(cleanJson);
-
-      const envVarsFromJson = extractEnvVarsFromJson(cleanJson);
-      
-      const explicitEnvVars: EnvVariable[] = [];
-      if (envPart.trim()) {
-        const lines = envPart.trim().split('\n');
-        for (const line of lines) {
-          const parts = line.split('|').map(s => s.trim());
-          const name = parts[0];
-          const description = parts[1] || '';
-          const example = parts[2] || '';
-          if (name && !name.startsWith('#') && /^[A-Z_]+$/.test(name)) {
-            explicitEnvVars.push({ name, description, example });
-          }
+    // Try to parse, with multiple attempts
+    let parsed;
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        parsed = JSON.parse(jsonStr);
+        break;
+      } catch (parseError) {
+        attempts++;
+        if (attempts >= maxAttempts) {
+          console.error('JSON parse error after', attempts, 'attempts:', parseError);
+          console.error('JSON (first 1000 chars):', jsonStr.substring(0, 1000));
+          throw new Error('O JSON gerado está inválido. A IA pode ter gerado strings com quebras de linha. Tente gerar novamente.');
+        }
+        // Try additional fixes
+        // Fix truncated strings by finding unclosed quotes
+        const quoteCount = (jsonStr.match(/"/g) || []).length;
+        if (quoteCount % 2 !== 0) {
+          // Odd number of quotes, try to find and fix
+          jsonStr = jsonStr.replace(/("[^"]*?)$/, '$1"');
+        }
+        // Remove any trailing incomplete content
+        const lastBrace = jsonStr.lastIndexOf('}');
+        if (lastBrace > 0 && lastBrace < jsonStr.length - 1) {
+          jsonStr = jsonStr.substring(0, lastBrace + 1);
         }
       }
+    }
 
-      const allEnvVars = [...envVarsFromJson];
-      for (const ev of explicitEnvVars) {
-        if (!allEnvVars.find(v => v.name === ev.name)) {
-          allEnvVars.push(ev);
-        }
-      }
-
-      setEnvVariables(allEnvVars);
-      toast.success('Workflow gerado com sucesso!');
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError, 'JSON:', jsonStr.substring(0, 500));
+    if (!parsed) {
       throw new Error('O JSON gerado está inválido. Tente gerar novamente.');
     }
+
+    const cleanJson = JSON.stringify(parsed, null, 2);
+    setGeneratedJson(cleanJson);
+
+    const envVarsFromJson = extractEnvVarsFromJson(cleanJson);
+    
+    const explicitEnvVars: EnvVariable[] = [];
+    if (envPart.trim()) {
+      const lines = envPart.trim().split('\n');
+      for (const line of lines) {
+        const lineParts = line.split('|').map(s => s.trim());
+        const name = lineParts[0];
+        const description = lineParts[1] || '';
+        const example = lineParts[2] || '';
+        if (name && !name.startsWith('#') && /^[A-Z_]+$/.test(name)) {
+          explicitEnvVars.push({ name, description, example });
+        }
+      }
+    }
+
+    const allEnvVars = [...envVarsFromJson];
+    for (const ev of explicitEnvVars) {
+      if (!allEnvVars.find(v => v.name === ev.name)) {
+        allEnvVars.push(ev);
+      }
+    }
+
+    setEnvVariables(allEnvVars);
+    toast.success('Workflow gerado com sucesso!');
   };
 
   const extractEnvVarsFromJson = (jsonStr: string): EnvVariable[] => {
