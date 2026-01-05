@@ -8166,44 +8166,6 @@ export type Database = {
           },
         ]
       }
-      telegram_config: {
-        Row: {
-          bot_token: string | null
-          bot_username: string | null
-          created_at: string
-          estabelecimento_id: string
-          id: string
-          updated_at: string
-          webhook_url: string | null
-        }
-        Insert: {
-          bot_token?: string | null
-          bot_username?: string | null
-          created_at?: string
-          estabelecimento_id: string
-          id?: string
-          updated_at?: string
-          webhook_url?: string | null
-        }
-        Update: {
-          bot_token?: string | null
-          bot_username?: string | null
-          created_at?: string
-          estabelecimento_id?: string
-          id?: string
-          updated_at?: string
-          webhook_url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "telegram_config_estabelecimento_id_fkey"
-            columns: ["estabelecimento_id"]
-            isOneToOne: true
-            referencedRelation: "estabelecimentos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       tipos_pagamento: {
         Row: {
           ativo: boolean
