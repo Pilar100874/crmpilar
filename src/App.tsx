@@ -75,9 +75,6 @@ import LogisticaRotas from "./pages/LogisticaRotas";
 import LogisticaConfig from "./pages/LogisticaConfig";
 import LogisticaAutomacoes from "./pages/LogisticaAutomacoes";
 import PilarRastreador from "./pages/PilarRastreador";
-import VeiculosOnline from "./pages/logistica/VeiculosOnline";
-import MapaTempoReal from "./pages/logistica/MapaTempoReal";
-import RotasDoDia from "./pages/logistica/RotasDoDia";
 import PilarRastreadorNativo from "./pages/PilarRastreadorNativo";
 import WhatsAppCatalogo from "./pages/WhatsAppCatalogo";
 import MarketplacesHubPage from "./pages/MarketplacesHubPage";
@@ -187,15 +184,13 @@ const App = () => (
               <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
               <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
               <Route path="/perfil" element={<Perfil />} />
-              <Route path="/logistica" element={<VeiculosOnline />} />
-              <Route path="/logistica/mapa" element={<MapaTempoReal />} />
-              <Route path="/logistica/rotas" element={<RotasDoDia />} />
-              <Route path="/logistica/hub" element={<LogisticaHub />} />
+              <Route path="/logistica" element={<LogisticaHub />} />
               <Route path="/logistica/monitoramento" element={<LogisticaMonitoramento />} />
               <Route path="/logistica/veiculos" element={<LogisticaVeiculos />} />
               <Route path="/logistica/historico" element={<LogisticaHistorico />} />
               <Route path="/logistica/historico/:veiculoId" element={<LogisticaHistorico />} />
               <Route path="/logistica/roteirizacao" element={<LogisticaRoteirizacao />} />
+              <Route path="/logistica/rotas" element={<LogisticaRotas />} />
               <Route path="/logistica/automacoes" element={<LogisticaAutomacoes />} />
               <Route path="/logistica/config" element={<LogisticaConfig />} />
               <Route path="/marketplaces" element={<MarketplacesHubPage />} />
