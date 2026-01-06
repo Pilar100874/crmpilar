@@ -556,6 +556,39 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
       throw new Error('O JSON gerado está inválido. Tente gerar novamente.');
     }
 
+    // CRITICAL: Fix empty connections - auto-generate based on node order
+    if (parsed.nodes && Array.isArray(parsed.nodes) && parsed.nodes.length > 1) {
+      const connections = parsed.connections || {};
+      const hasConnections = Object.keys(connections).length > 0;
+      
+      if (!hasConnections) {
+        console.warn('Connections vazias detectadas, gerando automaticamente...');
+        const newConnections: Record<string, any> = {};
+        
+        // Sort nodes by x position (horizontal order)
+        const sortedNodes = [...parsed.nodes].sort((a, b) => {
+          const posA = a.position?.[0] || 0;
+          const posB = b.position?.[0] || 0;
+          return posA - posB;
+        });
+        
+        // Create connections between consecutive nodes
+        for (let i = 0; i < sortedNodes.length - 1; i++) {
+          const currentNode = sortedNodes[i];
+          const nextNode = sortedNodes[i + 1];
+          
+          if (currentNode.name && nextNode.name) {
+            newConnections[currentNode.name] = {
+              main: [[{ node: nextNode.name, type: "main", index: 0 }]]
+            };
+          }
+        }
+        
+        parsed.connections = newConnections;
+        console.log('Connections geradas:', newConnections);
+      }
+    }
+
     const cleanJson = JSON.stringify(parsed, null, 2);
     setGeneratedJson(cleanJson);
 
