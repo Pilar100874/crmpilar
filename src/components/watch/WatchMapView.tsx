@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -66,52 +66,105 @@ interface WatchMapViewProps {
 }
 
 const WatchMapView = ({ veiculos, selectedVeiculoId, onVeiculoClick }: WatchMapViewProps) => {
+  const [mapError, setMapError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const validVeiculos = veiculos.filter(v => v.ultima_posicao);
   const defaultCenter: [number, number] = validVeiculos.length > 0 
     ? [validVeiculos[0].ultima_posicao!.lat, validVeiculos[0].ultima_posicao!.lng]
     : [-23.5505, -46.6333];
 
-  return (
-    <>
-      <MapContainer
-        center={defaultCenter}
-        zoom={13}
-        style={{ width: '100%', height: '100%' }}
-        zoomControl={false}
-        attributionControl={false}
-      >
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        />
-        <MapUpdater veiculos={validVeiculos} />
-        
-        {validVeiculos.map(veiculo => (
-          <Marker
-            key={veiculo.id}
-            position={[veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng]}
-            icon={createVehicleIcon(veiculo.status)}
-            eventHandlers={{
-              click: () => onVeiculoClick?.(veiculo.id)
-            }}
-          >
-            <Popup>
-              <div style={{ fontSize: '11px', lineHeight: 1.3 }}>
-                <strong>{veiculo.placa}</strong>
-                <br />
-                {veiculo.motorista && <span>{veiculo.motorista}<br /></span>}
-                <span>{Math.round(veiculo.ultima_posicao!.velocidade)} km/h</span>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-      <style>{`
-        .leaflet-container {
-          background: #1a1a2e;
-        }
-      `}</style>
-    </>
-  );
+  if (!isClient) {
+    return (
+      <div style={{ 
+        width: '100%', 
+        height: '100%', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        background: '#1a1a2e',
+        color: 'rgba(255,255,255,0.5)'
+      }}>
+        Carregando mapa...
+      </div>
+    );
+  }
+
+  if (mapError) {
+    return (
+      <div style={{ 
+        width: '100%', 
+        height: '100%', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        background: '#1a1a2e',
+        color: '#ef4444',
+        fontSize: '12px',
+        textAlign: 'center',
+        padding: '10px'
+      }}>
+        Erro ao carregar mapa: {mapError}
+      </div>
+    );
+  }
+
+  try {
+    return (
+      <>
+        <MapContainer
+          center={defaultCenter}
+          zoom={13}
+          style={{ width: '100%', height: '100%' }}
+          zoomControl={false}
+          attributionControl={false}
+        >
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
+          <MapUpdater veiculos={validVeiculos} />
+          
+          {validVeiculos.map(veiculo => (
+            <Marker
+              key={veiculo.id}
+              position={[veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng]}
+              icon={createVehicleIcon(veiculo.status)}
+              eventHandlers={{
+                click: () => onVeiculoClick?.(veiculo.id)
+              }}
+            >
+              <Popup>
+                <div style={{ fontSize: '11px', lineHeight: 1.3 }}>
+                  <strong>{veiculo.placa}</strong>
+                  <br />
+                  {veiculo.motorista && <span>{veiculo.motorista}<br /></span>}
+                  <span>{Math.round(veiculo.ultima_posicao!.velocidade)} km/h</span>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+        <style>{`
+          .leaflet-container {
+            background: #1a1a2e;
+            width: 100%;
+            height: 100%;
+          }
+          .leaflet-control-attribution {
+            display: none !important;
+          }
+        `}</style>
+      </>
+    );
+  } catch (error) {
+    console.error('Map render error:', error);
+    setMapError(error instanceof Error ? error.message : 'Erro desconhecido');
+    return null;
+  }
 };
 
 export default WatchMapView;
