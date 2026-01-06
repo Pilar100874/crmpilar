@@ -106,6 +106,7 @@ import WatchLogisticaMapa from "./pages/watch/WatchLogisticaMapa";
 import WatchLogisticaRota from "./pages/watch/WatchLogisticaRota";
 import WatchLogisticaHistorico from "./pages/watch/WatchLogisticaHistorico";
 import { MacroProvider } from "./contexts/MacroContext";
+import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
 const queryClient = new QueryClient();
 
@@ -124,6 +125,7 @@ const App = () => (
         <Sonner />
         
         <BrowserRouter>
+          <WatchRedirectWrapper>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
@@ -238,6 +240,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </WatchRedirectWrapper>
         </BrowserRouter>
       </TooltipProvider>
     </MacroProvider>
