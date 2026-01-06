@@ -11,7 +11,7 @@ function generateUUID(): string {
   return crypto.randomUUID();
 }
 
-// Fix and validate workflow structure
+// Fix and validate workflow structure for n8n 2.1.5
 function fixWorkflowStructure(workflow: any): any {
   // Ensure required fields exist
   if (!workflow.name) {
@@ -22,32 +22,55 @@ function fixWorkflowStructure(workflow: any): any {
     throw new Error("Workflow must have nodes array");
   }
   
-  // Fix nodes - ensure each has required fields
+  // Fix nodes - ensure each has required fields for n8n 2.1.5
   workflow.nodes = workflow.nodes.map((node: any, index: number) => {
+    // Ensure id exists
     if (!node.id) {
       node.id = generateUUID();
     }
-    if (!node.position || !Array.isArray(node.position)) {
+    
+    // CRITICAL: n8n 2.1.5 uses position as array [x, y] - ensure it's correct format
+    if (!node.position) {
       node.position = [100 + (index * 240), 300];
+    } else if (typeof node.position === 'object' && !Array.isArray(node.position)) {
+      // Convert object {x, y} to array [x, y]
+      node.position = [node.position.x || 100 + (index * 240), node.position.y || 300];
     }
+    
+    // Ensure position values are numbers
+    if (Array.isArray(node.position)) {
+      node.position = [
+        typeof node.position[0] === 'number' ? node.position[0] : 100 + (index * 240),
+        typeof node.position[1] === 'number' ? node.position[1] : 300
+      ];
+    }
+    
+    // Ensure parameters exists
     if (!node.parameters) {
       node.parameters = {};
     }
+    
+    // Ensure typeVersion is a number
+    if (!node.typeVersion) {
+      node.typeVersion = 1;
+    }
+    
     // Add webhookId for webhook nodes
     if (node.type === 'n8n-nodes-base.webhook' && !node.webhookId) {
       node.webhookId = generateUUID();
     }
+    
     return node;
   });
   
   // Sort nodes by x position
   const sortedNodes = [...workflow.nodes].sort((a, b) => {
-    const posA = a.position?.[0] || 0;
-    const posB = b.position?.[0] || 0;
+    const posA = Array.isArray(a.position) ? a.position[0] : (a.position?.x || 0);
+    const posB = Array.isArray(b.position) ? b.position[0] : (b.position?.x || 0);
     return posA - posB;
   });
   
-  // ALWAYS regenerate connections based on node order
+  // ALWAYS regenerate connections based on node order - n8n 2.1.5 format
   const connections: Record<string, any> = {};
   
   for (let i = 0; i < sortedNodes.length - 1; i++) {
@@ -63,17 +86,26 @@ function fixWorkflowStructure(workflow: any): any {
   
   workflow.connections = connections;
   
-  // Ensure other required fields
+  // Ensure other required fields for n8n 2.1.5
   if (workflow.active === undefined) {
     workflow.active = false;
   }
   
   if (!workflow.settings) {
-    workflow.settings = { executionOrder: "v1" };
+    workflow.settings = {
+      executionOrder: "v1",
+      saveManualExecutions: true,
+      callerPolicy: "workflowsFromSameOwner"
+    };
   }
   
   if (!workflow.pinData) {
     workflow.pinData = {};
+  }
+  
+  // n8n 2.1.5 requires these fields
+  if (!workflow.id) {
+    workflow.id = generateUUID();
   }
   
   if (!workflow.versionId) {
@@ -83,11 +115,18 @@ function fixWorkflowStructure(workflow: any): any {
   // Add meta for n8n 2.x compatibility
   if (!workflow.meta) {
     workflow.meta = {
-      templateCredsSetupCompleted: true
+      templateCredsSetupCompleted: true,
+      instanceId: generateUUID()
     };
   }
   
+  // Add tags array (required for n8n 2.1.5)
+  if (!workflow.tags) {
+    workflow.tags = [];
+  }
+  
   console.log('Fixed workflow connections:', JSON.stringify(connections, null, 2));
+  console.log('Nodes with positions:', workflow.nodes.map((n: any) => ({ name: n.name, position: n.position })));
   
   return workflow;
 }
