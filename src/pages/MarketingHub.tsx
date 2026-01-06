@@ -12,7 +12,8 @@ import {
   Key,
   Workflow,
   Link2,
-  Server
+  Server,
+  GitBranch
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -31,6 +32,7 @@ import AIApiKeysManager from '@/components/marketing/AIApiKeysManager';
 import IntegrationCredentialsManager from '@/components/marketing/IntegrationCredentialsManager';
 import ResourceN8nGenerator from '@/components/marketing/ResourceN8nGenerator';
 import RailwayVariables from '@/components/marketing/RailwayVariables';
+import { N8nWorkflowEditor } from '@/components/marketing/n8n-editor';
 
 interface TabItem {
   id: string;
@@ -49,6 +51,7 @@ const tabItems: TabItem[] = [
   { id: 'canvas', label: 'Canvas', icon: Palette, description: 'Editor visual de conteúdo' },
   { id: 'api-keys', label: 'Chaves IA', icon: Key, description: 'Gerencie chaves de API de IA' },
   { id: 'integrations', label: 'Integrações', icon: Link2, description: 'Google, MS SQL e outros' },
+  { id: 'n8n-editor', label: 'Editor n8n', icon: GitBranch, description: 'Crie workflows visuais estilo n8n' },
 ];
 
 const MarketingHub: React.FC = () => {
@@ -78,6 +81,8 @@ const MarketingHub: React.FC = () => {
         return <AIApiKeysManager />;
       case 'integrations':
         return <IntegrationCredentialsManager />;
+      case 'n8n-editor':
+        return <N8nWorkflowEditor />;
       default:
         return null;
     }
