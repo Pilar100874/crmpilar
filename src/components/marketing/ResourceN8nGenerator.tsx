@@ -1318,6 +1318,8 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
         </DialogContent>
       </Dialog>
     </div>
+      </TabsContent>
+    </Tabs>
   );
 };
 
