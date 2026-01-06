@@ -141,41 +141,7 @@ const WatchLogisticaRota = () => {
   return (
     <div className="watch-container">
       <div className="watch-frame">
-        {/* Time display */}
-        <div className="watch-time">
-          <span className="time-main">{formatTime(currentTime)}</span>
-        </div>
-
-        {/* Back button */}
-        <button onClick={() => navigate('/watch/logistica')} className="watch-back">
-          <ArrowLeft className="w-4 h-4" />
-        </button>
-
-        {/* Header with vehicle plate */}
-        <div className="watch-header">
-          <Route className="w-4 h-4" />
-          <span>{veiculo?.placa || 'Carregando...'}</span>
-        </div>
-
-        {/* Stats row */}
-        {estatisticas && (
-          <div className="stats-row">
-            <div className="stat-box">
-              <MapPin className="w-3 h-3" />
-              <span>{estatisticas.distancia_total_km} km</span>
-            </div>
-            <div className="stat-box">
-              <Gauge className="w-3 h-3" />
-              <span>{estatisticas.velocidade_maxima} km/h</span>
-            </div>
-            <div className="stat-box">
-              <Clock className="w-3 h-3" />
-              <span>{formatMinutes(estatisticas.tempo_movimento_minutos)}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Map with route */}
+        {/* Map with route - fullscreen */}
         <div className="watch-map-container">
           {loading && posicoes.length === 0 ? (
             <div className="loading-indicator">
@@ -201,13 +167,47 @@ const WatchLogisticaRota = () => {
           )}
         </div>
 
-        {/* Date indicator */}
-        <div className="date-indicator">
-          {format(new Date(), "dd 'de' MMMM", { locale: ptBR })}
+        {/* Time display overlay */}
+        <div className="watch-time-overlay">
+          <span>{formatTime(currentTime)}</span>
         </div>
 
-        {/* Refresh button */}
-        <button onClick={fetchData} className="refresh-btn" disabled={loading}>
+        {/* Back button overlay */}
+        <button onClick={() => navigate('/watch/logistica')} className="watch-back-overlay">
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+
+        {/* Header with vehicle plate overlay */}
+        <div className="watch-header-overlay">
+          <Route className="w-3 h-3" />
+          <span>{veiculo?.placa || '...'}</span>
+        </div>
+
+        {/* Stats row overlay */}
+        {estatisticas && (
+          <div className="stats-row-overlay">
+            <div className="stat-box">
+              <MapPin className="w-3 h-3" />
+              <span>{estatisticas.distancia_total_km} km</span>
+            </div>
+            <div className="stat-box">
+              <Gauge className="w-3 h-3" />
+              <span>{estatisticas.velocidade_maxima} km/h</span>
+            </div>
+            <div className="stat-box">
+              <Clock className="w-3 h-3" />
+              <span>{formatMinutes(estatisticas.tempo_movimento_minutos)}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Date indicator overlay */}
+        <div className="date-overlay">
+          {format(new Date(), "dd/MM", { locale: ptBR })}
+        </div>
+
+        {/* Refresh button overlay */}
+        <button onClick={fetchData} className="refresh-overlay" disabled={loading}>
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
@@ -241,76 +241,23 @@ const WatchLogisticaRota = () => {
             0 0 0 4px #2a2a3e,
             0 0 0 6px #1a1a2e;
           overflow: hidden;
-          padding-top: 10%;
-        }
-
-        .watch-time {
-          position: absolute;
-          top: 6%;
-          z-index: 1000;
-        }
-
-        .time-main {
-          font-size: clamp(10px, 3vw, 14px);
-          font-weight: 300;
-          color: rgba(255, 255, 255, 0.9);
-          background: rgba(0, 0, 0, 0.5);
-          padding: 2px 8px;
-          border-radius: 10px;
-        }
-
-        .watch-back {
-          position: absolute;
-          top: 5%;
-          left: 20%;
-          background: rgba(0, 0, 0, 0.6);
-          border: none;
-          border-radius: 50%;
-          width: clamp(24px, 7vw, 32px);
-          height: clamp(24px, 7vw, 32px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          cursor: pointer;
-          z-index: 1000;
-        }
-
-        .watch-header {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          color: white;
-          font-size: clamp(10px, 3vw, 14px);
-          font-weight: 600;
-          margin-top: 2%;
-        }
-
-        .stats-row {
-          display: flex;
-          gap: clamp(6px, 2vw, 12px);
-          margin-top: 3%;
-        }
-
-        .stat-box {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          background: rgba(255, 255, 255, 0.08);
-          padding: 4px 8px;
-          border-radius: 10px;
-          color: rgba(255, 255, 255, 0.8);
-          font-size: clamp(8px, 2.2vw, 10px);
-          font-weight: 500;
         }
 
         .watch-map-container {
-          width: 75%;
-          height: 50%;
-          border-radius: 20px;
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          border-radius: 50%;
           overflow: hidden;
-          border: 2px solid rgba(255, 255, 255, 0.1);
-          margin-top: 3%;
+          z-index: 1;
+        }
+
+        .watch-map-container :global(.leaflet-container) {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
         }
 
         .loading-indicator, .no-data {
@@ -326,18 +273,28 @@ const WatchLogisticaRota = () => {
           font-size: clamp(9px, 2.5vw, 12px);
         }
 
-        .date-indicator {
+        .watch-time-overlay {
           position: absolute;
-          bottom: 18%;
-          font-size: clamp(8px, 2.5vw, 11px);
-          color: rgba(255, 255, 255, 0.5);
-          text-transform: capitalize;
+          top: 6%;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: clamp(12px, 3vw, 16px);
+          font-weight: 600;
+          color: white;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(10px);
+          padding: 4px 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          z-index: 100;
         }
 
-        .refresh-btn {
+        .watch-back-overlay {
           position: absolute;
-          bottom: 8%;
-          background: rgba(255, 255, 255, 0.1);
+          top: 5%;
+          left: 18%;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 50%;
           width: clamp(28px, 8vw, 36px);
@@ -345,12 +302,98 @@ const WatchLogisticaRota = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: rgba(255, 255, 255, 0.7);
+          color: white;
           cursor: pointer;
-          z-index: 1000;
+          z-index: 100;
         }
 
-        .refresh-btn:disabled {
+        .watch-back-overlay:active {
+          transform: scale(0.95);
+          background: rgba(0, 0, 0, 0.9);
+        }
+
+        .watch-header-overlay {
+          position: absolute;
+          top: 5%;
+          right: 18%;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(10px);
+          padding: 4px 10px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: white;
+          font-size: clamp(10px, 2.5vw, 12px);
+          font-weight: 600;
+          z-index: 100;
+        }
+
+        .stats-row-overlay {
+          position: absolute;
+          bottom: 20%;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          gap: clamp(4px, 1.5vw, 8px);
+          z-index: 100;
+        }
+
+        .stat-box {
+          display: flex;
+          align-items: center;
+          gap: 3px;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(10px);
+          padding: 4px 8px;
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          color: white;
+          font-size: clamp(8px, 2vw, 10px);
+          font-weight: 500;
+        }
+
+        .date-overlay {
+          position: absolute;
+          bottom: 12%;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: clamp(10px, 2.5vw, 12px);
+          color: white;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(10px);
+          padding: 3px 10px;
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          z-index: 100;
+        }
+
+        .refresh-overlay {
+          position: absolute;
+          bottom: 5%;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 50%;
+          width: clamp(28px, 8vw, 36px);
+          height: clamp(28px, 8vw, 36px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          cursor: pointer;
+          z-index: 100;
+        }
+
+        .refresh-overlay:active {
+          transform: translateX(-50%) scale(0.95);
+          background: rgba(0, 0, 0, 0.9);
+        }
+
+        .refresh-overlay:disabled {
           opacity: 0.5;
         }
       `}</style>
