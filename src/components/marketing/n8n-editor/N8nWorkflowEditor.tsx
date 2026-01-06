@@ -20,10 +20,10 @@ import { useNodeTypes, useCredentialTypes, useCredentials, useWorkflows, useSave
 import { N8nNodeType, N8nWorkflow, WorkflowData, WorkflowNode } from './types';
 
 interface N8nWorkflowEditorProps {
-  estabelecimentoId: string;
+  estabelecimentoId?: string;
 }
 
-const N8nWorkflowEditor: React.FC<N8nWorkflowEditorProps> = ({ estabelecimentoId }) => {
+const N8nWorkflowEditor: React.FC<N8nWorkflowEditorProps> = ({ estabelecimentoId = '' }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
