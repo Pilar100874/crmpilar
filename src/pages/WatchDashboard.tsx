@@ -18,115 +18,139 @@ const WatchDashboard = () => {
   }, []);
 
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/watch/dashboard' },
-    { icon: Truck, label: 'Logística', path: '/watch/logistica' },
-    { icon: Calendar, label: 'Agenda', path: '/watch/agenda' },
-    { icon: ShoppingCart, label: 'Vendas', path: '/watch/vendas' },
-    { icon: MessageSquare, label: 'Chats', path: '/watch/chats' },
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/watch/dashboard', color: '#3b82f6' },
+    { icon: Truck, label: 'Logística', path: '/watch/logistica', color: '#22c55e' },
+    { icon: Calendar, label: 'Agenda', path: '/watch/agenda', color: '#a855f7' },
+    { icon: ShoppingCart, label: 'Vendas', path: '/watch/vendas', color: '#f97316' },
+    { icon: MessageSquare, label: 'Chats', path: '/watch/chats', color: '#ec4899' },
   ];
 
   const formatTime = (date: Date) => date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  const formatDate = (date: Date) => date.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' });
 
   return (
-    <div className="min-h-screen min-h-dvh flex items-center justify-center bg-sidebar p-0 m-0 overflow-hidden">
-      <div 
-        className="relative flex flex-col items-center justify-start overflow-hidden rounded-full"
-        style={{ 
-          width: 'min(100vw, 100vh)',
-          height: 'min(100vw, 100vh)',
-          maxWidth: '450px',
-          maxHeight: '450px',
-          background: 'radial-gradient(circle at 30% 30%, hsl(220 18% 22%), hsl(220 18% 16%))',
-          boxShadow: 'inset 0 0 60px rgba(0, 0, 0, 0.4), 0 0 0 3px hsl(25 95% 53% / 0.3), 0 0 0 6px hsl(220 15% 18%)',
-          padding: '10%',
-        }}
-      >
-        {/* Header with time */}
-        <div className="w-full text-center mb-2">
-          <span 
-            className="text-primary font-light tracking-widest"
-            style={{ fontSize: 'clamp(28px, 9vw, 42px)' }}
-          >
-            {formatTime(currentTime)}
-          </span>
-          <p 
-            className="text-sidebar-foreground/60 capitalize"
-            style={{ fontSize: 'clamp(10px, 3vw, 14px)' }}
-          >
-            {formatDate(currentTime)}
-          </p>
+    <div className="watch-container">
+      <div className="watch-frame">
+        {/* Time display */}
+        <div className="watch-time">
+          <span className="time-main">{formatTime(currentTime)}</span>
         </div>
 
-        {/* Cards grid */}
-        <div 
-          className="grid grid-cols-2 w-full"
-          style={{ 
-            gap: 'clamp(6px, 2vw, 12px)',
-            maxWidth: '260px',
-          }}
-        >
-          {menuItems.slice(0, 4).map((item, index) => {
+        {/* Menu Items */}
+        <div className="menu-list">
+          {menuItems.map((item, index) => {
             const Icon = item.icon;
             return (
               <button
                 key={index}
                 onClick={() => navigate(item.path)}
-                className="aspect-square rounded-xl border border-sidebar-border/50 flex flex-col items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
-                style={{
-                  background: 'linear-gradient(145deg, hsl(220 18% 24%), hsl(220 18% 18%))',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
-                  gap: 'clamp(4px, 1.5vw, 8px)',
-                }}
+                className="menu-item"
+                style={{ '--item-color': item.color } as React.CSSProperties}
               >
-                <div 
-                  className="rounded-full bg-primary/20 flex items-center justify-center"
-                  style={{
-                    width: 'clamp(32px, 10vw, 44px)',
-                    height: 'clamp(32px, 10vw, 44px)',
-                  }}
-                >
-                  <Icon 
-                    className="text-primary" 
-                    style={{ width: 'clamp(16px, 5vw, 22px)', height: 'clamp(16px, 5vw, 22px)' }}
-                    strokeWidth={1.5} 
-                  />
+                <div className="menu-icon">
+                  <Icon className="w-5 h-5" />
                 </div>
-                <span 
-                  className="text-sidebar-foreground/90 font-medium"
-                  style={{ fontSize: 'clamp(9px, 2.8vw, 12px)' }}
-                >
-                  {item.label}
-                </span>
+                <span className="menu-label">{item.label}</span>
               </button>
             );
           })}
         </div>
-
-        {/* Bottom card - Chats */}
-        <button
-          onClick={() => navigate(menuItems[4].path)}
-          className="mt-2 rounded-xl border border-sidebar-border/50 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 bg-gradient-primary"
-          style={{
-            width: 'clamp(100px, 35vw, 140px)',
-            height: 'clamp(36px, 10vw, 48px)',
-            boxShadow: '0 4px 16px hsl(25 95% 53% / 0.3)',
-            gap: 'clamp(6px, 2vw, 10px)',
-          }}
-        >
-          <MessageSquare 
-            className="text-white" 
-            style={{ width: 'clamp(14px, 4vw, 18px)', height: 'clamp(14px, 4vw, 18px)' }}
-            strokeWidth={1.5} 
-          />
-          <span 
-            className="text-white font-semibold"
-            style={{ fontSize: 'clamp(10px, 3vw, 13px)' }}
-          >
-            Chats
-          </span>
-        </button>
       </div>
+
+      <style>{`
+        .watch-container {
+          min-height: 100vh;
+          min-height: 100dvh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #000;
+          padding: 0;
+          margin: 0;
+          overflow: hidden;
+        }
+
+        .watch-frame {
+          width: min(100vw, 100vh);
+          height: min(100vw, 100vh);
+          max-width: 450px;
+          max-height: 450px;
+          border-radius: 50%;
+          background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          box-shadow: 
+            inset 0 0 60px rgba(0, 0, 0, 0.5),
+            0 0 0 4px #2a2a3e,
+            0 0 0 6px #1a1a2e;
+          overflow: hidden;
+        }
+
+        .watch-time {
+          position: absolute;
+          top: 8%;
+          z-index: 1000;
+        }
+
+        .time-main {
+          font-size: clamp(18px, 6vw, 28px);
+          font-weight: 300;
+          color: rgba(255, 255, 255, 0.9);
+          letter-spacing: 2px;
+        }
+
+        .menu-list {
+          display: flex;
+          flex-direction: column;
+          gap: clamp(6px, 2vw, 10px);
+          width: 65%;
+          max-height: 65%;
+          overflow-y: auto;
+          scrollbar-width: none;
+          padding-top: 5%;
+        }
+
+        .menu-list::-webkit-scrollbar {
+          display: none;
+        }
+
+        .menu-item {
+          display: flex;
+          align-items: center;
+          gap: clamp(10px, 3vw, 14px);
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: clamp(10px, 3vw, 16px);
+          padding: clamp(10px, 3vw, 14px);
+          cursor: pointer;
+          transition: all 0.2s;
+          color: white;
+        }
+
+        .menu-item:active {
+          transform: scale(0.95);
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-icon {
+          width: clamp(36px, 11vw, 48px);
+          height: clamp(36px, 11vw, 48px);
+          border-radius: 50%;
+          background: color-mix(in srgb, var(--item-color) 20%, transparent);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--item-color);
+          flex-shrink: 0;
+        }
+
+        .menu-label {
+          font-size: clamp(12px, 4vw, 16px);
+          font-weight: 500;
+        }
+      `}</style>
     </div>
   );
 };
