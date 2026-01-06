@@ -103,6 +103,13 @@ const N8nJsonAdapter: React.FC = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showOriginalKeys, setShowOriginalKeys] = useState(false);
+  const [replacementLog, setReplacementLog] = useState<Array<{
+    original: string;
+    replacement: string;
+    type: string;
+    provider: string;
+    count: number;
+  }>>([]);
 
   useEffect(() => {
     loadApiKeys();
@@ -240,12 +247,19 @@ const N8nJsonAdapter: React.FC = () => {
     }
 
     setIsProcessing(true);
+    setReplacementLog([]);
 
     try {
       let parsed = JSON.parse(inputJson);
       let jsonStr = JSON.stringify(parsed, null, 2);
       let replacementsCount = 0;
-      const replacementLog: string[] = [];
+      const newReplacementLog: Array<{
+        original: string;
+        replacement: string;
+        type: string;
+        provider: string;
+        count: number;
+      }> = [];
 
       // Replace detected keys that are marked for replacement
       for (const detectedKey of detectedKeys) {
@@ -258,13 +272,20 @@ const N8nJsonAdapter: React.FC = () => {
           const count = (jsonStr.match(regex) || []).length;
           jsonStr = jsonStr.replace(regex, replacement.value);
           replacementsCount += count;
-          replacementLog.push(`${detectedKey.type} → ${replacement.provider}`);
+          newReplacementLog.push({
+            original: detectedKey.original,
+            replacement: replacement.value,
+            type: detectedKey.type,
+            provider: replacement.provider || 'Desconhecido',
+            count
+          });
         }
       }
 
       // Re-parse to ensure valid JSON
       parsed = JSON.parse(jsonStr);
       setOutputJson(JSON.stringify(parsed, null, 2));
+      setReplacementLog(newReplacementLog);
 
       if (replacementsCount > 0) {
         toast.success(`${replacementsCount} chave(s) substituída(s)!`);
@@ -518,6 +539,56 @@ const N8nJsonAdapter: React.FC = () => {
                 </>
               )}
             </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Replacement Log Section */}
+      {replacementLog.length > 0 && (
+        <Card className="border-green-500/30 bg-green-500/5">
+          <CardHeader className="py-3">
+            <CardTitle className="text-sm flex items-center gap-2 text-green-600">
+              <Check className="h-4 w-4" />
+              Substituições Realizadas ({replacementLog.length})
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Detalhes das chaves que foram substituídas no workflow
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="py-2">
+            <div className="space-y-2">
+              {replacementLog.map((log, idx) => (
+                <div key={idx} className="p-3 rounded-lg border bg-background">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-xs">
+                          {log.type}
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {log.count}x
+                        </Badge>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground">De:</span>
+                          <code className="bg-red-500/10 text-red-600 px-1 py-0.5 rounded font-mono text-xs truncate max-w-[200px]">
+                            {showOriginalKeys ? log.original : maskKey(log.original)}
+                          </code>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground">Para:</span>
+                          <code className="bg-green-500/10 text-green-600 px-1 py-0.5 rounded font-mono text-xs truncate max-w-[200px]">
+                            {showOriginalKeys ? log.replacement : maskKey(log.replacement)}
+                          </code>
+                          <span className="text-muted-foreground">({log.provider})</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
