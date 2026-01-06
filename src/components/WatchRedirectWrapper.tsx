@@ -1,12 +1,8 @@
 import { useWatchRedirect } from '@/hooks/useWatchRedirect';
 
-interface WatchRedirectWrapperProps {
-  children: React.ReactNode;
-}
-
-const WatchRedirectWrapper = ({ children }: WatchRedirectWrapperProps) => {
+const WatchRedirectWrapper = () => {
   useWatchRedirect();
-  return <>{children}</>;
+  return null;
 };
 
 export default WatchRedirectWrapper;
