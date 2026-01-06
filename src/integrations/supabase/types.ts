@@ -4725,6 +4725,169 @@ export type Database = {
           },
         ]
       }
+      n8n_credenciais: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          credential_type_id: string
+          estabelecimento_id: string
+          id: string
+          nome: string
+          updated_at: string
+          valores_criptografados: Json
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          credential_type_id: string
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          updated_at?: string
+          valores_criptografados?: Json
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          credential_type_id?: string
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+          valores_criptografados?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "n8n_credenciais_credential_type_id_fkey"
+            columns: ["credential_type_id"]
+            isOneToOne: false
+            referencedRelation: "n8n_credential_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "n8n_credenciais_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      n8n_credential_types: {
+        Row: {
+          campos_json: Json
+          created_at: string
+          descricao: string | null
+          icone: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          campos_json?: Json
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          campos_json?: Json
+          created_at?: string
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      n8n_node_types: {
+        Row: {
+          categoria: string | null
+          cor: string | null
+          created_at: string
+          credential_type_id: string | null
+          descricao: string | null
+          icone: string | null
+          id: string
+          nome_display: string
+          parametros_schema: Json
+          tipo: string
+        }
+        Insert: {
+          categoria?: string | null
+          cor?: string | null
+          created_at?: string
+          credential_type_id?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome_display: string
+          parametros_schema?: Json
+          tipo: string
+        }
+        Update: {
+          categoria?: string | null
+          cor?: string | null
+          created_at?: string
+          credential_type_id?: string | null
+          descricao?: string | null
+          icone?: string | null
+          id?: string
+          nome_display?: string
+          parametros_schema?: Json
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "n8n_node_types_credential_type_id_fkey"
+            columns: ["credential_type_id"]
+            isOneToOne: false
+            referencedRelation: "n8n_credential_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      n8n_workflows: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          flow_data: Json
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          flow_data?: Json
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          flow_data?: Json
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "n8n_workflows_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       n8n_workflows_gerados: {
         Row: {
           created_at: string
