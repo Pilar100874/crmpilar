@@ -157,235 +157,270 @@ const WatchLogisticaHistorico = () => {
     return `${mins}m`;
   };
 
-  // Se veículo selecionado, mostra mapa fullscreen
+  // Se veículo selecionado, mostra mapa no formato circular do relógio
   if (selectedVeiculo) {
     return (
-      <div className="watch-fullscreen-container">
-        {/* Full screen map */}
-        <div className="fullscreen-map">
-          {loadingRoute && posicoes.length === 0 ? (
-            <div className="loading-indicator">
-              <RefreshCw className="w-6 h-6 animate-spin" />
-            </div>
-          ) : posicoes.length === 0 ? (
-            <div className="no-data">
-              <History className="w-12 h-12 opacity-50" />
-              <span>Sem dados hoje</span>
-            </div>
-          ) : mapReady ? (
-            <Suspense fallback={
-              <div className="loading-indicator">
+      <div className="watch-container">
+        <div className="watch-frame">
+          {/* Map inside watch frame */}
+          <div className="watch-map-container">
+            {loadingRoute && posicoes.length === 0 ? (
+              <div className="loading-indicator-map">
                 <RefreshCw className="w-6 h-6 animate-spin" />
               </div>
-            }>
-              <RouteMapView posicoes={posicoes} />
-            </Suspense>
-          ) : (
-            <div className="loading-indicator">
-              <RefreshCw className="w-6 h-6 animate-spin" />
-            </div>
-          )}
-        </div>
+            ) : posicoes.length === 0 ? (
+              <div className="no-data-map">
+                <History className="w-10 h-10 opacity-50" />
+                <span>Sem dados hoje</span>
+              </div>
+            ) : mapReady ? (
+              <Suspense fallback={
+                <div className="loading-indicator-map">
+                  <RefreshCw className="w-6 h-6 animate-spin" />
+                </div>
+              }>
+                <RouteMapView posicoes={posicoes} />
+              </Suspense>
+            ) : (
+              <div className="loading-indicator-map">
+                <RefreshCw className="w-6 h-6 animate-spin" />
+              </div>
+            )}
+          </div>
 
-        {/* Overlay top */}
-        <div className="overlay-top">
-          <button onClick={handleBack} className="overlay-btn">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-
-          <div className="overlay-time">
+          {/* Time display at top */}
+          <div className="watch-time-overlay">
             <span>{formatTime(currentTime)}</span>
           </div>
 
-          <button onClick={() => fetchHistorico(selectedVeiculo.id)} className="overlay-btn" disabled={loadingRoute}>
-            <RefreshCw className={`w-5 h-5 ${loadingRoute ? 'animate-spin' : ''}`} />
+          {/* Back button */}
+          <button onClick={handleBack} className="watch-back-overlay">
+            <ArrowLeft className="w-4 h-4" />
           </button>
-        </div>
 
-        {/* Vehicle info overlay */}
-        <div className="overlay-vehicle">
-          <Car className="w-4 h-4" />
-          <span>{selectedVeiculo.placa}</span>
-        </div>
+          {/* Refresh button */}
+          <button 
+            onClick={() => fetchHistorico(selectedVeiculo.id)} 
+            className="watch-refresh-overlay" 
+            disabled={loadingRoute}
+          >
+            <RefreshCw className={`w-4 h-4 ${loadingRoute ? 'animate-spin' : ''}`} />
+          </button>
 
-        {/* Stats overlay */}
-        {estatisticas && (
-          <div className="overlay-stats">
-            <div className="stat-item">
-              <MapPin className="w-4 h-4" />
-              <span>{estatisticas.distancia_total_km} km</span>
-            </div>
-            <div className="stat-item">
-              <Gauge className="w-4 h-4" />
-              <span>{estatisticas.velocidade_maxima} km/h</span>
-            </div>
-            <div className="stat-item">
-              <Clock className="w-4 h-4" />
-              <span>{formatMinutes(estatisticas.tempo_movimento_minutos)}</span>
-            </div>
+          {/* Vehicle info overlay */}
+          <div className="watch-vehicle-overlay">
+            <Car className="w-3 h-3" />
+            <span>{selectedVeiculo.placa}</span>
           </div>
-        )}
 
-        {/* Date overlay */}
-        <div className="overlay-bottom">
-          <div className="date-indicator">
-            {format(new Date(), "dd 'de' MMMM", { locale: ptBR })}
+          {/* Stats overlay */}
+          {estatisticas && (
+            <div className="watch-stats-overlay">
+              <div className="stat-mini">
+                <MapPin className="w-3 h-3" />
+                <span>{estatisticas.distancia_total_km}km</span>
+              </div>
+              <div className="stat-mini">
+                <Gauge className="w-3 h-3" />
+                <span>{estatisticas.velocidade_maxima}km/h</span>
+              </div>
+              <div className="stat-mini">
+                <Clock className="w-3 h-3" />
+                <span>{formatMinutes(estatisticas.tempo_movimento_minutos)}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Date overlay at bottom */}
+          <div className="watch-date-overlay">
+            {format(new Date(), "dd/MM", { locale: ptBR })}
           </div>
         </div>
 
         <style>{`
-          .watch-fullscreen-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
+          .watch-container {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: #000;
+            padding: 0;
+            margin: 0;
             overflow: hidden;
           }
 
-          .fullscreen-map {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100%;
-            height: 100%;
+          .watch-frame {
+            width: min(100vw, 100vh);
+            height: min(100vw, 100vh);
+            max-width: 450px;
+            max-height: 450px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            box-shadow: 
+              inset 0 0 60px rgba(0, 0, 0, 0.5),
+              0 0 0 4px #2a2a3e,
+              0 0 0 6px #1a1a2e;
+            overflow: hidden;
           }
 
-          .loading-indicator, .no-data {
+          .watch-map-container {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            right: 10%;
+            bottom: 10%;
+            border-radius: 50%;
+            overflow: hidden;
+            z-index: 1;
+          }
+
+          .watch-map-container :global(.leaflet-container) {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+          }
+
+          .loading-indicator-map, .no-data-map {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 8px;
             width: 100%;
             height: 100%;
-            background: #1a1a2e;
+            background: #2a2a3e;
             color: rgba(255, 255, 255, 0.5);
-            font-size: 16px;
+            font-size: 12px;
           }
 
-          .overlay-top {
+          .watch-time-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px;
-            padding-top: max(16px, env(safe-area-inset-top));
-            z-index: 1000;
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
+            top: 6%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(12px, 3vw, 16px);
+            font-weight: 600;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 4px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 100;
           }
 
-          .overlay-btn {
-            background: rgba(0, 0, 0, 0.6);
+          .watch-back-overlay {
+            position: absolute;
+            top: 5%;
+            left: 18%;
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 50%;
-            width: 44px;
-            height: 44px;
+            width: clamp(28px, 8vw, 36px);
+            height: clamp(28px, 8vw, 36px);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             cursor: pointer;
+            z-index: 100;
           }
 
-          .overlay-btn:active {
+          .watch-back-overlay:active {
             transform: scale(0.95);
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
           }
 
-          .overlay-btn:disabled {
+          .watch-refresh-overlay {
+            position: absolute;
+            top: 5%;
+            right: 18%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: clamp(28px, 8vw, 36px);
+            height: clamp(28px, 8vw, 36px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            z-index: 100;
+          }
+
+          .watch-refresh-overlay:active {
+            transform: scale(0.95);
+            background: rgba(0, 0, 0, 0.9);
+          }
+
+          .watch-refresh-overlay:disabled {
             opacity: 0.5;
           }
 
-          .overlay-time {
-            font-size: 18px;
-            font-weight: 600;
-            color: white;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-          }
-
-          .overlay-vehicle {
+          .watch-vehicle-overlay {
             position: absolute;
-            top: 80px;
-            top: calc(max(16px, env(safe-area-inset-top)) + 60px);
+            top: 16%;
             left: 50%;
             transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            color: white;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            z-index: 1000;
-          }
-
-          .overlay-stats {
-            position: absolute;
-            bottom: 80px;
-            bottom: calc(max(20px, env(safe-area-inset-bottom)) + 60px);
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 12px;
-            z-index: 1000;
-          }
-
-          .stat-item {
             display: flex;
             align-items: center;
             gap: 6px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            padding: 8px 12px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: clamp(11px, 2.5vw, 14px);
+            font-weight: 600;
             color: white;
-            font-size: 13px;
-            font-weight: 500;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 4px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 100;
           }
 
-          .overlay-bottom {
+          .watch-stats-overlay {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            bottom: 18%;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            justify-content: center;
-            padding: 20px;
-            padding-bottom: max(20px, env(safe-area-inset-bottom));
-            z-index: 1000;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+            gap: 8px;
+            z-index: 100;
           }
 
-          .date-indicator {
-            font-size: 14px;
+          .stat-mini {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 4px 8px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: clamp(9px, 2vw, 11px);
+            font-weight: 500;
+          }
+
+          .watch-date-overlay {
+            position: absolute;
+            bottom: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(10px, 2.5vw, 13px);
             font-weight: 500;
             color: white;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(10px);
-            padding: 8px 20px;
-            border-radius: 20px;
+            padding: 4px 12px;
+            border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            text-transform: capitalize;
+            z-index: 100;
           }
         `}</style>
       </div>
