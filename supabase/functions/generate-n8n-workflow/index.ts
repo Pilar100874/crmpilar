@@ -13,6 +13,8 @@ function generateUUID(): string {
 
 // Fix and validate workflow structure for n8n 2.1.5
 function fixWorkflowStructure(workflow: any): any {
+  console.log('Input workflow:', JSON.stringify(workflow, null, 2));
+  
   // Ensure required fields exist
   if (!workflow.name) {
     workflow.name = "Generated Workflow";
@@ -29,18 +31,22 @@ function fixWorkflowStructure(workflow: any): any {
       node.id = generateUUID();
     }
     
-    // CRITICAL: n8n 2.1.5 uses position as array [x, y] - ensure it's correct format
+    // Ensure name exists
+    if (!node.name) {
+      node.name = `Node_${index}`;
+    }
+    
+    // CRITICAL: n8n 2.1.5 uses position as array [x, y]
     if (!node.position) {
-      node.position = [100 + (index * 240), 300];
+      node.position = [100 + (index * 250), 300];
     } else if (typeof node.position === 'object' && !Array.isArray(node.position)) {
-      // Convert object {x, y} to array [x, y]
-      node.position = [node.position.x || 100 + (index * 240), node.position.y || 300];
+      node.position = [node.position.x || 100 + (index * 250), node.position.y || 300];
     }
     
     // Ensure position values are numbers
     if (Array.isArray(node.position)) {
       node.position = [
-        typeof node.position[0] === 'number' ? node.position[0] : 100 + (index * 240),
+        typeof node.position[0] === 'number' ? node.position[0] : 100 + (index * 250),
         typeof node.position[1] === 'number' ? node.position[1] : 300
       ];
     }
@@ -51,8 +57,8 @@ function fixWorkflowStructure(workflow: any): any {
     }
     
     // Ensure typeVersion is a number
-    if (!node.typeVersion) {
-      node.typeVersion = 1;
+    if (typeof node.typeVersion !== 'number') {
+      node.typeVersion = Number(node.typeVersion) || 1;
     }
     
     // Add webhookId for webhook nodes
@@ -63,15 +69,17 @@ function fixWorkflowStructure(workflow: any): any {
     return node;
   });
   
-  // Sort nodes by x position
+  // Sort nodes by x position for connection generation
   const sortedNodes = [...workflow.nodes].sort((a, b) => {
-    const posA = Array.isArray(a.position) ? a.position[0] : (a.position?.x || 0);
-    const posB = Array.isArray(b.position) ? b.position[0] : (b.position?.x || 0);
+    const posA = Array.isArray(a.position) ? a.position[0] : 0;
+    const posB = Array.isArray(b.position) ? b.position[0] : 0;
     return posA - posB;
   });
   
-  // ALWAYS regenerate connections based on node order - n8n 2.1.5 format
-  const connections: Record<string, any> = {};
+  console.log('Sorted nodes for connections:', sortedNodes.map(n => n.name));
+  
+  // ALWAYS regenerate connections based on node order - CORRECT n8n 2.1.5 format
+  const connections: Record<string, { main: Array<Array<{ node: string; type: string; index: number }>> }> = {};
   
   for (let i = 0; i < sortedNodes.length - 1; i++) {
     const currentNode = sortedNodes[i];
@@ -79,60 +87,49 @@ function fixWorkflowStructure(workflow: any): any {
     
     if (currentNode.name && nextNode.name) {
       connections[currentNode.name] = {
-        main: [[{ node: nextNode.name, type: "main", index: 0 }]]
+        main: [
+          [
+            { 
+              node: nextNode.name, 
+              type: "main", 
+              index: 0 
+            }
+          ]
+        ]
       };
     }
   }
   
   workflow.connections = connections;
   
-  // Ensure other required fields for n8n 2.1.5
-  if (workflow.active === undefined) {
-    workflow.active = false;
-  }
+  console.log('Generated connections:', JSON.stringify(connections, null, 2));
   
-  if (!workflow.settings) {
-    workflow.settings = {
-      executionOrder: "v1",
-      saveManualExecutions: true,
-      callerPolicy: "workflowsFromSameOwner"
-    };
-  }
+  // Required fields for n8n 2.1.5
+  workflow.active = false;
   
-  if (!workflow.pinData) {
-    workflow.pinData = {};
-  }
+  workflow.settings = {
+    executionOrder: "v1",
+    saveManualExecutions: true,
+    callerPolicy: "workflowsFromSameOwner"
+  };
   
-  // n8n 2.1.5 requires these fields
-  if (!workflow.id) {
-    workflow.id = generateUUID();
-  }
+  workflow.pinData = {};
+  workflow.id = generateUUID();
+  workflow.versionId = generateUUID();
+  workflow.tags = [];
   
-  if (!workflow.versionId) {
-    workflow.versionId = generateUUID();
-  }
-  
-  // Add meta for n8n 2.x compatibility
-  if (!workflow.meta) {
-    workflow.meta = {
-      templateCredsSetupCompleted: true,
-      instanceId: generateUUID()
-    };
-  }
-  
-  // Add tags array (required for n8n 2.1.5)
-  if (!workflow.tags) {
-    workflow.tags = [];
-  }
-  
-  console.log('Fixed workflow connections:', JSON.stringify(connections, null, 2));
-  console.log('Nodes with positions:', workflow.nodes.map((n: any) => ({ name: n.name, position: n.position })));
+  workflow.meta = {
+    templateCredsSetupCompleted: true,
+    instanceId: generateUUID()
+  };
   
   return workflow;
 }
 
 // Extract JSON from AI response
 function extractJSON(content: string): any {
+  console.log('Extracting JSON from content length:', content.length);
+  
   // Remove markdown code blocks
   let jsonStr = content.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
   
@@ -161,16 +158,11 @@ function extractJSON(content: string): any {
   jsonStr = jsonStr.replace(/,\s*([}\]])/g, '$1'); // Remove trailing commas
   jsonStr = jsonStr.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F]/g, ' '); // Remove control chars
   
-  // Fix multiline strings
-  jsonStr = jsonStr.replace(/"([^"]*?)[\n\r]+([^"]*?)"/g, (match) => {
-    return match.replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ');
-  });
-  
   try {
     return JSON.parse(jsonStr);
   } catch (e) {
     console.error('JSON parse error:', e);
-    console.error('JSON (first 500 chars):', jsonStr.substring(0, 500));
+    console.error('JSON (first 1000 chars):', jsonStr.substring(0, 1000));
     throw new Error('Invalid JSON in AI response');
   }
 }
@@ -178,7 +170,7 @@ function extractJSON(content: string): any {
 // Extract environment variables section
 function extractEnvVars(content: string): string {
   const parts = content.split('---ENV_VARS---');
-  return parts[1] || '';
+  return parts[1]?.trim() || '';
 }
 
 serve(async (req) => {
@@ -189,42 +181,180 @@ serve(async (req) => {
   try {
     const { prompt, resourceContext } = await req.json();
 
-    console.log('Generating n8n workflow with context:', { promptLength: prompt?.length, resourceContext: !!resourceContext });
+    console.log('=== Generating n8n workflow ===');
+    console.log('Prompt length:', prompt?.length);
+    console.log('Has resourceContext:', !!resourceContext);
 
-    const systemPrompt = `Você é um especialista em n8n workflow automation. Gere workflows n8n válidos.
+    // Build variable instructions from context
+    let variableInstructions = '';
+    if (resourceContext) {
+      // Parse variable mentions from the context
+      const variableMatches = resourceContext.match(/- ([^(]+) \(ID: ([^,]+),/g);
+      if (variableMatches) {
+        variableInstructions = `
+VARIÁVEIS DO RECURSO (use assim no n8n):
+${variableMatches.map((m: string) => {
+  const match = m.match(/- ([^(]+) \(ID: ([^,]+),/);
+  if (match) {
+    const label = match[1].trim();
+    const id = match[2].trim();
+    return `- ${label}: Use ={{ $json["${id}"] }} ou ={{ $json.${id} }}`;
+  }
+  return '';
+}).filter(Boolean).join('\n')}
+
+IMPORTANTE: Para acessar dados do webhook ou nó anterior, use:
+- ={{ $json.campo }} para acessar um campo do JSON de entrada
+- ={{ $input.item.json.campo }} para ser mais explícito
+- ={{ $node["Nome do Nó"].json.campo }} para pegar de um nó específico`;
+      }
+    }
+
+    const systemPrompt = `Você é um especialista em n8n 2.1.5. Gere workflows VÁLIDOS e FUNCIONAIS.
 
 ${resourceContext || ''}
+${variableInstructions}
 
-INSTRUÇÕES:
-1. Retorne APENAS o JSON do workflow (sem markdown)
-2. Cada node precisa: id, name, type, typeVersion, position [x, y], parameters
-3. Posicione os nodes da esquerda para direita (x crescente) na ordem de execução
-4. NÃO se preocupe com connections - elas serão geradas automaticamente
+REGRAS ABSOLUTAS:
+1. Retorne APENAS o JSON do workflow, sem explicações
+2. Cada node DEVE ter: id, name, type, typeVersion (número), position (array [x,y]), parameters
+3. Position DEVE ser array [x, y] - NÃO objeto {x,y}
+4. Posicione nodes da esquerda para direita (x crescente): 100, 350, 600, 850...
+5. NÃO inclua "connections" - será gerado automaticamente pelo sistema
+6. typeVersion DEVE ser número (não string)
 
-TIPOS DE NODES:
-- Webhook: {"type": "n8n-nodes-base.webhook", "typeVersion": 2, "parameters": {"httpMethod": "POST", "path": "meu-path"}}
-- OpenAI: {"type": "@n8n/n8n-nodes-langchain.openAi", "typeVersion": 1.8, "parameters": {"modelId": {"__rl": true, "mode": "list", "value": "gpt-4o"}}, "credentials": {"openAiApi": {"id": "1", "name": "OpenAI"}}}
-- HTTP Request: {"type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "parameters": {"url": "https://api.example.com", "method": "GET"}}
-- Set: {"type": "n8n-nodes-base.set", "typeVersion": 3.4, "parameters": {"options": {}}}
-- Respond to Webhook: {"type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.1, "parameters": {"respondWith": "json", "responseBody": "={{ $json }}"}}
-- Code: {"type": "n8n-nodes-base.code", "typeVersion": 2, "parameters": {"jsCode": "return items;"}}
+TIPOS DE NODES VÁLIDOS (n8n 2.1.5):
 
-EXEMPLO MÍNIMO:
+Webhook (receber dados):
 {
-  "name": "Meu Workflow",
-  "nodes": [
-    {"id": "1", "name": "Webhook", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [100, 300], "parameters": {"httpMethod": "POST", "path": "start"}},
-    {"id": "2", "name": "Processar", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [340, 300], "parameters": {"options": {}}},
-    {"id": "3", "name": "Responder", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.1, "position": [580, 300], "parameters": {"respondWith": "json", "responseBody": "={{ $json }}"}}
-  ],
+  "id": "uuid",
+  "name": "Webhook",
+  "type": "n8n-nodes-base.webhook",
+  "typeVersion": 2,
+  "position": [100, 300],
+  "webhookId": "uuid",
+  "parameters": {
+    "httpMethod": "POST",
+    "path": "meu-endpoint",
+    "responseMode": "responseNode"
+  }
+}
+
+OpenAI (gerar texto):
+{
+  "id": "uuid",
+  "name": "OpenAI",
+  "type": "@n8n/n8n-nodes-langchain.openAi",
+  "typeVersion": 1,
+  "position": [350, 300],
+  "parameters": {
+    "resource": "chat",
+    "operation": "message",
+    "prompt": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "Você é um assistente útil"
+        },
+        {
+          "role": "user", 
+          "content": "={{ $json.mensagem }}"
+        }
+      ]
+    },
+    "options": {
+      "model": "gpt-4o"
+    }
+  },
+  "credentials": {
+    "openAiApi": {
+      "id": "1",
+      "name": "OpenAI account"
+    }
+  }
+}
+
+Set (manipular dados):
+{
+  "id": "uuid",
+  "name": "Set",
+  "type": "n8n-nodes-base.set",
+  "typeVersion": 3,
+  "position": [600, 300],
+  "parameters": {
+    "mode": "manual",
+    "duplicateItem": false,
+    "assignments": {
+      "assignments": [
+        {
+          "id": "uuid",
+          "name": "resultado",
+          "value": "={{ $json.text }}",
+          "type": "string"
+        }
+      ]
+    }
+  }
+}
+
+Respond to Webhook:
+{
+  "id": "uuid",
+  "name": "Respond",
+  "type": "n8n-nodes-base.respondToWebhook",
+  "typeVersion": 1,
+  "position": [850, 300],
+  "parameters": {
+    "respondWith": "json",
+    "responseBody": "={{ $json }}"
+  }
+}
+
+HTTP Request:
+{
+  "id": "uuid", 
+  "name": "HTTP Request",
+  "type": "n8n-nodes-base.httpRequest",
+  "typeVersion": 4,
+  "position": [350, 300],
+  "parameters": {
+    "url": "https://api.example.com/endpoint",
+    "method": "POST",
+    "sendBody": true,
+    "bodyParameters": {
+      "parameters": [
+        {"name": "campo", "value": "={{ $json.valor }}"}
+      ]
+    }
+  }
+}
+
+Code (JavaScript):
+{
+  "id": "uuid",
+  "name": "Code",
+  "type": "n8n-nodes-base.code",
+  "typeVersion": 2,
+  "position": [350, 300],
+  "parameters": {
+    "jsCode": "const items = $input.all();\\nreturn items.map(item => ({json: {resultado: item.json.campo}}));"
+  }
+}
+
+VARIÁVEIS DE AMBIENTE: Use $env.NOME_VARIAVEL (ex: ={{ $env.API_KEY }})
+
+ESTRUTURA DO WORKFLOW:
+{
+  "name": "Nome do Workflow",
+  "nodes": [...],
   "connections": {},
   "active": false,
   "settings": {"executionOrder": "v1"}
 }
 
-VARIÁVEIS DE AMBIENTE: Use ={{ $env.NOME_VAR }}
-
-Após o JSON, adicione "---ENV_VARS---" seguido de: NOME|Descrição|Exemplo`;
+APÓS o JSON, adicione:
+---ENV_VARS---
+NOME_VAR|Descrição da variável|exemplo_valor`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -245,7 +375,7 @@ Após o JSON, adicione "---ENV_VARS---" seguido de: NOME|Descrição|Exemplo`;
     if (!response.ok) {
       const errorText = await response.text();
       console.error('AI API error:', errorText);
-      throw new Error(`AI API error: ${response.status} - ${errorText}`);
+      throw new Error(`AI API error: ${response.status}`);
     }
 
     const data = await response.json();
@@ -255,7 +385,7 @@ Após o JSON, adicione "---ENV_VARS---" seguido de: NOME|Descrição|Exemplo`;
       throw new Error('No content in AI response');
     }
 
-    console.log('Raw AI response length:', rawContent.length);
+    console.log('Raw AI response (first 500 chars):', rawContent.substring(0, 500));
 
     // Extract and parse JSON
     const workflow = extractJSON(rawContent);
@@ -272,9 +402,10 @@ Após o JSON, adicione "---ENV_VARS---" seguido de: NOME|Descrição|Exemplo`;
       ? `${finalJson}\n\n---ENV_VARS---\n${envVarsPart}`
       : finalJson;
 
-    console.log('Workflow generated and fixed successfully');
-    console.log('Nodes:', fixedWorkflow.nodes?.length);
-    console.log('Connections:', Object.keys(fixedWorkflow.connections || {}).length);
+    console.log('=== Workflow generated successfully ===');
+    console.log('Nodes count:', fixedWorkflow.nodes?.length);
+    console.log('Connections count:', Object.keys(fixedWorkflow.connections || {}).length);
+    console.log('Connection keys:', Object.keys(fixedWorkflow.connections || {}));
 
     return new Response(JSON.stringify({ content: finalContent }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
