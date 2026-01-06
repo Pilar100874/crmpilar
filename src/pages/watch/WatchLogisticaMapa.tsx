@@ -92,161 +92,192 @@ const WatchLogisticaMapa = () => {
   const validVeiculos = veiculos.filter(v => v.ultima_posicao);
 
   return (
-    <div className="watch-fullscreen-container">
-      {/* Full screen map */}
-      <div className="fullscreen-map">
-        {loading && validVeiculos.length === 0 ? (
-          <div className="loading-indicator">
-            <RefreshCw className="w-6 h-6 animate-spin" />
-          </div>
-        ) : mapReady ? (
-          <Suspense fallback={
-            <div className="loading-indicator">
+    <div className="watch-container">
+      <div className="watch-frame">
+        {/* Map inside watch frame */}
+        <div className="watch-map-container">
+          {loading && validVeiculos.length === 0 ? (
+            <div className="loading-indicator-map">
               <RefreshCw className="w-6 h-6 animate-spin" />
             </div>
-          }>
-            <MapComponents 
-              veiculos={validVeiculos} 
-              selectedVeiculoId={selectedVeiculoId}
-              onVeiculoClick={(id) => navigate(`/watch/logistica/rota/${id}`)}
-            />
-          </Suspense>
-        ) : (
-          <div className="loading-indicator">
-            <RefreshCw className="w-6 h-6 animate-spin" />
-          </div>
-        )}
-      </div>
+          ) : mapReady ? (
+            <Suspense fallback={
+              <div className="loading-indicator-map">
+                <RefreshCw className="w-6 h-6 animate-spin" />
+              </div>
+            }>
+              <MapComponents 
+                veiculos={validVeiculos} 
+                selectedVeiculoId={selectedVeiculoId}
+                onVeiculoClick={(id) => navigate(`/watch/logistica/rota/${id}`)}
+              />
+            </Suspense>
+          ) : (
+            <div className="loading-indicator-map">
+              <RefreshCw className="w-6 h-6 animate-spin" />
+            </div>
+          )}
+        </div>
 
-      {/* Overlay controls */}
-      <div className="overlay-top">
-        {/* Back button */}
-        <button onClick={() => navigate('/watch/logistica')} className="overlay-btn">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-
-        {/* Time display */}
-        <div className="overlay-time">
+        {/* Time display at top */}
+        <div className="watch-time-overlay">
           <span>{formatTime(currentTime)}</span>
         </div>
 
-        {/* Refresh button */}
-        <button onClick={fetchVeiculos} className="overlay-btn" disabled={loading}>
-          <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+        {/* Back button */}
+        <button onClick={() => navigate('/watch/logistica')} className="watch-back-overlay">
+          <ArrowLeft className="w-4 h-4" />
         </button>
-      </div>
 
-      {/* Vehicle count indicator */}
-      <div className="overlay-bottom">
-        <div className="vehicle-count">
+        {/* Refresh button */}
+        <button onClick={fetchVeiculos} className="watch-refresh-overlay" disabled={loading}>
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        </button>
+
+        {/* Vehicle count at bottom */}
+        <div className="watch-count-overlay">
           {validVeiculos.length} veículo(s)
         </div>
       </div>
 
       <style>{`
-        .watch-fullscreen-container {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          width: 100vw;
-          height: 100vh;
-          height: 100dvh;
+        .watch-container {
+          min-height: 100vh;
+          min-height: 100dvh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           background: #000;
+          padding: 0;
+          margin: 0;
           overflow: hidden;
         }
 
-        .fullscreen-map {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          width: 100%;
-          height: 100%;
+        .watch-frame {
+          width: min(100vw, 100vh);
+          height: min(100vw, 100vh);
+          max-width: 450px;
+          max-height: 450px;
+          border-radius: 50%;
+          background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+          box-shadow: 
+            inset 0 0 60px rgba(0, 0, 0, 0.5),
+            0 0 0 4px #2a2a3e,
+            0 0 0 6px #1a1a2e;
+          overflow: hidden;
         }
 
-        .loading-indicator {
+        .watch-map-container {
+          position: absolute;
+          top: 10%;
+          left: 10%;
+          right: 10%;
+          bottom: 10%;
+          border-radius: 50%;
+          overflow: hidden;
+          z-index: 1;
+        }
+
+        .watch-map-container :global(.leaflet-container) {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+        }
+
+        .loading-indicator-map {
           display: flex;
           align-items: center;
           justify-content: center;
           width: 100%;
           height: 100%;
-          background: #1a1a2e;
+          background: #2a2a3e;
           color: rgba(255, 255, 255, 0.5);
         }
 
-        .overlay-top {
+        .watch-time-overlay {
           position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 16px;
-          padding-top: max(16px, env(safe-area-inset-top));
-          z-index: 1000;
-          background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
+          top: 6%;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: clamp(12px, 3vw, 16px);
+          font-weight: 600;
+          color: white;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(10px);
+          padding: 4px 12px;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          z-index: 100;
         }
 
-        .overlay-btn {
-          background: rgba(0, 0, 0, 0.6);
+        .watch-back-overlay {
+          position: absolute;
+          top: 5%;
+          left: 18%;
+          background: rgba(0, 0, 0, 0.7);
           backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 50%;
-          width: 44px;
-          height: 44px;
+          width: clamp(28px, 8vw, 36px);
+          height: clamp(28px, 8vw, 36px);
           display: flex;
           align-items: center;
           justify-content: center;
           color: white;
           cursor: pointer;
+          z-index: 100;
         }
 
-        .overlay-btn:active {
+        .watch-back-overlay:active {
           transform: scale(0.95);
-          background: rgba(0, 0, 0, 0.8);
+          background: rgba(0, 0, 0, 0.9);
         }
 
-        .overlay-btn:disabled {
+        .watch-refresh-overlay {
+          position: absolute;
+          top: 5%;
+          right: 18%;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 50%;
+          width: clamp(28px, 8vw, 36px);
+          height: clamp(28px, 8vw, 36px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          cursor: pointer;
+          z-index: 100;
+        }
+
+        .watch-refresh-overlay:active {
+          transform: scale(0.95);
+          background: rgba(0, 0, 0, 0.9);
+        }
+
+        .watch-refresh-overlay:disabled {
           opacity: 0.5;
         }
 
-        .overlay-time {
-          font-size: 18px;
-          font-weight: 600;
-          color: white;
-          background: rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(10px);
-          padding: 8px 16px;
-          border-radius: 20px;
-          border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .overlay-bottom {
+        .watch-count-overlay {
           position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          display: flex;
-          justify-content: center;
-          padding: 20px;
-          padding-bottom: max(20px, env(safe-area-inset-bottom));
-          z-index: 1000;
-          background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
-        }
-
-        .vehicle-count {
-          font-size: 14px;
+          bottom: 8%;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: clamp(10px, 2.5vw, 13px);
           font-weight: 500;
           color: white;
-          background: rgba(0, 0, 0, 0.6);
+          background: rgba(0, 0, 0, 0.7);
           backdrop-filter: blur(10px);
-          padding: 8px 20px;
-          border-radius: 20px;
+          padding: 4px 12px;
+          border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.2);
+          z-index: 100;
         }
       `}</style>
     </div>
