@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, MapPin } from 'lucide-react';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { VeiculoComStatus, VeiculoPosicao } from '@/types/logistica';
 
@@ -92,141 +92,79 @@ const WatchLogisticaMapa = () => {
   const validVeiculos = veiculos.filter(v => v.ultima_posicao);
 
   return (
-    <div className="watch-container">
-      <div className="watch-frame">
-        {/* Time display */}
-        <div className="watch-time">
-          <span className="time-main">{formatTime(currentTime)}</span>
-        </div>
+    <div className="watch-fullscreen-container">
+      {/* Full screen map */}
+      <div className="fullscreen-map">
+        {loading && validVeiculos.length === 0 ? (
+          <div className="loading-indicator">
+            <RefreshCw className="w-6 h-6 animate-spin" />
+          </div>
+        ) : mapReady ? (
+          <Suspense fallback={
+            <div className="loading-indicator">
+              <RefreshCw className="w-6 h-6 animate-spin" />
+            </div>
+          }>
+            <MapComponents 
+              veiculos={validVeiculos} 
+              selectedVeiculoId={selectedVeiculoId}
+              onVeiculoClick={(id) => navigate(`/watch/logistica/rota/${id}`)}
+            />
+          </Suspense>
+        ) : (
+          <div className="loading-indicator">
+            <RefreshCw className="w-6 h-6 animate-spin" />
+          </div>
+        )}
+      </div>
 
+      {/* Overlay controls */}
+      <div className="overlay-top">
         {/* Back button */}
-        <button onClick={() => navigate('/watch/logistica')} className="watch-back">
-          <ArrowLeft className="w-4 h-4" />
+        <button onClick={() => navigate('/watch/logistica')} className="overlay-btn">
+          <ArrowLeft className="w-5 h-5" />
         </button>
 
-        {/* Title */}
-        <div className="watch-title">
-          <MapPin className="w-4 h-4" />
-          <span>Mapa ao Vivo</span>
-        </div>
-
-        {/* Map container */}
-        <div className="watch-map-container">
-          {loading && validVeiculos.length === 0 ? (
-            <div className="loading-indicator">
-              <RefreshCw className="w-6 h-6 animate-spin" />
-            </div>
-          ) : mapReady ? (
-            <Suspense fallback={
-              <div className="loading-indicator">
-                <RefreshCw className="w-6 h-6 animate-spin" />
-              </div>
-            }>
-              <MapComponents 
-                veiculos={validVeiculos} 
-                selectedVeiculoId={selectedVeiculoId}
-                onVeiculoClick={(id) => navigate(`/watch/logistica/rota/${id}`)}
-              />
-            </Suspense>
-          ) : (
-            <div className="loading-indicator">
-              <RefreshCw className="w-6 h-6 animate-spin" />
-            </div>
-          )}
-        </div>
-
-        {/* Vehicle count indicator */}
-        <div className="vehicle-count">
-          {validVeiculos.length} veículo(s)
+        {/* Time display */}
+        <div className="overlay-time">
+          <span>{formatTime(currentTime)}</span>
         </div>
 
         {/* Refresh button */}
-        <button onClick={fetchVeiculos} className="refresh-btn" disabled={loading}>
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        <button onClick={fetchVeiculos} className="overlay-btn" disabled={loading}>
+          <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
+      {/* Vehicle count indicator */}
+      <div className="overlay-bottom">
+        <div className="vehicle-count">
+          {validVeiculos.length} veículo(s)
+        </div>
+      </div>
+
       <style>{`
-        .watch-container {
-          min-height: 100vh;
-          min-height: 100dvh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+        .watch-fullscreen-container {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 100vw;
+          height: 100vh;
+          height: 100dvh;
           background: #000;
-          padding: 0;
-          margin: 0;
           overflow: hidden;
         }
 
-        .watch-frame {
-          width: min(100vw, 100vh);
-          height: min(100vw, 100vh);
-          max-width: 450px;
-          max-height: 450px;
-          border-radius: 50%;
-          background: linear-gradient(145deg, #1a1a2e, #0f0f1a);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-          box-shadow: 
-            inset 0 0 60px rgba(0, 0, 0, 0.5),
-            0 0 0 4px #2a2a3e,
-            0 0 0 6px #1a1a2e;
-          overflow: hidden;
-        }
-
-        .watch-time {
+        .fullscreen-map {
           position: absolute;
-          top: 6%;
-          z-index: 1000;
-        }
-
-        .time-main {
-          font-size: clamp(10px, 3vw, 14px);
-          font-weight: 300;
-          color: rgba(255, 255, 255, 0.9);
-          background: rgba(0, 0, 0, 0.5);
-          padding: 2px 8px;
-          border-radius: 10px;
-        }
-
-        .watch-back {
-          position: absolute;
-          top: 5%;
-          left: 20%;
-          background: rgba(0, 0, 0, 0.6);
-          border: none;
-          border-radius: 50%;
-          width: clamp(24px, 7vw, 32px);
-          height: clamp(24px, 7vw, 32px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          cursor: pointer;
-          z-index: 1000;
-        }
-
-        .watch-title {
-          position: absolute;
-          top: 15%;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          color: white;
-          font-size: clamp(10px, 3vw, 14px);
-          font-weight: 500;
-        }
-
-        .watch-map-container {
-          width: 75%;
-          height: 55%;
-          border-radius: 20px;
-          overflow: hidden;
-          border: 2px solid rgba(255, 255, 255, 0.1);
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 100%;
+          height: 100%;
         }
 
         .loading-indicator {
@@ -235,34 +173,80 @@ const WatchLogisticaMapa = () => {
           justify-content: center;
           width: 100%;
           height: 100%;
-          background: rgba(26, 26, 46, 0.9);
+          background: #1a1a2e;
           color: rgba(255, 255, 255, 0.5);
         }
 
-        .vehicle-count {
+        .overlay-top {
           position: absolute;
-          bottom: 18%;
-          font-size: clamp(8px, 2.5vw, 11px);
-          color: rgba(255, 255, 255, 0.6);
-          background: rgba(0, 0, 0, 0.5);
-          padding: 2px 10px;
-          border-radius: 10px;
+          top: 0;
+          left: 0;
+          right: 0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px;
+          padding-top: max(16px, env(safe-area-inset-top));
+          z-index: 1000;
+          background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
         }
 
-        .refresh-btn {
-          position: absolute;
-          bottom: 8%;
-          background: rgba(255, 255, 255, 0.1);
+        .overlay-btn {
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.2);
           border-radius: 50%;
-          width: clamp(28px, 8vw, 36px);
-          height: clamp(28px, 8vw, 36px);
+          width: 44px;
+          height: 44px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: rgba(255, 255, 255, 0.7);
+          color: white;
           cursor: pointer;
+        }
+
+        .overlay-btn:active {
+          transform: scale(0.95);
+          background: rgba(0, 0, 0, 0.8);
+        }
+
+        .overlay-btn:disabled {
+          opacity: 0.5;
+        }
+
+        .overlay-time {
+          font-size: 18px;
+          font-weight: 600;
+          color: white;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(10px);
+          padding: 8px 16px;
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .overlay-bottom {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          display: flex;
+          justify-content: center;
+          padding: 20px;
+          padding-bottom: max(20px, env(safe-area-inset-bottom));
           z-index: 1000;
+          background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+        }
+
+        .vehicle-count {
+          font-size: 14px;
+          font-weight: 500;
+          color: white;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(10px);
+          padding: 8px 20px;
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
       `}</style>
     </div>
