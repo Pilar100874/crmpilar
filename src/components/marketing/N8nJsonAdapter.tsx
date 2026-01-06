@@ -466,7 +466,7 @@ const N8nJsonAdapter: React.FC = () => {
             </TabsContent>
             <TabsContent value="visual" className="mt-0">
               <div className="h-[400px] rounded-lg border bg-muted/20 overflow-hidden">
-                <N8nWorkflowVisualizer jsonData={inputJson} />
+                <N8nWorkflowVisualizer jsonData={inputJson} editable={false} />
               </div>
             </TabsContent>
           </Tabs>
@@ -661,7 +661,7 @@ const N8nJsonAdapter: React.FC = () => {
               </TabsList>
               <TabsContent value="visual" className="mt-0">
                 <div className="h-[400px] rounded-lg border bg-muted/20 overflow-hidden">
-                  <N8nWorkflowVisualizer jsonData={outputJson} />
+                  <N8nWorkflowVisualizer jsonData={outputJson} onJsonChange={setOutputJson} editable={true} />
                 </div>
               </TabsContent>
               <TabsContent value="json" className="mt-0">
