@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { VeiculoComStatus } from '@/types/logistica';
@@ -43,128 +42,101 @@ const createVehicleIcon = (status: 'movendo' | 'parado' | 'offline') => {
   });
 };
 
-const MapUpdater = ({ veiculos }: { veiculos: VeiculoComStatus[] }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    const validVeiculos = veiculos.filter(v => v.ultima_posicao);
-    if (validVeiculos.length > 0) {
-      const bounds = L.latLngBounds(
-        validVeiculos.map(v => [v.ultima_posicao!.lat, v.ultima_posicao!.lng])
-      );
-      map.fitBounds(bounds, { padding: [20, 20], maxZoom: 14 });
-    }
-  }, [veiculos, map]);
-  
-  return null;
-};
-
 interface WatchMapViewProps {
   veiculos: VeiculoComStatus[];
   selectedVeiculoId: string | null;
   onVeiculoClick?: (id: string) => void;
 }
 
-const WatchMapView = ({ veiculos, selectedVeiculoId, onVeiculoClick }: WatchMapViewProps) => {
-  const [mapError, setMapError] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+const WatchMapView = ({ veiculos, onVeiculoClick }: WatchMapViewProps) => {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
 
   const validVeiculos = veiculos.filter(v => v.ultima_posicao);
   const defaultCenter: [number, number] = validVeiculos.length > 0 
     ? [validVeiculos[0].ultima_posicao!.lat, validVeiculos[0].ultima_posicao!.lng]
     : [-23.5505, -46.6333];
 
-  if (!isClient) {
-    return (
-      <div style={{ 
-        width: '100%', 
-        height: '100%', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#1a1a2e',
-        color: 'rgba(255,255,255,0.5)'
-      }}>
-        Carregando mapa...
-      </div>
-    );
-  }
+  // Initialize map
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
 
-  if (mapError) {
-    return (
-      <div style={{ 
-        width: '100%', 
-        height: '100%', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#1a1a2e',
-        color: '#ef4444',
-        fontSize: '12px',
-        textAlign: 'center',
-        padding: '10px'
-      }}>
-        Erro ao carregar mapa: {mapError}
-      </div>
-    );
-  }
+    mapRef.current = L.map(mapContainerRef.current, {
+      zoomControl: false,
+      attributionControl: false
+    }).setView(defaultCenter, 13);
 
-  try {
-    return (
-      <>
-        <MapContainer
-          center={defaultCenter}
-          zoom={13}
-          style={{ width: '100%', height: '100%' }}
-          zoomControl={false}
-          attributionControl={false}
-        >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          />
-          <MapUpdater veiculos={validVeiculos} />
-          
-          {validVeiculos.map(veiculo => (
-            <Marker
-              key={veiculo.id}
-              position={[veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng]}
-              icon={createVehicleIcon(veiculo.status)}
-              eventHandlers={{
-                click: () => onVeiculoClick?.(veiculo.id)
-              }}
-            >
-              <Popup>
-                <div style={{ fontSize: '11px', lineHeight: 1.3 }}>
-                  <strong>{veiculo.placa}</strong>
-                  <br />
-                  {veiculo.motorista && <span>{veiculo.motorista}<br /></span>}
-                  <span>{Math.round(veiculo.ultima_posicao!.velocidade)} km/h</span>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-        <style>{`
-          .leaflet-container {
-            background: #1a1a2e;
-            width: 100%;
-            height: 100%;
-          }
-          .leaflet-control-attribution {
-            display: none !important;
-          }
-        `}</style>
-      </>
-    );
-  } catch (error) {
-    console.error('Map render error:', error);
-    setMapError(error instanceof Error ? error.message : 'Erro desconhecido');
-    return null;
-  }
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(mapRef.current);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update markers when veiculos change
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+    const currentMarkers = markersRef.current;
+
+    // Remove markers that no longer exist
+    const currentIds = new Set(validVeiculos.map(v => v.id));
+    currentMarkers.forEach((marker, id) => {
+      if (!currentIds.has(id)) {
+        marker.remove();
+        currentMarkers.delete(id);
+      }
+    });
+
+    // Add or update markers
+    validVeiculos.forEach(veiculo => {
+      const pos: L.LatLngExpression = [veiculo.ultima_posicao!.lat, veiculo.ultima_posicao!.lng];
+      const existingMarker = currentMarkers.get(veiculo.id);
+
+      if (existingMarker) {
+        existingMarker.setLatLng(pos);
+        existingMarker.setIcon(createVehicleIcon(veiculo.status));
+      } else {
+        const marker = L.marker(pos, { icon: createVehicleIcon(veiculo.status) })
+          .addTo(map)
+          .bindPopup(`
+            <div style="font-size: 11px; line-height: 1.3;">
+              <strong>${veiculo.placa}</strong>
+              ${veiculo.motorista ? `<br/>${veiculo.motorista}` : ''}
+              <br/>${Math.round(veiculo.ultima_posicao!.velocidade)} km/h
+            </div>
+          `);
+
+        marker.on('click', () => {
+          onVeiculoClick?.(veiculo.id);
+        });
+
+        currentMarkers.set(veiculo.id, marker);
+      }
+    });
+
+    // Fit bounds to show all vehicles
+    if (validVeiculos.length > 0) {
+      const bounds = L.latLngBounds(validVeiculos.map(v => [v.ultima_posicao!.lat, v.ultima_posicao!.lng]));
+      map.fitBounds(bounds, { padding: [20, 20], maxZoom: 14 });
+    }
+  }, [veiculos, onVeiculoClick]);
+
+  return (
+    <>
+      <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
+      <style>{`
+        .leaflet-container {
+          background: #1a1a2e;
+        }
+      `}</style>
+    </>
+  );
 };
 
 export default WatchMapView;

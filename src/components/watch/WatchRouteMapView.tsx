@@ -1,33 +1,18 @@
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from 'react-leaflet';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { VeiculoPosicao } from '@/types/logistica';
-
-const MapUpdater = ({ positions }: { positions: VeiculoPosicao[] }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    if (positions.length > 0) {
-      const bounds = L.latLngBounds(positions.map(p => [p.lat, p.lng]));
-      map.fitBounds(bounds, { padding: [20, 20], maxZoom: 15 });
-    }
-  }, [positions, map]);
-  
-  return null;
-};
 
 interface WatchRouteMapViewProps {
   posicoes: VeiculoPosicao[];
 }
 
 const WatchRouteMapView = ({ posicoes }: WatchRouteMapViewProps) => {
-  const [isClient, setIsClient] = useState(false);
-  const [mapError, setMapError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const routeLayerRef = useRef<L.Polyline | null>(null);
+  const startMarkerRef = useRef<L.CircleMarker | null>(null);
+  const endMarkerRef = useRef<L.CircleMarker | null>(null);
 
   const routeCoordinates = posicoes.map(p => [p.lat, p.lng] as [number, number]);
   const lastPosition = posicoes.length > 0 ? posicoes[posicoes.length - 1] : null;
@@ -35,113 +20,95 @@ const WatchRouteMapView = ({ posicoes }: WatchRouteMapViewProps) => {
     ? [lastPosition.lat, lastPosition.lng]
     : [-23.5505, -46.6333];
 
-  if (!isClient) {
-    return (
-      <div style={{ 
-        width: '100%', 
-        height: '100%', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#1a1a2e',
-        color: 'rgba(255,255,255,0.5)'
-      }}>
-        Carregando mapa...
-      </div>
-    );
-  }
+  // Initialize map
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
 
-  if (mapError) {
-    return (
-      <div style={{ 
-        width: '100%', 
-        height: '100%', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#1a1a2e',
-        color: '#ef4444',
-        fontSize: '12px',
-        textAlign: 'center',
-        padding: '10px'
-      }}>
-        Erro ao carregar mapa: {mapError}
-      </div>
-    );
-  }
+    mapRef.current = L.map(mapContainerRef.current, {
+      zoomControl: false,
+      attributionControl: false
+    }).setView(defaultCenter, 13);
 
-  try {
-    return (
-      <>
-        <MapContainer
-          center={defaultCenter}
-          zoom={13}
-          style={{ width: '100%', height: '100%' }}
-          zoomControl={false}
-          attributionControl={false}
-        >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          />
-          <MapUpdater positions={posicoes} />
-          
-          {/* Route polyline */}
-          {routeCoordinates.length > 1 && (
-            <Polyline
-              positions={routeCoordinates}
-              pathOptions={{ 
-                color: '#3b82f6', 
-                weight: 3,
-                opacity: 0.8
-              }}
-            />
-          )}
-          
-          {/* Start marker */}
-          {posicoes.length > 0 && (
-            <CircleMarker
-              center={[posicoes[0].lat, posicoes[0].lng]}
-              radius={5}
-              pathOptions={{ 
-                fillColor: '#22c55e',
-                fillOpacity: 1,
-                color: 'white',
-                weight: 2
-              }}
-            />
-          )}
-          
-          {/* End marker (current position) */}
-          {lastPosition && (
-            <CircleMarker
-              center={[lastPosition.lat, lastPosition.lng]}
-              radius={6}
-              pathOptions={{ 
-                fillColor: '#ef4444',
-                fillOpacity: 1,
-                color: 'white',
-                weight: 2
-              }}
-            />
-          )}
-        </MapContainer>
-        <style>{`
-          .leaflet-container {
-            background: #1a1a2e;
-            width: 100%;
-            height: 100%;
-          }
-          .leaflet-control-attribution {
-            display: none !important;
-          }
-        `}</style>
-      </>
-    );
-  } catch (error) {
-    console.error('Map render error:', error);
-    setMapError(error instanceof Error ? error.message : 'Erro desconhecido');
-    return null;
-  }
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(mapRef.current);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update route when posicoes change
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+
+    // Remove existing layers
+    if (routeLayerRef.current) {
+      routeLayerRef.current.remove();
+      routeLayerRef.current = null;
+    }
+    if (startMarkerRef.current) {
+      startMarkerRef.current.remove();
+      startMarkerRef.current = null;
+    }
+    if (endMarkerRef.current) {
+      endMarkerRef.current.remove();
+      endMarkerRef.current = null;
+    }
+
+    if (posicoes.length === 0) return;
+
+    // Add route polyline
+    if (routeCoordinates.length > 1) {
+      routeLayerRef.current = L.polyline(routeCoordinates, {
+        color: '#3b82f6',
+        weight: 3,
+        opacity: 0.8
+      }).addTo(map);
+    }
+
+    // Add start marker
+    if (posicoes.length > 0) {
+      startMarkerRef.current = L.circleMarker([posicoes[0].lat, posicoes[0].lng], {
+        radius: 5,
+        fillColor: '#22c55e',
+        fillOpacity: 1,
+        color: 'white',
+        weight: 2
+      }).addTo(map);
+    }
+
+    // Add end marker (current position)
+    if (lastPosition) {
+      endMarkerRef.current = L.circleMarker([lastPosition.lat, lastPosition.lng], {
+        radius: 6,
+        fillColor: '#ef4444',
+        fillOpacity: 1,
+        color: 'white',
+        weight: 2
+      }).addTo(map);
+    }
+
+    // Fit bounds to show entire route
+    if (posicoes.length > 0) {
+      const bounds = L.latLngBounds(posicoes.map(p => [p.lat, p.lng]));
+      map.fitBounds(bounds, { padding: [20, 20], maxZoom: 15 });
+    }
+  }, [posicoes]);
+
+  return (
+    <>
+      <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
+      <style>{`
+        .leaflet-container {
+          background: #1a1a2e;
+        }
+      `}</style>
+    </>
+  );
 };
 
 export default WatchRouteMapView;
