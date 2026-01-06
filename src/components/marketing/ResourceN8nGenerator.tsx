@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Workflow, Wand2, Copy, Check, Loader2, Sparkles, RefreshCw, Download, AlertCircle, Server, FileCode, AtSign, Bot, Database, Hash, Slash, Save, FolderOpen, X, Edit, ExternalLink } from 'lucide-react';
+import { Workflow, Wand2, Copy, Check, Loader2, Sparkles, RefreshCw, Download, AlertCircle, Server, FileCode, AtSign, Bot, Database, Hash, Slash, Save, FolderOpen, X, Edit, ExternalLink, Upload, KeyRound, Replace } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import N8nJsonAdapter from './N8nJsonAdapter';
 
 interface EnvVariable {
   name: string;
@@ -828,6 +829,23 @@ ${selectedResource.publishChannels && selectedResource.publishChannels.length > 
   }
 
   return (
+    <Tabs defaultValue="generate" className="w-full space-y-6">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="generate" className="flex items-center gap-2">
+          <Wand2 className="h-4 w-4" />
+          Gerar Workflow
+        </TabsTrigger>
+        <TabsTrigger value="adapt" className="flex items-center gap-2">
+          <Replace className="h-4 w-4" />
+          Adaptar JSON Existente
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="adapt">
+        <N8nJsonAdapter />
+      </TabsContent>
+
+      <TabsContent value="generate">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
