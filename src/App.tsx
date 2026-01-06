@@ -125,7 +125,7 @@ const App = () => (
         <Sonner />
         
         <BrowserRouter>
-          <WatchRedirectWrapper>
+          <WatchRedirectWrapper />
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
@@ -240,7 +240,6 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </WatchRedirectWrapper>
         </BrowserRouter>
       </TooltipProvider>
     </MacroProvider>
