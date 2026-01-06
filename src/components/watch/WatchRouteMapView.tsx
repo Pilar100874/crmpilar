@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -22,71 +22,126 @@ interface WatchRouteMapViewProps {
 }
 
 const WatchRouteMapView = ({ posicoes }: WatchRouteMapViewProps) => {
+  const [isClient, setIsClient] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const routeCoordinates = posicoes.map(p => [p.lat, p.lng] as [number, number]);
   const lastPosition = posicoes.length > 0 ? posicoes[posicoes.length - 1] : null;
   const defaultCenter: [number, number] = lastPosition 
     ? [lastPosition.lat, lastPosition.lng]
     : [-23.5505, -46.6333];
 
-  return (
-    <>
-      <MapContainer
-        center={defaultCenter}
-        zoom={13}
-        style={{ width: '100%', height: '100%' }}
-        zoomControl={false}
-        attributionControl={false}
-      >
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        />
-        <MapUpdater positions={posicoes} />
-        
-        {/* Route polyline */}
-        <Polyline
-          positions={routeCoordinates}
-          pathOptions={{ 
-            color: '#3b82f6', 
-            weight: 3,
-            opacity: 0.8
-          }}
-        />
-        
-        {/* Start marker */}
-        {posicoes.length > 0 && (
-          <CircleMarker
-            center={[posicoes[0].lat, posicoes[0].lng]}
-            radius={5}
-            pathOptions={{ 
-              fillColor: '#22c55e',
-              fillOpacity: 1,
-              color: 'white',
-              weight: 2
-            }}
+  if (!isClient) {
+    return (
+      <div style={{ 
+        width: '100%', 
+        height: '100%', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        background: '#1a1a2e',
+        color: 'rgba(255,255,255,0.5)'
+      }}>
+        Carregando mapa...
+      </div>
+    );
+  }
+
+  if (mapError) {
+    return (
+      <div style={{ 
+        width: '100%', 
+        height: '100%', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        background: '#1a1a2e',
+        color: '#ef4444',
+        fontSize: '12px',
+        textAlign: 'center',
+        padding: '10px'
+      }}>
+        Erro ao carregar mapa: {mapError}
+      </div>
+    );
+  }
+
+  try {
+    return (
+      <>
+        <MapContainer
+          center={defaultCenter}
+          zoom={13}
+          style={{ width: '100%', height: '100%' }}
+          zoomControl={false}
+          attributionControl={false}
+        >
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
-        )}
-        
-        {/* End marker (current position) */}
-        {lastPosition && (
-          <CircleMarker
-            center={[lastPosition.lat, lastPosition.lng]}
-            radius={6}
-            pathOptions={{ 
-              fillColor: '#ef4444',
-              fillOpacity: 1,
-              color: 'white',
-              weight: 2
-            }}
-          />
-        )}
-      </MapContainer>
-      <style>{`
-        .leaflet-container {
-          background: #1a1a2e;
-        }
-      `}</style>
-    </>
-  );
+          <MapUpdater positions={posicoes} />
+          
+          {/* Route polyline */}
+          {routeCoordinates.length > 1 && (
+            <Polyline
+              positions={routeCoordinates}
+              pathOptions={{ 
+                color: '#3b82f6', 
+                weight: 3,
+                opacity: 0.8
+              }}
+            />
+          )}
+          
+          {/* Start marker */}
+          {posicoes.length > 0 && (
+            <CircleMarker
+              center={[posicoes[0].lat, posicoes[0].lng]}
+              radius={5}
+              pathOptions={{ 
+                fillColor: '#22c55e',
+                fillOpacity: 1,
+                color: 'white',
+                weight: 2
+              }}
+            />
+          )}
+          
+          {/* End marker (current position) */}
+          {lastPosition && (
+            <CircleMarker
+              center={[lastPosition.lat, lastPosition.lng]}
+              radius={6}
+              pathOptions={{ 
+                fillColor: '#ef4444',
+                fillOpacity: 1,
+                color: 'white',
+                weight: 2
+              }}
+            />
+          )}
+        </MapContainer>
+        <style>{`
+          .leaflet-container {
+            background: #1a1a2e;
+            width: 100%;
+            height: 100%;
+          }
+          .leaflet-control-attribution {
+            display: none !important;
+          }
+        `}</style>
+      </>
+    );
+  } catch (error) {
+    console.error('Map render error:', error);
+    setMapError(error instanceof Error ? error.message : 'Erro desconhecido');
+    return null;
+  }
 };
 
 export default WatchRouteMapView;
