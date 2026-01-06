@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   ReactFlow,
   Node,
@@ -28,11 +28,22 @@ import {
   Filter,
   GitBranch,
   Repeat,
-  PlusCircle
+  PlusCircle,
+  X,
+  Save
 } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 
 interface N8nWorkflowVisualizerProps {
   jsonData: string;
+  onJsonChange?: (newJson: string) => void;
+  editable?: boolean;
 }
 
 // Icon mapping for n8n node types
@@ -71,12 +82,12 @@ const getNodeColor = (type: string) => {
 };
 
 // Custom node component
-const N8nNode = ({ data }: NodeProps) => {
+const N8nNode = ({ data, selected }: NodeProps) => {
   const color = getNodeColor(data.type as string || '');
   
   return (
     <div 
-      className="px-3 py-2 shadow-lg rounded-lg border-2 bg-background min-w-[150px] max-w-[200px]"
+      className={`px-3 py-2 shadow-lg rounded-lg border-2 bg-background min-w-[150px] max-w-[200px] cursor-pointer transition-all ${selected ? 'ring-2 ring-primary ring-offset-2' : 'hover:shadow-xl'}`}
       style={{ borderColor: color }}
     >
       <Handle 
@@ -115,10 +126,135 @@ const nodeTypes = {
   n8nNode: N8nNode,
 };
 
-const N8nWorkflowVisualizer: React.FC<N8nWorkflowVisualizerProps> = ({ jsonData }) => {
-  const { nodes, edges, error } = useMemo(() => {
+// Parameter editor component
+const ParameterEditor: React.FC<{
+  params: Record<string, any>;
+  path?: string;
+  onChange: (path: string, value: any) => void;
+  editable: boolean;
+}> = ({ params, path = '', onChange, editable }) => {
+  const renderValue = (key: string, value: any, currentPath: string) => {
+    const fullPath = currentPath ? `${currentPath}.${key}` : key;
+    
+    if (value === null || value === undefined) {
+      return (
+        <div key={fullPath} className="flex items-center gap-2 py-1">
+          <span className="text-xs text-muted-foreground min-w-[100px]">{key}:</span>
+          <span className="text-xs italic text-muted-foreground">null</span>
+        </div>
+      );
+    }
+    
+    if (typeof value === 'boolean') {
+      return (
+        <div key={fullPath} className="flex items-center gap-2 py-1">
+          <span className="text-xs text-muted-foreground min-w-[100px]">{key}:</span>
+          <Badge variant={value ? 'default' : 'secondary'} className="text-xs">
+            {value ? 'true' : 'false'}
+          </Badge>
+        </div>
+      );
+    }
+    
+    if (typeof value === 'number') {
+      return (
+        <div key={fullPath} className="flex items-center gap-2 py-1">
+          <Label className="text-xs text-muted-foreground min-w-[100px]">{key}:</Label>
+          {editable ? (
+            <Input
+              type="number"
+              value={value}
+              onChange={(e) => onChange(fullPath, parseFloat(e.target.value) || 0)}
+              className="h-7 text-xs flex-1"
+            />
+          ) : (
+            <span className="text-xs font-mono">{value}</span>
+          )}
+        </div>
+      );
+    }
+    
+    if (typeof value === 'string') {
+      const isLongText = value.length > 50 || value.includes('\n');
+      const isSensitive = key.toLowerCase().includes('key') || 
+                          key.toLowerCase().includes('token') || 
+                          key.toLowerCase().includes('secret') ||
+                          key.toLowerCase().includes('password');
+      
+      return (
+        <div key={fullPath} className="flex flex-col gap-1 py-1">
+          <Label className="text-xs text-muted-foreground">{key}:</Label>
+          {editable ? (
+            isLongText ? (
+              <Textarea
+                value={value}
+                onChange={(e) => onChange(fullPath, e.target.value)}
+                className="text-xs font-mono min-h-[60px]"
+              />
+            ) : (
+              <Input
+                type={isSensitive ? 'password' : 'text'}
+                value={value}
+                onChange={(e) => onChange(fullPath, e.target.value)}
+                className="h-7 text-xs font-mono"
+              />
+            )
+          ) : (
+            <span className={`text-xs font-mono break-all ${isSensitive ? 'blur-sm hover:blur-none transition-all' : ''}`}>
+              {isSensitive ? value.substring(0, 10) + '...' : value}
+            </span>
+          )}
+        </div>
+      );
+    }
+    
+    if (Array.isArray(value)) {
+      return (
+        <div key={fullPath} className="py-1">
+          <Label className="text-xs text-muted-foreground">{key}: (Array [{value.length}])</Label>
+          <div className="ml-3 mt-1 pl-2 border-l-2 border-muted">
+            {value.map((item, idx) => renderValue(`[${idx}]`, item, fullPath))}
+          </div>
+        </div>
+      );
+    }
+    
+    if (typeof value === 'object') {
+      return (
+        <div key={fullPath} className="py-1">
+          <Label className="text-xs text-muted-foreground font-semibold">{key}:</Label>
+          <div className="ml-3 mt-1 pl-2 border-l-2 border-muted">
+            {Object.entries(value).map(([k, v]) => renderValue(k, v, fullPath))}
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
+
+  if (!params || Object.keys(params).length === 0) {
+    return <p className="text-xs text-muted-foreground italic">Nenhum parâmetro</p>;
+  }
+
+  return (
+    <div className="space-y-1">
+      {Object.entries(params).map(([key, value]) => renderValue(key, value, path))}
+    </div>
+  );
+};
+
+const N8nWorkflowVisualizer: React.FC<N8nWorkflowVisualizerProps> = ({ 
+  jsonData, 
+  onJsonChange,
+  editable = false 
+}) => {
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [editedParams, setEditedParams] = useState<Record<string, any>>({});
+
+  const { nodes, edges, error, originalData } = useMemo(() => {
     if (!jsonData.trim()) {
-      return { nodes: [], edges: [], error: null };
+      return { nodes: [], edges: [], error: null, originalData: null };
     }
 
     try {
@@ -128,7 +264,6 @@ const N8nWorkflowVisualizer: React.FC<N8nWorkflowVisualizerProps> = ({ jsonData 
 
       // Convert n8n nodes to React Flow nodes
       const flowNodes: Node[] = n8nNodes.map((node: any, index: number) => {
-        // Try to get position from node, or calculate a default
         let x = 100 + (index % 4) * 250;
         let y = 100 + Math.floor(index / 4) * 150;
         
@@ -145,6 +280,9 @@ const N8nWorkflowVisualizer: React.FC<N8nWorkflowVisualizerProps> = ({ jsonData 
             label: node.name || node.displayName || `Node ${index + 1}`,
             type: node.type || 'Unknown',
             parameters: node.parameters || {},
+            credentials: node.credentials || {},
+            originalNode: node,
+            originalIndex: index,
           },
         };
       });
@@ -157,7 +295,6 @@ const N8nWorkflowVisualizer: React.FC<N8nWorkflowVisualizerProps> = ({ jsonData 
         const sourceNode = flowNodes.find(n => n.data.label === sourceNodeName);
         if (!sourceNode) return;
 
-        // n8n connections structure: { "NodeName": { "main": [[{ "node": "TargetNode", "type": "main", "index": 0 }]] }}
         if (connectionData.main) {
           connectionData.main.forEach((outputs: any[], outputIndex: number) => {
             if (Array.isArray(outputs)) {
@@ -179,11 +316,58 @@ const N8nWorkflowVisualizer: React.FC<N8nWorkflowVisualizerProps> = ({ jsonData 
         }
       });
 
-      return { nodes: flowNodes, edges: flowEdges, error: null };
+      return { nodes: flowNodes, edges: flowEdges, error: null, originalData: parsed };
     } catch (e) {
-      return { nodes: [], edges: [], error: 'JSON inválido' };
+      return { nodes: [], edges: [], error: 'JSON inválido', originalData: null };
     }
   }, [jsonData]);
+
+  const handleNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    setSelectedNode(node);
+    setEditedParams(JSON.parse(JSON.stringify(node.data.parameters || {})));
+  }, []);
+
+  const handleParamChange = useCallback((path: string, value: any) => {
+    setEditedParams(prev => {
+      const newParams = JSON.parse(JSON.stringify(prev));
+      const keys = path.split('.');
+      let current = newParams;
+      
+      for (let i = 0; i < keys.length - 1; i++) {
+        const key = keys[i];
+        if (key.startsWith('[') && key.endsWith(']')) {
+          const idx = parseInt(key.slice(1, -1));
+          current = current[idx];
+        } else {
+          current = current[key];
+        }
+      }
+      
+      const lastKey = keys[keys.length - 1];
+      if (lastKey.startsWith('[') && lastKey.endsWith(']')) {
+        const idx = parseInt(lastKey.slice(1, -1));
+        current[idx] = value;
+      } else {
+        current[lastKey] = value;
+      }
+      
+      return newParams;
+    });
+  }, []);
+
+  const handleSaveNode = useCallback(() => {
+    if (!selectedNode || !originalData || !onJsonChange) return;
+
+    const newData = JSON.parse(JSON.stringify(originalData));
+    const nodeIndex = selectedNode.data.originalIndex as number;
+    
+    if (newData.nodes && newData.nodes[nodeIndex]) {
+      newData.nodes[nodeIndex].parameters = editedParams;
+    }
+
+    onJsonChange(JSON.stringify(newData, null, 2));
+    setSelectedNode(null);
+  }, [selectedNode, originalData, editedParams, onJsonChange]);
 
   if (error) {
     return (
@@ -208,27 +392,97 @@ const N8nWorkflowVisualizer: React.FC<N8nWorkflowVisualizerProps> = ({ jsonData 
   }
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={nodeTypes}
-      fitView
-      fitViewOptions={{ padding: 0.2 }}
-      minZoom={0.1}
-      maxZoom={2}
-      defaultEdgeOptions={{
-        type: 'smoothstep',
-        animated: true,
-      }}
-    >
-      <Background color="#333" gap={16} size={1} />
-      <Controls className="!bg-background !border !rounded-lg" />
-      <MiniMap 
-        className="!bg-background !border !rounded-lg"
-        nodeColor={(node) => getNodeColor(node.data?.type as string || '')}
-        maskColor="rgba(0,0,0,0.5)"
-      />
-    </ReactFlow>
+    <>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        onNodeClick={handleNodeClick}
+        fitView
+        fitViewOptions={{ padding: 0.2 }}
+        minZoom={0.1}
+        maxZoom={2}
+        defaultEdgeOptions={{
+          type: 'smoothstep',
+          animated: true,
+        }}
+      >
+        <Background color="#333" gap={16} size={1} />
+        <Controls className="!bg-background !border !rounded-lg" />
+        <MiniMap 
+          className="!bg-background !border !rounded-lg"
+          nodeColor={(node) => getNodeColor(node.data?.type as string || '')}
+          maskColor="rgba(0,0,0,0.5)"
+        />
+      </ReactFlow>
+
+      <Sheet open={!!selectedNode} onOpenChange={(open) => !open && setSelectedNode(null)}>
+        <SheetContent className="w-[400px] sm:w-[540px] overflow-hidden flex flex-col">
+          <SheetHeader className="flex-shrink-0">
+            <SheetTitle className="flex items-center gap-2">
+              <div 
+                className="p-2 rounded-md text-white"
+                style={{ backgroundColor: getNodeColor(selectedNode?.data?.type as string || '') }}
+              >
+                {getNodeIcon(selectedNode?.data?.type as string || '')}
+              </div>
+              <div>
+                <div>{selectedNode?.data?.label as string}</div>
+                <div className="text-xs text-muted-foreground font-normal">
+                  {selectedNode?.data?.type as string}
+                </div>
+              </div>
+            </SheetTitle>
+          </SheetHeader>
+
+          <ScrollArea className="flex-1 mt-4">
+            <div className="space-y-4 pr-4">
+              <div>
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Parâmetros
+                </h4>
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <ParameterEditor 
+                    params={editable ? editedParams : (selectedNode?.data?.parameters as Record<string, any> || {})}
+                    onChange={handleParamChange}
+                    editable={editable && !!onJsonChange}
+                  />
+                </div>
+              </div>
+
+              {selectedNode?.data?.credentials && Object.keys(selectedNode.data.credentials as object).length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    Credenciais
+                  </h4>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    {Object.entries(selectedNode.data.credentials as Record<string, any>).map(([key, value]) => (
+                      <div key={key} className="flex items-center gap-2 py-1">
+                        <span className="text-xs text-muted-foreground">{key}:</span>
+                        <Badge variant="outline" className="text-xs">
+                          {typeof value === 'object' ? value.name || value.id : value}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {editable && onJsonChange && (
+            <div className="flex-shrink-0 pt-4 border-t mt-4">
+              <Button onClick={handleSaveNode} className="w-full">
+                <Save className="h-4 w-4 mr-2" />
+                Salvar Alterações
+              </Button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
 
