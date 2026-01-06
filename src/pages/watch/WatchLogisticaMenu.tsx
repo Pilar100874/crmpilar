@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Truck, Map, Route } from 'lucide-react';
+import { ArrowLeft, Truck, Map, History } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const WatchLogisticaMenu = () => {
@@ -27,9 +27,9 @@ const WatchLogisticaMenu = () => {
       color: '#3b82f6'
     },
     { 
-      icon: Route, 
-      label: 'Rotas', 
-      path: '/watch/logistica/rota',
+      icon: History, 
+      label: 'Histórico', 
+      path: '/watch/logistica/historico',
       color: '#a855f7'
     },
   ];

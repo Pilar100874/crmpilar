@@ -67,7 +67,7 @@ const WatchMapView = ({ veiculos, onVeiculoClick }: WatchMapViewProps) => {
       attributionControl: false
     }).setView(defaultCenter, 13);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(mapRef.current);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapRef.current);
 
     return () => {
       if (mapRef.current) {
@@ -132,7 +132,7 @@ const WatchMapView = ({ veiculos, onVeiculoClick }: WatchMapViewProps) => {
       <div ref={mapContainerRef} style={{ width: '100%', height: '100%' }} />
       <style>{`
         .leaflet-container {
-          background: #1a1a2e;
+          background: #f0f0f0;
         }
       `}</style>
     </>
