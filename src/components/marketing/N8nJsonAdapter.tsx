@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, KeyRound, Replace, Check, Copy, Download, Loader2, AlertCircle, RefreshCw, Save, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Upload, KeyRound, Replace, Check, Copy, Download, Loader2, AlertCircle, RefreshCw, Save, Trash2, Eye, EyeOff, Workflow, Code2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,8 +9,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import N8nWorkflowVisualizer from './N8nWorkflowVisualizer';
 
 interface ApiKey {
   id: string;
@@ -103,6 +105,7 @@ const N8nJsonAdapter: React.FC = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showOriginalKeys, setShowOriginalKeys] = useState(false);
+  const [viewMode, setViewMode] = useState<'json' | 'visual'>('json');
   const [replacementLog, setReplacementLog] = useState<Array<{
     original: string;
     replacement: string;
@@ -442,12 +445,31 @@ const N8nJsonAdapter: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent className="py-2">
-          <Textarea
-            value={inputJson}
-            onChange={(e) => handleInputChange(e.target.value)}
-            placeholder='{"nodes": [...], "connections": {...}}'
-            className="min-h-[200px] font-mono text-xs"
-          />
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'json' | 'visual')}>
+            <TabsList className="mb-2">
+              <TabsTrigger value="json" className="gap-1">
+                <Code2 className="h-3 w-3" />
+                JSON
+              </TabsTrigger>
+              <TabsTrigger value="visual" className="gap-1">
+                <Workflow className="h-3 w-3" />
+                Visual
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="json" className="mt-0">
+              <Textarea
+                value={inputJson}
+                onChange={(e) => handleInputChange(e.target.value)}
+                placeholder='{"nodes": [...], "connections": {...}}'
+                className="min-h-[200px] font-mono text-xs"
+              />
+            </TabsContent>
+            <TabsContent value="visual" className="mt-0">
+              <div className="h-[400px] rounded-lg border bg-muted/20 overflow-hidden">
+                <N8nWorkflowVisualizer jsonData={inputJson} />
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -626,11 +648,30 @@ const N8nJsonAdapter: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent className="py-2">
-            <ScrollArea className="h-[300px] rounded-md border bg-muted/50 p-4">
-              <pre className="text-xs font-mono whitespace-pre-wrap break-all">
-                {outputJson}
-              </pre>
-            </ScrollArea>
+            <Tabs defaultValue="visual">
+              <TabsList className="mb-2">
+                <TabsTrigger value="visual" className="gap-1">
+                  <Workflow className="h-3 w-3" />
+                  Visual
+                </TabsTrigger>
+                <TabsTrigger value="json" className="gap-1">
+                  <Code2 className="h-3 w-3" />
+                  JSON
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="visual" className="mt-0">
+                <div className="h-[400px] rounded-lg border bg-muted/20 overflow-hidden">
+                  <N8nWorkflowVisualizer jsonData={outputJson} />
+                </div>
+              </TabsContent>
+              <TabsContent value="json" className="mt-0">
+                <ScrollArea className="h-[300px] rounded-md border bg-muted/50 p-4">
+                  <pre className="text-xs font-mono whitespace-pre-wrap break-all">
+                    {outputJson}
+                  </pre>
+                </ScrollArea>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       )}
