@@ -104,6 +104,7 @@ import WatchLogisticaMenu from "./pages/watch/WatchLogisticaMenu";
 import WatchLogisticaVeiculos from "./pages/watch/WatchLogisticaVeiculos";
 import WatchLogisticaMapa from "./pages/watch/WatchLogisticaMapa";
 import WatchLogisticaRota from "./pages/watch/WatchLogisticaRota";
+import WatchLogisticaHistorico from "./pages/watch/WatchLogisticaHistorico";
 import { MacroProvider } from "./contexts/MacroContext";
 
 const queryClient = new QueryClient();
@@ -232,6 +233,7 @@ const App = () => (
             <Route path="/watch/logistica/veiculos" element={<WatchLogisticaVeiculos />} />
             <Route path="/watch/logistica/mapa" element={<WatchLogisticaMapa />} />
             <Route path="/watch/logistica/rota" element={<WatchLogisticaRota />} />
+            <Route path="/watch/logistica/historico" element={<WatchLogisticaHistorico />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
