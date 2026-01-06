@@ -27,47 +27,55 @@ const WatchDashboard = () => {
 
   const formatTime = (date: Date) => date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
+  const sliceAngle = 360 / menuItems.length;
+
   return (
     <div className="watch-container">
       <div className="watch-frame">
-        {/* Time Display at top */}
-        <div className="time-display">
-          <span className="time-main">{formatTime(currentTime)}</span>
-        </div>
-
-        {/* Full circular menu grid */}
-        <div className="menu-circle">
+        {/* Pizza slices */}
+        <div className="pizza-container">
           {menuItems.map((item, index) => {
             const Icon = item.icon;
-            const angle = (index * 72) - 90; // 360/5 = 72 degrees apart, starting from top
-            const radius = 32; // percentage from center
-            const x = 50 + radius * Math.cos(angle * Math.PI / 180);
-            const y = 50 + radius * Math.sin(angle * Math.PI / 180);
+            const startAngle = index * sliceAngle - 90;
+            const midAngle = startAngle + sliceAngle / 2;
+            const iconRadius = 38;
+            const iconX = 50 + iconRadius * Math.cos(midAngle * Math.PI / 180);
+            const iconY = 50 + iconRadius * Math.sin(midAngle * Math.PI / 180);
             
             return (
               <button
                 key={index}
                 onClick={() => navigate(item.path)}
-                className="menu-item-circle"
+                className="pizza-slice"
                 style={{ 
+                  '--start-angle': `${startAngle}deg`,
+                  '--slice-angle': `${sliceAngle}deg`,
                   '--item-color': item.color,
                   '--item-gradient': item.gradient,
-                  left: `${x}%`,
-                  top: `${y}%`,
+                  clipPath: `polygon(50% 50%, ${50 + 50 * Math.cos((startAngle) * Math.PI / 180)}% ${50 + 50 * Math.sin((startAngle) * Math.PI / 180)}%, ${50 + 50 * Math.cos((startAngle + sliceAngle * 0.25) * Math.PI / 180)}% ${50 + 50 * Math.sin((startAngle + sliceAngle * 0.25) * Math.PI / 180)}%, ${50 + 50 * Math.cos((startAngle + sliceAngle * 0.5) * Math.PI / 180)}% ${50 + 50 * Math.sin((startAngle + sliceAngle * 0.5) * Math.PI / 180)}%, ${50 + 50 * Math.cos((startAngle + sliceAngle * 0.75) * Math.PI / 180)}% ${50 + 50 * Math.sin((startAngle + sliceAngle * 0.75) * Math.PI / 180)}%, ${50 + 50 * Math.cos((startAngle + sliceAngle) * Math.PI / 180)}% ${50 + 50 * Math.sin((startAngle + sliceAngle) * Math.PI / 180)}%)`,
                 } as React.CSSProperties}
               >
-                <div className="menu-icon-circle">
-                  <Icon className="icon-size" />
+                <div 
+                  className="slice-content"
+                  style={{
+                    left: `${iconX}%`,
+                    top: `${iconY}%`,
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  <div className="slice-icon">
+                    <Icon className="icon-size" />
+                  </div>
+                  <span className="slice-label">{item.label}</span>
                 </div>
-                <span className="menu-label-circle">{item.label}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Center logo/brand */}
-        <div className="center-brand">
-          <div className="brand-ring"></div>
+        {/* Center circle with time */}
+        <div className="center-circle">
+          <span className="time-main">{formatTime(currentTime)}</span>
         </div>
       </div>
 
@@ -104,30 +112,7 @@ const WatchDashboard = () => {
           overflow: hidden;
         }
 
-        .time-display {
-          position: absolute;
-          top: 8%;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          z-index: 10;
-        }
-
-        .time-main {
-          font-size: clamp(14px, 4vw, 20px);
-          font-weight: 600;
-          color: white;
-          letter-spacing: 1px;
-          background: rgba(0, 0, 0, 0.5);
-          backdrop-filter: blur(10px);
-          padding: 4px 14px;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .menu-circle {
+        .pizza-container {
           position: absolute;
           width: 100%;
           height: 100%;
@@ -135,86 +120,106 @@ const WatchDashboard = () => {
           left: 0;
         }
 
-        .menu-item-circle {
+        .pizza-slice {
           position: absolute;
-          transform: translate(-50%, -50%);
+          width: 100%;
+          height: 100%;
+          top: 0;
+          left: 0;
+          background: var(--item-gradient);
+          border: none;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          opacity: 0.85;
+        }
+
+        .pizza-slice::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: inherit;
+          clip-path: inherit;
+          border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .pizza-slice:hover {
+          opacity: 1;
+          filter: brightness(1.2);
+          z-index: 5;
+        }
+
+        .pizza-slice:active {
+          filter: brightness(0.9);
+          transform: scale(0.98);
+        }
+
+        .slice-content {
+          position: absolute;
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: clamp(4px, 1.5vw, 8px);
-          padding: clamp(10px, 3.5vw, 16px);
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          pointer-events: none;
+          z-index: 2;
+        }
+
+        .slice-icon {
+          width: clamp(32px, 10vw, 48px);
+          height: clamp(32px, 10vw, 48px);
           border-radius: 50%;
-          cursor: pointer;
-          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-          color: white;
-          width: clamp(60px, 20vw, 85px);
-          height: clamp(60px, 20vw, 85px);
-          justify-content: center;
-          backdrop-filter: blur(8px);
-        }
-
-        .menu-item-circle:hover {
-          background: rgba(255, 255, 255, 0.12);
-          border-color: var(--item-color);
-          box-shadow: 0 0 20px color-mix(in srgb, var(--item-color) 40%, transparent);
-        }
-
-        .menu-item-circle:active {
-          transform: translate(-50%, -50%) scale(0.9);
-          background: var(--item-gradient);
-        }
-
-        .menu-icon-circle {
-          width: clamp(26px, 8vw, 36px);
-          height: clamp(26px, 8vw, 36px);
-          border-radius: 50%;
-          background: var(--item-gradient);
+          background: rgba(0, 0, 0, 0.3);
+          backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
           justify-content: center;
           color: white;
-          box-shadow: 0 4px 12px color-mix(in srgb, var(--item-color) 50%, transparent);
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .icon-size {
-          width: clamp(14px, 4vw, 18px);
-          height: clamp(14px, 4vw, 18px);
+          width: clamp(16px, 5vw, 24px);
+          height: clamp(16px, 5vw, 24px);
         }
 
-        .menu-label-circle {
-          font-size: clamp(7px, 2.2vw, 10px);
-          font-weight: 600;
-          color: rgba(255, 255, 255, 0.9);
+        .slice-label {
+          font-size: clamp(8px, 2.5vw, 12px);
+          font-weight: 700;
+          color: white;
           text-align: center;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
           white-space: nowrap;
         }
 
-        .center-brand {
+        .center-circle {
           position: absolute;
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          width: clamp(50px, 16vw, 70px);
-          height: clamp(50px, 16vw, 70px);
+          width: clamp(70px, 22vw, 100px);
+          height: clamp(70px, 22vw, 100px);
           border-radius: 50%;
-          background: radial-gradient(circle at 30% 30%, #2a2a3e, #15152a);
+          background: radial-gradient(circle at 30% 30%, #2a2a3e, #0a0a14);
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 2px solid rgba(255, 255, 255, 0.1);
+          border: 3px solid rgba(255, 255, 255, 0.2);
           box-shadow: 
-            inset 0 0 20px rgba(0, 0, 0, 0.5),
-            0 0 30px rgba(0, 0, 0, 0.3);
+            inset 0 0 30px rgba(0, 0, 0, 0.6),
+            0 0 40px rgba(0, 0, 0, 0.5),
+            0 0 0 2px rgba(255, 255, 255, 0.1);
+          z-index: 10;
         }
 
-        .brand-ring {
-          width: 60%;
-          height: 60%;
-          border-radius: 50%;
-          border: 2px solid rgba(255, 255, 255, 0.2);
-          background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(168, 85, 247, 0.3));
+        .time-main {
+          font-size: clamp(16px, 5vw, 24px);
+          font-weight: 700;
+          color: white;
+          letter-spacing: 1px;
+          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
         }
       `}</style>
     </div>
