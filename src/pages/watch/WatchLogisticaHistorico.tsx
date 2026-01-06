@@ -270,10 +270,10 @@ const WatchLogisticaHistorico = () => {
 
           .watch-map-container {
             position: absolute;
-            top: 10%;
-            left: 10%;
-            right: 10%;
-            bottom: 10%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             border-radius: 50%;
             overflow: hidden;
             z-index: 1;
