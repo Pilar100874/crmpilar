@@ -157,6 +157,242 @@ const WatchLogisticaHistorico = () => {
     return `${mins}m`;
   };
 
+  // Se veículo selecionado, mostra mapa fullscreen
+  if (selectedVeiculo) {
+    return (
+      <div className="watch-fullscreen-container">
+        {/* Full screen map */}
+        <div className="fullscreen-map">
+          {loadingRoute && posicoes.length === 0 ? (
+            <div className="loading-indicator">
+              <RefreshCw className="w-6 h-6 animate-spin" />
+            </div>
+          ) : posicoes.length === 0 ? (
+            <div className="no-data">
+              <History className="w-12 h-12 opacity-50" />
+              <span>Sem dados hoje</span>
+            </div>
+          ) : mapReady ? (
+            <Suspense fallback={
+              <div className="loading-indicator">
+                <RefreshCw className="w-6 h-6 animate-spin" />
+              </div>
+            }>
+              <RouteMapView posicoes={posicoes} />
+            </Suspense>
+          ) : (
+            <div className="loading-indicator">
+              <RefreshCw className="w-6 h-6 animate-spin" />
+            </div>
+          )}
+        </div>
+
+        {/* Overlay top */}
+        <div className="overlay-top">
+          <button onClick={handleBack} className="overlay-btn">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+
+          <div className="overlay-time">
+            <span>{formatTime(currentTime)}</span>
+          </div>
+
+          <button onClick={() => fetchHistorico(selectedVeiculo.id)} className="overlay-btn" disabled={loadingRoute}>
+            <RefreshCw className={`w-5 h-5 ${loadingRoute ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+
+        {/* Vehicle info overlay */}
+        <div className="overlay-vehicle">
+          <Car className="w-4 h-4" />
+          <span>{selectedVeiculo.placa}</span>
+        </div>
+
+        {/* Stats overlay */}
+        {estatisticas && (
+          <div className="overlay-stats">
+            <div className="stat-item">
+              <MapPin className="w-4 h-4" />
+              <span>{estatisticas.distancia_total_km} km</span>
+            </div>
+            <div className="stat-item">
+              <Gauge className="w-4 h-4" />
+              <span>{estatisticas.velocidade_maxima} km/h</span>
+            </div>
+            <div className="stat-item">
+              <Clock className="w-4 h-4" />
+              <span>{formatMinutes(estatisticas.tempo_movimento_minutos)}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Date overlay */}
+        <div className="overlay-bottom">
+          <div className="date-indicator">
+            {format(new Date(), "dd 'de' MMMM", { locale: ptBR })}
+          </div>
+        </div>
+
+        <style>{`
+          .watch-fullscreen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            background: #000;
+            overflow: hidden;
+          }
+
+          .fullscreen-map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+          }
+
+          .loading-indicator, .no-data {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 16px;
+          }
+
+          .overlay-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            padding-top: max(16px, env(safe-area-inset-top));
+            z-index: 1000;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
+          }
+
+          .overlay-btn {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+          }
+
+          .overlay-btn:active {
+            transform: scale(0.95);
+            background: rgba(0, 0, 0, 0.8);
+          }
+
+          .overlay-btn:disabled {
+            opacity: 0.5;
+          }
+
+          .overlay-time {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+          }
+
+          .overlay-vehicle {
+            position: absolute;
+            top: 80px;
+            top: calc(max(16px, env(safe-area-inset-top)) + 60px);
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+          }
+
+          .overlay-stats {
+            position: absolute;
+            bottom: 80px;
+            bottom: calc(max(20px, env(safe-area-inset-bottom)) + 60px);
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 1000;
+          }
+
+          .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 8px 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+          }
+
+          .overlay-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            z-index: 1000;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+          }
+
+          .date-indicator {
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-transform: capitalize;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Lista de veículos (tela circular)
   return (
     <div className="watch-container">
       <div className="watch-frame">
@@ -170,105 +406,39 @@ const WatchLogisticaHistorico = () => {
           <ArrowLeft className="w-4 h-4" />
         </button>
 
-        {!selectedVeiculo ? (
-          <>
-            {/* Header */}
-            <div className="watch-header">
-              <History className="w-4 h-4" />
-              <span>Histórico do Dia</span>
-            </div>
+        {/* Header */}
+        <div className="watch-header">
+          <History className="w-4 h-4" />
+          <span>Histórico do Dia</span>
+        </div>
 
-            {/* Vehicle list */}
-            <div className="watch-list">
-              {loading ? (
-                <div className="loading-indicator">
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                </div>
-              ) : (
-                veiculos.map(veiculo => (
-                  <button
-                    key={veiculo.id}
-                    onClick={() => handleSelectVeiculo(veiculo)}
-                    className="vehicle-item"
-                  >
-                    <div className="vehicle-info">
-                      <Car className="w-3 h-3" />
-                      <span className="vehicle-plate">{veiculo.placa}</span>
-                    </div>
-                    <ChevronLeft className="w-4 h-4 rotate-180 opacity-50" />
-                  </button>
-                ))
-              )}
+        {/* Vehicle list */}
+        <div className="watch-list">
+          {loading ? (
+            <div className="loading-indicator-small">
+              <RefreshCw className="w-5 h-5 animate-spin" />
             </div>
+          ) : (
+            veiculos.map(veiculo => (
+              <button
+                key={veiculo.id}
+                onClick={() => handleSelectVeiculo(veiculo)}
+                className="vehicle-item"
+              >
+                <div className="vehicle-info">
+                  <Car className="w-3 h-3" />
+                  <span className="vehicle-plate">{veiculo.placa}</span>
+                </div>
+                <ChevronLeft className="w-4 h-4 rotate-180 opacity-50" />
+              </button>
+            ))
+          )}
+        </div>
 
-            {/* Date indicator */}
-            <div className="date-indicator">
-              {format(new Date(), "dd 'de' MMMM", { locale: ptBR })}
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Header with vehicle plate */}
-            <div className="watch-header">
-              <History className="w-4 h-4" />
-              <span>{selectedVeiculo.placa}</span>
-            </div>
-
-            {/* Stats row */}
-            {estatisticas && (
-              <div className="stats-row">
-                <div className="stat-box">
-                  <MapPin className="w-3 h-3" />
-                  <span>{estatisticas.distancia_total_km} km</span>
-                </div>
-                <div className="stat-box">
-                  <Gauge className="w-3 h-3" />
-                  <span>{estatisticas.velocidade_maxima} km/h</span>
-                </div>
-                <div className="stat-box">
-                  <Clock className="w-3 h-3" />
-                  <span>{formatMinutes(estatisticas.tempo_movimento_minutos)}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Map with route */}
-            <div className="watch-map-container">
-              {loadingRoute && posicoes.length === 0 ? (
-                <div className="loading-indicator">
-                  <RefreshCw className="w-6 h-6 animate-spin" />
-                </div>
-              ) : posicoes.length === 0 ? (
-                <div className="no-data">
-                  <History className="w-8 h-8 opacity-50" />
-                  <span>Sem dados hoje</span>
-                </div>
-              ) : mapReady ? (
-                <Suspense fallback={
-                  <div className="loading-indicator">
-                    <RefreshCw className="w-6 h-6 animate-spin" />
-                  </div>
-                }>
-                  <RouteMapView posicoes={posicoes} />
-                </Suspense>
-              ) : (
-                <div className="loading-indicator">
-                  <RefreshCw className="w-6 h-6 animate-spin" />
-                </div>
-              )}
-            </div>
-
-            {/* Date indicator */}
-            <div className="date-indicator">
-              {format(new Date(), "dd 'de' MMMM", { locale: ptBR })}
-            </div>
-
-            {/* Refresh button */}
-            <button onClick={() => fetchHistorico(selectedVeiculo.id)} className="refresh-btn" disabled={loadingRoute}>
-              <RefreshCw className={`w-4 h-4 ${loadingRoute ? 'animate-spin' : ''}`} />
-            </button>
-          </>
-        )}
+        {/* Date indicator */}
+        <div className="date-indicator-watch">
+          {format(new Date(), "dd 'de' MMMM", { locale: ptBR })}
+        </div>
       </div>
 
       <style>{`
@@ -361,6 +531,14 @@ const WatchLogisticaHistorico = () => {
           display: none;
         }
 
+        .loading-indicator-small {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          color: rgba(255, 255, 255, 0.5);
+        }
+
         .vehicle-item {
           display: flex;
           justify-content: space-between;
@@ -390,72 +568,12 @@ const WatchLogisticaHistorico = () => {
           font-weight: 600;
         }
 
-        .stats-row {
-          display: flex;
-          gap: clamp(6px, 2vw, 12px);
-          margin-top: 3%;
-        }
-
-        .stat-box {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          background: rgba(255, 255, 255, 0.08);
-          padding: 4px 8px;
-          border-radius: 10px;
-          color: rgba(255, 255, 255, 0.8);
-          font-size: clamp(8px, 2.2vw, 10px);
-          font-weight: 500;
-        }
-
-        .watch-map-container {
-          width: 75%;
-          height: 50%;
-          border-radius: 20px;
-          overflow: hidden;
-          border: 2px solid rgba(255, 255, 255, 0.1);
-          margin-top: 3%;
-        }
-
-        .loading-indicator, .no-data {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          width: 100%;
-          height: 100%;
-          background: rgba(26, 26, 46, 0.9);
-          color: rgba(255, 255, 255, 0.5);
-          font-size: clamp(9px, 2.5vw, 12px);
-        }
-
-        .date-indicator {
+        .date-indicator-watch {
           position: absolute;
           bottom: 18%;
           font-size: clamp(8px, 2.5vw, 11px);
           color: rgba(255, 255, 255, 0.5);
           text-transform: capitalize;
-        }
-
-        .refresh-btn {
-          position: absolute;
-          bottom: 8%;
-          background: rgba(255, 255, 255, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          border-radius: 50%;
-          width: clamp(28px, 8vw, 36px);
-          height: clamp(28px, 8vw, 36px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: rgba(255, 255, 255, 0.7);
-          cursor: pointer;
-          z-index: 1000;
-        }
-
-        .refresh-btn:disabled {
-          opacity: 0.5;
         }
       `}</style>
     </div>
