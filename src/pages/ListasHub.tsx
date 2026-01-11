@@ -7,7 +7,8 @@ import {
   Link2,
   PanelLeft,
   PanelLeftClose,
-  LucideIcon
+  LucideIcon,
+  MapPin
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,6 +23,7 @@ import Empresas from './Empresas';
 import Todos from './Todos';
 import VinculosEmpresas from './VinculosEmpresas';
 import VinculosContatos from './VinculosContatos';
+import MapaClientesView from '@/components/listas/MapaClientesView';
 
 interface TabItem {
   id: string;
@@ -36,6 +38,7 @@ const tabItems: TabItem[] = [
   { id: 'todos', label: 'Todos', icon: Users, description: 'Visualização de todos os registros' },
   { id: 'vinculos-empresas', label: 'Vínculo Empresas', icon: Link2, description: 'Vínculo Empresas X Usuário / Segmento' },
   { id: 'vinculos-contatos', label: 'Vínculo Contatos', icon: Link2, description: 'Vínculo Contatos X Usuário / Segmento' },
+  { id: 'mapa-clientes', label: 'Mapa Clientes', icon: MapPin, description: 'Visualização geográfica das empresas' },
 ];
 
 const ListasHub: React.FC = () => {
@@ -57,6 +60,8 @@ const ListasHub: React.FC = () => {
         return <VinculosEmpresas />;
       case 'vinculos-contatos':
         return <VinculosContatos />;
+      case 'mapa-clientes':
+        return <MapaClientesView />;
       default:
         return null;
     }
