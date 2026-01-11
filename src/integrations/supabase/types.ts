@@ -2632,6 +2632,8 @@ export type Database = {
           estabelecimento_id: string | null
           estado: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           nome: string | null
           nome_fantasia: string | null
           telefone: string | null
@@ -2651,6 +2653,8 @@ export type Database = {
           estabelecimento_id?: string | null
           estado?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           nome?: string | null
           nome_fantasia?: string | null
           telefone?: string | null
@@ -2670,6 +2674,8 @@ export type Database = {
           estabelecimento_id?: string | null
           estado?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           nome?: string | null
           nome_fantasia?: string | null
           telefone?: string | null
