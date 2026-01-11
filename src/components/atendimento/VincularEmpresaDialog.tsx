@@ -8,6 +8,7 @@ import { Building2, Search, Plus, Loader2, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { geocodeAndSaveEmpresa } from "@/hooks/useGeocodingService";
 
 interface VincularEmpresaDialogProps {
   open: boolean;

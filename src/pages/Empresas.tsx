@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { geocodeAndSaveEmpresa } from "@/hooks/useGeocodingService";
 import * as React from "react";
 import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -818,6 +819,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
           .update(empresaPayload)
           .eq('id', empresaId);
 
+        // Geocodificar e salvar coordenadas automaticamente
+        geocodeAndSaveEmpresa(
+          supabase,
+          empresaId,
+          formData.address,
+          formData.city,
+          formData.state,
+          formData.cep
+        );
+
         toast.success("Empresa atualizada!");
       } else {
         const { data: inserted, error } = await supabase
@@ -828,6 +839,16 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
         if (error) throw error;
         empresaId = inserted!.id;
+
+        // Geocodificar e salvar coordenadas automaticamente
+        geocodeAndSaveEmpresa(
+          supabase,
+          empresaId,
+          formData.address,
+          formData.city,
+          formData.state,
+          formData.cep
+        );
 
         // Vincular automaticamente a empresa ao usuário que criou
         const { data: { user } } = await supabase.auth.getUser();
