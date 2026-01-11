@@ -59,37 +59,20 @@ const MapaClientesView: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [empresasRes, usuariosRes, vinculosRes] = await Promise.all([
+      const [empresasRes, usuariosRes, empresaVinculosRes] = await Promise.all([
         supabase.from('empresas').select('id, nome_fantasia, nome, endereco, cidade, estado, latitude, longitude'),
         supabase.from('usuarios').select('id, nome'),
-        supabase.from('customer_vinculos').select('customer_id, usuario_id')
+        supabase.from('empresa_vinculos').select('empresa_id, usuario_id')
       ]);
 
       if (empresasRes.data) setEmpresas(empresasRes.data);
       if (usuariosRes.data) setUsuarios(usuariosRes.data);
       
-      // Adapt customer_vinculos to work with empresas
-      if (vinculosRes.data) {
-        // We need to get empresa_ids from customers
-        const customerIds = vinculosRes.data.map(v => v.customer_id);
-        const customersRes = await supabase
-          .from('customers')
-          .select('id, empresa_id')
-          .in('id', customerIds);
-        
-        if (customersRes.data) {
-          const empresaVinculos: EmpresaVinculo[] = [];
-          vinculosRes.data.forEach(v => {
-            const customer = customersRes.data.find(c => c.id === v.customer_id);
-            if (customer?.empresa_id) {
-              empresaVinculos.push({
-                empresa_id: customer.empresa_id,
-                usuario_id: v.usuario_id
-              });
-            }
-          });
-          setVinculos(empresaVinculos);
-        }
+      if (empresaVinculosRes.data) {
+        setVinculos(empresaVinculosRes.data.map(v => ({
+          empresa_id: v.empresa_id,
+          usuario_id: v.usuario_id
+        })));
       }
     } catch (error) {
       console.error('Error fetching data:', error);

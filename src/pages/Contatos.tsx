@@ -22,6 +22,7 @@ import { useAddressLookup } from "@/hooks/useAddressLookup";
 import { useCNPJLookup } from "@/hooks/useCNPJLookup";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { geocodeAndSaveEmpresa } from "@/hooks/useGeocodingService";
 import { FieldMaskConfig, type FieldMask } from "@/components/config/FieldMaskConfig";
 import { SortableFieldItem } from "@/components/config/SortableFieldItem";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
@@ -1303,6 +1304,18 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
         if (empresaErr) throw empresaErr;
         novaEmpresaId = novaEmpresa?.id;
+
+        // Geocodificar e salvar coordenadas automaticamente
+        if (novaEmpresaId) {
+          geocodeAndSaveEmpresa(
+            supabase,
+            novaEmpresaId,
+            formData.address,
+            formData.city,
+            formData.state,
+            formData.cep
+          );
+        }
 
         // Vincular automaticamente a empresa ao usuário que criou
         if (novaEmpresaId) {
