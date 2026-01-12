@@ -216,9 +216,28 @@ export const IBGEDataLoader: React.FC<IBGEDataLoaderProps> = ({ onLoadComplete }
       return { lat: coords.latitude, lng: coords.longitude };
     }
     
-    // Fallback: usar centróide do estado
-    const uf = municipio.microrregiao.mesorregiao.UF.sigla;
-    return UF_CENTROIDS[uf] || { lat: -15.7942, lng: -47.8822 }; // Brasília como fallback
+    // Fallback: usar centróide do estado (com verificação de null)
+    const uf = municipio?.microrregiao?.mesorregiao?.UF?.sigla;
+    if (uf && UF_CENTROIDS[uf]) {
+      return UF_CENTROIDS[uf];
+    }
+    return { lat: -15.7942, lng: -47.8822 }; // Brasília como fallback
+  };
+
+  const getUfFromMunicipio = (mun: MunicipioIBGE): string => {
+    return mun?.microrregiao?.mesorregiao?.UF?.sigla || '';
+  };
+
+  const getRegiaoFromMunicipio = (mun: MunicipioIBGE): string => {
+    return mun?.microrregiao?.mesorregiao?.UF?.regiao?.nome || '';
+  };
+
+  const getMesorregiaoFromMunicipio = (mun: MunicipioIBGE): string => {
+    return mun?.microrregiao?.mesorregiao?.nome || '';
+  };
+
+  const getMicrorregiaoFromMunicipio = (mun: MunicipioIBGE): string => {
+    return mun?.microrregiao?.nome || '';
   };
 
   const handleLoadData = async () => {
@@ -253,16 +272,12 @@ export const IBGEDataLoader: React.FC<IBGEDataLoaderProps> = ({ onLoadComplete }
       for (let i = 0; i < totalMunicipios; i += batchSize) {
         const batch = municipios.slice(i, i + batchSize);
         
-        const records = await Promise.all(batch.map(async (mun) => {
+        const records = batch.map((mun) => {
           const coords = estimateCoords(mun, coordsMap);
-          const uf = mun.microrregiao.mesorregiao.UF.sigla;
+          const uf = getUfFromMunicipio(mun);
           
-          let populacao: number | null = null;
-          let pibPerCapita: number | null = null;
-          
-          // Buscar dados adicionais apenas para amostragem (muito lento para todos)
-          // Usando dados pré-calculados quando disponível
-          const coordData = coordsMap.get(mun.id);
+          // Pular municípios sem UF válido
+          if (!uf) return null;
           
           return {
             municipio: mun.nome,
@@ -270,27 +285,32 @@ export const IBGEDataLoader: React.FC<IBGEDataLoaderProps> = ({ onLoadComplete }
             codigo_ibge: String(mun.id),
             latitude: coords.lat,
             longitude: coords.lng,
-            populacao: populacao,
-            pib_per_capita: pibPerCapita,
-            renda_media: null, // Será preenchido com dados do Atlas Brasil
-            idh: null,
-            regiao: mun.microrregiao.mesorregiao.UF.regiao.nome,
-            mesorregiao: mun.microrregiao.mesorregiao.nome,
-            microrregiao: mun.microrregiao.nome,
+            populacao: null as number | null,
+            pib_per_capita: null as number | null,
+            renda_media: null as number | null,
+            idh: null as number | null,
+            regiao: getRegiaoFromMunicipio(mun),
+            mesorregiao: getMesorregiaoFromMunicipio(mun),
+            microrregiao: getMicrorregiaoFromMunicipio(mun),
           };
-        }));
+        }).filter((r): r is NonNullable<typeof r> => r !== null);
 
-        // Inserir no Supabase
+        // Inserir no Supabase com coordenadas
         const { error } = await supabase
           .from('municipios_renda')
           .upsert(records.map(r => ({
             municipio: r.municipio,
             uf: r.uf,
             codigo_ibge: r.codigo_ibge,
+            latitude: r.latitude,
+            longitude: r.longitude,
             renda_media: r.renda_media,
             pib_per_capita: r.pib_per_capita,
             idh: r.idh,
             populacao: r.populacao,
+            regiao: r.regiao,
+            mesorregiao: r.mesorregiao,
+            microrregiao: r.microrregiao,
           })), { 
             onConflict: 'municipio,uf',
             ignoreDuplicates: false 
