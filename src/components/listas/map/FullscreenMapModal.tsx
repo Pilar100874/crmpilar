@@ -1128,302 +1128,475 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[100vw] w-[100vw] h-[100vh] sm:max-w-[98vw] sm:w-[98vw] sm:h-[95vh] p-0 gap-0 rounded-none sm:rounded-lg z-[9999]" aria-describedby={undefined}>
+      <DialogContent className="max-w-[100vw] w-[100vw] h-[100dvh] p-0 gap-0 rounded-none z-[9999] md:max-w-[98vw] md:w-[98vw] md:h-[95vh] md:rounded-lg" aria-describedby={undefined}>
         <VisuallyHidden>
           <DialogTitle>Mapa Geoespacial em Tela Cheia</DialogTitle>
         </VisuallyHidden>
         
         <div className="relative w-full h-full flex flex-col">
-          {/* Header - Responsivo */}
-          <div className="flex flex-col gap-2 p-2 sm:p-3 border-b bg-background z-10">
-            {/* Linha 1: Título, Badges e Fechar */}
-            <div className="flex items-center justify-between w-full">
-              <h2 className="text-sm sm:text-lg font-semibold flex items-center gap-1.5 sm:gap-2">
-                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <span className="hidden sm:inline">Mapa Geoespacial</span>
-                <span className="sm:hidden">Mapa</span>
-              </h2>
-              
-              {/* Badges */}
-              <div className="flex items-center gap-1.5">
-                {unidadesNoMapa > 0 && (
-                  <Badge variant="outline" className="bg-pink-500/10 border-pink-500/50 text-pink-700 text-[10px] sm:text-xs px-1 sm:px-1.5 h-5 sm:h-6">
-                    <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5" />
-                    {unidadesNoMapa}
+          {/* Header Mobile - Compacto */}
+          <div className="flex flex-col bg-background z-10 border-b">
+            {/* Linha Principal: Título e Fechar */}
+            <div className="flex items-center justify-between px-3 py-2 md:px-4 md:py-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 md:h-5 md:w-5 text-primary shrink-0" />
+                <h2 className="text-sm md:text-lg font-semibold truncate">
+                  <span className="md:hidden">Mapa</span>
+                  <span className="hidden md:inline">Mapa Geoespacial</span>
+                </h2>
+                {/* Badges inline no título */}
+                <div className="flex items-center gap-1 ml-1">
+                  {unidadesNoMapa > 0 && (
+                    <Badge variant="outline" className="bg-pink-500/10 border-pink-500/50 text-pink-700 text-[10px] px-1 h-5 shrink-0">
+                      <MapPin className="h-2.5 w-2.5 mr-0.5" />
+                      {unidadesNoMapa}
+                    </Badge>
+                  )}
+                  <Badge variant="secondary" className="text-[10px] px-1 h-5 shrink-0">
+                    <Building2 className="h-2.5 w-2.5 mr-0.5" />
+                    {empresasNoMapa}
                   </Badge>
-                )}
-                <Badge variant="secondary" className="text-[10px] sm:text-xs px-1 sm:px-1.5 h-5 sm:h-6">
-                  <Building2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5" />
-                  {empresasNoMapa}
-                </Badge>
+                </div>
               </div>
               
-              {/* Fechar */}
-              <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7 sm:h-8 sm:w-8 ml-1">
-                <X className="h-4 w-4 sm:h-5 sm:w-5" />
+              <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 shrink-0 -mr-1">
+                <X className="h-5 w-5" />
               </Button>
             </div>
 
-            {/* Linha 2: Filtros e Controles - scrollável horizontalmente */}
-            <div className="flex items-center gap-1.5 sm:gap-2 w-full overflow-x-auto pb-1 scrollbar-hide">
-              {/* Filtro de CNAE para Concorrência */}
-              {onCnaesChange && (
-                <CnaeFilterSelect
-                  selectedCnaes={selectedCnaes}
-                  onCnaesChange={onCnaesChange}
-                />
-              )}
-
-              {/* Importador de dados CNAE - hidden on mobile */}
-              <div className="hidden sm:block">
-                <CnaeHeatmapImporter onImportComplete={refetchHeatmap} />
-              </div>
-              
-              {/* Carregar dados IBGE - hidden on mobile */}
-              <div className="hidden sm:block">
-                <IBGEDataLoader onLoadComplete={refetchRenda} />
-              </div>
-              
-              {/* Painel de Isócronas */}
-              <IsochronePanel selectedPoint={selectedMapPoint} />
-
-              {/* Controles de Desenho de Polígono */}
-              <div className="flex items-center gap-1 shrink-0">
-                {!isDrawing && !showResults && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-7 sm:h-8 text-[10px] sm:text-xs px-2 sm:px-3 shrink-0"
-                    onClick={startDrawing}
-                  >
-                    <PenTool className="h-3 w-3 mr-0.5 sm:mr-1" />
-                    <span className="hidden sm:inline">Desenhar</span>
-                    <span className="sm:hidden">Área</span>
-                  </Button>
-                )}
+            {/* Controles - Grid em mobile, flex em desktop */}
+            <div className="px-2 pb-2 md:px-4 md:pb-3">
+              {/* Mobile: Grade compacta de 2 linhas */}
+              <div className="md:hidden space-y-2">
+                {/* Primeira linha: Filtros principais */}
+                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+                  {/* CNAE Filter */}
+                  {onCnaesChange && (
+                    <CnaeFilterSelect
+                      selectedCnaes={selectedCnaes}
+                      onCnaesChange={onCnaesChange}
+                    />
+                  )}
+                  
+                  {/* Filtro de Usuário */}
+                  <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
+                    <SelectTrigger className="w-[90px] h-8 text-xs shrink-0">
+                      <Filter className="h-3 w-3 mr-1" />
+                      <SelectValue placeholder="Usuário" />
+                    </SelectTrigger>
+                    <SelectContent 
+                      className="bg-popover" 
+                      style={{ zIndex: 99999 }}
+                      position="popper"
+                      sideOffset={4}
+                    >
+                      <SelectItem value="all">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4" />
+                          Todas
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="none">
+                        <div className="flex items-center gap-2">
+                          <X className="h-4 w-4" />
+                          Sem vínculo
+                        </div>
+                      </SelectItem>
+                      {usuarios.map(u => (
+                        <SelectItem key={u.id} value={u.id}>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            {u.nome}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {/* Camadas Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-8 text-xs px-2 shrink-0">
+                        <Layers className="h-3.5 w-3.5" />
+                        <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">
+                          {activeLayersCount}
+                        </Badge>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-64 bg-popover" style={{ zIndex: 99999 }}>
+                      <DropdownMenuLabel className="flex items-center gap-2 text-sm">
+                        <Layers className="h-4 w-4" />
+                        Camadas
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <div className="p-2 space-y-2 max-h-[50vh] overflow-y-auto">
+                        {layers.map((layer) => (
+                          <div 
+                            key={layer.id} 
+                            className="flex items-center justify-between gap-2"
+                          >
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <div 
+                                className="w-3 h-3 rounded-full shrink-0"
+                                style={{ backgroundColor: layer.color }}
+                              />
+                              <Label 
+                                htmlFor={`layer-mobile-${layer.id}`}
+                                className="text-sm cursor-pointer truncate"
+                              >
+                                {layer.name}
+                              </Label>
+                            </div>
+                            <Switch
+                              id={`layer-mobile-${layer.id}`}
+                              checked={layer.visible}
+                              onCheckedChange={() => onLayerToggle(layer.id)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
+                  {/* Isócronas */}
+                  <IsochronePanel selectedPoint={selectedMapPoint} />
+                </div>
                 
-                {isDrawing && (
-                  <>
-                    <Badge variant="secondary" className="h-7 sm:h-8 px-1.5 sm:px-2 flex items-center gap-0.5 text-[10px] sm:text-xs">
-                      <PenTool className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                      {polygonPoints.length}
-                    </Badge>
+                {/* Segunda linha: Ações */}
+                <div className="flex items-center gap-1.5">
+                  {/* Botões de Desenho */}
+                  {!isDrawing && !showResults && (
                     <Button 
                       variant="outline" 
-                      size="icon"
-                      className="h-7 w-7 sm:h-8 sm:w-8"
-                      onClick={removeLastPoint}
-                      disabled={polygonPoints.length === 0}
+                      size="sm" 
+                      className="h-8 text-xs px-2"
+                      onClick={startDrawing}
                     >
-                      <Undo2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <PenTool className="h-3.5 w-3.5 mr-1" />
+                      Área
                     </Button>
+                  )}
+                  
+                  {isDrawing && (
+                    <div className="flex items-center gap-1">
+                      <Badge variant="secondary" className="h-8 px-2 flex items-center gap-1 text-xs">
+                        <PenTool className="h-3 w-3" />
+                        {polygonPoints.length}
+                      </Badge>
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={removeLastPoint}
+                        disabled={polygonPoints.length === 0}
+                      >
+                        <Undo2 className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="default" 
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={finishDrawing}
+                        disabled={polygonPoints.length < 3}
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={cancelDrawing}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {showResults && (
                     <Button 
-                      variant="default" 
+                      variant="outline" 
                       size="sm"
-                      className="h-7 sm:h-8 text-[10px] sm:text-xs px-2"
-                      onClick={finishDrawing}
-                      disabled={polygonPoints.length < 3}
+                      className="h-8 text-xs px-2"
+                      onClick={clearPolygon}
                     >
-                      <Check className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      Limpar
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="h-7 w-7 sm:h-8 sm:w-8"
-                      onClick={cancelDrawing}
-                    >
-                      <X className="h-3 w-3 sm:h-4 sm:w-4" />
+                  )}
+                  
+                  {/* Spacer */}
+                  <div className="flex-1" />
+                  
+                  {/* Zoom Controls */}
+                  <div className="flex items-center gap-1">
+                    <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-8 w-8">
+                      <ZoomIn className="h-4 w-4" />
                     </Button>
-                  </>
-                )}
-                
-                {showResults && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="h-7 sm:h-8 text-[10px] sm:text-xs px-2"
-                    onClick={clearPolygon}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                )}
+                    <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-8 w-8">
+                      <ZoomOut className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
+              
+              {/* Desktop: Linha única com scroll */}
+              <div className="hidden md:flex items-center gap-2 overflow-x-auto scrollbar-hide">
+                {/* Filtro de CNAE */}
+                {onCnaesChange && (
+                  <CnaeFilterSelect
+                    selectedCnaes={selectedCnaes}
+                    onCnaesChange={onCnaesChange}
+                  />
+                )}
 
-              {/* Filtro de Usuário */}
-              <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
-                <SelectTrigger className="w-[100px] sm:w-[140px] h-7 sm:h-8 text-[10px] sm:text-xs shrink-0">
-                  <Filter className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 shrink-0" />
-                  <SelectValue placeholder="Usuário" />
-                </SelectTrigger>
-                <SelectContent 
-                  className="bg-popover" 
-                  style={{ zIndex: 99999 }}
-                  position="popper"
-                  sideOffset={4}
-                >
-                  <SelectItem value="all">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4" />
-                      Todas
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="none">
-                    <div className="flex items-center gap-2">
-                      <X className="h-4 w-4" />
-                      Sem vínculo
-                    </div>
-                  </SelectItem>
-                  {usuarios.map(u => (
-                    <SelectItem key={u.id} value={u.id}>
+                {/* Importador de dados CNAE */}
+                <CnaeHeatmapImporter onImportComplete={refetchHeatmap} />
+                
+                {/* Carregar dados IBGE */}
+                <IBGEDataLoader onLoadComplete={refetchRenda} />
+                
+                {/* Painel de Isócronas */}
+                <IsochronePanel selectedPoint={selectedMapPoint} />
+
+                {/* Controles de Desenho de Polígono */}
+                <div className="flex items-center gap-1 shrink-0">
+                  {!isDrawing && !showResults && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 text-xs px-3"
+                      onClick={startDrawing}
+                    >
+                      <PenTool className="h-3.5 w-3.5 mr-1" />
+                      Desenhar Área
+                    </Button>
+                  )}
+                  
+                  {isDrawing && (
+                    <>
+                      <Badge variant="secondary" className="h-8 px-2 flex items-center gap-1 text-xs">
+                        <PenTool className="h-3 w-3" />
+                        {polygonPoints.length}
+                      </Badge>
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={removeLastPoint}
+                        disabled={polygonPoints.length === 0}
+                      >
+                        <Undo2 className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        className="h-8 text-xs px-2"
+                        onClick={finishDrawing}
+                        disabled={polygonPoints.length < 3}
+                      >
+                        <Check className="h-4 w-4 mr-1" />
+                        Finalizar
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={cancelDrawing}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                  
+                  {showResults && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="h-8 text-xs px-2"
+                      onClick={clearPolygon}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      Limpar
+                    </Button>
+                  )}
+                </div>
+
+                {/* Filtro de Usuário */}
+                <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
+                  <SelectTrigger className="w-[140px] h-8 text-xs shrink-0">
+                    <Filter className="h-3 w-3 mr-1 shrink-0" />
+                    <SelectValue placeholder="Usuário" />
+                  </SelectTrigger>
+                  <SelectContent 
+                    className="bg-popover" 
+                    style={{ zIndex: 99999 }}
+                    position="popper"
+                    sideOffset={4}
+                  >
+                    <SelectItem value="all">
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        {u.nome}
+                        <Building2 className="h-4 w-4" />
+                        Todas
                       </div>
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Dropdown Camadas */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-7 sm:h-8 text-[10px] sm:text-xs px-2 sm:px-3 shrink-0">
-                    <Layers className="h-3 w-3 mr-0.5 sm:mr-1" />
-                    <span className="hidden sm:inline">Camadas</span>
-                    <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 px-1 text-[10px] sm:text-xs">
-                      {activeLayersCount}
-                    </Badge>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 bg-popover" style={{ zIndex: 99999 }}>
-                  <DropdownMenuLabel className="flex items-center gap-2">
-                    <Layers className="h-4 w-4" />
-                    Camadas do Mapa
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <div className="p-2 space-y-3 max-h-[300px] overflow-y-auto">
-                    {layers.map((layer) => (
-                      <div 
-                        key={layer.id} 
-                        className="flex items-center justify-between gap-3"
-                      >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div 
-                            className="w-3 h-3 rounded-full shrink-0"
-                            style={{ backgroundColor: layer.color }}
-                          />
-                          <Label 
-                            htmlFor={`layer-fs-${layer.id}`}
-                            className="text-sm cursor-pointer truncate"
-                          >
-                            {layer.name}
-                          </Label>
-                        </div>
-                        <Switch
-                          id={`layer-fs-${layer.id}`}
-                          checked={layer.visible}
-                          onCheckedChange={() => onLayerToggle(layer.id)}
-                        />
+                    <SelectItem value="none">
+                      <div className="flex items-center gap-2">
+                        <X className="h-4 w-4" />
+                        Sem vínculo
                       </div>
+                    </SelectItem>
+                    {usuarios.map(u => (
+                      <SelectItem key={u.id} value={u.id}>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          {u.nome}
+                        </div>
+                      </SelectItem>
                     ))}
-                  </div>
-                  <DropdownMenuSeparator />
-                  <div className="p-2 space-y-2 max-h-[180px] overflow-y-auto">
-                    <div className="text-xs font-medium text-foreground">Legenda:</div>
-                    {layers.filter(l => l.visible).length === 0 ? (
-                      <p className="text-xs text-muted-foreground italic">Nenhuma camada ativa</p>
-                    ) : (
-                      layers.filter(l => l.visible).map(layer => (
-                        <div key={layer.id} className="text-xs space-y-0.5 pb-1.5 border-b border-border/50 last:border-0">
-                          <div className="flex items-center gap-2 font-medium">
+                  </SelectContent>
+                </Select>
+
+                {/* Dropdown Camadas */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 text-xs px-3 shrink-0">
+                      <Layers className="h-3.5 w-3.5 mr-1" />
+                      Camadas
+                      <Badge variant="secondary" className="ml-1 h-5 px-1 text-xs">
+                        {activeLayersCount}
+                      </Badge>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-72 bg-popover" style={{ zIndex: 99999 }}>
+                    <DropdownMenuLabel className="flex items-center gap-2">
+                      <Layers className="h-4 w-4" />
+                      Camadas do Mapa
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <div className="p-2 space-y-3 max-h-[300px] overflow-y-auto">
+                      {layers.map((layer) => (
+                        <div 
+                          key={layer.id} 
+                          className="flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div 
-                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              className="w-3 h-3 rounded-full shrink-0"
                               style={{ backgroundColor: layer.color }}
                             />
-                            <span>{layer.name}</span>
+                            <Label 
+                              htmlFor={`layer-fs-${layer.id}`}
+                              className="text-sm cursor-pointer truncate"
+                            >
+                              {layer.name}
+                            </Label>
                           </div>
-                          {layer.id === 'units' && (
-                            <div className="text-muted-foreground pl-4 space-y-0.5">
-                              <p>📍 Marcador rosa = Filiais da empresa</p>
-                              <p>Clique para ver detalhes da unidade</p>
-                            </div>
-                          )}
-                          {layer.id === 'clients' && (
-                            <div className="text-muted-foreground pl-4 space-y-0.5">
-                              <p>🏢 Marcador azul = Empresas cadastradas</p>
-                              <p>Clique para ver dados do cliente</p>
-                            </div>
-                          )}
-                          {layer.id === 'sales' && (
-                            <div className="text-muted-foreground pl-4 space-y-0.5">
-                              <p>📊 Tamanho do círculo = Volume de vendas</p>
-                              <p>🟢 Verde = Maior faturamento</p>
-                            </div>
-                          )}
-                          {layer.id === 'demographics' && (
-                            <div className="text-muted-foreground pl-4 space-y-0.5">
-                              <p>👥 Zoom baixo: Regiões e Estados</p>
-                              <p>👥 Zoom alto: 5570 Municípios</p>
-                              <p>Círculo maior = Maior população</p>
-                              <p>Exibe: População, PIB e IDH</p>
-                            </div>
-                          )}
-                          {layer.id === 'income' && (
-                            <div className="text-muted-foreground pl-4 space-y-0.5">
-                              <p>💰 Renda média por região</p>
-                              <p>Tamanho = Poder de compra</p>
-                            </div>
-                          )}
-                          {layer.id === 'competition' && (
-                            <div className="text-muted-foreground pl-4 space-y-0.5">
-                              <p>🏪 Concorrentes por região</p>
-                              <p>🟢 Baixa | 🟡 Média | 🔴 Alta concorrência</p>
-                            </div>
-                          )}
-                          {layer.id === 'logistics' && (
-                            <div className="text-muted-foreground pl-4 space-y-0.5">
-                              <p>🚚 Análise de acessibilidade</p>
-                              <p>Preenchido = Difícil acesso logístico</p>
-                            </div>
-                          )}
-                          {layer.id === 'isochrone' && (
-                            <div className="text-muted-foreground pl-4 space-y-0.5">
-                              <p>⏱️ Área de cobertura por tempo</p>
-                              <p>Selecione um ponto no mapa</p>
-                            </div>
-                          )}
-                          {layer.id === 'density' && (
-                            <div className="text-muted-foreground pl-4 space-y-0.5">
-                              <p>🟠 Empresas por município</p>
-                              <p>Círculo maior = Mais empresas</p>
-                              <p>Baseado nos CNAEs selecionados</p>
-                            </div>
-                          )}
-                          {layer.id === 'municipal_income' && (
-                            <div className="text-muted-foreground pl-4 space-y-0.5">
-                              <p>💵 PIB per capita por município</p>
-                              <p>🟢 Alto | 🟡 Médio | 🔴 Baixo</p>
-                              <p>Fonte: Dados IBGE</p>
-                            </div>
-                          )}
+                          <Switch
+                            id={`layer-fs-${layer.id}`}
+                            checked={layer.visible}
+                            onCheckedChange={() => onLayerToggle(layer.id)}
+                          />
                         </div>
-                      ))
-                    )}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      ))}
+                    </div>
+                    <DropdownMenuSeparator />
+                    <div className="p-2 space-y-2 max-h-[180px] overflow-y-auto">
+                      <div className="text-xs font-medium text-foreground">Legenda:</div>
+                      {layers.filter(l => l.visible).length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic">Nenhuma camada ativa</p>
+                      ) : (
+                        layers.filter(l => l.visible).map(layer => (
+                          <div key={layer.id} className="text-xs space-y-0.5 pb-1.5 border-b border-border/50 last:border-0">
+                            <div className="flex items-center gap-2 font-medium">
+                              <div 
+                                className="w-2.5 h-2.5 rounded-full shrink-0"
+                                style={{ backgroundColor: layer.color }}
+                              />
+                              <span>{layer.name}</span>
+                            </div>
+                            {layer.id === 'units' && (
+                              <div className="text-muted-foreground pl-4 space-y-0.5">
+                                <p>📍 Marcador rosa = Filiais da empresa</p>
+                                <p>Clique para ver detalhes da unidade</p>
+                              </div>
+                            )}
+                            {layer.id === 'clients' && (
+                              <div className="text-muted-foreground pl-4 space-y-0.5">
+                                <p>🏢 Marcador azul = Empresas cadastradas</p>
+                                <p>Clique para ver dados do cliente</p>
+                              </div>
+                            )}
+                            {layer.id === 'sales' && (
+                              <div className="text-muted-foreground pl-4 space-y-0.5">
+                                <p>📊 Tamanho do círculo = Volume de vendas</p>
+                                <p>🟢 Verde = Maior faturamento</p>
+                              </div>
+                            )}
+                            {layer.id === 'demographics' && (
+                              <div className="text-muted-foreground pl-4 space-y-0.5">
+                                <p>👥 Zoom baixo: Regiões e Estados</p>
+                                <p>👥 Zoom alto: 5570 Municípios</p>
+                                <p>Círculo maior = Maior população</p>
+                                <p>Exibe: População, PIB e IDH</p>
+                              </div>
+                            )}
+                            {layer.id === 'income' && (
+                              <div className="text-muted-foreground pl-4 space-y-0.5">
+                                <p>💰 Renda média por região</p>
+                                <p>Tamanho = Poder de compra</p>
+                              </div>
+                            )}
+                            {layer.id === 'competition' && (
+                              <div className="text-muted-foreground pl-4 space-y-0.5">
+                                <p>🏪 Concorrentes por região</p>
+                                <p>🟢 Baixa | 🟡 Média | 🔴 Alta concorrência</p>
+                              </div>
+                            )}
+                            {layer.id === 'logistics' && (
+                              <div className="text-muted-foreground pl-4 space-y-0.5">
+                                <p>🚚 Análise de acessibilidade</p>
+                                <p>Preenchido = Difícil acesso logístico</p>
+                              </div>
+                            )}
+                            {layer.id === 'isochrone' && (
+                              <div className="text-muted-foreground pl-4 space-y-0.5">
+                                <p>⏱️ Área de cobertura por tempo</p>
+                                <p>Selecione um ponto no mapa</p>
+                              </div>
+                            )}
+                            {layer.id === 'density' && (
+                              <div className="text-muted-foreground pl-4 space-y-0.5">
+                                <p>🟠 Empresas por município</p>
+                                <p>Círculo maior = Mais empresas</p>
+                                <p>Baseado nos CNAEs selecionados</p>
+                              </div>
+                            )}
+                            {layer.id === 'municipal_income' && (
+                              <div className="text-muted-foreground pl-4 space-y-0.5">
+                                <p>💵 PIB per capita por município</p>
+                                <p>🟢 Alto | 🟡 Médio | 🔴 Baixo</p>
+                                <p>Fonte: Dados IBGE</p>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-              {/* Zoom Controls */}
-              <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-                <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-7 w-7 sm:h-8 sm:w-8">
-                  <ZoomIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                </Button>
-                <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-7 w-7 sm:h-8 sm:w-8">
-                  <ZoomOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                </Button>
-                <Button variant="outline" size="icon" onClick={handleReset} className="h-7 w-7 sm:h-8 sm:w-8 hidden sm:flex">
-                  <RotateCcw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                </Button>
+                {/* Zoom Controls */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-8 w-8">
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-8 w-8">
+                    <ZoomOut className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="icon" onClick={handleReset} className="h-8 w-8">
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -1436,12 +1609,14 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               style={{ zIndex: 1 }}
             />
 
-            {/* Indicador de modo de desenho */}
+            {/* Indicador de modo de desenho - Responsivo */}
             {isDrawing && (
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white rounded-lg px-4 py-2 z-20 flex items-center gap-2 shadow-lg">
-                <PenTool className="h-4 w-4 animate-pulse" />
-                <span className="text-sm font-medium">
-                  Clique no mapa para adicionar pontos ({polygonPoints.length} de 3 mín.)
+              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground rounded-lg px-3 py-1.5 md:px-4 md:py-2 z-20 flex items-center gap-2 shadow-lg max-w-[90%]">
+                <PenTool className="h-3.5 w-3.5 md:h-4 md:w-4 animate-pulse shrink-0" />
+                <span className="text-xs md:text-sm font-medium truncate">
+                  <span className="hidden md:inline">Clique no mapa para adicionar pontos </span>
+                  <span className="md:hidden">Toque para marcar </span>
+                  ({polygonPoints.length}/3+)
                 </span>
               </div>
             )}
@@ -1455,34 +1630,26 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               />
             )}
 
-            {/* Indicador de nível de zoom */}
+            {/* Indicador de nível de zoom - Compacto em mobile */}
             {mapReady && !showResults && (
-              <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-2 z-10 text-xs max-w-xs">
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">Nível:</span>
-                  <Badge variant={currentLevel === 'municipal' || currentLevel === 'local' ? 'default' : 'secondary'}>
-                    {currentLevel === 'country' && '🌎 País'}
-                    {currentLevel === 'region' && '🗺️ Região'}
-                    {currentLevel === 'state' && '📍 Estado'}
-                    {currentLevel === 'municipal' && '🏙️ Município'}
-                    {currentLevel === 'local' && '📌 Local'}
-                  </Badge>
-                  <span className="text-muted-foreground">Zoom: {currentZoom}</span>
-                </div>
-                {(currentLevel === 'country' || currentLevel === 'region') && (
-                  <p className="text-muted-foreground mt-1">🔍 Dê zoom para ver detalhes por UF</p>
-                )}
-                {municipiosRenda.length === 0 && currentLevel === 'state' && (
-                  <p className="text-amber-600 mt-1">⚠️ Use "Carregar Dados IBGE" para dados municipais</p>
-                )}
+              <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 bg-background/95 backdrop-blur-sm border rounded-lg px-2 py-1 md:px-3 md:py-2 z-10">
+                <Badge variant={currentLevel === 'municipal' || currentLevel === 'local' ? 'default' : 'secondary'} className="text-[10px] md:text-xs h-5">
+                  {currentLevel === 'country' && '🌎 País'}
+                  {currentLevel === 'region' && '🗺️ Região'}
+                  {currentLevel === 'state' && '📍 UF'}
+                  {currentLevel === 'municipal' && '🏙️ Mun'}
+                  {currentLevel === 'local' && '📌 Local'}
+                </Badge>
               </div>
             )}
             
-            {/* Alerta de dados não carregados */}
+            {/* Alerta de dados não carregados - Responsivo */}
             {mapReady && municipiosRenda.length === 0 && (currentLevel === 'municipal' || currentLevel === 'local') && !isDrawing && (
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 z-10 flex items-center gap-3 shadow-lg">
-                <span className="text-amber-700 text-sm">📊 Dados municipais não carregados</span>
-                <IBGEDataLoader onLoadComplete={refetchRenda} />
+              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5 md:px-4 md:py-2 z-10 flex items-center gap-2 shadow-lg max-w-[90%]">
+                <span className="text-amber-700 text-xs md:text-sm truncate">📊 Dados não carregados</span>
+                <div className="hidden md:block">
+                  <IBGEDataLoader onLoadComplete={refetchRenda} />
+                </div>
               </div>
             )}
 
