@@ -767,34 +767,42 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     }
 
     // Mostra dados municipais - usa renda_media ou pib_per_capita como fallback
-    const valoresRenda = municipiosRenda
-      .filter(m => m.renda_media || m.pib_per_capita)
-      .map(m => m.renda_media || m.pib_per_capita!);
+    // Filtra municípios com dados válidos (PIB > 0 é suficiente já que renda_media está vazia)
+    const municipiosComDados = municipiosRenda.filter(m => 
+      m.latitude && m.longitude && (m.renda_media || (m.pib_per_capita && m.pib_per_capita > 0))
+    );
     
-    if (valoresRenda.length === 0) {
+    console.log(`📊 Renda Municipal: ${municipiosComDados.length} municípios com dados válidos de ${municipiosRenda.length} total`);
+    
+    if (municipiosComDados.length === 0) {
       console.log('Nenhum município com dados de renda/PIB encontrado');
       return;
     }
     
+    const valoresRenda = municipiosComDados.map(m => m.renda_media || m.pib_per_capita!);
     const maxRenda = Math.max(...valoresRenda, 1);
-    const minRenda = Math.min(...valoresRenda);
+    const minRenda = Math.min(...valoresRenda.filter(v => v > 0));
 
-    municipiosRenda.forEach(mun => {
-      if (!mun.latitude || !mun.longitude) return;
-      
+    let addedCount = 0;
+    municipiosComDados.forEach(mun => {
       // Usa renda_media se disponível, senão pib_per_capita
-      const valorRenda = mun.renda_media || mun.pib_per_capita;
-      if (!valorRenda) return;
+      const valorRenda = mun.renda_media || mun.pib_per_capita!;
 
-      const normalized = (valorRenda - minRenda) / (maxRenda - minRenda);
-      const radius = 6 + (normalized * 18);
+      // Normalização logarítmica para melhor distribuição visual (PIB varia muito)
+      const logMax = Math.log10(maxRenda);
+      const logMin = Math.log10(Math.max(minRenda, 1));
+      const logValor = Math.log10(Math.max(valorRenda, 1));
+      const normalized = (logValor - logMin) / (logMax - logMin);
+      
+      // Raio mínimo de 4 para garantir visibilidade
+      const radius = Math.max(4, 4 + (normalized * 16));
 
       // Cor: vermelho (baixa) -> amarelo -> verde (alta)
       let fillColor = '#ef4444';
       if (normalized > 0.6) fillColor = '#22c55e';
       else if (normalized > 0.3) fillColor = '#f59e0b';
 
-      const circle = L.circleMarker([mun.latitude, mun.longitude], {
+      const circle = L.circleMarker([mun.latitude!, mun.longitude!], {
         radius: radius,
         fillColor: fillColor,
         color: '#374151',
@@ -818,7 +826,10 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
       `);
 
       municipalIncomeLayerRef.current!.addLayer(circle);
+      addedCount++;
     });
+    
+    console.log(`✅ Renda Municipal: ${addedCount} marcadores adicionados ao mapa`);
   }, [layers, mapReady, municipiosRenda]);
 
   // NOVA CAMADA: Densidade de Estabelecimentos por município
