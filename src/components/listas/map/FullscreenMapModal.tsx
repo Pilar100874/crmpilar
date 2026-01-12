@@ -1235,10 +1235,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                 </SelectContent>
               </Select>
               
-              {/* Isócronas */}
-              <div className="flex-shrink-0">
-                <IsochronePanel selectedPoint={selectedMapPoint} />
-              </div>
+              {/* Isócronas - apenas desktop */}
               
               {/* Desenho de Área */}
               {!isDrawing && !showResults && (
