@@ -487,7 +487,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     }
   }, [layers, mapReady, currentLevel, stateData, regionData, municipalData, municipalLoading]);
 
-  // Update income layer
+  // Update income layer - agora com dados municipais em zoom alto
   useEffect(() => {
     if (!incomeLayerRef.current || !mapReady) return;
     
@@ -496,35 +496,100 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     const incomeLayer = layers.find(l => l.id === 'income');
     if (!incomeLayer?.visible) return;
 
-    const maxRenda = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.renda_media));
-    const minRenda = Math.min(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.renda_media));
+    // Em zoom baixo (< 6): mostra por UF
+    // Em zoom alto (>= 6): mostra por município usando municipiosRenda
+    if (currentZoom < 6) {
+      // Visão por UF
+      const maxRenda = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.renda_media));
+      const minRenda = Math.min(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.renda_media));
 
-    Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
-      const normalizedRenda = (data.renda_media - minRenda) / (maxRenda - minRenda);
-      const opacity = 0.3 + (normalizedRenda * 0.5);
-      const radius = 15 + (normalizedRenda * 25);
+      Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
+        const normalizedRenda = (data.renda_media - minRenda) / (maxRenda - minRenda);
+        const opacity = 0.3 + (normalizedRenda * 0.5);
+        const radius = 15 + (normalizedRenda * 25);
 
-      const circle = L.circleMarker([data.lat, data.lng], {
-        radius: radius,
-        fillColor: '#f59e0b',
-        color: '#b45309',
-        weight: 1,
-        opacity: 0.7,
-        fillOpacity: opacity
+        const circle = L.circleMarker([data.lat, data.lng], {
+          radius: radius,
+          fillColor: '#f59e0b',
+          color: '#b45309',
+          weight: 1,
+          opacity: 0.7,
+          fillOpacity: opacity
+        });
+
+        circle.bindPopup(`
+          <div class="p-2">
+            <strong>${uf}</strong>
+            <br/><small>Renda Média: R$ ${data.renda_media.toLocaleString('pt-BR')}</small>
+            <br/><small>Score Poder de Compra: ${Math.round(normalizedRenda * 100)}</small>
+            <br/><small class="text-muted-foreground">Fonte: IBGE/IPEA</small>
+          </div>
+        `);
+
+        incomeLayerRef.current!.addLayer(circle);
+      });
+    } else {
+      // Visão por município - usa PIB per capita dos dados municipais
+      const municipiosComDados = municipiosRenda.filter(m => 
+        m.latitude && m.longitude && (m.renda_media || (m.pib_per_capita && m.pib_per_capita > 0))
+      );
+
+      if (municipiosComDados.length === 0) {
+        console.log('📊 Renda: Sem dados municipais, aguardando carregamento...');
+        return;
+      }
+
+      const valoresRenda = municipiosComDados.map(m => m.renda_media || m.pib_per_capita!);
+      const maxRenda = Math.max(...valoresRenda, 1);
+      const minRenda = Math.min(...valoresRenda.filter(v => v > 0));
+
+      let addedCount = 0;
+      municipiosComDados.forEach(mun => {
+        const valorRenda = mun.renda_media || mun.pib_per_capita!;
+
+        // Normalização logarítmica para melhor distribuição visual
+        const logMax = Math.log10(maxRenda);
+        const logMin = Math.log10(Math.max(minRenda, 1));
+        const logValor = Math.log10(Math.max(valorRenda, 1));
+        const normalized = (logValor - logMin) / (logMax - logMin);
+        
+        const radius = Math.max(4, 4 + (normalized * 16));
+
+        // Cor: vermelho (baixa) -> amarelo -> verde (alta)
+        let fillColor = '#ef4444';
+        if (normalized > 0.6) fillColor = '#22c55e';
+        else if (normalized > 0.3) fillColor = '#f59e0b';
+
+        const circle = L.circleMarker([mun.latitude!, mun.longitude!], {
+          radius: radius,
+          fillColor: fillColor,
+          color: '#b45309',
+          weight: 1,
+          opacity: 0.8,
+          fillOpacity: 0.6
+        });
+
+        const tipoValor = mun.renda_media ? 'Renda Média' : 'PIB per Capita';
+        circle.bindPopup(`
+          <div class="p-3">
+            <strong style="font-size: 14px;">💰 ${mun.municipio} - ${mun.uf}</strong>
+            <hr style="margin: 8px 0; border-color: #e5e7eb;"/>
+            <div style="display: grid; gap: 4px;">
+              <div>💵 <strong>${tipoValor}:</strong> R$ ${valorRenda.toLocaleString('pt-BR')}</div>
+              ${mun.idh ? `<div>📈 <strong>IDH:</strong> ${mun.idh.toFixed(3)}</div>` : ''}
+              ${mun.populacao ? `<div>👥 <strong>População:</strong> ${mun.populacao.toLocaleString('pt-BR')}</div>` : ''}
+            </div>
+            <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">Fonte: IBGE</p>
+          </div>
+        `);
+
+        incomeLayerRef.current!.addLayer(circle);
+        addedCount++;
       });
 
-      circle.bindPopup(`
-        <div class="p-2">
-          <strong>${uf}</strong>
-          <br/><small>Renda Média: R$ ${data.renda_media.toLocaleString('pt-BR')}</small>
-          <br/><small>Score Poder de Compra: ${Math.round(normalizedRenda * 100)}</small>
-          <br/><small class="text-muted-foreground">Fonte: IBGE/IPEA</small>
-        </div>
-      `);
-
-      incomeLayerRef.current!.addLayer(circle);
-    });
-  }, [layers, mapReady]);
+      console.log(`✅ Renda: ${addedCount} municípios renderizados`);
+    }
+  }, [layers, mapReady, currentZoom, municipiosRenda]);
 
   // Update competition layer - agora usa dados de CNAE
   useEffect(() => {
