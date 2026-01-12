@@ -114,7 +114,7 @@ export const DEFAULT_LAYERS: MapLayer[] = [
   {
     id: 'demographics',
     name: 'Demografia',
-    description: 'População e densidade demográfica (IBGE)',
+    description: 'Dados populacionais por estado: população total, renda média e IDH',
     visible: true,
     color: '#8b5cf6',
     icon: 'Users',
@@ -168,7 +168,7 @@ export const DEFAULT_LAYERS: MapLayer[] = [
   {
     id: 'density',
     name: 'Densidade Estabelec.',
-    description: 'Densidade de empresas por município',
+    description: 'Concentração de empresas por município baseada nos CNAEs selecionados',
     visible: false,
     color: '#f97316',
     icon: 'BarChart3',
