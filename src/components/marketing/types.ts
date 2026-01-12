@@ -11,7 +11,6 @@ export type FieldType =
   | 'selection_video'  // Seleção de vídeos (criador define as opções)
   | 'selection_text'   // Seleção de textos longos (criador define as opções)
   | 'checkbox_selection' // Seleção múltipla com checkboxes (criador define as opções)
-  | 'multi_select'    // Caixa de seleção múltipla (dropdown multi-select)
   | 'dropdown' 
   | 'number'
   | 'date'
@@ -108,7 +107,7 @@ export const FIELD_TYPE_CATEGORIES = {
   selection: {
     label: 'Seleção',
     description: 'Você define as opções agora, usuário escolhe depois',
-    types: ['selection_image', 'selection_audio', 'selection_video', 'selection_text', 'checkbox_selection', 'multi_select', 'dropdown'] as FieldType[],
+    types: ['selection_image', 'selection_audio', 'selection_video', 'selection_text', 'checkbox_selection', 'dropdown'] as FieldType[],
   },
   product: {
     label: 'Produto',
@@ -127,7 +126,6 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   selection_video: 'Seleção de Vídeos',
   selection_text: 'Seleção de Textos',
   checkbox_selection: 'Seleção com Checkboxes',
-  multi_select: 'Caixa de Seleção',
   dropdown: 'Lista Suspensa',
   number: 'Número',
   date: 'Data',
@@ -147,7 +145,6 @@ export const FIELD_TYPE_DESCRIPTIONS: Record<FieldType, string> = {
   selection_video: 'Defina vídeos para o usuário escolher',
   selection_text: 'Defina textos longos para o usuário escolher',
   checkbox_selection: 'Defina opções para seleção múltipla com checkboxes',
-  multi_select: 'Dropdown com seleção múltipla de opções',
   dropdown: 'Lista de opções',
   number: 'Valor numérico',
   date: 'Seletor de data',
