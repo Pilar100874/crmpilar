@@ -702,16 +702,28 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
       return;
     }
 
-    // Mostra dados municipais
-    const rendaValores = municipiosRenda.filter(m => m.renda_media).map(m => m.renda_media!);
-    const maxRenda = Math.max(...rendaValores, 1);
-    const minRenda = Math.min(...rendaValores);
+    // Mostra dados municipais - usa renda_media ou pib_per_capita como fallback
+    const valoresRenda = municipiosRenda
+      .filter(m => m.renda_media || m.pib_per_capita)
+      .map(m => m.renda_media || m.pib_per_capita!);
+    
+    if (valoresRenda.length === 0) {
+      console.log('Nenhum município com dados de renda/PIB encontrado');
+      return;
+    }
+    
+    const maxRenda = Math.max(...valoresRenda, 1);
+    const minRenda = Math.min(...valoresRenda);
 
     municipiosRenda.forEach(mun => {
-      if (!mun.latitude || !mun.longitude || !mun.renda_media) return;
+      if (!mun.latitude || !mun.longitude) return;
+      
+      // Usa renda_media se disponível, senão pib_per_capita
+      const valorRenda = mun.renda_media || mun.pib_per_capita;
+      if (!valorRenda) return;
 
-      const normalized = (mun.renda_media - minRenda) / (maxRenda - minRenda);
-      const radius = 8 + (normalized * 20);
+      const normalized = (valorRenda - minRenda) / (maxRenda - minRenda);
+      const radius = 6 + (normalized * 18);
 
       // Cor: vermelho (baixa) -> amarelo -> verde (alta)
       let fillColor = '#ef4444';
@@ -727,16 +739,17 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
         fillOpacity: 0.6
       });
 
+      const tipoValor = mun.renda_media ? 'Renda Média' : 'PIB per Capita';
       circle.bindPopup(`
         <div class="p-3">
           <strong style="font-size: 14px;">📍 ${mun.municipio} - ${mun.uf}</strong>
           <hr style="margin: 8px 0; border-color: #e5e7eb;"/>
           <div style="display: grid; gap: 4px;">
-            <div>💰 <strong>Renda Média:</strong> R$ ${mun.renda_media.toLocaleString('pt-BR')}</div>
+            <div>💰 <strong>${tipoValor}:</strong> R$ ${valorRenda.toLocaleString('pt-BR')}</div>
             ${mun.idh ? `<div>📈 <strong>IDH:</strong> ${mun.idh.toFixed(3)}</div>` : ''}
             ${mun.populacao ? `<div>👥 <strong>População:</strong> ${mun.populacao.toLocaleString('pt-BR')}</div>` : ''}
           </div>
-          <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">Fonte: Dados importados</p>
+          <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">Fonte: IBGE</p>
         </div>
       `);
 

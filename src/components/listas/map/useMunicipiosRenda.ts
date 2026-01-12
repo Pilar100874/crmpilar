@@ -29,7 +29,7 @@ export const useMunicipiosRenda = () => {
       const { data, error } = await supabase
         .from('municipios_renda')
         .select('*')
-        .order('renda_media', { ascending: false, nullsFirst: false });
+        .order('pib_per_capita', { ascending: false, nullsFirst: false });
 
       if (error) throw error;
 
