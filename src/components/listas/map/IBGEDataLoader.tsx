@@ -330,11 +330,18 @@ export const IBGEDataLoader: React.FC<IBGEDataLoaderProps> = ({ onLoadComplete }
         }
       }
 
-      // 4. Buscar dados populacionais e PIB por estado (mais rápido)
+      // 4. Buscar dados populacionais e PIB por estado (otimizado com batch)
       if (dataSources.find(s => s.id === 'populacao' && s.enabled) || 
           dataSources.find(s => s.id === 'pib' && s.enabled)) {
         addLog('Buscando dados agregados por estado...');
-        await fetchAndUpdateStateData();
+        await fetchAndUpdateStateData((current, total, type) => {
+          // Progresso de 90% a 100%
+          const additionalProgress = Math.round((current / total) * 10);
+          setProgress(90 + additionalProgress);
+          if (current % 1000 === 0 || current === total) {
+            addLog(`${type}: ${current}/${total}`);
+          }
+        });
       }
 
       setProgress(100);
@@ -353,7 +360,7 @@ export const IBGEDataLoader: React.FC<IBGEDataLoaderProps> = ({ onLoadComplete }
     }
   };
 
-  const fetchAndUpdateStateData = async () => {
+  const fetchAndUpdateStateData = async (onProgress?: (current: number, total: number, type: string) => void) => {
     try {
       // Buscar população por município do Censo 2022
       setStatus('Buscando dados populacionais...');
@@ -367,26 +374,34 @@ export const IBGEDataLoader: React.FC<IBGEDataLoaderProps> = ({ onLoadComplete }
         const popData = await popResponse.json();
         const series = popData?.[0]?.resultados?.[0]?.series || [];
         
-        addLog(`Atualizando população de ${series.length} municípios...`);
+        addLog(`Atualizando população de ${series.length} municípios em batch...`);
         
-        // Processar em batches
-        for (let i = 0; i < series.length; i += 500) {
-          const batch = series.slice(i, i + 500);
-          
-          for (const item of batch) {
-            const codigoIbge = item.localidade?.id;
-            const populacao = item.serie?.['2022'];
-            
-            if (codigoIbge && populacao) {
-              await supabase
-                .from('municipios_renda')
-                .update({ populacao: parseInt(populacao) })
-                .eq('codigo_ibge', String(codigoIbge));
-            }
+        // Preparar todos os updates em memória
+        const popUpdates: { codigo_ibge: string; populacao: number }[] = [];
+        for (const item of series) {
+          const codigoIbge = item.localidade?.id;
+          const populacao = item.serie?.['2022'];
+          if (codigoIbge && populacao) {
+            popUpdates.push({ codigo_ibge: String(codigoIbge), populacao: parseInt(populacao) });
           }
-          
-          addLog(`População: ${Math.min(i + 500, series.length)}/${series.length}`);
         }
+
+        // Processar em batches maiores com Promise.all
+        const batchSize = 50;
+        for (let i = 0; i < popUpdates.length; i += batchSize) {
+          const batch = popUpdates.slice(i, i + batchSize);
+          
+          await Promise.all(batch.map(update => 
+            supabase
+              .from('municipios_renda')
+              .update({ populacao: update.populacao })
+              .eq('codigo_ibge', update.codigo_ibge)
+          ));
+          
+          onProgress?.(Math.min(i + batchSize, popUpdates.length), popUpdates.length * 2, 'População');
+        }
+        
+        addLog(`✅ População atualizada para ${popUpdates.length} municípios`);
       }
 
       // Buscar PIB per capita
@@ -401,25 +416,35 @@ export const IBGEDataLoader: React.FC<IBGEDataLoaderProps> = ({ onLoadComplete }
         const pibData = await pibResponse.json();
         const series = pibData?.[0]?.resultados?.[0]?.series || [];
         
-        addLog(`Atualizando PIB de ${series.length} municípios...`);
+        addLog(`Atualizando PIB de ${series.length} municípios em batch...`);
         
-        for (let i = 0; i < series.length; i += 500) {
-          const batch = series.slice(i, i + 500);
-          
-          for (const item of batch) {
-            const codigoIbge = item.localidade?.id;
-            const pibPerCapita = item.serie?.['2021'];
-            
-            if (codigoIbge && pibPerCapita) {
-              await supabase
-                .from('municipios_renda')
-                .update({ pib_per_capita: parseFloat(pibPerCapita) })
-                .eq('codigo_ibge', String(codigoIbge));
-            }
+        // Preparar todos os updates em memória
+        const pibUpdates: { codigo_ibge: string; pib_per_capita: number }[] = [];
+        for (const item of series) {
+          const codigoIbge = item.localidade?.id;
+          const pibPerCapita = item.serie?.['2021'];
+          if (codigoIbge && pibPerCapita) {
+            pibUpdates.push({ codigo_ibge: String(codigoIbge), pib_per_capita: parseFloat(pibPerCapita) });
           }
-          
-          addLog(`PIB: ${Math.min(i + 500, series.length)}/${series.length}`);
         }
+
+        // Processar em batches maiores com Promise.all
+        const batchSize = 50;
+        const totalItems = pibUpdates.length * 2; // Para calcular progresso total
+        for (let i = 0; i < pibUpdates.length; i += batchSize) {
+          const batch = pibUpdates.slice(i, i + batchSize);
+          
+          await Promise.all(batch.map(update => 
+            supabase
+              .from('municipios_renda')
+              .update({ pib_per_capita: update.pib_per_capita })
+              .eq('codigo_ibge', update.codigo_ibge)
+          ));
+          
+          onProgress?.(pibUpdates.length + Math.min(i + batchSize, pibUpdates.length), totalItems, 'PIB');
+        }
+        
+        addLog(`✅ PIB atualizado para ${pibUpdates.length} municípios`);
       }
 
     } catch (error) {
