@@ -1128,216 +1128,217 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[100vw] w-[100vw] h-[100dvh] p-0 gap-0 rounded-none z-[9999] md:max-w-[98vw] md:w-[98vw] md:h-[95vh] md:rounded-lg" aria-describedby={undefined}>
+      <DialogContent className="max-w-[100vw] w-[100vw] h-[100dvh] p-0 gap-0 rounded-none z-[9999] md:max-w-[98vw] md:w-[98vw] md:h-[95vh] md:rounded-lg overflow-hidden" aria-describedby={undefined}>
         <VisuallyHidden>
           <DialogTitle>Mapa Geoespacial em Tela Cheia</DialogTitle>
         </VisuallyHidden>
         
-        <div className="relative w-full h-full flex flex-col">
-          {/* Header Mobile - Compacto */}
-          <div className="flex flex-col bg-background z-10 border-b">
-            {/* Linha Principal: Título e Fechar */}
-            <div className="flex items-center justify-between px-3 py-2 md:px-4 md:py-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 md:h-5 md:w-5 text-primary shrink-0" />
-                <h2 className="text-sm md:text-lg font-semibold truncate">
-                  <span className="md:hidden">Mapa</span>
-                  <span className="hidden md:inline">Mapa Geoespacial</span>
-                </h2>
-                {/* Badges inline no título */}
-                <div className="flex items-center gap-1 ml-1">
+        <div className="relative w-full h-full flex flex-col bg-background">
+          {/* ===== MOBILE/TABLET HEADER ===== */}
+          <div className="md:hidden flex flex-col bg-background/95 backdrop-blur-md z-20 border-b shadow-sm">
+            {/* Top bar: Título + Fechar */}
+            <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MapPin className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold leading-tight">Mapa</h2>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    {unidadesNoMapa > 0 && (
+                      <span className="text-[10px] text-pink-600 font-medium">
+                        {unidadesNoMapa} unid
+                      </span>
+                    )}
+                    {unidadesNoMapa > 0 && empresasNoMapa > 0 && (
+                      <span className="text-muted-foreground">•</span>
+                    )}
+                    <span className="text-[10px] text-muted-foreground">
+                      {empresasNoMapa} emp
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={onClose} 
+                className="h-9 w-9 rounded-full hover:bg-destructive/10 hover:text-destructive"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Toolbar: Ações rápidas */}
+            <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto scrollbar-hide">
+              {/* Filtro CNAE */}
+              {onCnaesChange && (
+                <CnaeFilterSelect
+                  selectedCnaes={selectedCnaes}
+                  onCnaesChange={onCnaesChange}
+                />
+              )}
+              
+              {/* Camadas */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5 px-3 rounded-full shrink-0">
+                    <Layers className="h-4 w-4" />
+                    <span className="text-xs">{activeLayersCount}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-72 bg-popover/95 backdrop-blur-md" style={{ zIndex: 99999 }}>
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Layers className="h-4 w-4" />
+                    Camadas do Mapa
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div className="p-2 space-y-2 max-h-[60vh] overflow-y-auto">
+                    {layers.map((layer) => (
+                      <div 
+                        key={layer.id} 
+                        className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          <div 
+                            className="w-3.5 h-3.5 rounded-full shrink-0 ring-2 ring-offset-1 ring-offset-background"
+                            style={{ backgroundColor: layer.color }}
+                          />
+                          <Label 
+                            htmlFor={`layer-m-${layer.id}`}
+                            className="text-sm cursor-pointer truncate"
+                          >
+                            {layer.name}
+                          </Label>
+                        </div>
+                        <Switch
+                          id={`layer-m-${layer.id}`}
+                          checked={layer.visible}
+                          onCheckedChange={() => onLayerToggle(layer.id)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* Usuário */}
+              <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
+                <SelectTrigger className="w-auto min-w-[80px] h-9 text-xs rounded-full shrink-0 gap-1.5">
+                  <User className="h-3.5 w-3.5" />
+                  <SelectValue placeholder="Usuário" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover" style={{ zIndex: 99999 }}>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="none">Sem vínculo</SelectItem>
+                  {usuarios.map(u => (
+                    <SelectItem key={u.id} value={u.id}>{u.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* Isócronas */}
+              <IsochronePanel selectedPoint={selectedMapPoint} />
+              
+              {/* Desenho de Área */}
+              {!isDrawing && !showResults && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-9 gap-1.5 px-3 rounded-full shrink-0"
+                  onClick={startDrawing}
+                >
+                  <PenTool className="h-4 w-4" />
+                  <span className="text-xs">Área</span>
+                </Button>
+              )}
+              
+              {showResults && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="h-9 gap-1.5 px-3 rounded-full shrink-0 text-destructive border-destructive/30 hover:bg-destructive/10"
+                  onClick={clearPolygon}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="text-xs">Limpar</span>
+                </Button>
+              )}
+            </div>
+            
+            {/* Barra de desenho (quando ativo) */}
+            {isDrawing && (
+              <div className="flex items-center justify-between gap-2 px-3 py-2 bg-primary/5 border-t border-primary/20">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
+                    <PenTool className="h-3.5 w-3.5 text-primary animate-pulse" />
+                  </div>
+                  <div className="text-xs">
+                    <span className="font-medium">{polygonPoints.length}</span>
+                    <span className="text-muted-foreground"> pontos (min 3)</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-8 w-8 rounded-full"
+                    onClick={removeLastPoint}
+                    disabled={polygonPoints.length === 0}
+                  >
+                    <Undo2 className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    className="h-8 px-3 rounded-full gap-1.5"
+                    onClick={finishDrawing}
+                    disabled={polygonPoints.length < 3}
+                  >
+                    <Check className="h-4 w-4" />
+                    <span className="text-xs">OK</span>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-destructive hover:bg-destructive/10"
+                    onClick={cancelDrawing}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ===== DESKTOP HEADER ===== */}
+          <div className="hidden md:flex flex-col bg-background z-10 border-b">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold">Mapa Geoespacial</h2>
+                <div className="flex items-center gap-1.5 ml-2">
                   {unidadesNoMapa > 0 && (
-                    <Badge variant="outline" className="bg-pink-500/10 border-pink-500/50 text-pink-700 text-[10px] px-1 h-5 shrink-0">
-                      <MapPin className="h-2.5 w-2.5 mr-0.5" />
+                    <Badge variant="outline" className="bg-pink-500/10 border-pink-500/50 text-pink-700">
+                      <MapPin className="h-3 w-3 mr-1" />
                       {unidadesNoMapa}
                     </Badge>
                   )}
-                  <Badge variant="secondary" className="text-[10px] px-1 h-5 shrink-0">
-                    <Building2 className="h-2.5 w-2.5 mr-0.5" />
+                  <Badge variant="secondary">
+                    <Building2 className="h-3 w-3 mr-1" />
                     {empresasNoMapa}
                   </Badge>
                 </div>
               </div>
               
-              <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 shrink-0 -mr-1">
+              <Button variant="ghost" size="icon" onClick={onClose}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
-
-            {/* Controles - Grid em mobile, flex em desktop */}
-            <div className="px-2 pb-2 md:px-4 md:pb-3">
-              {/* Mobile: Grade compacta de 2 linhas */}
-              <div className="md:hidden space-y-2">
-                {/* Primeira linha: Filtros principais */}
-                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
-                  {/* CNAE Filter */}
-                  {onCnaesChange && (
-                    <CnaeFilterSelect
-                      selectedCnaes={selectedCnaes}
-                      onCnaesChange={onCnaesChange}
-                    />
-                  )}
-                  
-                  {/* Filtro de Usuário */}
-                  <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
-                    <SelectTrigger className="w-[90px] h-8 text-xs shrink-0">
-                      <Filter className="h-3 w-3 mr-1" />
-                      <SelectValue placeholder="Usuário" />
-                    </SelectTrigger>
-                    <SelectContent 
-                      className="bg-popover" 
-                      style={{ zIndex: 99999 }}
-                      position="popper"
-                      sideOffset={4}
-                    >
-                      <SelectItem value="all">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4" />
-                          Todas
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="none">
-                        <div className="flex items-center gap-2">
-                          <X className="h-4 w-4" />
-                          Sem vínculo
-                        </div>
-                      </SelectItem>
-                      {usuarios.map(u => (
-                        <SelectItem key={u.id} value={u.id}>
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4" />
-                            {u.nome}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  {/* Camadas Dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 text-xs px-2 shrink-0">
-                        <Layers className="h-3.5 w-3.5" />
-                        <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px]">
-                          {activeLayersCount}
-                        </Badge>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-64 bg-popover" style={{ zIndex: 99999 }}>
-                      <DropdownMenuLabel className="flex items-center gap-2 text-sm">
-                        <Layers className="h-4 w-4" />
-                        Camadas
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <div className="p-2 space-y-2 max-h-[50vh] overflow-y-auto">
-                        {layers.map((layer) => (
-                          <div 
-                            key={layer.id} 
-                            className="flex items-center justify-between gap-2"
-                          >
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <div 
-                                className="w-3 h-3 rounded-full shrink-0"
-                                style={{ backgroundColor: layer.color }}
-                              />
-                              <Label 
-                                htmlFor={`layer-mobile-${layer.id}`}
-                                className="text-sm cursor-pointer truncate"
-                              >
-                                {layer.name}
-                              </Label>
-                            </div>
-                            <Switch
-                              id={`layer-mobile-${layer.id}`}
-                              checked={layer.visible}
-                              onCheckedChange={() => onLayerToggle(layer.id)}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  
-                  {/* Isócronas */}
-                  <IsochronePanel selectedPoint={selectedMapPoint} />
-                </div>
-                
-                {/* Segunda linha: Ações */}
-                <div className="flex items-center gap-1.5">
-                  {/* Botões de Desenho */}
-                  {!isDrawing && !showResults && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-8 text-xs px-2"
-                      onClick={startDrawing}
-                    >
-                      <PenTool className="h-3.5 w-3.5 mr-1" />
-                      Área
-                    </Button>
-                  )}
-                  
-                  {isDrawing && (
-                    <div className="flex items-center gap-1">
-                      <Badge variant="secondary" className="h-8 px-2 flex items-center gap-1 text-xs">
-                        <PenTool className="h-3 w-3" />
-                        {polygonPoints.length}
-                      </Badge>
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={removeLastPoint}
-                        disabled={polygonPoints.length === 0}
-                      >
-                        <Undo2 className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="default" 
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={finishDrawing}
-                        disabled={polygonPoints.length < 3}
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={cancelDrawing}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                  
-                  {showResults && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="h-8 text-xs px-2"
-                      onClick={clearPolygon}
-                    >
-                      <Trash2 className="h-3.5 w-3.5 mr-1" />
-                      Limpar
-                    </Button>
-                  )}
-                  
-                  {/* Spacer */}
-                  <div className="flex-1" />
-                  
-                  {/* Zoom Controls */}
-                  <div className="flex items-center gap-1">
-                    <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-8 w-8">
-                      <ZoomIn className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-8 w-8">
-                      <ZoomOut className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
+            
+            {/* Desktop toolbar */}
+            <div className="flex items-center gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide">
               
               {/* Desktop: Linha única com scroll */}
               <div className="hidden md:flex items-center gap-2 overflow-x-auto scrollbar-hide">
@@ -1609,14 +1610,40 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               style={{ zIndex: 1 }}
             />
 
-            {/* Indicador de modo de desenho - Responsivo */}
+            {/* Mobile: Controles de zoom flutuantes */}
+            <div className="md:hidden absolute right-3 top-3 flex flex-col gap-1.5 z-10">
+              <Button 
+                variant="secondary" 
+                size="icon" 
+                onClick={handleZoomIn} 
+                className="h-10 w-10 rounded-full shadow-lg bg-background/90 backdrop-blur-sm border"
+              >
+                <ZoomIn className="h-5 w-5" />
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="icon" 
+                onClick={handleZoomOut} 
+                className="h-10 w-10 rounded-full shadow-lg bg-background/90 backdrop-blur-sm border"
+              >
+                <ZoomOut className="h-5 w-5" />
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="icon" 
+                onClick={handleReset} 
+                className="h-10 w-10 rounded-full shadow-lg bg-background/90 backdrop-blur-sm border"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Indicador de modo de desenho - Desktop only (mobile usa header) */}
             {isDrawing && (
-              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground rounded-lg px-3 py-1.5 md:px-4 md:py-2 z-20 flex items-center gap-2 shadow-lg max-w-[90%]">
-                <PenTool className="h-3.5 w-3.5 md:h-4 md:w-4 animate-pulse shrink-0" />
-                <span className="text-xs md:text-sm font-medium truncate">
-                  <span className="hidden md:inline">Clique no mapa para adicionar pontos </span>
-                  <span className="md:hidden">Toque para marcar </span>
-                  ({polygonPoints.length}/3+)
+              <div className="hidden md:flex absolute top-4 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-4 py-2 z-20 items-center gap-2 shadow-lg">
+                <PenTool className="h-4 w-4 animate-pulse" />
+                <span className="text-sm font-medium">
+                  Clique para adicionar pontos ({polygonPoints.length}/3+)
                 </span>
               </div>
             )}
@@ -1630,32 +1657,39 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               />
             )}
 
-            {/* Indicador de nível de zoom - Compacto em mobile */}
+            {/* Indicador de nível de zoom */}
             {mapReady && !showResults && (
-              <div className="absolute bottom-2 left-2 md:bottom-4 md:left-4 bg-background/95 backdrop-blur-sm border rounded-lg px-2 py-1 md:px-3 md:py-2 z-10">
-                <Badge variant={currentLevel === 'municipal' || currentLevel === 'local' ? 'default' : 'secondary'} className="text-[10px] md:text-xs h-5">
+              <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4 z-10">
+                <Badge 
+                  variant={currentLevel === 'municipal' || currentLevel === 'local' ? 'default' : 'secondary'} 
+                  className="text-[10px] md:text-xs h-6 px-2.5 shadow-sm bg-background/90 backdrop-blur-sm border"
+                >
                   {currentLevel === 'country' && '🌎 País'}
                   {currentLevel === 'region' && '🗺️ Região'}
-                  {currentLevel === 'state' && '📍 UF'}
-                  {currentLevel === 'municipal' && '🏙️ Mun'}
+                  {currentLevel === 'state' && '📍 Estado'}
+                  {currentLevel === 'municipal' && '🏙️ Município'}
                   {currentLevel === 'local' && '📌 Local'}
                 </Badge>
               </div>
             )}
             
-            {/* Alerta de dados não carregados - Responsivo */}
+            {/* Alerta de dados não carregados */}
             {mapReady && municipiosRenda.length === 0 && (currentLevel === 'municipal' || currentLevel === 'local') && !isDrawing && (
-              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5 md:px-4 md:py-2 z-10 flex items-center gap-2 shadow-lg max-w-[90%]">
-                <span className="text-amber-700 text-xs md:text-sm truncate">📊 Dados não carregados</span>
-                <div className="hidden md:block">
+              <div className="absolute top-3 left-3 right-14 md:top-4 md:left-1/2 md:right-auto md:transform md:-translate-x-1/2 bg-amber-50/95 backdrop-blur-sm border border-amber-200 rounded-full px-3 py-1.5 md:px-4 md:py-2 z-10 flex items-center gap-2 shadow-md">
+                <span className="text-amber-700 text-xs truncate">📊 Dados municipais não carregados</span>
+                <div className="hidden md:block shrink-0">
                   <IBGEDataLoader onLoadComplete={refetchRenda} />
                 </div>
               </div>
             )}
 
+            {/* Loading */}
             {!mapReady && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-                <div className="text-muted-foreground">Carregando mapa...</div>
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm text-muted-foreground">Carregando mapa...</span>
+                </div>
               </div>
             )}
           </div>
