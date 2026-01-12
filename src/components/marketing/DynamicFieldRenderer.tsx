@@ -459,34 +459,18 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'selection_text':
         return (
           <div className="space-y-3">
-            <ScrollArea className="max-h-64 border rounded-lg">
-              <div className="p-2 space-y-2">
+            <Select value={value || ''} onValueChange={onChange}>
+              <SelectTrigger>
+                <SelectValue placeholder={field.placeholder || 'Selecione um texto...'} />
+              </SelectTrigger>
+              <SelectContent className="max-h-64">
                 {field.options?.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => onChange(option.value)}
-                    className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
-                      value === option.value
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1">
-                        <span className="font-medium text-sm block mb-1">{option.label}</span>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {option.value}
-                        </p>
-                      </div>
-                      {value === option.value && (
-                        <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                      )}
-                    </div>
-                  </button>
+                  <SelectItem key={option.id} value={option.value}>
+                    <span className="font-medium">{option.label}</span>
+                  </SelectItem>
                 ))}
-              </div>
-            </ScrollArea>
+              </SelectContent>
+            </Select>
             {value && (
               <Card className="bg-primary/5 border-primary/20">
                 <CardContent className="p-3">
