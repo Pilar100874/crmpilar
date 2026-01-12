@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { MapLayer, VendasRegiao, DADOS_DEMOGRAFICOS_UF, Unidade } from './MapLayerTypes';
 import { CnaeFilterSelect } from './CnaeFilterSelect';
 import { CnaeHeatmapImporter } from './CnaeHeatmapImporter';
-import { RendaImporter } from './RendaImporter';
+
 import { IBGEDataLoader } from './IBGEDataLoader';
 import { IsochronePanel } from './IsochronePanel';
 import { useCnaeHeatmap } from './useCnaeHeatmap';
@@ -1176,9 +1176,6 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
               {/* Importador de dados CNAE */}
               <CnaeHeatmapImporter onImportComplete={refetchHeatmap} />
-              
-              {/* Importador de Renda */}
-              <RendaImporter onImportComplete={refetchRenda} />
               
               {/* Carregar dados IBGE automaticamente */}
               <IBGEDataLoader onLoadComplete={refetchRenda} />
