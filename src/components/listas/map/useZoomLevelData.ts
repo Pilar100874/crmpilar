@@ -51,28 +51,59 @@ export const useZoomLevelData = (zoomLevel: number) => {
   const fetchMunicipalData = useCallback(async () => {
     setLoading(true);
     try {
-      // Busca todos os municípios com coordenadas da tabela municipios_renda
-      const { data: rendaData, error } = await supabase
-        .from('municipios_renda')
-        .select('municipio, uf, latitude, longitude, populacao, pib_per_capita, idh, renda_media')
-        .not('latitude', 'is', null)
-        .not('longitude', 'is', null)
-        .order('populacao', { ascending: false, nullsFirst: false });
+      // Busca todos os municípios em lotes para evitar limite de 1000
+      const allRendaData: any[] = [];
+      const batchSize = 1000;
+      let offset = 0;
+      let hasMore = true;
 
-      if (error) throw error;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('municipios_renda')
+          .select('municipio, uf, latitude, longitude, populacao, pib_per_capita, idh, renda_media')
+          .not('latitude', 'is', null)
+          .not('longitude', 'is', null)
+          .order('populacao', { ascending: false, nullsFirst: false })
+          .range(offset, offset + batchSize - 1);
 
-      // Busca contagem de empresas por município
-      const { data: empresasData } = await supabase
-        .from('empresas_cnae_municipios')
-        .select('municipio, uf, quantidade');
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          allRendaData.push(...data);
+          offset += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      // Busca contagem de empresas por município (também em lotes)
+      const allEmpresasData: any[] = [];
+      offset = 0;
+      hasMore = true;
+
+      while (hasMore) {
+        const { data } = await supabase
+          .from('empresas_cnae_municipios')
+          .select('municipio, uf, quantidade')
+          .range(offset, offset + batchSize - 1);
+
+        if (data && data.length > 0) {
+          allEmpresasData.push(...data);
+          offset += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
 
       const empresasMap = new Map<string, number>();
-      empresasData?.forEach(e => {
+      allEmpresasData.forEach(e => {
         const key = `${e.municipio.toUpperCase()}-${e.uf}`;
         empresasMap.set(key, (empresasMap.get(key) || 0) + e.quantidade);
       });
 
-      const combined: MunicipalData[] = (rendaData || []).map(r => {
+      const combined: MunicipalData[] = allRendaData.map(r => {
         const key = `${r.municipio.toUpperCase()}-${r.uf}`;
         return {
           municipio: r.municipio,
