@@ -514,19 +514,45 @@ const MapaClientesView: React.FC = () => {
                 ))}
               </div>
               <DropdownMenuSeparator />
-              <div className="p-2">
-                <div className="text-xs text-muted-foreground space-y-1">
-                  <div className="font-medium mb-1">Legenda:</div>
-                  {layers.filter(l => l.visible).map(layer => (
-                    <div key={layer.id} className="flex items-center gap-2">
-                      <div 
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{ backgroundColor: layer.color }}
-                      />
-                      <span>{layer.name}</span>
+              <div className="p-2 space-y-2 max-h-[200px] overflow-y-auto">
+                <div className="text-xs font-medium text-foreground mb-2">Legenda das Camadas Ativas:</div>
+                {layers.filter(l => l.visible).length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">Nenhuma camada ativa</p>
+                ) : (
+                  layers.filter(l => l.visible).map(layer => (
+                    <div key={layer.id} className="text-xs space-y-1 pb-2 border-b border-border/50 last:border-0">
+                      <div className="flex items-center gap-2 font-medium">
+                        <div 
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{ backgroundColor: layer.color }}
+                        />
+                        <span>{layer.name}</span>
+                      </div>
+                      <p className="text-muted-foreground pl-5">{layer.description}</p>
+                      {layer.id === 'units' && (
+                        <p className="text-muted-foreground pl-5 italic">• Ícone rosa maior = Filiais/Pontos de venda</p>
+                      )}
+                      {layer.id === 'clients' && (
+                        <p className="text-muted-foreground pl-5 italic">• Ícone azul = Empresas cadastradas</p>
+                      )}
+                      {layer.id === 'sales' && (
+                        <p className="text-muted-foreground pl-5 italic">• Tamanho = Volume de vendas</p>
+                      )}
+                      {layer.id === 'demographics' && (
+                        <p className="text-muted-foreground pl-5 italic">• Tamanho = População | Opacidade = Densidade</p>
+                      )}
+                      {layer.id === 'income' && (
+                        <p className="text-muted-foreground pl-5 italic">• Tamanho/Opacidade = Renda média</p>
+                      )}
+                      {layer.id === 'competition' && (
+                        <p className="text-muted-foreground pl-5 italic">• Verde = Baixo | Amarelo = Médio | Vermelho = Alto</p>
+                      )}
+                      {layer.id === 'logistics' && (
+                        <p className="text-muted-foreground pl-5 italic">• Preenchido = Difícil acesso | Vazio = Fácil acesso</p>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  ))
+                )}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
