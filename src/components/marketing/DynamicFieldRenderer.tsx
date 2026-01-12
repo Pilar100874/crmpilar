@@ -458,28 +458,18 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
         
       case 'selection_text':
         return (
-          <div className="space-y-3">
-            <Select value={value || ''} onValueChange={onChange}>
-              <SelectTrigger>
-                <SelectValue placeholder={field.placeholder || 'Selecione um texto...'} />
-              </SelectTrigger>
-              <SelectContent className="max-h-64">
-                {field.options?.map((option) => (
-                  <SelectItem key={option.id} value={option.value}>
-                    <span className="font-medium">{option.label}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {value && (
-              <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="p-3">
-                  <p className="text-xs text-muted-foreground mb-1">Texto selecionado:</p>
-                  <p className="text-sm whitespace-pre-wrap">{value}</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          <Select value={value || ''} onValueChange={onChange}>
+            <SelectTrigger>
+              <SelectValue placeholder={field.placeholder || 'Selecione um texto...'} />
+            </SelectTrigger>
+            <SelectContent className="max-h-64">
+              {field.options?.map((option) => (
+                <SelectItem key={option.id} value={option.value}>
+                  <span className="font-medium">{option.label}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         );
 
       case 'product_name':
