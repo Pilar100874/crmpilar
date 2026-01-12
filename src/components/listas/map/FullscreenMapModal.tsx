@@ -19,6 +19,7 @@ import { MapLayer, VendasRegiao, DADOS_DEMOGRAFICOS_UF, Unidade } from './MapLay
 import { CnaeFilterSelect } from './CnaeFilterSelect';
 import { CnaeHeatmapImporter } from './CnaeHeatmapImporter';
 import { RendaImporter } from './RendaImporter';
+import { IBGEDataLoader } from './IBGEDataLoader';
 import { IsochronePanel } from './IsochronePanel';
 import { useCnaeHeatmap } from './useCnaeHeatmap';
 import { useMunicipiosRenda } from './useMunicipiosRenda';
@@ -845,6 +846,9 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               
               {/* Importador de Renda */}
               <RendaImporter onImportComplete={refetchRenda} />
+              
+              {/* Carregar dados IBGE automaticamente */}
+              <IBGEDataLoader onLoadComplete={refetchRenda} />
               
               {/* Painel de Isócronas */}
               <IsochronePanel selectedPoint={selectedMapPoint} />
