@@ -17,6 +17,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { MapLayer, VendasRegiao, DADOS_DEMOGRAFICOS_UF, Unidade } from './MapLayerTypes';
 import { CnaeFilterSelect } from './CnaeFilterSelect';
+import { CnaeHeatmapImporter } from './CnaeHeatmapImporter';
+import { useCnaeHeatmap } from './useCnaeHeatmap';
 import { 
   X, 
   Filter, 
@@ -27,7 +29,8 @@ import {
   RotateCcw,
   MapPin,
   Layers,
-  ChevronDown
+  ChevronDown,
+  Upload
 } from 'lucide-react';
 
 // Fix default Leaflet marker icons
@@ -109,7 +112,11 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   const competitionLayerRef = useRef<L.LayerGroup | null>(null);
   const logisticsLayerRef = useRef<L.LayerGroup | null>(null);
   const cnaeMarkersLayerRef = useRef<L.LayerGroup | null>(null);
+  const heatmapLayerRef = useRef<L.LayerGroup | null>(null);
   const [mapReady, setMapReady] = useState(false);
+
+  // Hook para dados do heatmap por município
+  const { heatmapData, heatmapByUF, loading: heatmapLoading, refetch: refetchHeatmap } = useCnaeHeatmap(selectedCnaes);
 
   // Initialize map when dialog opens
   const initializeMap = useCallback(() => {
@@ -136,6 +143,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
       competitionLayerRef.current = L.layerGroup().addTo(map);
       logisticsLayerRef.current = L.layerGroup().addTo(map);
       cnaeMarkersLayerRef.current = L.layerGroup().addTo(map);
+      heatmapLayerRef.current = L.layerGroup().addTo(map);
 
       mapRef.current = map;
 
@@ -163,6 +171,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
         competitionLayerRef.current = null;
         logisticsLayerRef.current = null;
         cnaeMarkersLayerRef.current = null;
+        heatmapLayerRef.current = null;
         setMapReady(false);
       }
       return;
@@ -540,6 +549,55 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     });
   }, [layers, mapReady]);
 
+  // NOVA CAMADA: Heatmap por Município (dados importados)
+  useEffect(() => {
+    if (!heatmapLayerRef.current || !mapReady) return;
+    
+    heatmapLayerRef.current.clearLayers();
+    
+    const compLayer = layers.find(l => l.id === 'competition');
+    if (!compLayer?.visible || selectedCnaes.length === 0 || heatmapData.length === 0) return;
+
+    // Calcula max para normalização
+    const maxQuantidade = Math.max(...heatmapData.map(d => d.quantidade), 1);
+    
+    // Renderiza círculos por município
+    heatmapData.forEach(data => {
+      if (!data.latitude || !data.longitude) return;
+      
+      const normalized = data.quantidade / maxQuantidade;
+      
+      // Cor baseada na intensidade (verde -> amarelo -> vermelho)
+      let fillColor = '#22c55e'; // verde
+      if (normalized > 0.6) fillColor = '#ef4444'; // vermelho
+      else if (normalized > 0.3) fillColor = '#f59e0b'; // amarelo
+      
+      // Tamanho proporcional à quantidade
+      const radius = Math.max(5, Math.min(normalized * 25 + 5, 30));
+      
+      const circle = L.circleMarker([data.latitude, data.longitude], {
+        radius: radius,
+        fillColor: fillColor,
+        color: '#374151',
+        weight: 1,
+        opacity: 0.8,
+        fillOpacity: 0.6
+      });
+
+      circle.bindPopup(`
+        <div class="p-2">
+          <strong>${data.municipio} - ${data.uf}</strong>
+          <br/><small>📊 Empresas: <strong>${data.quantidade.toLocaleString('pt-BR')}</strong></small>
+          ${data.cnae_descricao ? `<br/><small>CNAE: ${data.cnae_descricao}</small>` : ''}
+          <br/><small>Densidade: ${normalized > 0.6 ? 'Alta' : normalized > 0.3 ? 'Média' : 'Baixa'}</small>
+          <br/><small class="text-muted-foreground">Fonte: Dados importados</small>
+        </div>
+      `);
+
+      heatmapLayerRef.current!.addLayer(circle);
+    });
+  }, [layers, mapReady, selectedCnaes, heatmapData]);
+
   const handleZoomIn = () => mapRef.current?.zoomIn();
   const handleZoomOut = () => mapRef.current?.zoomOut();
   const handleReset = () => mapRef.current?.setView([-15.7801, -47.9292], 4);
@@ -595,6 +653,9 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                   onCnaesChange={onCnaesChange}
                 />
               )}
+
+              {/* Importador de dados CNAE */}
+              <CnaeHeatmapImporter onImportComplete={refetchHeatmap} />
 
               {/* Filtro de Usuário */}
               <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>

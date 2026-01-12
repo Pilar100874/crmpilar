@@ -2737,6 +2737,53 @@ export type Database = {
           },
         ]
       }
+      empresas_cnae_municipios: {
+        Row: {
+          cnae: string
+          cnae_descricao: string | null
+          codigo_municipio: string | null
+          created_at: string
+          estabelecimento_id: string | null
+          id: string
+          municipio: string
+          quantidade: number
+          uf: string
+          updated_at: string
+        }
+        Insert: {
+          cnae: string
+          cnae_descricao?: string | null
+          codigo_municipio?: string | null
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          municipio: string
+          quantidade?: number
+          uf: string
+          updated_at?: string
+        }
+        Update: {
+          cnae?: string
+          cnae_descricao?: string | null
+          codigo_municipio?: string | null
+          created_at?: string
+          estabelecimento_id?: string | null
+          id?: string
+          municipio?: string
+          quantidade?: number
+          uf?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empresas_cnae_municipios_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entregas_programadas: {
         Row: {
           created_at: string
@@ -4775,6 +4822,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      municipios_coordenadas: {
+        Row: {
+          codigo_ibge: string | null
+          created_at: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          nome: string
+          populacao: number | null
+          uf: string
+        }
+        Insert: {
+          codigo_ibge?: string | null
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nome: string
+          populacao?: number | null
+          uf: string
+        }
+        Update: {
+          codigo_ibge?: string | null
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nome?: string
+          populacao?: number | null
+          uf?: string
+        }
+        Relationships: []
       }
       n8n_credenciais: {
         Row: {
