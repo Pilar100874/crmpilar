@@ -1135,37 +1135,37 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
         
         <div className="relative w-full h-full flex flex-col">
           {/* Header - Responsivo */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-3 border-b bg-background z-10 gap-2">
-            {/* Linha 1: Título e Fechar */}
-            <div className="flex items-center justify-between w-full sm:w-auto gap-2">
-              <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+          <div className="flex flex-col gap-2 p-2 sm:p-3 border-b bg-background z-10">
+            {/* Linha 1: Título, Badges e Fechar */}
+            <div className="flex items-center justify-between w-full">
+              <h2 className="text-sm sm:text-lg font-semibold flex items-center gap-1.5 sm:gap-2">
                 <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                <span className="hidden xs:inline">Mapa Geoespacial</span>
-                <span className="xs:hidden">Mapa</span>
+                <span className="hidden sm:inline">Mapa Geoespacial</span>
+                <span className="sm:hidden">Mapa</span>
               </h2>
               
-              {/* Badges - Mobile */}
-              <div className="flex sm:hidden items-center gap-1.5">
+              {/* Badges */}
+              <div className="flex items-center gap-1.5">
                 {unidadesNoMapa > 0 && (
-                  <Badge variant="outline" className="bg-pink-500/10 border-pink-500/50 text-pink-700 text-xs px-1.5">
-                    <MapPin className="h-3 w-3 mr-0.5" />
+                  <Badge variant="outline" className="bg-pink-500/10 border-pink-500/50 text-pink-700 text-[10px] sm:text-xs px-1 sm:px-1.5 h-5 sm:h-6">
+                    <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5" />
                     {unidadesNoMapa}
                   </Badge>
                 )}
-                <Badge variant="secondary" className="text-xs px-1.5">
-                  <Building2 className="h-3 w-3 mr-0.5" />
+                <Badge variant="secondary" className="text-[10px] sm:text-xs px-1 sm:px-1.5 h-5 sm:h-6">
+                  <Building2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5" />
                   {empresasNoMapa}
                 </Badge>
               </div>
               
-              {/* Fechar - Mobile */}
-              <Button variant="ghost" size="icon" onClick={onClose} className="sm:hidden h-8 w-8">
-                <X className="h-5 w-5" />
+              {/* Fechar */}
+              <Button variant="ghost" size="icon" onClick={onClose} className="h-7 w-7 sm:h-8 sm:w-8 ml-1">
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </div>
 
-            {/* Linha 2: Filtros e Controles */}
-            <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+            {/* Linha 2: Filtros e Controles - scrollável horizontalmente */}
+            <div className="flex items-center gap-1.5 sm:gap-2 w-full overflow-x-auto pb-1 scrollbar-hide">
               {/* Filtro de CNAE para Concorrência */}
               {onCnaesChange && (
                 <CnaeFilterSelect
@@ -1174,64 +1174,65 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                 />
               )}
 
-              {/* Importador de dados CNAE */}
-              <CnaeHeatmapImporter onImportComplete={refetchHeatmap} />
+              {/* Importador de dados CNAE - hidden on mobile */}
+              <div className="hidden sm:block">
+                <CnaeHeatmapImporter onImportComplete={refetchHeatmap} />
+              </div>
               
-              {/* Carregar dados IBGE automaticamente */}
-              <IBGEDataLoader onLoadComplete={refetchRenda} />
+              {/* Carregar dados IBGE - hidden on mobile */}
+              <div className="hidden sm:block">
+                <IBGEDataLoader onLoadComplete={refetchRenda} />
+              </div>
               
               {/* Painel de Isócronas */}
               <IsochronePanel selectedPoint={selectedMapPoint} />
 
               {/* Controles de Desenho de Polígono */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 shrink-0">
                 {!isDrawing && !showResults && (
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-8 text-xs sm:text-sm shrink-0"
+                    className="h-7 sm:h-8 text-[10px] sm:text-xs px-2 sm:px-3 shrink-0"
                     onClick={startDrawing}
                   >
-                    <PenTool className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    <span className="hidden sm:inline">Desenhar Área</span>
+                    <PenTool className="h-3 w-3 mr-0.5 sm:mr-1" />
+                    <span className="hidden sm:inline">Desenhar</span>
                     <span className="sm:hidden">Área</span>
                   </Button>
                 )}
                 
                 {isDrawing && (
                   <>
-                    <Badge variant="secondary" className="h-8 px-2 flex items-center gap-1">
-                      <PenTool className="h-3 w-3" />
-                      {polygonPoints.length} pts
+                    <Badge variant="secondary" className="h-7 sm:h-8 px-1.5 sm:px-2 flex items-center gap-0.5 text-[10px] sm:text-xs">
+                      <PenTool className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                      {polygonPoints.length}
                     </Badge>
                     <Button 
                       variant="outline" 
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-7 w-7 sm:h-8 sm:w-8"
                       onClick={removeLastPoint}
                       disabled={polygonPoints.length === 0}
-                      title="Desfazer último ponto"
                     >
-                      <Undo2 className="h-4 w-4" />
+                      <Undo2 className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                     <Button 
                       variant="default" 
                       size="sm"
-                      className="h-8"
+                      className="h-7 sm:h-8 text-[10px] sm:text-xs px-2"
                       onClick={finishDrawing}
                       disabled={polygonPoints.length < 3}
                     >
-                      <Check className="h-4 w-4 mr-1" />
-                      Calcular
+                      <Check className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-7 w-7 sm:h-8 sm:w-8"
                       onClick={cancelDrawing}
-                      title="Cancelar"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </>
                 )}
@@ -1240,19 +1241,18 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="h-8 text-xs sm:text-sm"
+                    className="h-7 sm:h-8 text-[10px] sm:text-xs px-2"
                     onClick={clearPolygon}
                   >
-                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    Limpar
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 )}
               </div>
 
               {/* Filtro de Usuário */}
               <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
-                <SelectTrigger className="w-[130px] sm:w-[160px] h-8 text-xs sm:text-sm shrink-0">
-                  <Filter className="h-3 w-3 sm:h-4 sm:w-4 mr-1 shrink-0" />
+                <SelectTrigger className="w-[100px] sm:w-[140px] h-7 sm:h-8 text-[10px] sm:text-xs shrink-0">
+                  <Filter className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1 shrink-0" />
                   <SelectValue placeholder="Usuário" />
                 </SelectTrigger>
                 <SelectContent 
@@ -1284,27 +1284,13 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                 </SelectContent>
               </Select>
 
-              {/* Badges - Desktop/Tablet */}
-              <div className="hidden sm:flex items-center gap-1.5">
-                {unidadesNoMapa > 0 && (
-                  <Badge variant="outline" className="bg-pink-500/10 border-pink-500 text-pink-700 text-xs">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    {unidadesNoMapa} unid.
-                  </Badge>
-                )}
-                <Badge variant="secondary" className="text-xs">
-                  <Building2 className="h-3 w-3 mr-1" />
-                  {empresasNoMapa} emp.
-                </Badge>
-              </div>
-
               {/* Dropdown Camadas */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 text-xs sm:text-sm shrink-0">
-                    <Layers className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <Button variant="outline" size="sm" className="h-7 sm:h-8 text-[10px] sm:text-xs px-2 sm:px-3 shrink-0">
+                    <Layers className="h-3 w-3 mr-0.5 sm:mr-1" />
                     <span className="hidden sm:inline">Camadas</span>
-                    <Badge variant="secondary" className="ml-1 h-4 sm:h-5 px-1 sm:px-1.5 text-xs">
+                    <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 px-1 text-[10px] sm:text-xs">
                       {activeLayersCount}
                     </Badge>
                   </Button>
@@ -1428,22 +1414,17 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               </DropdownMenu>
 
               {/* Zoom Controls */}
-              <div className="flex items-center gap-1 shrink-0">
-                <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-8 w-8">
-                  <ZoomIn className="h-4 w-4" />
+              <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-7 w-7 sm:h-8 sm:w-8">
+                  <ZoomIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
-                <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-8 w-8">
-                  <ZoomOut className="h-4 w-4" />
+                <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-7 w-7 sm:h-8 sm:w-8">
+                  <ZoomOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
-                <Button variant="outline" size="icon" onClick={handleReset} className="h-8 w-8 hidden sm:flex">
-                  <RotateCcw className="h-4 w-4" />
+                <Button variant="outline" size="icon" onClick={handleReset} className="h-7 w-7 sm:h-8 sm:w-8 hidden sm:flex">
+                  <RotateCcw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </Button>
               </div>
-              
-              {/* Fechar - Desktop */}
-              <Button variant="ghost" size="icon" onClick={onClose} className="hidden sm:flex h-8 w-8 shrink-0">
-                <X className="h-5 w-5" />
-              </Button>
             </div>
           </div>
 
