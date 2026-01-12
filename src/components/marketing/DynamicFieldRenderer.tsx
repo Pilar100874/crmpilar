@@ -479,14 +479,6 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
               </ScrollArea>
             )}
 
-            {selectedProduto && (
-              <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="p-3">
-                  <p className="text-xs text-muted-foreground">Produto selecionado:</p>
-                  <p className="font-medium">{selectedProduto.nome}</p>
-                </CardContent>
-              </Card>
-            )}
           </div>
         );
 
@@ -556,21 +548,6 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
               </ScrollArea>
             )}
 
-            {value?.imageUrl && (
-              <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <img
-                    src={value.imageUrl}
-                    alt="Selecionada"
-                    className="w-16 h-16 rounded-lg object-cover"
-                  />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Imagem selecionada de:</p>
-                    <p className="font-medium">{value.productName}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         );
 
