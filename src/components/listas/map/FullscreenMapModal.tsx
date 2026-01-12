@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -83,41 +84,69 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   const incomeLayerRef = useRef<L.LayerGroup | null>(null);
   const competitionLayerRef = useRef<L.LayerGroup | null>(null);
   const logisticsLayerRef = useRef<L.LayerGroup | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
-  // Initialize map
-  useEffect(() => {
-    if (!open || !mapContainerRef.current) return;
-    
-    // Small delay to ensure container is rendered
-    const timer = setTimeout(() => {
-      if (mapRef.current || !mapContainerRef.current) return;
+  // Initialize map when dialog opens
+  const initializeMap = useCallback(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
 
-      mapRef.current = L.map(mapContainerRef.current).setView([-15.7801, -47.9292], 4);
+    try {
+      const map = L.map(mapContainerRef.current, {
+        center: [-15.7801, -47.9292],
+        zoom: 4,
+        zoomControl: false
+      });
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(mapRef.current);
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
 
-      markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
-      vendasLayerRef.current = L.layerGroup().addTo(mapRef.current);
-      demographicsLayerRef.current = L.layerGroup().addTo(mapRef.current);
-      incomeLayerRef.current = L.layerGroup().addTo(mapRef.current);
-      competitionLayerRef.current = L.layerGroup().addTo(mapRef.current);
-      logisticsLayerRef.current = L.layerGroup().addTo(mapRef.current);
-    }, 100);
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    return () => {
-      clearTimeout(timer);
+      markersLayerRef.current = L.layerGroup().addTo(map);
+      vendasLayerRef.current = L.layerGroup().addTo(map);
+      demographicsLayerRef.current = L.layerGroup().addTo(map);
+      incomeLayerRef.current = L.layerGroup().addTo(map);
+      competitionLayerRef.current = L.layerGroup().addTo(map);
+      logisticsLayerRef.current = L.layerGroup().addTo(map);
+
+      mapRef.current = map;
+
+      // Force resize after a delay
+      setTimeout(() => {
+        map.invalidateSize();
+        setMapReady(true);
+      }, 300);
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      // Cleanup when closing
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
+        markersLayerRef.current = null;
+        vendasLayerRef.current = null;
+        demographicsLayerRef.current = null;
+        incomeLayerRef.current = null;
+        competitionLayerRef.current = null;
+        logisticsLayerRef.current = null;
+        setMapReady(false);
       }
-    };
-  }, [open]);
+      return;
+    }
+
+    // Initialize with delay to ensure DOM is ready
+    const timer = setTimeout(initializeMap, 200);
+    return () => clearTimeout(timer);
+  }, [open, initializeMap]);
 
   // Update markers layer (clients)
   useEffect(() => {
-    if (!markersLayerRef.current) return;
+    if (!markersLayerRef.current || !mapReady) return;
     
     markersLayerRef.current.clearLayers();
     
@@ -148,11 +177,11 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
           </div>
         `);
     });
-  }, [empresas, layers]);
+  }, [empresas, layers, mapReady]);
 
   // Update vendas layer
   useEffect(() => {
-    if (!vendasLayerRef.current) return;
+    if (!vendasLayerRef.current || !mapReady) return;
     
     vendasLayerRef.current.clearLayers();
     
@@ -185,11 +214,11 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
       vendasLayerRef.current!.addLayer(circle);
     });
-  }, [vendasData, layers]);
+  }, [vendasData, layers, mapReady]);
 
   // Update demographics layer
   useEffect(() => {
-    if (!demographicsLayerRef.current) return;
+    if (!demographicsLayerRef.current || !mapReady) return;
     
     demographicsLayerRef.current.clearLayers();
     
@@ -224,11 +253,11 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
       demographicsLayerRef.current!.addLayer(circle);
     });
-  }, [layers]);
+  }, [layers, mapReady]);
 
   // Update income layer
   useEffect(() => {
-    if (!incomeLayerRef.current) return;
+    if (!incomeLayerRef.current || !mapReady) return;
     
     incomeLayerRef.current.clearLayers();
     
@@ -263,23 +292,22 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
       incomeLayerRef.current!.addLayer(circle);
     });
-  }, [layers]);
+  }, [layers, mapReady]);
 
   // Update competition layer (simulated)
   useEffect(() => {
-    if (!competitionLayerRef.current) return;
+    if (!competitionLayerRef.current || !mapReady) return;
     
     competitionLayerRef.current.clearLayers();
     
     const compLayer = layers.find(l => l.id === 'competition');
     if (!compLayer?.visible) return;
 
-    // Simulated competition data based on urbanization
     Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
       const competitionLevel = data.urbanizacao / 100;
-      let fillColor = '#22c55e'; // green = low
-      if (competitionLevel > 0.85) fillColor = '#ef4444'; // red = high
-      else if (competitionLevel > 0.75) fillColor = '#f59e0b'; // yellow = medium
+      let fillColor = '#22c55e';
+      if (competitionLevel > 0.85) fillColor = '#ef4444';
+      else if (competitionLevel > 0.75) fillColor = '#f59e0b';
 
       const circle = L.circleMarker([data.lat, data.lng], {
         radius: 18,
@@ -301,25 +329,21 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
       competitionLayerRef.current!.addLayer(circle);
     });
-  }, [layers]);
+  }, [layers, mapReady]);
 
   // Update logistics layer
   useEffect(() => {
-    if (!logisticsLayerRef.current) return;
+    if (!logisticsLayerRef.current || !mapReady) return;
     
     logisticsLayerRef.current.clearLayers();
     
     const logLayer = layers.find(l => l.id === 'logistics');
     if (!logLayer?.visible) return;
 
-    // Simulated logistics access based on density (higher density = better access)
-    const maxDensidade = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.densidade));
-
     Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
       const accessScore = Math.min(data.densidade / 100, 1);
       let accessLevel = 'baixo';
       let fillOpacity = 1;
-      let weight = 3;
       
       if (accessScore > 0.5) {
         accessLevel = 'alto';
@@ -351,7 +375,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
       logisticsLayerRef.current!.addLayer(circle);
     });
-  }, [layers]);
+  }, [layers, mapReady]);
 
   const handleZoomIn = () => mapRef.current?.zoomIn();
   const handleZoomOut = () => mapRef.current?.zoomOut();
@@ -359,7 +383,11 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[98vw] w-[98vw] h-[95vh] p-0 gap-0">
+      <DialogContent className="max-w-[98vw] w-[98vw] h-[95vh] p-0 gap-0" aria-describedby={undefined}>
+        <VisuallyHidden>
+          <DialogTitle>Mapa Geoespacial em Tela Cheia</DialogTitle>
+        </VisuallyHidden>
+        
         <div className="relative w-full h-full flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b bg-background z-10">
@@ -423,12 +451,18 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
           </div>
 
           {/* Map Content */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative overflow-hidden">
             <div 
               ref={mapContainerRef} 
-              className="absolute inset-0"
-              style={{ zIndex: 0 }}
+              className="absolute inset-0 w-full h-full"
+              style={{ zIndex: 1 }}
             />
+
+            {!mapReady && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+                <div className="text-muted-foreground">Carregando mapa...</div>
+              </div>
+            )}
 
             {/* Layer Control Panel */}
             <div className="absolute top-3 left-3 z-[1000]">
