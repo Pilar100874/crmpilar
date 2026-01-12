@@ -983,16 +983,22 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                             <p className="text-muted-foreground pl-4">Tamanho = Volume vendas</p>
                           )}
                           {layer.id === 'demographics' && (
-                            <p className="text-muted-foreground pl-4">Tamanho = População</p>
+                            <p className="text-muted-foreground pl-4 text-xs">População, renda e IDH por estado</p>
                           )}
                           {layer.id === 'income' && (
-                            <p className="text-muted-foreground pl-4">Tamanho = Renda média</p>
+                            <p className="text-muted-foreground pl-4 text-xs">Tamanho = Renda média</p>
                           )}
                           {layer.id === 'competition' && (
-                            <p className="text-muted-foreground pl-4">🟢Baixo 🟡Médio 🔴Alto</p>
+                            <p className="text-muted-foreground pl-4 text-xs">🟢Baixo 🟡Médio 🔴Alto</p>
                           )}
                           {layer.id === 'logistics' && (
-                            <p className="text-muted-foreground pl-4">Cheio = Difícil acesso</p>
+                            <p className="text-muted-foreground pl-4 text-xs">Cheio = Difícil acesso</p>
+                          )}
+                          {layer.id === 'density' && (
+                            <p className="text-muted-foreground pl-4 text-xs">🟠 Qtd empresas por município (CNAEs)</p>
+                          )}
+                          {layer.id === 'municipal_income' && (
+                            <p className="text-muted-foreground pl-4 text-xs">🟢Alto 🟡Médio 🔴Baixo PIB per capita</p>
                           )}
                         </div>
                       ))
