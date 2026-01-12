@@ -1134,10 +1134,20 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
         </VisuallyHidden>
         
         <div className="relative w-full h-full flex flex-col bg-background">
+          {/* ===== MOBILE/TABLET: BOTÃO FECHAR FIXO ===== */}
+          <Button 
+            variant="secondary" 
+            size="icon" 
+            onClick={onClose} 
+            className="lg:hidden fixed top-3 right-3 z-[10001] h-11 w-11 rounded-full shadow-lg border-2 border-border bg-background"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+
           {/* ===== MOBILE/TABLET HEADER ===== */}
           <div className="lg:hidden flex flex-col bg-background z-20 border-b shrink-0">
-            {/* Top bar: Título + Fechar */}
-            <div className="flex items-center justify-between px-3 py-2 min-h-[48px]">
+            {/* Top bar: Título */}
+            <div className="flex items-center px-3 py-2 min-h-[48px] pr-16">
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <MapPin className="h-4 w-4 text-primary" />
@@ -1153,24 +1163,14 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                   </div>
                 </div>
               </div>
-              
-              {/* Botão Fechar - sempre visível */}
-              <Button 
-                variant="outline" 
-                size="icon" 
-                onClick={onClose} 
-                className="h-10 w-10 shrink-0 ml-2 rounded-full border-2"
-              >
-                <X className="h-5 w-5" />
-              </Button>
             </div>
 
-            {/* Toolbar: Scroll horizontal */}
-            <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto border-t" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {/* Toolbar: Scroll horizontal com padding para não cortar */}
+            <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto border-t scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Camadas */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9 gap-1.5 px-3 shrink-0 whitespace-nowrap">
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5 px-3 flex-shrink-0">
                     <Layers className="h-4 w-4" />
                     <span className="text-xs">{activeLayersCount}</span>
                   </Button>
@@ -1212,15 +1212,17 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               
               {/* Filtro CNAE */}
               {onCnaesChange && (
-                <CnaeFilterSelect
-                  selectedCnaes={selectedCnaes}
-                  onCnaesChange={onCnaesChange}
-                />
+                <div className="flex-shrink-0">
+                  <CnaeFilterSelect
+                    selectedCnaes={selectedCnaes}
+                    onCnaesChange={onCnaesChange}
+                  />
+                </div>
               )}
               
               {/* Usuário */}
               <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
-                <SelectTrigger className="w-[100px] h-9 text-xs shrink-0">
+                <SelectTrigger className="w-[100px] h-9 text-xs flex-shrink-0">
                   <User className="h-3 w-3 mr-1" />
                   <SelectValue placeholder="Usuário" />
                 </SelectTrigger>
@@ -1234,14 +1236,16 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               </Select>
               
               {/* Isócronas */}
-              <IsochronePanel selectedPoint={selectedMapPoint} />
+              <div className="flex-shrink-0">
+                <IsochronePanel selectedPoint={selectedMapPoint} />
+              </div>
               
               {/* Desenho de Área */}
               {!isDrawing && !showResults && (
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="h-9 gap-1 px-3 shrink-0 whitespace-nowrap"
+                  className="h-9 gap-1 px-3 flex-shrink-0"
                   onClick={startDrawing}
                 >
                   <PenTool className="h-4 w-4" />
@@ -1253,13 +1257,16 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                 <Button 
                   variant="destructive" 
                   size="sm"
-                  className="h-9 gap-1 px-3 shrink-0 whitespace-nowrap"
+                  className="h-9 gap-1 px-3 flex-shrink-0"
                   onClick={clearPolygon}
                 >
                   <Trash2 className="h-4 w-4" />
                   <span className="text-xs">Limpar</span>
                 </Button>
               )}
+              
+              {/* Espaço extra no final para garantir scroll */}
+              <div className="w-4 flex-shrink-0" aria-hidden="true" />
             </div>
             
             {/* Barra de desenho (quando ativo) */}
