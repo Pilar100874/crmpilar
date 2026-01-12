@@ -183,6 +183,73 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
           </Select>
         );
 
+      case 'multi_select':
+        const multiSelectedValues = Array.isArray(value) ? value : [];
+        const toggleMultiOption = (optionValue: string) => {
+          if (multiSelectedValues.includes(optionValue)) {
+            onChange(multiSelectedValues.filter((v: string) => v !== optionValue));
+          } else {
+            onChange([...multiSelectedValues, optionValue]);
+          }
+        };
+        const selectedLabels = field.options
+          ?.filter(opt => multiSelectedValues.includes(opt.value))
+          .map(opt => opt.label)
+          .join(', ');
+        return (
+          <div className="space-y-2">
+            <div className="relative">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-between text-left font-normal"
+                onClick={(e) => {
+                  const dropdown = e.currentTarget.nextElementSibling;
+                  if (dropdown) {
+                    dropdown.classList.toggle('hidden');
+                  }
+                }}
+              >
+                <span className={multiSelectedValues.length > 0 ? '' : 'text-muted-foreground'}>
+                  {multiSelectedValues.length > 0 
+                    ? `${multiSelectedValues.length} selecionado(s)` 
+                    : field.placeholder || 'Selecione...'}
+                </span>
+                <Check className={`h-4 w-4 ${multiSelectedValues.length > 0 ? 'opacity-100' : 'opacity-0'}`} />
+              </Button>
+              <div className="hidden absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg">
+                <ScrollArea className="max-h-48">
+                  <div className="p-1">
+                    {field.options?.map((option) => {
+                      const isSelected = multiSelectedValues.includes(option.value);
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => toggleMultiOption(option.value)}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm text-left transition-colors ${
+                            isSelected ? 'bg-primary/10' : 'hover:bg-muted'
+                          }`}
+                        >
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center ${
+                            isSelected ? 'bg-primary border-primary' : 'border-muted-foreground/40'
+                          }`}>
+                            {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                          </div>
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
+            {selectedLabels && (
+              <p className="text-xs text-muted-foreground">{selectedLabels}</p>
+            )}
+          </div>
+        );
+
       case 'selection_image':
         return (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
