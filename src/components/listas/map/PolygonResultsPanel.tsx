@@ -48,8 +48,8 @@ export const PolygonResultsPanel: React.FC<PolygonResultsPanelProps> = ({
 
   return (
     <>
-      {/* Mobile: Bottom Sheet Style */}
-      <div className="md:hidden absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t rounded-t-2xl shadow-2xl z-[1000] flex flex-col max-h-[70vh]">
+      {/* Mobile/Tablet: Bottom Sheet Style */}
+      <div className="lg:hidden absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t rounded-t-2xl shadow-2xl z-[1000] flex flex-col max-h-[70vh]">
         {/* Handle + Header */}
         <div 
           className="flex flex-col items-center pt-2 pb-1 cursor-pointer"
@@ -161,7 +161,7 @@ export const PolygonResultsPanel: React.FC<PolygonResultsPanelProps> = ({
       </div>
 
       {/* Desktop: Card lateral */}
-      <div className="hidden md:flex absolute left-4 bottom-4 bg-background/95 backdrop-blur-md border rounded-xl shadow-xl z-[1000] w-80 max-h-[60vh] flex-col">
+      <div className="hidden lg:flex absolute left-4 bottom-4 bg-background/95 backdrop-blur-md border rounded-xl shadow-xl z-[1000] w-80 max-h-[60vh] flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b">
           <div className="flex items-center gap-2">

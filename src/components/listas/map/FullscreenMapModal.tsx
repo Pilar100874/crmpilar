@@ -1128,14 +1128,14 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[100vw] w-[100vw] h-[100dvh] p-0 gap-0 rounded-none z-[9999] md:max-w-[98vw] md:w-[98vw] md:h-[95vh] md:rounded-lg overflow-hidden" aria-describedby={undefined}>
+      <DialogContent className="max-w-[100vw] w-[100vw] h-[100dvh] p-0 gap-0 rounded-none z-[9999] lg:max-w-[98vw] lg:w-[98vw] lg:h-[95vh] lg:rounded-lg overflow-hidden" aria-describedby={undefined}>
         <VisuallyHidden>
           <DialogTitle>Mapa Geoespacial em Tela Cheia</DialogTitle>
         </VisuallyHidden>
         
         <div className="relative w-full h-full flex flex-col bg-background">
           {/* ===== MOBILE/TABLET HEADER ===== */}
-          <div className="md:hidden flex flex-col bg-background/95 backdrop-blur-md z-20 border-b shadow-sm">
+          <div className="lg:hidden flex flex-col bg-background/95 backdrop-blur-md z-20 border-b shadow-sm">
             {/* Top bar: Título + Fechar */}
             <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/50">
               <div className="flex items-center gap-2.5">
@@ -1313,7 +1313,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
           </div>
 
           {/* ===== DESKTOP HEADER ===== */}
-          <div className="hidden md:flex flex-col bg-background z-10 border-b">
+          <div className="hidden lg:flex flex-col bg-background z-10 border-b">
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-3">
                 <MapPin className="h-5 w-5 text-primary" />
@@ -1341,7 +1341,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
             <div className="flex items-center gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide">
               
               {/* Desktop: Linha única com scroll */}
-              <div className="hidden md:flex items-center gap-2 overflow-x-auto scrollbar-hide">
+              <div className="hidden lg:flex items-center gap-2 overflow-x-auto scrollbar-hide">
                 {/* Filtro de CNAE */}
                 {onCnaesChange && (
                   <CnaeFilterSelect
@@ -1611,7 +1611,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
             />
 
             {/* Mobile: Controles de zoom flutuantes */}
-            <div className="md:hidden absolute right-3 top-3 flex flex-col gap-1.5 z-10">
+            <div className="lg:hidden absolute right-3 top-3 flex flex-col gap-1.5 z-10">
               <Button 
                 variant="secondary" 
                 size="icon" 
@@ -1640,7 +1640,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
             {/* Indicador de modo de desenho - Desktop only (mobile usa header) */}
             {isDrawing && (
-              <div className="hidden md:flex absolute top-4 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-4 py-2 z-20 items-center gap-2 shadow-lg">
+              <div className="hidden lg:flex absolute top-4 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground rounded-full px-4 py-2 z-20 items-center gap-2 shadow-lg">
                 <PenTool className="h-4 w-4 animate-pulse" />
                 <span className="text-sm font-medium">
                   Clique para adicionar pontos ({polygonPoints.length}/3+)
@@ -1659,10 +1659,10 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
             {/* Indicador de nível de zoom */}
             {mapReady && !showResults && (
-              <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4 z-10">
+              <div className="absolute bottom-3 left-3 lg:bottom-4 lg:left-4 z-10">
                 <Badge 
                   variant={currentLevel === 'municipal' || currentLevel === 'local' ? 'default' : 'secondary'} 
-                  className="text-[10px] md:text-xs h-6 px-2.5 shadow-sm bg-background/90 backdrop-blur-sm border"
+                  className="text-[10px] lg:text-xs h-6 px-2.5 shadow-sm bg-background/90 backdrop-blur-sm border"
                 >
                   {currentLevel === 'country' && '🌎 País'}
                   {currentLevel === 'region' && '🗺️ Região'}
@@ -1675,9 +1675,9 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
             
             {/* Alerta de dados não carregados */}
             {mapReady && municipiosRenda.length === 0 && (currentLevel === 'municipal' || currentLevel === 'local') && !isDrawing && (
-              <div className="absolute top-3 left-3 right-14 md:top-4 md:left-1/2 md:right-auto md:transform md:-translate-x-1/2 bg-amber-50/95 backdrop-blur-sm border border-amber-200 rounded-full px-3 py-1.5 md:px-4 md:py-2 z-10 flex items-center gap-2 shadow-md">
+              <div className="absolute top-3 left-3 right-14 lg:top-4 lg:left-1/2 lg:right-auto lg:transform lg:-translate-x-1/2 bg-amber-50/95 backdrop-blur-sm border border-amber-200 rounded-full px-3 py-1.5 lg:px-4 lg:py-2 z-10 flex items-center gap-2 shadow-md">
                 <span className="text-amber-700 text-xs truncate">📊 Dados municipais não carregados</span>
-                <div className="hidden md:block shrink-0">
+                <div className="hidden lg:block shrink-0">
                   <IBGEDataLoader onLoadComplete={refetchRenda} />
                 </div>
               </div>
