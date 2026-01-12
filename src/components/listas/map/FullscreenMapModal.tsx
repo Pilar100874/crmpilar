@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import MapLayerControl from './MapLayerControl';
 import MapLegend from './MapLegend';
 import { MapLayer, VendasRegiao, DADOS_DEMOGRAFICOS_UF } from './MapLayerTypes';
-import BRASIL_ESTADOS_GEOJSON from './BrasilGeoJSON';
 import { 
   X, 
   Filter, 
@@ -66,21 +65,6 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-// Helper function for color interpolation
-const getColorForValue = (value: number, min: number, max: number, colorScheme: 'purple' | 'amber' | 'green' | 'red' | 'cyan') => {
-  const normalized = (value - min) / (max - min);
-  const schemes = {
-    purple: ['#ede9fe', '#c4b5fd', '#a78bfa', '#8b5cf6', '#7c3aed', '#6d28d9'],
-    amber: ['#fef3c7', '#fde68a', '#fcd34d', '#fbbf24', '#f59e0b', '#d97706'],
-    green: ['#dcfce7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a'],
-    red: ['#fee2e2', '#fecaca', '#fca5a5', '#f87171', '#ef4444', '#dc2626'],
-    cyan: ['#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2']
-  };
-  const colors = schemes[colorScheme];
-  const index = Math.min(Math.floor(normalized * colors.length), colors.length - 1);
-  return colors[index];
-};
-
 const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   open,
   onClose,
@@ -96,10 +80,10 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const vendasLayerRef = useRef<L.LayerGroup | null>(null);
-  const demographicsLayerRef = useRef<L.GeoJSON | null>(null);
-  const incomeLayerRef = useRef<L.GeoJSON | null>(null);
-  const competitionLayerRef = useRef<L.GeoJSON | null>(null);
-  const logisticsLayerRef = useRef<L.GeoJSON | null>(null);
+  const demographicsLayerRef = useRef<L.LayerGroup | null>(null);
+  const incomeLayerRef = useRef<L.LayerGroup | null>(null);
+  const competitionLayerRef = useRef<L.LayerGroup | null>(null);
+  const logisticsLayerRef = useRef<L.LayerGroup | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
   // Initialize map when dialog opens
@@ -121,6 +105,10 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
       markersLayerRef.current = L.layerGroup().addTo(map);
       vendasLayerRef.current = L.layerGroup().addTo(map);
+      demographicsLayerRef.current = L.layerGroup().addTo(map);
+      incomeLayerRef.current = L.layerGroup().addTo(map);
+      competitionLayerRef.current = L.layerGroup().addTo(map);
+      logisticsLayerRef.current = L.layerGroup().addTo(map);
 
       mapRef.current = map;
 
@@ -136,6 +124,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
   useEffect(() => {
     if (!open) {
+      // Cleanup when closing
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
@@ -150,6 +139,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
       return;
     }
 
+    // Initialize with delay to ensure DOM is ready
     const timer = setTimeout(initializeMap, 200);
     return () => clearTimeout(timer);
   }, [open, initializeMap]);
@@ -226,72 +216,50 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     });
   }, [vendasData, layers, mapReady]);
 
-  // Update demographics layer with GeoJSON choropleth
+  // Update demographics layer
   useEffect(() => {
-    if (!mapRef.current || !mapReady) return;
+    if (!demographicsLayerRef.current || !mapReady) return;
     
-    if (demographicsLayerRef.current) {
-      mapRef.current.removeLayer(demographicsLayerRef.current);
-      demographicsLayerRef.current = null;
-    }
+    demographicsLayerRef.current.clearLayers();
     
     const demoLayer = layers.find(l => l.id === 'demographics');
     if (!demoLayer?.visible) return;
 
     const maxDensidade = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.densidade));
-    const minDensidade = Math.min(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.densidade));
 
-    demographicsLayerRef.current = L.geoJSON(BRASIL_ESTADOS_GEOJSON, {
-      style: (feature) => {
-        const uf = feature?.properties?.uf;
-        const data = DADOS_DEMOGRAFICOS_UF[uf];
-        if (!data) return { fillColor: '#e5e7eb', fillOpacity: 0.3, weight: 1, color: '#9ca3af' };
-        
-        return {
-          fillColor: getColorForValue(data.densidade, minDensidade, maxDensidade, 'purple'),
-          fillOpacity: 0.7,
-          weight: 2,
-          color: '#6d28d9',
-          opacity: 0.8
-        };
-      },
-      onEachFeature: (feature, layer) => {
-        const uf = feature?.properties?.uf;
-        const data = DADOS_DEMOGRAFICOS_UF[uf];
-        if (!data) return;
-        
-        layer.bindPopup(`
-          <div class="p-2">
-            <strong>${uf} - ${feature.properties.nome}</strong>
-            <br/><small>População: ${data.populacao.toLocaleString('pt-BR')}</small>
-            <br/><small>Densidade: ${data.densidade.toFixed(1)} hab/km²</small>
-            <br/><small>Urbanização: ${data.urbanizacao}%</small>
-            <br/><small style="color: #666;">Fonte: IBGE 2022</small>
-          </div>
-        `);
-        
-        layer.on({
-          mouseover: (e) => {
-            const target = e.target;
-            target.setStyle({ weight: 3, color: '#4c1d95', fillOpacity: 0.9 });
-            target.bringToFront();
-          },
-          mouseout: (e) => {
-            demographicsLayerRef.current?.resetStyle(e.target);
-          }
-        });
-      }
-    }).addTo(mapRef.current);
+    Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
+      const normalizedDensity = data.densidade / maxDensidade;
+      const opacity = 0.2 + (normalizedDensity * 0.6);
+      const radius = 20 + (normalizedDensity * 30);
+
+      const circle = L.circleMarker([data.lat, data.lng], {
+        radius: radius,
+        fillColor: '#8b5cf6',
+        color: '#6d28d9',
+        weight: 1,
+        opacity: 0.7,
+        fillOpacity: opacity
+      });
+
+      circle.bindPopup(`
+        <div class="p-2">
+          <strong>${uf}</strong>
+          <br/><small>População: ${data.populacao.toLocaleString('pt-BR')}</small>
+          <br/><small>Densidade: ${data.densidade.toFixed(1)} hab/km²</small>
+          <br/><small>Urbanização: ${data.urbanizacao}%</small>
+          <br/><small class="text-muted-foreground">Fonte: IBGE 2022</small>
+        </div>
+      `);
+
+      demographicsLayerRef.current!.addLayer(circle);
+    });
   }, [layers, mapReady]);
 
-  // Update income layer with GeoJSON choropleth
+  // Update income layer
   useEffect(() => {
-    if (!mapRef.current || !mapReady) return;
+    if (!incomeLayerRef.current || !mapReady) return;
     
-    if (incomeLayerRef.current) {
-      mapRef.current.removeLayer(incomeLayerRef.current);
-      incomeLayerRef.current = null;
-    }
+    incomeLayerRef.current.clearLayers();
     
     const incomeLayer = layers.find(l => l.id === 'income');
     if (!incomeLayer?.visible) return;
@@ -299,170 +267,114 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     const maxRenda = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.renda_media));
     const minRenda = Math.min(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.renda_media));
 
-    incomeLayerRef.current = L.geoJSON(BRASIL_ESTADOS_GEOJSON, {
-      style: (feature) => {
-        const uf = feature?.properties?.uf;
-        const data = DADOS_DEMOGRAFICOS_UF[uf];
-        if (!data) return { fillColor: '#e5e7eb', fillOpacity: 0.3, weight: 1, color: '#9ca3af' };
-        
-        return {
-          fillColor: getColorForValue(data.renda_media, minRenda, maxRenda, 'amber'),
-          fillOpacity: 0.7,
-          weight: 2,
-          color: '#b45309',
-          opacity: 0.8
-        };
-      },
-      onEachFeature: (feature, layer) => {
-        const uf = feature?.properties?.uf;
-        const data = DADOS_DEMOGRAFICOS_UF[uf];
-        if (!data) return;
-        
-        const normalizedRenda = (data.renda_media - minRenda) / (maxRenda - minRenda);
-        layer.bindPopup(`
-          <div class="p-2">
-            <strong>${uf} - ${feature.properties.nome}</strong>
-            <br/><small>Renda Média: R$ ${data.renda_media.toLocaleString('pt-BR')}</small>
-            <br/><small>Score Poder de Compra: ${Math.round(normalizedRenda * 100)}/100</small>
-            <br/><small style="color: #666;">Fonte: IBGE/IPEA</small>
-          </div>
-        `);
-        
-        layer.on({
-          mouseover: (e) => {
-            const target = e.target;
-            target.setStyle({ weight: 3, color: '#92400e', fillOpacity: 0.9 });
-            target.bringToFront();
-          },
-          mouseout: (e) => {
-            incomeLayerRef.current?.resetStyle(e.target);
-          }
-        });
-      }
-    }).addTo(mapRef.current);
+    Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
+      const normalizedRenda = (data.renda_media - minRenda) / (maxRenda - minRenda);
+      const opacity = 0.3 + (normalizedRenda * 0.5);
+      const radius = 15 + (normalizedRenda * 25);
+
+      const circle = L.circleMarker([data.lat, data.lng], {
+        radius: radius,
+        fillColor: '#f59e0b',
+        color: '#b45309',
+        weight: 1,
+        opacity: 0.7,
+        fillOpacity: opacity
+      });
+
+      circle.bindPopup(`
+        <div class="p-2">
+          <strong>${uf}</strong>
+          <br/><small>Renda Média: R$ ${data.renda_media.toLocaleString('pt-BR')}</small>
+          <br/><small>Score Poder de Compra: ${Math.round(normalizedRenda * 100)}</small>
+          <br/><small class="text-muted-foreground">Fonte: IBGE/IPEA</small>
+        </div>
+      `);
+
+      incomeLayerRef.current!.addLayer(circle);
+    });
   }, [layers, mapReady]);
 
-  // Update competition layer with GeoJSON choropleth
+  // Update competition layer (simulated)
   useEffect(() => {
-    if (!mapRef.current || !mapReady) return;
+    if (!competitionLayerRef.current || !mapReady) return;
     
-    if (competitionLayerRef.current) {
-      mapRef.current.removeLayer(competitionLayerRef.current);
-      competitionLayerRef.current = null;
-    }
+    competitionLayerRef.current.clearLayers();
     
     const compLayer = layers.find(l => l.id === 'competition');
     if (!compLayer?.visible) return;
 
-    competitionLayerRef.current = L.geoJSON(BRASIL_ESTADOS_GEOJSON, {
-      style: (feature) => {
-        const uf = feature?.properties?.uf;
-        const data = DADOS_DEMOGRAFICOS_UF[uf];
-        if (!data) return { fillColor: '#e5e7eb', fillOpacity: 0.3, weight: 1, color: '#9ca3af' };
-        
-        const competitionLevel = data.urbanizacao / 100;
-        let fillColor = '#22c55e'; // green = low competition
-        if (competitionLevel > 0.85) fillColor = '#ef4444'; // red = high
-        else if (competitionLevel > 0.75) fillColor = '#f59e0b'; // amber = medium
-        
-        return {
-          fillColor,
-          fillOpacity: 0.6,
-          weight: 2,
-          color: '#374151',
-          opacity: 0.8
-        };
-      },
-      onEachFeature: (feature, layer) => {
-        const uf = feature?.properties?.uf;
-        const data = DADOS_DEMOGRAFICOS_UF[uf];
-        if (!data) return;
-        
-        const competitionLevel = data.urbanizacao / 100;
-        const nivel = competitionLevel > 0.85 ? 'Alto' : competitionLevel > 0.75 ? 'Médio' : 'Baixo';
-        
-        layer.bindPopup(`
-          <div class="p-2">
-            <strong>${uf} - ${feature.properties.nome}</strong>
-            <br/><small>Nível de Concorrência: <b>${nivel}</b></small>
-            <br/><small>Urbanização: ${data.urbanizacao}%</small>
-            <br/><small style="color: #666;">Estimado via IBGE CNAE</small>
-          </div>
-        `);
-        
-        layer.on({
-          mouseover: (e) => {
-            const target = e.target;
-            target.setStyle({ weight: 3, fillOpacity: 0.85 });
-            target.bringToFront();
-          },
-          mouseout: (e) => {
-            competitionLayerRef.current?.resetStyle(e.target);
-          }
-        });
-      }
-    }).addTo(mapRef.current);
+    Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
+      const competitionLevel = data.urbanizacao / 100;
+      let fillColor = '#22c55e';
+      if (competitionLevel > 0.85) fillColor = '#ef4444';
+      else if (competitionLevel > 0.75) fillColor = '#f59e0b';
+
+      const circle = L.circleMarker([data.lat, data.lng], {
+        radius: 18,
+        fillColor: fillColor,
+        color: '#374151',
+        weight: 1,
+        opacity: 0.7,
+        fillOpacity: 0.5
+      });
+
+      circle.bindPopup(`
+        <div class="p-2">
+          <strong>${uf} - Concorrência</strong>
+          <br/><small>Nível: ${competitionLevel > 0.85 ? 'Alto' : competitionLevel > 0.75 ? 'Médio' : 'Baixo'}</small>
+          <br/><small>Urbanização: ${data.urbanizacao}%</small>
+          <br/><small class="text-muted-foreground">Estimado via IBGE CNAE</small>
+        </div>
+      `);
+
+      competitionLayerRef.current!.addLayer(circle);
+    });
   }, [layers, mapReady]);
 
-  // Update logistics layer with GeoJSON choropleth
+  // Update logistics layer
   useEffect(() => {
-    if (!mapRef.current || !mapReady) return;
+    if (!logisticsLayerRef.current || !mapReady) return;
     
-    if (logisticsLayerRef.current) {
-      mapRef.current.removeLayer(logisticsLayerRef.current);
-      logisticsLayerRef.current = null;
-    }
+    logisticsLayerRef.current.clearLayers();
     
     const logLayer = layers.find(l => l.id === 'logistics');
     if (!logLayer?.visible) return;
 
-    const maxDensidade = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.densidade));
-    const minDensidade = Math.min(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.densidade));
-
-    logisticsLayerRef.current = L.geoJSON(BRASIL_ESTADOS_GEOJSON, {
-      style: (feature) => {
-        const uf = feature?.properties?.uf;
-        const data = DADOS_DEMOGRAFICOS_UF[uf];
-        if (!data) return { fillColor: '#e5e7eb', fillOpacity: 0.3, weight: 1, color: '#9ca3af' };
-        
-        return {
-          fillColor: getColorForValue(data.densidade, minDensidade, maxDensidade, 'cyan'),
-          fillOpacity: 0.65,
-          weight: 2,
-          color: '#0891b2',
-          opacity: 0.8
-        };
-      },
-      onEachFeature: (feature, layer) => {
-        const uf = feature?.properties?.uf;
-        const data = DADOS_DEMOGRAFICOS_UF[uf];
-        if (!data) return;
-        
-        const accessScore = Math.min(data.densidade / 100, 1);
-        const accessLevel = accessScore > 0.5 ? 'Alto' : accessScore > 0.2 ? 'Médio' : 'Baixo';
-        const tempoEntrega = Math.round((1 - accessScore) * 48 + 6);
-        
-        layer.bindPopup(`
-          <div class="p-2">
-            <strong>${uf} - ${feature.properties.nome}</strong>
-            <br/><small>Acesso Logístico: <b>${accessLevel}</b></small>
-            <br/><small>Tempo Estimado Entrega: ${tempoEntrega}h</small>
-            <br/><small style="color: #666;">Fonte: DNIT/OSM</small>
-          </div>
-        `);
-        
-        layer.on({
-          mouseover: (e) => {
-            const target = e.target;
-            target.setStyle({ weight: 3, color: '#0e7490', fillOpacity: 0.85 });
-            target.bringToFront();
-          },
-          mouseout: (e) => {
-            logisticsLayerRef.current?.resetStyle(e.target);
-          }
-        });
+    Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
+      const accessScore = Math.min(data.densidade / 100, 1);
+      let accessLevel = 'baixo';
+      let fillOpacity = 1;
+      
+      if (accessScore > 0.5) {
+        accessLevel = 'alto';
+        fillOpacity = 0;
+      } else if (accessScore > 0.2) {
+        accessLevel = 'medio';
+        fillOpacity = 0.3;
       }
-    }).addTo(mapRef.current);
+
+      const circle = L.circleMarker([data.lat, data.lng], {
+        radius: 15,
+        fillColor: '#06b6d4',
+        color: '#06b6d4',
+        weight: 2,
+        opacity: 0.8,
+        fillOpacity: fillOpacity
+      });
+
+      const tempoEntrega = Math.round((1 - accessScore) * 48 + 6);
+
+      circle.bindPopup(`
+        <div class="p-2">
+          <strong>${uf} - Logística</strong>
+          <br/><small>Acesso: ${accessLevel.charAt(0).toUpperCase() + accessLevel.slice(1)}</small>
+          <br/><small>Tempo Estimado: ${tempoEntrega}h</small>
+          <br/><small class="text-muted-foreground">Fonte: DNIT/OSM</small>
+        </div>
+      `);
+
+      logisticsLayerRef.current!.addLayer(circle);
+    });
   }, [layers, mapReady]);
 
   const handleZoomIn = () => mapRef.current?.zoomIn();
