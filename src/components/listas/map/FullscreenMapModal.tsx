@@ -16,6 +16,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { MapLayer, VendasRegiao, DADOS_DEMOGRAFICOS_UF, Unidade } from './MapLayerTypes';
+import { CnaeFilterSelect } from './CnaeFilterSelect';
 import { 
   X, 
   Filter, 
@@ -46,6 +47,8 @@ interface Empresa {
   estado: string | null;
   latitude: number | null;
   longitude: number | null;
+  cnae_principal?: string | null;
+  cnae_descricao?: string | null;
 }
 
 interface Usuario {
@@ -64,6 +67,11 @@ interface FullscreenMapModalProps {
   vendasData: VendasRegiao[];
   selectedUsuarioId: string;
   onUsuarioChange: (id: string) => void;
+  // Novos props para CNAE
+  selectedCnaes?: string[];
+  onCnaesChange?: (cnaes: string[]) => void;
+  empresasByCnae?: Empresa[];
+  concorrenciaPorUF?: Record<string, { count: number; empresas: Empresa[] }>;
 }
 
 const formatCurrency = (value: number) => {
@@ -85,7 +93,11 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   usuarios,
   vendasData,
   selectedUsuarioId,
-  onUsuarioChange
+  onUsuarioChange,
+  selectedCnaes = [],
+  onCnaesChange,
+  empresasByCnae = [],
+  concorrenciaPorUF = {}
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -96,6 +108,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   const incomeLayerRef = useRef<L.LayerGroup | null>(null);
   const competitionLayerRef = useRef<L.LayerGroup | null>(null);
   const logisticsLayerRef = useRef<L.LayerGroup | null>(null);
+  const cnaeMarkersLayerRef = useRef<L.LayerGroup | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
   // Initialize map when dialog opens
@@ -122,6 +135,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
       incomeLayerRef.current = L.layerGroup().addTo(map);
       competitionLayerRef.current = L.layerGroup().addTo(map);
       logisticsLayerRef.current = L.layerGroup().addTo(map);
+      cnaeMarkersLayerRef.current = L.layerGroup().addTo(map);
 
       mapRef.current = map;
 
@@ -148,6 +162,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
         incomeLayerRef.current = null;
         competitionLayerRef.current = null;
         logisticsLayerRef.current = null;
+        cnaeMarkersLayerRef.current = null;
         setMapReady(false);
       }
       return;
@@ -362,7 +377,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     });
   }, [layers, mapReady]);
 
-  // Update competition layer (simulated)
+  // Update competition layer - agora usa dados de CNAE
   useEffect(() => {
     if (!competitionLayerRef.current || !mapReady) return;
     
@@ -371,33 +386,113 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     const compLayer = layers.find(l => l.id === 'competition');
     if (!compLayer?.visible) return;
 
-    Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
-      const competitionLevel = data.urbanizacao / 100;
-      let fillColor = '#22c55e';
-      if (competitionLevel > 0.85) fillColor = '#ef4444';
-      else if (competitionLevel > 0.75) fillColor = '#f59e0b';
+    // Se há CNAEs selecionados, mostra baseado nas empresas reais
+    if (selectedCnaes.length > 0 && Object.keys(concorrenciaPorUF).length > 0) {
+      const maxCount = Math.max(...Object.values(concorrenciaPorUF).map(d => d.count), 1);
+      
+      Object.entries(concorrenciaPorUF).forEach(([uf, data]) => {
+        const ufData = DADOS_DEMOGRAFICOS_UF[uf];
+        if (!ufData) return;
 
-      const circle = L.circleMarker([data.lat, data.lng], {
-        radius: 18,
-        fillColor: fillColor,
-        color: '#374151',
-        weight: 1,
-        opacity: 0.7,
-        fillOpacity: 0.5
+        const normalizedCount = data.count / maxCount;
+        let fillColor = '#22c55e'; // verde - baixa concorrência
+        if (normalizedCount > 0.6) fillColor = '#ef4444'; // vermelho - alta
+        else if (normalizedCount > 0.3) fillColor = '#f59e0b'; // amarelo - média
+        
+        const radius = 15 + (normalizedCount * 30);
+
+        const circle = L.circleMarker([ufData.lat, ufData.lng], {
+          radius: radius,
+          fillColor: fillColor,
+          color: '#374151',
+          weight: 2,
+          opacity: 0.8,
+          fillOpacity: 0.6
+        });
+
+        circle.bindPopup(`
+          <div class="p-2">
+            <strong>${uf} - Concorrência CNAE</strong>
+            <br/><small>Empresas encontradas: ${data.count}</small>
+            <br/><small>Nível: ${normalizedCount > 0.6 ? 'Alto' : normalizedCount > 0.3 ? 'Médio' : 'Baixo'}</small>
+            <br/><small>CNAEs filtrados: ${selectedCnaes.length}</small>
+            <br/><small class="text-muted-foreground">Fonte: Base de empresas</small>
+          </div>
+        `);
+
+        competitionLayerRef.current!.addLayer(circle);
+      });
+    } else {
+      // Fallback: mostra baseado em urbanização (comportamento anterior)
+      Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
+        const competitionLevel = data.urbanizacao / 100;
+        let fillColor = '#22c55e';
+        if (competitionLevel > 0.85) fillColor = '#ef4444';
+        else if (competitionLevel > 0.75) fillColor = '#f59e0b';
+
+        const circle = L.circleMarker([data.lat, data.lng], {
+          radius: 18,
+          fillColor: fillColor,
+          color: '#374151',
+          weight: 1,
+          opacity: 0.7,
+          fillOpacity: 0.5
+        });
+
+        circle.bindPopup(`
+          <div class="p-2">
+            <strong>${uf} - Concorrência</strong>
+            <br/><small>Nível: ${competitionLevel > 0.85 ? 'Alto' : competitionLevel > 0.75 ? 'Médio' : 'Baixo'}</small>
+            <br/><small>Urbanização: ${data.urbanizacao}%</small>
+            <br/><small class="text-muted-foreground">Selecione CNAEs para dados reais</small>
+          </div>
+        `);
+
+        competitionLayerRef.current!.addLayer(circle);
+      });
+    }
+  }, [layers, mapReady, selectedCnaes, concorrenciaPorUF]);
+
+  // Marcadores individuais de empresas por CNAE
+  useEffect(() => {
+    if (!cnaeMarkersLayerRef.current || !mapReady) return;
+    
+    cnaeMarkersLayerRef.current.clearLayers();
+    
+    const compLayer = layers.find(l => l.id === 'competition');
+    if (!compLayer?.visible || selectedCnaes.length === 0) return;
+
+    empresasByCnae.forEach(empresa => {
+      if (!empresa.latitude || !empresa.longitude) return;
+
+      const customIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background: #ef4444; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="white">
+            <path d="M3 21h18M5 21V7l8-4 8 4v14M9 21v-6h6v6"/>
+          </svg>
+        </div>`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
       });
 
-      circle.bindPopup(`
-        <div class="p-2">
-          <strong>${uf} - Concorrência</strong>
-          <br/><small>Nível: ${competitionLevel > 0.85 ? 'Alto' : competitionLevel > 0.75 ? 'Médio' : 'Baixo'}</small>
-          <br/><small>Urbanização: ${data.urbanizacao}%</small>
-          <br/><small class="text-muted-foreground">Estimado via IBGE CNAE</small>
-        </div>
-      `);
-
-      competitionLayerRef.current!.addLayer(circle);
+      L.marker([empresa.latitude, empresa.longitude], { icon: customIcon })
+        .addTo(cnaeMarkersLayerRef.current!)
+        .bindPopup(`
+          <div class="p-2">
+            <div style="background: #ef4444; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; margin-bottom: 8px; display: inline-block; font-size: 11px;">
+              🏪 CONCORRENTE
+            </div>
+            <br/>
+            <strong>${empresa.nome_fantasia || empresa.nome}</strong>
+            ${empresa.cnae_principal ? `<br/><small><strong>CNAE:</strong> ${empresa.cnae_principal}</small>` : ''}
+            ${empresa.cnae_descricao ? `<br/><small>${empresa.cnae_descricao}</small>` : ''}
+            ${empresa.endereco ? `<br/><small>${empresa.endereco}</small>` : ''}
+            ${empresa.cidade ? `<br/><small>${empresa.cidade}${empresa.estado ? ` - ${empresa.estado}` : ''}</small>` : ''}
+          </div>
+        `);
     });
-  }, [layers, mapReady]);
+  }, [empresasByCnae, layers, mapReady, selectedCnaes]);
 
   // Update logistics layer
   useEffect(() => {
@@ -493,6 +588,14 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
             {/* Linha 2: Filtros e Controles */}
             <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+              {/* Filtro de CNAE para Concorrência */}
+              {onCnaesChange && (
+                <CnaeFilterSelect
+                  selectedCnaes={selectedCnaes}
+                  onCnaesChange={onCnaesChange}
+                />
+              )}
+
               {/* Filtro de Usuário */}
               <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
                 <SelectTrigger className="w-[130px] sm:w-[160px] h-8 text-xs sm:text-sm shrink-0">

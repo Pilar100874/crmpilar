@@ -14,6 +14,8 @@ interface Empresa {
   estado: string | null;
   latitude: number | null;
   longitude: number | null;
+  cnae_principal: string | null;
+  cnae_descricao: string | null;
 }
 
 interface Usuario {
@@ -35,12 +37,13 @@ export const useMapLayers = () => {
   const [vendasData, setVendasData] = useState<VendasRegiao[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUsuarioId, setSelectedUsuarioId] = useState<string>('all');
+  const [selectedCnaes, setSelectedCnaes] = useState<string[]>([]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const [empresasRes, usuariosRes, empresaVinculosRes, unidadesRes] = await Promise.all([
-        supabase.from('empresas').select('id, nome_fantasia, nome, endereco, cidade, estado, latitude, longitude'),
+        supabase.from('empresas').select('id, nome_fantasia, nome, endereco, cidade, estado, latitude, longitude, cnae_principal, cnae_descricao'),
         supabase.from('usuarios').select('id, nome'),
         supabase.from('empresa_vinculos').select('empresa_id, usuario_id'),
         supabase.from('unidades').select('id, nome, cep, logradouro, numero, complemento, bairro, cidade, uf, latitude, longitude')
@@ -185,6 +188,34 @@ export const useMapLayers = () => {
     return filtered;
   })();
 
+  // Empresas filtradas por CNAE para a camada de concorrência
+  const empresasByCnae = (() => {
+    if (selectedCnaes.length === 0) return [];
+    
+    return empresas.filter(e => 
+      e.latitude && 
+      e.longitude && 
+      e.cnae_principal && 
+      selectedCnaes.includes(e.cnae_principal)
+    );
+  })();
+
+  // Agrupa empresas por UF para análise de concorrência
+  const concorrenciaPorUF = (() => {
+    const porUF: Record<string, { count: number; empresas: Empresa[] }> = {};
+    
+    empresasByCnae.forEach(empresa => {
+      const uf = empresa.estado || 'N/A';
+      if (!porUF[uf]) {
+        porUF[uf] = { count: 0, empresas: [] };
+      }
+      porUF[uf].count++;
+      porUF[uf].empresas.push(empresa);
+    });
+    
+    return porUF;
+  })();
+
   const getDemographicsData = useCallback(() => {
     return Object.entries(DADOS_DEMOGRAFICOS_UF).map(([uf, data]) => ({
       uf,
@@ -197,6 +228,8 @@ export const useMapLayers = () => {
     toggleLayer,
     empresas: filteredEmpresas,
     allEmpresas: empresas,
+    empresasByCnae,
+    concorrenciaPorUF,
     unidades,
     usuarios,
     vinculos,
@@ -205,6 +238,8 @@ export const useMapLayers = () => {
     fetchData,
     selectedUsuarioId,
     setSelectedUsuarioId,
+    selectedCnaes,
+    setSelectedCnaes,
     getDemographicsData
   };
 };
