@@ -171,7 +171,9 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
       const map = L.map(mapContainerRef.current, {
         center: [-15.7801, -47.9292],
         zoom: 4,
-        zoomControl: false
+        zoomControl: false,
+        touchZoom: true,
+        dragging: true
       });
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1047,7 +1049,17 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
       tempMarkersRef.current = L.layerGroup().addTo(map);
     }
 
+    // Desabilita double click zoom durante o desenho para evitar conflitos
+    if (isDrawing) {
+      map.doubleClickZoom.disable();
+    } else {
+      map.doubleClickZoom.enable();
+    }
+
     const handleMapClick = (e: L.LeafletMouseEvent) => {
+      // Previne propagação de eventos de drag
+      if (e.originalEvent && (e.originalEvent as any).wasHandledByDrag) return;
+      
       if (isDrawing) {
         addPoint(e.latlng.lat, e.latlng.lng);
       } else if (isSelectingPoint) {
