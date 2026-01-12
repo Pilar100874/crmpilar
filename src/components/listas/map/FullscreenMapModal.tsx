@@ -269,7 +269,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     });
   }, [vendasData, layers, mapReady]);
 
-  // Update demographics layer
+  // Update demographics layer - usa POPULAÇÃO para tamanho do círculo
   useEffect(() => {
     if (!demographicsLayerRef.current || !mapReady) return;
     
@@ -278,19 +278,25 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     const demoLayer = layers.find(l => l.id === 'demographics');
     if (!demoLayer?.visible) return;
 
-    const maxDensidade = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.densidade));
+    const maxPopulacao = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.populacao));
+    const minPopulacao = Math.min(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.populacao));
 
     Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
+      // Normaliza pela POPULAÇÃO para definir o raio
+      const normalizedPopulacao = (data.populacao - minPopulacao) / (maxPopulacao - minPopulacao);
+      const radius = 15 + (normalizedPopulacao * 40); // SP terá o maior círculo
+      
+      // Usa densidade para definir a opacidade (mais denso = mais escuro)
+      const maxDensidade = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.densidade));
       const normalizedDensity = data.densidade / maxDensidade;
-      const opacity = 0.2 + (normalizedDensity * 0.6);
-      const radius = 20 + (normalizedDensity * 30);
+      const opacity = 0.25 + (normalizedDensity * 0.5);
 
       const circle = L.circleMarker([data.lat, data.lng], {
         radius: radius,
         fillColor: '#8b5cf6',
         color: '#6d28d9',
-        weight: 1,
-        opacity: 0.7,
+        weight: 2,
+        opacity: 0.8,
         fillOpacity: opacity
       });
 

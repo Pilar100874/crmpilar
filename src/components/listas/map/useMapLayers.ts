@@ -45,7 +45,54 @@ export const useMapLayers = () => {
 
       if (empresasRes.data) setEmpresas(empresasRes.data);
       if (usuariosRes.data) setUsuarios(usuariosRes.data);
-      if (unidadesRes.data) setUnidades(unidadesRes.data);
+      
+      // Processa unidades e geocodifica as que não têm coordenadas
+      if (unidadesRes.data) {
+        const unidadesComCoordenadas = unidadesRes.data.filter(u => u.latitude && u.longitude);
+        const unidadesSemCoordenadas = unidadesRes.data.filter(u => !u.latitude && !u.longitude);
+        
+        // Geocodificar unidades sem coordenadas (até 5 por vez para não sobrecarregar)
+        for (const unidade of unidadesSemCoordenadas.slice(0, 5)) {
+          try {
+            const addressParts = [
+              unidade.logradouro,
+              unidade.numero,
+              unidade.bairro,
+              unidade.cidade,
+              unidade.uf,
+              'Brasil'
+            ].filter(Boolean).join(', ');
+            
+            if (addressParts.length > 10) {
+              const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressParts)}&limit=1`
+              );
+              const data = await response.json();
+              
+              if (data?.[0]) {
+                const lat = parseFloat(data[0].lat);
+                const lon = parseFloat(data[0].lon);
+                
+                // Salvar no banco
+                await supabase
+                  .from('unidades')
+                  .update({ latitude: lat, longitude: lon })
+                  .eq('id', unidade.id);
+                
+                // Adicionar à lista com coordenadas
+                unidadesComCoordenadas.push({ ...unidade, latitude: lat, longitude: lon });
+              }
+              
+              // Delay para respeitar rate limit do Nominatim
+              await new Promise(resolve => setTimeout(resolve, 1100));
+            }
+          } catch (error) {
+            console.error('Erro geocodificando unidade:', error);
+          }
+        }
+        
+        setUnidades([...unidadesComCoordenadas, ...unidadesSemCoordenadas.slice(5)]);
+      }
       
       if (empresaVinculosRes.data) {
         setVinculos(empresaVinculosRes.data.map(v => ({
