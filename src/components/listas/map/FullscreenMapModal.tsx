@@ -455,7 +455,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[100vw] w-[100vw] h-[100vh] sm:max-w-[98vw] sm:w-[98vw] sm:h-[95vh] p-0 gap-0 rounded-none sm:rounded-lg" aria-describedby={undefined}>
+      <DialogContent className="max-w-[100vw] w-[100vw] h-[100vh] sm:max-w-[98vw] sm:w-[98vw] sm:h-[95vh] p-0 gap-0 rounded-none sm:rounded-lg z-[9999]" aria-describedby={undefined}>
         <VisuallyHidden>
           <DialogTitle>Mapa Geoespacial em Tela Cheia</DialogTitle>
         </VisuallyHidden>
@@ -499,7 +499,12 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                   <Filter className="h-3 w-3 sm:h-4 sm:w-4 mr-1 shrink-0" />
                   <SelectValue placeholder="Usuário" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover z-[1100]">
+                <SelectContent 
+                  className="bg-popover" 
+                  style={{ zIndex: 99999 }}
+                  position="popper"
+                  sideOffset={4}
+                >
                   <SelectItem value="all">
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4" />
@@ -548,7 +553,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                     </Badge>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 bg-popover z-[1100]">
+                <DropdownMenuContent align="end" className="w-72 bg-popover" style={{ zIndex: 99999 }}>
                   <DropdownMenuLabel className="flex items-center gap-2">
                     <Layers className="h-4 w-4" />
                     Camadas do Mapa
