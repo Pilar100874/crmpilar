@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import MapLayerControl from './MapLayerControl';
 import MapLegend from './MapLegend';
-import { MapLayer, VendasRegiao, DADOS_DEMOGRAFICOS_UF } from './MapLayerTypes';
+import { MapLayer, VendasRegiao, DADOS_DEMOGRAFICOS_UF, Unidade } from './MapLayerTypes';
 import { 
   X, 
   Filter, 
@@ -50,6 +50,7 @@ interface FullscreenMapModalProps {
   layers: MapLayer[];
   onLayerToggle: (layerId: string) => void;
   empresas: Empresa[];
+  unidades: Unidade[];
   usuarios: Usuario[];
   vendasData: VendasRegiao[];
   selectedUsuarioId: string;
@@ -71,6 +72,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   layers,
   onLayerToggle,
   empresas,
+  unidades,
   usuarios,
   vendasData,
   selectedUsuarioId,
@@ -79,6 +81,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const unidadesLayerRef = useRef<L.LayerGroup | null>(null);
   const vendasLayerRef = useRef<L.LayerGroup | null>(null);
   const demographicsLayerRef = useRef<L.LayerGroup | null>(null);
   const incomeLayerRef = useRef<L.LayerGroup | null>(null);
@@ -104,6 +107,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
       markersLayerRef.current = L.layerGroup().addTo(map);
+      unidadesLayerRef.current = L.layerGroup().addTo(map);
       vendasLayerRef.current = L.layerGroup().addTo(map);
       demographicsLayerRef.current = L.layerGroup().addTo(map);
       incomeLayerRef.current = L.layerGroup().addTo(map);
@@ -129,6 +133,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
         mapRef.current.remove();
         mapRef.current = null;
         markersLayerRef.current = null;
+        unidadesLayerRef.current = null;
         vendasLayerRef.current = null;
         demographicsLayerRef.current = null;
         incomeLayerRef.current = null;
@@ -178,6 +183,54 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
         `);
     });
   }, [empresas, layers, mapReady]);
+
+  // Update unidades layer (filiais/pontos de venda)
+  useEffect(() => {
+    if (!unidadesLayerRef.current || !mapReady) return;
+    
+    unidadesLayerRef.current.clearLayers();
+    
+    const unitsLayer = layers.find(l => l.id === 'units');
+    if (!unitsLayer?.visible) return;
+
+    unidades.forEach(unidade => {
+      if (!unidade.latitude || !unidade.longitude) return;
+
+      const customIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background: #ec4899; width: 32px; height: 32px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3" fill="#ec4899"/>
+          </svg>
+        </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      const enderecoCompleto = [
+        unidade.logradouro,
+        unidade.numero,
+        unidade.bairro,
+        unidade.cidade,
+        unidade.uf
+      ].filter(Boolean).join(', ');
+
+      L.marker([unidade.latitude, unidade.longitude], { icon: customIcon })
+        .addTo(unidadesLayerRef.current!)
+        .bindPopup(`
+          <div class="p-2">
+            <div style="background: #ec4899; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; margin-bottom: 8px; display: inline-block;">
+              📍 UNIDADE/FILIAL
+            </div>
+            <br/>
+            <strong>${unidade.nome}</strong>
+            ${enderecoCompleto ? `<br/><small>${enderecoCompleto}</small>` : ''}
+            ${unidade.cep ? `<br/><small>CEP: ${unidade.cep}</small>` : ''}
+          </div>
+        `);
+    });
+  }, [unidades, layers, mapReady]);
 
   // Update vendas layer
   useEffect(() => {
@@ -428,8 +481,13 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                 </Select>
               </div>
 
-              <Badge variant="secondary">
+              <Badge variant="outline" className="bg-pink-500/10 border-pink-500 text-pink-700">
                 <MapPin className="h-3 w-3 mr-1" />
+                {unidades.filter(u => u.latitude && u.longitude).length} unidades
+              </Badge>
+
+              <Badge variant="secondary">
+                <Building2 className="h-3 w-3 mr-1" />
                 {empresas.filter(e => e.latitude && e.longitude).length} empresas
               </Badge>
             </div>
@@ -478,6 +536,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                 layers={layers}
                 vendasData={vendasData}
                 totalEmpresas={empresas.filter(e => e.latitude && e.longitude).length}
+                totalUnidades={unidades.filter(u => u.latitude && u.longitude).length}
               />
             </div>
 

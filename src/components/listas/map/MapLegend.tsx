@@ -1,12 +1,13 @@
 import React from 'react';
-import { MapLayer, VendasRegiao } from './MapLayerTypes';
+import { MapLayer, VendasRegiao, Unidade } from './MapLayerTypes';
 import { Card } from '@/components/ui/card';
-import { TrendingUp, MapPin, Users, Wallet, Store, Truck } from 'lucide-react';
+import { TrendingUp, MapPin, Users, Wallet, Store, Truck, Building } from 'lucide-react';
 
 interface MapLegendProps {
   layers: MapLayer[];
   vendasData?: VendasRegiao[];
   totalEmpresas?: number;
+  totalUnidades?: number;
 }
 
 const formatCurrency = (value: number) => {
@@ -18,7 +19,7 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
-const MapLegend: React.FC<MapLegendProps> = ({ layers, vendasData = [], totalEmpresas = 0 }) => {
+const MapLegend: React.FC<MapLegendProps> = ({ layers, vendasData = [], totalEmpresas = 0, totalUnidades = 0 }) => {
   const activeLayers = layers.filter(l => l.visible);
   
   const totalVendas = vendasData.reduce((acc, v) => acc + v.total_vendas, 0);
@@ -30,6 +31,16 @@ const MapLegend: React.FC<MapLegendProps> = ({ layers, vendasData = [], totalEmp
       <div className="text-xs font-semibold mb-2 text-muted-foreground">LEGENDA</div>
       
       <div className="space-y-2">
+        {/* Unidades/Filiais */}
+        {activeLayers.find(l => l.id === 'units') && (
+          <div className="flex items-center gap-2 text-xs">
+            <div className="w-4 h-4 rounded-full bg-pink-500 flex items-center justify-center">
+              <MapPin className="h-2.5 w-2.5 text-white" />
+            </div>
+            <span>Unidades/Filiais ({totalUnidades})</span>
+          </div>
+        )}
+
         {/* Clientes */}
         {activeLayers.find(l => l.id === 'clients') && (
           <div className="flex items-center gap-2 text-xs">

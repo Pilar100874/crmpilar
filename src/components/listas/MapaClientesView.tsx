@@ -32,6 +32,7 @@ const MapaClientesView: React.FC = () => {
     toggleLayer,
     empresas,
     allEmpresas,
+    unidades,
     usuarios,
     vendasData,
     loading,
@@ -158,6 +159,7 @@ const MapaClientesView: React.FC = () => {
         layers={layers}
         onLayerToggle={toggleLayer}
         empresas={empresas}
+        unidades={unidades}
         usuarios={usuarios}
         vendasData={vendasData}
         selectedUsuarioId={selectedUsuarioId}
