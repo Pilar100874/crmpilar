@@ -62,7 +62,11 @@ const MapaClientesView: React.FC = () => {
     loading,
     fetchData,
     selectedUsuarioId,
-    setSelectedUsuarioId
+    setSelectedUsuarioId,
+    selectedCnaes,
+    setSelectedCnaes,
+    empresasByCnae,
+    concorrenciaPorUF
   } = useMapLayers();
 
   const geocodeEmpresas = async () => {
@@ -594,6 +598,10 @@ const MapaClientesView: React.FC = () => {
         vendasData={vendasData}
         selectedUsuarioId={selectedUsuarioId}
         onUsuarioChange={setSelectedUsuarioId}
+        selectedCnaes={selectedCnaes}
+        onCnaesChange={setSelectedCnaes}
+        empresasByCnae={empresasByCnae}
+        concorrenciaPorUF={concorrenciaPorUF}
       />
     </div>
   );

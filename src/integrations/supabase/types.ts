@@ -1700,6 +1700,42 @@ export type Database = {
           },
         ]
       }
+      cnaes: {
+        Row: {
+          classe: string | null
+          codigo: string
+          created_at: string | null
+          descricao: string
+          divisao: string | null
+          grupo: string | null
+          id: string
+          secao: string | null
+          subclasse: string | null
+        }
+        Insert: {
+          classe?: string | null
+          codigo: string
+          created_at?: string | null
+          descricao: string
+          divisao?: string | null
+          grupo?: string | null
+          id?: string
+          secao?: string | null
+          subclasse?: string | null
+        }
+        Update: {
+          classe?: string | null
+          codigo?: string
+          created_at?: string | null
+          descricao?: string
+          divisao?: string | null
+          grupo?: string | null
+          id?: string
+          secao?: string | null
+          subclasse?: string | null
+        }
+        Relationships: []
+      }
       combustiveis_precos: {
         Row: {
           created_at: string
@@ -2623,6 +2659,9 @@ export type Database = {
           bairro: string | null
           cep: string | null
           cidade: string | null
+          cnae_descricao: string | null
+          cnae_principal: string | null
+          cnaes_secundarios: string[] | null
           cnpj: string | null
           created_at: string | null
           custom_fields: Json | null
@@ -2644,6 +2683,9 @@ export type Database = {
           bairro?: string | null
           cep?: string | null
           cidade?: string | null
+          cnae_descricao?: string | null
+          cnae_principal?: string | null
+          cnaes_secundarios?: string[] | null
           cnpj?: string | null
           created_at?: string | null
           custom_fields?: Json | null
@@ -2665,6 +2707,9 @@ export type Database = {
           bairro?: string | null
           cep?: string | null
           cidade?: string | null
+          cnae_descricao?: string | null
+          cnae_principal?: string | null
+          cnaes_secundarios?: string[] | null
           cnpj?: string | null
           created_at?: string | null
           custom_fields?: Json | null
