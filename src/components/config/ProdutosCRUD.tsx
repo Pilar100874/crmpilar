@@ -1267,9 +1267,9 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="w-[98vw] sm:w-[95vw] max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden p-0">
+        <DialogContent className="w-[98vw] sm:w-[95vw] max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden p-0 flex flex-col">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4 border-b">
+          <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent px-3 sm:px-6 py-3 sm:py-4 border-b flex-shrink-0">
             <DialogHeader>
               <DialogTitle className="text-base sm:text-lg font-semibold flex items-center gap-2">
                 <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
@@ -1285,7 +1285,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
             </DialogHeader>
           </div>
 
-          <div className="overflow-y-auto max-h-[calc(95vh-120px)] sm:max-h-[calc(90vh-140px)] px-3 sm:px-6 py-3 sm:py-4">
+          <div className="overflow-y-auto flex-1 min-h-0 px-3 sm:px-6 py-3 sm:py-4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-5 h-auto bg-muted/50 p-0.5 sm:p-1 rounded-lg gap-0.5 sm:gap-1">
                 <TabsTrigger 
@@ -2049,7 +2049,7 @@ export function ProdutosCRUD({ estabelecimentoId }: ProdutosCRUDProps) {
           </Tabs>
           </div>
 
-          <div className="border-t px-3 sm:px-6 py-3 sm:py-4 bg-muted/20">
+          <div className="border-t px-3 sm:px-6 py-3 sm:py-4 bg-muted/20 flex-shrink-0">
             <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sm:gap-2">
               <Button variant="outline" onClick={() => setShowDialog(false)} disabled={uploading} className="w-full sm:w-auto h-9 sm:h-10 text-sm">
                 Cancelar
