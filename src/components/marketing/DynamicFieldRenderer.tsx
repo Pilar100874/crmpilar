@@ -167,20 +167,41 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
           </div>
         );
 
-      case 'dropdown':
+      case 'radio_selection':
         return (
-          <Select value={value || ''} onValueChange={onChange}>
-            <SelectTrigger>
-              <SelectValue placeholder={field.placeholder || 'Selecione...'} />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options?.map((option) => (
-                <SelectItem key={option.id} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ScrollArea className="max-h-64 border rounded-lg">
+            <div className="p-2 space-y-1">
+              {field.options?.map((option) => {
+                const isSelected = value === option.value;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => onChange(option.value)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all ${
+                      isSelected
+                        ? 'bg-primary/10 border border-primary'
+                        : 'hover:bg-muted border border-transparent'
+                    }`}
+                  >
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      isSelected
+                        ? 'border-primary'
+                        : 'border-muted-foreground/40'
+                    }`}>
+                      {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                    </div>
+                    <span className="text-sm flex-1">{option.label}</span>
+                  </button>
+                );
+              })}
+              {(!field.options || field.options.length === 0) && (
+                <p className="text-center text-sm text-muted-foreground py-4">
+                  Nenhuma opção configurada
+                </p>
+              )}
+            </div>
+          </ScrollArea>
         );
 
       case 'selection_image':
@@ -432,37 +453,29 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
           </Select>
         );
 
-      case 'checkbox_selection':
-        const selectedValues = Array.isArray(value) ? value : [];
-        const toggleCheckboxOption = (optionValue: string) => {
-          if (selectedValues.includes(optionValue)) {
-            onChange(selectedValues.filter((v: string) => v !== optionValue));
-          } else {
-            onChange([...selectedValues, optionValue]);
-          }
-        };
+      case 'selection_text':
         return (
           <ScrollArea className="max-h-64 border rounded-lg">
             <div className="p-2 space-y-1">
               {field.options?.map((option) => {
-                const isChecked = selectedValues.includes(option.value);
+                const isSelected = value === option.value;
                 return (
                   <button
                     key={option.id}
                     type="button"
-                    onClick={() => toggleCheckboxOption(option.value)}
+                    onClick={() => onChange(option.value)}
                     className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all ${
-                      isChecked
+                      isSelected
                         ? 'bg-primary/10 border border-primary'
                         : 'hover:bg-muted border border-transparent'
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                      isChecked
-                        ? 'bg-primary border-primary'
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      isSelected
+                        ? 'border-primary'
                         : 'border-muted-foreground/40'
                     }`}>
-                      {isChecked && <Check className="h-3 w-3 text-primary-foreground" />}
+                      {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                     </div>
                     <span className="text-sm flex-1">{option.label}</span>
                   </button>

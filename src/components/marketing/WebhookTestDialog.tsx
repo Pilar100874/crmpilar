@@ -95,7 +95,7 @@ export const WebhookTestDialog: React.FC<WebhookTestDialogProps> = ({
       case 'selection_video':
         // Use actual video URL from first option if available
         return field.options?.[0]?.videoUrl || 'https://example.com/video-sample.mp4';
-      case 'dropdown':
+      case 'radio_selection':
         return field.options?.[0]?.value || 'option1';
       case 'selection_text':
         return field.options?.[0]?.value || 'Opção 1';
