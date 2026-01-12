@@ -4898,9 +4898,14 @@ export type Database = {
           created_at: string | null
           id: string
           idh: number | null
+          latitude: number | null
+          longitude: number | null
+          mesorregiao: string | null
+          microrregiao: string | null
           municipio: string
           pib_per_capita: number | null
           populacao: number | null
+          regiao: string | null
           renda_media: number | null
           renda_mediana: number | null
           uf: string
@@ -4911,9 +4916,14 @@ export type Database = {
           created_at?: string | null
           id?: string
           idh?: number | null
+          latitude?: number | null
+          longitude?: number | null
+          mesorregiao?: string | null
+          microrregiao?: string | null
           municipio: string
           pib_per_capita?: number | null
           populacao?: number | null
+          regiao?: string | null
           renda_media?: number | null
           renda_mediana?: number | null
           uf: string
@@ -4924,9 +4934,14 @@ export type Database = {
           created_at?: string | null
           id?: string
           idh?: number | null
+          latitude?: number | null
+          longitude?: number | null
+          mesorregiao?: string | null
+          microrregiao?: string | null
           municipio?: string
           pib_per_capita?: number | null
           populacao?: number | null
+          regiao?: string | null
           renda_media?: number | null
           renda_mediana?: number | null
           uf?: string

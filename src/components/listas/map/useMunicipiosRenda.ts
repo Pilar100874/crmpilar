@@ -11,72 +11,39 @@ interface MunicipioRenda {
   pib_per_capita: number | null;
   idh: number | null;
   populacao: number | null;
-  latitude?: number;
-  longitude?: number;
-}
-
-interface MunicipioCoord {
-  nome: string;
-  uf: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
+  regiao?: string | null;
+  mesorregiao?: string | null;
+  microrregiao?: string | null;
 }
 
 export const useMunicipiosRenda = () => {
   const [municipiosRenda, setMunicipiosRenda] = useState<MunicipioRenda[]>([]);
   const [loading, setLoading] = useState(false);
-  const [coordenadas, setCoordenadas] = useState<Map<string, MunicipioCoord>>(new Map());
 
-  // Busca coordenadas dos municípios
-  const fetchCoordenadas = useCallback(async () => {
-    const { data } = await supabase
-      .from('municipios_coordenadas')
-      .select('nome, uf, latitude, longitude');
-    
-    if (data) {
-      const map = new Map<string, MunicipioCoord>();
-      data.forEach(m => {
-        if (m.latitude && m.longitude) {
-          map.set(`${m.nome.toUpperCase()}-${m.uf}`, {
-            nome: m.nome,
-            uf: m.uf,
-            latitude: m.latitude,
-            longitude: m.longitude
-          });
-        }
-      });
-      setCoordenadas(map);
-    }
-  }, []);
-
-  // Busca dados de renda dos municípios
+  // Busca dados de renda dos municípios diretamente com coordenadas
   const fetchMunicipiosRenda = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('municipios_renda')
         .select('*')
-        .order('renda_media', { ascending: false });
+        .order('renda_media', { ascending: false, nullsFirst: false });
 
       if (error) throw error;
 
-      // Enriquece com coordenadas
-      const enriched = (data || []).map(m => {
-        const key = `${m.municipio.toUpperCase()}-${m.uf}`;
-        const coord = coordenadas.get(key);
-        return {
-          ...m,
-          latitude: coord?.latitude,
-          longitude: coord?.longitude
-        };
-      });
+      // Filtra apenas municípios com coordenadas válidas
+      const withCoords = (data || []).filter(m => 
+        m.latitude !== null && m.longitude !== null
+      );
 
-      setMunicipiosRenda(enriched);
+      setMunicipiosRenda(withCoords);
     } catch (error) {
       console.error('Erro ao buscar dados de renda:', error);
     }
     setLoading(false);
-  }, [coordenadas]);
+  }, []);
 
   // Agrupa por UF para visão macro
   const rendaPorUF = useCallback(() => {
@@ -86,23 +53,30 @@ export const useMunicipiosRenda = () => {
       total_populacao: number;
       municipios: number;
       soma_renda: number;
+      pib_medio: number;
+      soma_pib: number;
     }>();
     
     municipiosRenda.forEach(m => {
-      if (!m.renda_media) return;
-      
       const existing = byUF.get(m.uf);
+      const pop = m.populacao || 1;
+      const renda = m.renda_media || 0;
+      const pib = m.pib_per_capita || 0;
+      
       if (existing) {
-        existing.soma_renda += m.renda_media * (m.populacao || 1);
-        existing.total_populacao += m.populacao || 1;
+        existing.soma_renda += renda * pop;
+        existing.soma_pib += pib * pop;
+        existing.total_populacao += pop;
         existing.municipios++;
       } else {
         byUF.set(m.uf, { 
           uf: m.uf, 
-          renda_media: m.renda_media,
-          total_populacao: m.populacao || 1,
+          renda_media: renda,
+          pib_medio: pib,
+          total_populacao: pop,
           municipios: 1,
-          soma_renda: m.renda_media * (m.populacao || 1)
+          soma_renda: renda * pop,
+          soma_pib: pib * pop
         });
       }
     });
@@ -110,19 +84,14 @@ export const useMunicipiosRenda = () => {
     // Calcula média ponderada por população
     return Array.from(byUF.values()).map(uf => ({
       ...uf,
-      renda_media: uf.soma_renda / uf.total_populacao
+      renda_media: uf.total_populacao > 0 ? uf.soma_renda / uf.total_populacao : 0,
+      pib_medio: uf.total_populacao > 0 ? uf.soma_pib / uf.total_populacao : 0
     }));
   }, [municipiosRenda]);
 
   useEffect(() => {
-    fetchCoordenadas();
-  }, [fetchCoordenadas]);
-
-  useEffect(() => {
-    if (coordenadas.size > 0) {
-      fetchMunicipiosRenda();
-    }
-  }, [coordenadas, fetchMunicipiosRenda]);
+    fetchMunicipiosRenda();
+  }, [fetchMunicipiosRenda]);
 
   return {
     municipiosRenda,
