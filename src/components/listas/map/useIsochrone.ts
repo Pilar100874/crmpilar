@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -15,7 +15,7 @@ interface IsochroneData {
 // OpenRouteService API (gratuito, até 40 req/min)
 const ORS_API_URL = 'https://api.openrouteservice.org/v2/isochrones';
 
-export const useIsochrone = () => {
+export function useIsochrone() {
   const [isocronas, setIsocronas] = useState<IsochroneData[]>([]);
   const [loading, setLoading] = useState(false);
   const [apiKey, setApiKey] = useState<string | null>(null);
@@ -116,6 +116,11 @@ export const useIsochrone = () => {
     }
   }, []);
 
+  // Load saved isochrones on mount
+  useEffect(() => {
+    fetchSavedIsochrones();
+  }, [fetchSavedIsochrones]);
+
   return {
     isocronas,
     loading,
@@ -125,4 +130,4 @@ export const useIsochrone = () => {
     generateIsochrone,
     deleteIsochrone
   };
-};
+}
