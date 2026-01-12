@@ -8500,7 +8500,9 @@ export type Database = {
           created_at: string | null
           estabelecimento_id: string | null
           id: string
+          latitude: number | null
           logradouro: string | null
+          longitude: number | null
           nome: string
           numero: string | null
           uf: string | null
@@ -8514,7 +8516,9 @@ export type Database = {
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
+          latitude?: number | null
           logradouro?: string | null
+          longitude?: number | null
           nome: string
           numero?: string | null
           uf?: string | null
@@ -8528,7 +8532,9 @@ export type Database = {
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
+          latitude?: number | null
           logradouro?: string | null
+          longitude?: number | null
           nome?: string
           numero?: string | null
           uf?: string | null

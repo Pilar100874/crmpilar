@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { MapLayer, DEFAULT_LAYERS, VendasRegiao, DADOS_DEMOGRAFICOS_UF } from './MapLayerTypes';
+import { MapLayer, DEFAULT_LAYERS, VendasRegiao, DADOS_DEMOGRAFICOS_UF, Unidade } from './MapLayerTypes';
 
 interface Empresa {
   id: string;
@@ -26,6 +26,7 @@ interface EmpresaVinculo {
 export const useMapLayers = () => {
   const [layers, setLayers] = useState<MapLayer[]>(DEFAULT_LAYERS);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [unidades, setUnidades] = useState<Unidade[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [vinculos, setVinculos] = useState<EmpresaVinculo[]>([]);
   const [vendasData, setVendasData] = useState<VendasRegiao[]>([]);
@@ -35,14 +36,16 @@ export const useMapLayers = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [empresasRes, usuariosRes, empresaVinculosRes] = await Promise.all([
+      const [empresasRes, usuariosRes, empresaVinculosRes, unidadesRes] = await Promise.all([
         supabase.from('empresas').select('id, nome_fantasia, nome, endereco, cidade, estado, latitude, longitude'),
         supabase.from('usuarios').select('id, nome'),
-        supabase.from('empresa_vinculos').select('empresa_id, usuario_id')
+        supabase.from('empresa_vinculos').select('empresa_id, usuario_id'),
+        supabase.from('unidades').select('id, nome, cep, logradouro, numero, complemento, bairro, cidade, uf, latitude, longitude')
       ]);
 
       if (empresasRes.data) setEmpresas(empresasRes.data);
       if (usuariosRes.data) setUsuarios(usuariosRes.data);
+      if (unidadesRes.data) setUnidades(unidadesRes.data);
       
       if (empresaVinculosRes.data) {
         setVinculos(empresaVinculosRes.data.map(v => ({
@@ -144,6 +147,7 @@ export const useMapLayers = () => {
     toggleLayer,
     empresas: filteredEmpresas,
     allEmpresas: empresas,
+    unidades,
     usuarios,
     vinculos,
     vendasData,

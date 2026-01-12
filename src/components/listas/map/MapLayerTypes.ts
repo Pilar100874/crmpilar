@@ -59,6 +59,20 @@ export interface VendasRegiao {
   longitude?: number;
 }
 
+export interface Unidade {
+  id: string;
+  nome: string;
+  cep: string | null;
+  logradouro: string | null;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  uf: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
 export interface MapLayer {
   id: string;
   name: string;
@@ -66,10 +80,19 @@ export interface MapLayer {
   visible: boolean;
   color: string;
   icon: string;
-  type: 'clients' | 'sales' | 'demographics' | 'income' | 'competition' | 'logistics';
+  type: 'clients' | 'sales' | 'demographics' | 'income' | 'competition' | 'logistics' | 'units';
 }
 
 export const DEFAULT_LAYERS: MapLayer[] = [
+  {
+    id: 'units',
+    name: 'Unidades/Filiais',
+    description: 'Seus pontos de venda e filiais',
+    visible: true,
+    color: '#ec4899',
+    icon: 'MapPin',
+    type: 'units'
+  },
   {
     id: 'clients',
     name: 'Clientes',
