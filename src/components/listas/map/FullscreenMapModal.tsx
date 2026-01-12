@@ -1135,74 +1135,61 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
         
         <div className="relative w-full h-full flex flex-col bg-background">
           {/* ===== MOBILE/TABLET HEADER ===== */}
-          <div className="lg:hidden flex flex-col bg-background/95 backdrop-blur-md z-20 border-b shadow-sm">
+          <div className="lg:hidden flex flex-col bg-background z-20 border-b shrink-0">
             {/* Top bar: Título + Fechar */}
-            <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/50">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="flex items-center justify-between px-3 py-2 min-h-[48px]">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <MapPin className="h-4 w-4 text-primary" />
                 </div>
-                <div>
-                  <h2 className="text-sm font-semibold leading-tight">Mapa</h2>
-                  <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold truncate">Mapa</h2>
+                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                     {unidadesNoMapa > 0 && (
-                      <span className="text-[10px] text-pink-600 font-medium">
-                        {unidadesNoMapa} unid
-                      </span>
+                      <span className="text-pink-600">{unidadesNoMapa} unid</span>
                     )}
-                    {unidadesNoMapa > 0 && empresasNoMapa > 0 && (
-                      <span className="text-muted-foreground">•</span>
-                    )}
-                    <span className="text-[10px] text-muted-foreground">
-                      {empresasNoMapa} emp
-                    </span>
+                    {unidadesNoMapa > 0 && empresasNoMapa > 0 && <span>•</span>}
+                    <span>{empresasNoMapa} emp</span>
                   </div>
                 </div>
               </div>
               
+              {/* Botão Fechar - sempre visível */}
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="icon" 
                 onClick={onClose} 
-                className="h-9 w-9 rounded-full hover:bg-destructive/10 hover:text-destructive"
+                className="h-10 w-10 shrink-0 ml-2 rounded-full border-2"
               >
                 <X className="h-5 w-5" />
               </Button>
             </div>
 
-            {/* Toolbar: Ações rápidas */}
-            <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto scrollbar-hide">
-              {/* Filtro CNAE */}
-              {onCnaesChange && (
-                <CnaeFilterSelect
-                  selectedCnaes={selectedCnaes}
-                  onCnaesChange={onCnaesChange}
-                />
-              )}
-              
+            {/* Toolbar: Scroll horizontal */}
+            <div className="flex items-center gap-2 px-3 py-2 overflow-x-auto border-t" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Camadas */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9 gap-1.5 px-3 rounded-full shrink-0">
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5 px-3 shrink-0 whitespace-nowrap">
                     <Layers className="h-4 w-4" />
                     <span className="text-xs">{activeLayersCount}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-72 bg-popover/95 backdrop-blur-md" style={{ zIndex: 99999 }}>
+                <DropdownMenuContent align="start" className="w-72 bg-popover" style={{ zIndex: 99999 }}>
                   <DropdownMenuLabel className="flex items-center gap-2">
                     <Layers className="h-4 w-4" />
-                    Camadas do Mapa
+                    Camadas
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <div className="p-2 space-y-2 max-h-[60vh] overflow-y-auto">
+                  <div className="p-2 space-y-2 max-h-[50vh] overflow-y-auto">
                     {layers.map((layer) => (
                       <div 
                         key={layer.id} 
-                        className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                        className="flex items-center justify-between gap-2 p-2 rounded-lg"
                       >
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
                           <div 
-                            className="w-3.5 h-3.5 rounded-full shrink-0 ring-2 ring-offset-1 ring-offset-background"
+                            className="w-3 h-3 rounded-full shrink-0"
                             style={{ backgroundColor: layer.color }}
                           />
                           <Label 
@@ -1223,10 +1210,18 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                 </DropdownMenuContent>
               </DropdownMenu>
               
+              {/* Filtro CNAE */}
+              {onCnaesChange && (
+                <CnaeFilterSelect
+                  selectedCnaes={selectedCnaes}
+                  onCnaesChange={onCnaesChange}
+                />
+              )}
+              
               {/* Usuário */}
               <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
-                <SelectTrigger className="w-auto min-w-[80px] h-9 text-xs rounded-full shrink-0 gap-1.5">
-                  <User className="h-3.5 w-3.5" />
+                <SelectTrigger className="w-[100px] h-9 text-xs shrink-0">
+                  <User className="h-3 w-3 mr-1" />
                   <SelectValue placeholder="Usuário" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover" style={{ zIndex: 99999 }}>
@@ -1246,7 +1241,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="h-9 gap-1.5 px-3 rounded-full shrink-0"
+                  className="h-9 gap-1 px-3 shrink-0 whitespace-nowrap"
                   onClick={startDrawing}
                 >
                   <PenTool className="h-4 w-4" />
@@ -1256,9 +1251,9 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               
               {showResults && (
                 <Button 
-                  variant="outline" 
+                  variant="destructive" 
                   size="sm"
-                  className="h-9 gap-1.5 px-3 rounded-full shrink-0 text-destructive border-destructive/30 hover:bg-destructive/10"
+                  className="h-9 gap-1 px-3 shrink-0 whitespace-nowrap"
                   onClick={clearPolygon}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -1269,21 +1264,16 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
             
             {/* Barra de desenho (quando ativo) */}
             {isDrawing && (
-              <div className="flex items-center justify-between gap-2 px-3 py-2 bg-primary/5 border-t border-primary/20">
+              <div className="flex items-center justify-between gap-2 px-3 py-2 bg-primary/10 border-t">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center">
-                    <PenTool className="h-3.5 w-3.5 text-primary animate-pulse" />
-                  </div>
-                  <div className="text-xs">
-                    <span className="font-medium">{polygonPoints.length}</span>
-                    <span className="text-muted-foreground"> pontos (min 3)</span>
-                  </div>
+                  <PenTool className="h-4 w-4 text-primary animate-pulse" />
+                  <span className="text-xs font-medium">{polygonPoints.length} pontos</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   <Button 
-                    variant="ghost" 
+                    variant="outline" 
                     size="icon"
-                    className="h-8 w-8 rounded-full"
+                    className="h-9 w-9"
                     onClick={removeLastPoint}
                     disabled={polygonPoints.length === 0}
                   >
@@ -1292,17 +1282,17 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                   <Button 
                     variant="default" 
                     size="sm"
-                    className="h-8 px-3 rounded-full gap-1.5"
+                    className="h-9 px-4"
                     onClick={finishDrawing}
                     disabled={polygonPoints.length < 3}
                   >
-                    <Check className="h-4 w-4" />
-                    <span className="text-xs">OK</span>
+                    <Check className="h-4 w-4 mr-1" />
+                    OK
                   </Button>
                   <Button 
                     variant="ghost" 
                     size="icon"
-                    className="h-8 w-8 rounded-full text-destructive hover:bg-destructive/10"
+                    className="h-9 w-9"
                     onClick={cancelDrawing}
                   >
                     <X className="h-4 w-4" />
