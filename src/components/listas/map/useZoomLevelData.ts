@@ -47,35 +47,24 @@ export const useZoomLevelData = (zoomLevel: number) => {
     return 'local';
   }, []);
 
-  // Busca dados municipais quando necessário
-  const fetchMunicipalData = useCallback(async (bounds?: { north: number; south: number; east: number; west: number }) => {
+  // Busca dados municipais diretamente de municipios_renda (já tem coordenadas)
+  const fetchMunicipalData = useCallback(async () => {
     setLoading(true);
     try {
-      // Busca dados de renda
-      let rendaQuery = supabase
+      // Busca todos os municípios com coordenadas da tabela municipios_renda
+      const { data: rendaData, error } = await supabase
         .from('municipios_renda')
-        .select('municipio, uf, renda_media, idh, populacao');
+        .select('municipio, uf, latitude, longitude, populacao, pib_per_capita, idh, renda_media')
+        .not('latitude', 'is', null)
+        .not('longitude', 'is', null)
+        .order('populacao', { ascending: false, nullsFirst: false });
 
-      const { data: rendaData } = await rendaQuery.limit(500);
-
-      // Busca coordenadas
-      let coordQuery = supabase
-        .from('municipios_coordenadas')
-        .select('nome, uf, latitude, longitude');
-
-      const { data: coordData } = await coordQuery.limit(500);
+      if (error) throw error;
 
       // Busca contagem de empresas por município
       const { data: empresasData } = await supabase
         .from('empresas_cnae_municipios')
-        .select('municipio, uf, quantidade')
-        .limit(1000);
-
-      // Combina os dados
-      const coordMap = new Map<string, { lat: number; lng: number }>();
-      coordData?.forEach(c => {
-        coordMap.set(`${c.nome.toUpperCase()}-${c.uf}`, { lat: c.latitude, lng: c.longitude });
-      });
+        .select('municipio, uf, quantidade');
 
       const empresasMap = new Map<string, number>();
       empresasData?.forEach(e => {
@@ -85,20 +74,20 @@ export const useZoomLevelData = (zoomLevel: number) => {
 
       const combined: MunicipalData[] = (rendaData || []).map(r => {
         const key = `${r.municipio.toUpperCase()}-${r.uf}`;
-        const coord = coordMap.get(key);
         return {
           municipio: r.municipio,
           uf: r.uf,
-          latitude: coord?.lat || 0,
-          longitude: coord?.lng || 0,
+          latitude: r.latitude!,
+          longitude: r.longitude!,
           populacao: r.populacao || undefined,
-          renda_media: r.renda_media ? Number(r.renda_media) : undefined,
+          renda_media: r.renda_media ? Number(r.renda_media) : (r.pib_per_capita ? Number(r.pib_per_capita) : undefined),
           idh: r.idh ? Number(r.idh) : undefined,
           empresas_count: empresasMap.get(key)
         };
-      }).filter(m => m.latitude !== 0);
+      });
 
       setMunicipalData(combined);
+      console.log(`✅ Carregados ${combined.length} municípios com dados demográficos`);
     } catch (error) {
       console.error('Erro ao buscar dados municipais:', error);
     }

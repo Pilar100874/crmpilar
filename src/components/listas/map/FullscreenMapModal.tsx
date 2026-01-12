@@ -138,7 +138,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   const { isocronas, fetchSavedIsochrones } = useIsochrone();
   
   // Hook para dados baseados em zoom
-  const { currentLevel, stateData, regionData, municipalData } = useZoomLevelData(currentZoom);
+  const { currentLevel, stateData, regionData, municipalData, loading: municipalLoading } = useZoomLevelData(currentZoom);
 
   // Initialize map when dialog opens
   const initializeMap = useCallback(() => {
@@ -344,7 +344,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     });
   }, [vendasData, layers, mapReady]);
 
-  // Update demographics layer - ZOOM DINÂMICO
+  // Update demographics layer - ZOOM DINÂMICO com suporte a municípios
   useEffect(() => {
     if (!demographicsLayerRef.current || !mapReady) return;
     
@@ -383,7 +383,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
         demographicsLayerRef.current!.addLayer(circle);
       });
-    } else {
+    } else if (currentLevel === 'state') {
       // Mostra UFs com dados completos
       const maxPopulacao = Math.max(...stateData.map(d => d.populacao));
       const minPopulacao = Math.min(...stateData.map(d => d.populacao));
@@ -414,14 +414,78 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               <div>🏙️ <strong>Urbanização:</strong> ${data.urbanizacao}%</div>
               <div>💰 <strong>Renda Média:</strong> R$ ${data.renda_media.toLocaleString('pt-BR')}</div>
             </div>
-            <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">Fonte: IBGE 2025</p>
+            <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">🔍 Dê zoom para ver municípios</p>
           </div>
         `);
 
         demographicsLayerRef.current!.addLayer(circle);
       });
+    } else {
+      // Mostra MUNICÍPIOS com dados demográficos
+      if (municipalData.length === 0) {
+        // Mostra mensagem de carregamento
+        const center = mapRef.current?.getCenter();
+        if (center && municipalLoading) {
+          const marker = L.marker([center.lat, center.lng], {
+            icon: L.divIcon({
+              className: 'custom-info-marker',
+              html: `<div style="background: #f3e8ff; border: 2px solid #8b5cf6; border-radius: 8px; padding: 8px 12px; white-space: nowrap; font-size: 12px;">
+                ⏳ Carregando dados de ${municipalData.length > 0 ? municipalData.length : '5570'} municípios...
+              </div>`,
+              iconSize: [280, 40],
+              iconAnchor: [140, 20]
+            })
+          });
+          demographicsLayerRef.current.addLayer(marker);
+        }
+        return;
+      }
+
+      // Calcula valores para normalização
+      const populacoes = municipalData.filter(m => m.populacao).map(m => m.populacao!);
+      const maxPop = Math.max(...populacoes, 1);
+      const minPop = Math.min(...populacoes, 0);
+
+      municipalData.forEach(mun => {
+        if (!mun.populacao) return;
+
+        const normalized = (mun.populacao - minPop) / (maxPop - minPop);
+        const radius = 4 + (normalized * 20);
+
+        // Cor baseada na população
+        let fillColor = '#c4b5fd'; // Baixa
+        if (normalized > 0.3) fillColor = '#8b5cf6'; // Média
+        if (normalized > 0.6) fillColor = '#6d28d9'; // Alta
+
+        const circle = L.circleMarker([mun.latitude, mun.longitude], {
+          radius: radius,
+          fillColor: fillColor,
+          color: '#4c1d95',
+          weight: 1,
+          opacity: 0.7,
+          fillOpacity: 0.5
+        });
+
+        circle.bindPopup(`
+          <div class="p-3">
+            <strong style="font-size: 14px;">📍 ${mun.municipio} - ${mun.uf}</strong>
+            <hr style="margin: 8px 0; border-color: #e5e7eb;"/>
+            <div style="display: grid; gap: 4px;">
+              <div>👥 <strong>População:</strong> ${mun.populacao.toLocaleString('pt-BR')}</div>
+              ${mun.renda_media ? `<div>💰 <strong>PIB per capita:</strong> R$ ${mun.renda_media.toLocaleString('pt-BR')}</div>` : ''}
+              ${mun.idh ? `<div>📈 <strong>IDH:</strong> ${mun.idh.toFixed(3)}</div>` : ''}
+              ${mun.empresas_count ? `<div>🏢 <strong>Empresas:</strong> ${mun.empresas_count.toLocaleString('pt-BR')}</div>` : ''}
+            </div>
+            <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">Fonte: IBGE</p>
+          </div>
+        `);
+
+        demographicsLayerRef.current!.addLayer(circle);
+      });
+
+      console.log(`✅ Demografia: ${municipalData.length} municípios renderizados`);
     }
-  }, [layers, mapReady, currentLevel, stateData, regionData]);
+  }, [layers, mapReady, currentLevel, stateData, regionData, municipalData, municipalLoading]);
 
   // Update income layer
   useEffect(() => {
@@ -993,9 +1057,10 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                           )}
                           {layer.id === 'demographics' && (
                             <div className="text-muted-foreground pl-4 space-y-0.5">
-                              <p>👥 Dados por estado (UF)</p>
+                              <p>👥 Zoom baixo: Regiões e Estados</p>
+                              <p>👥 Zoom alto: 5570 Municípios</p>
                               <p>Círculo maior = Maior população</p>
-                              <p>Exibe: População, Renda e IDH</p>
+                              <p>Exibe: População, PIB e IDH</p>
                             </div>
                           )}
                           {layer.id === 'income' && (
