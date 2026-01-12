@@ -643,7 +643,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     });
   }, [empresasByCnae, layers, mapReady, selectedCnaes]);
 
-  // Update logistics layer
+  // Update logistics layer - agora com dados municipais
   useEffect(() => {
     if (!logisticsLayerRef.current || !mapReady) return;
     
@@ -652,42 +652,120 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     const logLayer = layers.find(l => l.id === 'logistics');
     if (!logLayer?.visible) return;
 
-    Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
-      const accessScore = Math.min(data.densidade / 100, 1);
-      let accessLevel = 'baixo';
-      let fillOpacity = 1;
-      
-      if (accessScore > 0.5) {
-        accessLevel = 'alto';
-        fillOpacity = 0;
-      } else if (accessScore > 0.2) {
-        accessLevel = 'medio';
-        fillOpacity = 0.3;
+    // Em zoom baixo (< 6): mostra por UF
+    // Em zoom alto (>= 6): mostra por município usando dados de municipiosRenda
+    if (currentZoom < 6) {
+      // Visão por UF
+      Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
+        const accessScore = Math.min(data.densidade / 100, 1);
+        let accessLevel = 'baixo';
+        let fillOpacity = 1;
+        
+        if (accessScore > 0.5) {
+          accessLevel = 'alto';
+          fillOpacity = 0;
+        } else if (accessScore > 0.2) {
+          accessLevel = 'medio';
+          fillOpacity = 0.3;
+        }
+
+        const circle = L.circleMarker([data.lat, data.lng], {
+          radius: 15,
+          fillColor: '#06b6d4',
+          color: '#06b6d4',
+          weight: 2,
+          opacity: 0.8,
+          fillOpacity: fillOpacity
+        });
+
+        const tempoEntrega = Math.round((1 - accessScore) * 48 + 6);
+
+        circle.bindPopup(`
+          <div class="p-2">
+            <strong>${uf} - Logística</strong>
+            <br/><small>Acesso: ${accessLevel.charAt(0).toUpperCase() + accessLevel.slice(1)}</small>
+            <br/><small>Tempo Estimado: ${tempoEntrega}h</small>
+            <br/><small class="text-muted-foreground">Fonte: DNIT/OSM</small>
+          </div>
+        `);
+
+        logisticsLayerRef.current!.addLayer(circle);
+      });
+    } else {
+      // Visão por município - usa população como proxy de acessibilidade logística
+      // (municípios maiores geralmente têm melhor infraestrutura)
+      const municipiosComDados = municipiosRenda.filter(m => 
+        m.latitude && m.longitude && m.populacao && m.populacao > 0
+      );
+
+      if (municipiosComDados.length === 0) {
+        console.log('📦 Logística: Sem dados municipais, aguardando carregamento...');
+        return;
       }
 
-      const circle = L.circleMarker([data.lat, data.lng], {
-        radius: 15,
-        fillColor: '#06b6d4',
-        color: '#06b6d4',
-        weight: 2,
-        opacity: 0.8,
-        fillOpacity: fillOpacity
+      // Calcula score de acessibilidade baseado em população (proxy)
+      const maxPop = Math.max(...municipiosComDados.map(m => m.populacao!));
+      const minPop = Math.min(...municipiosComDados.filter(m => m.populacao! > 1000).map(m => m.populacao!));
+
+      municipiosComDados.forEach(mun => {
+        const pop = mun.populacao!;
+        
+        // Normalização logarítmica para melhor distribuição
+        const logMax = Math.log10(maxPop);
+        const logMin = Math.log10(Math.max(minPop, 1000));
+        const logPop = Math.log10(Math.max(pop, 1000));
+        const accessScore = Math.min((logPop - logMin) / (logMax - logMin), 1);
+        
+        let accessLevel = 'baixo';
+        let fillColor = '#ef4444'; // vermelho
+        let fillOpacity = 0.6;
+        let tempoEntrega = 72; // horas
+        
+        if (accessScore > 0.6) {
+          accessLevel = 'alto';
+          fillColor = '#22c55e'; // verde
+          fillOpacity = 0.6;
+          tempoEntrega = 6;
+        } else if (accessScore > 0.3) {
+          accessLevel = 'medio';
+          fillColor = '#f59e0b'; // amarelo
+          fillOpacity = 0.6;
+          tempoEntrega = 24;
+        } else {
+          tempoEntrega = Math.round((1 - accessScore) * 48 + 24);
+        }
+
+        const radius = Math.max(4, 4 + (accessScore * 12));
+
+        const circle = L.circleMarker([mun.latitude!, mun.longitude!], {
+          radius: radius,
+          fillColor: fillColor,
+          color: '#0891b2',
+          weight: 1,
+          opacity: 0.8,
+          fillOpacity: fillOpacity
+        });
+
+        circle.bindPopup(`
+          <div class="p-3">
+            <strong style="font-size: 14px;">🚚 ${mun.municipio} - ${mun.uf}</strong>
+            <hr style="margin: 8px 0; border-color: #e5e7eb;"/>
+            <div style="display: grid; gap: 4px;">
+              <div>📦 <strong>Acesso Logístico:</strong> ${accessLevel.charAt(0).toUpperCase() + accessLevel.slice(1)}</div>
+              <div>⏱️ <strong>Tempo Estimado:</strong> ${tempoEntrega}h</div>
+              <div>👥 <strong>População:</strong> ${pop.toLocaleString('pt-BR')}</div>
+              ${mun.regiao ? `<div>🗺️ <strong>Região:</strong> ${mun.regiao}</div>` : ''}
+            </div>
+            <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">Estimativa baseada em infraestrutura regional</p>
+          </div>
+        `);
+
+        logisticsLayerRef.current!.addLayer(circle);
       });
 
-      const tempoEntrega = Math.round((1 - accessScore) * 48 + 6);
-
-      circle.bindPopup(`
-        <div class="p-2">
-          <strong>${uf} - Logística</strong>
-          <br/><small>Acesso: ${accessLevel.charAt(0).toUpperCase() + accessLevel.slice(1)}</small>
-          <br/><small>Tempo Estimado: ${tempoEntrega}h</small>
-          <br/><small class="text-muted-foreground">Fonte: DNIT/OSM</small>
-        </div>
-      `);
-
-      logisticsLayerRef.current!.addLayer(circle);
-    });
-  }, [layers, mapReady]);
+      console.log(`✅ Logística: ${municipiosComDados.length} municípios renderizados`);
+    }
+  }, [layers, mapReady, currentZoom, municipiosRenda]);
 
   // NOVA CAMADA: Heatmap por Município (dados importados)
   useEffect(() => {
