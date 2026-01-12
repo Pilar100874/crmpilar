@@ -137,7 +137,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
             {field.type === 'selection_audio' && 'Áudios para Seleção'}
             {field.type === 'selection_video' && 'Vídeos para Seleção'}
             {field.type === 'selection_text' && 'Textos para Seleção'}
-            {field.type === 'dropdown' && 'Opções'}
+            {field.type === 'radio_selection' && 'Opções'}
           </Label>
           <Button
             type="button"
@@ -172,8 +172,8 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
                 </Button>
               </div>
               
-              {/* Dropdown - apenas valor texto */}
-              {field.type === 'dropdown' && (
+              {/* Radio Selection - apenas valor texto */}
+              {field.type === 'radio_selection' && (
                 <Input
                   value={option.value}
                   onChange={(e) => handleUpdateOption(index, { value: e.target.value })}
@@ -346,7 +346,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
               {field.type === 'selection_audio' && 'Adicione áudios para o usuário escolher'}
               {field.type === 'selection_video' && 'Adicione vídeos para o usuário escolher'}
               {field.type === 'selection_text' && 'Adicione textos para o usuário escolher'}
-              {field.type === 'dropdown' && 'Adicione opções para a lista'}
+              {field.type === 'radio_selection' && 'Adicione opções para a seleção'}
             </div>
           )}
         </div>

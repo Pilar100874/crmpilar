@@ -10,8 +10,7 @@ export type FieldType =
   | 'selection_audio'  // Seleção de áudios (criador define as opções)
   | 'selection_video'  // Seleção de vídeos (criador define as opções)
   | 'selection_text'   // Seleção de textos longos (criador define as opções)
-  | 'checkbox_selection' // Seleção múltipla com checkboxes (criador define as opções)
-  | 'dropdown' 
+  | 'radio_selection'  // Seleção única com radio buttons (criador define as opções)
   | 'number'
   | 'date'
   | 'checkbox'
@@ -107,7 +106,7 @@ export const FIELD_TYPE_CATEGORIES = {
   selection: {
     label: 'Seleção',
     description: 'Você define as opções agora, usuário escolhe depois',
-    types: ['selection_image', 'selection_audio', 'selection_video', 'selection_text', 'checkbox_selection', 'dropdown'] as FieldType[],
+    types: ['selection_image', 'selection_audio', 'selection_video', 'selection_text', 'radio_selection'] as FieldType[],
   },
   product: {
     label: 'Produto',
@@ -125,8 +124,7 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   selection_audio: 'Seleção de Áudios',
   selection_video: 'Seleção de Vídeos',
   selection_text: 'Seleção de Textos',
-  checkbox_selection: 'Seleção com Checkboxes',
-  dropdown: 'Lista Suspensa',
+  radio_selection: 'Seleção Única',
   number: 'Número',
   date: 'Data',
   checkbox: 'Checkbox',
@@ -144,8 +142,7 @@ export const FIELD_TYPE_DESCRIPTIONS: Record<FieldType, string> = {
   selection_audio: 'Defina áudios para o usuário escolher',
   selection_video: 'Defina vídeos para o usuário escolher',
   selection_text: 'Defina textos longos para o usuário escolher',
-  checkbox_selection: 'Defina opções para seleção múltipla com checkboxes',
-  dropdown: 'Lista de opções',
+  radio_selection: 'Defina opções para o usuário escolher uma',
   number: 'Valor numérico',
   date: 'Seletor de data',
   checkbox: 'Opção sim/não',
