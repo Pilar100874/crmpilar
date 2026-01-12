@@ -212,7 +212,7 @@ export const FormStepsManager: React.FC<FormStepsManagerProps> = ({
         <div className="space-y-3">
           {steps.map((step, index) => {
             const stepFields = getFieldsForStep(step.id);
-            const isOpen = openSteps[step.id] ?? true;
+            const isOpen = openSteps[step.id] ?? false;
             
             return (
               <Collapsible key={step.id} open={isOpen} onOpenChange={() => toggleStep(step.id)}>
