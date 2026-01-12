@@ -23,6 +23,7 @@ import { IsochronePanel } from './IsochronePanel';
 import { useCnaeHeatmap } from './useCnaeHeatmap';
 import { useMunicipiosRenda } from './useMunicipiosRenda';
 import { useIsochrone } from './useIsochrone';
+import { useZoomLevelData } from './useZoomLevelData';
 import { 
   X, 
   Filter, 
@@ -124,6 +125,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   const [mapReady, setMapReady] = useState(false);
   const [selectedMapPoint, setSelectedMapPoint] = useState<{ lat: number; lng: number } | null>(null);
   const [isSelectingPoint, setIsSelectingPoint] = useState(false);
+  const [currentZoom, setCurrentZoom] = useState(4);
 
   // Hook para dados do heatmap por município
   const { heatmapData, heatmapByUF, loading: heatmapLoading, refetch: refetchHeatmap } = useCnaeHeatmap(selectedCnaes);
@@ -133,6 +135,9 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   
   // Hook para isócronas
   const { isocronas, fetchSavedIsochrones } = useIsochrone();
+  
+  // Hook para dados baseados em zoom
+  const { currentLevel, stateData, regionData, municipalData } = useZoomLevelData(currentZoom);
 
   // Initialize map when dialog opens
   const initializeMap = useCallback(() => {
@@ -171,6 +176,11 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
           setIsSelectingPoint(false);
         }
       });
+      
+      // Zoom handler para atualizar nível de detalhe
+      map.on('zoomend', () => {
+        setCurrentZoom(map.getZoom());
+      });
 
       mapRef.current = map;
 
@@ -182,7 +192,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     } catch (error) {
       console.error('Error initializing map:', error);
     }
-  }, []);
+  }, [isSelectingPoint]);
 
   useEffect(() => {
     if (!open) {
@@ -333,7 +343,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     });
   }, [vendasData, layers, mapReady]);
 
-  // Update demographics layer - usa POPULAÇÃO para tamanho do círculo
+  // Update demographics layer - ZOOM DINÂMICO
   useEffect(() => {
     if (!demographicsLayerRef.current || !mapReady) return;
     
@@ -342,41 +352,75 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     const demoLayer = layers.find(l => l.id === 'demographics');
     if (!demoLayer?.visible) return;
 
-    const maxPopulacao = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.populacao));
-    const minPopulacao = Math.min(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.populacao));
+    // Nível de zoom determina o que mostrar
+    if (currentLevel === 'country' || currentLevel === 'region') {
+      // Mostra regiões agregadas
+      regionData.forEach(region => {
+        const radius = Math.max(20, Math.min(region.populacao / 2000000, 50));
+        
+        const circle = L.circleMarker([region.lat, region.lng], {
+          radius: radius,
+          fillColor: '#8b5cf6',
+          color: '#6d28d9',
+          weight: 3,
+          opacity: 0.9,
+          fillOpacity: 0.5
+        });
 
-    Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
-      // Normaliza pela POPULAÇÃO para definir o raio
-      const normalizedPopulacao = (data.populacao - minPopulacao) / (maxPopulacao - minPopulacao);
-      const radius = 15 + (normalizedPopulacao * 40); // SP terá o maior círculo
-      
-      // Usa densidade para definir a opacidade (mais denso = mais escuro)
-      const maxDensidade = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.densidade));
-      const normalizedDensity = data.densidade / maxDensidade;
-      const opacity = 0.25 + (normalizedDensity * 0.5);
+        circle.bindPopup(`
+          <div class="p-3">
+            <strong style="font-size: 14px;">🗺️ Região ${region.regiao}</strong>
+            <hr style="margin: 8px 0; border-color: #e5e7eb;"/>
+            <div style="display: grid; gap: 4px;">
+              <div>👥 <strong>População:</strong> ${region.populacao.toLocaleString('pt-BR')}</div>
+              <div>💰 <strong>Renda Média:</strong> R$ ${region.renda_media.toLocaleString('pt-BR')}</div>
+              <div>📍 <strong>Estados:</strong> ${region.ufs.join(', ')}</div>
+            </div>
+            <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">🔍 Dê zoom para ver detalhes por UF</p>
+          </div>
+        `);
 
-      const circle = L.circleMarker([data.lat, data.lng], {
-        radius: radius,
-        fillColor: '#8b5cf6',
-        color: '#6d28d9',
-        weight: 2,
-        opacity: 0.8,
-        fillOpacity: opacity
+        demographicsLayerRef.current!.addLayer(circle);
       });
+    } else {
+      // Mostra UFs com dados completos
+      const maxPopulacao = Math.max(...stateData.map(d => d.populacao));
+      const minPopulacao = Math.min(...stateData.map(d => d.populacao));
+      const maxDensidade = Math.max(...stateData.map(d => d.densidade));
 
-      circle.bindPopup(`
-        <div class="p-2">
-          <strong>${uf}</strong>
-          <br/><small>População: ${data.populacao.toLocaleString('pt-BR')}</small>
-          <br/><small>Densidade: ${data.densidade.toFixed(1)} hab/km²</small>
-          <br/><small>Urbanização: ${data.urbanizacao}%</small>
-          <br/><small class="text-muted-foreground">Fonte: IBGE 2022</small>
-        </div>
-      `);
+      stateData.forEach(data => {
+        const normalizedPopulacao = (data.populacao - minPopulacao) / (maxPopulacao - minPopulacao);
+        const radius = 15 + (normalizedPopulacao * 40);
+        const normalizedDensity = data.densidade / maxDensidade;
+        const opacity = 0.25 + (normalizedDensity * 0.5);
 
-      demographicsLayerRef.current!.addLayer(circle);
-    });
-  }, [layers, mapReady]);
+        const circle = L.circleMarker([data.lat, data.lng], {
+          radius: radius,
+          fillColor: '#8b5cf6',
+          color: '#6d28d9',
+          weight: 2,
+          opacity: 0.8,
+          fillOpacity: opacity
+        });
+
+        circle.bindPopup(`
+          <div class="p-3">
+            <strong style="font-size: 14px;">📍 ${data.uf}</strong>
+            <hr style="margin: 8px 0; border-color: #e5e7eb;"/>
+            <div style="display: grid; gap: 4px;">
+              <div>👥 <strong>População:</strong> ${data.populacao.toLocaleString('pt-BR')}</div>
+              <div>📊 <strong>Densidade:</strong> ${data.densidade.toFixed(1)} hab/km²</div>
+              <div>🏙️ <strong>Urbanização:</strong> ${data.urbanizacao}%</div>
+              <div>💰 <strong>Renda Média:</strong> R$ ${data.renda_media.toLocaleString('pt-BR')}</div>
+            </div>
+            <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">Fonte: IBGE 2025</p>
+          </div>
+        `);
+
+        demographicsLayerRef.current!.addLayer(circle);
+      });
+    }
+  }, [layers, mapReady, currentLevel, stateData, regionData]);
 
   // Update income layer
   useEffect(() => {
@@ -629,6 +673,117 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     });
   }, [layers, mapReady, selectedCnaes, heatmapData]);
 
+  // NOVA CAMADA: Renda Municipal (dados importados) - só aparece com zoom alto
+  useEffect(() => {
+    if (!municipalIncomeLayerRef.current || !mapReady) return;
+    
+    municipalIncomeLayerRef.current.clearLayers();
+    
+    const incomeLayer = layers.find(l => l.id === 'municipal_income');
+    if (!incomeLayer?.visible) return;
+
+    // Se não há dados municipais, mostra mensagem no centro
+    if (municipiosRenda.length === 0) {
+      const center = mapRef.current?.getCenter();
+      if (center) {
+        const marker = L.marker([center.lat, center.lng], {
+          icon: L.divIcon({
+            className: 'custom-info-marker',
+            html: `<div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 8px 12px; white-space: nowrap; font-size: 12px;">
+              📊 Importe dados de renda usando o botão "Importar Renda"
+            </div>`,
+            iconSize: [280, 40],
+            iconAnchor: [140, 20]
+          })
+        });
+        municipalIncomeLayerRef.current.addLayer(marker);
+      }
+      return;
+    }
+
+    // Mostra dados municipais
+    const rendaValores = municipiosRenda.filter(m => m.renda_media).map(m => m.renda_media!);
+    const maxRenda = Math.max(...rendaValores, 1);
+    const minRenda = Math.min(...rendaValores);
+
+    municipiosRenda.forEach(mun => {
+      if (!mun.latitude || !mun.longitude || !mun.renda_media) return;
+
+      const normalized = (mun.renda_media - minRenda) / (maxRenda - minRenda);
+      const radius = 8 + (normalized * 20);
+
+      // Cor: vermelho (baixa) -> amarelo -> verde (alta)
+      let fillColor = '#ef4444';
+      if (normalized > 0.6) fillColor = '#22c55e';
+      else if (normalized > 0.3) fillColor = '#f59e0b';
+
+      const circle = L.circleMarker([mun.latitude, mun.longitude], {
+        radius: radius,
+        fillColor: fillColor,
+        color: '#374151',
+        weight: 1,
+        opacity: 0.8,
+        fillOpacity: 0.6
+      });
+
+      circle.bindPopup(`
+        <div class="p-3">
+          <strong style="font-size: 14px;">📍 ${mun.municipio} - ${mun.uf}</strong>
+          <hr style="margin: 8px 0; border-color: #e5e7eb;"/>
+          <div style="display: grid; gap: 4px;">
+            <div>💰 <strong>Renda Média:</strong> R$ ${mun.renda_media.toLocaleString('pt-BR')}</div>
+            ${mun.idh ? `<div>📈 <strong>IDH:</strong> ${mun.idh.toFixed(3)}</div>` : ''}
+            ${mun.populacao ? `<div>👥 <strong>População:</strong> ${mun.populacao.toLocaleString('pt-BR')}</div>` : ''}
+          </div>
+          <p style="font-size: 10px; color: #6b7280; margin-top: 8px;">Fonte: Dados importados</p>
+        </div>
+      `);
+
+      municipalIncomeLayerRef.current!.addLayer(circle);
+    });
+  }, [layers, mapReady, municipiosRenda]);
+
+  // NOVA CAMADA: Densidade de Estabelecimentos por município
+  useEffect(() => {
+    if (!densityLayerRef.current || !mapReady) return;
+    
+    densityLayerRef.current.clearLayers();
+    
+    const densityLayer = layers.find(l => l.id === 'density');
+    if (!densityLayer?.visible || heatmapData.length === 0) return;
+
+    const maxQtd = Math.max(...heatmapData.map(d => d.quantidade), 1);
+
+    heatmapData.forEach(data => {
+      if (!data.latitude || !data.longitude) return;
+
+      const normalized = data.quantidade / maxQtd;
+      const radius = 6 + (normalized * 25);
+
+      const circle = L.circleMarker([data.latitude, data.longitude], {
+        radius: radius,
+        fillColor: '#f97316',
+        color: '#c2410c',
+        weight: 1,
+        opacity: 0.8,
+        fillOpacity: 0.5
+      });
+
+      circle.bindPopup(`
+        <div class="p-3">
+          <strong style="font-size: 14px;">🏢 ${data.municipio} - ${data.uf}</strong>
+          <hr style="margin: 8px 0; border-color: #e5e7eb;"/>
+          <div style="display: grid; gap: 4px;">
+            <div>📊 <strong>Empresas:</strong> ${data.quantidade.toLocaleString('pt-BR')}</div>
+            ${data.cnae_descricao ? `<div>🏷️ <strong>CNAE:</strong> ${data.cnae_descricao}</div>` : ''}
+          </div>
+        </div>
+      `);
+
+      densityLayerRef.current!.addLayer(circle);
+    });
+  }, [layers, mapReady, heatmapData]);
+
   const handleZoomIn = () => mapRef.current?.zoomIn();
   const handleZoomOut = () => mapRef.current?.zoomOut();
   const handleReset = () => mapRef.current?.setView([-15.7801, -47.9292], 4);
@@ -856,6 +1011,26 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               className="absolute inset-0 w-full h-full"
               style={{ zIndex: 1 }}
             />
+
+            {/* Indicador de nível de zoom */}
+            {mapReady && (
+              <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-2 z-10 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Nível:</span>
+                  <Badge variant={currentLevel === 'municipal' || currentLevel === 'local' ? 'default' : 'secondary'}>
+                    {currentLevel === 'country' && '🌎 País'}
+                    {currentLevel === 'region' && '🗺️ Região'}
+                    {currentLevel === 'state' && '📍 Estado'}
+                    {currentLevel === 'municipal' && '🏙️ Município'}
+                    {currentLevel === 'local' && '📌 Local'}
+                  </Badge>
+                  <span className="text-muted-foreground">Zoom: {currentZoom}</span>
+                </div>
+                {(currentLevel === 'country' || currentLevel === 'region') && (
+                  <p className="text-muted-foreground mt-1">🔍 Dê zoom para ver mais detalhes</p>
+                )}
+              </div>
+            )}
 
             {!mapReady && (
               <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
