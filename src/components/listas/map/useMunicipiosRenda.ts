@@ -26,19 +26,34 @@ export const useMunicipiosRenda = () => {
   const fetchMunicipiosRenda = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('municipios_renda')
-        .select('*')
-        .order('pib_per_capita', { ascending: false, nullsFirst: false });
+      // Busca todos os municípios em lotes para evitar limite de 1000
+      const allData: MunicipioRenda[] = [];
+      const batchSize = 1000;
+      let offset = 0;
+      let hasMore = true;
 
-      if (error) throw error;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('municipios_renda')
+          .select('*')
+          .not('latitude', 'is', null)
+          .not('longitude', 'is', null)
+          .order('pib_per_capita', { ascending: false, nullsFirst: false })
+          .range(offset, offset + batchSize - 1);
 
-      // Filtra apenas municípios com coordenadas válidas
-      const withCoords = (data || []).filter(m => 
-        m.latitude !== null && m.longitude !== null
-      );
+        if (error) throw error;
 
-      setMunicipiosRenda(withCoords);
+        if (data && data.length > 0) {
+          allData.push(...data);
+          offset += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      console.log(`✅ Carregados ${allData.length} municípios com dados de renda`);
+      setMunicipiosRenda(allData);
     } catch (error) {
       console.error('Erro ao buscar dados de renda:', error);
     }
