@@ -18,7 +18,11 @@ import { Label } from '@/components/ui/label';
 import { MapLayer, VendasRegiao, DADOS_DEMOGRAFICOS_UF, Unidade } from './MapLayerTypes';
 import { CnaeFilterSelect } from './CnaeFilterSelect';
 import { CnaeHeatmapImporter } from './CnaeHeatmapImporter';
+import { RendaImporter } from './RendaImporter';
+import { IsochronePanel } from './IsochronePanel';
 import { useCnaeHeatmap } from './useCnaeHeatmap';
+import { useMunicipiosRenda } from './useMunicipiosRenda';
+import { useIsochrone } from './useIsochrone';
 import { 
   X, 
   Filter, 
@@ -30,7 +34,8 @@ import {
   MapPin,
   Layers,
   ChevronDown,
-  Upload
+  Upload,
+  MousePointer
 } from 'lucide-react';
 
 // Fix default Leaflet marker icons
@@ -113,10 +118,21 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   const logisticsLayerRef = useRef<L.LayerGroup | null>(null);
   const cnaeMarkersLayerRef = useRef<L.LayerGroup | null>(null);
   const heatmapLayerRef = useRef<L.LayerGroup | null>(null);
+  const isochroneLayerRef = useRef<L.LayerGroup | null>(null);
+  const municipalIncomeLayerRef = useRef<L.LayerGroup | null>(null);
+  const densityLayerRef = useRef<L.LayerGroup | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [selectedMapPoint, setSelectedMapPoint] = useState<{ lat: number; lng: number } | null>(null);
+  const [isSelectingPoint, setIsSelectingPoint] = useState(false);
 
   // Hook para dados do heatmap por município
   const { heatmapData, heatmapByUF, loading: heatmapLoading, refetch: refetchHeatmap } = useCnaeHeatmap(selectedCnaes);
+  
+  // Hook para dados de renda por município
+  const { municipiosRenda, rendaPorUF, loading: rendaLoading, refetch: refetchRenda } = useMunicipiosRenda();
+  
+  // Hook para isócronas
+  const { isocronas, fetchSavedIsochrones } = useIsochrone();
 
   // Initialize map when dialog opens
   const initializeMap = useCallback(() => {
@@ -144,6 +160,17 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
       logisticsLayerRef.current = L.layerGroup().addTo(map);
       cnaeMarkersLayerRef.current = L.layerGroup().addTo(map);
       heatmapLayerRef.current = L.layerGroup().addTo(map);
+      isochroneLayerRef.current = L.layerGroup().addTo(map);
+      municipalIncomeLayerRef.current = L.layerGroup().addTo(map);
+      densityLayerRef.current = L.layerGroup().addTo(map);
+
+      // Click handler para selecionar ponto para isócrona
+      map.on('click', (e: L.LeafletMouseEvent) => {
+        if (isSelectingPoint) {
+          setSelectedMapPoint({ lat: e.latlng.lat, lng: e.latlng.lng });
+          setIsSelectingPoint(false);
+        }
+      });
 
       mapRef.current = map;
 
@@ -172,7 +199,11 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
         logisticsLayerRef.current = null;
         cnaeMarkersLayerRef.current = null;
         heatmapLayerRef.current = null;
+        isochroneLayerRef.current = null;
+        municipalIncomeLayerRef.current = null;
+        densityLayerRef.current = null;
         setMapReady(false);
+        setSelectedMapPoint(null);
       }
       return;
     }
@@ -180,7 +211,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     // Initialize with delay to ensure DOM is ready
     const timer = setTimeout(initializeMap, 200);
     return () => clearTimeout(timer);
-  }, [open, initializeMap]);
+  }, [open, initializeMap, isSelectingPoint]);
 
   // Update markers layer (clients)
   useEffect(() => {
@@ -656,6 +687,12 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
               {/* Importador de dados CNAE */}
               <CnaeHeatmapImporter onImportComplete={refetchHeatmap} />
+              
+              {/* Importador de Renda */}
+              <RendaImporter onImportComplete={refetchRenda} />
+              
+              {/* Painel de Isócronas */}
+              <IsochronePanel selectedPoint={selectedMapPoint} />
 
               {/* Filtro de Usuário */}
               <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>

@@ -3666,6 +3666,42 @@ export type Database = {
           },
         ]
       }
+      isocronas: {
+        Row: {
+          created_at: string | null
+          estabelecimento_id: string
+          geometria_geojson: Json | null
+          id: string
+          latitude: number
+          longitude: number
+          modo_transporte: string
+          nome: string
+          tempo_minutos: number
+        }
+        Insert: {
+          created_at?: string | null
+          estabelecimento_id: string
+          geometria_geojson?: Json | null
+          id?: string
+          latitude: number
+          longitude: number
+          modo_transporte?: string
+          nome: string
+          tempo_minutos?: number
+        }
+        Update: {
+          created_at?: string | null
+          estabelecimento_id?: string
+          geometria_geojson?: Json | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          modo_transporte?: string
+          nome?: string
+          tempo_minutos?: number
+        }
+        Relationships: []
+      }
       kb_anexos: {
         Row: {
           artigo_id: string
@@ -4853,6 +4889,48 @@ export type Database = {
           nome?: string
           populacao?: number | null
           uf?: string
+        }
+        Relationships: []
+      }
+      municipios_renda: {
+        Row: {
+          codigo_ibge: string | null
+          created_at: string | null
+          id: string
+          idh: number | null
+          municipio: string
+          pib_per_capita: number | null
+          populacao: number | null
+          renda_media: number | null
+          renda_mediana: number | null
+          uf: string
+          updated_at: string | null
+        }
+        Insert: {
+          codigo_ibge?: string | null
+          created_at?: string | null
+          id?: string
+          idh?: number | null
+          municipio: string
+          pib_per_capita?: number | null
+          populacao?: number | null
+          renda_media?: number | null
+          renda_mediana?: number | null
+          uf: string
+          updated_at?: string | null
+        }
+        Update: {
+          codigo_ibge?: string | null
+          created_at?: string | null
+          id?: string
+          idh?: number | null
+          municipio?: string
+          pib_per_capita?: number | null
+          populacao?: number | null
+          renda_media?: number | null
+          renda_mediana?: number | null
+          uf?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

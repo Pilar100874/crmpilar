@@ -80,7 +80,7 @@ export interface MapLayer {
   visible: boolean;
   color: string;
   icon: string;
-  type: 'clients' | 'sales' | 'demographics' | 'income' | 'competition' | 'logistics' | 'units';
+  type: 'clients' | 'sales' | 'demographics' | 'income' | 'competition' | 'logistics' | 'units' | 'isochrone' | 'municipal_income' | 'density';
 }
 
 export const DEFAULT_LAYERS: MapLayer[] = [
@@ -146,6 +146,33 @@ export const DEFAULT_LAYERS: MapLayer[] = [
     color: '#06b6d4',
     icon: 'Truck',
     type: 'logistics'
+  },
+  {
+    id: 'isochrone',
+    name: 'Isócronas',
+    description: 'Áreas de alcance por tempo de deslocamento',
+    visible: false,
+    color: '#10b981',
+    icon: 'Clock',
+    type: 'isochrone'
+  },
+  {
+    id: 'municipal_income',
+    name: 'Renda Municipal',
+    description: 'Renda média por município (dados importados)',
+    visible: false,
+    color: '#eab308',
+    icon: 'DollarSign',
+    type: 'municipal_income'
+  },
+  {
+    id: 'density',
+    name: 'Densidade Estabelec.',
+    description: 'Densidade de empresas por município',
+    visible: false,
+    color: '#f97316',
+    icon: 'BarChart3',
+    type: 'density'
   }
 ];
 
