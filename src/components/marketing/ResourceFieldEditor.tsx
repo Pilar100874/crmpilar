@@ -24,7 +24,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
   onChange,
   onRemove,
 }) => {
-  const needsOptions = ['dropdown', 'selection_image', 'selection_audio', 'selection_video', 'selection_text'].includes(field.type);
+  const needsOptions = ['radio_selection', 'selection_image', 'selection_audio', 'selection_video', 'selection_text'].includes(field.type);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
   // Check if field name is empty
