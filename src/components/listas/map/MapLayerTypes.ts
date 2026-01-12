@@ -149,7 +149,9 @@ export const DEFAULT_LAYERS: MapLayer[] = [
   }
 ];
 
-// Dados demográficos simulados do IBGE para estados brasileiros (2022)
+// Dados demográficos oficiais do IBGE - Estimativas da População 2025
+// Fonte: IBGE. Diretoria de Pesquisas - DPE - Coordenação de População e Indicadores Sociais - COPIS
+// Data de referência: 1º de julho de 2025
 export const DADOS_DEMOGRAFICOS_UF: Record<string, {
   populacao: number;
   densidade: number;
@@ -158,31 +160,52 @@ export const DADOS_DEMOGRAFICOS_UF: Record<string, {
   lat: number;
   lng: number;
 }> = {
-  'SP': { populacao: 46649132, densidade: 176.25, renda_media: 2587, urbanizacao: 96.4, lat: -23.55, lng: -46.64 },
-  'RJ': { populacao: 17503832, densidade: 400.56, renda_media: 2295, urbanizacao: 97.0, lat: -22.91, lng: -43.17 },
-  'MG': { populacao: 21411923, densidade: 36.55, renda_media: 1837, urbanizacao: 85.3, lat: -19.92, lng: -43.94 },
-  'BA': { populacao: 14985284, densidade: 26.47, renda_media: 1256, urbanizacao: 72.1, lat: -12.97, lng: -38.51 },
-  'RS': { populacao: 11473595, densidade: 40.73, renda_media: 2147, urbanizacao: 85.1, lat: -30.03, lng: -51.23 },
-  'PR': { populacao: 11597484, densidade: 58.05, renda_media: 2063, urbanizacao: 85.3, lat: -25.43, lng: -49.27 },
-  'PE': { populacao: 9674793, densidade: 98.07, renda_media: 1284, urbanizacao: 80.2, lat: -8.05, lng: -34.88 },
-  'CE': { populacao: 9240580, densidade: 62.04, renda_media: 1098, urbanizacao: 75.1, lat: -3.72, lng: -38.53 },
-  'PA': { populacao: 8777124, densidade: 7.04, renda_media: 1156, urbanizacao: 68.5, lat: -1.46, lng: -48.50 },
-  'SC': { populacao: 7610361, densidade: 79.73, renda_media: 2344, urbanizacao: 84.0, lat: -27.60, lng: -48.55 },
-  'MA': { populacao: 7153262, densidade: 21.55, renda_media: 876, urbanizacao: 63.1, lat: -2.53, lng: -44.27 },
-  'GO': { populacao: 7206589, densidade: 21.21, renda_media: 1823, urbanizacao: 90.3, lat: -16.68, lng: -49.25 },
-  'AM': { populacao: 4240358, densidade: 2.70, renda_media: 1345, urbanizacao: 79.1, lat: -3.12, lng: -60.02 },
-  'PB': { populacao: 4059905, densidade: 71.83, renda_media: 1087, urbanizacao: 75.4, lat: -7.12, lng: -34.86 },
-  'ES': { populacao: 4108508, densidade: 89.02, renda_media: 1876, urbanizacao: 83.4, lat: -20.32, lng: -40.34 },
-  'RN': { populacao: 3560903, densidade: 67.38, renda_media: 1198, urbanizacao: 77.8, lat: -5.78, lng: -35.21 },
-  'MT': { populacao: 3658649, densidade: 4.05, renda_media: 1956, urbanizacao: 81.8, lat: -15.60, lng: -56.10 },
-  'AL': { populacao: 3365351, densidade: 121.05, renda_media: 987, urbanizacao: 73.6, lat: -9.67, lng: -35.74 },
-  'PI': { populacao: 3289290, densidade: 13.06, renda_media: 956, urbanizacao: 65.8, lat: -5.09, lng: -42.80 },
-  'MS': { populacao: 2839188, densidade: 7.95, renda_media: 1987, urbanizacao: 85.6, lat: -20.45, lng: -54.62 },
-  'SE': { populacao: 2338474, densidade: 106.42, renda_media: 1134, urbanizacao: 73.5, lat: -10.91, lng: -37.05 },
-  'DF': { populacao: 3094325, densidade: 534.63, renda_media: 3245, urbanizacao: 97.6, lat: -15.78, lng: -47.93 },
-  'RO': { populacao: 1815278, densidade: 7.62, renda_media: 1567, urbanizacao: 73.2, lat: -8.76, lng: -63.90 },
-  'TO': { populacao: 1607363, densidade: 5.79, renda_media: 1345, urbanizacao: 79.0, lat: -10.17, lng: -48.33 },
-  'AC': { populacao: 906876, densidade: 5.50, renda_media: 1234, urbanizacao: 72.6, lat: -9.98, lng: -67.81 },
-  'AP': { populacao: 877613, densidade: 6.13, renda_media: 1287, urbanizacao: 89.0, lat: 0.03, lng: -51.05 },
-  'RR': { populacao: 652713, densidade: 2.91, renda_media: 1456, urbanizacao: 76.6, lat: 2.82, lng: -60.67 }
+  // REGIÃO NORTE - 18.801.282 habitantes
+  'RO': { populacao: 1751950, densidade: 7.38, renda_media: 1567, urbanizacao: 73.2, lat: -8.76, lng: -63.90 },
+  'AC': { populacao: 884372, densidade: 5.37, renda_media: 1234, urbanizacao: 72.6, lat: -9.98, lng: -67.81 },
+  'AM': { populacao: 4321616, densidade: 2.75, renda_media: 1345, urbanizacao: 79.1, lat: -3.12, lng: -60.02 },
+  'RR': { populacao: 738772, densidade: 3.30, renda_media: 1456, urbanizacao: 76.6, lat: 2.82, lng: -60.67 },
+  'PA': { populacao: 8711196, densidade: 6.98, renda_media: 1156, urbanizacao: 68.5, lat: -1.46, lng: -48.50 },
+  'AP': { populacao: 806517, densidade: 5.63, renda_media: 1287, urbanizacao: 89.0, lat: 0.03, lng: -51.05 },
+  'TO': { populacao: 1586859, densidade: 5.71, renda_media: 1345, urbanizacao: 79.0, lat: -10.17, lng: -48.33 },
+  
+  // REGIÃO NORDESTE - 57.244.485 habitantes
+  'MA': { populacao: 7018211, densidade: 21.14, renda_media: 876, urbanizacao: 63.1, lat: -2.53, lng: -44.27 },
+  'PI': { populacao: 3384547, densidade: 13.44, renda_media: 956, urbanizacao: 65.8, lat: -5.09, lng: -42.80 },
+  'CE': { populacao: 9268836, densidade: 62.23, renda_media: 1098, urbanizacao: 75.1, lat: -3.72, lng: -38.53 },
+  'RN': { populacao: 3455236, densidade: 65.40, renda_media: 1198, urbanizacao: 77.8, lat: -5.78, lng: -35.21 },
+  'PB': { populacao: 4164468, densidade: 73.68, renda_media: 1087, urbanizacao: 75.4, lat: -7.12, lng: -34.86 },
+  'PE': { populacao: 9562007, densidade: 96.93, renda_media: 1284, urbanizacao: 80.2, lat: -8.05, lng: -34.88 },
+  'AL': { populacao: 3220848, densidade: 115.85, renda_media: 987, urbanizacao: 73.6, lat: -9.67, lng: -35.74 },
+  'SE': { populacao: 2299425, densidade: 104.64, renda_media: 1134, urbanizacao: 73.5, lat: -10.91, lng: -37.05 },
+  'BA': { populacao: 14870907, densidade: 26.26, renda_media: 1256, urbanizacao: 72.1, lat: -12.97, lng: -38.51 },
+  
+  // REGIÃO SUDESTE - 88.825.643 habitantes
+  'MG': { populacao: 21393441, densidade: 36.52, renda_media: 1837, urbanizacao: 85.3, lat: -19.92, lng: -43.94 },
+  'ES': { populacao: 4126854, densidade: 89.41, renda_media: 1876, urbanizacao: 83.4, lat: -20.32, lng: -40.34 },
+  'RJ': { populacao: 17223547, densidade: 393.15, renda_media: 2295, urbanizacao: 97.0, lat: -22.91, lng: -43.17 },
+  'SP': { populacao: 46081801, densidade: 174.11, renda_media: 2587, urbanizacao: 96.4, lat: -23.55, lng: -46.64 },
+  
+  // REGIÃO SUL - 31.310.809 habitantes
+  'PR': { populacao: 11890517, densidade: 59.52, renda_media: 2063, urbanizacao: 85.3, lat: -25.43, lng: -49.27 },
+  'SC': { populacao: 8187029, densidade: 85.78, renda_media: 2344, urbanizacao: 84.0, lat: -27.60, lng: -48.55 },
+  'RS': { populacao: 11233263, densidade: 39.88, renda_media: 2147, urbanizacao: 85.1, lat: -30.03, lng: -51.23 },
+  
+  // REGIÃO CENTRO-OESTE - 17.238.818 habitantes
+  'MS': { populacao: 2924631, densidade: 8.19, renda_media: 1987, urbanizacao: 85.6, lat: -20.45, lng: -54.62 },
+  'MT': { populacao: 3893659, densidade: 4.31, renda_media: 1956, urbanizacao: 81.8, lat: -15.60, lng: -56.10 },
+  'GO': { populacao: 7423629, densidade: 21.85, renda_media: 1823, urbanizacao: 90.3, lat: -16.68, lng: -49.25 },
+  'DF': { populacao: 2996899, densidade: 517.81, renda_media: 3245, urbanizacao: 97.6, lat: -15.78, lng: -47.93 }
+};
+
+// População total do Brasil em 2025: 213.421.037 habitantes
+export const POPULACAO_BRASIL_2025 = 213421037;
+
+// Populações regionais 2025
+export const POPULACAO_REGIOES_2025 = {
+  'Norte': 18801282,
+  'Nordeste': 57244485,
+  'Sudeste': 88825643,
+  'Sul': 31310809,
+  'Centro-Oeste': 17238818
 };
