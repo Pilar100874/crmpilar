@@ -1604,8 +1604,8 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               style={{ zIndex: 1 }}
             />
 
-            {/* Mobile: Controles de zoom flutuantes */}
-            <div className="lg:hidden absolute right-3 top-3 flex flex-col gap-1.5 z-10">
+            {/* Mobile: Controles de zoom flutuantes - lado esquerdo para não conflitar com botão fechar */}
+            <div className="lg:hidden absolute left-3 top-3 flex flex-col gap-1.5 z-10">
               <Button 
                 variant="secondary" 
                 size="icon" 
