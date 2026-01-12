@@ -115,7 +115,7 @@ export const DEFAULT_LAYERS: MapLayer[] = [
     id: 'demographics',
     name: 'Demografia',
     description: 'População e densidade demográfica (IBGE)',
-    visible: false,
+    visible: true,
     color: '#8b5cf6',
     icon: 'Users',
     type: 'demographics'

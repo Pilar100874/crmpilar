@@ -1018,7 +1018,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
 
             {/* Indicador de nível de zoom */}
             {mapReady && (
-              <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-2 z-10 text-xs">
+              <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-2 z-10 text-xs max-w-xs">
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">Nível:</span>
                   <Badge variant={currentLevel === 'municipal' || currentLevel === 'local' ? 'default' : 'secondary'}>
@@ -1031,8 +1031,19 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                   <span className="text-muted-foreground">Zoom: {currentZoom}</span>
                 </div>
                 {(currentLevel === 'country' || currentLevel === 'region') && (
-                  <p className="text-muted-foreground mt-1">🔍 Dê zoom para ver mais detalhes</p>
+                  <p className="text-muted-foreground mt-1">🔍 Dê zoom para ver detalhes por UF</p>
                 )}
+                {municipiosRenda.length === 0 && currentLevel === 'state' && (
+                  <p className="text-amber-600 mt-1">⚠️ Use "Carregar Dados IBGE" para dados municipais</p>
+                )}
+              </div>
+            )}
+            
+            {/* Alerta de dados não carregados */}
+            {mapReady && municipiosRenda.length === 0 && (currentLevel === 'municipal' || currentLevel === 'local') && (
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 z-10 flex items-center gap-3 shadow-lg">
+                <span className="text-amber-700 text-sm">📊 Dados municipais não carregados</span>
+                <IBGEDataLoader onLoadComplete={refetchRenda} />
               </div>
             )}
 
