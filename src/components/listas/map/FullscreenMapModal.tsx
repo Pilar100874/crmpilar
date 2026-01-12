@@ -6,8 +6,15 @@ import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import MapLayerControl from './MapLayerControl';
-import MapLegend from './MapLegend';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { MapLayer, VendasRegiao, DADOS_DEMOGRAFICOS_UF, Unidade } from './MapLayerTypes';
 import { 
   X, 
@@ -17,7 +24,9 @@ import {
   ZoomIn, 
   ZoomOut, 
   RotateCcw,
-  MapPin
+  MapPin,
+  Layers,
+  ChevronDown
 } from 'lucide-react';
 
 // Fix default Leaflet marker icons
@@ -440,75 +449,195 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   const handleZoomOut = () => mapRef.current?.zoomOut();
   const handleReset = () => mapRef.current?.setView([-15.7801, -47.9292], 4);
 
+  const activeLayersCount = layers.filter(l => l.visible).length;
+  const unidadesNoMapa = unidades.filter(u => u.latitude && u.longitude).length;
+  const empresasNoMapa = empresas.filter(e => e.latitude && e.longitude).length;
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[98vw] w-[98vw] h-[95vh] p-0 gap-0" aria-describedby={undefined}>
+      <DialogContent className="max-w-[100vw] w-[100vw] h-[100vh] sm:max-w-[98vw] sm:w-[98vw] sm:h-[95vh] p-0 gap-0 rounded-none sm:rounded-lg" aria-describedby={undefined}>
         <VisuallyHidden>
           <DialogTitle>Mapa Geoespacial em Tela Cheia</DialogTitle>
         </VisuallyHidden>
         
         <div className="relative w-full h-full flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-3 border-b bg-background z-10">
-            <div className="flex items-center gap-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-primary" />
-                Mapa Geoespacial
+          {/* Header - Responsivo */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-3 border-b bg-background z-10 gap-2">
+            {/* Linha 1: Título e Fechar */}
+            <div className="flex items-center justify-between w-full sm:w-auto gap-2">
+              <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <span className="hidden xs:inline">Mapa Geoespacial</span>
+                <span className="xs:hidden">Mapa</span>
               </h2>
               
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
-                  <SelectTrigger className="w-[180px] h-8">
-                    <SelectValue placeholder="Filtrar usuário" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4" />
-                        Todas empresas
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="none">
-                      <div className="flex items-center gap-2">
-                        <X className="h-4 w-4" />
-                        Sem vínculo
-                      </div>
-                    </SelectItem>
-                    {usuarios.map(u => (
-                      <SelectItem key={u.id} value={u.id}>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          {u.nome}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {/* Badges - Mobile */}
+              <div className="flex sm:hidden items-center gap-1.5">
+                {unidadesNoMapa > 0 && (
+                  <Badge variant="outline" className="bg-pink-500/10 border-pink-500/50 text-pink-700 text-xs px-1.5">
+                    <MapPin className="h-3 w-3 mr-0.5" />
+                    {unidadesNoMapa}
+                  </Badge>
+                )}
+                <Badge variant="secondary" className="text-xs px-1.5">
+                  <Building2 className="h-3 w-3 mr-0.5" />
+                  {empresasNoMapa}
+                </Badge>
               </div>
-
-              <Badge variant="outline" className="bg-pink-500/10 border-pink-500 text-pink-700">
-                <MapPin className="h-3 w-3 mr-1" />
-                {unidades.filter(u => u.latitude && u.longitude).length} unidades
-              </Badge>
-
-              <Badge variant="secondary">
-                <Building2 className="h-3 w-3 mr-1" />
-                {empresas.filter(e => e.latitude && e.longitude).length} empresas
-              </Badge>
+              
+              {/* Fechar - Mobile */}
+              <Button variant="ghost" size="icon" onClick={onClose} className="sm:hidden h-8 w-8">
+                <X className="h-5 w-5" />
+              </Button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleZoomIn}>
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleZoomOut}>
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleReset}>
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onClick={onClose}>
+            {/* Linha 2: Filtros e Controles */}
+            <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+              {/* Filtro de Usuário */}
+              <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
+                <SelectTrigger className="w-[130px] sm:w-[160px] h-8 text-xs sm:text-sm shrink-0">
+                  <Filter className="h-3 w-3 sm:h-4 sm:w-4 mr-1 shrink-0" />
+                  <SelectValue placeholder="Usuário" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-[1100]">
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Todas
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="none">
+                    <div className="flex items-center gap-2">
+                      <X className="h-4 w-4" />
+                      Sem vínculo
+                    </div>
+                  </SelectItem>
+                  {usuarios.map(u => (
+                    <SelectItem key={u.id} value={u.id}>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        {u.nome}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Badges - Desktop/Tablet */}
+              <div className="hidden sm:flex items-center gap-1.5">
+                {unidadesNoMapa > 0 && (
+                  <Badge variant="outline" className="bg-pink-500/10 border-pink-500 text-pink-700 text-xs">
+                    <MapPin className="h-3 w-3 mr-1" />
+                    {unidadesNoMapa} unid.
+                  </Badge>
+                )}
+                <Badge variant="secondary" className="text-xs">
+                  <Building2 className="h-3 w-3 mr-1" />
+                  {empresasNoMapa} emp.
+                </Badge>
+              </div>
+
+              {/* Dropdown Camadas */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 text-xs sm:text-sm shrink-0">
+                    <Layers className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <span className="hidden sm:inline">Camadas</span>
+                    <Badge variant="secondary" className="ml-1 h-4 sm:h-5 px-1 sm:px-1.5 text-xs">
+                      {activeLayersCount}
+                    </Badge>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-72 bg-popover z-[1100]">
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Layers className="h-4 w-4" />
+                    Camadas do Mapa
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <div className="p-2 space-y-3 max-h-[300px] overflow-y-auto">
+                    {layers.map((layer) => (
+                      <div 
+                        key={layer.id} 
+                        className="flex items-center justify-between gap-3"
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div 
+                            className="w-3 h-3 rounded-full shrink-0"
+                            style={{ backgroundColor: layer.color }}
+                          />
+                          <Label 
+                            htmlFor={`layer-fs-${layer.id}`}
+                            className="text-sm cursor-pointer truncate"
+                          >
+                            {layer.name}
+                          </Label>
+                        </div>
+                        <Switch
+                          id={`layer-fs-${layer.id}`}
+                          checked={layer.visible}
+                          onCheckedChange={() => onLayerToggle(layer.id)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="p-2 space-y-2 max-h-[180px] overflow-y-auto">
+                    <div className="text-xs font-medium text-foreground">Legenda:</div>
+                    {layers.filter(l => l.visible).length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">Nenhuma camada ativa</p>
+                    ) : (
+                      layers.filter(l => l.visible).map(layer => (
+                        <div key={layer.id} className="text-xs space-y-0.5 pb-1.5 border-b border-border/50 last:border-0">
+                          <div className="flex items-center gap-2 font-medium">
+                            <div 
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: layer.color }}
+                            />
+                            <span>{layer.name}</span>
+                          </div>
+                          {layer.id === 'units' && (
+                            <p className="text-muted-foreground pl-4">Ícone rosa = Filiais</p>
+                          )}
+                          {layer.id === 'clients' && (
+                            <p className="text-muted-foreground pl-4">Ícone azul = Empresas</p>
+                          )}
+                          {layer.id === 'sales' && (
+                            <p className="text-muted-foreground pl-4">Tamanho = Volume vendas</p>
+                          )}
+                          {layer.id === 'demographics' && (
+                            <p className="text-muted-foreground pl-4">Tamanho = População</p>
+                          )}
+                          {layer.id === 'income' && (
+                            <p className="text-muted-foreground pl-4">Tamanho = Renda média</p>
+                          )}
+                          {layer.id === 'competition' && (
+                            <p className="text-muted-foreground pl-4">🟢Baixo 🟡Médio 🔴Alto</p>
+                          )}
+                          {layer.id === 'logistics' && (
+                            <p className="text-muted-foreground pl-4">Cheio = Difícil acesso</p>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Zoom Controls */}
+              <div className="flex items-center gap-1 shrink-0">
+                <Button variant="outline" size="icon" onClick={handleZoomIn} className="h-8 w-8">
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" onClick={handleZoomOut} className="h-8 w-8">
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" onClick={handleReset} className="h-8 w-8 hidden sm:flex">
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Fechar - Desktop */}
+              <Button variant="ghost" size="icon" onClick={onClose} className="hidden sm:flex h-8 w-8 shrink-0">
                 <X className="h-5 w-5" />
               </Button>
             </div>
@@ -527,33 +656,6 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                 <div className="text-muted-foreground">Carregando mapa...</div>
               </div>
             )}
-
-            {/* Layer Control Panel */}
-            <div className="absolute top-3 left-3 z-[1000]">
-              <MapLayerControl 
-                layers={layers} 
-                onLayerToggle={onLayerToggle}
-              />
-            </div>
-
-            {/* Legend */}
-            <div className="absolute bottom-3 left-3 z-[1000]">
-              <MapLegend 
-                layers={layers}
-                vendasData={vendasData}
-                totalEmpresas={empresas.filter(e => e.latitude && e.longitude).length}
-                totalUnidades={unidades.filter(u => u.latitude && u.longitude).length}
-              />
-            </div>
-
-            {/* Compact Layer Toggle */}
-            <div className="absolute top-3 right-3 z-[1000]">
-              <MapLayerControl 
-                layers={layers} 
-                onLayerToggle={onLayerToggle}
-                compact
-              />
-            </div>
           </div>
         </div>
       </DialogContent>
