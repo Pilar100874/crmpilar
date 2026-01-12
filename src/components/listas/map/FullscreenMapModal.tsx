@@ -974,31 +974,67 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
                             <span>{layer.name}</span>
                           </div>
                           {layer.id === 'units' && (
-                            <p className="text-muted-foreground pl-4">Ícone rosa = Filiais</p>
+                            <div className="text-muted-foreground pl-4 space-y-0.5">
+                              <p>📍 Marcador rosa = Filiais da empresa</p>
+                              <p>Clique para ver detalhes da unidade</p>
+                            </div>
                           )}
                           {layer.id === 'clients' && (
-                            <p className="text-muted-foreground pl-4">Ícone azul = Empresas</p>
+                            <div className="text-muted-foreground pl-4 space-y-0.5">
+                              <p>🏢 Marcador azul = Empresas cadastradas</p>
+                              <p>Clique para ver dados do cliente</p>
+                            </div>
                           )}
                           {layer.id === 'sales' && (
-                            <p className="text-muted-foreground pl-4">Tamanho = Volume vendas</p>
+                            <div className="text-muted-foreground pl-4 space-y-0.5">
+                              <p>📊 Tamanho do círculo = Volume de vendas</p>
+                              <p>🟢 Verde = Maior faturamento</p>
+                            </div>
                           )}
                           {layer.id === 'demographics' && (
-                            <p className="text-muted-foreground pl-4 text-xs">População, renda e IDH por estado</p>
+                            <div className="text-muted-foreground pl-4 space-y-0.5">
+                              <p>👥 Dados por estado (UF)</p>
+                              <p>Círculo maior = Maior população</p>
+                              <p>Exibe: População, Renda e IDH</p>
+                            </div>
                           )}
                           {layer.id === 'income' && (
-                            <p className="text-muted-foreground pl-4 text-xs">Tamanho = Renda média</p>
+                            <div className="text-muted-foreground pl-4 space-y-0.5">
+                              <p>💰 Renda média por região</p>
+                              <p>Tamanho = Poder de compra</p>
+                            </div>
                           )}
                           {layer.id === 'competition' && (
-                            <p className="text-muted-foreground pl-4 text-xs">🟢Baixo 🟡Médio 🔴Alto</p>
+                            <div className="text-muted-foreground pl-4 space-y-0.5">
+                              <p>🏪 Concorrentes por região</p>
+                              <p>🟢 Baixa | 🟡 Média | 🔴 Alta concorrência</p>
+                            </div>
                           )}
                           {layer.id === 'logistics' && (
-                            <p className="text-muted-foreground pl-4 text-xs">Cheio = Difícil acesso</p>
+                            <div className="text-muted-foreground pl-4 space-y-0.5">
+                              <p>🚚 Análise de acessibilidade</p>
+                              <p>Preenchido = Difícil acesso logístico</p>
+                            </div>
+                          )}
+                          {layer.id === 'isochrone' && (
+                            <div className="text-muted-foreground pl-4 space-y-0.5">
+                              <p>⏱️ Área de cobertura por tempo</p>
+                              <p>Selecione um ponto no mapa</p>
+                            </div>
                           )}
                           {layer.id === 'density' && (
-                            <p className="text-muted-foreground pl-4 text-xs">🟠 Qtd empresas por município (CNAEs)</p>
+                            <div className="text-muted-foreground pl-4 space-y-0.5">
+                              <p>🟠 Empresas por município</p>
+                              <p>Círculo maior = Mais empresas</p>
+                              <p>Baseado nos CNAEs selecionados</p>
+                            </div>
                           )}
                           {layer.id === 'municipal_income' && (
-                            <p className="text-muted-foreground pl-4 text-xs">🟢Alto 🟡Médio 🔴Baixo PIB per capita</p>
+                            <div className="text-muted-foreground pl-4 space-y-0.5">
+                              <p>💵 PIB per capita por município</p>
+                              <p>🟢 Alto | 🟡 Médio | 🔴 Baixo</p>
+                              <p>Fonte: Dados IBGE</p>
+                            </div>
                           )}
                         </div>
                       ))
