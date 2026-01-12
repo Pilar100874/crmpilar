@@ -37,8 +37,14 @@ import {
   Layers,
   ChevronDown,
   Upload,
-  MousePointer
+  MousePointer,
+  PenTool,
+  Check,
+  Undo2,
+  Trash2
 } from 'lucide-react';
+import { usePolygonDrawing } from './usePolygonDrawing';
+import { PolygonResultsPanel } from './PolygonResultsPanel';
 
 // Fix default Leaflet marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -140,6 +146,23 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
   // Hook para dados baseados em zoom
   const { currentLevel, stateData, regionData, municipalData, loading: municipalLoading } = useZoomLevelData(currentZoom);
 
+  // Hook para desenho de polígono
+  const {
+    isDrawing,
+    polygonPoints,
+    metrics: polygonMetrics,
+    showResults,
+    startDrawing,
+    cancelDrawing,
+    addPoint,
+    removeLastPoint,
+    finishDrawing,
+    clearPolygon,
+    setShowResults,
+    polygonLayerRef,
+    tempMarkersRef
+  } = usePolygonDrawing(municipiosRenda, heatmapData);
+
   // Initialize map when dialog opens
   const initializeMap = useCallback(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -170,13 +193,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
       municipalIncomeLayerRef.current = L.layerGroup().addTo(map);
       densityLayerRef.current = L.layerGroup().addTo(map);
 
-      // Click handler para selecionar ponto para isócrona
-      map.on('click', (e: L.LeafletMouseEvent) => {
-        if (isSelectingPoint) {
-          setSelectedMapPoint({ lat: e.latlng.lat, lng: e.latlng.lng });
-          setIsSelectingPoint(false);
-        }
-      });
+      // Click handler é gerenciado via useEffect separado para suportar desenho de polígono
       
       // Zoom handler para atualizar nível de detalhe
       map.on('zoomend', () => {
@@ -1016,6 +1033,91 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
     });
   }, [layers, mapReady, heatmapData]);
 
+  // Effect para gerenciar click do mapa para desenho de polígono
+  useEffect(() => {
+    if (!mapRef.current || !mapReady) return;
+
+    const map = mapRef.current;
+    
+    // Inicializa layers do polígono se necessário
+    if (!polygonLayerRef.current) {
+      polygonLayerRef.current = L.layerGroup().addTo(map);
+    }
+    if (!tempMarkersRef.current) {
+      tempMarkersRef.current = L.layerGroup().addTo(map);
+    }
+
+    const handleMapClick = (e: L.LeafletMouseEvent) => {
+      if (isDrawing) {
+        addPoint(e.latlng.lat, e.latlng.lng);
+      } else if (isSelectingPoint) {
+        setSelectedMapPoint({ lat: e.latlng.lat, lng: e.latlng.lng });
+        setIsSelectingPoint(false);
+      }
+    };
+
+    map.on('click', handleMapClick);
+
+    return () => {
+      map.off('click', handleMapClick);
+    };
+  }, [mapReady, isDrawing, isSelectingPoint, addPoint]);
+
+  // Effect para renderizar o polígono sendo desenhado
+  useEffect(() => {
+    if (!polygonLayerRef.current || !tempMarkersRef.current || !mapReady) return;
+
+    // Limpa layers
+    polygonLayerRef.current.clearLayers();
+    tempMarkersRef.current.clearLayers();
+
+    if (polygonPoints.length === 0) return;
+
+    // Adiciona marcadores para cada ponto
+    polygonPoints.forEach((point, idx) => {
+      const marker = L.circleMarker([point.lat, point.lng], {
+        radius: 6,
+        fillColor: idx === 0 ? '#22c55e' : '#3b82f6',
+        color: '#ffffff',
+        weight: 2,
+        fillOpacity: 1
+      });
+      
+      marker.bindTooltip(`Ponto ${idx + 1}`, { permanent: false });
+      tempMarkersRef.current!.addLayer(marker);
+    });
+
+    // Desenha as linhas do polígono
+    if (polygonPoints.length >= 2) {
+      const latlngs = polygonPoints.map(p => [p.lat, p.lng] as [number, number]);
+      
+      // Se não está mais desenhando (polígono fechado), fecha o polígono
+      if (!isDrawing && polygonPoints.length >= 3) {
+        latlngs.push(latlngs[0]); // Fecha o polígono
+      }
+      
+      const polyline = L.polyline(latlngs, {
+        color: '#3b82f6',
+        weight: 3,
+        opacity: 0.8,
+        dashArray: isDrawing ? '10, 10' : undefined
+      });
+      
+      polygonLayerRef.current.addLayer(polyline);
+
+      // Se fechou o polígono, adiciona área preenchida
+      if (!isDrawing && polygonPoints.length >= 3) {
+        const polygon = L.polygon(polygonPoints.map(p => [p.lat, p.lng] as [number, number]), {
+          color: '#3b82f6',
+          fillColor: '#3b82f6',
+          fillOpacity: 0.2,
+          weight: 2
+        });
+        polygonLayerRef.current.addLayer(polygon);
+      }
+    }
+  }, [polygonPoints, isDrawing, mapReady]);
+
   const handleZoomIn = () => mapRef.current?.zoomIn();
   const handleZoomOut = () => mapRef.current?.zoomOut();
   const handleReset = () => mapRef.current?.setView([-15.7801, -47.9292], 4);
@@ -1083,6 +1185,72 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               
               {/* Painel de Isócronas */}
               <IsochronePanel selectedPoint={selectedMapPoint} />
+
+              {/* Controles de Desenho de Polígono */}
+              <div className="flex items-center gap-1">
+                {!isDrawing && !showResults && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-8 text-xs sm:text-sm shrink-0"
+                    onClick={startDrawing}
+                  >
+                    <PenTool className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    <span className="hidden sm:inline">Desenhar Área</span>
+                    <span className="sm:hidden">Área</span>
+                  </Button>
+                )}
+                
+                {isDrawing && (
+                  <>
+                    <Badge variant="secondary" className="h-8 px-2 flex items-center gap-1">
+                      <PenTool className="h-3 w-3" />
+                      {polygonPoints.length} pts
+                    </Badge>
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={removeLastPoint}
+                      disabled={polygonPoints.length === 0}
+                      title="Desfazer último ponto"
+                    >
+                      <Undo2 className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="default" 
+                      size="sm"
+                      className="h-8"
+                      onClick={finishDrawing}
+                      disabled={polygonPoints.length < 3}
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Calcular
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={cancelDrawing}
+                      title="Cancelar"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+                
+                {showResults && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="h-8 text-xs sm:text-sm"
+                    onClick={clearPolygon}
+                  >
+                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                    Limpar
+                  </Button>
+                )}
+              </div>
 
               {/* Filtro de Usuário */}
               <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
@@ -1290,8 +1458,27 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
               style={{ zIndex: 1 }}
             />
 
+            {/* Indicador de modo de desenho */}
+            {isDrawing && (
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white rounded-lg px-4 py-2 z-20 flex items-center gap-2 shadow-lg">
+                <PenTool className="h-4 w-4 animate-pulse" />
+                <span className="text-sm font-medium">
+                  Clique no mapa para adicionar pontos ({polygonPoints.length} de 3 mín.)
+                </span>
+              </div>
+            )}
+
+            {/* Painel de resultados do polígono */}
+            {showResults && polygonMetrics && (
+              <PolygonResultsPanel
+                metrics={polygonMetrics}
+                onClose={() => setShowResults(false)}
+                onClear={clearPolygon}
+              />
+            )}
+
             {/* Indicador de nível de zoom */}
-            {mapReady && (
+            {mapReady && !showResults && (
               <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur-sm border rounded-lg px-3 py-2 z-10 text-xs max-w-xs">
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">Nível:</span>
@@ -1314,7 +1501,7 @@ const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
             )}
             
             {/* Alerta de dados não carregados */}
-            {mapReady && municipiosRenda.length === 0 && (currentLevel === 'municipal' || currentLevel === 'local') && (
+            {mapReady && municipiosRenda.length === 0 && (currentLevel === 'municipal' || currentLevel === 'local') && !isDrawing && (
               <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 z-10 flex items-center gap-3 shadow-lg">
                 <span className="text-amber-700 text-sm">📊 Dados municipais não carregados</span>
                 <IBGEDataLoader onLoadComplete={refetchRenda} />
