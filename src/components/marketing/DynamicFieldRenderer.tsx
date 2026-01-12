@@ -185,55 +185,39 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
 
       case 'selection_image':
         return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {field.options?.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => onChange(option.imageUrl || option.value)}
-                  className={`relative rounded-lg overflow-hidden border-2 transition-all ${
-                    value === (option.imageUrl || option.value)
-                      ? 'border-primary ring-2 ring-primary/20'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  {option.imageUrl ? (
-                    <img
-                      src={option.imageUrl}
-                      alt={option.label}
-                      className="w-full aspect-square object-cover"
-                    />
-                  ) : (
-                    <div className="w-full aspect-square bg-muted flex items-center justify-center">
-                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                    <span className="text-xs text-white font-medium">{option.label}</span>
-                  </div>
-                  {value === (option.imageUrl || option.value) && (
-                    <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
-                      <Check className="h-3 w-3 text-primary-foreground" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-            
-            {/* Preview da imagem selecionada */}
-            {value && (
-              <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="p-3">
-                  <p className="text-xs text-muted-foreground mb-2">Imagem selecionada:</p>
-                  <img 
-                    src={value} 
-                    alt="Preview" 
-                    className="w-full max-h-64 object-contain rounded-lg"
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {field.options?.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => onChange(option.imageUrl || option.value)}
+                className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+                  value === (option.imageUrl || option.value)
+                    ? 'border-primary ring-2 ring-primary/20'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                {option.imageUrl ? (
+                  <img
+                    src={option.imageUrl}
+                    alt={option.label}
+                    className="w-full aspect-square object-cover"
                   />
-                </CardContent>
-              </Card>
-            )}
+                ) : (
+                  <div className="w-full aspect-square bg-muted flex items-center justify-center">
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                  <span className="text-xs text-white font-medium">{option.label}</span>
+                </div>
+                {value === (option.imageUrl || option.value) && (
+                  <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
+                    <Check className="h-3 w-3 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
+            ))}
           </div>
         );
       case 'media_image':
@@ -364,96 +348,72 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
 
       case 'selection_audio':
         return (
-          <div className="space-y-3">
-            <ScrollArea className="max-h-64 border rounded-lg">
-              <div className="p-2 space-y-2">
-                {field.options?.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => onChange(option.audioUrl || option.value)}
-                    className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
-                      value === (option.audioUrl || option.value)
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex-1">
-                        <span className="font-medium text-sm block mb-1">{option.label}</span>
-                        {option.audioUrl && (
-                          <audio controls className="w-full h-8" onClick={(e) => e.stopPropagation()}>
-                            <source src={option.audioUrl} />
-                          </audio>
-                        )}
-                      </div>
-                      {value === (option.audioUrl || option.value) && (
-                        <Check className="h-4 w-4 text-primary shrink-0" />
+          <ScrollArea className="max-h-64 border rounded-lg">
+            <div className="p-2 space-y-2">
+              {field.options?.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => onChange(option.audioUrl || option.value)}
+                  className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
+                    value === (option.audioUrl || option.value)
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex-1">
+                      <span className="font-medium text-sm block mb-1">{option.label}</span>
+                      {option.audioUrl && (
+                        <audio controls className="w-full h-8" onClick={(e) => e.stopPropagation()}>
+                          <source src={option.audioUrl} />
+                        </audio>
                       )}
                     </div>
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-            
-            {/* Player do áudio selecionado */}
-            {value && (
-              <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="p-3">
-                  <p className="text-xs text-muted-foreground mb-2">Áudio selecionado:</p>
-                  <audio controls src={value} className="w-full" />
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                    {value === (option.audioUrl || option.value) && (
+                      <Check className="h-4 w-4 text-primary shrink-0" />
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
         );
 
       case 'selection_video':
         return (
-          <div className="space-y-3">
-            <ScrollArea className="max-h-80 border rounded-lg">
-              <div className="p-2 space-y-3">
-                {field.options?.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => onChange(option.videoUrl || option.value)}
-                    className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
-                      value === (option.videoUrl || option.value)
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="font-medium text-sm">{option.label}</span>
-                      {value === (option.videoUrl || option.value) && (
-                        <Check className="h-4 w-4 text-primary shrink-0" />
-                      )}
-                    </div>
-                    {option.videoUrl && (
-                      <video 
-                        controls 
-                        className="w-full max-h-32 rounded-lg" 
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <source src={option.videoUrl} />
-                      </video>
+          <ScrollArea className="max-h-80 border rounded-lg">
+            <div className="p-2 space-y-3">
+              {field.options?.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => onChange(option.videoUrl || option.value)}
+                  className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
+                    value === (option.videoUrl || option.value)
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="font-medium text-sm">{option.label}</span>
+                    {value === (option.videoUrl || option.value) && (
+                      <Check className="h-4 w-4 text-primary shrink-0" />
                     )}
-                  </button>
-                ))}
-              </div>
-            </ScrollArea>
-            
-            {/* Player do vídeo selecionado */}
-            {value && (
-              <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="p-3">
-                  <p className="text-xs text-muted-foreground mb-2">Vídeo selecionado:</p>
-                  <video controls src={value} className="w-full max-h-64 rounded-lg" />
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                  </div>
+                  {option.videoUrl && (
+                    <video 
+                      controls 
+                      className="w-full max-h-32 rounded-lg" 
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <source src={option.videoUrl} />
+                    </video>
+                  )}
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
         );
         
       case 'selection_text':
