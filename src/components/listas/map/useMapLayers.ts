@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { MapLayer, DEFAULT_LAYERS, VendasRegiao, DADOS_DEMOGRAFICOS_UF, Unidade } from './MapLayerTypes';
 
+// Re-export para uso externo
+export { DADOS_DEMOGRAFICOS_UF };
+
 interface Empresa {
   id: string;
   nome_fantasia: string;
