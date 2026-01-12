@@ -1,0 +1,465 @@
+import React, { useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import MapLayerControl from './MapLayerControl';
+import MapLegend from './MapLegend';
+import { MapLayer, VendasRegiao, DADOS_DEMOGRAFICOS_UF } from './MapLayerTypes';
+import { 
+  X, 
+  Filter, 
+  Building2, 
+  User, 
+  ZoomIn, 
+  ZoomOut, 
+  RotateCcw,
+  MapPin
+} from 'lucide-react';
+
+// Fix default Leaflet marker icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+interface Empresa {
+  id: string;
+  nome_fantasia: string;
+  nome: string;
+  endereco: string | null;
+  cidade: string | null;
+  estado: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+interface Usuario {
+  id: string;
+  nome: string;
+}
+
+interface FullscreenMapModalProps {
+  open: boolean;
+  onClose: () => void;
+  layers: MapLayer[];
+  onLayerToggle: (layerId: string) => void;
+  empresas: Empresa[];
+  usuarios: Usuario[];
+  vendasData: VendasRegiao[];
+  selectedUsuarioId: string;
+  onUsuarioChange: (id: string) => void;
+}
+
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value);
+};
+
+const FullscreenMapModal: React.FC<FullscreenMapModalProps> = ({
+  open,
+  onClose,
+  layers,
+  onLayerToggle,
+  empresas,
+  usuarios,
+  vendasData,
+  selectedUsuarioId,
+  onUsuarioChange
+}) => {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const vendasLayerRef = useRef<L.LayerGroup | null>(null);
+  const demographicsLayerRef = useRef<L.LayerGroup | null>(null);
+  const incomeLayerRef = useRef<L.LayerGroup | null>(null);
+  const competitionLayerRef = useRef<L.LayerGroup | null>(null);
+  const logisticsLayerRef = useRef<L.LayerGroup | null>(null);
+
+  // Initialize map
+  useEffect(() => {
+    if (!open || !mapContainerRef.current) return;
+    
+    // Small delay to ensure container is rendered
+    const timer = setTimeout(() => {
+      if (mapRef.current || !mapContainerRef.current) return;
+
+      mapRef.current = L.map(mapContainerRef.current).setView([-15.7801, -47.9292], 4);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(mapRef.current);
+
+      markersLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      vendasLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      demographicsLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      incomeLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      competitionLayerRef.current = L.layerGroup().addTo(mapRef.current);
+      logisticsLayerRef.current = L.layerGroup().addTo(mapRef.current);
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [open]);
+
+  // Update markers layer (clients)
+  useEffect(() => {
+    if (!markersLayerRef.current) return;
+    
+    markersLayerRef.current.clearLayers();
+    
+    const clientsLayer = layers.find(l => l.id === 'clients');
+    if (!clientsLayer?.visible) return;
+
+    empresas.forEach(empresa => {
+      if (!empresa.latitude || !empresa.longitude) return;
+
+      const customIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background: #3b82f6; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+            <path d="M3 21h18M5 21V7l8-4 8 4v14M9 21v-6h6v6"/>
+          </svg>
+        </div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      L.marker([empresa.latitude, empresa.longitude], { icon: customIcon })
+        .addTo(markersLayerRef.current!)
+        .bindPopup(`
+          <div class="p-2">
+            <strong>${empresa.nome_fantasia || empresa.nome}</strong>
+            ${empresa.endereco ? `<br/><small>${empresa.endereco}</small>` : ''}
+            ${empresa.cidade ? `<br/><small>${empresa.cidade}${empresa.estado ? ` - ${empresa.estado}` : ''}</small>` : ''}
+          </div>
+        `);
+    });
+  }, [empresas, layers]);
+
+  // Update vendas layer
+  useEffect(() => {
+    if (!vendasLayerRef.current) return;
+    
+    vendasLayerRef.current.clearLayers();
+    
+    const salesLayer = layers.find(l => l.id === 'sales');
+    if (!salesLayer?.visible) return;
+
+    vendasData.forEach(venda => {
+      if (!venda.latitude || !venda.longitude) return;
+
+      const radius = Math.min(Math.max(venda.total_vendas * 5, 10), 50);
+      
+      const circle = L.circleMarker([venda.latitude, venda.longitude], {
+        radius: radius,
+        fillColor: '#22c55e',
+        color: '#15803d',
+        weight: 2,
+        opacity: 0.8,
+        fillOpacity: 0.4
+      });
+
+      circle.bindPopup(`
+        <div class="p-2">
+          <strong>${venda.cidade} - ${venda.uf}</strong>
+          <br/><small>Orçamentos: ${venda.total_orcamentos}</small>
+          <br/><small>Vendas: ${venda.total_vendas}</small>
+          <br/><small>Total: ${formatCurrency(venda.valor_total)}</small>
+          <br/><small>Ticket Médio: ${formatCurrency(venda.ticket_medio)}</small>
+        </div>
+      `);
+
+      vendasLayerRef.current!.addLayer(circle);
+    });
+  }, [vendasData, layers]);
+
+  // Update demographics layer
+  useEffect(() => {
+    if (!demographicsLayerRef.current) return;
+    
+    demographicsLayerRef.current.clearLayers();
+    
+    const demoLayer = layers.find(l => l.id === 'demographics');
+    if (!demoLayer?.visible) return;
+
+    const maxDensidade = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.densidade));
+
+    Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
+      const normalizedDensity = data.densidade / maxDensidade;
+      const opacity = 0.2 + (normalizedDensity * 0.6);
+      const radius = 20 + (normalizedDensity * 30);
+
+      const circle = L.circleMarker([data.lat, data.lng], {
+        radius: radius,
+        fillColor: '#8b5cf6',
+        color: '#6d28d9',
+        weight: 1,
+        opacity: 0.7,
+        fillOpacity: opacity
+      });
+
+      circle.bindPopup(`
+        <div class="p-2">
+          <strong>${uf}</strong>
+          <br/><small>População: ${data.populacao.toLocaleString('pt-BR')}</small>
+          <br/><small>Densidade: ${data.densidade.toFixed(1)} hab/km²</small>
+          <br/><small>Urbanização: ${data.urbanizacao}%</small>
+          <br/><small class="text-muted-foreground">Fonte: IBGE 2022</small>
+        </div>
+      `);
+
+      demographicsLayerRef.current!.addLayer(circle);
+    });
+  }, [layers]);
+
+  // Update income layer
+  useEffect(() => {
+    if (!incomeLayerRef.current) return;
+    
+    incomeLayerRef.current.clearLayers();
+    
+    const incomeLayer = layers.find(l => l.id === 'income');
+    if (!incomeLayer?.visible) return;
+
+    const maxRenda = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.renda_media));
+    const minRenda = Math.min(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.renda_media));
+
+    Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
+      const normalizedRenda = (data.renda_media - minRenda) / (maxRenda - minRenda);
+      const opacity = 0.3 + (normalizedRenda * 0.5);
+      const radius = 15 + (normalizedRenda * 25);
+
+      const circle = L.circleMarker([data.lat, data.lng], {
+        radius: radius,
+        fillColor: '#f59e0b',
+        color: '#b45309',
+        weight: 1,
+        opacity: 0.7,
+        fillOpacity: opacity
+      });
+
+      circle.bindPopup(`
+        <div class="p-2">
+          <strong>${uf}</strong>
+          <br/><small>Renda Média: R$ ${data.renda_media.toLocaleString('pt-BR')}</small>
+          <br/><small>Score Poder de Compra: ${Math.round(normalizedRenda * 100)}</small>
+          <br/><small class="text-muted-foreground">Fonte: IBGE/IPEA</small>
+        </div>
+      `);
+
+      incomeLayerRef.current!.addLayer(circle);
+    });
+  }, [layers]);
+
+  // Update competition layer (simulated)
+  useEffect(() => {
+    if (!competitionLayerRef.current) return;
+    
+    competitionLayerRef.current.clearLayers();
+    
+    const compLayer = layers.find(l => l.id === 'competition');
+    if (!compLayer?.visible) return;
+
+    // Simulated competition data based on urbanization
+    Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
+      const competitionLevel = data.urbanizacao / 100;
+      let fillColor = '#22c55e'; // green = low
+      if (competitionLevel > 0.85) fillColor = '#ef4444'; // red = high
+      else if (competitionLevel > 0.75) fillColor = '#f59e0b'; // yellow = medium
+
+      const circle = L.circleMarker([data.lat, data.lng], {
+        radius: 18,
+        fillColor: fillColor,
+        color: '#374151',
+        weight: 1,
+        opacity: 0.7,
+        fillOpacity: 0.5
+      });
+
+      circle.bindPopup(`
+        <div class="p-2">
+          <strong>${uf} - Concorrência</strong>
+          <br/><small>Nível: ${competitionLevel > 0.85 ? 'Alto' : competitionLevel > 0.75 ? 'Médio' : 'Baixo'}</small>
+          <br/><small>Urbanização: ${data.urbanizacao}%</small>
+          <br/><small class="text-muted-foreground">Estimado via IBGE CNAE</small>
+        </div>
+      `);
+
+      competitionLayerRef.current!.addLayer(circle);
+    });
+  }, [layers]);
+
+  // Update logistics layer
+  useEffect(() => {
+    if (!logisticsLayerRef.current) return;
+    
+    logisticsLayerRef.current.clearLayers();
+    
+    const logLayer = layers.find(l => l.id === 'logistics');
+    if (!logLayer?.visible) return;
+
+    // Simulated logistics access based on density (higher density = better access)
+    const maxDensidade = Math.max(...Object.values(DADOS_DEMOGRAFICOS_UF).map(d => d.densidade));
+
+    Object.entries(DADOS_DEMOGRAFICOS_UF).forEach(([uf, data]) => {
+      const accessScore = Math.min(data.densidade / 100, 1);
+      let accessLevel = 'baixo';
+      let fillOpacity = 1;
+      let weight = 3;
+      
+      if (accessScore > 0.5) {
+        accessLevel = 'alto';
+        fillOpacity = 0;
+      } else if (accessScore > 0.2) {
+        accessLevel = 'medio';
+        fillOpacity = 0.3;
+      }
+
+      const circle = L.circleMarker([data.lat, data.lng], {
+        radius: 15,
+        fillColor: '#06b6d4',
+        color: '#06b6d4',
+        weight: 2,
+        opacity: 0.8,
+        fillOpacity: fillOpacity
+      });
+
+      const tempoEntrega = Math.round((1 - accessScore) * 48 + 6);
+
+      circle.bindPopup(`
+        <div class="p-2">
+          <strong>${uf} - Logística</strong>
+          <br/><small>Acesso: ${accessLevel.charAt(0).toUpperCase() + accessLevel.slice(1)}</small>
+          <br/><small>Tempo Estimado: ${tempoEntrega}h</small>
+          <br/><small class="text-muted-foreground">Fonte: DNIT/OSM</small>
+        </div>
+      `);
+
+      logisticsLayerRef.current!.addLayer(circle);
+    });
+  }, [layers]);
+
+  const handleZoomIn = () => mapRef.current?.zoomIn();
+  const handleZoomOut = () => mapRef.current?.zoomOut();
+  const handleReset = () => mapRef.current?.setView([-15.7801, -47.9292], 4);
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-[98vw] w-[98vw] h-[95vh] p-0 gap-0">
+        <div className="relative w-full h-full flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-3 border-b bg-background z-10">
+            <div className="flex items-center gap-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                Mapa Geoespacial
+              </h2>
+              
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={selectedUsuarioId} onValueChange={onUsuarioChange}>
+                  <SelectTrigger className="w-[180px] h-8">
+                    <SelectValue placeholder="Filtrar usuário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        Todas empresas
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="none">
+                      <div className="flex items-center gap-2">
+                        <X className="h-4 w-4" />
+                        Sem vínculo
+                      </div>
+                    </SelectItem>
+                    {usuarios.map(u => (
+                      <SelectItem key={u.id} value={u.id}>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          {u.nome}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Badge variant="secondary">
+                <MapPin className="h-3 w-3 mr-1" />
+                {empresas.filter(e => e.latitude && e.longitude).length} empresas
+              </Badge>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleZoomIn}>
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleZoomOut}>
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleReset}>
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Map Content */}
+          <div className="flex-1 relative">
+            <div 
+              ref={mapContainerRef} 
+              className="absolute inset-0"
+              style={{ zIndex: 0 }}
+            />
+
+            {/* Layer Control Panel */}
+            <div className="absolute top-3 left-3 z-[1000]">
+              <MapLayerControl 
+                layers={layers} 
+                onLayerToggle={onLayerToggle}
+              />
+            </div>
+
+            {/* Legend */}
+            <div className="absolute bottom-3 left-3 z-[1000]">
+              <MapLegend 
+                layers={layers}
+                vendasData={vendasData}
+                totalEmpresas={empresas.filter(e => e.latitude && e.longitude).length}
+              />
+            </div>
+
+            {/* Compact Layer Toggle */}
+            <div className="absolute top-3 right-3 z-[1000]">
+              <MapLayerControl 
+                layers={layers} 
+                onLayerToggle={onLayerToggle}
+                compact
+              />
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default FullscreenMapModal;
