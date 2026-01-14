@@ -304,34 +304,53 @@ export const StepCover: React.FC<StepCoverProps> = ({
           </div>
           <div className="rounded-2xl overflow-hidden shadow-2xl">
             <div
-              className="aspect-[210/297] relative flex flex-col items-center justify-center p-8 text-center"
+              className="aspect-[210/297] relative flex flex-col overflow-hidden"
               style={{
-                backgroundColor: page.backgroundColor || primaryColor,
-                backgroundImage: page.backgroundImage ? `url(${page.backgroundImage})` : undefined,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
+                backgroundColor: page.backgroundColor || '#1a1a1a',
               }}
             >
+              {/* Background Image - Full bleed */}
               {page.backgroundImage && (
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/60" />
-              )}
-              <div className="relative z-10 flex flex-col items-center gap-6">
-                {page.logoUrl && (
-                  <img
-                    src={page.logoUrl}
-                    alt="Logo"
-                    className="h-24 object-contain drop-shadow-lg"
+                <>
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${page.backgroundImage})` }}
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                </>
+              )}
+
+              {/* Top Header */}
+              <div className="relative z-10 flex items-center justify-between p-6">
+                {page.logoUrl && (
+                  <img src={page.logoUrl} alt="Logo" className="h-10 object-contain" />
                 )}
-                <div className="space-y-3">
-                  <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight drop-shadow-lg">
-                    {page.title || 'Título do Catálogo'}
+                <span className="text-white/60 text-xs tracking-widest uppercase">
+                  {page.subtitle || 'Product Catalog'}
+                </span>
+              </div>
+
+              {/* Centered Content */}
+              <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8">
+                <div className="text-center space-y-4">
+                  <h1 className="text-4xl font-light text-white tracking-tight uppercase">
+                    <span className="font-serif italic">
+                      {(page.title || 'CATALOG')?.split(' ')[0]}
+                    </span>
                   </h1>
-                  {(page.subtitle || !page.title) && (
-                    <p className="text-lg text-white/80 font-light tracking-wide">
-                      {page.subtitle || 'Subtítulo'}
-                    </p>
+                  {(page.title || 'CATALOG')?.split(' ').slice(1).join(' ') && (
+                    <h1 className="text-4xl font-bold text-white tracking-tight uppercase">
+                      {(page.title || 'CATALOG')?.split(' ').slice(1).join(' ')}
+                    </h1>
                   )}
+                </div>
+              </div>
+
+              {/* Bottom - Year */}
+              <div className="relative z-10 flex items-end justify-between p-6">
+                <span className="text-6xl font-light text-white/20">{new Date().getFullYear()}</span>
+                <div className="text-right text-white/50 text-[10px] tracking-wider uppercase">
+                  www.empresa.com
                 </div>
               </div>
             </div>
