@@ -25,6 +25,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
   businessType,
   estabelecimentoId
 }) => {
+  // Debug log to track logo state
+  console.log('[StepCover] Rendering with logoUrl:', page.logoUrl ? `${page.logoUrl.substring(0, 50)}... (${page.logoUrl.length} chars)` : 'null');
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
   const [generatingImage, setGeneratingImage] = useState(false);
