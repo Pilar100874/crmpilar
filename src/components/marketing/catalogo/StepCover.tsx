@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -28,8 +28,14 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingText, setGeneratingText] = useState(false);
   const [imagePrompt, setImagePrompt] = useState('');
+  
+  // Use ref to always have latest page value
+  const pageRef = useRef(page);
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
 
-  const handleFileUpload = (
+  const handleFileUpload = useCallback((
     e: React.ChangeEvent<HTMLInputElement>,
     field: 'logoUrl' | 'backgroundImage'
   ) => {
@@ -40,18 +46,20 @@ export const StepCover: React.FC<StepCoverProps> = ({
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
       console.log(`[StepCover] File uploaded for ${field}, size: ${dataUrl.length} chars`);
-      const newPage = { ...page, [field]: dataUrl };
-      console.log(`[StepCover] Calling onChange with new page:`, { ...newPage, [field]: newPage[field]?.substring(0, 50) + '...' });
+      const currentPage = pageRef.current;
+      const newPage = { ...currentPage, [field]: dataUrl };
+      console.log(`[StepCover] Calling onChange with new page`);
       onChange(newPage);
     };
     reader.readAsDataURL(file);
-  };
+  }, [onChange]);
 
-  const clearImage = (field: 'logoUrl' | 'backgroundImage') => {
-    onChange({ ...page, [field]: undefined });
-  };
+  const clearImage = useCallback((field: 'logoUrl' | 'backgroundImage') => {
+    const currentPage = pageRef.current;
+    onChange({ ...currentPage, [field]: undefined });
+  }, [onChange]);
 
-  const generateAIImage = async () => {
+  const generateAIImage = useCallback(async () => {
     if (!imagePrompt.trim()) {
       toast.error('Digite uma descrição para a imagem');
       return;
@@ -72,7 +80,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
       if (error) throw error;
       if (data?.imageUrl) {
         console.log('[StepCover] Setting background image, length:', data.imageUrl.length);
-        const newPage = { ...page, backgroundImage: data.imageUrl };
+        const currentPage = pageRef.current;
+        const newPage = { ...currentPage, backgroundImage: data.imageUrl };
         onChange(newPage);
         toast.success('Imagem gerada com sucesso!');
       } else {
@@ -85,9 +94,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
     } finally {
       setGeneratingImage(false);
     }
-  };
+  }, [imagePrompt, onChange]);
 
-  const generateAIText = async () => {
+  const generateAIText = useCallback(async () => {
     setGeneratingText(true);
     try {
       const { data, error } = await supabase.functions.invoke('catalog-ai', {
@@ -101,8 +110,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
       if (error) throw error;
       if (data.suggestions?.length > 0) {
         const suggestion = data.suggestions[0];
+        const currentPage = pageRef.current;
         onChange({ 
-          ...page, 
+          ...currentPage, 
           title: suggestion.title,
           subtitle: suggestion.subtitle 
         });
@@ -114,8 +124,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
     } finally {
       setGeneratingText(false);
     }
-  };
-
+  }, [catalogName, businessType, onChange]);
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
       {/* Form */}
