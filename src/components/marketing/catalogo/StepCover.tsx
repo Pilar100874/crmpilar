@@ -33,13 +33,16 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const [generatingText, setGeneratingText] = useState(false);
   const [imagePrompt, setImagePrompt] = useState('');
   
-  // Use ref to always have latest page value
+  // Ref to store onChange to avoid stale closures
+  const onChangeRef = useRef(onChange);
   const pageRef = useRef(page);
+  
   useEffect(() => {
+    onChangeRef.current = onChange;
     pageRef.current = page;
-  }, [page]);
+  }, [onChange, page]);
 
-  const handleFileUpload = useCallback((
+  const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
     field: 'logoUrl' | 'backgroundImage'
   ) => {
@@ -50,18 +53,22 @@ export const StepCover: React.FC<StepCoverProps> = ({
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
       console.log(`[StepCover] File uploaded for ${field}, size: ${dataUrl.length} chars`);
+      
+      // Use refs to get latest values
       const currentPage = pageRef.current;
+      const currentOnChange = onChangeRef.current;
+      
       const newPage = { ...currentPage, [field]: dataUrl };
-      console.log(`[StepCover] Calling onChange with new page`);
-      onChange(newPage);
+      console.log(`[StepCover] Calling onChange, logoUrl exists: ${!!newPage.logoUrl}, backgroundImage exists: ${!!newPage.backgroundImage}`);
+      currentOnChange(newPage);
     };
     reader.readAsDataURL(file);
-  }, [onChange]);
+  };
 
-  const clearImage = useCallback((field: 'logoUrl' | 'backgroundImage') => {
+  const clearImage = (field: 'logoUrl' | 'backgroundImage') => {
     const currentPage = pageRef.current;
-    onChange({ ...currentPage, [field]: undefined });
-  }, [onChange]);
+    onChangeRef.current({ ...currentPage, [field]: undefined });
+  };
 
   const generateAIImage = useCallback(async () => {
     if (!imagePrompt.trim()) {
