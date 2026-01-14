@@ -186,8 +186,8 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
           </div>
         </div>
 
-        {/* Main Image Area with 5mm margins - positioned 2cm lower */}
-        <div className="px-[5mm]" style={{ marginTop: '2cm', flex: '1 1 auto', maxHeight: 'calc(100% - 18rem)' }}>
+        {/* Main Image Area with 5mm margins - fixed position */}
+        <div className="flex-1 px-[5mm] pb-[5mm]">
           <div className="relative w-full h-full overflow-hidden bg-gray-200">
             {coverPage.backgroundImage ? (
               <img 
