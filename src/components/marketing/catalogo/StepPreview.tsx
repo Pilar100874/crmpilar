@@ -187,14 +187,14 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
         </div>
 
         {/* Main Image Area with 5mm margins on sides, 4cm from bottom */}
-        <div className="flex-1 px-[5mm] pb-[40mm]">
-          <div className="relative w-full h-full overflow-hidden bg-gray-200">
+        <div className="flex-1 px-[5mm] flex flex-col">
+          <div className="relative w-full flex-1 overflow-hidden bg-gray-200" style={{ marginBottom: '40mm' }}>
             {coverPage.backgroundImage ? (
               <img 
                 key={`cover-bg-${coverPage.backgroundImage.length}`}
                 src={coverPage.backgroundImage}
                 alt="Cover"
-                className="absolute inset-0 w-full h-full object-cover object-center"
+                className="absolute top-0 left-0 w-full h-full object-cover object-top"
                 onError={(e) => {
                   console.error('[StepPreview] Failed to load background image');
                   e.currentTarget.style.display = 'none';
