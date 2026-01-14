@@ -211,20 +211,12 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
           )}
         </div>
 
-        {/* Footer center */}
-        <div className="flex items-center gap-1 text-gray-600">
-          <span className="text-xs" style={{ fontFamily: 'Georgia, serif' }}>
-            <span className="font-normal">Home</span>
-            {' '}
-            <span className="font-bold">Design</span>
-            {' '}
-            <span className="font-normal">Catalog</span>
-          </span>
-        </div>
-
         {/* Website right */}
-        <span className="text-[10px] text-gray-500 tracking-wider">
-          www.empresa.com
+        <span 
+          className="text-2xl text-gray-500 tracking-wider"
+          style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
+        >
+          www.pilar.com.br
         </span>
       </div>
     </div>
