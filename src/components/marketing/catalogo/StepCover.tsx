@@ -66,31 +66,59 @@ export const StepCover: React.FC<StepCoverProps> = ({
     }
     
     setGeneratingImage(true);
+    toast.loading('Gerando imagem... isso pode levar até 30 segundos', { id: 'ai-image' });
+    
     try {
       console.log('[StepCover] Generating AI image with prompt:', imagePrompt.trim());
-      const { data, error } = await supabase.functions.invoke('catalog-ai', {
-        body: { 
-          action: 'generate-image',
-          prompt: `Professional catalog cover background: ${imagePrompt.trim()}`
+      
+      // Use fetch with AbortController for better timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/catalog-ai`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            action: 'generate-image',
+            prompt: `Professional catalog cover background: ${imagePrompt.trim()}`
+          }),
+          signal: controller.signal,
         }
-      });
+      );
+      
+      clearTimeout(timeoutId);
 
-      console.log('[StepCover] AI response received:', { error, hasImageUrl: !!data?.imageUrl, imageUrlLength: data?.imageUrl?.length });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erro ${response.status}`);
+      }
 
-      if (error) throw error;
+      const data = await response.json();
+      console.log('[StepCover] AI response received:', { hasImageUrl: !!data?.imageUrl, imageUrlLength: data?.imageUrl?.length });
+
       if (data?.imageUrl) {
         console.log('[StepCover] Setting background image, length:', data.imageUrl.length);
         const currentPage = pageRef.current;
         const newPage = { ...currentPage, backgroundImage: data.imageUrl };
         onChange(newPage);
-        toast.success('Imagem gerada com sucesso!');
+        toast.success('Imagem gerada com sucesso!', { id: 'ai-image' });
       } else {
         console.error('[StepCover] No imageUrl in response:', data);
-        toast.error('Erro: imagem não retornada');
+        toast.error('Erro: imagem não retornada', { id: 'ai-image' });
       }
     } catch (error: any) {
       console.error('[StepCover] Error generating image:', error);
-      toast.error(error.message || 'Erro ao gerar imagem');
+      if (error.name === 'AbortError') {
+        toast.error('Timeout: a geração demorou muito. Tente novamente.', { id: 'ai-image' });
+      } else {
+        toast.error(error.message || 'Erro ao gerar imagem', { id: 'ai-image' });
+      }
     } finally {
       setGeneratingImage(false);
     }
