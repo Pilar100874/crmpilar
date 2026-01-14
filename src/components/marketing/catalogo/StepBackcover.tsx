@@ -271,57 +271,80 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
           </div>
           <div className="rounded-2xl overflow-hidden shadow-2xl">
             <div
-              className="aspect-[210/297] relative flex flex-col items-center justify-center p-12 text-center"
+              className="aspect-[210/297] relative flex overflow-hidden"
               style={{
-                backgroundColor: page.backgroundColor || primaryColor,
-                backgroundImage: page.backgroundImage ? `url(${page.backgroundImage})` : undefined,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
+                backgroundColor: page.backgroundColor || '#1a1a1a',
               }}
             >
+              {/* Background */}
               {page.backgroundImage && (
-                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70" />
-              )}
-              <div className="relative z-10 flex flex-col items-center gap-8 text-white max-w-sm">
-                {logoUrl && (
-                  <img
-                    src={logoUrl}
-                    alt="Logo"
-                    className="h-20 object-contain drop-shadow-lg"
+                <>
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${page.backgroundImage})` }}
                   />
-                )}
-                
-                <h2 className="text-2xl font-light tracking-wide">
-                  {page.title || 'Entre em Contato'}
-                </h2>
+                  <div className="absolute inset-0 bg-black/60" />
+                </>
+              )}
 
-                <div className="w-12 h-px bg-white/30" />
+              {/* Left Side - Decorative */}
+              <div className="relative z-10 w-1/2 flex items-center justify-center">
+                <div className="text-center">
+                  <h2 className="text-4xl font-light text-white/20 uppercase tracking-widest">
+                    <span className="font-serif italic block">{new Date().getFullYear()}</span>
+                  </h2>
+                  <div className="mt-6">
+                    {logoUrl && (
+                      <img src={logoUrl} alt="Logo" className="h-12 object-contain mx-auto opacity-80" />
+                    )}
+                  </div>
+                </div>
+              </div>
 
-                <div className="space-y-4 text-sm">
-                  {page.contactInfo?.phone && (
-                    <div className="flex items-center gap-3 justify-center text-white/90">
-                      <Phone className="h-4 w-4" />
-                      <span>{page.contactInfo.phone}</span>
+              {/* Right Side - Contact Info */}
+              <div className="relative z-10 w-1/2 flex flex-col justify-center p-8 bg-white/5 backdrop-blur-sm">
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-light text-white">
+                      <span className="font-serif italic text-white/60">Product</span>
+                      {' '}
+                      <span className="font-bold uppercase">CATALOG</span>
+                    </h3>
+                    <div className="w-12 h-0.5 bg-white/30" />
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-xs text-white/60 uppercase tracking-wider">
+                      {page.title || 'Contact us'}
+                    </p>
+                    
+                    <div className="space-y-2 text-xs">
+                      {page.contactInfo?.phone && (
+                        <div className="flex items-center gap-2 text-white/80">
+                          <Phone className="h-3 w-3 text-white/40" />
+                          <span>{page.contactInfo.phone}</span>
+                        </div>
+                      )}
+                      {page.contactInfo?.email && (
+                        <div className="flex items-center gap-2 text-white/80">
+                          <Mail className="h-3 w-3 text-white/40" />
+                          <span>{page.contactInfo.email}</span>
+                        </div>
+                      )}
+                      {page.contactInfo?.website && (
+                        <div className="flex items-center gap-2 text-white/80">
+                          <Globe className="h-3 w-3 text-white/40" />
+                          <span>{page.contactInfo.website}</span>
+                        </div>
+                      )}
+                      {page.contactInfo?.address && (
+                        <div className="flex items-start gap-2 text-white/80">
+                          <MapPin className="h-3 w-3 text-white/40 mt-0.5" />
+                          <span className="line-clamp-2">{page.contactInfo.address}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {page.contactInfo?.email && (
-                    <div className="flex items-center gap-3 justify-center text-white/90">
-                      <Mail className="h-4 w-4" />
-                      <span>{page.contactInfo.email}</span>
-                    </div>
-                  )}
-                  {page.contactInfo?.website && (
-                    <div className="flex items-center gap-3 justify-center text-white/90">
-                      <Globe className="h-4 w-4" />
-                      <span>{page.contactInfo.website}</span>
-                    </div>
-                  )}
-                  {page.contactInfo?.address && (
-                    <div className="flex items-center gap-3 justify-center text-white/90">
-                      <MapPin className="h-4 w-4 flex-shrink-0" />
-                      <span className="text-center">{page.contactInfo.address}</span>
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
