@@ -439,17 +439,20 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
         
       case 'selection_text':
         return (
-          <Select value={value || undefined} onValueChange={onChange}>
+          <Select value={value || ""} onValueChange={(val) => onChange(val)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Selecione uma opção" />
             </SelectTrigger>
-            <SelectContent className="bg-background border shadow-lg z-50">
-              {field.options?.filter(opt => opt.value).map((option) => (
-                <SelectItem key={option.id} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-              {(!field.options || field.options.filter(opt => opt.value).length === 0) && (
+            <SelectContent className="bg-background border shadow-lg z-50 max-h-60">
+              {field.options?.map((option) => {
+                const optionValue = option.value || option.label || option.id;
+                return (
+                  <SelectItem key={option.id} value={optionValue}>
+                    {option.label}
+                  </SelectItem>
+                );
+              })}
+              {(!field.options || field.options.length === 0) && (
                 <div className="text-center text-sm text-muted-foreground py-4 px-2">
                   Nenhuma opção configurada
                 </div>
