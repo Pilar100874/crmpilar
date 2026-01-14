@@ -188,16 +188,25 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
 
         {/* Main Image Area with 5mm margins - fixed position */}
         <div className="flex-1 px-[5mm] pb-[5mm]">
-          <div className="relative w-full h-full overflow-hidden">
+          <div className="relative w-full h-full overflow-hidden bg-gray-200">
             {coverPage.backgroundImage ? (
               <img 
-                key={coverPage.backgroundImage.substring(0, 100)}
+                key={`cover-bg-${coverPage.backgroundImage.length}`}
                 src={coverPage.backgroundImage}
                 alt="Cover"
                 className="absolute inset-0 w-full h-full object-cover object-center"
+                onError={(e) => {
+                  console.error('[StepPreview] Failed to load background image');
+                  e.currentTarget.style.display = 'none';
+                }}
+                onLoad={() => {
+                  console.log('[StepPreview] Background image loaded successfully');
+                }}
               />
             ) : (
-              <div className="absolute inset-0 bg-gray-300" />
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+                <span className="text-gray-500 text-sm">Sem imagem de fundo</span>
+              </div>
             )}
           </div>
         </div>
