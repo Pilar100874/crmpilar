@@ -307,7 +307,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
               className="aspect-[210/297] flex flex-col overflow-hidden bg-white"
             >
               {/* Top White Header Section */}
-              <div className="bg-white px-6 pt-12 pb-4 text-center">
+              <div className="bg-white px-6 pt-20 pb-4 text-center">
                 <h1 
                   className="text-3xl text-gray-900 tracking-[0.15em] uppercase"
                   style={{ fontFamily: 'Times New Roman, Times, serif', fontWeight: 700 }}
@@ -335,18 +335,20 @@ export const StepCover: React.FC<StepCoverProps> = ({
                 </div>
               </div>
 
-              {/* Main Image Area */}
-              <div className="flex-1 relative">
-                {page.backgroundImage ? (
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${page.backgroundImage})` }}
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-gray-300 flex items-center justify-center">
-                    <span className="text-gray-400 text-sm">Imagem gerada por IA</span>
-                  </div>
-                )}
+              {/* Main Image Area with 5mm margins */}
+              <div className="flex-1 px-[5mm] pb-[5mm]">
+                <div className="relative w-full h-full">
+                  {page.backgroundImage ? (
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: `url(${page.backgroundImage})` }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gray-300 flex items-center justify-center">
+                      <span className="text-gray-400 text-sm">Imagem gerada por IA</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Bottom Footer Section */}

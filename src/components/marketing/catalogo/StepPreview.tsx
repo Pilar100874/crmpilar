@@ -154,7 +154,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
       className="w-full h-full flex flex-col relative overflow-hidden bg-white"
     >
       {/* Top White Header Section */}
-      <div className="bg-white px-8 pt-16 pb-6 text-center">
+      <div className="bg-white px-8 pt-28 pb-6 text-center">
         <h1 
           className="text-5xl text-gray-900 tracking-[0.15em] uppercase"
           style={{ fontFamily: 'Times New Roman, Times, serif', fontWeight: 700 }}
@@ -182,18 +182,20 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
         </div>
       </div>
 
-      {/* Main Image Area */}
-      <div className="flex-1 relative">
-        {coverPage.backgroundImage ? (
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${coverPage.backgroundImage})` }}
-          />
-        ) : (
-          <div 
-            className="absolute inset-0 bg-gray-300"
-          />
-        )}
+      {/* Main Image Area with 5mm margins */}
+      <div className="flex-1 px-[5mm] pb-[5mm]">
+        <div className="relative w-full h-full">
+          {coverPage.backgroundImage ? (
+            <div 
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${coverPage.backgroundImage})` }}
+            />
+          ) : (
+            <div 
+              className="absolute inset-0 bg-gray-300"
+            />
+          )}
+        </div>
       </div>
 
       {/* Bottom Footer Section */}
