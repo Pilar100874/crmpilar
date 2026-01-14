@@ -19,6 +19,30 @@ serve(async (req) => {
     }
 
     if (action === "generate-image") {
+      const realisticPrompt = `
+Ultra-realistic photography quality.
+Natural, believable lighting with correct light falloff and shadow behavior.
+Accurate skin tones and textures — visible pores, micro-details, natural imperfections.
+No plastic skin, no AI smoothing, no artificial sharpening.
+Correct anatomy, realistic proportions, physically plausible posture and perspective.
+High dynamic range without overprocessing — highlights preserved, shadows detailed.
+True-to-life materials and surfaces (fabric, skin, metal, glass, concrete).
+Depth and separation between subject and background feel natural, not cut-out.
+Lens behavior feels real: subtle depth of field where appropriate, natural motion blur if movement exists, realistic noise or grain when low light is present.
+Color grading is restrained and photographic — no oversaturation, no fake cinematic LUTs.
+Overall image should feel indistinguishable from a real photograph taken in the real world.
+No stylization. No illustration look. No CGI feel. No fantasy lighting.
+`;
+
+      const fullPrompt = `Generate a FULLSCREEN, high-resolution, edge-to-edge background image for a catalog cover. The image must completely fill a vertical A4 page (portrait orientation, 210x297mm aspect ratio). 
+
+USER REQUEST: ${prompt || 'Professional, elegant and modern catalog cover background with sophisticated colors.'}
+
+PHOTOGRAPHY STYLE REQUIREMENTS:
+${realisticPrompt}
+
+IMPORTANT: The image must work as a full-bleed backdrop for white text overlay. No text, no borders, no margins - just pure visual content that fills the entire frame. Ultra high resolution.`;
+
       // Generate image using Lovable AI
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -31,7 +55,7 @@ serve(async (req) => {
           messages: [
             {
               role: "user",
-              content: `Generate a FULLSCREEN, high-resolution, edge-to-edge background image for a catalog cover. The image must completely fill a vertical A4 page (portrait orientation, 210x297mm aspect ratio). ${prompt || 'Professional, elegant and modern catalog cover background. Minimalist with subtle gradients or abstract geometric patterns. Sophisticated colors - deep blues, elegant grays, or warm neutrals.'}. IMPORTANT: The image must work as a full-bleed backdrop for white text overlay. No text, no borders, no margins - just pure visual content that fills the entire frame. Ultra high resolution.`
+              content: fullPrompt
             }
           ],
           modalities: ["image", "text"]
