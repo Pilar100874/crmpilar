@@ -14,6 +14,7 @@ interface StepCoverProps {
   primaryColor: string;
   catalogName?: string;
   businessType?: string;
+  estabelecimentoId?: string | null;
 }
 
 export const StepCover: React.FC<StepCoverProps> = ({ 
@@ -21,7 +22,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
   onChange, 
   primaryColor,
   catalogName,
-  businessType 
+  businessType,
+  estabelecimentoId
 }) => {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
@@ -86,7 +88,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
           },
           body: JSON.stringify({
             action: 'generate-image',
-            prompt: `Professional catalog cover background: ${imagePrompt.trim()}`
+            prompt: `Professional catalog cover background: ${imagePrompt.trim()}`,
+            estabelecimentoId: estabelecimentoId || null
           }),
           signal: controller.signal,
         }
