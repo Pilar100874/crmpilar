@@ -213,6 +213,48 @@ export const StepCover: React.FC<StepCoverProps> = ({
             />
           </div>
 
+          {/* Logo Upload */}
+          <div className="space-y-3">
+            <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+              Logo (3x3 cm)
+            </Label>
+            <input
+              ref={logoInputRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleFileUpload(e, 'logoUrl')}
+              className="hidden"
+            />
+            {page.logoUrl ? (
+              <div className="relative inline-block group">
+                <img
+                  key={page.logoUrl.substring(0, 50)}
+                  src={page.logoUrl}
+                  alt="Logo"
+                  className="h-16 object-contain rounded-lg"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => clearImage('logoUrl')}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => logoInputRef.current?.click()}
+                className="w-full h-20 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+              >
+                <Upload className="h-5 w-5" />
+                <span className="text-xs">Carregar logo</span>
+              </button>
+            )}
+          </div>
+
           {/* AI Image Generation */}
           <div className="space-y-3">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider">
