@@ -50,10 +50,13 @@ export const StepCover: React.FC<StepCoverProps> = ({
       console.log(`[StepCover] File uploaded for ${field}, size: ${dataUrl.length} chars`);
       const currentPage = pageRef.current;
       const newPage = { ...currentPage, [field]: dataUrl };
-      console.log(`[StepCover] Calling onChange with new page`);
+      console.log(`[StepCover] Calling onChange with new page, logoUrl present:`, !!newPage.logoUrl);
       onChange(newPage);
     };
     reader.readAsDataURL(file);
+    
+    // Reset input value to allow re-uploading same file
+    e.target.value = '';
   }, [onChange]);
 
   const clearImage = useCallback((field: 'logoUrl' | 'backgroundImage') => {
