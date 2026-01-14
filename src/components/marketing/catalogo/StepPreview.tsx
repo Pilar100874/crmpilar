@@ -158,7 +158,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
         className="w-full h-full flex flex-col relative overflow-hidden bg-white"
       >
         {/* Top White Header Section */}
-        <div className="bg-white px-8 pt-28 pb-6 text-center">
+        <div className="bg-white px-8 pt-28 pb-0 text-center">
           <h1 
             className="text-5xl text-gray-900 tracking-[0.15em] uppercase"
             style={{ fontFamily: 'Times New Roman, Times, serif', fontWeight: 700 }}
@@ -186,29 +186,34 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
           </div>
         </div>
 
-        {/* Main Image Area: 5mm sides, 1cm from texts above, 4cm from bottom */}
-        <div className="flex-1 flex flex-col" style={{ padding: '10mm 5mm 40mm 5mm' }}>
-          <div className="relative w-full flex-1 overflow-hidden bg-gray-200">
-            {coverPage.backgroundImage ? (
-              <img 
-                key={`cover-bg-${coverPage.backgroundImage.length}`}
-                src={coverPage.backgroundImage}
-                alt="Cover"
-                className="absolute top-0 left-0 w-full h-full object-cover object-top"
-                onError={(e) => {
-                  console.error('[StepPreview] Failed to load background image');
-                  e.currentTarget.style.display = 'none';
-                }}
-                onLoad={() => {
-                  console.log('[StepPreview] Background image loaded successfully');
-                }}
-              />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-                <span className="text-gray-500 text-sm">Sem imagem de fundo</span>
-              </div>
-            )}
-          </div>
+        {/* Main Image Area: 5mm sides, 1cm (10mm) from texts above, 4cm (40mm) from bottom */}
+        <div 
+          className="relative overflow-hidden bg-gray-200"
+          style={{ 
+            margin: '10mm 5mm 40mm 5mm',
+            flex: 1,
+            minHeight: 0
+          }}
+        >
+          {coverPage.backgroundImage ? (
+            <img 
+              key={`cover-bg-${coverPage.backgroundImage.length}`}
+              src={coverPage.backgroundImage}
+              alt="Cover"
+              className="absolute top-0 left-0 w-full h-full object-cover object-top"
+              onError={(e) => {
+                console.error('[StepPreview] Failed to load background image');
+                e.currentTarget.style.display = 'none';
+              }}
+              onLoad={() => {
+                console.log('[StepPreview] Background image loaded successfully');
+              }}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
+              <span className="text-gray-500 text-sm">Sem imagem de fundo</span>
+            </div>
+          )}
         </div>
 
         {/* Bottom Footer Section */}
