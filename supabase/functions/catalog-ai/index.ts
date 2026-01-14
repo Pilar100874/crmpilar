@@ -31,7 +31,7 @@ serve(async (req) => {
           messages: [
             {
               role: "user",
-              content: prompt || `Generate a professional, elegant and modern catalog cover background image. The style should be minimalist with subtle gradients or abstract geometric patterns. Colors should be sophisticated - deep blues, elegant grays, or warm neutrals. The image should work well as a backdrop for white text. No text in the image.`
+              content: `Generate a FULLSCREEN, high-resolution, edge-to-edge background image for a catalog cover. The image must completely fill a vertical A4 page (portrait orientation, 210x297mm aspect ratio). ${prompt || 'Professional, elegant and modern catalog cover background. Minimalist with subtle gradients or abstract geometric patterns. Sophisticated colors - deep blues, elegant grays, or warm neutrals.'}. IMPORTANT: The image must work as a full-bleed backdrop for white text overlay. No text, no borders, no margins - just pure visual content that fills the entire frame. Ultra high resolution.`
             }
           ],
           modalities: ["image", "text"]
