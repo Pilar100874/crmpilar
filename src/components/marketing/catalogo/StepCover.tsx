@@ -39,7 +39,10 @@ export const StepCover: React.FC<StepCoverProps> = ({
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
-      onChange({ ...page, [field]: dataUrl });
+      console.log(`[StepCover] File uploaded for ${field}, size: ${dataUrl.length} chars`);
+      const newPage = { ...page, [field]: dataUrl };
+      console.log(`[StepCover] Calling onChange with new page:`, { ...newPage, [field]: newPage[field]?.substring(0, 50) + '...' });
+      onChange(newPage);
     };
     reader.readAsDataURL(file);
   };
@@ -56,6 +59,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
     
     setGeneratingImage(true);
     try {
+      console.log('[StepCover] Generating AI image with prompt:', imagePrompt.trim());
       const { data, error } = await supabase.functions.invoke('catalog-ai', {
         body: { 
           action: 'generate-image',
@@ -63,13 +67,20 @@ export const StepCover: React.FC<StepCoverProps> = ({
         }
       });
 
+      console.log('[StepCover] AI response received:', { error, hasImageUrl: !!data?.imageUrl, imageUrlLength: data?.imageUrl?.length });
+
       if (error) throw error;
-      if (data.imageUrl) {
-        onChange({ ...page, backgroundImage: data.imageUrl });
+      if (data?.imageUrl) {
+        console.log('[StepCover] Setting background image, length:', data.imageUrl.length);
+        const newPage = { ...page, backgroundImage: data.imageUrl };
+        onChange(newPage);
         toast.success('Imagem gerada com sucesso!');
+      } else {
+        console.error('[StepCover] No imageUrl in response:', data);
+        toast.error('Erro: imagem não retornada');
       }
     } catch (error: any) {
-      console.error('Error generating image:', error);
+      console.error('[StepCover] Error generating image:', error);
       toast.error(error.message || 'Erro ao gerar imagem');
     } finally {
       setGeneratingImage(false);
