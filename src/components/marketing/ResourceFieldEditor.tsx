@@ -24,7 +24,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
   onChange,
   onRemove,
 }) => {
-  const needsOptions = ['radio_selection', 'selection_image', 'selection_audio', 'selection_video', 'selection_text'].includes(field.type);
+  const needsOptions = ['radio_selection', 'selection_image', 'selection_audio', 'selection_video', 'selection_text', 'selection_text_image'].includes(field.type);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
   // Check if field name is empty
@@ -150,6 +150,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
             {field.type === 'selection_audio' && 'Áudios para Seleção'}
             {field.type === 'selection_video' && 'Vídeos para Seleção'}
             {field.type === 'selection_text' && 'Textos para Seleção'}
+            {field.type === 'selection_text_image' && 'Textos com Imagem de Referência'}
             {field.type === 'radio_selection' && 'Opções'}
           </Label>
           <Button
@@ -204,6 +205,66 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
                   rows={4}
                   className="text-sm"
                 />
+              )}
+
+              {/* Seleção de Texto com Imagem - textarea + upload de imagem de referência */}
+              {field.type === 'selection_text_image' && (
+                <div className="space-y-3">
+                  <Textarea
+                    value={option.value}
+                    onChange={(e) => handleUpdateOption(index, { value: e.target.value })}
+                    placeholder="Digite o texto completo aqui..."
+                    rows={4}
+                    className="text-sm"
+                  />
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 flex gap-2">
+                      <Input
+                        value={option.imageUrl || ''}
+                        onChange={(e) => handleUpdateOption(index, { imageUrl: e.target.value })}
+                        placeholder="URL da Imagem de referência ou faça upload"
+                        className="h-8 text-sm"
+                        disabled={uploadingIndex === index}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 relative shrink-0"
+                        disabled={uploadingIndex === index}
+                        asChild
+                      >
+                        <label className="cursor-pointer">
+                          {uploadingIndex === index ? (
+                            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          ) : (
+                            <Upload className="h-3 w-3 mr-1" />
+                          )}
+                          {uploadingIndex === index ? 'Enviando...' : 'Upload'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            disabled={uploadingIndex === index}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleFileUpload(index, file, 'image');
+                            }}
+                          />
+                        </label>
+                      </Button>
+                    </div>
+                    {option.imageUrl && (
+                      <div className="w-16 h-16 rounded border overflow-hidden shrink-0">
+                        <img 
+                          src={option.imageUrl} 
+                          alt={option.label} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
               
               {/* Seleção de Imagem - upload de imagem */}
@@ -359,6 +420,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
               {field.type === 'selection_audio' && 'Adicione áudios para o usuário escolher'}
               {field.type === 'selection_video' && 'Adicione vídeos para o usuário escolher'}
               {field.type === 'selection_text' && 'Adicione textos para o usuário escolher'}
+              {field.type === 'selection_text_image' && 'Adicione textos com imagens de referência para o usuário escolher'}
               {field.type === 'radio_selection' && 'Adicione opções para a seleção'}
             </div>
           )}

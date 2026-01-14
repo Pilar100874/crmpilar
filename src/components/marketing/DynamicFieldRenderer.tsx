@@ -439,22 +439,6 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
         
       case 'selection_text':
         return (
-          <Select value={value || ''} onValueChange={onChange}>
-            <SelectTrigger>
-              <SelectValue placeholder={field.placeholder || 'Selecione um texto...'} />
-            </SelectTrigger>
-            <SelectContent className="max-h-64">
-              {field.options?.map((option) => (
-                <SelectItem key={option.id} value={option.value}>
-                  <span className="font-medium">{option.label}</span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        );
-
-      case 'selection_text':
-        return (
           <ScrollArea className="max-h-64 border rounded-lg">
             <div className="p-2 space-y-1">
               {field.options?.map((option) => {
@@ -478,6 +462,61 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
                       {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                     </div>
                     <span className="text-sm flex-1">{option.label}</span>
+                  </button>
+                );
+              })}
+              {(!field.options || field.options.length === 0) && (
+                <p className="text-center text-sm text-muted-foreground py-4">
+                  Nenhuma opção configurada
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+        );
+
+      case 'selection_text_image':
+        return (
+          <ScrollArea className="max-h-80 border rounded-lg">
+            <div className="p-2 space-y-2">
+              {field.options?.map((option) => {
+                const isSelected = value === option.value;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => onChange(option.value)}
+                    className={`w-full flex items-start gap-3 p-3 rounded-lg text-left transition-all ${
+                      isSelected
+                        ? 'bg-primary/10 border border-primary'
+                        : 'hover:bg-muted border border-transparent'
+                    }`}
+                  >
+                    {option.imageUrl && (
+                      <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border">
+                        <img 
+                          src={option.imageUrl} 
+                          alt={option.label}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
+                          isSelected
+                            ? 'border-primary'
+                            : 'border-muted-foreground/40'
+                        }`}>
+                          {isSelected && <div className="w-2 h-2 rounded-full bg-primary" />}
+                        </div>
+                        <span className="font-medium text-sm truncate">{option.label}</span>
+                      </div>
+                      {option.value && (
+                        <p className="text-xs text-muted-foreground line-clamp-2 ml-6">
+                          {option.value}
+                        </p>
+                      )}
+                    </div>
                   </button>
                 );
               })}

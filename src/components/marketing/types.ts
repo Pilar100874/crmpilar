@@ -10,6 +10,7 @@ export type FieldType =
   | 'selection_audio'  // Seleção de áudios (criador define as opções)
   | 'selection_video'  // Seleção de vídeos (criador define as opções)
   | 'selection_text'   // Seleção de textos longos (criador define as opções)
+  | 'selection_text_image' // Seleção de texto com referência de imagem
   | 'radio_selection'  // Seleção única com radio buttons (criador define as opções)
   | 'number'
   | 'date'
@@ -106,7 +107,7 @@ export const FIELD_TYPE_CATEGORIES = {
   selection: {
     label: 'Seleção',
     description: 'Você define as opções agora, usuário escolhe depois',
-    types: ['selection_image', 'selection_audio', 'selection_video', 'selection_text', 'radio_selection'] as FieldType[],
+    types: ['selection_image', 'selection_audio', 'selection_video', 'selection_text', 'selection_text_image', 'radio_selection'] as FieldType[],
   },
   product: {
     label: 'Produto',
@@ -124,6 +125,7 @@ export const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   selection_audio: 'Seleção de Áudios',
   selection_video: 'Seleção de Vídeos',
   selection_text: 'Seleção de Textos',
+  selection_text_image: 'Seleção de Texto com Imagem',
   radio_selection: 'Seleção Única',
   number: 'Número',
   date: 'Data',
@@ -142,6 +144,7 @@ export const FIELD_TYPE_DESCRIPTIONS: Record<FieldType, string> = {
   selection_audio: 'Defina áudios para o usuário escolher',
   selection_video: 'Defina vídeos para o usuário escolher',
   selection_text: 'Defina textos longos para o usuário escolher',
+  selection_text_image: 'Textos com imagem de referência para o usuário escolher',
   radio_selection: 'Defina opções para o usuário escolher uma',
   number: 'Valor numérico',
   date: 'Seletor de data',
