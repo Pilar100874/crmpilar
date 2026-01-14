@@ -316,32 +316,6 @@ export const StepCover: React.FC<StepCoverProps> = ({
               </button>
             )}
           </div>
-
-          {/* Color */}
-          <div className="space-y-3">
-            <Label className="text-xs text-muted-foreground uppercase tracking-wider">
-              Cor de Fundo
-            </Label>
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-10 rounded-lg shadow-sm border cursor-pointer transition-transform hover:scale-105"
-                style={{ backgroundColor: page.backgroundColor || primaryColor }}
-                onClick={() => document.getElementById('cover-bg-color')?.click()}
-              />
-              <Input
-                id="cover-bg-color"
-                type="color"
-                value={page.backgroundColor || primaryColor}
-                onChange={(e) => onChange({ ...page, backgroundColor: e.target.value })}
-                className="sr-only"
-              />
-              <Input
-                value={page.backgroundColor || primaryColor}
-                onChange={(e) => onChange({ ...page, backgroundColor: e.target.value })}
-                className="flex-1 h-10 font-mono text-sm"
-              />
-            </div>
-          </div>
         </div>
       </div>
 
