@@ -31,6 +31,15 @@ const MarketingCatalogo: React.FC = () => {
     backgroundColor: '#0f172a',
   });
 
+  // Debug: log coverPage changes
+  useEffect(() => {
+    console.log('[MarketingCatalogo] coverPage updated:', {
+      hasLogoUrl: !!coverPage.logoUrl,
+      logoUrlLength: coverPage.logoUrl?.length,
+      hasBackgroundImage: !!coverPage.backgroundImage
+    });
+  }, [coverPage]);
+
   const [productsPage, setProductsPage] = useState<CatalogPage>({
     id: 'products',
     type: 'products',
