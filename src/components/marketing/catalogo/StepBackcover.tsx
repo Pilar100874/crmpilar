@@ -3,11 +3,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { CatalogPage, COVER_STYLES } from './types';
+import { CatalogPage } from './types';
 import { Phone, Mail, Globe, MapPin, Sparkles, Loader2, X, ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface StepBackcoverProps {
   page: CatalogPage;
@@ -23,7 +22,7 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
   logoUrl 
 }) => {
   const [generatingImage, setGeneratingImage] = useState(false);
-  const [selectedStyle, setSelectedStyle] = useState<string>('elegant');
+  const [imagePrompt, setImagePrompt] = useState('');
   const bgInputRef = useRef<HTMLInputElement>(null);
 
   const updateContact = (field: keyof CatalogPage['contactInfo'], value: string) => {
@@ -53,13 +52,17 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
   };
 
   const generateAIImage = async () => {
+    if (!imagePrompt.trim()) {
+      toast.error('Digite uma descrição para a imagem');
+      return;
+    }
+    
     setGeneratingImage(true);
     try {
-      const style = COVER_STYLES.find(s => s.id === selectedStyle);
       const { data, error } = await supabase.functions.invoke('catalog-ai', {
         body: { 
           action: 'generate-image',
-          prompt: `${style?.prompt || 'Professional elegant'} back cover for product catalog, suitable for contact information display`
+          prompt: `Professional catalog back cover background: ${imagePrompt.trim()}, suitable for contact information display`
         }
       });
 
@@ -163,41 +166,38 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
           {/* AI Image Generation */}
           <div className="space-y-3 pt-2">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider">
-              Imagem de Fundo
+              Imagem de Fundo com IA
             </Label>
             
-            <div className="grid grid-cols-5 gap-2">
-              {COVER_STYLES.map((style) => (
-                <button
-                  key={style.id}
-                  type="button"
-                  onClick={() => setSelectedStyle(style.id)}
-                  className={cn(
-                    "p-2 rounded-lg text-xs font-medium transition-all text-center",
-                    selectedStyle === style.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                  )}
-                >
-                  {style.label}
-                </button>
-              ))}
-            </div>
+            <Textarea
+              value={imagePrompt}
+              onChange={(e) => setImagePrompt(e.target.value)}
+              placeholder="Descreva a imagem que deseja, ex: paisagem moderna com tons azuis, fundo minimalista..."
+              className="min-h-[70px] resize-none text-sm"
+            />
 
             <Button
               type="button"
               onClick={generateAIImage}
-              disabled={generatingImage}
+              disabled={generatingImage || !imagePrompt.trim()}
               className="w-full h-10 gap-2"
-              variant="outline"
             >
               {generatingImage ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Sparkles className="h-4 w-4" />
               )}
-              {generatingImage ? 'Gerando...' : 'Gerar imagem com IA'}
+              {generatingImage ? 'Gerando imagem...' : 'Gerar imagem com IA'}
             </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">ou</span>
+              </div>
+            </div>
 
             <input
               ref={bgInputRef}
@@ -212,7 +212,7 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
                 <img
                   src={page.backgroundImage}
                   alt="Background"
-                  className="w-full h-20 object-cover rounded-xl"
+                  className="w-full h-24 object-cover rounded-xl"
                 />
                 <Button
                   type="button"
@@ -231,7 +231,7 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
                 className="w-full h-14 border-2 border-dashed rounded-xl flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors text-xs"
               >
                 <ImageIcon className="h-4 w-4" />
-                <span>Ou carregar do dispositivo</span>
+                <span>Carregar imagem do dispositivo</span>
               </button>
             )}
           </div>
