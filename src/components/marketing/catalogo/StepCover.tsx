@@ -179,6 +179,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
             {page.logoUrl ? (
               <div className="relative inline-block group">
                 <img
+                  key={page.logoUrl.substring(0, 50)}
                   src={page.logoUrl}
                   alt="Logo"
                   className="h-16 object-contain rounded-lg"
@@ -365,16 +366,21 @@ export const StepCover: React.FC<StepCoverProps> = ({
 
               {/* Bottom Footer Section */}
               <div className="bg-white px-4 py-3 flex items-center justify-between">
-                {/* Logo bottom left */}
-                <div className="flex items-center">
-                  {page.logoUrl ? (
-                    <img src={page.logoUrl} alt="Logo" className="h-6 object-contain" />
-                  ) : (
-                    <div className="w-7 h-7 border border-gray-300 rounded flex items-center justify-center">
-                      <span className="text-[6px] text-gray-400 uppercase">Logo</span>
-                    </div>
-                  )}
-                </div>
+              {/* Logo bottom left */}
+              <div className="flex items-center">
+                {page.logoUrl ? (
+                  <img 
+                    key={page.logoUrl.substring(0, 50)} 
+                    src={page.logoUrl} 
+                    alt="Logo" 
+                    className="h-6 object-contain" 
+                  />
+                ) : (
+                  <div className="w-7 h-7 border border-gray-300 rounded flex items-center justify-center">
+                    <span className="text-[6px] text-gray-400 uppercase">Logo</span>
+                  </div>
+                )}
+              </div>
 
                 {/* Website right */}
                 <span 
