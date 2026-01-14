@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Download, Eye, Loader2, ChevronLeft, ChevronRight, Package } from 'lucide-react';
+import { Download, Loader2, ChevronLeft, ChevronRight, Package, FileText, Phone, Mail, Globe, MapPin } from 'lucide-react';
 import { CatalogConfig, CatalogPage, LAYOUT_OPTIONS } from './types';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
@@ -32,7 +32,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
   const productsPerPage = layout === 'list' ? 8 : layoutConfig.cols * 3;
   
   const productPages = Math.ceil(products.length / productsPerPage);
-  const totalPages = 2 + productPages; // cover + products + backcover
+  const totalPages = 2 + productPages;
 
   const formatPrice = (price?: number) => {
     if (!price) return '';
@@ -58,10 +58,9 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
       const pageWidth = 210;
       const pageHeight = 297;
 
-      // Generate each page
       for (let i = 0; i < totalPages; i++) {
         setCurrentPage(i);
-        await new Promise((r) => setTimeout(r, 100)); // Wait for render
+        await new Promise((r) => setTimeout(r, 150));
 
         const canvas = await html2canvas(pdfRef.current, {
           scale: 2,
@@ -92,7 +91,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
 
   const renderCoverPage = () => (
     <div
-      className="w-full h-full flex flex-col items-center justify-center p-12 text-center relative"
+      className="w-full h-full flex flex-col items-center justify-center p-16 text-center relative"
       style={{
         backgroundColor: coverPage.backgroundColor || config.primaryColor,
         backgroundImage: coverPage.backgroundImage ? `url(${coverPage.backgroundImage})` : undefined,
@@ -102,18 +101,20 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
       }}
     >
       {coverPage.backgroundImage && (
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/60" />
       )}
-      <div className="relative z-10 flex flex-col items-center gap-6">
+      <div className="relative z-10 flex flex-col items-center gap-8">
         {coverPage.logoUrl && (
-          <img src={coverPage.logoUrl} alt="Logo" className="h-24 object-contain" />
+          <img src={coverPage.logoUrl} alt="Logo" className="h-28 object-contain drop-shadow-lg" />
         )}
-        <h1 className="text-4xl font-bold text-white drop-shadow-lg">
-          {coverPage.title || config.name || 'Catálogo de Produtos'}
-        </h1>
-        {coverPage.subtitle && (
-          <p className="text-xl text-white/90">{coverPage.subtitle}</p>
-        )}
+        <div className="space-y-4">
+          <h1 className="text-5xl font-bold text-white tracking-tight drop-shadow-lg">
+            {coverPage.title || config.name || 'Catálogo'}
+          </h1>
+          {coverPage.subtitle && (
+            <p className="text-xl text-white/80 font-light tracking-wider">{coverPage.subtitle}</p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -124,12 +125,12 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
 
     return (
       <div
-        className="w-full h-full p-8 bg-white"
+        className="w-full h-full p-10 bg-white flex flex-col"
         style={{ fontFamily: config.fontFamily }}
       >
         <div
           className={cn(
-            "grid gap-4 h-full",
+            "grid gap-5 flex-1 content-start",
             layout === 'grid-2' && "grid-cols-2",
             layout === 'grid-3' && "grid-cols-3",
             layout === 'grid-4' && "grid-cols-4",
@@ -140,14 +141,14 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
             <div
               key={product.id}
               className={cn(
-                "border rounded-lg overflow-hidden flex flex-col",
-                layout === 'list' && "flex-row"
+                "bg-muted/30 rounded-xl overflow-hidden flex flex-col",
+                layout === 'list' && "flex-row items-center"
               )}
             >
               <div
                 className={cn(
-                  "bg-muted flex items-center justify-center",
-                  layout === 'list' ? "w-24 h-24" : "aspect-square"
+                  "bg-muted/50 flex items-center justify-center",
+                  layout === 'list' ? "w-24 h-24 flex-shrink-0" : "aspect-square"
                 )}
               >
                 {product.foto_url ? (
@@ -157,17 +158,17 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <Package className="h-8 w-8 text-muted-foreground" />
+                  <Package className="h-10 w-10 text-muted-foreground/50" />
                 )}
               </div>
-              <div className={cn("p-3 flex-1", layout === 'list' && "flex flex-col justify-center")}>
-                <h3 className="font-medium text-sm line-clamp-2">{product.nome}</h3>
+              <div className={cn("p-4 flex-1", layout === 'list' && "flex flex-col justify-center")}>
+                <h3 className="font-semibold text-sm line-clamp-2 mb-1">{product.nome}</h3>
                 {config.showCodes && product.codigo && (
-                  <p className="text-xs text-muted-foreground mt-1">Cód: {product.codigo}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Cód: {product.codigo}</p>
                 )}
                 {config.showPrices && product.preco_tabela && (
                   <p
-                    className="text-sm font-bold mt-1"
+                    className="text-base font-bold"
                     style={{ color: config.primaryColor }}
                   >
                     {formatPrice(product.preco_tabela)}
@@ -177,7 +178,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
             </div>
           ))}
         </div>
-        <div className="absolute bottom-4 right-4 text-xs text-muted-foreground">
+        <div className="text-center text-xs text-muted-foreground pt-4 border-t mt-auto">
           Página {pageIndex + 2}
         </div>
       </div>
@@ -186,31 +187,44 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
 
   const renderBackcoverPage = () => (
     <div
-      className="w-full h-full flex flex-col items-center justify-center p-12 text-center"
+      className="w-full h-full flex flex-col items-center justify-center p-16 text-center"
       style={{
         backgroundColor: backcoverPage.backgroundColor || config.primaryColor,
         fontFamily: config.fontFamily,
       }}
     >
-      <div className="flex flex-col items-center gap-8 text-white">
+      <div className="flex flex-col items-center gap-10 text-white max-w-md">
         {coverPage.logoUrl && (
-          <img src={coverPage.logoUrl} alt="Logo" className="h-20 object-contain" />
+          <img src={coverPage.logoUrl} alt="Logo" className="h-24 object-contain drop-shadow-lg opacity-90" />
         )}
-        <h2 className="text-2xl font-bold">
+        <h2 className="text-3xl font-light tracking-wide">
           {backcoverPage.title || 'Entre em Contato'}
         </h2>
-        <div className="space-y-4 text-lg">
+        <div className="w-16 h-px bg-white/30" />
+        <div className="space-y-5 text-base">
           {backcoverPage.contactInfo?.phone && (
-            <p>📞 {backcoverPage.contactInfo.phone}</p>
+            <div className="flex items-center gap-4 justify-center text-white/90">
+              <Phone className="h-5 w-5" />
+              <span>{backcoverPage.contactInfo.phone}</span>
+            </div>
           )}
           {backcoverPage.contactInfo?.email && (
-            <p>✉️ {backcoverPage.contactInfo.email}</p>
+            <div className="flex items-center gap-4 justify-center text-white/90">
+              <Mail className="h-5 w-5" />
+              <span>{backcoverPage.contactInfo.email}</span>
+            </div>
           )}
           {backcoverPage.contactInfo?.website && (
-            <p>🌐 {backcoverPage.contactInfo.website}</p>
+            <div className="flex items-center gap-4 justify-center text-white/90">
+              <Globe className="h-5 w-5" />
+              <span>{backcoverPage.contactInfo.website}</span>
+            </div>
           )}
           {backcoverPage.contactInfo?.address && (
-            <p>📍 {backcoverPage.contactInfo.address}</p>
+            <div className="flex items-center gap-4 justify-center text-white/90">
+              <MapPin className="h-5 w-5 flex-shrink-0" />
+              <span>{backcoverPage.contactInfo.address}</span>
+            </div>
           )}
         </div>
       </div>
@@ -230,18 +244,22 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Controls */}
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">
-            {products.length} produtos
-          </Badge>
-          <Badge variant="outline">
-            {totalPages} páginas
-          </Badge>
+        <div className="space-y-1">
+          <h3 className="text-lg font-medium">Preview do Catálogo</h3>
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="rounded-lg font-normal">
+              <FileText className="h-3 w-3 mr-1" />
+              {products.length} produtos
+            </Badge>
+            <Badge variant="secondary" className="rounded-lg font-normal">
+              {totalPages} páginas
+            </Badge>
+          </div>
         </div>
-        <Button onClick={generatePDF} disabled={generating}>
+        <Button onClick={generatePDF} disabled={generating} size="lg" className="rounded-xl">
           {generating ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (
@@ -251,34 +269,40 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
         </Button>
       </div>
 
-      {/* Preview */}
-      <div className="border rounded-lg overflow-hidden bg-muted/30">
-        <div className="flex items-center justify-between p-2 bg-muted border-b">
+      {/* Main Preview */}
+      <div className="rounded-2xl overflow-hidden bg-muted/30 border">
+        {/* Navigation */}
+        <div className="flex items-center justify-between p-4 bg-muted/50 border-b">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
             disabled={currentPage === 0 || generating}
+            className="rounded-lg"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Anterior
           </Button>
           <span className="text-sm font-medium">
-            {getPageLabel()} ({currentPage + 1}/{totalPages})
+            {getPageLabel()} <span className="text-muted-foreground">({currentPage + 1}/{totalPages})</span>
           </span>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={currentPage === totalPages - 1 || generating}
+            className="rounded-lg"
           >
-            <ChevronRight className="h-4 w-4" />
+            Próximo
+            <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
 
-        <div className="flex justify-center p-4 bg-muted/50">
+        {/* Page View */}
+        <div className="flex justify-center p-8 bg-muted/20">
           <div
             ref={pdfRef}
-            className="bg-white shadow-lg overflow-hidden relative"
+            className="bg-white shadow-2xl rounded-lg overflow-hidden"
             style={{
               width: '210mm',
               height: '297mm',
@@ -291,24 +315,55 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
         </div>
       </div>
 
-      {/* Page Thumbnails */}
-      <ScrollArea className="w-full">
-        <div className="flex gap-2 pb-2">
+      {/* Thumbnails */}
+      <ScrollArea className="w-full pb-2">
+        <div className="flex gap-3">
           {Array.from({ length: totalPages }).map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrentPage(i)}
+              disabled={generating}
               className={cn(
-                "flex-shrink-0 w-16 h-20 border rounded overflow-hidden transition-all",
-                currentPage === i && "ring-2 ring-primary"
+                "flex-shrink-0 w-20 h-28 rounded-xl border-2 overflow-hidden transition-all",
+                currentPage === i 
+                  ? "border-primary shadow-lg scale-105" 
+                  : "border-transparent hover:border-muted-foreground/30"
               )}
             >
-              <div className="w-full h-full bg-muted flex items-center justify-center text-xs">
-                {i === 0 ? 'Capa' : i === totalPages - 1 ? 'Contra' : `P${i}`}
+              <div 
+                className={cn(
+                  "w-full h-full flex flex-col items-center justify-center text-xs gap-1",
+                  i === 0 || i === totalPages - 1 
+                    ? "text-white" 
+                    : "bg-muted text-muted-foreground"
+                )}
+                style={
+                  i === 0 || i === totalPages - 1 
+                    ? { backgroundColor: config.primaryColor } 
+                    : undefined
+                }
+              >
+                {i === 0 ? (
+                  <>
+                    <FileText className="h-4 w-4" />
+                    <span className="font-medium">Capa</span>
+                  </>
+                ) : i === totalPages - 1 ? (
+                  <>
+                    <Phone className="h-4 w-4" />
+                    <span className="font-medium">Contra</span>
+                  </>
+                ) : (
+                  <>
+                    <Package className="h-4 w-4" />
+                    <span className="font-medium">P{i}</span>
+                  </>
+                )}
               </div>
             </button>
           ))}
         </div>
+        <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </div>
   );

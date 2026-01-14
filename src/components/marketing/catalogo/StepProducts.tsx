@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Search, Package, X, GripVertical, LayoutGrid } from 'lucide-react';
+import { Search, Package, X, LayoutGrid, Grid2X2, Grid3X3, List, Loader2 } from 'lucide-react';
 import { CatalogProduct, CatalogPage, LAYOUT_OPTIONS } from './types';
 import { useCatalogProducts } from './useCatalogProducts';
 import { cn } from '@/lib/utils';
@@ -64,7 +64,6 @@ export const StepProducts: React.FC<StepProductsProps> = ({
   };
 
   const selectAll = () => {
-    const allIds = new Set([...selectedIds, ...products.map((p) => p.id)]);
     const allProducts = [...selectedProducts];
     products.forEach((p) => {
       if (!selectedIds.has(p.id)) {
@@ -86,28 +85,47 @@ export const StepProducts: React.FC<StepProductsProps> = ({
     }).format(price);
   };
 
+  const getLayoutIcon = (layout: string) => {
+    switch (layout) {
+      case 'grid-2': return Grid2X2;
+      case 'grid-3': return Grid3X3;
+      case 'grid-4': return LayoutGrid;
+      case 'list': return List;
+      default: return Grid3X3;
+    }
+  };
+
+  const LayoutIcon = getLayoutIcon(page.layout || 'grid-3');
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Product Selection */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar produtos..."
-              className="pl-10"
-            />
-          </div>
+      <div className="space-y-5">
+        <div className="space-y-2">
+          <h3 className="text-lg font-medium">Selecionar Produtos</h3>
+          <p className="text-sm text-muted-foreground">
+            Escolha os produtos para incluir no catálogo
+          </p>
         </div>
 
-        <div className="flex gap-2">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Buscar produtos..."
+            className="pl-11 h-11 rounded-xl"
+          />
+        </div>
+
+        {/* Filters */}
+        <div className="flex gap-3">
           <Select
             value={selectedCategory || 'all'}
             onValueChange={(v) => setSelectedCategory(v === 'all' ? null : v)}
           >
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="flex-1 h-10 rounded-lg">
               <SelectValue placeholder="Categoria" />
             </SelectTrigger>
             <SelectContent>
@@ -124,7 +142,7 @@ export const StepProducts: React.FC<StepProductsProps> = ({
             value={selectedGroup || 'all'}
             onValueChange={(v) => setSelectedGroup(v === 'all' ? null : v)}
           >
-            <SelectTrigger className="flex-1">
+            <SelectTrigger className="flex-1 h-10 rounded-lg">
               <SelectValue placeholder="Grupo" />
             </SelectTrigger>
             <SelectContent>
@@ -138,59 +156,63 @@ export const StepProducts: React.FC<StepProductsProps> = ({
           </Select>
         </div>
 
+        {/* Quick Actions */}
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={selectAll}>
-            Selecionar todos
+          <Button variant="outline" size="sm" onClick={selectAll} className="rounded-lg text-xs">
+            Selecionar visíveis
           </Button>
-          <Button variant="outline" size="sm" onClick={clearSelection}>
+          <Button variant="outline" size="sm" onClick={clearSelection} className="rounded-lg text-xs">
             Limpar seleção
           </Button>
         </div>
 
-        <ScrollArea className="h-[400px] border rounded-lg">
+        {/* Product List */}
+        <ScrollArea className="h-[420px] rounded-xl border bg-muted/20">
           {loading ? (
-            <div className="flex items-center justify-center h-32 text-muted-foreground">
-              Carregando produtos...
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : products.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-              <Package className="h-8 w-8 mb-2" />
-              <p>Nenhum produto encontrado</p>
+              <Package className="h-8 w-8 mb-2 opacity-50" />
+              <p className="text-sm">Nenhum produto encontrado</p>
             </div>
           ) : (
-            <div className="p-2 space-y-1">
+            <div className="p-3 space-y-2">
               {products.map((product) => (
                 <div
                   key={product.id}
                   className={cn(
-                    "flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors",
+                    "flex items-center gap-4 p-3 rounded-xl cursor-pointer transition-all",
                     selectedIds.has(product.id)
-                      ? "bg-primary/10 border border-primary/20"
-                      : "hover:bg-muted"
+                      ? "bg-primary/10 ring-1 ring-primary/30"
+                      : "bg-background hover:bg-muted"
                   )}
                   onClick={() => toggleProduct(product)}
                 >
                   <Checkbox
                     checked={selectedIds.has(product.id)}
-                    onCheckedChange={() => toggleProduct(product)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
                   {product.foto_url ? (
                     <img
                       src={product.foto_url}
                       alt={product.nome}
-                      className="w-10 h-10 object-cover rounded"
+                      className="w-12 h-12 object-cover rounded-lg"
                     />
                   ) : (
-                    <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
+                    <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
                       <Package className="h-5 w-5 text-muted-foreground" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{product.nome}</p>
-                    <div className="flex gap-2 text-xs text-muted-foreground">
-                      {showCodes && product.codigo && <span>{product.codigo}</span>}
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {showCodes && product.codigo && (
+                        <span className="text-xs text-muted-foreground">{product.codigo}</span>
+                      )}
                       {showPrices && product.preco_tabela && (
-                        <span className="font-medium text-foreground">
+                        <span className="text-xs font-semibold text-primary">
                           {formatPrice(product.preco_tabela)}
                         </span>
                       )}
@@ -204,52 +226,65 @@ export const StepProducts: React.FC<StepProductsProps> = ({
       </div>
 
       {/* Selected Products & Layout */}
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <Label>Produtos Selecionados ({selectedProducts.length})</Label>
-          <div className="flex items-center gap-2">
-            <LayoutGrid className="h-4 w-4 text-muted-foreground" />
-            <Select
-              value={page.layout || 'grid-3'}
-              onValueChange={(v) => onChange({ ...page, layout: v as CatalogPage['layout'] })}
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LAYOUT_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="space-y-1">
+            <h3 className="text-lg font-medium">Selecionados</h3>
+            <p className="text-sm text-muted-foreground">
+              {selectedProducts.length} produto{selectedProducts.length !== 1 ? 's' : ''}
+            </p>
           </div>
+          <Select
+            value={page.layout || 'grid-3'}
+            onValueChange={(v) => onChange({ ...page, layout: v as CatalogPage['layout'] })}
+          >
+            <SelectTrigger className="w-[140px] h-10 rounded-lg">
+              <div className="flex items-center gap-2">
+                <LayoutIcon className="h-4 w-4" />
+                <SelectValue />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              {LAYOUT_OPTIONS.map((opt) => {
+                const Icon = getLayoutIcon(opt.value);
+                return (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    <div className="flex items-center gap-2">
+                      <Icon className="h-4 w-4" />
+                      {opt.label}
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
 
-        <ScrollArea className="h-[400px] border rounded-lg">
+        {/* Selected Products List */}
+        <ScrollArea className="h-[320px] rounded-xl border bg-muted/20">
           {selectedProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-              <Package className="h-8 w-8 mb-2" />
-              <p>Selecione produtos à esquerda</p>
+              <Package className="h-8 w-8 mb-2 opacity-50" />
+              <p className="text-sm">Selecione produtos à esquerda</p>
             </div>
           ) : (
-            <div className="p-2 space-y-1">
+            <div className="p-3 space-y-2">
               {selectedProducts.map((product, index) => (
                 <div
                   key={product.id}
-                  className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg group"
+                  className="flex items-center gap-3 p-3 bg-background rounded-xl group"
                 >
-                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-                  <span className="text-sm text-muted-foreground w-6">{index + 1}</span>
+                  <span className="text-xs text-muted-foreground w-5 text-center font-medium">
+                    {index + 1}
+                  </span>
                   {product.foto_url ? (
                     <img
                       src={product.foto_url}
                       alt={product.nome}
-                      className="w-8 h-8 object-cover rounded"
+                      className="w-10 h-10 object-cover rounded-lg"
                     />
                   ) : (
-                    <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                    <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
                       <Package className="h-4 w-4 text-muted-foreground" />
                     </div>
                   )}
@@ -257,7 +292,7 @@ export const StepProducts: React.FC<StepProductsProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                     onClick={() => removeProduct(product.id)}
                   >
                     <X className="h-4 w-4" />
@@ -268,26 +303,33 @@ export const StepProducts: React.FC<StepProductsProps> = ({
           )}
         </ScrollArea>
 
-        {/* Mini Preview */}
-        <div className="border rounded-lg p-4 bg-muted/30">
-          <p className="text-xs text-muted-foreground mb-2">Preview do Layout</p>
-          <div
-            className={cn(
-              "grid gap-2",
-              page.layout === 'grid-2' && "grid-cols-2",
-              page.layout === 'grid-3' && "grid-cols-3",
-              page.layout === 'grid-4' && "grid-cols-4",
-              page.layout === 'list' && "grid-cols-1"
-            )}
-          >
-            {Array.from({ length: Math.min(selectedProducts.length, 6) }).map((_, i) => (
-              <div
-                key={i}
-                className="aspect-square bg-muted rounded flex items-center justify-center"
-              >
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </div>
-            ))}
+        {/* Layout Preview */}
+        <div className="space-y-3">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+            Preview do Layout
+          </Label>
+          <div className="rounded-xl border bg-background p-4">
+            <div
+              className={cn(
+                "grid gap-2",
+                page.layout === 'grid-2' && "grid-cols-2",
+                page.layout === 'grid-3' && "grid-cols-3",
+                page.layout === 'grid-4' && "grid-cols-4",
+                page.layout === 'list' && "grid-cols-1"
+              )}
+            >
+              {Array.from({ length: Math.min(selectedProducts.length || 6, 6) }).map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "bg-muted rounded-lg flex items-center justify-center",
+                    page.layout === 'list' ? "h-12" : "aspect-square"
+                  )}
+                >
+                  <Package className="h-4 w-4 text-muted-foreground/50" />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
