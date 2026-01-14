@@ -7,6 +7,13 @@ export interface CatalogProduct {
   codigo?: string;
   categoria_nome?: string;
   grupo_nome?: string;
+  grupo_id?: string;
+}
+
+export interface ProductGroup {
+  id: string;
+  nome: string;
+  products: CatalogProduct[];
 }
 
 export interface CatalogPage {
@@ -25,6 +32,7 @@ export interface CatalogPage {
     website?: string;
     address?: string;
   };
+  groupByCategory?: boolean;
 }
 
 export interface CatalogConfig {
@@ -36,6 +44,7 @@ export interface CatalogConfig {
   fontFamily: string;
   showPrices: boolean;
   showCodes: boolean;
+  businessType?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -67,4 +76,12 @@ export const FONT_OPTIONS = [
   { value: 'Montserrat, sans-serif', label: 'Montserrat' },
   { value: 'Poppins, sans-serif', label: 'Poppins' },
   { value: 'Playfair Display, serif', label: 'Playfair Display' },
+] as const;
+
+export const COVER_STYLES = [
+  { id: 'elegant', label: 'Elegante', prompt: 'Professional elegant catalog cover with subtle gradients, deep blues and golds, minimalist geometric patterns' },
+  { id: 'modern', label: 'Moderno', prompt: 'Modern sleek catalog cover with clean lines, monochromatic scheme, abstract shapes' },
+  { id: 'nature', label: 'Natural', prompt: 'Natural organic catalog cover with soft earth tones, botanical elements, warm textures' },
+  { id: 'tech', label: 'Tecnológico', prompt: 'Futuristic tech catalog cover with digital patterns, neon accents, dark background' },
+  { id: 'luxury', label: 'Luxo', prompt: 'Luxury premium catalog cover with marble textures, gold accents, sophisticated black background' },
 ] as const;

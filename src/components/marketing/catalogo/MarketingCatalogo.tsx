@@ -96,6 +96,8 @@ const MarketingCatalogo: React.FC = () => {
             page={coverPage}
             onChange={setCoverPage}
             primaryColor={config.primaryColor}
+            catalogName={config.name}
+            businessType={config.businessType}
           />
         );
       case 2:

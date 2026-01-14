@@ -1,9 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Download, Loader2, ChevronLeft, ChevronRight, Package, FileText, Phone, Mail, Globe, MapPin } from 'lucide-react';
-import { CatalogConfig, CatalogPage, LAYOUT_OPTIONS } from './types';
+import { Download, Loader2, ChevronLeft, ChevronRight, Package, FileText, Phone, Mail, Globe, MapPin, Layers } from 'lucide-react';
+import { CatalogConfig, CatalogPage, CatalogProduct, LAYOUT_OPTIONS, ProductGroup } from './types';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -14,6 +14,13 @@ interface StepPreviewProps {
   coverPage: CatalogPage;
   productsPage: CatalogPage;
   backcoverPage: CatalogPage;
+}
+
+interface PageInfo {
+  type: 'cover' | 'group-header' | 'products' | 'backcover';
+  groupName?: string;
+  products?: CatalogProduct[];
+  startIdx?: number;
 }
 
 export const StepPreview: React.FC<StepPreviewProps> = ({
@@ -29,10 +36,58 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
   const products = productsPage.products || [];
   const layout = productsPage.layout || 'grid-3';
   const layoutConfig = LAYOUT_OPTIONS.find((l) => l.value === layout) || LAYOUT_OPTIONS[1];
-  const productsPerPage = layout === 'list' ? 8 : layoutConfig.cols * 3;
-  
-  const productPages = Math.ceil(products.length / productsPerPage);
-  const totalPages = 2 + productPages;
+  const productsPerPage = layout === 'list' ? 6 : layoutConfig.cols * 2;
+  const groupByCategory = productsPage.groupByCategory ?? true;
+
+  // Group products
+  const groupedProducts = useMemo((): ProductGroup[] => {
+    if (!groupByCategory) {
+      return [{ id: 'all', nome: 'Todos os Produtos', products }];
+    }
+
+    const groupMap = new Map<string, typeof products>();
+    products.forEach(product => {
+      const groupName = product.grupo_nome || 'Outros';
+      const groupId = product.grupo_id || 'outros';
+      const key = `${groupId}__${groupName}`;
+      
+      if (!groupMap.has(key)) {
+        groupMap.set(key, []);
+      }
+      groupMap.get(key)!.push(product);
+    });
+
+    return Array.from(groupMap.entries()).map(([key, prods]) => {
+      const [id, nome] = key.split('__');
+      return { id, nome, products: prods };
+    }).sort((a, b) => a.nome.localeCompare(b.nome));
+  }, [products, groupByCategory]);
+
+  // Build pages array
+  const pages = useMemo((): PageInfo[] => {
+    const result: PageInfo[] = [{ type: 'cover' }];
+
+    groupedProducts.forEach(group => {
+      if (groupByCategory && groupedProducts.length > 1) {
+        result.push({ type: 'group-header', groupName: group.nome });
+      }
+      
+      const totalProductPages = Math.ceil(group.products.length / productsPerPage);
+      for (let i = 0; i < totalProductPages; i++) {
+        result.push({
+          type: 'products',
+          groupName: group.nome,
+          products: group.products.slice(i * productsPerPage, (i + 1) * productsPerPage),
+          startIdx: i * productsPerPage,
+        });
+      }
+    });
+
+    result.push({ type: 'backcover' });
+    return result;
+  }, [groupedProducts, productsPerPage, groupByCategory]);
+
+  const totalPages = pages.length;
 
   const formatPrice = (price?: number) => {
     if (!price) return '';
@@ -60,7 +115,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
 
       for (let i = 0; i < totalPages; i++) {
         setCurrentPage(i);
-        await new Promise((r) => setTimeout(r, 150));
+        await new Promise((r) => setTimeout(r, 200));
 
         const canvas = await html2canvas(pdfRef.current, {
           scale: 2,
@@ -119,81 +174,113 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     </div>
   );
 
-  const renderProductPage = (pageIndex: number) => {
-    const startIdx = pageIndex * productsPerPage;
-    const pageProducts = products.slice(startIdx, startIdx + productsPerPage);
-
-    return (
-      <div
-        className="w-full h-full p-10 bg-white flex flex-col"
-        style={{ fontFamily: config.fontFamily }}
-      >
-        <div
-          className={cn(
-            "grid gap-5 flex-1 content-start",
-            layout === 'grid-2' && "grid-cols-2",
-            layout === 'grid-3' && "grid-cols-3",
-            layout === 'grid-4' && "grid-cols-4",
-            layout === 'list' && "grid-cols-1"
-          )}
-        >
-          {pageProducts.map((product) => (
-            <div
-              key={product.id}
-              className={cn(
-                "bg-muted/30 rounded-xl overflow-hidden flex flex-col",
-                layout === 'list' && "flex-row items-center"
-              )}
-            >
-              <div
-                className={cn(
-                  "bg-muted/50 flex items-center justify-center",
-                  layout === 'list' ? "w-24 h-24 flex-shrink-0" : "aspect-square"
-                )}
-              >
-                {product.foto_url ? (
-                  <img
-                    src={product.foto_url}
-                    alt={product.nome}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Package className="h-10 w-10 text-muted-foreground/50" />
-                )}
-              </div>
-              <div className={cn("p-4 flex-1", layout === 'list' && "flex flex-col justify-center")}>
-                <h3 className="font-semibold text-sm line-clamp-2 mb-1">{product.nome}</h3>
-                {config.showCodes && product.codigo && (
-                  <p className="text-xs text-muted-foreground mb-1">Cód: {product.codigo}</p>
-                )}
-                {config.showPrices && product.preco_tabela && (
-                  <p
-                    className="text-base font-bold"
-                    style={{ color: config.primaryColor }}
-                  >
-                    {formatPrice(product.preco_tabela)}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="text-center text-xs text-muted-foreground pt-4 border-t mt-auto">
-          Página {pageIndex + 2}
-        </div>
-      </div>
-    );
-  };
-
-  const renderBackcoverPage = () => (
+  const renderGroupHeader = (groupName: string) => (
     <div
       className="w-full h-full flex flex-col items-center justify-center p-16 text-center"
       style={{
-        backgroundColor: backcoverPage.backgroundColor || config.primaryColor,
+        backgroundColor: config.primaryColor,
         fontFamily: config.fontFamily,
       }}
     >
-      <div className="flex flex-col items-center gap-10 text-white max-w-md">
+      <div className="flex flex-col items-center gap-6">
+        <Layers className="h-16 w-16 text-white/60" />
+        <h2 className="text-4xl font-bold text-white tracking-tight">
+          {groupName}
+        </h2>
+        <div className="w-24 h-1 bg-white/30 rounded-full" />
+      </div>
+    </div>
+  );
+
+  const renderProductPage = (pageProducts: typeof products, groupName?: string) => (
+    <div
+      className="w-full h-full p-8 bg-white flex flex-col"
+      style={{ fontFamily: config.fontFamily }}
+    >
+      {/* Group Header */}
+      {groupByCategory && groupedProducts.length > 1 && (
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b">
+          <div 
+            className="w-1 h-6 rounded-full"
+            style={{ backgroundColor: config.primaryColor }}
+          />
+          <h3 className="text-lg font-semibold" style={{ color: config.primaryColor }}>
+            {groupName}
+          </h3>
+        </div>
+      )}
+
+      {/* Products Grid */}
+      <div
+        className={cn(
+          "grid gap-4 flex-1 content-start",
+          layout === 'grid-2' && "grid-cols-2",
+          layout === 'grid-3' && "grid-cols-3",
+          layout === 'grid-4' && "grid-cols-4",
+          layout === 'list' && "grid-cols-1"
+        )}
+      >
+        {pageProducts.map((product) => (
+          <div
+            key={product.id}
+            className={cn(
+              "bg-slate-50 rounded-2xl overflow-hidden flex flex-col shadow-sm",
+              layout === 'list' && "flex-row items-center"
+            )}
+          >
+            <div
+              className={cn(
+                "bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center relative",
+                layout === 'list' ? "w-28 h-28 flex-shrink-0" : "aspect-square"
+              )}
+            >
+              {product.foto_url ? (
+                <img
+                  src={product.foto_url}
+                  alt={product.nome}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Package className="h-12 w-12 text-slate-300" />
+              )}
+            </div>
+            <div className={cn("p-4 flex-1", layout === 'list' && "flex flex-col justify-center")}>
+              <h3 className="font-semibold text-sm line-clamp-2 mb-2 text-slate-800">
+                {product.nome}
+              </h3>
+              {config.showCodes && product.codigo && (
+                <p className="text-xs text-slate-500 mb-1">Cód: {product.codigo}</p>
+              )}
+              {config.showPrices && product.preco_tabela && (
+                <p
+                  className="text-lg font-bold"
+                  style={{ color: config.primaryColor }}
+                >
+                  {formatPrice(product.preco_tabela)}
+                </p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderBackcoverPage = () => (
+    <div
+      className="w-full h-full flex flex-col items-center justify-center p-16 text-center relative"
+      style={{
+        backgroundColor: backcoverPage.backgroundColor || config.primaryColor,
+        backgroundImage: backcoverPage.backgroundImage ? `url(${backcoverPage.backgroundImage})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        fontFamily: config.fontFamily,
+      }}
+    >
+      {backcoverPage.backgroundImage && (
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70" />
+      )}
+      <div className="relative z-10 flex flex-col items-center gap-10 text-white max-w-md">
         {coverPage.logoUrl && (
           <img src={coverPage.logoUrl} alt="Logo" className="h-24 object-contain drop-shadow-lg opacity-90" />
         )}
@@ -232,15 +319,31 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
   );
 
   const renderCurrentPage = () => {
-    if (currentPage === 0) return renderCoverPage();
-    if (currentPage === totalPages - 1) return renderBackcoverPage();
-    return renderProductPage(currentPage - 1);
+    const pageInfo = pages[currentPage];
+    
+    switch (pageInfo.type) {
+      case 'cover':
+        return renderCoverPage();
+      case 'group-header':
+        return renderGroupHeader(pageInfo.groupName!);
+      case 'products':
+        return renderProductPage(pageInfo.products!, pageInfo.groupName);
+      case 'backcover':
+        return renderBackcoverPage();
+      default:
+        return null;
+    }
   };
 
   const getPageLabel = () => {
-    if (currentPage === 0) return 'Capa';
-    if (currentPage === totalPages - 1) return 'Contracapa';
-    return `Produtos ${currentPage}/${productPages}`;
+    const pageInfo = pages[currentPage];
+    switch (pageInfo.type) {
+      case 'cover': return 'Capa';
+      case 'group-header': return `Seção: ${pageInfo.groupName}`;
+      case 'products': return pageInfo.groupName || 'Produtos';
+      case 'backcover': return 'Contracapa';
+      default: return '';
+    }
   };
 
   return (
@@ -253,6 +356,10 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
             <Badge variant="secondary" className="rounded-lg font-normal">
               <FileText className="h-3 w-3 mr-1" />
               {products.length} produtos
+            </Badge>
+            <Badge variant="secondary" className="rounded-lg font-normal">
+              <Layers className="h-3 w-3 mr-1" />
+              {groupedProducts.length} grupo{groupedProducts.length !== 1 ? 's' : ''}
             </Badge>
             <Badge variant="secondary" className="rounded-lg font-normal">
               {totalPages} páginas
@@ -318,7 +425,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
       {/* Thumbnails */}
       <ScrollArea className="w-full pb-2">
         <div className="flex gap-3">
-          {Array.from({ length: totalPages }).map((_, i) => (
+          {pages.map((pageInfo, i) => (
             <button
               key={i}
               onClick={() => setCurrentPage(i)}
@@ -332,31 +439,36 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
             >
               <div 
                 className={cn(
-                  "w-full h-full flex flex-col items-center justify-center text-xs gap-1",
-                  i === 0 || i === totalPages - 1 
+                  "w-full h-full flex flex-col items-center justify-center text-xs gap-1 p-1",
+                  (pageInfo.type === 'cover' || pageInfo.type === 'backcover' || pageInfo.type === 'group-header')
                     ? "text-white" 
                     : "bg-muted text-muted-foreground"
                 )}
                 style={
-                  i === 0 || i === totalPages - 1 
+                  (pageInfo.type === 'cover' || pageInfo.type === 'backcover' || pageInfo.type === 'group-header')
                     ? { backgroundColor: config.primaryColor } 
                     : undefined
                 }
               >
-                {i === 0 ? (
+                {pageInfo.type === 'cover' ? (
                   <>
                     <FileText className="h-4 w-4" />
                     <span className="font-medium">Capa</span>
                   </>
-                ) : i === totalPages - 1 ? (
+                ) : pageInfo.type === 'backcover' ? (
                   <>
                     <Phone className="h-4 w-4" />
                     <span className="font-medium">Contra</span>
                   </>
+                ) : pageInfo.type === 'group-header' ? (
+                  <>
+                    <Layers className="h-4 w-4" />
+                    <span className="font-medium text-center line-clamp-2">{pageInfo.groupName}</span>
+                  </>
                 ) : (
                   <>
                     <Package className="h-4 w-4" />
-                    <span className="font-medium">P{i}</span>
+                    <span className="font-medium text-center line-clamp-2">{pageInfo.groupName}</span>
                   </>
                 )}
               </div>
