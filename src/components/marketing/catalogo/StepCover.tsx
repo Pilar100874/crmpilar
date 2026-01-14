@@ -226,12 +226,13 @@ export const StepCover: React.FC<StepCoverProps> = ({
               className="hidden"
             />
             {page.logoUrl ? (
-              <div className="relative inline-block group">
+              <div className="relative inline-block group" key={`logo-preview-${page.logoUrl.length}`}>
                 <img
-                  key={page.logoUrl.substring(0, 50)}
                   src={page.logoUrl}
                   alt="Logo"
-                  className="h-16 object-contain rounded-lg"
+                  className="h-16 object-contain rounded-lg border"
+                  onLoad={() => console.log('[StepCover] Logo image loaded in form')}
+                  onError={() => console.error('[StepCover] Logo image failed to load in form')}
                 />
                 <Button
                   type="button"
