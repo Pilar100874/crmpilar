@@ -13,7 +13,8 @@ import {
   Workflow,
   Link2,
   Server,
-  GitBranch
+  GitBranch,
+  BookOpen
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -33,6 +34,7 @@ import IntegrationCredentialsManager from '@/components/marketing/IntegrationCre
 import ResourceN8nGenerator from '@/components/marketing/ResourceN8nGenerator';
 import RailwayVariables from '@/components/marketing/RailwayVariables';
 import { N8nWorkflowEditor } from '@/components/marketing/n8n-editor';
+import { MarketingCatalogo } from '@/components/marketing/catalogo';
 
 interface TabItem {
   id: string;
@@ -44,6 +46,7 @@ interface TabItem {
 const tabItems: TabItem[] = [
   { id: 'recursos', label: 'Recursos IA', icon: Wand2, description: 'Crie conteúdo com IA e n8n' },
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
+  { id: 'catalogo', label: 'Catálogo', icon: BookOpen, description: 'Gere catálogos de produtos em PDF' },
   { id: 'n8n-generator', label: 'Gerador n8n', icon: Workflow, description: 'Gere workflows n8n com IA' },
   { id: 'railway-env', label: 'Variáveis Railway', icon: Server, description: 'Variáveis de ambiente para n8n' },
   { id: 'automacoes', label: 'Automações', icon: Zap, description: 'Fluxos automatizados de marketing' },
@@ -67,6 +70,8 @@ const MarketingHub: React.FC = () => {
         return <MarketingRecursos />;
       case 'galeria':
         return <MarketingGaleria />;
+      case 'catalogo':
+        return <MarketingCatalogo />;
       case 'n8n-generator':
         return <ResourceN8nGenerator />;
       case 'railway-env':
