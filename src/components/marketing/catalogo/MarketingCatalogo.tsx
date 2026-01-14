@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, ArrowRight, FileText } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileText, BookOpen } from 'lucide-react';
 import { CatalogConfig, CatalogPage, WIZARD_STEPS } from './types';
 import { CatalogWizardSteps } from './CatalogWizardSteps';
 import { StepInfo } from './StepInfo';
@@ -17,8 +16,8 @@ const MarketingCatalogo: React.FC = () => {
   const [config, setConfig] = useState<CatalogConfig>({
     name: '',
     pages: [],
-    primaryColor: '#1a1a1a',
-    secondaryColor: '#666666',
+    primaryColor: '#0f172a',
+    secondaryColor: '#64748b',
     fontFamily: 'Inter, sans-serif',
     showPrices: true,
     showCodes: true,
@@ -29,7 +28,7 @@ const MarketingCatalogo: React.FC = () => {
     type: 'cover',
     title: '',
     subtitle: '',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0f172a',
   });
 
   const [productsPage, setProductsPage] = useState<CatalogPage>({
@@ -43,7 +42,7 @@ const MarketingCatalogo: React.FC = () => {
     id: 'backcover',
     type: 'backcover',
     title: 'Entre em Contato',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0f172a',
     contactInfo: {},
   });
 
@@ -60,15 +59,15 @@ const MarketingCatalogo: React.FC = () => {
 
   const canProceed = () => {
     switch (currentStep) {
-      case 0: // Info
+      case 0:
         return config.name.trim().length > 0;
-      case 1: // Cover
+      case 1:
         return true;
-      case 2: // Products
+      case 2:
         return (productsPage.products?.length || 0) > 0;
-      case 3: // Backcover
+      case 3:
         return true;
-      case 4: // Preview
+      case 4:
         return true;
       default:
         return true;
@@ -132,51 +131,66 @@ const MarketingCatalogo: React.FC = () => {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Empty State */}
-      {!estabelecimentoId && (
-        <div className="text-center py-12 text-muted-foreground">
-          <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>Selecione um estabelecimento para criar catálogos</p>
+  if (!estabelecimentoId) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+          <BookOpen className="h-8 w-8 text-muted-foreground" />
         </div>
-      )}
+        <h3 className="text-lg font-medium mb-2">Nenhum estabelecimento selecionado</h3>
+        <p className="text-sm text-muted-foreground max-w-sm">
+          Selecione um estabelecimento para começar a criar catálogos de produtos
+        </p>
+      </div>
+    );
+  }
 
-      {estabelecimentoId && (
-        <>
-          {/* Wizard Steps */}
-          <CatalogWizardSteps
-            currentStep={currentStep}
-            onStepClick={setCurrentStep}
-          />
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-semibold tracking-tight">Criar Catálogo</h2>
+          <p className="text-sm text-muted-foreground">
+            Monte seu catálogo de produtos em poucos passos
+          </p>
+        </div>
+      </div>
 
-          {/* Step Content */}
-          <Card>
-            <CardContent className="pt-6">
-              {renderStep()}
-            </CardContent>
-          </Card>
+      {/* Wizard Steps */}
+      <CatalogWizardSteps
+        currentStep={currentStep}
+        onStepClick={setCurrentStep}
+      />
 
-          {/* Navigation */}
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              disabled={currentStep === 0}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
+      {/* Step Content */}
+      <div className="bg-card rounded-2xl border p-6 md:p-8">
+        {renderStep()}
+      </div>
 
-            {currentStep < WIZARD_STEPS.length - 1 && (
-              <Button onClick={handleNext} disabled={!canProceed()}>
-                Próximo
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            )}
-          </div>
-        </>
-      )}
+      {/* Navigation */}
+      <div className="flex items-center justify-between pt-4">
+        <Button
+          variant="outline"
+          onClick={handleBack}
+          disabled={currentStep === 0}
+          className="rounded-xl"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar
+        </Button>
+
+        {currentStep < WIZARD_STEPS.length - 1 && (
+          <Button 
+            onClick={handleNext} 
+            disabled={!canProceed()}
+            className="rounded-xl"
+          >
+            Próximo
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 };
