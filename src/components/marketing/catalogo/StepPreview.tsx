@@ -272,105 +272,166 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     </div>
   );
 
-  // Product Page - Clean grid with editorial typography
-  const renderProductPage = (pageProducts: typeof products, groupName?: string, pageNumber?: number) => (
-    <div
-      className="w-full h-full flex flex-col bg-white relative"
-      style={{ fontFamily: config.fontFamily }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100">
-        {coverPage.logoUrl && (
-          <img src={coverPage.logoUrl} alt="Logo" className="h-6 object-contain opacity-60" />
-        )}
-        <span className="text-xs text-gray-400 tracking-widest uppercase">
-          {groupName || 'Products'}
-        </span>
-      </div>
+  // Product Page - Reference design with group header, description and product cards
+  const renderProductPage = (pageProducts: typeof products, groupName?: string, pageNumber?: number) => {
+    // Get first word and rest for styling
+    const groupWords = (groupName || 'Products').split(' ');
+    const firstWord = groupWords[0] || '';
+    const restWords = groupWords.slice(1).join(' ');
+    
+    return (
+      <div
+        className="w-full h-full flex flex-col bg-white relative"
+        style={{ fontFamily: config.fontFamily }}
+      >
+        {/* Decorative accent bar on left side */}
+        <div 
+          className="absolute left-0 top-0 w-[35%] h-[140px]"
+          style={{ backgroundColor: config.primaryColor || '#C9A961' }}
+        />
 
-      {/* Category Title */}
-      <div className="px-8 py-6">
-        <h3 className="text-2xl">
-          <span className="font-serif italic text-gray-400">Product</span>
-          {' '}
-          <span className="font-bold uppercase text-gray-900">Category</span>
-        </h3>
-      </div>
-
-      {/* Products Grid */}
-      <div className="flex-1 px-8 pb-6">
-        <div
-          className={cn(
-            "grid gap-5 h-full content-start",
-            layout === 'grid-2' && "grid-cols-2",
-            layout === 'grid-3' && "grid-cols-3",
-            layout === 'grid-4' && "grid-cols-4",
-            layout === 'list' && "grid-cols-1"
-          )}
-        >
-          {pageProducts.map((product, idx) => (
-            <div
-              key={product.id}
-              className={cn(
-                "flex flex-col",
-                layout === 'list' && "flex-row items-center gap-6 p-4 bg-gray-50 rounded-xl"
-              )}
+        {/* Header Section with Group Title */}
+        <div className="relative z-10 px-8 pt-8 pb-4">
+          {/* Group Title */}
+          <h2 className="text-3xl tracking-wide">
+            <span 
+              className="font-light uppercase"
+              style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif' }}
             >
-              {/* Product Image */}
+              {firstWord}
+            </span>
+            {restWords && (
+              <>
+                <br />
+                <span 
+                  className="font-bold uppercase text-gray-900"
+                  style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', letterSpacing: '0.05em' }}
+                >
+                  {restWords}
+                </span>
+              </>
+            )}
+            {!restWords && (
+              <>
+                <br />
+                <span 
+                  className="font-bold uppercase text-gray-900"
+                  style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', letterSpacing: '0.05em' }}
+                >
+                  COLLECTION
+                </span>
+              </>
+            )}
+          </h2>
+          
+          {/* Description text */}
+          <p className="mt-3 text-[10px] text-gray-500 leading-relaxed max-w-[90%]">
+            Confira nossa seleção de produtos de alta qualidade, desenvolvidos para atender às suas necessidades com excelência e sofisticação.
+          </p>
+        </div>
+
+        {/* Products Grid */}
+        <div className="flex-1 px-6 pb-4 pt-2">
+          <div
+            className={cn(
+              "grid gap-x-4 gap-y-6 h-full content-start",
+              layout === 'grid-2' && "grid-cols-2",
+              layout === 'grid-3' && "grid-cols-3",
+              layout === 'grid-4' && "grid-cols-4",
+              layout === 'list' && "grid-cols-1"
+            )}
+          >
+            {pageProducts.map((product, idx) => (
               <div
+                key={product.id}
                 className={cn(
-                  "relative overflow-hidden rounded-xl bg-gray-100",
-                  layout === 'list' ? "w-24 h-24 flex-shrink-0" : "aspect-square"
+                  "flex flex-col",
+                  layout === 'list' && "flex-row items-center gap-6 p-4 bg-gray-50 rounded-xl"
                 )}
               >
-                {product.foto_url ? (
-                  <img
-                    src={product.foto_url}
-                    alt={product.nome}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Package className="h-10 w-10 text-gray-300" />
-                  </div>
-                )}
-              </div>
+                {/* Product Image - Clean with shadow */}
+                <div
+                  className={cn(
+                    "relative overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center",
+                    layout === 'list' ? "w-24 h-24 flex-shrink-0 rounded-lg" : "aspect-[4/5] rounded-sm"
+                  )}
+                  style={{ 
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                  }}
+                >
+                  {product.foto_url ? (
+                    <img
+                      src={product.foto_url}
+                      alt={product.nome}
+                      className="w-full h-full object-contain p-2"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="h-12 w-12 text-gray-300" />
+                    </div>
+                  )}
+                </div>
 
-              {/* Product Info */}
-              <div className={cn("pt-3 space-y-1", layout === 'list' && "pt-0 flex-1")}>
-                <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
-                  {product.nome}
-                </h4>
-                {config.showCodes && product.codigo && (
-                  <p className="text-xs text-gray-400">
-                    Ref: {product.codigo}
+                {/* Product Info - Following reference design */}
+                <div className={cn("pt-3 space-y-1", layout === 'list' && "pt-0 flex-1")}>
+                  {/* Product Name with icon */}
+                  <div className="flex items-center gap-1.5">
+                    <svg 
+                      className="h-3 w-3 flex-shrink-0" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2"
+                      style={{ color: config.primaryColor || '#C9A961' }}
+                    >
+                      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                      <line x1="3" y1="6" x2="21" y2="6" />
+                      <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                    <h4 className="font-semibold text-[11px] text-gray-800 line-clamp-1">
+                      {product.nome}
+                    </h4>
+                  </div>
+                  
+                  {/* Price - Gold/Yellow color like reference */}
+                  {config.showPrices && product.preco_tabela ? (
+                    <p 
+                      className="text-base font-bold"
+                      style={{ color: config.primaryColor || '#C9A961' }}
+                    >
+                      {formatPrice(product.preco_tabela)}
+                    </p>
+                  ) : (
+                    <p 
+                      className="text-base font-bold"
+                      style={{ color: config.primaryColor || '#C9A961' }}
+                    >
+                      Consulte
+                    </p>
+                  )}
+                  
+                  {/* Product description or code */}
+                  <p className="text-[8px] text-gray-400 leading-relaxed line-clamp-3">
+                    {product.descricao || (config.showCodes && product.codigo ? `Ref: ${product.codigo}` : 'Produto de alta qualidade desenvolvido para atender às suas necessidades.')}
                   </p>
-                )}
-                {config.showPrices && product.preco_tabela && (
-                  <p 
-                    className="text-base font-bold"
-                    style={{ color: config.primaryColor }}
-                  >
-                    {formatPrice(product.preco_tabela)}
-                  </p>
-                )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-8 py-3 border-t border-gray-100">
+          {coverPage.logoUrl && (
+            <img src={coverPage.logoUrl} alt="Logo" className="h-5 object-contain opacity-50" />
+          )}
+          <span className="text-[10px] text-gray-400">
+            {String(pageNumber || 1).padStart(2, '0')}
+          </span>
         </div>
       </div>
-
-      {/* Footer */}
-      <div className="flex items-center justify-between px-8 py-4 border-t border-gray-100">
-        <span className="text-xs text-gray-400">
-          www.empresa.com
-        </span>
-        <span className="text-xs text-gray-400">
-          {String(pageNumber || 1).padStart(2, '0')}
-        </span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   // Back Cover - Clean contact page
   const renderBackcoverPage = () => (
