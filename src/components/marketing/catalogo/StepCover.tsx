@@ -305,22 +305,32 @@ export const StepCover: React.FC<StepCoverProps> = ({
           <div className="rounded-2xl overflow-hidden shadow-2xl">
             <div
               className="aspect-[210/297] flex flex-col overflow-hidden bg-white"
-              style={{ fontFamily: 'Georgia, serif' }}
             >
               {/* Top White Header Section */}
               <div className="bg-white px-6 pt-12 pb-4 text-center">
-                <h1 className="text-2xl font-bold text-gray-900 tracking-[0.2em] uppercase">
+                <h1 
+                  className="text-3xl text-gray-900 tracking-[0.15em] uppercase"
+                  style={{ fontFamily: 'Times New Roman, Times, serif', fontWeight: 700 }}
+                >
                   {page.title || 'CATALOG'}
                 </h1>
                 {page.subtitle && (
-                  <p className="text-[7px] text-gray-500 tracking-[0.25em] uppercase mt-2">
+                  <p 
+                    className="text-[8px] text-gray-400 tracking-[0.3em] uppercase mt-2"
+                    style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
+                  >
                     {page.subtitle}
                   </p>
                 )}
                 {/* Year with decorative lines */}
                 <div className="flex items-center justify-center gap-2 mt-3">
                   <div className="w-8 h-px bg-gray-400" />
-                  <span className="text-xs text-gray-700 tracking-[0.15em]">{new Date().getFullYear()}</span>
+                  <span 
+                    className="text-xs text-gray-600 tracking-[0.15em]"
+                    style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
+                  >
+                    {new Date().getFullYear()}
+                  </span>
                   <div className="w-8 h-px bg-gray-400" />
                 </div>
               </div>

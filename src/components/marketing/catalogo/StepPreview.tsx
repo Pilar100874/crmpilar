@@ -152,23 +152,33 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
   const renderCoverPage = () => (
     <div
       className="w-full h-full flex flex-col relative overflow-hidden bg-white"
-      style={{ fontFamily: 'Georgia, serif' }}
     >
       {/* Top White Header Section */}
       <div className="bg-white px-8 pt-16 pb-6 text-center">
-        <h1 className="text-4xl font-bold text-gray-900 tracking-[0.2em] uppercase">
+        <h1 
+          className="text-5xl text-gray-900 tracking-[0.15em] uppercase"
+          style={{ fontFamily: 'Times New Roman, Times, serif', fontWeight: 700 }}
+        >
           {coverPage.title || config.name || 'CATALOG'}
         </h1>
         {coverPage.subtitle && (
-          <p className="text-[10px] text-gray-500 tracking-[0.3em] uppercase mt-3">
+          <p 
+            className="text-[11px] text-gray-400 tracking-[0.35em] uppercase mt-4"
+            style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
+          >
             {coverPage.subtitle}
           </p>
         )}
         {/* Year with decorative lines */}
-        <div className="flex items-center justify-center gap-3 mt-4">
-          <div className="w-12 h-px bg-gray-400" />
-          <span className="text-sm text-gray-700 tracking-[0.2em]">{currentYear}</span>
-          <div className="w-12 h-px bg-gray-400" />
+        <div className="flex items-center justify-center gap-4 mt-5">
+          <div className="w-14 h-px bg-gray-400" />
+          <span 
+            className="text-base text-gray-600 tracking-[0.2em]"
+            style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
+          >
+            {currentYear}
+          </span>
+          <div className="w-14 h-px bg-gray-400" />
         </div>
       </div>
 
