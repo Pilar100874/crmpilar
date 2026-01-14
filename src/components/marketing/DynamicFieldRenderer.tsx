@@ -621,6 +621,11 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
         {field.required && <span className="text-destructive">*</span>}
       </Label>
       {renderField()}
+      {field.placeholder && (
+        <p className="text-xs text-muted-foreground">
+          {field.placeholder}
+        </p>
+      )}
     </div>
   );
 };
