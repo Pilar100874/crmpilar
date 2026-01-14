@@ -335,13 +335,14 @@ export const StepCover: React.FC<StepCoverProps> = ({
                 </div>
               </div>
 
-              {/* Main Image Area with 5mm margins */}
+              {/* Main Image Area with 5mm margins - fixed position */}
               <div className="flex-1 px-[5mm] pb-[5mm]">
-                <div className="relative w-full h-full">
+                <div className="relative w-full h-full overflow-hidden">
                   {page.backgroundImage ? (
-                    <div 
-                      className="absolute inset-0 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${page.backgroundImage})` }}
+                    <img 
+                      src={page.backgroundImage}
+                      alt="Cover"
+                      className="absolute inset-0 w-full h-full object-cover object-center"
                     />
                   ) : (
                     <div className="absolute inset-0 bg-gray-300 flex items-center justify-center">
