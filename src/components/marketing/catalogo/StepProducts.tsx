@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Search, Package, X, LayoutGrid, Grid2X2, Grid3X3, List, Loader2 } from 'lucide-react';
-import { CatalogProduct, CatalogPage, LAYOUT_OPTIONS } from './types';
+import { Switch } from '@/components/ui/switch';
+import { Search, Package, X, LayoutGrid, Grid2X2, Grid3X3, List, Loader2, Layers } from 'lucide-react';
+import { CatalogProduct, CatalogPage, LAYOUT_OPTIONS, ProductGroup } from './types';
 import { useCatalogProducts } from './useCatalogProducts';
 import { cn } from '@/lib/utils';
 
@@ -41,6 +41,7 @@ export const StepProducts: React.FC<StepProductsProps> = ({
 
   const selectedProducts = page.products || [];
   const selectedIds = new Set(selectedProducts.map((p) => p.id));
+  const groupByCategory = page.groupByCategory ?? true;
 
   const toggleProduct = (product: CatalogProduct) => {
     if (selectedIds.has(product.id)) {
@@ -95,6 +96,28 @@ export const StepProducts: React.FC<StepProductsProps> = ({
     }
   };
 
+  // Group selected products by grupo_nome
+  const getGroupedProducts = (): ProductGroup[] => {
+    const groupMap = new Map<string, CatalogProduct[]>();
+    
+    selectedProducts.forEach(product => {
+      const groupName = product.grupo_nome || 'Outros';
+      const groupId = product.grupo_id || 'outros';
+      const key = `${groupId}__${groupName}`;
+      
+      if (!groupMap.has(key)) {
+        groupMap.set(key, []);
+      }
+      groupMap.get(key)!.push(product);
+    });
+
+    return Array.from(groupMap.entries()).map(([key, prods]) => {
+      const [id, nome] = key.split('__');
+      return { id, nome, products: prods };
+    }).sort((a, b) => a.nome.localeCompare(b.nome));
+  };
+
+  const groupedProducts = getGroupedProducts();
   const LayoutIcon = getLayoutIcon(page.layout || 'grid-3');
 
   return (
@@ -208,6 +231,11 @@ export const StepProducts: React.FC<StepProductsProps> = ({
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{product.nome}</p>
                     <div className="flex items-center gap-2 mt-0.5">
+                      {product.grupo_nome && (
+                        <span className="text-xs text-primary/80 bg-primary/10 px-2 py-0.5 rounded-full">
+                          {product.grupo_nome}
+                        </span>
+                      )}
                       {showCodes && product.codigo && (
                         <span className="text-xs text-muted-foreground">{product.codigo}</span>
                       )}
@@ -231,7 +259,7 @@ export const StepProducts: React.FC<StepProductsProps> = ({
           <div className="space-y-1">
             <h3 className="text-lg font-medium">Selecionados</h3>
             <p className="text-sm text-muted-foreground">
-              {selectedProducts.length} produto{selectedProducts.length !== 1 ? 's' : ''}
+              {selectedProducts.length} produto{selectedProducts.length !== 1 ? 's' : ''} em {groupedProducts.length} grupo{groupedProducts.length !== 1 ? 's' : ''}
             </p>
           </div>
           <Select
@@ -260,43 +288,74 @@ export const StepProducts: React.FC<StepProductsProps> = ({
           </Select>
         </div>
 
-        {/* Selected Products List */}
-        <ScrollArea className="h-[320px] rounded-xl border bg-muted/20">
+        {/* Group by Category Toggle */}
+        <div 
+          className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+          onClick={() => onChange({ ...page, groupByCategory: !groupByCategory })}
+        >
+          <div className="flex items-center gap-3">
+            <Layers className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p className="font-medium text-sm">Separar por grupos</p>
+              <p className="text-xs text-muted-foreground">Organiza produtos por grupos no PDF</p>
+            </div>
+          </div>
+          <Switch
+            checked={groupByCategory}
+            onCheckedChange={(v) => onChange({ ...page, groupByCategory: v })}
+          />
+        </div>
+
+        {/* Grouped Selected Products */}
+        <ScrollArea className="h-[340px] rounded-xl border bg-muted/20">
           {selectedProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
               <Package className="h-8 w-8 mb-2 opacity-50" />
               <p className="text-sm">Selecione produtos à esquerda</p>
             </div>
           ) : (
-            <div className="p-3 space-y-2">
-              {selectedProducts.map((product, index) => (
-                <div
-                  key={product.id}
-                  className="flex items-center gap-3 p-3 bg-background rounded-xl group"
-                >
-                  <span className="text-xs text-muted-foreground w-5 text-center font-medium">
-                    {index + 1}
-                  </span>
-                  {product.foto_url ? (
-                    <img
-                      src={product.foto_url}
-                      alt={product.nome}
-                      className="w-10 h-10 object-cover rounded-lg"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center">
-                      <Package className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  )}
-                  <span className="flex-1 text-sm truncate">{product.nome}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                    onClick={() => removeProduct(product.id)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+            <div className="p-3 space-y-4">
+              {groupedProducts.map((group) => (
+                <div key={group.id} className="space-y-2">
+                  <div className="flex items-center gap-2 px-2">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs font-semibold text-primary uppercase tracking-wider">
+                      {group.nome}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      ({group.products.length})
+                    </span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                  <div className="space-y-1">
+                    {group.products.map((product) => (
+                      <div
+                        key={product.id}
+                        className="flex items-center gap-3 p-2 bg-background rounded-lg group"
+                      >
+                        {product.foto_url ? (
+                          <img
+                            src={product.foto_url}
+                            alt={product.nome}
+                            className="w-9 h-9 object-cover rounded-lg"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 bg-muted rounded-lg flex items-center justify-center">
+                            <Package className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                        <span className="flex-1 text-sm truncate">{product.nome}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                          onClick={() => removeProduct(product.id)}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

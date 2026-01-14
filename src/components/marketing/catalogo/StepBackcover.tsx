@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { CatalogPage } from './types';
-import { Phone, Mail, Globe, MapPin } from 'lucide-react';
+import { CatalogPage, COVER_STYLES } from './types';
+import { Phone, Mail, Globe, MapPin, Sparkles, Loader2, X, ImageIcon } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface StepBackcoverProps {
   page: CatalogPage;
@@ -18,6 +22,10 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
   primaryColor,
   logoUrl 
 }) => {
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState<string>('elegant');
+  const bgInputRef = useRef<HTMLInputElement>(null);
+
   const updateContact = (field: keyof CatalogPage['contactInfo'], value: string) => {
     onChange({
       ...page,
@@ -26,6 +34,46 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
         [field]: value,
       },
     });
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      onChange({ ...page, backgroundImage: dataUrl });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearImage = () => {
+    onChange({ ...page, backgroundImage: undefined });
+  };
+
+  const generateAIImage = async () => {
+    setGeneratingImage(true);
+    try {
+      const style = COVER_STYLES.find(s => s.id === selectedStyle);
+      const { data, error } = await supabase.functions.invoke('catalog-ai', {
+        body: { 
+          action: 'generate-image',
+          prompt: `${style?.prompt || 'Professional elegant'} back cover for product catalog, suitable for contact information display`
+        }
+      });
+
+      if (error) throw error;
+      if (data.imageUrl) {
+        onChange({ ...page, backgroundImage: data.imageUrl });
+        toast.success('Imagem gerada com sucesso!');
+      }
+    } catch (error: any) {
+      console.error('Error generating image:', error);
+      toast.error(error.message || 'Erro ao gerar imagem');
+    } finally {
+      setGeneratingImage(false);
+    }
   };
 
   return (
@@ -112,6 +160,82 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
             </div>
           </div>
 
+          {/* AI Image Generation */}
+          <div className="space-y-3 pt-2">
+            <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+              Imagem de Fundo
+            </Label>
+            
+            <div className="grid grid-cols-5 gap-2">
+              {COVER_STYLES.map((style) => (
+                <button
+                  key={style.id}
+                  type="button"
+                  onClick={() => setSelectedStyle(style.id)}
+                  className={cn(
+                    "p-2 rounded-lg text-xs font-medium transition-all text-center",
+                    selectedStyle === style.id
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                  )}
+                >
+                  {style.label}
+                </button>
+              ))}
+            </div>
+
+            <Button
+              type="button"
+              onClick={generateAIImage}
+              disabled={generatingImage}
+              className="w-full h-10 gap-2"
+              variant="outline"
+            >
+              {generatingImage ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              {generatingImage ? 'Gerando...' : 'Gerar imagem com IA'}
+            </Button>
+
+            <input
+              ref={bgInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+
+            {page.backgroundImage ? (
+              <div className="relative group">
+                <img
+                  src={page.backgroundImage}
+                  alt="Background"
+                  className="w-full h-20 object-cover rounded-xl"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={clearImage}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => bgInputRef.current?.click()}
+                className="w-full h-14 border-2 border-dashed rounded-xl flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors text-xs"
+              >
+                <ImageIcon className="h-4 w-4" />
+                <span>Ou carregar do dispositivo</span>
+              </button>
+            )}
+          </div>
+
           <div className="space-y-3">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider">
               Cor de Fundo
@@ -150,9 +274,15 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
               className="aspect-[210/297] relative flex flex-col items-center justify-center p-12 text-center"
               style={{
                 backgroundColor: page.backgroundColor || primaryColor,
+                backgroundImage: page.backgroundImage ? `url(${page.backgroundImage})` : undefined,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
               }}
             >
-              <div className="flex flex-col items-center gap-8 text-white max-w-sm">
+              {page.backgroundImage && (
+                <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/70" />
+              )}
+              <div className="relative z-10 flex flex-col items-center gap-8 text-white max-w-sm">
                 {logoUrl && (
                   <img
                     src={logoUrl}
