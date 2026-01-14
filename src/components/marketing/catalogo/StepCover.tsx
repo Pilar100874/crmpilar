@@ -32,15 +32,17 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingText, setGeneratingText] = useState(false);
   const [imagePrompt, setImagePrompt] = useState('');
+  const [forceUpdate, setForceUpdate] = useState(0);
   
-  // Ref to store onChange to avoid stale closures
-  const onChangeRef = useRef(onChange);
-  const pageRef = useRef(page);
+  // Local state to track uploaded images for immediate display
+  const [localLogoUrl, setLocalLogoUrl] = useState<string | undefined>(page.logoUrl);
+  const [localBgImage, setLocalBgImage] = useState<string | undefined>(page.backgroundImage);
   
+  // Sync local state with props
   useEffect(() => {
-    onChangeRef.current = onChange;
-    pageRef.current = page;
-  }, [onChange, page]);
+    setLocalLogoUrl(page.logoUrl);
+    setLocalBgImage(page.backgroundImage);
+  }, [page.logoUrl, page.backgroundImage]);
 
   const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -54,20 +56,29 @@ export const StepCover: React.FC<StepCoverProps> = ({
       const dataUrl = event.target?.result as string;
       console.log(`[StepCover] File uploaded for ${field}, size: ${dataUrl.length} chars`);
       
-      // Use refs to get latest values
-      const currentPage = pageRef.current;
-      const currentOnChange = onChangeRef.current;
+      // Update local state immediately for visual feedback
+      if (field === 'logoUrl') {
+        setLocalLogoUrl(dataUrl);
+      } else {
+        setLocalBgImage(dataUrl);
+      }
       
-      const newPage = { ...currentPage, [field]: dataUrl };
+      // Update parent state
+      const newPage = { ...page, [field]: dataUrl };
       console.log(`[StepCover] Calling onChange, logoUrl exists: ${!!newPage.logoUrl}, backgroundImage exists: ${!!newPage.backgroundImage}`);
-      currentOnChange(newPage);
+      onChange(newPage);
+      setForceUpdate(prev => prev + 1);
     };
     reader.readAsDataURL(file);
   };
 
   const clearImage = (field: 'logoUrl' | 'backgroundImage') => {
-    const currentPage = pageRef.current;
-    onChangeRef.current({ ...currentPage, [field]: undefined });
+    if (field === 'logoUrl') {
+      setLocalLogoUrl(undefined);
+    } else {
+      setLocalBgImage(undefined);
+    }
+    onChange({ ...page, [field]: undefined });
   };
 
   const generateAIImage = useCallback(async () => {
@@ -116,8 +127,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
 
       if (data?.imageUrl) {
         console.log('[StepCover] Setting background image, length:', data.imageUrl.length);
-        const currentPage = pageRef.current;
-        const newPage = { ...currentPage, backgroundImage: data.imageUrl };
+        setLocalBgImage(data.imageUrl);
+        const newPage = { ...page, backgroundImage: data.imageUrl };
         onChange(newPage);
         toast.success('Imagem gerada com sucesso!', { id: 'ai-image' });
       } else {
@@ -150,9 +161,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
       if (error) throw error;
       if (data.suggestions?.length > 0) {
         const suggestion = data.suggestions[0];
-        const currentPage = pageRef.current;
         onChange({ 
-          ...currentPage, 
+          ...page, 
           title: suggestion.title,
           subtitle: suggestion.subtitle 
         });
@@ -225,10 +235,10 @@ export const StepCover: React.FC<StepCoverProps> = ({
               onChange={(e) => handleFileUpload(e, 'logoUrl')}
               className="hidden"
             />
-            {page.logoUrl ? (
-              <div className="relative inline-block group" key={`logo-preview-${page.logoUrl.length}`}>
+            {localLogoUrl ? (
+              <div className="relative inline-block group" key={`logo-preview-${forceUpdate}`}>
                 <img
-                  src={page.logoUrl}
+                  src={localLogoUrl}
                   alt="Logo"
                   className="h-16 object-contain rounded-lg border"
                   onLoad={() => console.log('[StepCover] Logo image loaded in form')}
