@@ -218,17 +218,20 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
 
         {/* Bottom Footer Section */}
         <div className="bg-white px-6 py-4 flex items-center justify-between">
-          {/* Logo bottom left */}
-          <div className="flex items-center gap-3">
+          {/* Logo bottom left - 3x3 cm */}
+          <div className="flex items-center">
             {coverPage.logoUrl ? (
               <img 
                 key={coverPage.logoUrl.substring(0, 100)}
                 src={coverPage.logoUrl} 
                 alt="Logo" 
-                className="h-8 object-contain" 
+                style={{ width: '30mm', height: '30mm', objectFit: 'contain' }}
               />
             ) : (
-              <div className="w-10 h-10 border border-gray-300 rounded flex items-center justify-center">
+              <div 
+                className="border border-gray-300 rounded flex items-center justify-center"
+                style={{ width: '30mm', height: '30mm' }}
+              >
                 <span className="text-[8px] text-gray-400 uppercase">Logo</span>
               </div>
             )}
