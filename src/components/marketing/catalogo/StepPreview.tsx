@@ -148,63 +148,72 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     }
   };
 
-  // Cover Page - Editorial style matching reference
+  // Cover Page - Exactly matching reference design
   const renderCoverPage = () => (
     <div
-      className="w-full h-full flex flex-col relative overflow-hidden"
-      style={{ fontFamily: config.fontFamily }}
+      className="w-full h-full flex flex-col relative overflow-hidden bg-white"
+      style={{ fontFamily: 'Georgia, serif' }}
     >
-      {/* Background Image - Full bleed */}
-      {coverPage.backgroundImage ? (
-        <>
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${coverPage.backgroundImage})` }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40" />
-        </>
-      ) : (
-        <div 
-          className="absolute inset-0"
-          style={{ backgroundColor: coverPage.backgroundColor || '#6b7280' }}
-        />
-      )}
-
-      {/* Top Section - Title & Subtitle */}
-      <div className="relative z-10 flex flex-col items-center pt-12 px-8">
-        <h1 className="text-5xl font-bold text-white tracking-widest uppercase text-center">
+      {/* Top White Header Section */}
+      <div className="bg-white px-8 pt-10 pb-6 text-center">
+        <h1 className="text-4xl font-bold text-gray-900 tracking-[0.2em] uppercase">
           {coverPage.title || config.name || 'CATALOG'}
         </h1>
         {coverPage.subtitle && (
-          <p className="text-xs text-white/70 tracking-[0.3em] uppercase mt-3">
+          <p className="text-[10px] text-gray-500 tracking-[0.3em] uppercase mt-3">
             {coverPage.subtitle}
           </p>
         )}
         {/* Year with decorative lines */}
-        <div className="flex items-center gap-4 mt-6">
-          <div className="w-16 h-px bg-white/50" />
-          <span className="text-lg text-white font-light tracking-widest">{currentYear}</span>
-          <div className="w-16 h-px bg-white/50" />
+        <div className="flex items-center justify-center gap-3 mt-4">
+          <div className="w-12 h-px bg-gray-400" />
+          <span className="text-sm text-gray-700 tracking-[0.2em]">{currentYear}</span>
+          <div className="w-12 h-px bg-gray-400" />
         </div>
       </div>
 
-      {/* Spacer for image area */}
-      <div className="flex-1" />
+      {/* Main Image Area */}
+      <div className="flex-1 relative">
+        {coverPage.backgroundImage ? (
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${coverPage.backgroundImage})` }}
+          />
+        ) : (
+          <div 
+            className="absolute inset-0 bg-gray-300"
+          />
+        )}
+      </div>
 
-      {/* Bottom Section - Logo & Footer */}
-      <div className="relative z-10 flex items-end justify-between p-8">
+      {/* Bottom Footer Section */}
+      <div className="bg-white px-6 py-4 flex items-center justify-between">
         {/* Logo bottom left */}
-        <div className="flex flex-col items-start gap-3">
-          {coverPage.logoUrl && (
-            <img src={coverPage.logoUrl} alt="Logo" className="h-12 object-contain" />
+        <div className="flex items-center gap-3">
+          {coverPage.logoUrl ? (
+            <img src={coverPage.logoUrl} alt="Logo" className="h-8 object-contain" />
+          ) : (
+            <div className="w-10 h-10 border border-gray-300 rounded flex items-center justify-center">
+              <span className="text-[8px] text-gray-400 uppercase">Logo</span>
+            </div>
           )}
         </div>
 
-        {/* Footer center/right */}
-        <div className="flex items-center gap-8 text-white/60 text-xs">
-          <span className="tracking-wider">{config.name || 'Product Catalog'}</span>
-          <span className="tracking-wider">www.empresa.com</span>
+        {/* Footer center */}
+        <div className="flex items-center gap-1 text-gray-600">
+          <span className="text-xs" style={{ fontFamily: 'Georgia, serif' }}>
+            <span className="font-normal">Home</span>
+            {' '}
+            <span className="font-bold">Design</span>
+            {' '}
+            <span className="font-normal">Catalog</span>
+          </span>
         </div>
+
+        {/* Website right */}
+        <span className="text-[10px] text-gray-500 tracking-wider">
+          www.empresa.com
+        </span>
       </div>
     </div>
   );
