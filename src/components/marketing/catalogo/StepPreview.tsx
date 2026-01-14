@@ -148,7 +148,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     }
   };
 
-  // Cover Page - Editorial style with large product image and clean typography
+  // Cover Page - Editorial style matching reference
   const renderCoverPage = () => (
     <div
       className="w-full h-full flex flex-col relative overflow-hidden"
@@ -161,48 +161,49 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${coverPage.backgroundImage})` }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40" />
         </>
       ) : (
         <div 
           className="absolute inset-0"
-          style={{ backgroundColor: coverPage.backgroundColor || '#1a1a1a' }}
+          style={{ backgroundColor: coverPage.backgroundColor || '#6b7280' }}
         />
       )}
 
-      {/* Top Header */}
-      <div className="relative z-10 flex items-center justify-between p-8">
-        {coverPage.logoUrl && (
-          <img src={coverPage.logoUrl} alt="Logo" className="h-12 object-contain" />
+      {/* Top Section - Title & Subtitle */}
+      <div className="relative z-10 flex flex-col items-center pt-12 px-8">
+        <h1 className="text-5xl font-bold text-white tracking-widest uppercase text-center">
+          {coverPage.title || config.name || 'CATALOG'}
+        </h1>
+        {coverPage.subtitle && (
+          <p className="text-xs text-white/70 tracking-[0.3em] uppercase mt-3">
+            {coverPage.subtitle}
+          </p>
         )}
-        <span className="text-white/60 text-sm tracking-widest uppercase">
-          {coverPage.subtitle || 'Product Catalog'}
-        </span>
+        {/* Year with decorative lines */}
+        <div className="flex items-center gap-4 mt-6">
+          <div className="w-16 h-px bg-white/50" />
+          <span className="text-lg text-white font-light tracking-widest">{currentYear}</span>
+          <div className="w-16 h-px bg-white/50" />
+        </div>
       </div>
 
-      {/* Centered Content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-12">
-        <div className="text-center space-y-6">
-          <h1 className="text-6xl font-light text-white tracking-tight uppercase">
-            <span className="font-serif italic">
-              {(coverPage.title || config.name || 'CATALOG')?.split(' ')[0]}
-            </span>
-          </h1>
-          {(coverPage.title || config.name || 'CATALOG')?.split(' ').slice(1).join(' ') && (
-            <h1 className="text-6xl font-bold text-white tracking-tight uppercase">
-              {(coverPage.title || config.name || 'CATALOG')?.split(' ').slice(1).join(' ')}
-            </h1>
+      {/* Spacer for image area */}
+      <div className="flex-1" />
+
+      {/* Bottom Section - Logo & Footer */}
+      <div className="relative z-10 flex items-end justify-between p-8">
+        {/* Logo bottom left */}
+        <div className="flex flex-col items-start gap-3">
+          {coverPage.logoUrl && (
+            <img src={coverPage.logoUrl} alt="Logo" className="h-12 object-contain" />
           )}
         </div>
-      </div>
 
-      {/* Bottom - Year */}
-      <div className="relative z-10 flex items-end justify-between p-8">
-        <div className="flex items-baseline gap-2">
-          <span className="text-8xl font-light text-white/20">{currentYear}</span>
-        </div>
-        <div className="text-right text-white/50 text-xs tracking-wider uppercase">
-          www.empresa.com
+        {/* Footer center/right */}
+        <div className="flex items-center gap-8 text-white/60 text-xs">
+          <span className="tracking-wider">{config.name || 'Product Catalog'}</span>
+          <span className="tracking-wider">www.empresa.com</span>
         </div>
       </div>
     </div>
