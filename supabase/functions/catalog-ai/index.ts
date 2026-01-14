@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,8 +12,10 @@ serve(async (req) => {
   }
 
   try {
-    const { action, prompt, catalogName, businessType } = await req.json();
+    const { action, prompt, catalogName, businessType, estabelecimentoId } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
@@ -42,6 +45,8 @@ PHOTOGRAPHY STYLE REQUIREMENTS:
 ${realisticPrompt}
 
 IMPORTANT: The image must work as a full-bleed backdrop for white text overlay. No text, no borders, no margins - just pure visual content that fills the entire frame. Ultra high resolution.`;
+
+      console.log("[catalog-ai] Generating image with prompt:", prompt);
 
       // Generate image using Lovable AI
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -81,13 +86,63 @@ IMPORTANT: The image must work as a full-bleed backdrop for white text overlay. 
       }
 
       const data = await response.json();
-      const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      const base64Image = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
       
-      if (!imageUrl) {
+      if (!base64Image) {
         throw new Error("No image generated");
       }
 
-      return new Response(JSON.stringify({ imageUrl }), {
+      console.log("[catalog-ai] Image generated, base64 length:", base64Image.length);
+
+      // Try to upload to Supabase storage if available
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && estabelecimentoId) {
+        try {
+          const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          
+          // Extract base64 data
+          const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
+          const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+          
+          // Generate unique filename
+          const filename = `catalog-covers/${estabelecimentoId}/${Date.now()}.png`;
+          
+          // Upload to storage
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('produtos')
+            .upload(filename, binaryData, {
+              contentType: 'image/png',
+              upsert: true
+            });
+
+          if (uploadError) {
+            console.error("[catalog-ai] Storage upload error:", uploadError);
+            // Fall back to returning base64
+            return new Response(JSON.stringify({ imageUrl: base64Image }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+
+          // Get public URL
+          const { data: urlData } = supabase.storage
+            .from('produtos')
+            .getPublicUrl(filename);
+
+          console.log("[catalog-ai] Image uploaded to storage:", urlData.publicUrl);
+
+          return new Response(JSON.stringify({ imageUrl: urlData.publicUrl }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } catch (storageError) {
+          console.error("[catalog-ai] Storage error:", storageError);
+          // Fall back to returning base64
+          return new Response(JSON.stringify({ imageUrl: base64Image }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      // If no storage available, return base64
+      return new Response(JSON.stringify({ imageUrl: base64Image }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

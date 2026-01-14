@@ -98,6 +98,7 @@ const MarketingCatalogo: React.FC = () => {
             primaryColor={config.primaryColor}
             catalogName={config.name}
             businessType={config.businessType}
+            estabelecimentoId={estabelecimentoId}
           />
         );
       case 2:
