@@ -902,8 +902,8 @@ export const ContentWizardDialog: React.FC<ContentWizardDialogProps> = ({
   const hasPublishStep = wizardSteps.some(s => s.type === 'publish');
 
   return (
-    <Dialog open={open} onOpenChange={handleClose} modal={false}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader className="px-6 pt-6 pb-4 border-b pr-12">
           <div className="flex items-center justify-between gap-4">
             <DialogTitle className="flex items-center gap-2 min-w-0 flex-shrink">

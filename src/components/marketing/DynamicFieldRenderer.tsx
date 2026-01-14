@@ -440,10 +440,18 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'selection_text':
         return (
           <Select value={value || ""} onValueChange={(val) => onChange(val)}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger 
+              className="w-full" 
+              onPointerDown={(e) => e.stopPropagation()}
+            >
               <SelectValue placeholder="Selecione uma opção" />
             </SelectTrigger>
-            <SelectContent className="bg-background border shadow-lg z-50 max-h-60">
+            <SelectContent 
+              className="bg-background border shadow-lg max-h-60"
+              style={{ zIndex: 999999 }}
+              position="popper"
+              sideOffset={4}
+            >
               {field.options?.map((option) => {
                 const optionValue = option.value || option.label || option.id;
                 return (
