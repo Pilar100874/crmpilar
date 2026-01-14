@@ -439,94 +439,67 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
         
       case 'selection_text':
         return (
-          <ScrollArea className="max-h-64 border rounded-lg">
-            <div className="p-2 space-y-1">
-              {field.options?.map((option) => {
-                const isSelected = value === option.value;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => onChange(option.value)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all ${
-                      isSelected
-                        ? 'bg-primary/10 border border-primary'
-                        : 'hover:bg-muted border border-transparent'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                      isSelected
-                        ? 'border-primary'
-                        : 'border-muted-foreground/40'
-                    }`}>
-                      {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
-                    </div>
-                    <span className="text-sm flex-1">{option.label}</span>
-                  </button>
-                );
-              })}
+          <Select value={value || ''} onValueChange={onChange}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecione uma opção" />
+            </SelectTrigger>
+            <SelectContent className="bg-background border shadow-lg z-50">
+              {field.options?.map((option) => (
+                <SelectItem key={option.id} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
               {(!field.options || field.options.length === 0) && (
-                <p className="text-center text-sm text-muted-foreground py-4">
+                <div className="text-center text-sm text-muted-foreground py-4 px-2">
                   Nenhuma opção configurada
-                </p>
+                </div>
               )}
-            </div>
-          </ScrollArea>
+            </SelectContent>
+          </Select>
         );
 
       case 'selection_text_image':
+        const selectedOption = field.options?.find(opt => opt.value === value);
         return (
-          <ScrollArea className="max-h-80 border rounded-lg">
-            <div className="p-2 space-y-2">
-              {field.options?.map((option) => {
-                const isSelected = value === option.value;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => onChange(option.value)}
-                    className={`w-full flex items-start gap-3 p-3 rounded-lg text-left transition-all ${
-                      isSelected
-                        ? 'bg-primary/10 border border-primary'
-                        : 'hover:bg-muted border border-transparent'
-                    }`}
-                  >
-                    {option.imageUrl && (
-                      <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 border">
-                        <img 
-                          src={option.imageUrl} 
-                          alt={option.label}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all shrink-0 ${
-                          isSelected
-                            ? 'border-primary'
-                            : 'border-muted-foreground/40'
-                        }`}>
-                          {isSelected && <div className="w-2 h-2 rounded-full bg-primary" />}
-                        </div>
-                        <span className="font-medium text-sm truncate">{option.label}</span>
-                      </div>
-                      {option.value && (
-                        <p className="text-xs text-muted-foreground line-clamp-2 ml-6">
-                          {option.value}
-                        </p>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-              {(!field.options || field.options.length === 0) && (
-                <p className="text-center text-sm text-muted-foreground py-4">
-                  Nenhuma opção configurada
-                </p>
+          <Select value={value || ''} onValueChange={onChange}>
+            <SelectTrigger className="w-full h-auto min-h-10">
+              {selectedOption ? (
+                <div className="flex items-center gap-2 py-1">
+                  {selectedOption.imageUrl && (
+                    <img 
+                      src={selectedOption.imageUrl} 
+                      alt={selectedOption.label}
+                      className="w-8 h-8 rounded object-cover"
+                    />
+                  )}
+                  <span>{selectedOption.label}</span>
+                </div>
+              ) : (
+                <SelectValue placeholder="Selecione uma opção" />
               )}
-            </div>
-          </ScrollArea>
+            </SelectTrigger>
+            <SelectContent className="bg-background border shadow-lg z-50">
+              {field.options?.map((option) => (
+                <SelectItem key={option.id} value={option.value} className="py-2">
+                  <div className="flex items-center gap-2">
+                    {option.imageUrl && (
+                      <img 
+                        src={option.imageUrl} 
+                        alt={option.label}
+                        className="w-8 h-8 rounded object-cover"
+                      />
+                    )}
+                    <span>{option.label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+              {(!field.options || field.options.length === 0) && (
+                <div className="text-center text-sm text-muted-foreground py-4 px-2">
+                  Nenhuma opção configurada
+                </div>
+              )}
+            </SelectContent>
+          </Select>
         );
 
       case 'product_name':
