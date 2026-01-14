@@ -308,7 +308,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
               style={{ fontFamily: 'Georgia, serif' }}
             >
               {/* Top White Header Section */}
-              <div className="bg-white px-6 pt-8 pb-4 text-center">
+              <div className="bg-white px-6 pt-12 pb-4 text-center">
                 <h1 className="text-2xl font-bold text-gray-900 tracking-[0.2em] uppercase">
                   {page.title || 'CATALOG'}
                 </h1>
