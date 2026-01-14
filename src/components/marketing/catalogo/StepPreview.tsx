@@ -149,77 +149,88 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
   };
 
   // Cover Page - Exactly matching reference design
-  const renderCoverPage = () => (
-    <div
-      className="w-full h-full flex flex-col relative overflow-hidden bg-white"
-    >
-      {/* Top White Header Section */}
-      <div className="bg-white px-8 pt-28 pb-6 text-center">
-        <h1 
-          className="text-5xl text-gray-900 tracking-[0.15em] uppercase"
-          style={{ fontFamily: 'Times New Roman, Times, serif', fontWeight: 700 }}
-        >
-          {coverPage.title || config.name || 'CATALOG'}
-        </h1>
-        {coverPage.subtitle && (
-          <p 
-            className="text-[11px] text-gray-400 tracking-[0.35em] uppercase mt-4"
-            style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
+  const renderCoverPage = () => {
+    // Debug log
+    console.log('[StepPreview] Rendering cover page, backgroundImage:', coverPage.backgroundImage ? `${coverPage.backgroundImage.substring(0, 50)}...` : 'none');
+    
+    return (
+      <div
+        className="w-full h-full flex flex-col relative overflow-hidden bg-white"
+      >
+        {/* Top White Header Section */}
+        <div className="bg-white px-8 pt-28 pb-6 text-center">
+          <h1 
+            className="text-5xl text-gray-900 tracking-[0.15em] uppercase"
+            style={{ fontFamily: 'Times New Roman, Times, serif', fontWeight: 700 }}
           >
-            {coverPage.subtitle}
-          </p>
-        )}
-        {/* Year with decorative lines */}
-        <div className="flex items-center justify-center gap-4 mt-5">
-          <div className="w-14 h-px bg-gray-400" />
+            {coverPage.title || config.name || 'CATALOG'}
+          </h1>
+          {coverPage.subtitle && (
+            <p 
+              className="text-[11px] text-gray-400 tracking-[0.35em] uppercase mt-4"
+              style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
+            >
+              {coverPage.subtitle}
+            </p>
+          )}
+          {/* Year with decorative lines */}
+          <div className="flex items-center justify-center gap-4 mt-5">
+            <div className="w-14 h-px bg-gray-400" />
+            <span 
+              className="text-base text-gray-600 tracking-[0.2em]"
+              style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
+            >
+              {currentYear}
+            </span>
+            <div className="w-14 h-px bg-gray-400" />
+          </div>
+        </div>
+
+        {/* Main Image Area with 5mm margins - fixed position */}
+        <div className="flex-1 px-[5mm] pb-[5mm]">
+          <div className="relative w-full h-full overflow-hidden">
+            {coverPage.backgroundImage ? (
+              <img 
+                key={coverPage.backgroundImage.substring(0, 100)}
+                src={coverPage.backgroundImage}
+                alt="Cover"
+                className="absolute inset-0 w-full h-full object-cover object-center"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gray-300" />
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Footer Section */}
+        <div className="bg-white px-6 py-4 flex items-center justify-between">
+          {/* Logo bottom left */}
+          <div className="flex items-center gap-3">
+            {coverPage.logoUrl ? (
+              <img 
+                key={coverPage.logoUrl.substring(0, 100)}
+                src={coverPage.logoUrl} 
+                alt="Logo" 
+                className="h-8 object-contain" 
+              />
+            ) : (
+              <div className="w-10 h-10 border border-gray-300 rounded flex items-center justify-center">
+                <span className="text-[8px] text-gray-400 uppercase">Logo</span>
+              </div>
+            )}
+          </div>
+
+          {/* Website right */}
           <span 
-            className="text-base text-gray-600 tracking-[0.2em]"
+            className="text-2xl text-gray-500 tracking-wider"
             style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
           >
-            {currentYear}
+            www.pilar.com.br
           </span>
-          <div className="w-14 h-px bg-gray-400" />
         </div>
       </div>
-
-      {/* Main Image Area with 5mm margins - fixed position */}
-      <div className="flex-1 px-[5mm] pb-[5mm]">
-        <div className="relative w-full h-full overflow-hidden">
-          {coverPage.backgroundImage ? (
-            <img 
-              src={coverPage.backgroundImage}
-              alt="Cover"
-              className="absolute inset-0 w-full h-full object-cover object-center"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gray-300" />
-          )}
-        </div>
-      </div>
-
-      {/* Bottom Footer Section */}
-      <div className="bg-white px-6 py-4 flex items-center justify-between">
-        {/* Logo bottom left */}
-        <div className="flex items-center gap-3">
-          {coverPage.logoUrl ? (
-            <img src={coverPage.logoUrl} alt="Logo" className="h-8 object-contain" />
-          ) : (
-            <div className="w-10 h-10 border border-gray-300 rounded flex items-center justify-center">
-              <span className="text-[8px] text-gray-400 uppercase">Logo</span>
-            </div>
-          )}
-        </div>
-
-        {/* Website right */}
-        <span 
-          className="text-2xl text-gray-500 tracking-wider"
-          style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
-        >
-          www.pilar.com.br
-        </span>
-      </div>
-    </div>
-  );
+    );
+  };
 
   // Group Header - Split design with image and text
   const renderGroupHeader = (groupName: string) => (
@@ -272,162 +283,149 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     </div>
   );
 
-  // Product Page - Reference design with group header, description and product cards
+  // Product Page - Reference design following the image: gold accent, clean header, product grid
   const renderProductPage = (pageProducts: typeof products, groupName?: string, pageNumber?: number) => {
-    // Get first word and rest for styling
-    const groupWords = (groupName || 'Products').split(' ');
-    const firstWord = groupWords[0] || '';
-    const restWords = groupWords.slice(1).join(' ');
+    const displayGroupName = groupName || 'NEW';
     
     return (
       <div
-        className="w-full h-full flex flex-col bg-white relative"
+        className="w-full h-full flex flex-col bg-white relative overflow-hidden"
         style={{ fontFamily: config.fontFamily }}
       >
-        {/* Decorative accent bar on left side */}
+        {/* Left gold accent bar */}
         <div 
-          className="absolute left-0 top-0 w-[35%] h-[140px]"
-          style={{ backgroundColor: config.primaryColor || '#C9A961' }}
+          className="absolute left-0 top-0 bottom-0 w-[12%]"
+          style={{ 
+            background: `linear-gradient(180deg, ${config.primaryColor || '#C9A961'} 0%, ${config.primaryColor || '#C9A961'}dd 100%)`
+          }}
         />
 
-        {/* Header Section with Group Title */}
-        <div className="relative z-10 px-8 pt-8 pb-4">
-          {/* Group Title */}
-          <h2 className="text-3xl tracking-wide">
-            <span 
-              className="font-light uppercase"
-              style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif' }}
-            >
-              {firstWord}
-            </span>
-            {restWords && (
-              <>
-                <br />
-                <span 
-                  className="font-bold uppercase text-gray-900"
-                  style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', letterSpacing: '0.05em' }}
-                >
-                  {restWords}
-                </span>
-              </>
-            )}
-            {!restWords && (
-              <>
-                <br />
-                <span 
-                  className="font-bold uppercase text-gray-900"
-                  style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', letterSpacing: '0.05em' }}
-                >
-                  COLLECTION
-                </span>
-              </>
-            )}
-          </h2>
-          
-          {/* Description text */}
-          <p className="mt-3 text-[10px] text-gray-500 leading-relaxed max-w-[90%]">
-            Confira nossa seleção de produtos de alta qualidade, desenvolvidos para atender às suas necessidades com excelência e sofisticação.
-          </p>
-        </div>
-
-        {/* Products Grid */}
-        <div className="flex-1 px-6 pb-4 pt-2">
-          <div
-            className={cn(
-              "grid gap-x-4 gap-y-6 h-full content-start",
-              layout === 'grid-2' && "grid-cols-2",
-              layout === 'grid-3' && "grid-cols-3",
-              layout === 'grid-4' && "grid-cols-4",
-              layout === 'list' && "grid-cols-1"
-            )}
-          >
-            {pageProducts.map((product, idx) => (
-              <div
-                key={product.id}
-                className={cn(
-                  "flex flex-col",
-                  layout === 'list' && "flex-row items-center gap-6 p-4 bg-gray-50 rounded-xl"
-                )}
+        {/* Main content area */}
+        <div className="relative z-10 flex-1 flex flex-col ml-[12%]">
+          {/* Header Section with Group Title */}
+          <div className="px-6 pt-8 pb-4">
+            {/* Group Title - Large and prominent */}
+            <h2 className="text-2xl leading-tight">
+              <span 
+                className="font-light uppercase text-gray-800 tracking-wide"
+                style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif' }}
               >
-                {/* Product Image - Clean with shadow */}
-                <div
-                  className={cn(
-                    "relative overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center",
-                    layout === 'list' ? "w-24 h-24 flex-shrink-0 rounded-lg" : "aspect-[4/5] rounded-sm"
-                  )}
-                  style={{ 
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-                  }}
-                >
-                  {product.foto_url ? (
-                    <img
-                      src={product.foto_url}
-                      alt={product.nome}
-                      className="w-full h-full object-contain p-2"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Package className="h-12 w-12 text-gray-300" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Product Info - Following reference design */}
-                <div className={cn("pt-3 space-y-1", layout === 'list' && "pt-0 flex-1")}>
-                  {/* Product Name with icon */}
-                  <div className="flex items-center gap-1.5">
-                    <svg 
-                      className="h-3 w-3 flex-shrink-0" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2"
-                      style={{ color: config.primaryColor || '#C9A961' }}
-                    >
-                      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                      <line x1="3" y1="6" x2="21" y2="6" />
-                      <path d="M16 10a4 4 0 0 1-8 0" />
-                    </svg>
-                    <h4 className="font-semibold text-[11px] text-gray-800 line-clamp-1">
-                      {product.nome}
-                    </h4>
-                  </div>
-                  
-                  {/* Price - Gold/Yellow color like reference */}
-                  {config.showPrices && product.preco_tabela ? (
-                    <p 
-                      className="text-base font-bold"
-                      style={{ color: config.primaryColor || '#C9A961' }}
-                    >
-                      {formatPrice(product.preco_tabela)}
-                    </p>
-                  ) : (
-                    <p 
-                      className="text-base font-bold"
-                      style={{ color: config.primaryColor || '#C9A961' }}
-                    >
-                      Consulte
-                    </p>
-                  )}
-                  
-                  {/* Product description or code */}
-                  <p className="text-[8px] text-gray-400 leading-relaxed line-clamp-3">
-                    {product.descricao || (config.showCodes && product.codigo ? `Ref: ${product.codigo}` : 'Produto de alta qualidade desenvolvido para atender às suas necessidades.')}
-                  </p>
-                </div>
-              </div>
-            ))}
+                {displayGroupName.toUpperCase()}
+              </span>
+              <br />
+              <span 
+                className="font-bold uppercase text-gray-900 text-3xl tracking-tight"
+                style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif' }}
+              >
+                COLLECTION
+              </span>
+            </h2>
+            
+            {/* Description text */}
+            <p className="mt-3 text-[9px] text-gray-500 leading-relaxed max-w-[95%]">
+              Lorem ipsum dolor sit amet, cons ectetur adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nost rud exerci tation ullamcorper.
+            </p>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between px-8 py-3 border-t border-gray-100">
-          {coverPage.logoUrl && (
-            <img src={coverPage.logoUrl} alt="Logo" className="h-5 object-contain opacity-50" />
-          )}
-          <span className="text-[10px] text-gray-400">
-            {String(pageNumber || 1).padStart(2, '0')}
-          </span>
+          {/* Products Grid */}
+          <div className="flex-1 px-6 pb-4 pt-2">
+            <div
+              className={cn(
+                "grid gap-x-4 gap-y-6 h-full content-start",
+                layout === 'grid-2' && "grid-cols-2",
+                layout === 'grid-3' && "grid-cols-3",
+                layout === 'grid-4' && "grid-cols-4",
+                layout === 'list' && "grid-cols-1"
+              )}
+            >
+              {pageProducts.map((product, idx) => (
+                <div
+                  key={product.id}
+                  className={cn(
+                    "flex flex-col",
+                    layout === 'list' && "flex-row items-center gap-6 p-4 bg-gray-50 rounded-xl"
+                  )}
+                >
+                  {/* Product Image - Clean with shadow */}
+                  <div
+                    className={cn(
+                      "relative overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center",
+                      layout === 'list' ? "w-24 h-24 flex-shrink-0 rounded-lg" : "aspect-[4/5] rounded-sm"
+                    )}
+                    style={{ 
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                    }}
+                  >
+                    {product.foto_url ? (
+                      <img
+                        src={product.foto_url}
+                        alt={product.nome}
+                        className="w-full h-full object-contain p-2"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="h-12 w-12 text-gray-300" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Product Info - Following reference design */}
+                  <div className={cn("pt-3 space-y-1", layout === 'list' && "pt-0 flex-1")}>
+                    {/* Product Name with icon */}
+                    <div className="flex items-center gap-1.5">
+                      <svg 
+                        className="h-3 w-3 flex-shrink-0" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2"
+                        style={{ color: config.primaryColor || '#C9A961' }}
+                      >
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <path d="M16 10a4 4 0 0 1-8 0" />
+                      </svg>
+                      <h4 className="font-semibold text-[11px] text-gray-800 line-clamp-1">
+                        {product.nome}
+                      </h4>
+                    </div>
+                    
+                    {/* Price - Gold/Yellow color like reference */}
+                    {config.showPrices && product.preco_tabela ? (
+                      <p 
+                        className="text-base font-bold"
+                        style={{ color: config.primaryColor || '#C9A961' }}
+                      >
+                        {formatPrice(product.preco_tabela)}
+                      </p>
+                    ) : (
+                      <p 
+                        className="text-base font-bold"
+                        style={{ color: config.primaryColor || '#C9A961' }}
+                      >
+                        Consulte
+                      </p>
+                    )}
+                    
+                    {/* Product description or code */}
+                    <p className="text-[8px] text-gray-400 leading-relaxed line-clamp-3">
+                      {product.descricao || (config.showCodes && product.codigo ? `Ref: ${product.codigo}` : 'Produto de alta qualidade desenvolvido para atender às suas necessidades.')}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
+            {coverPage.logoUrl && (
+              <img src={coverPage.logoUrl} alt="Logo" className="h-5 object-contain opacity-50" />
+            )}
+            <span className="text-[10px] text-gray-400">
+              {String(pageNumber || 1).padStart(2, '0')}
+            </span>
+          </div>
         </div>
       </div>
     );
