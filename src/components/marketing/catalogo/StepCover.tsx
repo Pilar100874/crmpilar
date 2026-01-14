@@ -306,7 +306,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
             <div
               className="aspect-[210/297] relative flex flex-col overflow-hidden"
               style={{
-                backgroundColor: page.backgroundColor || '#1a1a1a',
+                backgroundColor: page.backgroundColor || '#6b7280',
               }}
             >
               {/* Background Image - Full bleed */}
@@ -316,41 +316,44 @@ export const StepCover: React.FC<StepCoverProps> = ({
                     className="absolute inset-0 bg-cover bg-center"
                     style={{ backgroundImage: `url(${page.backgroundImage})` }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40" />
                 </>
               )}
 
-              {/* Top Header */}
-              <div className="relative z-10 flex items-center justify-between p-6">
-                {page.logoUrl && (
-                  <img src={page.logoUrl} alt="Logo" className="h-10 object-contain" />
+              {/* Top Section - Title & Subtitle */}
+              <div className="relative z-10 flex flex-col items-center pt-8 px-6">
+                <h1 className="text-3xl font-bold text-white tracking-widest uppercase text-center">
+                  {page.title || 'CATALOG'}
+                </h1>
+                {page.subtitle && (
+                  <p className="text-[8px] text-white/70 tracking-[0.25em] uppercase mt-2">
+                    {page.subtitle}
+                  </p>
                 )}
-                <span className="text-white/60 text-xs tracking-widest uppercase">
-                  {page.subtitle || 'Product Catalog'}
-                </span>
-              </div>
-
-              {/* Centered Content */}
-              <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-8">
-                <div className="text-center space-y-4">
-                  <h1 className="text-4xl font-light text-white tracking-tight uppercase">
-                    <span className="font-serif italic">
-                      {(page.title || 'CATALOG')?.split(' ')[0]}
-                    </span>
-                  </h1>
-                  {(page.title || 'CATALOG')?.split(' ').slice(1).join(' ') && (
-                    <h1 className="text-4xl font-bold text-white tracking-tight uppercase">
-                      {(page.title || 'CATALOG')?.split(' ').slice(1).join(' ')}
-                    </h1>
-                  )}
+                {/* Year with decorative lines */}
+                <div className="flex items-center gap-3 mt-4">
+                  <div className="w-10 h-px bg-white/50" />
+                  <span className="text-sm text-white font-light tracking-widest">{new Date().getFullYear()}</span>
+                  <div className="w-10 h-px bg-white/50" />
                 </div>
               </div>
 
-              {/* Bottom - Year */}
+              {/* Spacer for image area */}
+              <div className="flex-1" />
+
+              {/* Bottom Section - Logo & Footer */}
               <div className="relative z-10 flex items-end justify-between p-6">
-                <span className="text-6xl font-light text-white/20">{new Date().getFullYear()}</span>
-                <div className="text-right text-white/50 text-[10px] tracking-wider uppercase">
-                  www.empresa.com
+                {/* Logo bottom left */}
+                <div className="flex flex-col items-start gap-2">
+                  {page.logoUrl && (
+                    <img src={page.logoUrl} alt="Logo" className="h-8 object-contain" />
+                  )}
+                </div>
+
+                {/* Footer center/right */}
+                <div className="flex items-center gap-4 text-white/60 text-[8px]">
+                  <span className="tracking-wider">Product Catalog</span>
+                  <span className="tracking-wider">www.empresa.com</span>
                 </div>
               </div>
             </div>
