@@ -30,6 +30,12 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
   // Check if field name is empty
   const isEmptyName = !field.name.trim();
 
+  // Check if field name has spaces
+  const hasSpaces = /\s/.test(field.name);
+
+  // Check if field name has special characters (only allow letters, numbers and underscore)
+  const hasSpecialChars = /[^a-zA-Z0-9_]/.test(field.name);
+
   // Check if field name is duplicate
   const isDuplicateName = useMemo(() => {
     if (isEmptyName) return false;
@@ -38,7 +44,14 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
     );
   }, [field.name, field.id, allFields, isEmptyName]);
 
-  const hasNameError = isEmptyName || isDuplicateName;
+  const hasNameError = isEmptyName || isDuplicateName || hasSpaces || hasSpecialChars;
+
+  // Sanitize field name on change - remove spaces and special chars
+  const handleNameChange = (value: string) => {
+    // Replace spaces with underscores and remove special chars
+    const sanitized = value.replace(/\s/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+    onChange({ ...field, name: sanitized });
+  };
 
   const handleAddOption = () => {
     const newOption: FieldOption = {
@@ -370,7 +383,7 @@ export const ResourceFieldEditor: React.FC<ResourceFieldEditorProps> = ({
               <div className="relative">
                 <Input
                   value={field.name}
-                  onChange={(e) => onChange({ ...field, name: e.target.value })}
+                  onChange={(e) => handleNameChange(e.target.value)}
                   placeholder="nome_campo"
                   className={`h-9 ${hasNameError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                 />
