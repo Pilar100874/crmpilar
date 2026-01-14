@@ -155,7 +155,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
       style={{ fontFamily: 'Georgia, serif' }}
     >
       {/* Top White Header Section */}
-      <div className="bg-white px-8 pt-10 pb-6 text-center">
+      <div className="bg-white px-8 pt-16 pb-6 text-center">
         <h1 className="text-4xl font-bold text-gray-900 tracking-[0.2em] uppercase">
           {coverPage.title || config.name || 'CATALOG'}
         </h1>
