@@ -304,57 +304,67 @@ export const StepCover: React.FC<StepCoverProps> = ({
           </div>
           <div className="rounded-2xl overflow-hidden shadow-2xl">
             <div
-              className="aspect-[210/297] relative flex flex-col overflow-hidden"
-              style={{
-                backgroundColor: page.backgroundColor || '#6b7280',
-              }}
+              className="aspect-[210/297] flex flex-col overflow-hidden bg-white"
+              style={{ fontFamily: 'Georgia, serif' }}
             >
-              {/* Background Image - Full bleed */}
-              {page.backgroundImage && (
-                <>
-                  <div 
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${page.backgroundImage})` }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40" />
-                </>
-              )}
-
-              {/* Top Section - Title & Subtitle */}
-              <div className="relative z-10 flex flex-col items-center pt-8 px-6">
-                <h1 className="text-3xl font-bold text-white tracking-widest uppercase text-center">
+              {/* Top White Header Section */}
+              <div className="bg-white px-6 pt-8 pb-4 text-center">
+                <h1 className="text-2xl font-bold text-gray-900 tracking-[0.2em] uppercase">
                   {page.title || 'CATALOG'}
                 </h1>
                 {page.subtitle && (
-                  <p className="text-[8px] text-white/70 tracking-[0.25em] uppercase mt-2">
+                  <p className="text-[7px] text-gray-500 tracking-[0.25em] uppercase mt-2">
                     {page.subtitle}
                   </p>
                 )}
                 {/* Year with decorative lines */}
-                <div className="flex items-center gap-3 mt-4">
-                  <div className="w-10 h-px bg-white/50" />
-                  <span className="text-sm text-white font-light tracking-widest">{new Date().getFullYear()}</span>
-                  <div className="w-10 h-px bg-white/50" />
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <div className="w-8 h-px bg-gray-400" />
+                  <span className="text-xs text-gray-700 tracking-[0.15em]">{new Date().getFullYear()}</span>
+                  <div className="w-8 h-px bg-gray-400" />
                 </div>
               </div>
 
-              {/* Spacer for image area */}
-              <div className="flex-1" />
+              {/* Main Image Area */}
+              <div className="flex-1 relative">
+                {page.backgroundImage ? (
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${page.backgroundImage})` }}
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gray-300 flex items-center justify-center">
+                    <span className="text-gray-400 text-sm">Imagem gerada por IA</span>
+                  </div>
+                )}
+              </div>
 
-              {/* Bottom Section - Logo & Footer */}
-              <div className="relative z-10 flex items-end justify-between p-6">
+              {/* Bottom Footer Section */}
+              <div className="bg-white px-4 py-3 flex items-center justify-between">
                 {/* Logo bottom left */}
-                <div className="flex flex-col items-start gap-2">
-                  {page.logoUrl && (
-                    <img src={page.logoUrl} alt="Logo" className="h-8 object-contain" />
+                <div className="flex items-center">
+                  {page.logoUrl ? (
+                    <img src={page.logoUrl} alt="Logo" className="h-6 object-contain" />
+                  ) : (
+                    <div className="w-7 h-7 border border-gray-300 rounded flex items-center justify-center">
+                      <span className="text-[6px] text-gray-400 uppercase">Logo</span>
+                    </div>
                   )}
                 </div>
 
-                {/* Footer center/right */}
-                <div className="flex items-center gap-4 text-white/60 text-[8px]">
-                  <span className="tracking-wider">Product Catalog</span>
-                  <span className="tracking-wider">www.empresa.com</span>
+                {/* Footer center */}
+                <div className="text-gray-600 text-[8px]">
+                  <span className="font-normal">Home</span>
+                  {' '}
+                  <span className="font-bold">Design</span>
+                  {' '}
+                  <span className="font-normal">Catalog</span>
                 </div>
+
+                {/* Website right */}
+                <span className="text-[7px] text-gray-500 tracking-wider">
+                  www.empresa.com
+                </span>
               </div>
             </div>
           </div>
