@@ -119,7 +119,8 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
       }
       
       const previewUrl = URL.createObjectURL(file);
-      setFormData({ ...formData, [field]: previewUrl });
+      // Usar callback para evitar closure stale
+      setFormData(prev => ({ ...prev, [field]: previewUrl }));
     }
   };
 
