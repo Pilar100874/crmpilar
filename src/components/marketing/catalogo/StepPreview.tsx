@@ -363,14 +363,36 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
 
   // Helper to get selected fields for a group
   const getGroupFields = (groupName?: string): string[] => {
-    if (!groupName || !config.groupFieldConfigs) return ['codigo', 'descricao'];
+    if (!config.groupFieldConfigs || config.groupFieldConfigs.length === 0) {
+      return ['codigo', 'descricao'];
+    }
     
-    // Find group by name
+    if (!groupName) {
+      // Return first config's fields or default
+      return config.groupFieldConfigs[0]?.selectedFields || ['codigo', 'descricao'];
+    }
+    
+    // Find group by name in grouped products
     const group = groupedProducts.find(g => g.nome === groupName);
-    if (!group) return ['codigo', 'descricao'];
     
-    const fieldConfig = config.groupFieldConfigs.find(c => c.groupId === group.id);
-    return fieldConfig?.selectedFields || ['codigo', 'descricao'];
+    // Try to find by groupId first
+    if (group) {
+      const fieldConfig = config.groupFieldConfigs.find(c => c.groupId === group.id);
+      if (fieldConfig?.selectedFields && fieldConfig.selectedFields.length > 0) {
+        console.log('[StepPreview] Found config by groupId:', group.id, fieldConfig.selectedFields);
+        return fieldConfig.selectedFields;
+      }
+    }
+    
+    // Try to find by groupName
+    const fieldConfigByName = config.groupFieldConfigs.find(c => c.groupName === groupName);
+    if (fieldConfigByName?.selectedFields && fieldConfigByName.selectedFields.length > 0) {
+      console.log('[StepPreview] Found config by groupName:', groupName, fieldConfigByName.selectedFields);
+      return fieldConfigByName.selectedFields;
+    }
+    
+    console.log('[StepPreview] No config found for group:', groupName, 'Available configs:', config.groupFieldConfigs);
+    return ['codigo', 'descricao'];
   };
 
   // Helper to get field label
