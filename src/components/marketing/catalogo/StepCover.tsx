@@ -40,6 +40,12 @@ export const StepCover: React.FC<StepCoverProps> = ({
   // AI Images hook for gallery
   const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
   
+  // Store page in a ref to always have the latest value in async callbacks
+  const pageRef = useRef(page);
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
+  
   // Derived logo and background from page prop - use directly without local state
   const logoUrl = page.logoUrl;
   const bgImage = page.backgroundImage;
@@ -48,12 +54,6 @@ export const StepCover: React.FC<StepCoverProps> = ({
     onChange({ ...pageRef.current, backgroundImage: imageUrl });
     toast.success('Imagem selecionada!');
   };
-
-  // Store page in a ref to always have the latest value in async callbacks
-  const pageRef = useRef(page);
-  useEffect(() => {
-    pageRef.current = page;
-  }, [page]);
 
   const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
