@@ -19,15 +19,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Trash2, Pencil, Plus, Upload, X, Image } from "lucide-react";
+import { Trash2, Pencil, Plus } from "lucide-react";
 
 interface ProdutoGrupo {
   id: string;
   nome: string;
   percentual_comissao?: number;
-  imagem_referencia?: string | null;
-  imagem_catalogo?: string | null;
   estabelecimento_id: string;
 }
 
@@ -43,14 +40,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
   const [formData, setFormData] = useState({
     nome: "",
     percentual_comissao: "",
-    imagem_referencia: "",
-    imagem_catalogo: "",
   });
-  
-  // Estados para arquivos selecionados (igual ProdutosCRUD)
-  const [selectedFileReferencia, setSelectedFileReferencia] = useState<File | null>(null);
-  const [selectedFileCatalogo, setSelectedFileCatalogo] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -77,63 +67,6 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     }
   };
 
-  // Upload para Supabase Storage (igual ProdutosCRUD)
-  const uploadFile = async (file: File, folder: string): Promise<string | null> => {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${estabelecimentoId}/${folder}/${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('produtos')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('produtos')
-        .getPublicUrl(fileName);
-
-      return publicUrl;
-    } catch (error) {
-      console.error('Erro no upload:', error);
-      toast.error("Erro ao fazer upload da imagem");
-      return null;
-    }
-  };
-
-  // Handler EXATAMENTE igual ProdutosCRUD
-  const handleFileSelect = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: 'imagem_referencia' | 'imagem_catalogo'
-  ) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        toast.error("Por favor selecione um arquivo de imagem");
-        return;
-      }
-      
-      if (field === 'imagem_referencia') {
-        setSelectedFileReferencia(file);
-      } else {
-        setSelectedFileCatalogo(file);
-      }
-      
-      const previewUrl = URL.createObjectURL(file);
-      // Usar callback para evitar closure stale
-      setFormData(prev => ({ ...prev, [field]: previewUrl }));
-    }
-  };
-
-  const clearImage = (field: 'imagem_referencia' | 'imagem_catalogo') => {
-    setFormData(prev => ({ ...prev, [field]: "" }));
-    if (field === 'imagem_referencia') {
-      setSelectedFileReferencia(null);
-    } else {
-      setSelectedFileCatalogo(null);
-    }
-  };
-
   const handleSave = async () => {
     if (!formData.nome.trim()) {
       toast.error("Nome do grupo é obrigatório");
@@ -141,36 +74,10 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     }
 
     try {
-      setUploading(true);
-      
-      let imagemReferenciaUrl = formData.imagem_referencia;
-      let imagemCatalogoUrl = formData.imagem_catalogo;
-
-      // Upload dos arquivos selecionados para Storage
-      if (selectedFileReferencia) {
-        const url = await uploadFile(selectedFileReferencia, 'grupos-referencia');
-        if (url) imagemReferenciaUrl = url;
-      }
-      
-      if (selectedFileCatalogo) {
-        const url = await uploadFile(selectedFileCatalogo, 'grupos-catalogo');
-        if (url) imagemCatalogoUrl = url;
-      }
-
-      // Se a URL é blob:// mas não tem arquivo selecionado, manter a URL existente do banco
-      if (imagemReferenciaUrl?.startsWith('blob:') && !selectedFileReferencia) {
-        imagemReferenciaUrl = editingGrupo?.imagem_referencia || null;
-      }
-      if (imagemCatalogoUrl?.startsWith('blob:') && !selectedFileCatalogo) {
-        imagemCatalogoUrl = editingGrupo?.imagem_catalogo || null;
-      }
-
-      const grupoData: any = {
+      const grupoData = {
         estabelecimento_id: estabelecimentoId,
         nome: formData.nome,
         percentual_comissao: formData.percentual_comissao ? parseFloat(formData.percentual_comissao) : 0,
-        imagem_referencia: imagemReferenciaUrl || null,
-        imagem_catalogo: imagemCatalogoUrl || null,
       };
 
       if (editingGrupo) {
@@ -200,28 +107,20 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
 
       setShowDialog(false);
       setEditingGrupo(null);
-      setSelectedFileReferencia(null);
-      setSelectedFileCatalogo(null);
-      setFormData({ nome: "", percentual_comissao: "", imagem_referencia: "", imagem_catalogo: "" });
+      setFormData({ nome: "", percentual_comissao: "" });
       loadGrupos();
     } catch (error: any) {
       console.error('Erro ao salvar grupo:', error);
       toast.error("Erro ao salvar grupo");
-    } finally {
-      setUploading(false);
     }
   };
 
-  const handleEdit = (grupo: any) => {
+  const handleEdit = (grupo: ProdutoGrupo) => {
     setEditingGrupo(grupo);
     setFormData({
       nome: grupo.nome,
       percentual_comissao: grupo.percentual_comissao?.toString() || "0",
-      imagem_referencia: grupo.imagem_referencia || "",
-      imagem_catalogo: grupo.imagem_catalogo || "",
     });
-    setSelectedFileReferencia(null);
-    setSelectedFileCatalogo(null);
     setShowDialog(true);
   };
 
@@ -253,9 +152,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
         <h3 className="text-lg font-semibold">Grupos de Produtos</h3>
         <Button onClick={() => {
           setEditingGrupo(null);
-          setFormData({ nome: "", percentual_comissao: "", imagem_referencia: "", imagem_catalogo: "" });
-          setSelectedFileReferencia(null);
-          setSelectedFileCatalogo(null);
+          setFormData({ nome: "", percentual_comissao: "" });
           setShowDialog(true);
         }}>
           <Plus className="w-4 h-4 mr-2" />
@@ -268,30 +165,14 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>% Comissão</TableHead>
-            <TableHead>Img Referência</TableHead>
-            <TableHead>Img Catálogo</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {grupos.map((grupo: any) => (
+          {grupos.map((grupo) => (
             <TableRow key={grupo.id}>
               <TableCell className="font-medium">{grupo.nome}</TableCell>
               <TableCell>{grupo.percentual_comissao}%</TableCell>
-              <TableCell>
-                {grupo.imagem_referencia ? (
-                  <img src={grupo.imagem_referencia} alt="Referência" className="h-10 w-10 object-cover rounded" />
-                ) : (
-                  <span className="text-muted-foreground text-sm">-</span>
-                )}
-              </TableCell>
-              <TableCell>
-                {grupo.imagem_catalogo ? (
-                  <img src={grupo.imagem_catalogo} alt="Catálogo" className="h-10 w-10 object-cover rounded" />
-                ) : (
-                  <span className="text-muted-foreground text-sm">-</span>
-                )}
-              </TableCell>
               <TableCell className="text-right">
                 <Button
                   variant="ghost"
@@ -312,7 +193,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
           ))}
           {grupos.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
+              <TableCell colSpan={3} className="text-center text-muted-foreground">
                 Nenhum grupo cadastrado
               </TableCell>
             </TableRow>
@@ -321,14 +202,14 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
       </Table>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle>
               {editingGrupo ? "Editar Grupo" : "Novo Grupo"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 pb-4">
+          <div className="space-y-4 py-4">
             <div>
               <Label>Nome *</Label>
               <Input
