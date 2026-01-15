@@ -51,6 +51,7 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
           fontFamily: 'Inter, sans-serif',
           showPrices: true,
           showCodes: true,
+          showPriceTable: true,
         },
         cover_page: parseJsonField<CatalogPage>(item.cover_page),
         products_page: parseJsonField<CatalogPage>(item.products_page),

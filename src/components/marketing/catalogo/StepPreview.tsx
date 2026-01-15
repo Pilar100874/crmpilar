@@ -85,37 +85,39 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
       }
     });
 
-    // Add price table pages - sorted alphabetically by group, products sorted alphabetically
-    const sortedGroupsForPriceTable = [...groupedProducts]
-      .sort((a, b) => a.nome.localeCompare(b.nome))
-      .map(group => ({
-        groupName: group.nome,
-        products: [...group.products].sort((a, b) => a.nome.localeCompare(b.nome))
-      }));
-    
-    // Calculate how many products fit per price table page (approximately 25-30 rows)
-    const ROWS_PER_PRICE_PAGE = 28;
-    let currentPricePageProducts: { groupName: string; products: CatalogProduct[] }[] = [];
-    let currentRowCount = 0;
-    
-    sortedGroupsForPriceTable.forEach(group => {
-      // Each group header takes 1 row
-      const groupRows = 1 + group.products.length;
+    // Add price table pages only if enabled - sorted alphabetically by group, products sorted alphabetically
+    if (config.showPriceTable !== false) {
+      const sortedGroupsForPriceTable = [...groupedProducts]
+        .sort((a, b) => a.nome.localeCompare(b.nome))
+        .map(group => ({
+          groupName: group.nome,
+          products: [...group.products].sort((a, b) => a.nome.localeCompare(b.nome))
+        }));
       
-      if (currentRowCount + groupRows > ROWS_PER_PRICE_PAGE && currentPricePageProducts.length > 0) {
-        // Push current page and start new one
+      // Calculate how many products fit per price table page (approximately 25-30 rows)
+      const ROWS_PER_PRICE_PAGE = 28;
+      let currentPricePageProducts: { groupName: string; products: CatalogProduct[] }[] = [];
+      let currentRowCount = 0;
+      
+      sortedGroupsForPriceTable.forEach(group => {
+        // Each group header takes 1 row
+        const groupRows = 1 + group.products.length;
+        
+        if (currentRowCount + groupRows > ROWS_PER_PRICE_PAGE && currentPricePageProducts.length > 0) {
+          // Push current page and start new one
+          result.push({ type: 'price-table', priceTableData: currentPricePageProducts, pageNumber: pageNum++ });
+          currentPricePageProducts = [];
+          currentRowCount = 0;
+        }
+        
+        currentPricePageProducts.push(group);
+        currentRowCount += groupRows;
+      });
+      
+      // Push remaining products
+      if (currentPricePageProducts.length > 0) {
         result.push({ type: 'price-table', priceTableData: currentPricePageProducts, pageNumber: pageNum++ });
-        currentPricePageProducts = [];
-        currentRowCount = 0;
       }
-      
-      currentPricePageProducts.push(group);
-      currentRowCount += groupRows;
-    });
-    
-    // Push remaining products
-    if (currentPricePageProducts.length > 0) {
-      result.push({ type: 'price-table', priceTableData: currentPricePageProducts, pageNumber: pageNum++ });
     }
 
     result.push({ type: 'backcover', pageNumber: pageNum });

@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CatalogConfig, FONT_OPTIONS } from './types';
-import { Palette, Type, Eye, Hash } from 'lucide-react';
+import { Palette, Type, Eye, Hash, Table } from 'lucide-react';
 
 interface StepInfoProps {
   config: CatalogConfig;
@@ -129,11 +129,28 @@ export const StepInfo: React.FC<StepInfoProps> = ({ config, onChange }) => {
           >
             <div className="space-y-0.5">
               <p className="font-medium text-sm">Exibir Preços</p>
-              <p className="text-xs text-muted-foreground">Mostrar preços dos produtos</p>
+              <p className="text-xs text-muted-foreground">Mostrar preços dos produtos nas páginas</p>
             </div>
             <Switch
               checked={config.showPrices}
               onCheckedChange={(v) => onChange({ showPrices: v })}
+            />
+          </div>
+
+          <div 
+            className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+            onClick={() => onChange({ showPriceTable: !config.showPriceTable })}
+          >
+            <div className="flex items-center gap-3">
+              <Table className="h-5 w-5 text-muted-foreground" />
+              <div className="space-y-0.5">
+                <p className="font-medium text-sm">Tabela de Preços</p>
+                <p className="text-xs text-muted-foreground">Incluir tabela de preços no final do catálogo</p>
+              </div>
+            </div>
+            <Switch
+              checked={config.showPriceTable ?? true}
+              onCheckedChange={(v) => onChange({ showPriceTable: v })}
             />
           </div>
         </div>
