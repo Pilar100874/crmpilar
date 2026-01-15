@@ -320,8 +320,8 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
         </TableBody>
       </Table>
 
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+      <Dialog open={showDialog} onOpenChange={setShowDialog} key={editingGrupo?.id || 'new'}>
+        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto" key={`content-${editingGrupo?.id || 'new'}`}>
           <DialogHeader>
             <DialogTitle>
               {editingGrupo ? "Editar Grupo" : "Novo Grupo"}
