@@ -276,7 +276,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
           {/* Vertical Text on Left Side - Full Height */}
           <div 
             className="absolute left-0 top-0 bottom-0 flex items-stretch"
-            style={{ width: '90px' }}
+            style={{ width: '120px' }}
           >
             <h2 
               className="text-white w-full h-full flex items-center justify-center"
@@ -290,7 +290,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
               <span 
                 className="whitespace-nowrap"
                 style={{ 
-                  fontSize: '80px',
+                  fontSize: '140px',
                   fontWeight: 300, 
                   color: 'rgba(255,255,255,0.85)',
                   letterSpacing: '-0.02em',
@@ -302,11 +302,11 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
               <span 
                 className="whitespace-nowrap"
                 style={{ 
-                  fontSize: '80px',
+                  fontSize: '140px',
                   fontWeight: 700,
                   color: '#ffffff',
                   letterSpacing: '-0.02em',
-                  marginTop: '4px',
+                  marginTop: '6px',
                   lineHeight: 1
                 }}
               >
