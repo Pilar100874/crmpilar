@@ -226,13 +226,13 @@ export const StepCover: React.FC<StepCoverProps> = ({
             </div>
             <Input
               value={page.title || ''}
-              onChange={(e) => onChange({ ...page, title: e.target.value })}
+              onChange={(e) => onChange({ ...pageRef.current, title: e.target.value })}
               placeholder="Ex: Catálogo de Produtos"
               className="h-11 border-0 border-b rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-primary"
             />
             <Input
               value={page.subtitle || ''}
-              onChange={(e) => onChange({ ...page, subtitle: e.target.value })}
+              onChange={(e) => onChange({ ...pageRef.current, subtitle: e.target.value })}
               placeholder="Ex: Primavera/Verão 2024"
               className="h-11 border-0 border-b rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-primary"
             />
