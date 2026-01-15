@@ -398,6 +398,16 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
               </p>
               <p className="text-green-500 font-bold text-xs mb-2">DEBUG: Antes do botão</p>
               <div className="flex items-center gap-3 bg-yellow-100 p-2">
+                <span className="text-purple-600 font-bold">TESTE1</span>
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
+                  disabled={uploading}
+                  className="px-4 py-2 border rounded bg-white hover:bg-gray-100"
+                >
+                  <span>📁 {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}</span>
+                </button>
+                <span className="text-purple-600 font-bold">TESTE2</span>
                 <Button
                   type="button"
                   variant="outline"
@@ -406,8 +416,9 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                   className="text-sm"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
+                  {selectedFileCatalogo ? 'Trocar2' : 'Selecionar2'}
                 </Button>
+                <span className="text-purple-600 font-bold">TESTE3</span>
                 {(formData.imagem_catalogo || selectedFileCatalogo) && (
                   <img 
                     src={formData.imagem_catalogo} 
