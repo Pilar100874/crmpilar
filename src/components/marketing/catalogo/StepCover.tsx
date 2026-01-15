@@ -34,8 +34,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const [imagePrompt, setImagePrompt] = useState('');
   const [galleryOpen, setGalleryOpen] = useState(false);
   
-  // Track logo loading state for UI feedback
-  const [logoLoading, setLogoLoading] = useState(false);
+  // Estado local para arquivo selecionado (IGUAL ProdutosCRUD)
+  const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
   
   // AI Images hook for gallery
   const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
@@ -45,75 +45,23 @@ export const StepCover: React.FC<StepCoverProps> = ({
     toast.success('Imagem selecionada!');
   };
 
-  // Logo upload - validates image and shows immediate preview
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // EXATAMENTE igual ProdutosCRUD.handleFileSelect
+  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-
-    console.log('[StepCover] Logo file selected:', file.name, file.size, file.type);
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error("Por favor selecione um arquivo de imagem");
-      return;
-    }
-
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Logo deve ter no máximo 2MB");
-      return;
-    }
-
-    // Create image to validate dimensions
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-    
-    img.onload = () => {
-      console.log('[StepCover] Image dimensions:', img.width, 'x', img.height);
-      
-      // Warn about small images
-      if (img.width < 100 || img.height < 100) {
-        toast.warning(`Imagem pequena (${img.width}x${img.height}px). Recomendado mínimo 200x200px para melhor qualidade.`);
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error("Por favor selecione um arquivo de imagem");
+        return;
       }
-      
-      // Warn about very large images
-      if (img.width > 2000 || img.height > 2000) {
-        toast.info(`Imagem grande (${img.width}x${img.height}px). Será redimensionada automaticamente.`);
-      }
-
-      // Read as base64 for persistence and display
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const dataUrl = event.target?.result as string;
-        if (dataUrl) {
-          console.log('[StepCover] Base64 ready, length:', dataUrl.length);
-          onChange({ ...page, logoUrl: dataUrl });
-          toast.success(`Logo carregado! (${img.width}x${img.height}px)`);
-          setLogoLoading(false);
-        }
-        URL.revokeObjectURL(objectUrl);
-      };
-      reader.onerror = () => {
-        console.error('[StepCover] FileReader error');
-        toast.error('Erro ao processar logo');
-        setLogoLoading(false);
-        URL.revokeObjectURL(objectUrl);
-      };
-      setLogoLoading(true);
-      reader.readAsDataURL(file);
-    };
-    
-    img.onerror = () => {
-      console.error('[StepCover] Image load error');
-      toast.error('Erro ao carregar imagem. Verifique se o arquivo é válido.');
-      URL.revokeObjectURL(objectUrl);
-    };
-    
-    img.src = objectUrl;
+      setSelectedLogoFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      onChange({ ...page, logoUrl: previewUrl });
+      toast.success('Logo carregado!');
+    }
   };
 
   const clearLogo = () => {
-    console.log('[StepCover] Clearing logo');
+    setSelectedLogoFile(null);
     onChange({ ...page, logoUrl: undefined });
     if (logoInputRef.current) {
       logoInputRef.current.value = "";
@@ -300,7 +248,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
               ref={logoInputRef}
               type="file"
               accept="image/*"
-              onChange={handleLogoUpload}
+              onChange={handleLogoSelect}
               className="hidden"
               id="logo-upload"
             />
@@ -313,7 +261,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
                 className="text-xs sm:text-sm"
               >
                 <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                {logoLoading ? 'Carregando...' : (page.logoUrl ? 'Trocar' : 'Selecionar')}
+                {selectedLogoFile ? 'Trocar' : 'Selecionar'}
               </Button>
               {page.logoUrl && (
                 <div className="relative inline-block group">
