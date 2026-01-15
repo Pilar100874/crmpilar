@@ -48,22 +48,18 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
       return [{ id: 'all', nome: 'Todos os Produtos', products }];
     }
 
-    const groupMap = new Map<string, typeof products>();
+    const groupMap = new Map<string, { id: string; nome: string; products: CatalogProduct[] }>();
     products.forEach(product => {
       const groupName = product.grupo_nome || 'Outros';
-      const groupId = product.grupo_id || 'outros';
-      const key = `${groupId}__${groupName}`;
+      const groupId = product.grupo_id || `outros_${groupName.replace(/\s+/g, '_').toLowerCase()}`;
       
-      if (!groupMap.has(key)) {
-        groupMap.set(key, []);
+      if (!groupMap.has(groupId)) {
+        groupMap.set(groupId, { id: groupId, nome: groupName, products: [] });
       }
-      groupMap.get(key)!.push(product);
+      groupMap.get(groupId)!.products.push(product);
     });
 
-    return Array.from(groupMap.entries()).map(([key, prods]) => {
-      const [id, nome] = key.split('__');
-      return { id, nome, products: prods };
-    }).sort((a, b) => a.nome.localeCompare(b.nome));
+    return Array.from(groupMap.values()).sort((a, b) => a.nome.localeCompare(b.nome));
   }, [products, groupByCategory]);
 
   // Build pages array
@@ -251,73 +247,91 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     );
   };
 
-  // Group Header - Split design with image and text (matching reference)
+  // Group Header - Full background image with vertical text (matching reference)
   const renderGroupHeader = (groupName: string) => {
     const group = groupedProducts.find(g => g.nome === groupName);
     const groupImage = group ? groupImages[group.id] : undefined;
+    
+    // Split group name for styling - first word light, rest bold
+    const words = groupName.split(' ');
+    const firstWord = words[0] || '';
+    const restWords = words.slice(1).join(' ');
 
     return (
       <div
-        className="w-full h-full flex relative overflow-hidden"
+        className="w-full h-full relative overflow-hidden"
         style={{ fontFamily: config.fontFamily }}
       >
-        {/* Left side - Dark with vertical text */}
+        {/* Full Background Image */}
+        {groupImage ? (
+          <img 
+            src={groupImage} 
+            alt={groupName} 
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <div 
+            className="absolute inset-0"
+            style={{ backgroundColor: '#6b7280' }}
+          />
+        )}
+
+        {/* Gradient overlay on left for text readability */}
         <div 
-          className="w-[35%] flex flex-col justify-center items-center relative"
-          style={{ backgroundColor: '#2a2a2a' }}
-        >
-          <div className="absolute inset-0 flex items-center justify-center">
-            <h2 
-              className="text-5xl text-white tracking-wide"
-              style={{ 
-                writingMode: 'vertical-rl', 
-                textOrientation: 'mixed',
-                transform: 'rotate(180deg)',
-                fontFamily: 'Georgia, serif'
-              }}
+          className="absolute inset-y-0 left-0 w-1/3"
+          style={{ 
+            background: 'linear-gradient(to right, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)'
+          }}
+        />
+
+        {/* Vertical Text on Left Side */}
+        <div className="absolute left-4 inset-y-0 flex items-center">
+          <h2 
+            className="text-white leading-none"
+            style={{ 
+              writingMode: 'vertical-rl', 
+              textOrientation: 'mixed',
+              transform: 'rotate(180deg)',
+              fontFamily: 'Helvetica Neue, Arial, sans-serif',
+            }}
+          >
+            <span 
+              className="text-4xl tracking-wider"
+              style={{ fontWeight: 200, opacity: 0.9 }}
             >
-              <span className="font-light italic text-white/70">{groupName.split(' ')[0]}</span>
-              {groupName.split(' ').length > 1 && (
-                <span className="font-bold ml-2">{groupName.split(' ').slice(1).join(' ')}</span>
-              )}
-            </h2>
-          </div>
+              {firstWord}
+            </span>
+            {restWords && (
+              <span 
+                className="text-4xl tracking-wider ml-1"
+                style={{ fontWeight: 700 }}
+              >
+                {restWords}
+              </span>
+            )}
+          </h2>
         </div>
 
-        {/* Right side - AI Generated Image or Product showcase */}
-        <div className="w-[65%] relative">
-          {groupImage ? (
-            <img 
-              src={groupImage} 
-              alt={groupName} 
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          ) : (
-            <div 
-              className="w-full h-full flex items-center justify-center p-8"
-              style={{ backgroundColor: '#f5f5f5' }}
-            >
-              <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
-                {group?.products.slice(0, 4).map((product, i) => (
-                  <div 
-                    key={i}
-                    className={cn(
-                      "aspect-square rounded-xl overflow-hidden shadow-lg",
-                      i === 0 && "col-span-2"
-                    )}
-                  >
-                    {product.foto_url ? (
-                      <img src={product.foto_url} alt={product.nome} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <Package className="h-10 w-10 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        {/* Small text on right side (optional description) */}
+        <div 
+          className="absolute right-6 top-1/2 -translate-y-1/2 max-w-[120px] text-right"
+        >
+          <p 
+            className="text-white/80 text-[8px] leading-relaxed"
+            style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
+          >
+            {group?.products.length || 0} produtos nesta categoria
+          </p>
+        </div>
+
+        {/* Page indicator bottom left */}
+        <div className="absolute bottom-4 left-4">
+          <span 
+            className="text-white/60 text-xs tracking-widest uppercase"
+            style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
+          >
+            {groupName}
+          </span>
         </div>
       </div>
     );
