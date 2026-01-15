@@ -34,8 +34,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const [imagePrompt, setImagePrompt] = useState('');
   const [galleryOpen, setGalleryOpen] = useState(false);
   
-  // Estado local para arquivo selecionado (IGUAL ProdutosCRUD)
+  // Estado local para arquivo selecionado e preview
   const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string>('');
   
   // AI Images hook for gallery
   const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
@@ -55,13 +56,18 @@ export const StepCover: React.FC<StepCoverProps> = ({
       }
       setSelectedLogoFile(file);
       const previewUrl = URL.createObjectURL(file);
+      setLogoPreviewUrl(previewUrl);
       onChange({ ...page, logoUrl: previewUrl });
       toast.success('Logo carregado!');
     }
   };
 
   const clearLogo = () => {
+    if (logoPreviewUrl) {
+      URL.revokeObjectURL(logoPreviewUrl);
+    }
     setSelectedLogoFile(null);
+    setLogoPreviewUrl('');
     onChange({ ...page, logoUrl: undefined });
     if (logoInputRef.current) {
       logoInputRef.current.value = "";
@@ -261,12 +267,12 @@ export const StepCover: React.FC<StepCoverProps> = ({
                 className="text-xs sm:text-sm"
               >
                 <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                {selectedLogoFile ? 'Trocar' : 'Selecionar'}
+                {logoPreviewUrl ? 'Trocar' : 'Selecionar'}
               </Button>
-              {page.logoUrl && (
+              {logoPreviewUrl && (
                 <div className="relative inline-block group">
                   <img 
-                    src={page.logoUrl} 
+                    src={logoPreviewUrl} 
                     alt="Logo Preview" 
                     className="w-12 h-12 sm:w-16 sm:h-16 object-contain rounded border bg-white"
                   />
@@ -437,9 +443,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
               <div className="bg-white px-4 py-3 flex items-center justify-between">
               {/* Logo bottom left */}
               <div className="flex items-center">
-                {page.logoUrl ? (
+                {logoPreviewUrl ? (
                   <img 
-                    src={page.logoUrl}
+                    src={logoPreviewUrl}
                     alt="Logo" 
                     className="h-6 w-auto object-contain"
                   />
