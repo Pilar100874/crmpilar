@@ -40,26 +40,11 @@ export const StepCover: React.FC<StepCoverProps> = ({
   // AI Images hook for gallery
   const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
   
-  // Use refs to track if we're the source of the change
-  const isLocalChange = useRef(false);
-  
-  // Local state to track uploaded images for immediate display
-  const [localLogoUrl, setLocalLogoUrl] = useState<string | undefined>(page.logoUrl);
-  const [localBgImage, setLocalBgImage] = useState<string | undefined>(page.backgroundImage);
-  
-  // Sync local state with props - but only if the change came from outside
-  useEffect(() => {
-    if (!isLocalChange.current) {
-      console.log('[StepCover] External change detected - syncing local state');
-      setLocalLogoUrl(page.logoUrl);
-      setLocalBgImage(page.backgroundImage);
-    }
-    isLocalChange.current = false;
-  }, [page.logoUrl, page.backgroundImage]);
+  // Derived logo and background from page prop - use directly without local state
+  const logoUrl = page.logoUrl;
+  const bgImage = page.backgroundImage;
 
   const handleSelectFromGallery = (imageUrl: string) => {
-    isLocalChange.current = true;
-    setLocalBgImage(imageUrl);
     onChange({ ...page, backgroundImage: imageUrl });
     toast.success('Imagem selecionada!');
   };
@@ -76,17 +61,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
       const dataUrl = event.target?.result as string;
       console.log(`[StepCover] File uploaded for ${field}, size: ${dataUrl.length} chars`);
       
-      // Mark as local change to prevent sync overwriting
-      isLocalChange.current = true;
-      
-      // Update local state immediately for visual feedback
-      if (field === 'logoUrl') {
-        setLocalLogoUrl(dataUrl);
-      } else {
-        setLocalBgImage(dataUrl);
-      }
-      
-      // Update parent state
+      // Update parent state directly
       const newPage = { ...page, [field]: dataUrl };
       console.log(`[StepCover] Calling onChange, logoUrl exists: ${!!newPage.logoUrl}, backgroundImage exists: ${!!newPage.backgroundImage}`);
       onChange(newPage);
@@ -96,12 +71,6 @@ export const StepCover: React.FC<StepCoverProps> = ({
   };
 
   const clearImage = (field: 'logoUrl' | 'backgroundImage') => {
-    isLocalChange.current = true;
-    if (field === 'logoUrl') {
-      setLocalLogoUrl(undefined);
-    } else {
-      setLocalBgImage(undefined);
-    }
     onChange({ ...page, [field]: undefined });
   };
 
@@ -153,11 +122,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
       if (data?.imageUrl) {
         console.log('[StepCover] Setting background image, URL:', data.imageUrl.substring(0, 100));
         
-        // Mark as local change to prevent sync overwriting
-        isLocalChange.current = true;
-        
         // Apply image to catalog immediately
-        setLocalBgImage(data.imageUrl);
         onChange({ ...page, backgroundImage: data.imageUrl });
         
         // If saved to gallery by edge function, just refresh the gallery
@@ -273,10 +238,10 @@ export const StepCover: React.FC<StepCoverProps> = ({
               onChange={(e) => handleFileUpload(e, 'logoUrl')}
               className="hidden"
             />
-            {localLogoUrl ? (
+            {logoUrl ? (
               <div className="relative inline-block group" key={`logo-preview-${forceUpdate}`}>
                 <img
-                  src={localLogoUrl}
+                  src={logoUrl}
                   alt="Logo"
                   className="h-16 w-auto object-contain rounded-lg border bg-white p-1"
                   onLoad={() => console.log('[StepCover] Logo image loaded in form')}
@@ -457,10 +422,10 @@ export const StepCover: React.FC<StepCoverProps> = ({
               <div className="bg-white px-4 py-3 flex items-center justify-between">
               {/* Logo bottom left */}
               <div className="flex items-center">
-                {localLogoUrl ? (
+                {logoUrl ? (
                   <img 
                     key={`preview-logo-${forceUpdate}`} 
-                    src={localLogoUrl} 
+                    src={logoUrl}
                     alt="Logo" 
                     className="h-6 w-auto object-contain"
                     onLoad={() => console.log('[StepCover] Logo image loaded in preview')}
