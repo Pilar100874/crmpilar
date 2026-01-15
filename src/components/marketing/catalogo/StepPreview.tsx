@@ -2,7 +2,7 @@ import React, { useRef, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Download, Loader2, ChevronLeft, ChevronRight, Package, FileText, Phone, Mail, Globe, MapPin, Layers } from 'lucide-react';
+import { Download, Loader2, ChevronLeft, ChevronRight, Package, FileText, Phone, Mail, Globe, MapPin, Layers, Table } from 'lucide-react';
 import { CatalogConfig, CatalogPage, CatalogProduct, LAYOUT_OPTIONS, ProductGroup, GroupFieldConfig, PRODUCT_FIELDS } from './types';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
@@ -18,11 +18,12 @@ interface StepPreviewProps {
 }
 
 interface PageInfo {
-  type: 'cover' | 'group-header' | 'products' | 'backcover';
+  type: 'cover' | 'group-header' | 'products' | 'price-table' | 'backcover';
   groupName?: string;
   products?: CatalogProduct[];
   startIdx?: number;
   pageNumber?: number;
+  priceTableData?: { groupName: string; products: CatalogProduct[] }[];
 }
 
 export const StepPreview: React.FC<StepPreviewProps> = ({
@@ -83,6 +84,39 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
         });
       }
     });
+
+    // Add price table pages - sorted alphabetically by group, products sorted alphabetically
+    const sortedGroupsForPriceTable = [...groupedProducts]
+      .sort((a, b) => a.nome.localeCompare(b.nome))
+      .map(group => ({
+        groupName: group.nome,
+        products: [...group.products].sort((a, b) => a.nome.localeCompare(b.nome))
+      }));
+    
+    // Calculate how many products fit per price table page (approximately 25-30 rows)
+    const ROWS_PER_PRICE_PAGE = 28;
+    let currentPricePageProducts: { groupName: string; products: CatalogProduct[] }[] = [];
+    let currentRowCount = 0;
+    
+    sortedGroupsForPriceTable.forEach(group => {
+      // Each group header takes 1 row
+      const groupRows = 1 + group.products.length;
+      
+      if (currentRowCount + groupRows > ROWS_PER_PRICE_PAGE && currentPricePageProducts.length > 0) {
+        // Push current page and start new one
+        result.push({ type: 'price-table', priceTableData: currentPricePageProducts, pageNumber: pageNum++ });
+        currentPricePageProducts = [];
+        currentRowCount = 0;
+      }
+      
+      currentPricePageProducts.push(group);
+      currentRowCount += groupRows;
+    });
+    
+    // Push remaining products
+    if (currentPricePageProducts.length > 0) {
+      result.push({ type: 'price-table', priceTableData: currentPricePageProducts, pageNumber: pageNum++ });
+    }
 
     result.push({ type: 'backcover', pageNumber: pageNum });
     return result;
@@ -681,6 +715,73 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     </div>
   );
 
+  // Price Table Page - Alphabetical list of products with prices grouped by category
+  const renderPriceTablePage = (priceTableData: { groupName: string; products: CatalogProduct[] }[]) => (
+    <div
+      className="w-full h-full flex flex-col bg-white relative overflow-hidden p-[12mm]"
+      style={{ fontFamily: config.fontFamily }}
+    >
+      {/* Header */}
+      <div className="mb-4 pb-3 border-b-2 border-gray-200">
+        <h2 className="text-2xl font-bold text-gray-900 uppercase tracking-wide">
+          Tabela de Preços
+        </h2>
+        <p className="text-xs text-gray-500 mt-1">Lista completa de produtos por grupo</p>
+      </div>
+
+      {/* Price Table */}
+      <div className="flex-1 overflow-hidden">
+        <table className="w-full text-[9px]">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="text-left py-1.5 px-2 font-semibold text-gray-700 w-[15%]">Código</th>
+              <th className="text-left py-1.5 px-2 font-semibold text-gray-700 w-[60%]">Produto</th>
+              <th className="text-right py-1.5 px-2 font-semibold text-gray-700 w-[25%]">Preço</th>
+            </tr>
+          </thead>
+          <tbody>
+            {priceTableData.map((group, groupIdx) => (
+              <React.Fragment key={group.groupName}>
+                {/* Group Header Row */}
+                <tr className="bg-gray-800">
+                  <td colSpan={3} className="py-1.5 px-2 font-bold text-white uppercase tracking-wide text-[8px]">
+                    {group.groupName}
+                  </td>
+                </tr>
+                {/* Product Rows */}
+                {group.products.map((product, productIdx) => (
+                  <tr 
+                    key={product.id} 
+                    className={cn(
+                      "border-b border-gray-100",
+                      productIdx % 2 === 0 ? "bg-white" : "bg-gray-50/50"
+                    )}
+                  >
+                    <td className="py-1 px-2 text-gray-600 font-mono">{product.codigo || '-'}</td>
+                    <td className="py-1 px-2 text-gray-800">{product.nome}</td>
+                    <td className="py-1 px-2 text-right font-semibold text-gray-900">
+                      {product.preco_tabela ? formatPrice(product.preco_tabela) : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-3 mt-2 border-t border-gray-200">
+        <span className="text-[8px] text-gray-400">
+          {config.name || 'Catálogo'} - {currentYear}
+        </span>
+        <span className="text-[10px] text-gray-400">
+          Tabela de Preços
+        </span>
+      </div>
+    </div>
+  );
+
   const renderCurrentPage = () => {
     const pageInfo = pages[currentPage];
     
@@ -691,6 +792,8 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
         return renderGroupHeader(pageInfo.groupName!);
       case 'products':
         return renderProductPage(pageInfo.products!, pageInfo.groupName, pageInfo.pageNumber);
+      case 'price-table':
+        return renderPriceTablePage(pageInfo.priceTableData!);
       case 'backcover':
         return renderBackcoverPage();
       default:
@@ -704,6 +807,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
       case 'cover': return 'Capa';
       case 'group-header': return `Seção: ${pageInfo.groupName}`;
       case 'products': return pageInfo.groupName || 'Produtos';
+      case 'price-table': return 'Tabela de Preços';
       case 'backcover': return 'Contracapa';
       default: return '';
     }
@@ -803,7 +907,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
               <div 
                 className={cn(
                   "w-full h-full flex flex-col items-center justify-center text-xs gap-1 p-1",
-                  (pageInfo.type === 'cover' || pageInfo.type === 'backcover' || pageInfo.type === 'group-header')
+                  (pageInfo.type === 'cover' || pageInfo.type === 'backcover' || pageInfo.type === 'group-header' || pageInfo.type === 'price-table')
                     ? "text-white bg-gray-900" 
                     : "bg-white text-gray-600 border"
                 )}
@@ -822,6 +926,11 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                   <>
                     <Layers className="h-4 w-4" />
                     <span className="font-medium text-center line-clamp-2">{pageInfo.groupName}</span>
+                  </>
+                ) : pageInfo.type === 'price-table' ? (
+                  <>
+                    <Table className="h-4 w-4" />
+                    <span className="font-medium text-center">Preços</span>
                   </>
                 ) : (
                   <>
