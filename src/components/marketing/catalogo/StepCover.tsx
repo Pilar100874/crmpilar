@@ -256,7 +256,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
             />
           </div>
 
-          {/* Logo Upload */}
+          {/* Logo Upload - Same pattern as ProdutoGruposCRUD */}
           <div className="space-y-3">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider">
               Logo da Empresa
@@ -267,34 +267,38 @@ export const StepCover: React.FC<StepCoverProps> = ({
               accept="image/*"
               onChange={handleLogoUpload}
               className="hidden"
+              id="logo-upload"
             />
-            {page.logoUrl ? (
-              <div className="relative inline-block group">
-                <img
-                  src={page.logoUrl}
-                  alt="Logo"
-                  className="h-16 w-auto object-contain rounded-lg border bg-white p-1"
-                />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={clearLogo}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              </div>
-            ) : (
-              <button
+            <div className="flex items-center gap-3">
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => logoInputRef.current?.click()}
-                className="w-full h-20 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+                className="text-xs sm:text-sm"
               >
-                <Upload className="h-5 w-5" />
-                <span className="text-xs">Carregar logo</span>
-              </button>
-            )}
+                <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                {page.logoUrl ? 'Trocar' : 'Selecionar'}
+              </Button>
+              {page.logoUrl && (
+                <div className="relative inline-block group">
+                  <img 
+                    src={page.logoUrl} 
+                    alt="Logo Preview" 
+                    className="w-12 h-12 sm:w-16 sm:h-16 object-contain rounded border bg-white"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={clearLogo}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* AI Image Generation */}
