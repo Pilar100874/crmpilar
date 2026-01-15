@@ -78,8 +78,26 @@ export function useCatalogProducts(estabelecimentoId: string | null) {
           codigo,
           categoria_id,
           grupo_id,
+          largura,
+          altura,
+          comprimento,
+          gramatura,
+          peso_unitario,
+          numero_folhas,
+          embalagem_largura,
+          embalagem_altura,
+          embalagem_comprimento,
+          embalagem_peso,
+          cubagem,
+          valor_seguro,
+          empilhamento_maximo,
+          fragil,
+          observacoes_frete,
+          ean_13,
+          ean_14_1,
+          ean_14_2,
           produto_categorias(nome),
-          produto_grupos(nome)
+          produto_grupos(id, nome)
         `)
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('ativo', true)
@@ -110,6 +128,28 @@ export function useCatalogProducts(estabelecimentoId: string | null) {
         codigo: p.codigo,
         categoria_nome: p.produto_categorias?.nome,
         grupo_nome: p.produto_grupos?.nome,
+        grupo_id: p.produto_grupos?.id || p.grupo_id,
+        // Dados Básicos
+        largura: p.largura,
+        altura: p.altura,
+        comprimento: p.comprimento,
+        gramatura: p.gramatura,
+        peso_unitario: p.peso_unitario,
+        numero_folhas: p.numero_folhas,
+        // Dados do Frete
+        embalagem_largura: p.embalagem_largura,
+        embalagem_altura: p.embalagem_altura,
+        embalagem_comprimento: p.embalagem_comprimento,
+        embalagem_peso: p.embalagem_peso,
+        cubagem: p.cubagem,
+        valor_seguro: p.valor_seguro,
+        empilhamento_maximo: p.empilhamento_maximo,
+        fragil: p.fragil,
+        observacoes_frete: p.observacoes_frete,
+        // Embalagem
+        ean_13: p.ean_13,
+        ean_14_1: p.ean_14_1,
+        ean_14_2: p.ean_14_2,
       }));
 
       setProducts(mappedProducts);

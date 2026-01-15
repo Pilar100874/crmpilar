@@ -136,6 +136,10 @@ const MarketingCatalogo: React.FC = () => {
     if (catalog.cover_page) setCoverPage(catalog.cover_page);
     if (catalog.products_page) setProductsPage(catalog.products_page);
     if (catalog.backcover_page) setBackcoverPage(catalog.backcover_page);
+    // Restore group field configs
+    if (catalog.config.groupFieldConfigs) {
+      setGroupFieldConfigs(catalog.config.groupFieldConfigs);
+    }
     setCurrentStep(0);
     setViewMode('editor');
   };
