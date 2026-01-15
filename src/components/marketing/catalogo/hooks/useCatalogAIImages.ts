@@ -135,6 +135,7 @@ export function useCatalogAIImages(estabelecimentoId: string) {
     loading,
     saveImage,
     deleteImage,
-    refetch: fetchImages
+    refetch: fetchImages,
+    refresh: fetchImages
   };
 }
