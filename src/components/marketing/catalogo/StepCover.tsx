@@ -50,43 +50,78 @@ export const StepCover: React.FC<StepCoverProps> = ({
     toast.success('Imagem selecionada!');
   };
 
-  // Logo upload - uses local state for immediate preview like ProdutosCRUD
+  // Logo upload - validates image and shows immediate preview
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Logo deve ter no máximo 2MB");
-      return;
-    }
+    console.log('[StepCover] Logo file selected:', file.name, file.size, file.type);
 
+    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error("Por favor selecione um arquivo de imagem");
       return;
     }
 
-    // Create preview URL immediately for instant feedback
-    const previewUrl = URL.createObjectURL(file);
-    setLogoPreview(previewUrl);
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Logo deve ter no máximo 2MB");
+      return;
+    }
 
-    // Also read as base64 for persistence
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        setLogoPreview(dataUrl);
-        onChange({ ...page, logoUrl: dataUrl });
-        toast.success('Logo carregado!');
+    // Create image to validate dimensions
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    
+    img.onload = () => {
+      console.log('[StepCover] Image dimensions:', img.width, 'x', img.height);
+      
+      // Warn about small images
+      if (img.width < 100 || img.height < 100) {
+        toast.warning(`Imagem pequena (${img.width}x${img.height}px). Recomendado mínimo 200x200px para melhor qualidade.`);
       }
+      
+      // Warn about very large images
+      if (img.width > 2000 || img.height > 2000) {
+        toast.info(`Imagem grande (${img.width}x${img.height}px). Será redimensionada automaticamente.`);
+      }
+
+      // Show preview immediately
+      setLogoPreview(objectUrl);
+      console.log('[StepCover] Preview set with objectUrl');
+
+      // Read as base64 for persistence
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        if (dataUrl) {
+          console.log('[StepCover] Base64 ready, length:', dataUrl.length);
+          setLogoPreview(dataUrl);
+          onChange({ ...page, logoUrl: dataUrl });
+          toast.success(`Logo carregado! (${img.width}x${img.height}px)`);
+          URL.revokeObjectURL(objectUrl);
+        }
+      };
+      reader.onerror = () => {
+        console.error('[StepCover] FileReader error');
+        toast.error('Erro ao processar logo');
+        setLogoPreview(undefined);
+        URL.revokeObjectURL(objectUrl);
+      };
+      reader.readAsDataURL(file);
     };
-    reader.onerror = () => {
-      toast.error('Erro ao carregar logo');
-      setLogoPreview(undefined);
+    
+    img.onerror = () => {
+      console.error('[StepCover] Image load error');
+      toast.error('Erro ao carregar imagem. Verifique se o arquivo é válido.');
+      URL.revokeObjectURL(objectUrl);
     };
-    reader.readAsDataURL(file);
+    
+    img.src = objectUrl;
   };
 
   const clearLogo = () => {
+    console.log('[StepCover] Clearing logo');
     setLogoPreview(undefined);
     onChange({ ...page, logoUrl: undefined });
     if (logoInputRef.current) {
