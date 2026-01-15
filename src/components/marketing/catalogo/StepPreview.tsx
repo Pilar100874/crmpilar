@@ -294,7 +294,8 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                   fontWeight: 300, 
                   color: 'rgba(255,255,255,0.85)',
                   letterSpacing: '-0.02em',
-                  lineHeight: 1
+                  lineHeight: 1,
+                  marginBottom: '20px'
                 }}
               >
                 Linha
