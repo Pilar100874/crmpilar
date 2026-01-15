@@ -349,8 +349,47 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
               />
             </div>
 
+            {/* Campo Imagem para Catálogo de Produtos - MOVIDO PARA CIMA */}
+            <div className="border-2 border-blue-500 p-3 rounded bg-blue-50">
+              <p className="text-red-500 font-bold text-sm mb-2">🔴 CATÁLOGO - Este deve aparecer primeiro</p>
+              <Label className="flex items-center gap-2 mb-1">
+                <Image className="w-4 h-4" />
+                Imagem para Catálogo de Produtos
+              </Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Imagem que será exibida no catálogo de produtos para este grupo
+              </p>
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
+                  disabled={uploading}
+                  className="text-sm"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
+                </Button>
+                {(formData.imagem_catalogo || selectedFileCatalogo) && (
+                  <img 
+                    src={formData.imagem_catalogo} 
+                    alt="Preview catálogo" 
+                    className="w-12 h-12 object-cover rounded border"
+                  />
+                )}
+              </div>
+              <input
+                id="grupo-imagem-catalogo-upload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
+                className="hidden"
+              />
+            </div>
+
             {/* Imagem de Referência */}
-            <div>
+            <div className="border-2 border-green-500 p-3 rounded">
+              <p className="text-green-600 font-bold text-sm mb-2">🟢 REFERÊNCIA - Este é o segundo</p>
               <Label className="flex items-center gap-2">
                 <Image className="w-4 h-4" />
                 Imagem de Referência do Produto
@@ -382,49 +421,6 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                 type="file"
                 accept="image/*"
                 onChange={(e) => handleFileSelect(e, 'imagem_referencia')}
-                className="hidden"
-              />
-            </div>
-
-            {/* Campo Imagem para Catálogo de Produtos */}
-            <div className="border-t pt-4 bg-blue-50 p-2 rounded">
-              <p className="text-red-500 font-bold text-xs mb-2">DEBUG: Este bloco deve aparecer</p>
-              <Label className="flex items-center gap-2 mb-1">
-                <Image className="w-4 h-4" />
-                Imagem para Catálogo de Produtos
-              </Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                Imagem que será exibida no catálogo de produtos para este grupo
-              </p>
-              <p className="text-green-500 font-bold text-xs mb-2">DEBUG: Antes do botão</p>
-              
-              <p className="text-black bg-red-300 p-4 text-lg font-bold">ELEMENTO ESTÁTICO SEM VARIÁVEIS</p>
-              
-              <div className="border-4 border-red-500 p-4 mt-4">
-                <p className="text-black font-bold">DENTRO DO DIV COM BORDA VERMELHA</p>
-                <span className="text-purple-600 font-bold block my-2">TESTE1-FORA</span>
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
-                  className="px-4 py-2 border rounded bg-white hover:bg-gray-100 my-2"
-                >
-                  📁 Selecionar Imagem
-                </button>
-                <span className="text-purple-600 font-bold block my-2">TESTE2-FORA</span>
-              </div>
-              
-              {formData.imagem_catalogo && (
-                <img 
-                  src={formData.imagem_catalogo} 
-                  alt="Preview catálogo" 
-                  className="w-12 h-12 object-cover rounded border mt-2"
-                />
-              )}
-              <input
-                id="grupo-imagem-catalogo-upload"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
                 className="hidden"
               />
             </div>
