@@ -36,6 +36,12 @@ export interface CatalogPage {
   groupByCategory?: boolean;
 }
 
+export interface GroupFieldConfig {
+  groupId: string;
+  groupName: string;
+  selectedFields: string[];
+}
+
 export interface CatalogConfig {
   id?: string;
   name: string;
@@ -45,6 +51,7 @@ export interface CatalogConfig {
   fontFamily: string;
   showPrices: boolean;
   showCodes: boolean;
+  groupFieldConfigs?: GroupFieldConfig[];
   businessType?: string;
   created_at?: string;
   updated_at?: string;
@@ -61,9 +68,17 @@ export const WIZARD_STEPS: WizardStep[] = [
   { id: 'cover', title: 'Capa', description: 'Configure a capa do catálogo' },
   { id: 'products', title: 'Produtos', description: 'Selecione os produtos' },
   { id: 'groups', title: 'Grupos', description: 'Imagens dos grupos' },
+  { id: 'fields', title: 'Campos', description: 'Campos exibidos por grupo' },
   { id: 'backcover', title: 'Contracapa', description: 'Informações de contato' },
   { id: 'preview', title: 'Visualização', description: 'Revise e exporte o PDF' },
 ];
+
+export const PRODUCT_FIELDS = [
+  { key: 'codigo', label: 'Código/SKU' },
+  { key: 'descricao', label: 'Descrição' },
+  { key: 'categoria_nome', label: 'Categoria' },
+  { key: 'grupo_nome', label: 'Grupo' },
+] as const;
 
 export const LAYOUT_OPTIONS = [
   { value: 'grid-2', label: '2 Colunas', cols: 2 },

@@ -136,20 +136,6 @@ export const StepInfo: React.FC<StepInfoProps> = ({ config, onChange }) => {
               onCheckedChange={(v) => onChange({ showPrices: v })}
             />
           </div>
-
-          <div 
-            className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
-            onClick={() => onChange({ showCodes: !config.showCodes })}
-          >
-            <div className="space-y-0.5">
-              <p className="font-medium text-sm">Exibir Códigos</p>
-              <p className="text-xs text-muted-foreground">Mostrar código/SKU dos produtos</p>
-            </div>
-            <Switch
-              checked={config.showCodes}
-              onCheckedChange={(v) => onChange({ showCodes: v })}
-            />
-          </div>
         </div>
       </div>
     </div>
