@@ -32,6 +32,7 @@ const MarketingCatalogo: React.FC = () => {
   const [saveName, setSaveName] = useState('');
   const [imagePrompt, setImagePrompt] = useState('');
   const [groupImages, setGroupImages] = useState<Record<string, string>>({});
+  const [groupPrompts, setGroupPrompts] = useState<Record<string, string>>({});
 
   const [config, setConfig] = useState<CatalogConfig>({
     name: '',
@@ -116,6 +117,7 @@ const MarketingCatalogo: React.FC = () => {
     setEditingCatalogId(null);
     setImagePrompt('');
     setGroupImages({});
+    setGroupPrompts({});
   };
 
   const handleCreateNew = () => {
@@ -248,7 +250,8 @@ const MarketingCatalogo: React.FC = () => {
             productsPage={productsPage}
             groupImages={groupImages}
             onGroupImageChange={handleGroupImageChange}
-            imagePrompt={imagePrompt}
+            groupPrompts={groupPrompts}
+            onGroupPromptChange={(groupId, prompt) => setGroupPrompts(prev => ({ ...prev, [groupId]: prompt }))}
             estabelecimentoId={estabelecimentoId}
           />
         );

@@ -10,7 +10,8 @@ interface StepGroupImagesProps {
   productsPage: CatalogPage;
   groupImages: Record<string, string>;
   onGroupImageChange: (groupId: string, imageUrl: string) => void;
-  imagePrompt: string;
+  groupPrompts: Record<string, string>;
+  onGroupPromptChange: (groupId: string, prompt: string) => void;
   estabelecimentoId?: string | null;
 }
 
@@ -18,11 +19,11 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
   productsPage,
   groupImages,
   onGroupImageChange,
-  imagePrompt,
+  groupPrompts,
+  onGroupPromptChange,
   estabelecimentoId,
 }) => {
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
-  const [generatingAll, setGeneratingAll] = useState(false);
 
   const products = productsPage.products || [];
   const groupByCategory = productsPage.groupByCategory ?? true;
@@ -52,8 +53,9 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
   }, [products, groupByCategory, groupImages]);
 
   const generateImageForGroup = async (group: ProductGroup) => {
-    if (!imagePrompt.trim()) {
-      toast.error('Configure um prompt de imagem na etapa da Capa primeiro');
+    const prompt = groupPrompts[group.id];
+    if (!prompt?.trim()) {
+      toast.error(`Digite uma descrição para o grupo "${group.nome}"`);
       return;
     }
 
@@ -63,9 +65,6 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 90000);
-
-      // Create a prompt that combines the base prompt with the group name
-      const groupPrompt = `${imagePrompt.trim()}, featuring ${group.nome} products, professional catalog page background`;
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/catalog-ai`,
@@ -78,7 +77,7 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
           },
           body: JSON.stringify({
             action: 'generate-image',
-            prompt: `Professional catalog group page background: ${groupPrompt}`,
+            prompt: `Professional catalog group page background: ${prompt.trim()}`,
             estabelecimentoId: estabelecimentoId || null,
             saveToGallery: true
           }),
@@ -113,43 +112,9 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
     }
   };
 
-  const generateAllImages = async () => {
-    if (!imagePrompt.trim()) {
-      toast.error('Configure um prompt de imagem na etapa da Capa primeiro');
-      return;
-    }
-
-    setGeneratingAll(true);
-    toast.loading('Gerando imagens para todos os grupos...', { id: 'ai-groups-all' });
-
-    let successCount = 0;
-    for (const group of groups) {
-      if (groupImages[group.id]) continue; // Skip if already has image
-      
-      try {
-        await generateImageForGroup(group);
-        successCount++;
-        // Small delay between requests to avoid rate limiting
-        await new Promise(r => setTimeout(r, 1000));
-      } catch (error) {
-        console.error(`Error generating for ${group.nome}:`, error);
-      }
-    }
-
-    setGeneratingAll(false);
-    if (successCount > 0) {
-      toast.success(`${successCount} imagens geradas!`, { id: 'ai-groups-all' });
-    } else {
-      toast.dismiss('ai-groups-all');
-    }
-  };
-
   const clearGroupImage = (groupId: string) => {
     onGroupImageChange(groupId, '');
   };
-
-  const groupsWithoutImages = groups.filter(g => !groupImages[g.id]);
-  const allGroupsHaveImages = groupsWithoutImages.length === 0 && groups.length > 0;
 
   if (!groupByCategory || groups.length === 0) {
     return (
@@ -171,140 +136,104 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-medium">Imagens dos Grupos</h3>
-          <p className="text-sm text-muted-foreground">
-            Gere imagens personalizadas para cada página de grupo no catálogo
-          </p>
-        </div>
-        
-        {groups.length > 1 && !allGroupsHaveImages && (
-          <Button
-            onClick={generateAllImages}
-            disabled={generatingAll || !imagePrompt.trim()}
-            className="gap-2"
-          >
-            {generatingAll ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="h-4 w-4" />
-            )}
-            Gerar Todas ({groupsWithoutImages.length})
-          </Button>
-        )}
+      <div>
+        <h3 className="text-lg font-medium">Imagens dos Grupos</h3>
+        <p className="text-sm text-muted-foreground">
+          Digite uma descrição para cada grupo e gere imagens personalizadas com IA
+        </p>
       </div>
 
-      {/* Prompt Info */}
-      {!imagePrompt.trim() && (
-        <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-          <p className="text-sm text-amber-600 dark:text-amber-400">
-            <strong>Atenção:</strong> Configure um prompt de imagem na etapa da <strong>Capa</strong> para usar a mesma estética em todos os grupos.
-          </p>
-        </div>
-      )}
-
-      {imagePrompt.trim() && (
-        <div className="p-4 rounded-xl bg-muted/50">
-          <Label className="text-xs text-muted-foreground uppercase tracking-wider mb-2 block">
-            Prompt base (da Capa)
-          </Label>
-          <p className="text-sm">{imagePrompt}</p>
-        </div>
-      )}
-
-      {/* Groups Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Groups List */}
+      <div className="space-y-6">
         {groups.map((group) => {
           const hasImage = !!groupImages[group.id];
           const isGenerating = generatingFor === group.id;
+          const prompt = groupPrompts[group.id] || '';
 
           return (
             <div
               key={group.id}
-              className="relative rounded-xl border bg-card overflow-hidden"
+              className="rounded-xl border bg-card overflow-hidden"
             >
-              {/* Image Preview Area */}
-              <div className="aspect-[16/9] relative bg-muted">
-                {hasImage ? (
-                  <>
-                    <img
-                      src={groupImages[group.id]}
-                      alt={group.nome}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2 h-7 w-7"
-                      onClick={() => clearGroupImage(group.id)}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
-                    <div className="absolute top-2 left-2">
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/90 text-white text-xs">
-                        <Check className="h-3 w-3" />
-                        Pronto
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
-                    <ImageIcon className="h-8 w-8 mb-2" />
-                    <span className="text-xs">Sem imagem</span>
+              {/* Group Header */}
+              <div className="p-4 border-b bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">{group.nome}</h4>
+                    <p className="text-xs text-muted-foreground">
+                      {group.products.length} produto{group.products.length !== 1 ? 's' : ''}
+                    </p>
                   </div>
-                )}
-
-                {/* Group Name Overlay - Similar to reference */}
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h4 className="text-white text-lg font-medium drop-shadow-lg">
-                    {group.nome}
-                  </h4>
-                  <p className="text-white/70 text-xs">
-                    {group.products.length} produto{group.products.length !== 1 ? 's' : ''}
-                  </p>
+                  {hasImage && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 text-green-600 text-xs">
+                      <Check className="h-3 w-3" />
+                      Imagem pronta
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="p-3 border-t bg-card">
-                <Button
-                  variant={hasImage ? "outline" : "default"}
-                  size="sm"
-                  className="w-full gap-2"
-                  onClick={() => generateImageForGroup(group)}
-                  disabled={isGenerating || !imagePrompt.trim()}
-                >
-                  {isGenerating ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-4 w-4" />
-                  )}
-                  {isGenerating ? 'Gerando...' : hasImage ? 'Gerar Nova' : 'Gerar Imagem'}
-                </Button>
+              {/* Content */}
+              <div className="p-4 space-y-4">
+                {/* Prompt Input */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">
+                    Descrição para IA
+                  </Label>
+                  <Textarea
+                    value={prompt}
+                    onChange={(e) => onGroupPromptChange(group.id, e.target.value)}
+                    placeholder={`Ex: produtos de ${group.nome.toLowerCase()} em ambiente moderno, tons neutros, iluminação profissional...`}
+                    className="min-h-[80px] resize-none text-sm"
+                  />
+                </div>
+
+                <div className="flex gap-4">
+                  {/* Image Preview */}
+                  <div className="w-32 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                    {hasImage ? (
+                      <div className="relative w-full h-full group">
+                        <img
+                          src={groupImages[group.id]}
+                          alt={group.nome}
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => clearGroupImage(group.id)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <ImageIcon className="h-6 w-6" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Generate Button */}
+                  <Button
+                    variant={hasImage ? "outline" : "default"}
+                    className="flex-1 gap-2"
+                    onClick={() => generateImageForGroup(group)}
+                    disabled={isGenerating || !prompt.trim()}
+                  >
+                    {isGenerating ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4" />
+                    )}
+                    {isGenerating ? 'Gerando...' : hasImage ? 'Gerar Nova Imagem' : 'Gerar Imagem com IA'}
+                  </Button>
+                </div>
               </div>
             </div>
           );
         })}
       </div>
-
-      {/* Status */}
-      {groups.length > 0 && (
-        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          {allGroupsHaveImages ? (
-            <>
-              <Check className="h-4 w-4 text-green-500" />
-              Todos os grupos têm imagem
-            </>
-          ) : (
-            <>
-              <Layers className="h-4 w-4" />
-              {groupsWithoutImages.length} de {groups.length} grupos sem imagem
-            </>
-          )}
-        </div>
-      )}
     </div>
   );
 };
