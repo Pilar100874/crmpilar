@@ -234,6 +234,7 @@ const MarketingCatalogo: React.FC = () => {
             onChange={setBackcoverPage}
             primaryColor={config.primaryColor}
             logoUrl={coverPage.logoUrl}
+            estabelecimentoId={estabelecimentoId || 'default'}
           />
         );
       case 4:

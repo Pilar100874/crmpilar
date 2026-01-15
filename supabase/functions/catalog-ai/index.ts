@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, prompt, catalogName, businessType, estabelecimentoId } = await req.json();
+    const { action, prompt, catalogName, businessType, estabelecimentoId, saveToGallery } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -95,7 +95,7 @@ IMPORTANT: The image must work as a full-bleed backdrop for white text overlay. 
       console.log("[catalog-ai] Image generated, base64 length:", base64Image.length);
 
       // Try to upload to Supabase storage if available
-      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && estabelecimentoId) {
+      if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && estabelecimentoId && saveToGallery) {
         try {
           const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
           
@@ -103,12 +103,12 @@ IMPORTANT: The image must work as a full-bleed backdrop for white text overlay. 
           const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, '');
           const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
           
-          // Generate unique filename
-          const filename = `catalog-covers/${estabelecimentoId}/${Date.now()}.png`;
+          // Generate unique filename - use the catalog-ai-images bucket
+          const filename = `${estabelecimentoId}/${Date.now()}.png`;
           
           // Upload to storage
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('produtos')
+          const { error: uploadError } = await supabase.storage
+            .from('catalog-ai-images')
             .upload(filename, binaryData, {
               contentType: 'image/png',
               upsert: true
@@ -124,12 +124,29 @@ IMPORTANT: The image must work as a full-bleed backdrop for white text overlay. 
 
           // Get public URL
           const { data: urlData } = supabase.storage
-            .from('produtos')
+            .from('catalog-ai-images')
             .getPublicUrl(filename);
 
           console.log("[catalog-ai] Image uploaded to storage:", urlData.publicUrl);
 
-          return new Response(JSON.stringify({ imageUrl: urlData.publicUrl }), {
+          // Save reference to catalog_ai_images table
+          const { error: dbError } = await supabase
+            .from('catalog_ai_images')
+            .insert({
+              estabelecimento_id: estabelecimentoId,
+              storage_path: filename,
+              public_url: urlData.publicUrl,
+              prompt: prompt
+            });
+
+          if (dbError) {
+            console.error("[catalog-ai] DB insert error:", dbError);
+          }
+
+          return new Response(JSON.stringify({ 
+            imageUrl: urlData.publicUrl,
+            savedToGallery: true 
+          }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } catch (storageError) {
