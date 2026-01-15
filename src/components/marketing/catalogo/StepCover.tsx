@@ -256,9 +256,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
                 <img
                   src={localLogoUrl}
                   alt="Logo"
-                  className="h-16 object-contain rounded-lg border"
+                  className="h-16 w-auto object-contain rounded-lg border bg-white p-1"
                   onLoad={() => console.log('[StepCover] Logo image loaded in form')}
-                  onError={() => console.error('[StepCover] Logo image failed to load in form')}
+                  onError={(e) => console.error('[StepCover] Logo image failed to load in form', e)}
                 />
                 <Button
                   type="button"
@@ -437,10 +437,12 @@ export const StepCover: React.FC<StepCoverProps> = ({
               <div className="flex items-center">
                 {localLogoUrl ? (
                   <img 
-                    key={`logo-${forceUpdate}`} 
+                    key={`preview-logo-${forceUpdate}`} 
                     src={localLogoUrl} 
                     alt="Logo" 
-                    className="h-6 object-contain" 
+                    className="h-6 w-auto object-contain"
+                    onLoad={() => console.log('[StepCover] Logo image loaded in preview')}
+                    onError={(e) => console.error('[StepCover] Logo image failed in preview', e)}
                   />
                 ) : (
                   <div className="w-7 h-7 border border-gray-300 rounded flex items-center justify-center">
