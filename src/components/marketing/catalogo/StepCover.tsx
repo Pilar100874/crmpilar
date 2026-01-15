@@ -34,13 +34,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const [imagePrompt, setImagePrompt] = useState('');
   const [galleryOpen, setGalleryOpen] = useState(false);
   
-  // Local state for logo preview (like ProdutosCRUD uses selectedFile + formData.foto_url)
-  const [logoPreview, setLogoPreview] = useState<string | undefined>(page.logoUrl);
-  
-  // Sync local preview with parent state
-  useEffect(() => {
-    setLogoPreview(page.logoUrl);
-  }, [page.logoUrl]);
+  // Track logo loading state for UI feedback
+  const [logoLoading, setLogoLoading] = useState(false);
   
   // AI Images hook for gallery
   const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
@@ -86,28 +81,25 @@ export const StepCover: React.FC<StepCoverProps> = ({
         toast.info(`Imagem grande (${img.width}x${img.height}px). Será redimensionada automaticamente.`);
       }
 
-      // Show preview immediately
-      setLogoPreview(objectUrl);
-      console.log('[StepCover] Preview set with objectUrl');
-
-      // Read as base64 for persistence
+      // Read as base64 for persistence and display
       const reader = new FileReader();
       reader.onload = (event) => {
         const dataUrl = event.target?.result as string;
         if (dataUrl) {
           console.log('[StepCover] Base64 ready, length:', dataUrl.length);
-          setLogoPreview(dataUrl);
           onChange({ ...page, logoUrl: dataUrl });
           toast.success(`Logo carregado! (${img.width}x${img.height}px)`);
-          URL.revokeObjectURL(objectUrl);
+          setLogoLoading(false);
         }
+        URL.revokeObjectURL(objectUrl);
       };
       reader.onerror = () => {
         console.error('[StepCover] FileReader error');
         toast.error('Erro ao processar logo');
-        setLogoPreview(undefined);
+        setLogoLoading(false);
         URL.revokeObjectURL(objectUrl);
       };
+      setLogoLoading(true);
       reader.readAsDataURL(file);
     };
     
@@ -122,7 +114,6 @@ export const StepCover: React.FC<StepCoverProps> = ({
 
   const clearLogo = () => {
     console.log('[StepCover] Clearing logo');
-    setLogoPreview(undefined);
     onChange({ ...page, logoUrl: undefined });
     if (logoInputRef.current) {
       logoInputRef.current.value = "";
@@ -322,12 +313,12 @@ export const StepCover: React.FC<StepCoverProps> = ({
                 className="text-xs sm:text-sm"
               >
                 <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                {logoPreview ? 'Trocar' : 'Selecionar'}
+                {logoLoading ? 'Carregando...' : (page.logoUrl ? 'Trocar' : 'Selecionar')}
               </Button>
-              {logoPreview && (
+              {page.logoUrl && (
                 <div className="relative inline-block group">
                   <img 
-                    src={logoPreview} 
+                    src={page.logoUrl} 
                     alt="Logo Preview" 
                     className="w-12 h-12 sm:w-16 sm:h-16 object-contain rounded border bg-white"
                   />
@@ -498,9 +489,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
               <div className="bg-white px-4 py-3 flex items-center justify-between">
               {/* Logo bottom left */}
               <div className="flex items-center">
-                {logoPreview ? (
+                {page.logoUrl ? (
                   <img 
-                    src={logoPreview}
+                    src={page.logoUrl}
                     alt="Logo" 
                     className="h-6 w-auto object-contain"
                   />
