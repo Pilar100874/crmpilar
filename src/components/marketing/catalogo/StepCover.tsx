@@ -34,12 +34,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const [imagePrompt, setImagePrompt] = useState('');
   const [galleryOpen, setGalleryOpen] = useState(false);
   
-  // Estado local para arquivo selecionado e preview
-  const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
-  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string>(page.logoUrl || '');
-  
-  // Debug: log do estado atual
-  console.log('[StepCover] Render - logoPreviewUrl:', logoPreviewUrl, 'page.logoUrl:', page.logoUrl);
+  // Estado para loading do logo
+  const [logoLoading, setLogoLoading] = useState(false);
   
   // AI Images hook for gallery
   const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
@@ -49,35 +45,34 @@ export const StepCover: React.FC<StepCoverProps> = ({
     toast.success('Imagem selecionada!');
   };
 
-  // EXATAMENTE igual ProdutosCRUD.handleFileSelect
+  // Converter para base64 para garantir que funcione
   const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('[StepCover] handleLogoSelect chamado');
     const file = e.target.files?.[0];
-    console.log('[StepCover] Arquivo:', file?.name, file?.type, file?.size);
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        console.log('[StepCover] Tipo inválido:', file.type);
-        toast.error("Por favor selecione um arquivo de imagem");
-        return;
-      }
-      setSelectedLogoFile(file);
-      const previewUrl = URL.createObjectURL(file);
-      console.log('[StepCover] Preview URL criada:', previewUrl);
-      setLogoPreviewUrl(previewUrl);
-      onChange({ ...page, logoUrl: previewUrl });
-      console.log('[StepCover] onChange chamado com logoUrl');
-      toast.success('Logo carregado!');
-    } else {
-      console.log('[StepCover] Nenhum arquivo selecionado');
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      toast.error("Por favor selecione um arquivo de imagem");
+      return;
     }
+    
+    setLogoLoading(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      console.log('[StepCover] Base64 gerado, tamanho:', base64?.length);
+      onChange({ ...page, logoUrl: base64 });
+      setLogoLoading(false);
+      toast.success('Logo carregado!');
+    };
+    reader.onerror = () => {
+      console.error('[StepCover] Erro ao ler arquivo');
+      toast.error('Erro ao carregar logo');
+      setLogoLoading(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const clearLogo = () => {
-    if (logoPreviewUrl) {
-      URL.revokeObjectURL(logoPreviewUrl);
-    }
-    setSelectedLogoFile(null);
-    setLogoPreviewUrl('');
     onChange({ ...page, logoUrl: undefined });
     if (logoInputRef.current) {
       logoInputRef.current.value = "";
@@ -277,17 +272,14 @@ export const StepCover: React.FC<StepCoverProps> = ({
                 className="text-xs sm:text-sm"
               >
                 <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                {logoPreviewUrl ? 'Trocar' : 'Selecionar'}
+                {logoLoading ? 'Carregando...' : (page.logoUrl ? 'Trocar' : 'Selecionar')}
               </Button>
-              {logoPreviewUrl ? (
-                <div className="relative inline-block group border-2 border-red-500 p-1">
+              {page.logoUrl ? (
+                <div className="relative inline-block group">
                   <img 
-                    src={logoPreviewUrl} 
+                    src={page.logoUrl} 
                     alt="Logo Preview" 
-                    style={{ width: '64px', height: '64px', minWidth: '64px', minHeight: '64px' }}
-                    className="object-contain rounded border-2 border-blue-500 bg-white"
-                    onLoad={() => console.log('[StepCover] Imagem carregou com sucesso')}
-                    onError={(e) => console.error('[StepCover] Erro ao carregar imagem:', e)}
+                    className="w-12 h-12 sm:w-16 sm:h-16 object-contain rounded border bg-white"
                   />
                   <Button
                     type="button"
@@ -450,9 +442,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
               <div className="bg-white px-4 py-3 flex items-center justify-between">
               {/* Logo bottom left */}
               <div className="flex items-center">
-                {logoPreviewUrl ? (
+                {page.logoUrl ? (
                   <img 
-                    src={logoPreviewUrl}
+                    src={page.logoUrl}
                     alt="Logo" 
                     className="h-6 w-auto object-contain"
                   />
