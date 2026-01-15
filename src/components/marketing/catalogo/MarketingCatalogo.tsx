@@ -6,6 +6,7 @@ import { CatalogWizardSteps } from './CatalogWizardSteps';
 import { StepInfo } from './StepInfo';
 import { StepCover } from './StepCover';
 import { StepProducts } from './StepProducts';
+import { StepGroupImages } from './StepGroupImages';
 import { StepBackcover } from './StepBackcover';
 import { StepPreview } from './StepPreview';
 import { SavedCatalogsList } from './SavedCatalogsList';
@@ -29,6 +30,8 @@ const MarketingCatalogo: React.FC = () => {
   const [editingCatalogId, setEditingCatalogId] = useState<string | null>(null);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
+  const [imagePrompt, setImagePrompt] = useState('');
+  const [groupImages, setGroupImages] = useState<Record<string, string>>({});
 
   const [config, setConfig] = useState<CatalogConfig>({
     name: '',
@@ -111,6 +114,8 @@ const MarketingCatalogo: React.FC = () => {
     });
     setCurrentStep(0);
     setEditingCatalogId(null);
+    setImagePrompt('');
+    setGroupImages({});
   };
 
   const handleCreateNew = () => {
@@ -182,9 +187,11 @@ const MarketingCatalogo: React.FC = () => {
       case 2:
         return (productsPage.products?.length || 0) > 0;
       case 3:
-        return true;
+        return true; // Groups step
       case 4:
-        return true;
+        return true; // Backcover step
+      case 5:
+        return true; // Preview step
       default:
         return true;
     }
@@ -202,6 +209,10 @@ const MarketingCatalogo: React.FC = () => {
     }
   };
 
+  const handleGroupImageChange = (groupId: string, imageUrl: string) => {
+    setGroupImages(prev => ({ ...prev, [groupId]: imageUrl }));
+  };
+
   const renderStep = () => {
     switch (currentStep) {
       case 0:
@@ -210,7 +221,11 @@ const MarketingCatalogo: React.FC = () => {
         return (
           <StepCover
             page={coverPage}
-            onChange={setCoverPage}
+            onChange={(newPage) => {
+              setCoverPage(newPage);
+            }}
+            onPromptChange={setImagePrompt}
+            imagePrompt={imagePrompt}
             primaryColor={config.primaryColor}
             catalogName={config.name}
             businessType={config.businessType}
@@ -229,6 +244,16 @@ const MarketingCatalogo: React.FC = () => {
         );
       case 3:
         return (
+          <StepGroupImages
+            productsPage={productsPage}
+            groupImages={groupImages}
+            onGroupImageChange={handleGroupImageChange}
+            imagePrompt={imagePrompt}
+            estabelecimentoId={estabelecimentoId}
+          />
+        );
+      case 4:
+        return (
           <StepBackcover
             page={backcoverPage}
             onChange={setBackcoverPage}
@@ -237,13 +262,14 @@ const MarketingCatalogo: React.FC = () => {
             estabelecimentoId={estabelecimentoId || 'default'}
           />
         );
-      case 4:
+      case 5:
         return (
           <StepPreview
             config={config}
             coverPage={coverPage}
             productsPage={productsPage}
             backcoverPage={backcoverPage}
+            groupImages={groupImages}
           />
         );
       default:

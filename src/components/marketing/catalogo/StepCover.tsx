@@ -13,6 +13,8 @@ import { AIImageGallery } from './AIImageGallery';
 interface StepCoverProps {
   page: CatalogPage;
   onChange: (page: CatalogPage) => void;
+  onPromptChange?: (prompt: string) => void;
+  imagePrompt?: string;
   primaryColor: string;
   catalogName?: string;
   businessType?: string;
@@ -22,6 +24,8 @@ interface StepCoverProps {
 export const StepCover: React.FC<StepCoverProps> = ({ 
   page, 
   onChange, 
+  onPromptChange,
+  imagePrompt: externalImagePrompt,
   primaryColor,
   catalogName,
   businessType,
@@ -31,8 +35,14 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const bgInputRef = useRef<HTMLInputElement>(null);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingText, setGeneratingText] = useState(false);
-  const [imagePrompt, setImagePrompt] = useState('');
+  const [imagePrompt, setImagePromptLocal] = useState(externalImagePrompt || '');
   const [galleryOpen, setGalleryOpen] = useState(false);
+  
+  // Sync prompt to parent when it changes
+  const setImagePrompt = (prompt: string) => {
+    setImagePromptLocal(prompt);
+    onPromptChange?.(prompt);
+  };
   
   // Estado para loading do logo
   const [logoLoading, setLogoLoading] = useState(false);

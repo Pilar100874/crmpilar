@@ -14,6 +14,7 @@ interface StepPreviewProps {
   coverPage: CatalogPage;
   productsPage: CatalogPage;
   backcoverPage: CatalogPage;
+  groupImages?: Record<string, string>;
 }
 
 interface PageInfo {
@@ -29,6 +30,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
   coverPage,
   productsPage,
   backcoverPage,
+  groupImages = {},
 }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [generating, setGenerating] = useState(false);
@@ -249,56 +251,77 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     );
   };
 
-  // Group Header - Split design with image and text
-  const renderGroupHeader = (groupName: string) => (
-    <div
-      className="w-full h-full flex relative"
-      style={{ fontFamily: config.fontFamily }}
-    >
-      {/* Left side - Dark with text */}
-      <div 
-        className="w-1/3 flex flex-col justify-center p-10"
-        style={{ backgroundColor: '#1a1a1a' }}
-      >
-        <div className="space-y-6">
-          <h2 
-            className="text-4xl font-light text-white"
-            style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-          >
-            <span className="font-serif italic text-white/60">{groupName.split(' ')[0]}</span>
-            {' '}
-            <span className="font-bold uppercase">{groupName.split(' ').slice(1).join(' ') || ''}</span>
-          </h2>
-        </div>
-      </div>
+  // Group Header - Split design with image and text (matching reference)
+  const renderGroupHeader = (groupName: string) => {
+    const group = groupedProducts.find(g => g.nome === groupName);
+    const groupImage = group ? groupImages[group.id] : undefined;
 
-      {/* Right side - Product showcase */}
-      <div 
-        className="w-2/3 flex items-center justify-center p-12"
-        style={{ backgroundColor: '#f5f5f5' }}
+    return (
+      <div
+        className="w-full h-full flex relative overflow-hidden"
+        style={{ fontFamily: config.fontFamily }}
       >
-        <div className="grid grid-cols-2 gap-6 w-full max-w-md">
-          {groupedProducts.find(g => g.nome === groupName)?.products.slice(0, 4).map((product, i) => (
-            <div 
-              key={i}
-              className={cn(
-                "aspect-square rounded-2xl overflow-hidden shadow-lg",
-                i === 0 && "col-span-2"
-              )}
+        {/* Left side - Dark with vertical text */}
+        <div 
+          className="w-[35%] flex flex-col justify-center items-center relative"
+          style={{ backgroundColor: '#2a2a2a' }}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <h2 
+              className="text-5xl text-white tracking-wide"
+              style={{ 
+                writingMode: 'vertical-rl', 
+                textOrientation: 'mixed',
+                transform: 'rotate(180deg)',
+                fontFamily: 'Georgia, serif'
+              }}
             >
-              {product.foto_url ? (
-                <img src={product.foto_url} alt={product.nome} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <Package className="h-12 w-12 text-gray-400" />
-                </div>
+              <span className="font-light italic text-white/70">{groupName.split(' ')[0]}</span>
+              {groupName.split(' ').length > 1 && (
+                <span className="font-bold ml-2">{groupName.split(' ').slice(1).join(' ')}</span>
               )}
+            </h2>
+          </div>
+        </div>
+
+        {/* Right side - AI Generated Image or Product showcase */}
+        <div className="w-[65%] relative">
+          {groupImage ? (
+            <img 
+              src={groupImage} 
+              alt={groupName} 
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <div 
+              className="w-full h-full flex items-center justify-center p-8"
+              style={{ backgroundColor: '#f5f5f5' }}
+            >
+              <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
+                {group?.products.slice(0, 4).map((product, i) => (
+                  <div 
+                    key={i}
+                    className={cn(
+                      "aspect-square rounded-xl overflow-hidden shadow-lg",
+                      i === 0 && "col-span-2"
+                    )}
+                  >
+                    {product.foto_url ? (
+                      <img src={product.foto_url} alt={product.nome} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                        <Package className="h-10 w-10 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+          )}
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Product Page - Reference design following the image: gold accent, clean header, product grid
   const renderProductPage = (pageProducts: typeof products, groupName?: string, pageNumber?: number) => {

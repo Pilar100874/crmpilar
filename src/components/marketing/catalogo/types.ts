@@ -14,6 +14,7 @@ export interface ProductGroup {
   id: string;
   nome: string;
   products: CatalogProduct[];
+  backgroundImage?: string;
 }
 
 export interface CatalogPage {
@@ -59,6 +60,7 @@ export const WIZARD_STEPS: WizardStep[] = [
   { id: 'info', title: 'Informações', description: 'Nome e configurações do catálogo' },
   { id: 'cover', title: 'Capa', description: 'Configure a capa do catálogo' },
   { id: 'products', title: 'Produtos', description: 'Selecione os produtos' },
+  { id: 'groups', title: 'Grupos', description: 'Imagens dos grupos' },
   { id: 'backcover', title: 'Contracapa', description: 'Informações de contato' },
   { id: 'preview', title: 'Visualização', description: 'Revise e exporte o PDF' },
 ];
