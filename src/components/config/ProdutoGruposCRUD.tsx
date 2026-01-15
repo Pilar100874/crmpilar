@@ -387,7 +387,8 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
             </div>
 
             {/* Campo Imagem para Catálogo de Produtos */}
-            <div className="border-t pt-4">
+            <div className="border-t pt-4 bg-blue-50 p-2 rounded">
+              <p className="text-red-500 font-bold text-xs mb-2">DEBUG: Este bloco deve aparecer</p>
               <Label className="flex items-center gap-2 mb-1">
                 <Image className="w-4 h-4" />
                 Imagem para Catálogo de Produtos
@@ -395,7 +396,8 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
               <p className="text-xs text-muted-foreground mb-2">
                 Imagem que será exibida no catálogo de produtos para este grupo
               </p>
-              <div className="flex items-center gap-3">
+              <p className="text-green-500 font-bold text-xs mb-2">DEBUG: Antes do botão</p>
+              <div className="flex items-center gap-3 bg-yellow-100 p-2">
                 <Button
                   type="button"
                   variant="outline"
