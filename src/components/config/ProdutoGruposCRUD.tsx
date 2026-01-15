@@ -328,6 +328,14 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
             </DialogTitle>
           </DialogHeader>
 
+          {/* DEBUG INFO */}
+          <div className="bg-yellow-200 p-2 text-xs mb-2">
+            <p><strong>Modo:</strong> {editingGrupo ? 'EDIÇÃO' : 'NOVO'}</p>
+            <p><strong>ID:</strong> {editingGrupo?.id || 'N/A'}</p>
+            <p><strong>Tem imagem_catalogo:</strong> {formData.imagem_catalogo ? 'SIM' : 'NÃO'}</p>
+            <p><strong>Timestamp:</strong> {Date.now()}</p>
+          </div>
+
           <div className="space-y-4 pb-4">
             <div>
               <Label>Nome *</Label>
@@ -351,7 +359,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
 
             {/* Campo Imagem para Catálogo de Produtos - MOVIDO PARA CIMA */}
             <div className="border-2 border-blue-500 p-3 rounded bg-blue-50">
-              <p className="text-red-500 font-bold text-sm mb-2">🔴 CATÁLOGO - Este deve aparecer primeiro</p>
+              <p className="text-red-500 font-bold text-sm mb-2">🔴 CATÁLOGO - ID: {editingGrupo?.id || 'new'}</p>
               <Label className="flex items-center gap-2 mb-1">
                 <Image className="w-4 h-4" />
                 Imagem para Catálogo de Produtos
