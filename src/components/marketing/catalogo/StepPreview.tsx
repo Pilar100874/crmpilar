@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Download, Loader2, ChevronLeft, ChevronRight, Package, FileText, Phone, Mail, Globe, MapPin, Layers } from 'lucide-react';
-import { CatalogConfig, CatalogPage, CatalogProduct, LAYOUT_OPTIONS, ProductGroup } from './types';
+import { CatalogConfig, CatalogPage, CatalogProduct, LAYOUT_OPTIONS, ProductGroup, GroupFieldConfig, PRODUCT_FIELDS } from './types';
 import { cn } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -337,9 +337,22 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     );
   };
 
-  // Product Page - Reference design: clean header with "Linha + GroupName", 4-column grid, orange triangle accent
+  // Helper to get selected fields for a group
+  const getGroupFields = (groupName?: string): string[] => {
+    if (!groupName || !config.groupFieldConfigs) return ['codigo', 'descricao'];
+    
+    // Find group by name
+    const group = groupedProducts.find(g => g.nome === groupName);
+    if (!group) return ['codigo', 'descricao'];
+    
+    const fieldConfig = config.groupFieldConfigs.find(c => c.groupId === group.id);
+    return fieldConfig?.selectedFields || ['codigo', 'descricao'];
+  };
+
+  // Product Page - Reference design: clean header with "Linha + GroupName", dynamic columns
   const renderProductPage = (pageProducts: typeof products, groupName?: string, pageNumber?: number) => {
     const displayGroupName = groupName || 'Produtos';
+    const selectedFields = getGroupFields(groupName);
     
     return (
       <div
@@ -408,23 +421,47 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                   layout === 'list' ? "flex-1" : "pt-2"
                 )}>
                   <div className="flex-1 min-w-0">
-                    {/* Product Name */}
+                    {/* Product Name - Always shown */}
                     <h4 className={cn(
                       "font-semibold text-gray-800 line-clamp-1",
                       layout === 'list' ? "text-sm" : layout === 'grid-2' ? "text-[11px]" : "text-[9px]"
                     )}>
                       {product.nome}
                     </h4>
-                    {/* Description */}
-                    <p className={cn(
-                      "text-gray-400 leading-tight mt-0.5",
-                      layout === 'list' ? "text-xs line-clamp-2" : layout === 'grid-2' ? "text-[9px] line-clamp-3" : "text-[7px] line-clamp-2"
-                    )}>
-                      {product.descricao || 'Produto de alta qualidade'}
-                    </p>
+                    
+                    {/* Description - Only if selected */}
+                    {selectedFields.includes('descricao') && product.descricao && (
+                      <p className={cn(
+                        "text-gray-400 leading-tight mt-0.5",
+                        layout === 'list' ? "text-xs line-clamp-2" : layout === 'grid-2' ? "text-[9px] line-clamp-3" : "text-[7px] line-clamp-2"
+                      )}>
+                        {product.descricao}
+                      </p>
+                    )}
+                    
+                    {/* Category - Only if selected */}
+                    {selectedFields.includes('categoria_nome') && product.categoria_nome && (
+                      <p className={cn(
+                        "text-gray-500 mt-0.5",
+                        layout === 'list' ? "text-xs" : "text-[7px]"
+                      )}>
+                        {product.categoria_nome}
+                      </p>
+                    )}
+                    
+                    {/* Group - Only if selected */}
+                    {selectedFields.includes('grupo_nome') && product.grupo_nome && (
+                      <p className={cn(
+                        "text-gray-500 mt-0.5",
+                        layout === 'list' ? "text-xs" : "text-[7px]"
+                      )}>
+                        {product.grupo_nome}
+                      </p>
+                    )}
                   </div>
-                  {/* Product Code */}
-                  {config.showCodes && product.codigo && (
+                  
+                  {/* Product Code - Only if selected */}
+                  {selectedFields.includes('codigo') && product.codigo && (
                     <span className={cn(
                       "font-medium text-gray-600 flex-shrink-0",
                       layout === 'list' ? "text-sm" : layout === 'grid-2' ? "text-[11px]" : "text-[9px]"

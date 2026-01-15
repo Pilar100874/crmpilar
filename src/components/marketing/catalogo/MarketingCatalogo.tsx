@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Save, BookOpen, Loader2 } from 'lucide-react';
-import { CatalogConfig, CatalogPage, WIZARD_STEPS } from './types';
+import { CatalogConfig, CatalogPage, WIZARD_STEPS, GroupFieldConfig } from './types';
 import { CatalogWizardSteps } from './CatalogWizardSteps';
 import { StepInfo } from './StepInfo';
 import { StepCover } from './StepCover';
 import { StepProducts } from './StepProducts';
 import { StepGroupImages } from './StepGroupImages';
+import { StepGroupFields } from './StepGroupFields';
 import { StepBackcover } from './StepBackcover';
 import { StepPreview } from './StepPreview';
 import { SavedCatalogsList } from './SavedCatalogsList';
@@ -33,6 +34,7 @@ const MarketingCatalogo: React.FC = () => {
   const [imagePrompt, setImagePrompt] = useState('');
   const [groupImages, setGroupImages] = useState<Record<string, string>>({});
   const [groupPrompts, setGroupPrompts] = useState<Record<string, string>>({});
+  const [groupFieldConfigs, setGroupFieldConfigs] = useState<GroupFieldConfig[]>([]);
 
   const [config, setConfig] = useState<CatalogConfig>({
     name: '',
@@ -42,6 +44,7 @@ const MarketingCatalogo: React.FC = () => {
     fontFamily: 'Inter, sans-serif',
     showPrices: true,
     showCodes: true,
+    groupFieldConfigs: [],
   });
 
   const [coverPage, setCoverPage] = useState<CatalogPage>({
@@ -92,6 +95,7 @@ const MarketingCatalogo: React.FC = () => {
       fontFamily: 'Inter, sans-serif',
       showPrices: true,
       showCodes: true,
+      groupFieldConfigs: [],
     });
     setCoverPage({
       id: 'cover',
@@ -118,6 +122,7 @@ const MarketingCatalogo: React.FC = () => {
     setImagePrompt('');
     setGroupImages({});
     setGroupPrompts({});
+    setGroupFieldConfigs([]);
   };
 
   const handleCreateNew = () => {
@@ -257,6 +262,17 @@ const MarketingCatalogo: React.FC = () => {
         );
       case 4:
         return (
+          <StepGroupFields
+            productsPage={productsPage}
+            groupFieldConfigs={groupFieldConfigs}
+            onGroupFieldConfigChange={(configs) => {
+              setGroupFieldConfigs(configs);
+              updateConfig({ groupFieldConfigs: configs });
+            }}
+          />
+        );
+      case 5:
+        return (
           <StepBackcover
             page={backcoverPage}
             onChange={setBackcoverPage}
@@ -265,7 +281,7 @@ const MarketingCatalogo: React.FC = () => {
             estabelecimentoId={estabelecimentoId || 'default'}
           />
         );
-      case 5:
+      case 6:
         return (
           <StepPreview
             config={config}
