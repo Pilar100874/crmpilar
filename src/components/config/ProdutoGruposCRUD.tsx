@@ -105,7 +105,9 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     e: React.ChangeEvent<HTMLInputElement>,
     field: 'imagem_referencia' | 'imagem_catalogo'
   ) => {
+    console.log('[ProdutoGruposCRUD v2] handleFileSelect chamado, field:', field);
     const file = e.target.files?.[0];
+    console.log('[ProdutoGruposCRUD v2] arquivo:', file?.name, file?.size);
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
@@ -126,6 +128,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     }
     
     const previewUrl = URL.createObjectURL(file);
+    console.log('[ProdutoGruposCRUD v2] previewUrl criado:', previewUrl);
     setFormData(prev => ({ ...prev, [field]: previewUrl }));
     toast.success('Imagem selecionada!');
   };
