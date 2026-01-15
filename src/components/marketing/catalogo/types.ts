@@ -8,6 +8,27 @@ export interface CatalogProduct {
   categoria_nome?: string;
   grupo_nome?: string;
   grupo_id?: string;
+  // Dados Básicos
+  largura?: number;
+  altura?: number;
+  comprimento?: number;
+  gramatura?: number;
+  peso_unitario?: number;
+  numero_folhas?: number;
+  // Dados do Frete
+  embalagem_largura?: number;
+  embalagem_altura?: number;
+  embalagem_comprimento?: number;
+  embalagem_peso?: number;
+  cubagem?: number;
+  valor_seguro?: number;
+  empilhamento_maximo?: number;
+  fragil?: boolean;
+  observacoes_frete?: string;
+  // Embalagem
+  ean_13?: string;
+  ean_14_1?: string;
+  ean_14_2?: string;
 }
 
 export interface ProductGroup {
@@ -74,10 +95,32 @@ export const WIZARD_STEPS: WizardStep[] = [
 ];
 
 export const PRODUCT_FIELDS = [
-  { key: 'codigo', label: 'Código/SKU' },
-  { key: 'descricao', label: 'Descrição' },
-  { key: 'categoria_nome', label: 'Categoria' },
-  { key: 'grupo_nome', label: 'Grupo' },
+  // Dados Básicos
+  { key: 'codigo', label: 'Código/SKU', category: 'Dados Básicos' },
+  { key: 'descricao', label: 'Descrição', category: 'Dados Básicos' },
+  { key: 'categoria_nome', label: 'Categoria', category: 'Dados Básicos' },
+  { key: 'largura', label: 'Largura (cm)', category: 'Dados Básicos' },
+  { key: 'altura', label: 'Altura (cm)', category: 'Dados Básicos' },
+  { key: 'comprimento', label: 'Comprimento (cm)', category: 'Dados Básicos' },
+  { key: 'gramatura', label: 'Gramatura', category: 'Dados Básicos' },
+  { key: 'peso_unitario', label: 'Peso Unitário', category: 'Dados Básicos' },
+  { key: 'numero_folhas', label: 'Número de Folhas', category: 'Dados Básicos' },
+  
+  // Dados do Frete
+  { key: 'embalagem_largura', label: 'Largura Embalagem (cm)', category: 'Dados do Frete' },
+  { key: 'embalagem_altura', label: 'Altura Embalagem (cm)', category: 'Dados do Frete' },
+  { key: 'embalagem_comprimento', label: 'Comprimento Embalagem (cm)', category: 'Dados do Frete' },
+  { key: 'embalagem_peso', label: 'Peso c/ Embalagem (kg)', category: 'Dados do Frete' },
+  { key: 'cubagem', label: 'Cubagem (m³)', category: 'Dados do Frete' },
+  { key: 'valor_seguro', label: 'Valor do Seguro', category: 'Dados do Frete' },
+  { key: 'empilhamento_maximo', label: 'Empilhamento Máximo', category: 'Dados do Frete' },
+  { key: 'fragil', label: 'Produto Frágil', category: 'Dados do Frete' },
+  { key: 'observacoes_frete', label: 'Observações de Frete', category: 'Dados do Frete' },
+  
+  // Embalagem
+  { key: 'ean_13', label: 'EAN-13', category: 'Embalagem' },
+  { key: 'ean_14_1', label: 'EAN-14 (1)', category: 'Embalagem' },
+  { key: 'ean_14_2', label: 'EAN-14 (2)', category: 'Embalagem' },
 ] as const;
 
 export const LAYOUT_OPTIONS = [
