@@ -2,9 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Loader2, ImageIcon, Layers, Check, X } from 'lucide-react';
+import { Sparkles, Loader2, ImageIcon, Layers, Check, X, FolderOpen } from 'lucide-react';
 import { CatalogPage, CatalogProduct, ProductGroup } from './types';
 import { toast } from 'sonner';
+import { useCatalogAIImages } from './hooks/useCatalogAIImages';
+import { AIImageGallery } from './AIImageGallery';
 
 interface StepGroupImagesProps {
   productsPage: CatalogPage;
@@ -24,9 +26,13 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
   estabelecimentoId,
 }) => {
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
+  const [galleryOpenFor, setGalleryOpenFor] = useState<string | null>(null);
 
   const products = productsPage.products || [];
   const groupByCategory = productsPage.groupByCategory ?? true;
+
+  // AI Images hook for gallery
+  const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
 
   // Get unique groups from selected products
   const groups = useMemo((): ProductGroup[] => {
@@ -96,6 +102,12 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
 
       if (data?.imageUrl) {
         onGroupImageChange(group.id, data.imageUrl);
+        
+        // Refresh gallery if saved
+        if (data.savedToGallery) {
+          await refreshGallery();
+        }
+        
         toast.success(`Imagem gerada para ${group.nome}!`, { id: `ai-group-${group.id}` });
       } else {
         toast.error('Erro: imagem não retornada', { id: `ai-group-${group.id}` });
@@ -114,6 +126,12 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
 
   const clearGroupImage = (groupId: string) => {
     onGroupImageChange(groupId, '');
+  };
+
+  const handleSelectFromGallery = (groupId: string, imageUrl: string) => {
+    onGroupImageChange(groupId, imageUrl);
+    setGalleryOpenFor(null);
+    toast.success('Imagem selecionada!');
   };
 
   if (!groupByCategory || groups.length === 0) {
@@ -139,7 +157,7 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
       <div>
         <h3 className="text-lg font-medium">Imagens dos Grupos</h3>
         <p className="text-sm text-muted-foreground">
-          Digite uma descrição para cada grupo e gere imagens personalizadas com IA
+          Digite uma descrição para cada grupo e gere imagens personalizadas com IA ou selecione da galeria
         </p>
       </div>
 
@@ -214,22 +232,51 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
                     )}
                   </div>
 
-                  {/* Generate Button */}
-                  <Button
-                    variant={hasImage ? "outline" : "default"}
-                    className="flex-1 gap-2"
-                    onClick={() => generateImageForGroup(group)}
-                    disabled={isGenerating || !prompt.trim()}
-                  >
-                    {isGenerating ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4" />
-                    )}
-                    {isGenerating ? 'Gerando...' : hasImage ? 'Gerar Nova Imagem' : 'Gerar Imagem com IA'}
-                  </Button>
+                  {/* Buttons */}
+                  <div className="flex-1 flex gap-2">
+                    {/* Generate Button */}
+                    <Button
+                      variant={hasImage ? "outline" : "default"}
+                      className="flex-1 gap-2"
+                      onClick={() => generateImageForGroup(group)}
+                      disabled={isGenerating || !prompt.trim()}
+                    >
+                      {isGenerating ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                      {isGenerating ? 'Gerando...' : hasImage ? 'Nova' : 'Gerar com IA'}
+                    </Button>
+
+                    {/* Gallery Button */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setGalleryOpenFor(group.id)}
+                      className="gap-2"
+                    >
+                      <FolderOpen className="h-4 w-4" />
+                      <span className="hidden sm:inline">Galeria</span>
+                      {images.length > 0 && (
+                        <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+                          {images.length}
+                        </span>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
+
+              {/* Gallery Dialog for this group */}
+              <AIImageGallery
+                open={galleryOpenFor === group.id}
+                onOpenChange={(open) => !open && setGalleryOpenFor(null)}
+                images={images}
+                loading={imagesLoading}
+                onSelect={(url) => handleSelectFromGallery(group.id, url)}
+                onDelete={deleteImage}
+              />
             </div>
           );
         })}
