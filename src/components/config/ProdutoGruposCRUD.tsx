@@ -396,25 +396,24 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                 Imagem que será exibida no catálogo de produtos para este grupo
               </p>
               
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
-                  disabled={uploading}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
-                </Button>
-                {formData.imagem_catalogo && (
-                  <img 
-                    src={formData.imagem_catalogo} 
-                    alt="Preview catálogo" 
-                    style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e5e7eb' }}
-                  />
-                )}
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
+                disabled={uploading}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
+              </Button>
+              
+              {formData.imagem_catalogo && (
+                <img 
+                  src={formData.imagem_catalogo} 
+                  alt="Preview catálogo" 
+                  style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e5e7eb', marginLeft: '12px', display: 'inline-block', verticalAlign: 'middle' }}
+                />
+              )}
               
               <input
                 id="grupo-imagem-catalogo-upload"
