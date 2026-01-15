@@ -254,7 +254,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     
     return (
       <div
-        className="w-full h-full bg-white p-[6mm] relative overflow-hidden"
+        className="w-full h-full bg-white p-[12mm] relative overflow-hidden"
         style={{ fontFamily: config.fontFamily }}
       >
         {/* Image container with white border */}
