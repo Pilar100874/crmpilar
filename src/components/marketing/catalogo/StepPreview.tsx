@@ -259,79 +259,88 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
 
     return (
       <div
-        className="w-full h-full relative overflow-hidden"
+        className="w-full h-full bg-white p-[6mm] relative overflow-hidden"
         style={{ fontFamily: config.fontFamily }}
       >
-        {/* Full Background Image */}
-        {groupImage ? (
-          <img 
-            src={groupImage} 
-            alt={groupName} 
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        ) : (
+        {/* Image container with white border */}
+        <div className="relative w-full h-full overflow-hidden">
+          {/* Background Image */}
+          {groupImage ? (
+            <img 
+              src={groupImage} 
+              alt={groupName} 
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <div 
+              className="absolute inset-0"
+              style={{ backgroundColor: '#6b7280' }}
+            />
+          )}
+
+          {/* Subtle gradient overlay on left for text readability */}
           <div 
-            className="absolute inset-0"
-            style={{ backgroundColor: '#6b7280' }}
-          />
-        )}
-
-        {/* Gradient overlay on left for text readability */}
-        <div 
-          className="absolute inset-y-0 left-0 w-1/3"
-          style={{ 
-            background: 'linear-gradient(to right, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)'
-          }}
-        />
-
-        {/* Vertical Text on Left Side */}
-        <div className="absolute left-4 inset-y-0 flex items-center">
-          <h2 
-            className="text-white leading-none"
+            className="absolute inset-y-0 left-0 w-[15%]"
             style={{ 
-              writingMode: 'vertical-rl', 
-              textOrientation: 'mixed',
-              transform: 'rotate(180deg)',
-              fontFamily: 'Helvetica Neue, Arial, sans-serif',
+              background: 'linear-gradient(to right, rgba(0,0,0,0.15) 0%, transparent 100%)'
             }}
+          />
+
+          {/* Vertical Text on Left Side - matching reference positioning */}
+          <div 
+            className="absolute left-3 inset-y-0 flex items-center justify-center"
           >
-            <span 
-              className="text-4xl tracking-wider"
-              style={{ fontWeight: 200, opacity: 0.9 }}
+            <h2 
+              className="text-white leading-[0.85]"
+              style={{ 
+                writingMode: 'vertical-rl', 
+                textOrientation: 'mixed',
+                transform: 'rotate(180deg)',
+                fontFamily: 'Helvetica Neue, Arial, sans-serif',
+                letterSpacing: '-0.02em'
+              }}
             >
-              {firstWord}
-            </span>
-            {restWords && (
               <span 
-                className="text-4xl tracking-wider ml-1"
-                style={{ fontWeight: 700 }}
+                style={{ 
+                  fontSize: '72px',
+                  fontWeight: 200, 
+                  opacity: 0.95,
+                  display: 'block'
+                }}
               >
-                {restWords}
+                {firstWord}
               </span>
-            )}
-          </h2>
-        </div>
+              {restWords && (
+                <span 
+                  style={{ 
+                    fontSize: '72px',
+                    fontWeight: 700,
+                    display: 'block',
+                    marginTop: '4px'
+                  }}
+                >
+                  {restWords}
+                </span>
+              )}
+            </h2>
+          </div>
 
-        {/* Small text on right side (optional description) */}
-        <div 
-          className="absolute right-6 top-1/2 -translate-y-1/2 max-w-[120px] text-right"
-        >
-          <p 
-            className="text-white/80 text-[8px] leading-relaxed"
-            style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
+          {/* Small descriptive text on right side */}
+          <div 
+            className="absolute right-4 bottom-1/3 max-w-[100px] text-right"
           >
-            {group?.products.length || 0} produtos nesta categoria
-          </p>
-        </div>
-
-        {/* Page indicator bottom left */}
-        <div className="absolute bottom-4 left-4">
-          <span 
-            className="text-white/60 text-xs tracking-widest uppercase"
-            style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
-          >
-            {groupName}
-          </span>
+            <p 
+              className="text-white/70 leading-relaxed"
+              style={{ 
+                fontFamily: 'Helvetica Neue, Arial, sans-serif', 
+                fontWeight: 300,
+                fontSize: '7px',
+                letterSpacing: '0.02em'
+              }}
+            >
+              {group?.products.length || 0} produtos disponíveis nesta categoria
+            </p>
+          </div>
         </div>
       </div>
     );
