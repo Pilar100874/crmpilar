@@ -38,7 +38,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const [galleryOpen, setGalleryOpen] = useState(false);
   
   // AI Images hook for gallery
-  const { images, loading: imagesLoading, saveImage, deleteImage } = useCatalogAIImages(estabelecimentoId || 'default');
+  const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
   
   // Local state to track uploaded images for immediate display
   const [localLogoUrl, setLocalLogoUrl] = useState<string | undefined>(page.logoUrl);
@@ -121,7 +121,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
           body: JSON.stringify({
             action: 'generate-image',
             prompt: `Professional catalog cover background: ${imagePrompt.trim()}`,
-            estabelecimentoId: estabelecimentoId || null
+            estabelecimentoId: estabelecimentoId || null,
+            saveToGallery: true
           }),
           signal: controller.signal,
         }
@@ -138,15 +139,21 @@ export const StepCover: React.FC<StepCoverProps> = ({
       console.log('[StepCover] AI response received:', { hasImageUrl: !!data?.imageUrl, imageUrlLength: data?.imageUrl?.length });
 
       if (data?.imageUrl) {
-        console.log('[StepCover] Setting background image, length:', data.imageUrl.length);
+        console.log('[StepCover] Setting background image, URL:', data.imageUrl.substring(0, 100));
+        
+        // Apply image to catalog immediately
         setLocalBgImage(data.imageUrl);
-        const newPage = { ...page, backgroundImage: data.imageUrl };
-        onChange(newPage);
+        onChange({ ...page, backgroundImage: data.imageUrl });
         
-        // Save to gallery
-        await saveImage(data.imageUrl, imagePrompt.trim());
-        
-        toast.success('Imagem gerada e salva na galeria!', { id: 'ai-image' });
+        // If saved to gallery by edge function, just refresh the gallery
+        if (data.savedToGallery) {
+          await refreshGallery();
+          toast.success('Imagem gerada e aplicada ao catálogo!', { id: 'ai-image' });
+        } else {
+          // If not saved by edge function, save manually
+          await saveImage(data.imageUrl, imagePrompt.trim());
+          toast.success('Imagem gerada e aplicada ao catálogo!', { id: 'ai-image' });
+        }
       } else {
         console.error('[StepCover] No imageUrl in response:', data);
         toast.error('Erro: imagem não retornada', { id: 'ai-image' });
@@ -161,7 +168,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
     } finally {
       setGeneratingImage(false);
     }
-  }, [imagePrompt, onChange, saveImage]);
+  }, [imagePrompt, onChange, page, saveImage, refreshGallery]);
 
   const generateAIText = useCallback(async () => {
     setGeneratingText(true);
