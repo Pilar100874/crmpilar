@@ -98,6 +98,7 @@ export const PRODUCT_FIELDS = [
   // Dados Básicos
   { key: 'codigo', label: 'Código/SKU', category: 'Dados Básicos' },
   { key: 'descricao', label: 'Descrição', category: 'Dados Básicos' },
+  { key: 'preco_tabela', label: 'Preço', category: 'Dados Básicos' },
   { key: 'categoria_nome', label: 'Categoria', category: 'Dados Básicos' },
   { key: 'largura', label: 'Largura (cm)', category: 'Dados Básicos' },
   { key: 'altura', label: 'Altura (cm)', category: 'Dados Básicos' },
