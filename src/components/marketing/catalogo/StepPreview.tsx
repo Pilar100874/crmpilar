@@ -135,13 +135,78 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     }).format(price);
   };
 
+  // Render a single page to PNG image
+  const renderPageToImage = async (pageIndex: number): Promise<string> => {
+    if (!pdfRef.current) throw new Error('PDF ref not found');
+    
+    setCurrentPage(pageIndex);
+    // Wait for React to re-render and images to load
+    await new Promise((r) => setTimeout(r, 600));
+    
+    // Wait for all images inside to be fully loaded
+    const images = pdfRef.current.querySelectorAll('img');
+    await Promise.all(
+      Array.from(images).map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      })
+    );
+    
+    // Additional wait for any CSS transitions/animations
+    await new Promise((r) => setTimeout(r, 200));
+    
+    // Clone the element to avoid any display issues
+    const clone = pdfRef.current.cloneNode(true) as HTMLElement;
+    clone.style.position = 'absolute';
+    clone.style.left = '-9999px';
+    clone.style.top = '0';
+    clone.style.width = `${pdfRef.current.offsetWidth}px`;
+    clone.style.height = `${pdfRef.current.offsetHeight}px`;
+    document.body.appendChild(clone);
+    
+    try {
+      const canvas = await html2canvas(clone, {
+        scale: 3, // Higher scale for better quality
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: pdfRef.current.offsetWidth,
+        height: pdfRef.current.offsetHeight,
+        imageTimeout: 15000,
+        removeContainer: false,
+      });
+      
+      return canvas.toDataURL('image/png', 1.0);
+    } finally {
+      document.body.removeChild(clone);
+    }
+  };
+
   const generatePDF = async () => {
     if (!pdfRef.current) return;
 
     setGenerating(true);
-    toast.loading('Gerando PDF...', { id: 'pdf-gen' });
+    const originalPage = currentPage;
+    
+    toast.loading('Gerando imagens das páginas...', { id: 'pdf-gen' });
 
     try {
+      // Step 1: Render ALL pages to images first
+      const pageImages: string[] = [];
+      
+      for (let i = 0; i < totalPages; i++) {
+        toast.loading(`Renderizando página ${i + 1} de ${totalPages}...`, { id: 'pdf-gen' });
+        const imageData = await renderPageToImage(i);
+        pageImages.push(imageData);
+      }
+      
+      toast.loading('Montando PDF...', { id: 'pdf-gen' });
+      
+      // Step 2: Create PDF from images
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -151,29 +216,13 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
       const pageWidth = 210;
       const pageHeight = 297;
 
-      for (let i = 0; i < totalPages; i++) {
-        setCurrentPage(i);
-        // Increase wait time to ensure proper rendering
-        await new Promise((r) => setTimeout(r, 400));
-
-        const canvas = await html2canvas(pdfRef.current, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-          // Force width/height for consistent rendering
-          width: pdfRef.current.offsetWidth,
-          height: pdfRef.current.offsetHeight,
-        });
-
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        
+      for (let i = 0; i < pageImages.length; i++) {
         if (i > 0) {
           pdf.addPage();
         }
         
-        pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight);
+        // Add the pre-rendered image to PDF
+        pdf.addImage(pageImages[i], 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
       }
 
       pdf.save(`${config.name || 'catalogo'}.pdf`);
@@ -183,7 +232,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
       toast.error('Erro ao gerar PDF', { id: 'pdf-gen' });
     } finally {
       setGenerating(false);
-      setCurrentPage(0);
+      setCurrentPage(originalPage);
     }
   };
 
