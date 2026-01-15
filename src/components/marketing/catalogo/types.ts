@@ -72,6 +72,7 @@ export interface CatalogConfig {
   fontFamily: string;
   showPrices: boolean;
   showCodes: boolean;
+  showPriceTable: boolean;
   groupFieldConfigs?: GroupFieldConfig[];
   businessType?: string;
   created_at?: string;

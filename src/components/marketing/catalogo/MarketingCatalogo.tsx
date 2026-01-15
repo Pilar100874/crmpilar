@@ -44,6 +44,7 @@ const MarketingCatalogo: React.FC = () => {
     fontFamily: 'Inter, sans-serif',
     showPrices: true,
     showCodes: true,
+    showPriceTable: true,
     groupFieldConfigs: [],
   });
 
@@ -95,6 +96,7 @@ const MarketingCatalogo: React.FC = () => {
       fontFamily: 'Inter, sans-serif',
       showPrices: true,
       showCodes: true,
+      showPriceTable: true,
       groupFieldConfigs: [],
     });
     setCoverPage({
