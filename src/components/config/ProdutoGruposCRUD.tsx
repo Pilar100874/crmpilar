@@ -395,11 +395,14 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
               <p className="text-xs text-muted-foreground mb-2">
                 Imagem que será exibida no catálogo de produtos para este grupo
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-row items-center gap-3">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
+                  onClick={() => {
+                    const input = document.getElementById('grupo-imagem-catalogo-upload');
+                    if (input) input.click();
+                  }}
                   disabled={uploading}
                   className="text-sm"
                 >
@@ -413,14 +416,14 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                     className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded border"
                   />
                 )}
+                <input
+                  id="grupo-imagem-catalogo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
+                  className="hidden"
+                />
               </div>
-              <input
-                id="grupo-imagem-catalogo-upload"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
-                className="hidden"
-              />
             </div>
           </div>
 
