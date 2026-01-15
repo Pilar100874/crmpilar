@@ -37,6 +37,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
   // Estado para loading do logo
   const [logoLoading, setLogoLoading] = useState(false);
   
+  // Debug: verificar se page.logoUrl está sendo atualizado
+  console.log('[StepCover] Render - page.logoUrl existe?', !!page.logoUrl, 'tamanho:', page.logoUrl?.length);
+  
   // AI Images hook for gallery
   const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
 
