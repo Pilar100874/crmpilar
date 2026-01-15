@@ -320,21 +320,13 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
         </TableBody>
       </Table>
 
-      <Dialog open={showDialog} onOpenChange={setShowDialog} key={editingGrupo?.id || 'new'}>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto" key={`content-${editingGrupo?.id || 'new'}`}>
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingGrupo ? "Editar Grupo" : "Novo Grupo"}
             </DialogTitle>
           </DialogHeader>
-
-          {/* DEBUG INFO */}
-          <div className="bg-yellow-200 p-2 text-xs mb-2">
-            <p><strong>Modo:</strong> {editingGrupo ? 'EDIÇÃO' : 'NOVO'}</p>
-            <p><strong>ID:</strong> {editingGrupo?.id || 'N/A'}</p>
-            <p><strong>Tem imagem_catalogo:</strong> {formData.imagem_catalogo ? 'SIM' : 'NÃO'}</p>
-            <p><strong>Timestamp:</strong> {Date.now()}</p>
-          </div>
 
           <div className="space-y-4 pb-4">
             <div>
@@ -357,35 +349,8 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
               />
             </div>
 
-            {/* Campo Imagem para Catálogo de Produtos - COMPLETAMENTE ESTÁTICO */}
-            <div className="border-2 border-blue-500 p-3 rounded bg-blue-50">
-              <p className="text-red-500 font-bold text-sm mb-2">🔴 CATÁLOGO</p>
-              <p className="font-bold mb-2">Imagem para Catálogo de Produtos</p>
-              <p className="text-xs text-gray-500 mb-2">Descrição do campo</p>
-              
-              <p className="bg-green-300 p-2 mb-2">ANTES DO DIV FLEX</p>
-              
-              <div style={{ display: 'block', backgroundColor: 'pink', padding: '10px' }}>
-                <p style={{ color: 'black', fontWeight: 'bold' }}>DENTRO DO DIV ROSA - DEVE APARECER</p>
-                <button style={{ padding: '10px', backgroundColor: 'white', border: '2px solid black' }}>
-                  BOTÃO HTML PURO
-                </button>
-              </div>
-              
-              <p className="bg-orange-300 p-2 mt-2">DEPOIS DO DIV ROSA</p>
-              
-              <input
-                id="grupo-imagem-catalogo-upload"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
-                className="hidden"
-              />
-            </div>
-
             {/* Imagem de Referência */}
-            <div className="border-2 border-green-500 p-3 rounded">
-              <p className="text-green-600 font-bold text-sm mb-2">🟢 REFERÊNCIA - Este é o segundo</p>
+            <div>
               <Label className="flex items-center gap-2">
                 <Image className="w-4 h-4" />
                 Imagem de Referência do Produto
@@ -418,6 +383,45 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                 accept="image/*"
                 onChange={(e) => handleFileSelect(e, 'imagem_referencia')}
                 className="hidden"
+              />
+            </div>
+
+            {/* Campo Imagem para Catálogo de Produtos */}
+            <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '16px', marginTop: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <Image className="w-4 h-4" />
+                <span style={{ fontWeight: 500 }}>Imagem para Catálogo de Produtos</span>
+              </div>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
+                Imagem que será exibida no catálogo de produtos para este grupo
+              </p>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
+                  disabled={uploading}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
+                </Button>
+                {formData.imagem_catalogo && (
+                  <img 
+                    src={formData.imagem_catalogo} 
+                    alt="Preview catálogo" 
+                    style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e5e7eb' }}
+                  />
+                )}
+              </div>
+              
+              <input
+                id="grupo-imagem-catalogo-upload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
+                style={{ display: 'none' }}
               />
             </div>
           </div>
