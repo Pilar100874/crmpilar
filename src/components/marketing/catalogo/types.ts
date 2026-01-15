@@ -74,6 +74,7 @@ export interface CatalogConfig {
   showCodes: boolean;
   showPriceTable: boolean;
   groupFieldConfigs?: GroupFieldConfig[];
+  groupImages?: Record<string, string>;
   businessType?: string;
   created_at?: string;
   updated_at?: string;

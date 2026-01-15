@@ -142,6 +142,10 @@ const MarketingCatalogo: React.FC = () => {
     if (catalog.config.groupFieldConfigs) {
       setGroupFieldConfigs(catalog.config.groupFieldConfigs);
     }
+    // Restore group images
+    if (catalog.config.groupImages) {
+      setGroupImages(catalog.config.groupImages);
+    }
     setCurrentStep(0);
     setViewMode('editor');
   };
@@ -167,7 +171,12 @@ const MarketingCatalogo: React.FC = () => {
   const handleSaveConfirm = async () => {
     if (!saveName.trim()) return;
     
-    const updatedConfig = { ...config, name: saveName };
+    const updatedConfig = { 
+      ...config, 
+      name: saveName,
+      groupImages,
+      groupFieldConfigs 
+    };
     await saveCatalog(
       saveName,
       updatedConfig,
