@@ -387,19 +387,29 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
             </div>
 
             {/* Imagem para Catálogo */}
-            <div>
-              <Label className="flex items-center gap-2">
+            <div className="border-t pt-4">
+              <Label className="flex items-center gap-2 mb-1">
                 <Image className="w-4 h-4" />
                 Imagem para Catálogo de Produtos
               </Label>
               <p className="text-xs text-muted-foreground mb-2">
                 Imagem que será exibida no catálogo de produtos para este grupo
               </p>
+              <input
+                id="grupo-imagem-catalogo-upload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
+                className="hidden"
+              />
               <div className="flex items-center gap-3">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
+                  onClick={() => {
+                    console.log('Clicou no botão catálogo');
+                    document.getElementById('grupo-imagem-catalogo-upload')?.click();
+                  }}
                   disabled={uploading}
                   className="text-sm"
                 >
@@ -409,18 +419,11 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                 {(formData.imagem_catalogo || selectedFileCatalogo) && (
                   <img 
                     src={formData.imagem_catalogo} 
-                    alt="Preview" 
+                    alt="Preview catálogo" 
                     className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded border"
                   />
                 )}
               </div>
-              <input
-                id="grupo-imagem-catalogo-upload"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
-                className="hidden"
-              />
             </div>
           </div>
 
