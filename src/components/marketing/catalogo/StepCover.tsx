@@ -45,9 +45,15 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const bgImage = page.backgroundImage;
 
   const handleSelectFromGallery = (imageUrl: string) => {
-    onChange({ ...page, backgroundImage: imageUrl });
+    onChange({ ...pageRef.current, backgroundImage: imageUrl });
     toast.success('Imagem selecionada!');
   };
+
+  // Store page in a ref to always have the latest value in async callbacks
+  const pageRef = useRef(page);
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
 
   const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -56,14 +62,20 @@ export const StepCover: React.FC<StepCoverProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    console.log(`[StepCover] Starting file upload for ${field}`);
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
       console.log(`[StepCover] File uploaded for ${field}, size: ${dataUrl.length} chars`);
       
-      // Update parent state directly
-      const newPage = { ...page, [field]: dataUrl };
-      console.log(`[StepCover] Calling onChange, logoUrl exists: ${!!newPage.logoUrl}, backgroundImage exists: ${!!newPage.backgroundImage}`);
+      // Use ref to get the latest page state
+      const currentPage = pageRef.current;
+      const newPage = { ...currentPage, [field]: dataUrl };
+      console.log(`[StepCover] Calling onChange with newPage:`, {
+        logoUrl: newPage.logoUrl ? `${newPage.logoUrl.substring(0, 30)}...` : null,
+        backgroundImage: newPage.backgroundImage ? `${newPage.backgroundImage.substring(0, 30)}...` : null
+      });
       onChange(newPage);
       setForceUpdate(prev => prev + 1);
     };
@@ -71,7 +83,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
   };
 
   const clearImage = (field: 'logoUrl' | 'backgroundImage') => {
-    onChange({ ...page, [field]: undefined });
+    onChange({ ...pageRef.current, [field]: undefined });
   };
 
   const generateAIImage = useCallback(async () => {
@@ -123,7 +135,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
         console.log('[StepCover] Setting background image, URL:', data.imageUrl.substring(0, 100));
         
         // Apply image to catalog immediately
-        onChange({ ...page, backgroundImage: data.imageUrl });
+        onChange({ ...pageRef.current, backgroundImage: data.imageUrl });
         
         // If saved to gallery by edge function, just refresh the gallery
         if (data.savedToGallery) {
@@ -148,7 +160,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
     } finally {
       setGeneratingImage(false);
     }
-  }, [imagePrompt, onChange, page, saveImage, refreshGallery]);
+  }, [imagePrompt, onChange, saveImage, refreshGallery]);
 
   const generateAIText = useCallback(async () => {
     setGeneratingText(true);
@@ -165,7 +177,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
       if (data.suggestions?.length > 0) {
         const suggestion = data.suggestions[0];
         onChange({ 
-          ...page, 
+          ...pageRef.current, 
           title: suggestion.title,
           subtitle: suggestion.subtitle 
         });
