@@ -241,7 +241,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
           {/* Website right - from backcover contactInfo */}
           {backcoverPage.contactInfo?.website && (
             <span 
-              className="text-[11px] text-gray-400 tracking-[0.35em] uppercase"
+              className="text-[22px] text-gray-400 tracking-[0.35em] uppercase"
               style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
             >
               {backcoverPage.contactInfo.website}
