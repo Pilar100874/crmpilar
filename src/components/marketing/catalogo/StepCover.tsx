@@ -34,57 +34,50 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const [imagePrompt, setImagePrompt] = useState('');
   const [galleryOpen, setGalleryOpen] = useState(false);
   
-  // Local state for logo - independent from page to avoid async issues
-  const [localLogo, setLocalLogo] = useState<string | undefined>(page.logoUrl);
-  
-  // Sync local logo with parent when it changes externally
-  useEffect(() => {
-    if (page.logoUrl !== localLogo) {
-      setLocalLogo(page.logoUrl);
-    }
-  }, [page.logoUrl]);
-  
   // AI Images hook for gallery
   const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
-  
-  // Store page in a ref to always have the latest value in async callbacks
-  const pageRef = useRef(page);
-  useEffect(() => {
-    pageRef.current = page;
-  }, [page]);
 
   const handleSelectFromGallery = (imageUrl: string) => {
-    onChange({ ...pageRef.current, logoUrl: localLogo, backgroundImage: imageUrl });
+    onChange({ ...page, backgroundImage: imageUrl });
     toast.success('Imagem selecionada!');
   };
 
-  // Dedicated logo upload handler - completely independent
+  // Simple logo upload - directly updates page state
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      const dataUrl = reader.result as string;
-      if (dataUrl) {
-        // Update local state immediately
-        setLocalLogo(dataUrl);
-        // Then update parent with current page + new logo
-        const currentPage = pageRef.current;
-        onChange({ ...currentPage, logoUrl: dataUrl });
+      const result = reader.result as string;
+      if (result) {
+        // Directly update with new object containing all existing props + logoUrl
+        onChange({
+          id: page.id,
+          type: page.type,
+          title: page.title,
+          subtitle: page.subtitle,
+          backgroundImage: page.backgroundImage,
+          backgroundColor: page.backgroundColor,
+          logoUrl: result
+        });
         toast.success('Logo carregado!');
       }
     };
     reader.readAsDataURL(file);
-    
-    // Reset input so same file can be selected again
     e.target.value = '';
   };
 
   const clearLogo = () => {
-    setLocalLogo(undefined);
-    const currentPage = pageRef.current;
-    onChange({ ...currentPage, logoUrl: undefined });
+    onChange({
+      id: page.id,
+      type: page.type,
+      title: page.title,
+      subtitle: page.subtitle,
+      backgroundImage: page.backgroundImage,
+      backgroundColor: page.backgroundColor,
+      logoUrl: undefined
+    });
   };
 
   const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,10 +86,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      const dataUrl = reader.result as string;
-      if (dataUrl) {
-        const currentPage = pageRef.current;
-        onChange({ ...currentPage, logoUrl: localLogo, backgroundImage: dataUrl });
+      const result = reader.result as string;
+      if (result) {
+        onChange({ ...page, backgroundImage: result });
       }
     };
     reader.readAsDataURL(file);
@@ -104,8 +96,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
   };
 
   const clearBackground = () => {
-    const currentPage = pageRef.current;
-    onChange({ ...currentPage, logoUrl: localLogo, backgroundImage: undefined });
+    onChange({ ...page, backgroundImage: undefined });
   };
 
   const generateAIImage = useCallback(async () => {
@@ -156,8 +147,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
       if (data?.imageUrl) {
         console.log('[StepCover] Setting background image, URL:', data.imageUrl.substring(0, 100));
         
-        // Apply image to catalog immediately - preserve localLogo
-        onChange({ ...pageRef.current, logoUrl: localLogo, backgroundImage: data.imageUrl });
+        // Apply image to catalog immediately - preserve logo
+        onChange({ ...page, backgroundImage: data.imageUrl });
         
         // If saved to gallery by edge function, just refresh the gallery
         if (data.savedToGallery) {
@@ -182,7 +173,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
     } finally {
       setGeneratingImage(false);
     }
-  }, [imagePrompt, onChange, saveImage, refreshGallery, localLogo]);
+  }, [imagePrompt, onChange, saveImage, refreshGallery, page]);
 
   const generateAIText = useCallback(async () => {
     setGeneratingText(true);
@@ -199,8 +190,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
       if (data.suggestions?.length > 0) {
         const suggestion = data.suggestions[0];
         onChange({ 
-          ...pageRef.current,
-          logoUrl: localLogo,
+          ...page,
           title: suggestion.title,
           subtitle: suggestion.subtitle 
         });
@@ -212,7 +202,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
     } finally {
       setGeneratingText(false);
     }
-  }, [catalogName, businessType, onChange, localLogo]);
+  }, [catalogName, businessType, onChange, page]);
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
       {/* Form */}
@@ -249,13 +239,13 @@ export const StepCover: React.FC<StepCoverProps> = ({
             </div>
             <Input
               value={page.title || ''}
-              onChange={(e) => onChange({ ...pageRef.current, logoUrl: localLogo, title: e.target.value })}
+              onChange={(e) => onChange({ ...page, title: e.target.value })}
               placeholder="Ex: Catálogo de Produtos"
               className="h-11 border-0 border-b rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-primary"
             />
             <Input
               value={page.subtitle || ''}
-              onChange={(e) => onChange({ ...pageRef.current, logoUrl: localLogo, subtitle: e.target.value })}
+              onChange={(e) => onChange({ ...page, subtitle: e.target.value })}
               placeholder="Ex: Primavera/Verão 2024"
               className="h-11 border-0 border-b rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-primary"
             />
@@ -273,10 +263,10 @@ export const StepCover: React.FC<StepCoverProps> = ({
               onChange={handleLogoUpload}
               className="hidden"
             />
-            {localLogo ? (
+            {page.logoUrl ? (
               <div className="relative inline-block group">
                 <img
-                  src={localLogo}
+                  src={page.logoUrl}
                   alt="Logo"
                   className="h-16 w-auto object-contain rounded-lg border bg-white p-1"
                 />
@@ -455,9 +445,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
               <div className="bg-white px-4 py-3 flex items-center justify-between">
               {/* Logo bottom left */}
               <div className="flex items-center">
-                {localLogo ? (
+                {page.logoUrl ? (
                   <img 
-                    src={localLogo}
+                    src={page.logoUrl}
                     alt="Logo" 
                     className="h-6 w-auto object-contain"
                   />
