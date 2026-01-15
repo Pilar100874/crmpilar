@@ -282,17 +282,23 @@ export const StepCover: React.FC<StepCoverProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => logoInputRef.current?.click()}
+                disabled={logoLoading}
                 className="text-xs sm:text-sm"
               >
                 <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 {logoLoading ? 'Carregando...' : (page.logoUrl ? 'Trocar' : 'Selecionar')}
               </Button>
-              {page.logoUrl ? (
+              {logoLoading ? (
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded border bg-muted flex items-center justify-center">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              ) : page.logoUrl ? (
                 <div className="relative inline-block group">
                   <img 
                     src={page.logoUrl} 
                     alt="Logo Preview" 
                     className="w-12 h-12 sm:w-16 sm:h-16 object-contain rounded border bg-white"
+                    key={page.logoUrl.substring(0, 50)}
                   />
                   <Button
                     type="button"
