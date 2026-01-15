@@ -6512,6 +6512,8 @@ export type Database = {
           created_at: string | null
           estabelecimento_id: string | null
           id: string
+          imagem_catalogo: string | null
+          imagem_referencia: string | null
           nome: string
           percentual_comissao: number | null
           updated_at: string | null
@@ -6520,6 +6522,8 @@ export type Database = {
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
+          imagem_catalogo?: string | null
+          imagem_referencia?: string | null
           nome: string
           percentual_comissao?: number | null
           updated_at?: string | null
@@ -6528,6 +6532,8 @@ export type Database = {
           created_at?: string | null
           estabelecimento_id?: string | null
           id?: string
+          imagem_catalogo?: string | null
+          imagem_referencia?: string | null
           nome?: string
           percentual_comissao?: number | null
           updated_at?: string | null
