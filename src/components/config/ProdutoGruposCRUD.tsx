@@ -71,6 +71,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     field: 'imagem_referencia' | 'imagem_catalogo'
   ) => {
     const file = e.target.files?.[0];
+    console.log('[ProdutoGruposCRUD] handleFileUpload chamado, field:', field, 'file:', file?.name);
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
@@ -81,7 +82,13 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
-      setFormData(prev => ({ ...prev, [field]: dataUrl }));
+      console.log('[ProdutoGruposCRUD] Base64 gerado, tamanho:', dataUrl?.length);
+      setFormData(prev => {
+        const newData = { ...prev, [field]: dataUrl };
+        console.log('[ProdutoGruposCRUD] formData atualizado, imagem_catalogo existe?', !!newData.imagem_catalogo);
+        return newData;
+      });
+      toast.success('Imagem carregada!');
     };
     reader.readAsDataURL(file);
   };
