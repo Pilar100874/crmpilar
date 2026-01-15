@@ -363,17 +363,24 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                 Imagem ilustrativa para identificar o tipo de produto do grupo
               </p>
               <div className="flex items-center gap-3">
+                <input
+                  id="grupo-imagem-referencia-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileSelect(e, 'imagem_referencia')}
+                  className="hidden"
+                />
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => document.getElementById('imagem-referencia-upload')?.click()}
+                  onClick={() => document.getElementById('grupo-imagem-referencia-upload')?.click()}
                   disabled={uploading}
                   className="text-sm"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  {formData.imagem_referencia || selectedFileReferencia ? 'Trocar' : 'Selecionar'}
+                  {formData.imagem_referencia ? 'Trocar' : 'Selecionar'}
                 </Button>
-                {(formData.imagem_referencia || selectedFileReferencia) && (
+                {formData.imagem_referencia && (
                   <div className="relative inline-block group">
                     <img
                       src={formData.imagem_referencia}
@@ -392,13 +399,6 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                   </div>
                 )}
               </div>
-              <input
-                id="imagem-referencia-upload"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileSelect(e, 'imagem_referencia')}
-                className="hidden"
-              />
             </div>
 
             {/* Imagem para Catálogo */}
@@ -411,17 +411,24 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                 Imagem que será exibida no catálogo de produtos para este grupo
               </p>
               <div className="flex items-center gap-3">
+                <input
+                  id="grupo-imagem-catalogo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
+                  className="hidden"
+                />
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => document.getElementById('imagem-catalogo-upload')?.click()}
+                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
                   disabled={uploading}
                   className="text-sm"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  {formData.imagem_catalogo || selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
+                  {formData.imagem_catalogo ? 'Trocar' : 'Selecionar'}
                 </Button>
-                {(formData.imagem_catalogo || selectedFileCatalogo) && (
+                {formData.imagem_catalogo && (
                   <div className="relative inline-block group">
                     <img
                       src={formData.imagem_catalogo}
@@ -440,13 +447,6 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                   </div>
                 )}
               </div>
-              <input
-                id="imagem-catalogo-upload"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
-                className="hidden"
-              />
             </div>
           </div>
 
