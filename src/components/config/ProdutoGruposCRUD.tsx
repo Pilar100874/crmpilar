@@ -397,36 +397,34 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                 Imagem que será exibida no catálogo de produtos para este grupo
               </p>
               <p className="text-green-500 font-bold text-xs mb-2">DEBUG: Antes do botão</p>
-              <div className="flex items-center gap-3 bg-yellow-100 p-2">
-                <span className="text-purple-600 font-bold">TESTE1</span>
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
-                  disabled={uploading}
-                  className="px-4 py-2 border rounded bg-white hover:bg-gray-100"
-                >
-                  <span>📁 {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}</span>
-                </button>
-                <span className="text-purple-600 font-bold">TESTE2</span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
-                  disabled={uploading}
-                  className="text-sm"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {selectedFileCatalogo ? 'Trocar2' : 'Selecionar2'}
-                </Button>
-                <span className="text-purple-600 font-bold">TESTE3</span>
-                {(formData.imagem_catalogo || selectedFileCatalogo) && (
-                  <img 
-                    src={formData.imagem_catalogo} 
-                    alt="Preview catálogo" 
-                    className="w-12 h-12 object-cover rounded border"
-                  />
-                )}
-              </div>
+              <span className="text-purple-600 font-bold block">TESTE1-FORA</span>
+              <button
+                type="button"
+                onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
+                disabled={uploading}
+                className="px-4 py-2 border rounded bg-white hover:bg-gray-100 my-2"
+              >
+                📁 {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
+              </button>
+              <span className="text-purple-600 font-bold block">TESTE2-FORA</span>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
+                disabled={uploading}
+                className="text-sm my-2"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {selectedFileCatalogo ? 'Trocar2' : 'Selecionar2'}
+              </Button>
+              <span className="text-purple-600 font-bold block">TESTE3-FORA</span>
+              {(formData.imagem_catalogo || selectedFileCatalogo) && (
+                <img 
+                  src={formData.imagem_catalogo} 
+                  alt="Preview catálogo" 
+                  className="w-12 h-12 object-cover rounded border"
+                />
+              )}
               <input
                 id="grupo-imagem-catalogo-upload"
                 type="file"
