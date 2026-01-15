@@ -279,12 +279,14 @@ export const StepCover: React.FC<StepCoverProps> = ({
                 <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 {logoPreviewUrl ? 'Trocar' : 'Selecionar'}
               </Button>
-              {logoPreviewUrl && (
+              {logoPreviewUrl ? (
                 <div className="relative inline-block group">
                   <img 
                     src={logoPreviewUrl} 
                     alt="Logo Preview" 
                     className="w-12 h-12 sm:w-16 sm:h-16 object-contain rounded border bg-white"
+                    onLoad={() => console.log('[StepCover] Imagem carregou com sucesso')}
+                    onError={(e) => console.error('[StepCover] Erro ao carregar imagem:', e)}
                   />
                   <Button
                     type="button"
@@ -296,6 +298,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
                     <X className="h-3 w-3" />
                   </Button>
                 </div>
+              ) : (
+                <span className="text-xs text-muted-foreground">Nenhum logo</span>
               )}
             </div>
           </div>
