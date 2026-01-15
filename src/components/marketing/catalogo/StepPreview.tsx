@@ -364,16 +364,28 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
           </h2>
         </div>
 
-        {/* Products Grid - 4 columns */}
+        {/* Products Grid - Dynamic columns based on layout */}
         <div className="flex-1">
-          <div className="grid grid-cols-4 gap-x-4 gap-y-5 h-full content-start">
+          <div className={cn(
+            "grid h-full content-start",
+            layout === 'list' && "grid-cols-1 gap-y-3",
+            layout === 'grid-2' && "grid-cols-2 gap-x-6 gap-y-6",
+            layout === 'grid-3' && "grid-cols-3 gap-x-5 gap-y-5",
+            layout === 'grid-4' && "grid-cols-4 gap-x-4 gap-y-4"
+          )}>
             {pageProducts.map((product, idx) => (
               <div
                 key={product.id}
-                className="flex flex-col"
+                className={cn(
+                  "flex",
+                  layout === 'list' ? "flex-row items-center gap-4 p-3 bg-gray-50 rounded" : "flex-col"
+                )}
               >
                 {/* Product Image Container */}
-                <div className="relative bg-gray-50 aspect-square flex items-center justify-center overflow-hidden">
+                <div className={cn(
+                  "relative bg-gray-50 flex items-center justify-center overflow-hidden",
+                  layout === 'list' ? "w-20 h-20 flex-shrink-0" : "aspect-square"
+                )}>
                   {product.foto_url ? (
                     <img
                       src={product.foto_url}
@@ -382,26 +394,41 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <Package className="h-10 w-10 text-gray-300" />
+                      <Package className={cn(
+                        "text-gray-300",
+                        layout === 'list' ? "h-8 w-8" : "h-10 w-10"
+                      )} />
                     </div>
                   )}
                 </div>
 
                 {/* Product Info */}
-                <div className="pt-2 flex items-start justify-between gap-2">
+                <div className={cn(
+                  "flex items-start justify-between gap-2",
+                  layout === 'list' ? "flex-1" : "pt-2"
+                )}>
                   <div className="flex-1 min-w-0">
                     {/* Product Name */}
-                    <h4 className="font-semibold text-[9px] text-gray-800 line-clamp-1">
+                    <h4 className={cn(
+                      "font-semibold text-gray-800 line-clamp-1",
+                      layout === 'list' ? "text-sm" : layout === 'grid-2' ? "text-[11px]" : "text-[9px]"
+                    )}>
                       {product.nome}
                     </h4>
                     {/* Description */}
-                    <p className="text-[7px] text-gray-400 line-clamp-2 leading-tight mt-0.5">
+                    <p className={cn(
+                      "text-gray-400 leading-tight mt-0.5",
+                      layout === 'list' ? "text-xs line-clamp-2" : layout === 'grid-2' ? "text-[9px] line-clamp-3" : "text-[7px] line-clamp-2"
+                    )}>
                       {product.descricao || 'Produto de alta qualidade'}
                     </p>
                   </div>
                   {/* Product Code */}
                   {config.showCodes && product.codigo && (
-                    <span className="text-[9px] font-medium text-gray-600 flex-shrink-0">
+                    <span className={cn(
+                      "font-medium text-gray-600 flex-shrink-0",
+                      layout === 'list' ? "text-sm" : layout === 'grid-2' ? "text-[11px]" : "text-[9px]"
+                    )}>
                       {product.codigo}
                     </span>
                   )}
