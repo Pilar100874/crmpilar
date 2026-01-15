@@ -55,17 +55,24 @@ export const StepCover: React.FC<StepCoverProps> = ({
 
   // EXATAMENTE igual ProdutosCRUD.handleFileSelect
   const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[StepCover] handleLogoSelect chamado');
     const file = e.target.files?.[0];
+    console.log('[StepCover] Arquivo:', file?.name, file?.type, file?.size);
     if (file) {
       if (!file.type.startsWith('image/')) {
+        console.log('[StepCover] Tipo inválido:', file.type);
         toast.error("Por favor selecione um arquivo de imagem");
         return;
       }
       setSelectedLogoFile(file);
       const previewUrl = URL.createObjectURL(file);
+      console.log('[StepCover] Preview URL criada:', previewUrl);
       setLogoPreviewUrl(previewUrl);
       onChange({ ...page, logoUrl: previewUrl });
+      console.log('[StepCover] onChange chamado com logoUrl');
       toast.success('Logo carregado!');
+    } else {
+      console.log('[StepCover] Nenhum arquivo selecionado');
     }
   };
 
