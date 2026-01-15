@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Sparkles, Loader2, ImageIcon, Layers, Check, X, FolderOpen } from 'lucide-react';
+import { Sparkles, Loader2, ImageIcon, Layers, Check, X, FolderOpen, ImagePlus } from 'lucide-react';
 import { CatalogPage, CatalogProduct, ProductGroup } from './types';
 import { toast } from 'sonner';
 import { useCatalogAIImages } from './hooks/useCatalogAIImages';
 import { AIImageGallery } from './AIImageGallery';
+import { cn } from '@/lib/utils';
 
 interface StepGroupImagesProps {
   productsPage: CatalogPage;
@@ -27,6 +27,7 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
 }) => {
   const [generatingFor, setGeneratingFor] = useState<string | null>(null);
   const [galleryOpenFor, setGalleryOpenFor] = useState<string | null>(null);
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
 
   const products = productsPage.products || [];
   const groupByCategory = productsPage.groupByCategory ?? true;
@@ -135,11 +136,11 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
 
   if (!groupByCategory || groups.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-          <Layers className="h-8 w-8 text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6 animate-fade-in">
+          <Layers className="h-10 w-10 text-primary/60" />
         </div>
-        <h3 className="text-lg font-medium mb-2">Nenhum grupo para configurar</h3>
+        <h3 className="text-xl font-medium mb-2">Nenhum grupo para configurar</h3>
         <p className="text-sm text-muted-foreground max-w-md">
           {!groupByCategory 
             ? 'Ative "Separar por grupos" na etapa de Produtos para configurar imagens por grupo.'
@@ -150,92 +151,140 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
     );
   }
 
+  const completedCount = groups.filter(g => !!groupImages[g.id]).length;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h3 className="text-lg font-medium">Imagens dos Grupos</h3>
-        <p className="text-sm text-muted-foreground">
-          Digite uma descrição para cada grupo e gere imagens personalizadas com IA ou selecione da galeria
+      <div className="text-center space-y-3">
+        <h2 className="text-2xl font-light tracking-tight">Imagens dos Grupos</h2>
+        <p className="text-muted-foreground text-sm max-w-lg mx-auto">
+          Defina imagens de destaque para cada grupo do catálogo. Use IA para gerar ou escolha da galeria.
         </p>
+        
+        {/* Progress indicator */}
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <div className="flex items-center gap-1.5">
+            {groups.map((group) => (
+              <div 
+                key={group.id}
+                className={cn(
+                  "w-2.5 h-2.5 rounded-full transition-all duration-300",
+                  groupImages[group.id] 
+                    ? "bg-green-500 scale-110" 
+                    : "bg-muted-foreground/20"
+                )}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {completedCount}/{groups.length} imagens
+          </span>
+        </div>
       </div>
 
-      {/* Groups List */}
-      <div className="space-y-6">
+      {/* Groups Grid - Image focused layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {groups.map((group) => {
           const hasImage = !!groupImages[group.id];
           const isGenerating = generatingFor === group.id;
           const prompt = groupPrompts[group.id] || '';
+          const isExpanded = expandedGroup === group.id;
 
           return (
             <div
               key={group.id}
-              className="rounded-xl border bg-card overflow-hidden"
+              className={cn(
+                "group relative rounded-2xl overflow-hidden transition-all duration-300",
+                "border border-border/50 hover:border-border",
+                "bg-gradient-to-b from-card to-card/80",
+                hasImage && "ring-2 ring-green-500/20"
+              )}
             >
-              {/* Group Header */}
-              <div className="p-4 border-b bg-muted/30">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">{group.nome}</h4>
-                    <p className="text-xs text-muted-foreground">
-                      {group.products.length} produto{group.products.length !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  {hasImage && (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 text-green-600 text-xs">
+              {/* Main Image Area - Priority Focus */}
+              <div 
+                className="relative aspect-[16/10] cursor-pointer"
+                onClick={() => setExpandedGroup(isExpanded ? null : group.id)}
+              >
+                {hasImage ? (
+                  <>
+                    <img
+                      src={groupImages[group.id]}
+                      alt={group.nome}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    {/* Overlay gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    
+                    {/* Remove button */}
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-3 right-3 h-8 w-8 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearGroupImage(group.id);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                    
+                    {/* Success badge */}
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/90 text-white text-xs font-medium shadow-lg">
                       <Check className="h-3 w-3" />
-                      Imagem pronta
-                    </span>
-                  )}
+                      Pronta
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-muted/50 to-muted text-muted-foreground">
+                    <div className="w-16 h-16 rounded-2xl bg-background/50 flex items-center justify-center mb-3 backdrop-blur-sm">
+                      <ImagePlus className="h-8 w-8" />
+                    </div>
+                    <p className="text-sm font-medium">Adicionar imagem</p>
+                    <p className="text-xs opacity-70">Clique para expandir opções</p>
+                  </div>
+                )}
+
+                {/* Group name overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <h4 className={cn(
+                    "font-semibold text-lg",
+                    hasImage ? "text-white" : "text-foreground"
+                  )}>
+                    {group.nome}
+                  </h4>
+                  <p className={cn(
+                    "text-sm",
+                    hasImage ? "text-white/70" : "text-muted-foreground"
+                  )}>
+                    {group.products.length} produto{group.products.length !== 1 ? 's' : ''}
+                  </p>
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="p-4 space-y-4">
-                {/* Prompt Input */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">
-                    Descrição para IA
-                  </Label>
-                  <Textarea
-                    value={prompt}
-                    onChange={(e) => onGroupPromptChange(group.id, e.target.value)}
-                    placeholder={`Ex: produtos de ${group.nome.toLowerCase()} em ambiente moderno, tons neutros, iluminação profissional...`}
-                    className="min-h-[80px] resize-none text-sm"
-                  />
-                </div>
-
-                <div className="flex gap-4">
-                  {/* Image Preview */}
-                  <div className="w-32 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                    {hasImage ? (
-                      <div className="relative w-full h-full group">
-                        <img
-                          src={groupImages[group.id]}
-                          alt={group.nome}
-                          className="w-full h-full object-cover"
-                        />
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => clearGroupImage(group.id)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <ImageIcon className="h-6 w-6" />
-                      </div>
-                    )}
+              {/* Expandable Content */}
+              <div className={cn(
+                "overflow-hidden transition-all duration-300 ease-out",
+                isExpanded ? "max-h-[300px] opacity-100" : "max-h-0 opacity-0"
+              )}>
+                <div className="p-4 space-y-4 border-t">
+                  {/* Prompt Input */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Descrição para IA
+                    </label>
+                    <Textarea
+                      value={prompt}
+                      onChange={(e) => onGroupPromptChange(group.id, e.target.value)}
+                      placeholder={`Ex: produtos de ${group.nome.toLowerCase()} em ambiente elegante, iluminação suave...`}
+                      className="min-h-[80px] resize-none text-sm bg-muted/30 border-0 focus-visible:ring-1"
+                    />
                   </div>
 
-                  {/* Buttons */}
-                  <div className="flex-1 flex gap-2">
-                    {/* Generate Button */}
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
                     <Button
-                      variant={hasImage ? "outline" : "default"}
+                      variant={hasImage ? "secondary" : "default"}
                       className="flex-1 gap-2"
                       onClick={() => generateImageForGroup(group)}
                       disabled={isGenerating || !prompt.trim()}
@@ -245,10 +294,9 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
                       ) : (
                         <Sparkles className="h-4 w-4" />
                       )}
-                      {isGenerating ? 'Gerando...' : hasImage ? 'Nova' : 'Gerar com IA'}
+                      {isGenerating ? 'Gerando...' : 'Gerar com IA'}
                     </Button>
 
-                    {/* Gallery Button */}
                     <Button
                       type="button"
                       variant="outline"
@@ -256,7 +304,7 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
                       className="gap-2"
                     >
                       <FolderOpen className="h-4 w-4" />
-                      <span className="hidden sm:inline">Galeria</span>
+                      Galeria
                       {images.length > 0 && (
                         <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
                           {images.length}
@@ -266,6 +314,37 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Quick Actions Bar (when collapsed) */}
+              {!isExpanded && (
+                <div className="p-3 flex gap-2 border-t bg-muted/20">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1 gap-2 h-9"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedGroup(group.id);
+                    }}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    IA
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setGalleryOpenFor(group.id);
+                    }}
+                    className="flex-1 gap-2 h-9"
+                  >
+                    <FolderOpen className="h-3.5 w-3.5" />
+                    Galeria
+                  </Button>
+                </div>
+              )}
 
               {/* Gallery Dialog for this group */}
               <AIImageGallery
