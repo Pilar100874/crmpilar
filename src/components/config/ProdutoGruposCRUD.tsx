@@ -386,41 +386,43 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
               />
             </div>
 
-            {/* Imagem para Catálogo */}
-            <div className="border-t pt-4">
-              <Label className="flex items-center gap-2 mb-1">
-                <Image className="w-4 h-4" />
-                Imagem para Catálogo de Produtos
-              </Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                Imagem que será exibida no catálogo de produtos para este grupo
-              </p>
-              <input
-                id="grupo-imagem-catalogo-upload"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
-                className="hidden"
-              />
-              <div className="flex items-center gap-3">
+            {/* Campo Imagem para Catálogo de Produtos */}
+            <div className="border-t pt-4 mt-4">
+              <div className="mb-2">
+                <Label className="flex items-center gap-2">
+                  <Image className="w-4 h-4" />
+                  <span>Imagem para Catálogo de Produtos</span>
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Imagem que será exibida no catálogo de produtos para este grupo
+                </p>
+              </div>
+              <div className="flex items-center gap-3 mt-2">
+                <input
+                  id="input-catalogo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
+                  style={{ display: 'none' }}
+                />
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
                   onClick={() => {
-                    console.log('Clicou no botão catálogo');
-                    document.getElementById('grupo-imagem-catalogo-upload')?.click();
+                    const el = document.getElementById('input-catalogo-upload');
+                    if (el) el.click();
                   }}
                   disabled={uploading}
-                  className="text-sm"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
+                  <span>{selectedFileCatalogo ? 'Trocar' : 'Selecionar'}</span>
                 </Button>
-                {(formData.imagem_catalogo || selectedFileCatalogo) && (
+                {formData.imagem_catalogo && (
                   <img 
                     src={formData.imagem_catalogo} 
                     alt="Preview catálogo" 
-                    className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded border"
+                    className="w-12 h-12 object-cover rounded border"
                   />
                 )}
               </div>
