@@ -343,12 +343,12 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     
     return (
       <div
-        className="w-full h-full flex flex-col bg-white relative overflow-hidden p-8"
+        className="w-full h-full flex flex-col bg-white relative overflow-hidden p-[12mm]"
         style={{ fontFamily: config.fontFamily }}
       >
         {/* Header Section */}
         <div className="mb-6">
-          <h2 className="text-3xl leading-tight">
+          <h2 className="text-5xl leading-tight">
             <span 
               className="font-light text-gray-600"
               style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif' }}
