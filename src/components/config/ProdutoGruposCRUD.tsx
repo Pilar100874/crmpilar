@@ -386,45 +386,34 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
               />
             </div>
 
-            {/* Campo Imagem para Catálogo de Produtos - HTML PURO */}
-            <div style={{ borderTop: '1px solid #ccc', paddingTop: '16px', marginTop: '16px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', fontWeight: 500 }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
-                Imagem para Catálogo de Produtos
-              </label>
-              <p style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+            {/* Campo Imagem para Catálogo de Produtos */}
+            <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '16px', marginTop: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <Image className="w-4 h-4" />
+                <span style={{ fontWeight: 500 }}>Imagem para Catálogo de Produtos</span>
+              </div>
+              <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '8px' }}>
                 Imagem que será exibida no catálogo de produtos para este grupo
               </p>
               
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
-                  disabled={uploading}
-                  style={{ 
-                    display: 'inline-flex', 
-                    alignItems: 'center', 
-                    gap: '8px',
-                    padding: '8px 16px', 
-                    border: '1px solid #ccc', 
-                    borderRadius: '6px', 
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                  {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
-                </button>
-                
-                {formData.imagem_catalogo && (
-                  <img 
-                    src={formData.imagem_catalogo} 
-                    alt="Preview" 
-                    style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #ccc' }}
-                  />
-                )}
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
+                disabled={uploading}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
+              </Button>
+              
+              {formData.imagem_catalogo && (
+                <img 
+                  src={formData.imagem_catalogo} 
+                  alt="Preview catálogo" 
+                  style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e5e7eb', marginLeft: '12px', display: 'inline-block', verticalAlign: 'middle' }}
+                />
+              )}
               
               <input
                 id="grupo-imagem-catalogo-upload"
