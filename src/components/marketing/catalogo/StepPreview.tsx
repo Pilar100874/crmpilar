@@ -275,8 +275,8 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
 
           {/* Vertical Text on Left Side - Full Height */}
           <div 
-            className="absolute left-0 top-0 bottom-0 flex items-stretch"
-            style={{ width: '120px' }}
+            className="absolute top-0 bottom-0 flex items-stretch"
+            style={{ width: '120px', left: '19px' }}
           >
             <h2 
               className="text-white w-full h-full flex items-center justify-center"
