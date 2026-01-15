@@ -468,195 +468,198 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     const hasEmbalagemFields = fieldsByCategory['Embalagem'].length > 0;
 
     // Get grid styles based on layout
-    const getGridStyles = () => {
+    const getGridCols = () => {
       switch (layout) {
-        case 'list':
-          return { display: 'flex', flexDirection: 'column' as const, gap: '12px' };
-        case 'grid-2':
-          return { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' };
-        case 'grid-3':
-          return { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' };
-        case 'grid-4':
-          return { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' };
-        default:
-          return { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' };
+        case 'list': return 1;
+        case 'grid-2': return 2;
+        case 'grid-3': return 3;
+        case 'grid-4': return 4;
+        default: return 3;
       }
     };
 
     const getTextSize = () => {
       switch (layout) {
-        case 'list': return { name: '14px', field: '12px', label: '8px' };
-        case 'grid-2': return { name: '11px', field: '8px', label: '7px' };
-        default: return { name: '9px', field: '7px', label: '6px' };
+        case 'list': return { name: 14, field: 12, label: 8 };
+        case 'grid-2': return { name: 11, field: 9, label: 7 };
+        default: return { name: 10, field: 8, label: 6 };
       }
     };
 
     const textSize = getTextSize();
+    const cols = getGridCols();
+    const isListLayout = layout === 'list';
+    
+    // Calculate product card width based on columns
+    const gapSize = 16;
+    const totalGaps = (cols - 1) * gapSize;
+    const cardWidthPercent = `calc(${100 / cols}% - ${totalGaps / cols}px)`;
+
+    // Render a single field value inline
+    const renderFieldInline = (product: CatalogProduct, fieldKey: string, isLast: boolean) => {
+      const value = formatFieldValue(product, fieldKey);
+      if (value === '-') return null;
+      return (
+        <span key={fieldKey} style={{ display: 'inline' }}>
+          <span style={{ color: '#9ca3af' }}>{getFieldLabel(fieldKey)}: </span>
+          <span style={{ color: '#374151' }}>{value}</span>
+          {!isLast && <span style={{ color: '#d1d5db' }}> • </span>}
+        </span>
+      );
+    };
+
+    // Render field category
+    const renderFieldCategory = (product: CatalogProduct, fieldKeys: string[], categoryLabel: string) => {
+      const validFields = fieldKeys.filter(k => formatFieldValue(product, k) !== '-');
+      if (validFields.length === 0) return null;
+      
+      return (
+        <div key={categoryLabel} style={{ marginTop: 4 }}>
+          {isListLayout && (
+            <div style={{ fontSize: textSize.label, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
+              {categoryLabel}
+            </div>
+          )}
+          <div style={{ color: '#6b7280', fontSize: textSize.field, lineHeight: 1.4 }}>
+            {validFields.map((fieldKey, idx) => renderFieldInline(product, fieldKey, idx === validFields.length - 1))}
+          </div>
+        </div>
+      );
+    };
     
     return (
-      <div
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          display: 'flex', 
-          flexDirection: 'column',
-          backgroundColor: 'white',
-          position: 'relative',
-          overflow: 'hidden',
-          padding: '12mm',
-          fontFamily: config.fontFamily,
-          boxSizing: 'border-box'
-        }}
-      >
+      <div style={{ 
+        width: '100%', 
+        height: '100%', 
+        backgroundColor: 'white',
+        position: 'relative',
+        overflow: 'hidden',
+        padding: 45,
+        fontFamily: config.fontFamily || 'Arial, sans-serif',
+        boxSizing: 'border-box'
+      }}>
         {/* Header Section */}
-        <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '48px', lineHeight: 1.1, margin: 0 }}>
-            <span style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300, color: '#4b5563' }}>
-              Linha{' '}
-            </span>
-            <span style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 700, color: '#111827' }}>
-              {displayGroupName}
-            </span>
-          </h2>
-        </div>
-
-        {/* Products Grid */}
-        <div style={{ flex: 1 }}>
-          <div style={getGridStyles()}>
-            {pageProducts.map((product, idx) => (
-              <div
-                key={product.id}
-                style={{
-                  display: 'flex',
-                  flexDirection: layout === 'list' ? 'row' : 'column',
-                  alignItems: layout === 'list' ? 'flex-start' : 'stretch',
-                  gap: layout === 'list' ? '16px' : '0',
-                  padding: layout === 'list' ? '12px' : '0',
-                  backgroundColor: layout === 'list' ? '#f9fafb' : 'transparent',
-                  borderRadius: layout === 'list' ? '4px' : '0'
-                }}
-              >
-                {/* Product Image Container */}
-                <div style={{
-                  position: 'relative',
-                  backgroundColor: '#f9fafb',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                  width: layout === 'list' ? '80px' : '100%',
-                  height: layout === 'list' ? '80px' : 'auto',
-                  aspectRatio: layout === 'list' ? undefined : '1/1',
-                  flexShrink: 0
-                }}>
-                  {product.foto_url ? (
-                    <img
-                      src={product.foto_url}
-                      alt={product.nome}
-                      style={{ width: '85%', height: '85%', objectFit: 'contain' }}
-                    />
-                  ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Package style={{ color: '#d1d5db', width: layout === 'list' ? '32px' : '40px', height: layout === 'list' ? '32px' : '40px' }} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Product Info */}
-                <div style={{ flex: 1, minWidth: 0, paddingTop: layout === 'list' ? '0' : '8px' }}>
-                  {/* Product Name - Always shown */}
-                  <h4 style={{ 
-                    fontWeight: 600, 
-                    color: '#1f2937', 
-                    margin: 0,
-                    fontSize: textSize.name,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {product.nome}
-                  </h4>
-                  
-                  {/* Dados Básicos Section */}
-                  {hasBasicFields && (
-                    <div style={{ marginTop: '4px' }}>
-                      {layout === 'list' && (
-                        <p style={{ fontSize: textSize.label, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px', margin: 0 }}>Dados Básicos</p>
-                      )}
-                      <div style={{ color: '#6b7280', fontSize: textSize.field }}>
-                        {fieldsByCategory['Dados Básicos'].map((fieldKey, i, arr) => {
-                          const value = formatFieldValue(product, fieldKey);
-                          const validValues = arr.filter(k => formatFieldValue(product, k) !== '-');
-                          const currentValidIndex = validValues.indexOf(fieldKey);
-                          if (value === '-') return null;
-                          return (
-                            <span key={fieldKey}>
-                              <span style={{ color: '#9ca3af' }}>{getFieldLabel(fieldKey)}: </span>
-                              <span style={{ color: '#374151' }}>{value}</span>
-                              {currentValidIndex < validValues.length - 1 && <span style={{ color: '#d1d5db' }}> • </span>}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Dados do Frete Section */}
-                  {hasFreteFields && (
-                    <div style={{ marginTop: '4px' }}>
-                      {layout === 'list' && (
-                        <p style={{ fontSize: textSize.label, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px', margin: 0 }}>Dados do Frete</p>
-                      )}
-                      <div style={{ color: '#6b7280', fontSize: textSize.field }}>
-                        {fieldsByCategory['Dados do Frete'].map((fieldKey, i, arr) => {
-                          const value = formatFieldValue(product, fieldKey);
-                          const validValues = arr.filter(k => formatFieldValue(product, k) !== '-');
-                          const currentValidIndex = validValues.indexOf(fieldKey);
-                          if (value === '-') return null;
-                          return (
-                            <span key={fieldKey}>
-                              <span style={{ color: '#9ca3af' }}>{getFieldLabel(fieldKey)}: </span>
-                              <span style={{ color: '#374151' }}>{value}</span>
-                              {currentValidIndex < validValues.length - 1 && <span style={{ color: '#d1d5db' }}> • </span>}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Embalagem Section */}
-                  {hasEmbalagemFields && (
-                    <div style={{ marginTop: '4px' }}>
-                      {layout === 'list' && (
-                        <p style={{ fontSize: textSize.label, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px', margin: 0 }}>Embalagem</p>
-                      )}
-                      <div style={{ color: '#6b7280', fontSize: textSize.field }}>
-                        {fieldsByCategory['Embalagem'].map((fieldKey, i, arr) => {
-                          const value = formatFieldValue(product, fieldKey);
-                          const validValues = arr.filter(k => formatFieldValue(product, k) !== '-');
-                          const currentValidIndex = validValues.indexOf(fieldKey);
-                          if (value === '-') return null;
-                          return (
-                            <span key={fieldKey}>
-                              <span style={{ color: '#9ca3af' }}>{getFieldLabel(fieldKey)}: </span>
-                              <span style={{ color: '#374151' }}>{value}</span>
-                              {currentValidIndex < validValues.length - 1 && <span style={{ color: '#d1d5db' }}> • </span>}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 42, lineHeight: 1.1 }}>
+            <span style={{ fontWeight: 300, color: '#4b5563' }}>Linha </span>
+            <span style={{ fontWeight: 700, color: '#111827' }}>{displayGroupName}</span>
           </div>
         </div>
 
+        {/* Products Grid - Using table for reliable PDF rendering */}
+        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: isListLayout ? '0 8px' : '12px' }}>
+          <tbody>
+            {/* Split products into rows based on column count */}
+            {Array.from({ length: Math.ceil(pageProducts.length / cols) }).map((_, rowIdx) => (
+              <tr key={rowIdx}>
+                {Array.from({ length: cols }).map((_, colIdx) => {
+                  const productIdx = rowIdx * cols + colIdx;
+                  const product = pageProducts[productIdx];
+                  
+                  if (!product) {
+                    return <td key={colIdx} style={{ width: cardWidthPercent, verticalAlign: 'top' }}></td>;
+                  }
+
+                  return (
+                    <td 
+                      key={colIdx} 
+                      style={{ 
+                        width: cardWidthPercent, 
+                        verticalAlign: 'top',
+                        padding: isListLayout ? '8px' : '0',
+                        backgroundColor: isListLayout ? '#f9fafb' : 'transparent'
+                      }}
+                    >
+                      {isListLayout ? (
+                        /* List Layout - Horizontal */
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                          <tbody>
+                            <tr>
+                              {/* Image */}
+                              <td style={{ width: 80, verticalAlign: 'top', padding: 0 }}>
+                                <div style={{ 
+                                  width: 80, 
+                                  height: 80, 
+                                  backgroundColor: '#f3f4f6',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}>
+                                  {product.foto_url ? (
+                                    <img src={product.foto_url} alt={product.nome} style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain' }} />
+                                  ) : (
+                                    <span style={{ color: '#9ca3af', fontSize: 10 }}>Sem foto</span>
+                                  )}
+                                </div>
+                              </td>
+                              {/* Info */}
+                              <td style={{ verticalAlign: 'top', paddingLeft: 12 }}>
+                                <div style={{ fontSize: textSize.name, fontWeight: 600, color: '#1f2937', marginBottom: 4 }}>
+                                  {product.nome}
+                                </div>
+                                {hasBasicFields && renderFieldCategory(product, fieldsByCategory['Dados Básicos'], 'Dados Básicos')}
+                                {hasFreteFields && renderFieldCategory(product, fieldsByCategory['Dados do Frete'], 'Dados do Frete')}
+                                {hasEmbalagemFields && renderFieldCategory(product, fieldsByCategory['Embalagem'], 'Embalagem')}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      ) : (
+                        /* Grid Layout - Vertical */
+                        <div>
+                          {/* Image */}
+                          <div style={{ 
+                            width: '100%', 
+                            paddingTop: '100%',
+                            position: 'relative',
+                            backgroundColor: '#f9fafb'
+                          }}>
+                            <div style={{ 
+                              position: 'absolute', 
+                              top: 0, 
+                              left: 0, 
+                              right: 0, 
+                              bottom: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              {product.foto_url ? (
+                                <img src={product.foto_url} alt={product.nome} style={{ maxWidth: '85%', maxHeight: '85%', objectFit: 'contain' }} />
+                              ) : (
+                                <span style={{ color: '#9ca3af', fontSize: 10 }}>Sem foto</span>
+                              )}
+                            </div>
+                          </div>
+                          {/* Info */}
+                          <div style={{ paddingTop: 8 }}>
+                            <div style={{ 
+                              fontSize: textSize.name, 
+                              fontWeight: 600, 
+                              color: '#1f2937',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {product.nome}
+                            </div>
+                            {hasBasicFields && renderFieldCategory(product, fieldsByCategory['Dados Básicos'], 'Dados Básicos')}
+                            {hasFreteFields && renderFieldCategory(product, fieldsByCategory['Dados do Frete'], 'Dados do Frete')}
+                            {hasEmbalagemFields && renderFieldCategory(product, fieldsByCategory['Embalagem'], 'Embalagem')}
+                          </div>
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
         {/* Footer with page number */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingTop: '16px' }}>
-          <span style={{ fontSize: '10px', color: '#9ca3af' }}>
+        <div style={{ position: 'absolute', bottom: 45, right: 45 }}>
+          <span style={{ fontSize: 10, color: '#9ca3af' }}>
             {String(pageNumber || 1).padStart(2, '0')}
           </span>
         </div>
@@ -749,79 +752,153 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     </div>
   );
 
-  // Price Table Page - Alphabetical list of products with prices grouped by category
+  // Price Table Page - Using pure table structure for reliable PDF rendering
   const renderPriceTablePage = (priceTableData: { groupName: string; products: CatalogProduct[] }[]) => (
-    <div
-      style={{ 
-        width: '100%', 
-        height: '100%', 
-        display: 'flex', 
-        flexDirection: 'column',
-        backgroundColor: 'white',
-        position: 'relative',
-        overflow: 'hidden',
-        padding: '12mm',
-        fontFamily: config.fontFamily,
-        boxSizing: 'border-box'
-      }}
-    >
+    <div style={{ 
+      width: '100%', 
+      height: '100%', 
+      backgroundColor: 'white',
+      position: 'relative',
+      overflow: 'hidden',
+      padding: 45,
+      fontFamily: config.fontFamily || 'Arial, sans-serif',
+      boxSizing: 'border-box'
+    }}>
       {/* Header */}
-      <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '2px solid #e5e7eb' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+      <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: '2px solid #e5e7eb' }}>
+        <div style={{ fontSize: 24, fontWeight: 'bold', color: '#111827', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Tabela de Preços
-        </h2>
-        <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Lista completa de produtos por grupo</p>
+        </div>
+        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+          Lista completa de produtos por grupo
+        </div>
       </div>
 
       {/* Price Table */}
-      <div style={{ flex: 1, overflow: 'hidden' }}>
-        <table style={{ width: '100%', fontSize: '9px', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ backgroundColor: '#f3f4f6' }}>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: '600', color: '#374151', width: '15%' }}>Código</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: '600', color: '#374151', width: '60%' }}>Produto</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', fontWeight: '600', color: '#374151', width: '25%' }}>Preço</th>
-            </tr>
-          </thead>
-          <tbody>
-            {priceTableData.map((group, groupIdx) => (
-              <React.Fragment key={group.groupName}>
-                {/* Group Header Row */}
-                <tr style={{ backgroundColor: '#1f2937' }}>
-                  <td colSpan={3} style={{ padding: '6px 8px', fontWeight: 'bold', color: 'white', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '8px' }}>
-                    {group.groupName}
+      <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+        <colgroup>
+          <col style={{ width: '18%' }} />
+          <col style={{ width: '57%' }} />
+          <col style={{ width: '25%' }} />
+        </colgroup>
+        <thead>
+          <tr>
+            <td style={{ 
+              textAlign: 'left', 
+              padding: '8px 10px', 
+              fontWeight: 600, 
+              color: '#374151', 
+              fontSize: 10,
+              backgroundColor: '#f3f4f6',
+              borderBottom: '1px solid #e5e7eb'
+            }}>
+              Código
+            </td>
+            <td style={{ 
+              textAlign: 'left', 
+              padding: '8px 10px', 
+              fontWeight: 600, 
+              color: '#374151', 
+              fontSize: 10,
+              backgroundColor: '#f3f4f6',
+              borderBottom: '1px solid #e5e7eb'
+            }}>
+              Produto
+            </td>
+            <td style={{ 
+              textAlign: 'right', 
+              padding: '8px 10px', 
+              fontWeight: 600, 
+              color: '#374151', 
+              fontSize: 10,
+              backgroundColor: '#f3f4f6',
+              borderBottom: '1px solid #e5e7eb'
+            }}>
+              Preço
+            </td>
+          </tr>
+        </thead>
+        <tbody>
+          {priceTableData.map((group) => (
+            <React.Fragment key={group.groupName}>
+              {/* Group Header Row */}
+              <tr>
+                <td 
+                  colSpan={3} 
+                  style={{ 
+                    padding: '8px 10px', 
+                    fontWeight: 'bold', 
+                    color: 'white', 
+                    backgroundColor: '#1f2937',
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    fontSize: 9
+                  }}
+                >
+                  {group.groupName}
+                </td>
+              </tr>
+              {/* Product Rows */}
+              {group.products.map((product, productIdx) => (
+                <tr key={product.id}>
+                  <td style={{ 
+                    padding: '6px 10px', 
+                    color: '#4b5563', 
+                    fontFamily: 'Courier New, monospace',
+                    fontSize: 9,
+                    backgroundColor: productIdx % 2 === 0 ? 'white' : '#fafafa',
+                    borderBottom: '1px solid #f3f4f6'
+                  }}>
+                    {product.codigo || '-'}
+                  </td>
+                  <td style={{ 
+                    padding: '6px 10px', 
+                    color: '#1f2937',
+                    fontSize: 9,
+                    backgroundColor: productIdx % 2 === 0 ? 'white' : '#fafafa',
+                    borderBottom: '1px solid #f3f4f6'
+                  }}>
+                    {product.nome}
+                  </td>
+                  <td style={{ 
+                    padding: '6px 10px', 
+                    textAlign: 'right', 
+                    fontWeight: 600, 
+                    color: '#111827',
+                    fontSize: 9,
+                    backgroundColor: productIdx % 2 === 0 ? 'white' : '#fafafa',
+                    borderBottom: '1px solid #f3f4f6'
+                  }}>
+                    {product.preco_tabela ? formatPrice(product.preco_tabela) : '-'}
                   </td>
                 </tr>
-                {/* Product Rows */}
-                {group.products.map((product, productIdx) => (
-                  <tr 
-                    key={product.id} 
-                    style={{ 
-                      borderBottom: '1px solid #f3f4f6',
-                      backgroundColor: productIdx % 2 === 0 ? 'white' : '#fafafa'
-                    }}
-                  >
-                    <td style={{ padding: '4px 8px', color: '#4b5563', fontFamily: 'monospace' }}>{product.codigo || '-'}</td>
-                    <td style={{ padding: '4px 8px', color: '#1f2937' }}>{product.nome}</td>
-                    <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: '600', color: '#111827' }}>
-                      {product.preco_tabela ? formatPrice(product.preco_tabela) : '-'}
-                    </td>
-                  </tr>
-                ))}
-              </React.Fragment>
-            ))}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
 
       {/* Footer */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '12px', marginTop: '8px', borderTop: '1px solid #e5e7eb' }}>
-        <span style={{ fontSize: '8px', color: '#9ca3af' }}>
-          {config.name || 'Catálogo'} - {currentYear}
-        </span>
-        <span style={{ fontSize: '10px', color: '#9ca3af' }}>
-          Tabela de Preços
-        </span>
+      <div style={{ 
+        position: 'absolute', 
+        bottom: 45, 
+        left: 45, 
+        right: 45,
+        paddingTop: 12, 
+        borderTop: '1px solid #e5e7eb'
+      }}>
+        <table style={{ width: '100%' }}>
+          <tbody>
+            <tr>
+              <td style={{ fontSize: 8, color: '#9ca3af', textAlign: 'left' }}>
+                {config.name || 'Catálogo'} - {currentYear}
+              </td>
+              <td style={{ fontSize: 10, color: '#9ca3af', textAlign: 'right' }}>
+                Tabela de Preços
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   );
