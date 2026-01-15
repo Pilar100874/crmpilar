@@ -397,32 +397,27 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                 Imagem que será exibida no catálogo de produtos para este grupo
               </p>
               <p className="text-green-500 font-bold text-xs mb-2">DEBUG: Antes do botão</p>
-              <span className="text-purple-600 font-bold block">TESTE1-FORA</span>
-              <button
-                type="button"
-                onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
-                disabled={uploading}
-                className="px-4 py-2 border rounded bg-white hover:bg-gray-100 my-2"
-              >
-                📁 {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
-              </button>
-              <span className="text-purple-600 font-bold block">TESTE2-FORA</span>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
-                disabled={uploading}
-                className="text-sm my-2"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                {selectedFileCatalogo ? 'Trocar2' : 'Selecionar2'}
-              </Button>
-              <span className="text-purple-600 font-bold block">TESTE3-FORA</span>
-              {(formData.imagem_catalogo || selectedFileCatalogo) && (
+              
+              <p className="text-black bg-red-300 p-4 text-lg font-bold">ELEMENTO ESTÁTICO SEM VARIÁVEIS</p>
+              
+              <div className="border-4 border-red-500 p-4 mt-4">
+                <p className="text-black font-bold">DENTRO DO DIV COM BORDA VERMELHA</p>
+                <span className="text-purple-600 font-bold block my-2">TESTE1-FORA</span>
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
+                  className="px-4 py-2 border rounded bg-white hover:bg-gray-100 my-2"
+                >
+                  📁 Selecionar Imagem
+                </button>
+                <span className="text-purple-600 font-bold block my-2">TESTE2-FORA</span>
+              </div>
+              
+              {formData.imagem_catalogo && (
                 <img 
                   src={formData.imagem_catalogo} 
                   alt="Preview catálogo" 
-                  className="w-12 h-12 object-cover rounded border"
+                  className="w-12 h-12 object-cover rounded border mt-2"
                 />
               )}
               <input
