@@ -105,9 +105,9 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     e: React.ChangeEvent<HTMLInputElement>,
     field: 'imagem_referencia' | 'imagem_catalogo'
   ) => {
-    console.log('[ProdutoGruposCRUD v2] handleFileSelect chamado, field:', field);
+    console.log('[ProdutoGruposCRUD v3] handleFileSelect chamado, field:', field);
     const file = e.target.files?.[0];
-    console.log('[ProdutoGruposCRUD v2] arquivo:', file?.name, file?.size);
+    console.log('[ProdutoGruposCRUD v3] arquivo:', file?.name, file?.size);
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
@@ -120,17 +120,29 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
       return;
     }
 
-    // Salva o arquivo e cria preview URL
+    // Salva o arquivo
     if (field === 'imagem_referencia') {
       setSelectedFileReferencia(file);
     } else {
       setSelectedFileCatalogo(file);
     }
     
+    // Cria preview URL e atualiza formData
     const previewUrl = URL.createObjectURL(file);
-    console.log('[ProdutoGruposCRUD v2] previewUrl criado:', previewUrl);
-    setFormData(prev => ({ ...prev, [field]: previewUrl }));
+    console.log('[ProdutoGruposCRUD v3] previewUrl criado:', previewUrl);
+    
+    // Atualiza o estado de forma direta (não usando função)
+    const newFormData = {
+      ...formData,
+      [field]: previewUrl
+    };
+    console.log('[ProdutoGruposCRUD v3] newFormData:', newFormData);
+    setFormData(newFormData);
+    
     toast.success('Imagem selecionada!');
+    
+    // Reset input para permitir selecionar mesmo arquivo novamente
+    e.target.value = '';
   };
 
   const clearImage = (field: 'imagem_referencia' | 'imagem_catalogo') => {
