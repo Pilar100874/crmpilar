@@ -321,14 +321,14 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
       </Table>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-[550px] min-h-[700px]">
+        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingGrupo ? "Editar Grupo" : "Novo Grupo"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-4 py-2">
             <div>
               <Label>Nome *</Label>
               <Input
