@@ -337,6 +337,25 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     );
   };
 
+  // Helper to get selected fields for a group, organized by category
+  const getGroupFieldsByCategory = (groupName?: string): Record<string, string[]> => {
+    const selectedFields = getGroupFields(groupName);
+    
+    const fieldsByCategory: Record<string, string[]> = {
+      'Dados Básicos': [],
+      'Dados do Frete': [],
+      'Embalagem': [],
+    };
+    
+    PRODUCT_FIELDS.forEach(field => {
+      if (selectedFields.includes(field.key)) {
+        fieldsByCategory[field.category].push(field.key);
+      }
+    });
+    
+    return fieldsByCategory;
+  };
+
   // Helper to get selected fields for a group
   const getGroupFields = (groupName?: string): string[] => {
     if (!groupName || !config.groupFieldConfigs) return ['codigo', 'descricao'];
@@ -349,10 +368,36 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     return fieldConfig?.selectedFields || ['codigo', 'descricao'];
   };
 
+  // Helper to get field label
+  const getFieldLabel = (key: string): string => {
+    const field = PRODUCT_FIELDS.find(f => f.key === key);
+    return field?.label || key;
+  };
+
+  // Helper to format field value
+  const formatFieldValue = (product: CatalogProduct, key: string): string => {
+    const value = (product as any)[key];
+    if (value === null || value === undefined) return '-';
+    if (typeof value === 'boolean') return value ? 'Sim' : 'Não';
+    if (typeof value === 'number') {
+      if (key.includes('preco') || key.includes('valor')) {
+        return `R$ ${value.toFixed(2)}`;
+      }
+      return value.toString();
+    }
+    return String(value);
+  };
+
   // Product Page - Reference design: clean header with "Linha + GroupName", dynamic columns
   const renderProductPage = (pageProducts: typeof products, groupName?: string, pageNumber?: number) => {
     const displayGroupName = groupName || 'Produtos';
     const selectedFields = getGroupFields(groupName);
+    const fieldsByCategory = getGroupFieldsByCategory(groupName);
+    
+    // Check which categories have fields selected
+    const hasBasicFields = fieldsByCategory['Dados Básicos'].length > 0;
+    const hasFreteFields = fieldsByCategory['Dados do Frete'].length > 0;
+    const hasEmbalagemFields = fieldsByCategory['Embalagem'].length > 0;
     
     return (
       <div
@@ -391,7 +436,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                 key={product.id}
                 className={cn(
                   "flex",
-                  layout === 'list' ? "flex-row items-center gap-4 p-3 bg-gray-50 rounded" : "flex-col"
+                  layout === 'list' ? "flex-row items-start gap-4 p-3 bg-gray-50 rounded" : "flex-col"
                 )}
               >
                 {/* Product Image Container */}
@@ -417,57 +462,90 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
 
                 {/* Product Info */}
                 <div className={cn(
-                  "flex items-start justify-between gap-2",
-                  layout === 'list' ? "flex-1" : "pt-2"
+                  "flex-1 min-w-0",
+                  layout === 'list' ? "" : "pt-2"
                 )}>
-                  <div className="flex-1 min-w-0">
-                    {/* Product Name - Always shown */}
-                    <h4 className={cn(
-                      "font-semibold text-gray-800 line-clamp-1",
-                      layout === 'list' ? "text-sm" : layout === 'grid-2' ? "text-[11px]" : "text-[9px]"
-                    )}>
-                      {product.nome}
-                    </h4>
-                    
-                    {/* Description - Only if selected */}
-                    {selectedFields.includes('descricao') && product.descricao && (
-                      <p className={cn(
-                        "text-gray-400 leading-tight mt-0.5",
-                        layout === 'list' ? "text-xs line-clamp-2" : layout === 'grid-2' ? "text-[9px] line-clamp-3" : "text-[7px] line-clamp-2"
-                      )}>
-                        {product.descricao}
-                      </p>
-                    )}
-                    
-                    {/* Category - Only if selected */}
-                    {selectedFields.includes('categoria_nome') && product.categoria_nome && (
-                      <p className={cn(
-                        "text-gray-500 mt-0.5",
-                        layout === 'list' ? "text-xs" : "text-[7px]"
-                      )}>
-                        {product.categoria_nome}
-                      </p>
-                    )}
-                    
-                    {/* Group - Only if selected */}
-                    {selectedFields.includes('grupo_nome') && product.grupo_nome && (
-                      <p className={cn(
-                        "text-gray-500 mt-0.5",
-                        layout === 'list' ? "text-xs" : "text-[7px]"
-                      )}>
-                        {product.grupo_nome}
-                      </p>
-                    )}
-                  </div>
+                  {/* Product Name - Always shown */}
+                  <h4 className={cn(
+                    "font-semibold text-gray-800 line-clamp-1",
+                    layout === 'list' ? "text-sm" : layout === 'grid-2' ? "text-[11px]" : "text-[9px]"
+                  )}>
+                    {product.nome}
+                  </h4>
                   
-                  {/* Product Code - Only if selected */}
-                  {selectedFields.includes('codigo') && product.codigo && (
-                    <span className={cn(
-                      "font-medium text-gray-600 flex-shrink-0",
-                      layout === 'list' ? "text-sm" : layout === 'grid-2' ? "text-[11px]" : "text-[9px]"
-                    )}>
-                      {product.codigo}
-                    </span>
+                  {/* Dados Básicos Section */}
+                  {hasBasicFields && (
+                    <div className="mt-1">
+                      {layout === 'list' && (
+                        <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wide">Dados Básicos</p>
+                      )}
+                      <div className={cn(
+                        "text-gray-500",
+                        layout === 'list' ? "text-xs" : "text-[7px]"
+                      )}>
+                        {fieldsByCategory['Dados Básicos'].map((fieldKey, i) => {
+                          const value = formatFieldValue(product, fieldKey);
+                          if (value === '-') return null;
+                          return (
+                            <span key={fieldKey}>
+                              {layout === 'list' && <span className="text-gray-400">{getFieldLabel(fieldKey)}: </span>}
+                              {value}
+                              {i < fieldsByCategory['Dados Básicos'].length - 1 && ' • '}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Dados do Frete Section */}
+                  {hasFreteFields && (
+                    <div className="mt-1">
+                      {layout === 'list' && (
+                        <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wide">Dados do Frete</p>
+                      )}
+                      <div className={cn(
+                        "text-gray-500",
+                        layout === 'list' ? "text-xs" : "text-[7px]"
+                      )}>
+                        {fieldsByCategory['Dados do Frete'].map((fieldKey, i) => {
+                          const value = formatFieldValue(product, fieldKey);
+                          if (value === '-') return null;
+                          return (
+                            <span key={fieldKey}>
+                              {layout === 'list' && <span className="text-gray-400">{getFieldLabel(fieldKey)}: </span>}
+                              {value}
+                              {i < fieldsByCategory['Dados do Frete'].length - 1 && ' • '}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Embalagem Section */}
+                  {hasEmbalagemFields && (
+                    <div className="mt-1">
+                      {layout === 'list' && (
+                        <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wide">Embalagem</p>
+                      )}
+                      <div className={cn(
+                        "text-gray-500",
+                        layout === 'list' ? "text-xs" : "text-[7px]"
+                      )}>
+                        {fieldsByCategory['Embalagem'].map((fieldKey, i) => {
+                          const value = formatFieldValue(product, fieldKey);
+                          if (value === '-') return null;
+                          return (
+                            <span key={fieldKey}>
+                              {layout === 'list' && <span className="text-gray-400">{getFieldLabel(fieldKey)}: </span>}
+                              {value}
+                              {i < fieldsByCategory['Embalagem'].length - 1 && ' • '}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
