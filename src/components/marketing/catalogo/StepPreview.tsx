@@ -153,13 +153,18 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
 
       for (let i = 0; i < totalPages; i++) {
         setCurrentPage(i);
-        await new Promise((r) => setTimeout(r, 200));
+        // Increase wait time to ensure proper rendering
+        await new Promise((r) => setTimeout(r, 400));
 
         const canvas = await html2canvas(pdfRef.current, {
           scale: 2,
           useCORS: true,
           allowTaint: true,
           backgroundColor: '#ffffff',
+          logging: false,
+          // Force width/height for consistent rendering
+          width: pdfRef.current.offsetWidth,
+          height: pdfRef.current.offsetHeight,
         });
 
         const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -461,91 +466,124 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     const hasBasicFields = fieldsByCategory['Dados Básicos'].length > 0;
     const hasFreteFields = fieldsByCategory['Dados do Frete'].length > 0;
     const hasEmbalagemFields = fieldsByCategory['Embalagem'].length > 0;
+
+    // Get grid styles based on layout
+    const getGridStyles = () => {
+      switch (layout) {
+        case 'list':
+          return { display: 'flex', flexDirection: 'column' as const, gap: '12px' };
+        case 'grid-2':
+          return { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' };
+        case 'grid-3':
+          return { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' };
+        case 'grid-4':
+          return { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' };
+        default:
+          return { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' };
+      }
+    };
+
+    const getTextSize = () => {
+      switch (layout) {
+        case 'list': return { name: '14px', field: '12px', label: '8px' };
+        case 'grid-2': return { name: '11px', field: '8px', label: '7px' };
+        default: return { name: '9px', field: '7px', label: '6px' };
+      }
+    };
+
+    const textSize = getTextSize();
     
     return (
       <div
-        className="w-full h-full flex flex-col bg-white relative overflow-hidden p-[12mm]"
-        style={{ fontFamily: config.fontFamily }}
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          display: 'flex', 
+          flexDirection: 'column',
+          backgroundColor: 'white',
+          position: 'relative',
+          overflow: 'hidden',
+          padding: '12mm',
+          fontFamily: config.fontFamily,
+          boxSizing: 'border-box'
+        }}
       >
         {/* Header Section */}
-        <div className="mb-6">
-          <h2 className="text-5xl leading-tight">
-            <span 
-              className="font-light text-gray-600"
-              style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif' }}
-            >
+        <div style={{ marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '48px', lineHeight: 1.1, margin: 0 }}>
+            <span style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300, color: '#4b5563' }}>
               Linha{' '}
             </span>
-            <span 
-              className="font-bold text-gray-900"
-              style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif' }}
-            >
+            <span style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 700, color: '#111827' }}>
               {displayGroupName}
             </span>
           </h2>
         </div>
 
-        {/* Products Grid - Dynamic columns based on layout */}
-        <div className="flex-1">
-          <div className={cn(
-            "grid h-full content-start",
-            layout === 'list' && "grid-cols-1 gap-y-3",
-            layout === 'grid-2' && "grid-cols-2 gap-x-6 gap-y-6",
-            layout === 'grid-3' && "grid-cols-3 gap-x-5 gap-y-5",
-            layout === 'grid-4' && "grid-cols-4 gap-x-4 gap-y-4"
-          )}>
+        {/* Products Grid */}
+        <div style={{ flex: 1 }}>
+          <div style={getGridStyles()}>
             {pageProducts.map((product, idx) => (
               <div
                 key={product.id}
-                className={cn(
-                  "flex",
-                  layout === 'list' ? "flex-row items-start gap-4 p-3 bg-gray-50 rounded" : "flex-col"
-                )}
+                style={{
+                  display: 'flex',
+                  flexDirection: layout === 'list' ? 'row' : 'column',
+                  alignItems: layout === 'list' ? 'flex-start' : 'stretch',
+                  gap: layout === 'list' ? '16px' : '0',
+                  padding: layout === 'list' ? '12px' : '0',
+                  backgroundColor: layout === 'list' ? '#f9fafb' : 'transparent',
+                  borderRadius: layout === 'list' ? '4px' : '0'
+                }}
               >
                 {/* Product Image Container */}
-                <div className={cn(
-                  "relative bg-gray-50 flex items-center justify-center overflow-hidden",
-                  layout === 'list' ? "w-20 h-20 flex-shrink-0" : "aspect-square"
-                )}>
+                <div style={{
+                  position: 'relative',
+                  backgroundColor: '#f9fafb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  width: layout === 'list' ? '80px' : '100%',
+                  height: layout === 'list' ? '80px' : 'auto',
+                  aspectRatio: layout === 'list' ? undefined : '1/1',
+                  flexShrink: 0
+                }}>
                   {product.foto_url ? (
                     <img
                       src={product.foto_url}
                       alt={product.nome}
-                      className="w-[85%] h-[85%] object-contain"
+                      style={{ width: '85%', height: '85%', objectFit: 'contain' }}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Package className={cn(
-                        "text-gray-300",
-                        layout === 'list' ? "h-8 w-8" : "h-10 w-10"
-                      )} />
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Package style={{ color: '#d1d5db', width: layout === 'list' ? '32px' : '40px', height: layout === 'list' ? '32px' : '40px' }} />
                     </div>
                   )}
                 </div>
 
                 {/* Product Info */}
-                <div className={cn(
-                  "flex-1 min-w-0",
-                  layout === 'list' ? "" : "pt-2"
-                )}>
+                <div style={{ flex: 1, minWidth: 0, paddingTop: layout === 'list' ? '0' : '8px' }}>
                   {/* Product Name - Always shown */}
-                  <h4 className={cn(
-                    "font-semibold text-gray-800 line-clamp-1",
-                    layout === 'list' ? "text-sm" : layout === 'grid-2' ? "text-[11px]" : "text-[9px]"
-                  )}>
+                  <h4 style={{ 
+                    fontWeight: 600, 
+                    color: '#1f2937', 
+                    margin: 0,
+                    fontSize: textSize.name,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
                     {product.nome}
                   </h4>
                   
                   {/* Dados Básicos Section */}
                   {hasBasicFields && (
-                    <div className="mt-1">
+                    <div style={{ marginTop: '4px' }}>
                       {layout === 'list' && (
-                        <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Dados Básicos</p>
+                        <p style={{ fontSize: textSize.label, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px', margin: 0 }}>Dados Básicos</p>
                       )}
-                      <div className={cn(
-                        "text-gray-500 flex flex-wrap gap-x-1",
-                        layout === 'list' ? "text-xs" : "text-[7px]"
-                      )}>
+                      <div style={{ color: '#6b7280', fontSize: textSize.field }}>
                         {fieldsByCategory['Dados Básicos'].map((fieldKey, i, arr) => {
                           const value = formatFieldValue(product, fieldKey);
                           const validValues = arr.filter(k => formatFieldValue(product, k) !== '-');
@@ -553,9 +591,9 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                           if (value === '-') return null;
                           return (
                             <span key={fieldKey}>
-                              <span className="text-gray-400">{getFieldLabel(fieldKey)}: </span>
-                              <span className="text-gray-700">{value}</span>
-                              {currentValidIndex < validValues.length - 1 && <span className="text-gray-300"> • </span>}
+                              <span style={{ color: '#9ca3af' }}>{getFieldLabel(fieldKey)}: </span>
+                              <span style={{ color: '#374151' }}>{value}</span>
+                              {currentValidIndex < validValues.length - 1 && <span style={{ color: '#d1d5db' }}> • </span>}
                             </span>
                           );
                         })}
@@ -565,14 +603,11 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                   
                   {/* Dados do Frete Section */}
                   {hasFreteFields && (
-                    <div className="mt-1">
+                    <div style={{ marginTop: '4px' }}>
                       {layout === 'list' && (
-                        <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Dados do Frete</p>
+                        <p style={{ fontSize: textSize.label, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px', margin: 0 }}>Dados do Frete</p>
                       )}
-                      <div className={cn(
-                        "text-gray-500 flex flex-wrap gap-x-1",
-                        layout === 'list' ? "text-xs" : "text-[7px]"
-                      )}>
+                      <div style={{ color: '#6b7280', fontSize: textSize.field }}>
                         {fieldsByCategory['Dados do Frete'].map((fieldKey, i, arr) => {
                           const value = formatFieldValue(product, fieldKey);
                           const validValues = arr.filter(k => formatFieldValue(product, k) !== '-');
@@ -580,9 +615,9 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                           if (value === '-') return null;
                           return (
                             <span key={fieldKey}>
-                              <span className="text-gray-400">{getFieldLabel(fieldKey)}: </span>
-                              <span className="text-gray-700">{value}</span>
-                              {currentValidIndex < validValues.length - 1 && <span className="text-gray-300"> • </span>}
+                              <span style={{ color: '#9ca3af' }}>{getFieldLabel(fieldKey)}: </span>
+                              <span style={{ color: '#374151' }}>{value}</span>
+                              {currentValidIndex < validValues.length - 1 && <span style={{ color: '#d1d5db' }}> • </span>}
                             </span>
                           );
                         })}
@@ -592,14 +627,11 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                   
                   {/* Embalagem Section */}
                   {hasEmbalagemFields && (
-                    <div className="mt-1">
+                    <div style={{ marginTop: '4px' }}>
                       {layout === 'list' && (
-                        <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Embalagem</p>
+                        <p style={{ fontSize: textSize.label, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px', margin: 0 }}>Embalagem</p>
                       )}
-                      <div className={cn(
-                        "text-gray-500 flex flex-wrap gap-x-1",
-                        layout === 'list' ? "text-xs" : "text-[7px]"
-                      )}>
+                      <div style={{ color: '#6b7280', fontSize: textSize.field }}>
                         {fieldsByCategory['Embalagem'].map((fieldKey, i, arr) => {
                           const value = formatFieldValue(product, fieldKey);
                           const validValues = arr.filter(k => formatFieldValue(product, k) !== '-');
@@ -607,9 +639,9 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                           if (value === '-') return null;
                           return (
                             <span key={fieldKey}>
-                              <span className="text-gray-400">{getFieldLabel(fieldKey)}: </span>
-                              <span className="text-gray-700">{value}</span>
-                              {currentValidIndex < validValues.length - 1 && <span className="text-gray-300"> • </span>}
+                              <span style={{ color: '#9ca3af' }}>{getFieldLabel(fieldKey)}: </span>
+                              <span style={{ color: '#374151' }}>{value}</span>
+                              {currentValidIndex < validValues.length - 1 && <span style={{ color: '#d1d5db' }}> • </span>}
                             </span>
                           );
                         })}
@@ -623,8 +655,8 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
         </div>
 
         {/* Footer with page number */}
-        <div className="flex items-center justify-end pt-4">
-          <span className="text-[10px] text-gray-400">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingTop: '16px' }}>
+          <span style={{ fontSize: '10px', color: '#9ca3af' }}>
             {String(pageNumber || 1).padStart(2, '0')}
           </span>
         </div>
@@ -720,33 +752,43 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
   // Price Table Page - Alphabetical list of products with prices grouped by category
   const renderPriceTablePage = (priceTableData: { groupName: string; products: CatalogProduct[] }[]) => (
     <div
-      className="w-full h-full flex flex-col bg-white relative overflow-hidden p-[12mm]"
-      style={{ fontFamily: config.fontFamily }}
+      style={{ 
+        width: '100%', 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column',
+        backgroundColor: 'white',
+        position: 'relative',
+        overflow: 'hidden',
+        padding: '12mm',
+        fontFamily: config.fontFamily,
+        boxSizing: 'border-box'
+      }}
     >
       {/* Header */}
-      <div className="mb-4 pb-3 border-b-2 border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-900 uppercase tracking-wide">
+      <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '2px solid #e5e7eb' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
           Tabela de Preços
         </h2>
-        <p className="text-xs text-gray-500 mt-1">Lista completa de produtos por grupo</p>
+        <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '4px' }}>Lista completa de produtos por grupo</p>
       </div>
 
       {/* Price Table */}
-      <div className="flex-1 overflow-hidden">
-        <table className="w-full text-[9px]">
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        <table style={{ width: '100%', fontSize: '9px', borderCollapse: 'collapse' }}>
           <thead>
-            <tr className="bg-gray-100">
-              <th className="text-left py-1.5 px-2 font-semibold text-gray-700 w-[15%]">Código</th>
-              <th className="text-left py-1.5 px-2 font-semibold text-gray-700 w-[60%]">Produto</th>
-              <th className="text-right py-1.5 px-2 font-semibold text-gray-700 w-[25%]">Preço</th>
+            <tr style={{ backgroundColor: '#f3f4f6' }}>
+              <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: '600', color: '#374151', width: '15%' }}>Código</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', fontWeight: '600', color: '#374151', width: '60%' }}>Produto</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', fontWeight: '600', color: '#374151', width: '25%' }}>Preço</th>
             </tr>
           </thead>
           <tbody>
             {priceTableData.map((group, groupIdx) => (
               <React.Fragment key={group.groupName}>
                 {/* Group Header Row */}
-                <tr className="bg-gray-800">
-                  <td colSpan={3} className="py-1.5 px-2 font-bold text-white uppercase tracking-wide text-[8px]">
+                <tr style={{ backgroundColor: '#1f2937' }}>
+                  <td colSpan={3} style={{ padding: '6px 8px', fontWeight: 'bold', color: 'white', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '8px' }}>
                     {group.groupName}
                   </td>
                 </tr>
@@ -754,14 +796,14 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                 {group.products.map((product, productIdx) => (
                   <tr 
                     key={product.id} 
-                    className={cn(
-                      "border-b border-gray-100",
-                      productIdx % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                    )}
+                    style={{ 
+                      borderBottom: '1px solid #f3f4f6',
+                      backgroundColor: productIdx % 2 === 0 ? 'white' : '#fafafa'
+                    }}
                   >
-                    <td className="py-1 px-2 text-gray-600 font-mono">{product.codigo || '-'}</td>
-                    <td className="py-1 px-2 text-gray-800">{product.nome}</td>
-                    <td className="py-1 px-2 text-right font-semibold text-gray-900">
+                    <td style={{ padding: '4px 8px', color: '#4b5563', fontFamily: 'monospace' }}>{product.codigo || '-'}</td>
+                    <td style={{ padding: '4px 8px', color: '#1f2937' }}>{product.nome}</td>
+                    <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: '600', color: '#111827' }}>
                       {product.preco_tabela ? formatPrice(product.preco_tabela) : '-'}
                     </td>
                   </tr>
@@ -773,11 +815,11 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-3 mt-2 border-t border-gray-200">
-        <span className="text-[8px] text-gray-400">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '12px', marginTop: '8px', borderTop: '1px solid #e5e7eb' }}>
+        <span style={{ fontSize: '8px', color: '#9ca3af' }}>
           {config.name || 'Catálogo'} - {currentYear}
         </span>
-        <span className="text-[10px] text-gray-400">
+        <span style={{ fontSize: '10px', color: '#9ca3af' }}>
           Tabela de Preços
         </span>
       </div>
