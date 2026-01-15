@@ -346,12 +346,19 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
       </Table>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
+        <DialogContent key={`${previewReferencia}-${previewCatalogo}`}>
           <DialogHeader>
             <DialogTitle>
               {editingGrupo ? "Editar Grupo" : "Novo Grupo"}
             </DialogTitle>
           </DialogHeader>
+
+          {/* Debug: mostrar URLs de preview */}
+          {(previewReferencia || previewCatalogo) && (
+            <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
+              Preview Ref: {previewReferencia ? '✓' : '✗'} | Preview Cat: {previewCatalogo ? '✓' : '✗'}
+            </div>
+          )}
 
           <div className="space-y-4">
             <div>
