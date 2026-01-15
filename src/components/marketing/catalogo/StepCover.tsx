@@ -42,7 +42,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
     toast.success('Imagem selecionada!');
   };
 
-  // Simple logo upload - directly updates page state
+  // Simple logo upload - exactly like background upload
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -51,16 +51,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
     reader.onloadend = () => {
       const result = reader.result as string;
       if (result) {
-        // Directly update with new object containing all existing props + logoUrl
-        onChange({
-          id: page.id,
-          type: page.type,
-          title: page.title,
-          subtitle: page.subtitle,
-          backgroundImage: page.backgroundImage,
-          backgroundColor: page.backgroundColor,
-          logoUrl: result
-        });
+        onChange({ ...page, logoUrl: result });
         toast.success('Logo carregado!');
       }
     };
@@ -69,15 +60,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
   };
 
   const clearLogo = () => {
-    onChange({
-      id: page.id,
-      type: page.type,
-      title: page.title,
-      subtitle: page.subtitle,
-      backgroundImage: page.backgroundImage,
-      backgroundColor: page.backgroundColor,
-      logoUrl: undefined
-    });
+    onChange({ ...page, logoUrl: undefined });
   };
 
   const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
