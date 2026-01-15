@@ -1394,6 +1394,33 @@ export type Database = {
           },
         ]
       }
+      catalog_ai_images: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          prompt: string | null
+          public_url: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          prompt?: string | null
+          public_url: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          prompt?: string | null
+          public_url?: string
+          storage_path?: string
+        }
+        Relationships: []
+      }
       catalogos_salvos: {
         Row: {
           backcover_page: Json | null

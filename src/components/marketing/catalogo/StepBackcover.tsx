@@ -4,26 +4,33 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { CatalogPage } from './types';
-import { Phone, Mail, Globe, MapPin, Sparkles, Loader2, X, ImageIcon } from 'lucide-react';
+import { Phone, Mail, Globe, MapPin, Sparkles, Loader2, X, ImageIcon, FolderOpen } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useCatalogAIImages } from './hooks/useCatalogAIImages';
+import { AIImageGallery } from './AIImageGallery';
 
 interface StepBackcoverProps {
   page: CatalogPage;
   onChange: (page: CatalogPage) => void;
   primaryColor: string;
   logoUrl?: string;
+  estabelecimentoId?: string;
 }
 
 export const StepBackcover: React.FC<StepBackcoverProps> = ({ 
   page, 
   onChange, 
   primaryColor,
-  logoUrl 
+  logoUrl,
+  estabelecimentoId = 'default'
 }) => {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [imagePrompt, setImagePrompt] = useState('');
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const bgInputRef = useRef<HTMLInputElement>(null);
+  
+  const { images, loading: imagesLoading, saveImage, deleteImage } = useCatalogAIImages(estabelecimentoId);
 
   const updateContact = (field: keyof CatalogPage['contactInfo'], value: string) => {
     onChange({
@@ -51,6 +58,11 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
     onChange({ ...page, backgroundImage: undefined });
   };
 
+  const handleSelectFromGallery = (imageUrl: string) => {
+    onChange({ ...page, backgroundImage: imageUrl });
+    toast.success('Imagem selecionada!');
+  };
+
   const generateAIImage = async () => {
     if (!imagePrompt.trim()) {
       toast.error('Digite uma descrição para a imagem');
@@ -62,14 +74,20 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
       const { data, error } = await supabase.functions.invoke('catalog-ai', {
         body: { 
           action: 'generate-image',
-          prompt: `Professional catalog back cover background: ${imagePrompt.trim()}, suitable for contact information display`
+          prompt: `Professional catalog back cover background: ${imagePrompt.trim()}, suitable for contact information display`,
+          estabelecimentoId,
+          saveToGallery: true
         }
       });
 
       if (error) throw error;
       if (data.imageUrl) {
         onChange({ ...page, backgroundImage: data.imageUrl });
-        toast.success('Imagem gerada com sucesso!');
+        
+        // Save to gallery
+        await saveImage(data.imageUrl, imagePrompt.trim());
+        
+        toast.success('Imagem gerada e salva na galeria!');
       }
     } catch (error: any) {
       console.error('Error generating image:', error);
@@ -176,19 +194,36 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
               className="min-h-[70px] resize-none text-sm"
             />
 
-            <Button
-              type="button"
-              onClick={generateAIImage}
-              disabled={generatingImage || !imagePrompt.trim()}
-              className="w-full h-10 gap-2"
-            >
-              {generatingImage ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4" />
-              )}
-              {generatingImage ? 'Gerando imagem...' : 'Gerar imagem com IA'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={generateAIImage}
+                disabled={generatingImage || !imagePrompt.trim()}
+                className="flex-1 h-10 gap-2"
+              >
+                {generatingImage ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {generatingImage ? 'Gerando...' : 'Gerar com IA'}
+              </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setGalleryOpen(true)}
+                className="h-10 gap-2"
+              >
+                <FolderOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">Galeria</span>
+                {images.length > 0 && (
+                  <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+                    {images.length}
+                  </span>
+                )}
+              </Button>
+            </div>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -351,6 +386,15 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
           </div>
         </div>
       </div>
+      {/* AI Image Gallery Dialog */}
+      <AIImageGallery
+        open={galleryOpen}
+        onOpenChange={setGalleryOpen}
+        images={images}
+        loading={imagesLoading}
+        onSelect={handleSelectFromGallery}
+        onDelete={deleteImage}
+      />
     </div>
   );
 };
