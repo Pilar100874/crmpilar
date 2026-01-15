@@ -321,115 +321,112 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
       </Table>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[550px] max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>
               {editingGrupo ? "Editar Grupo" : "Novo Grupo"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            <div>
-              <Label>Nome *</Label>
-              <Input
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                placeholder="Nome do grupo"
-              />
-            </div>
-
-            <div>
-              <Label>Percentual de Comissão (%)</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={formData.percentual_comissao}
-                onChange={(e) => setFormData({ ...formData, percentual_comissao: e.target.value })}
-                placeholder="0.00"
-              />
-            </div>
-
-            {/* Imagem de Referência */}
-            <div>
-              <Label className="flex items-center gap-2">
-                <Image className="w-4 h-4" />
-                Imagem de Referência do Produto
-              </Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                Imagem ilustrativa para identificar o tipo de produto do grupo
-              </p>
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('grupo-imagem-referencia-upload')?.click()}
-                  disabled={uploading}
-                  className="text-sm"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {selectedFileReferencia ? 'Trocar' : 'Selecionar'}
-                </Button>
-                {(formData.imagem_referencia || selectedFileReferencia) && (
-                  <img 
-                    src={formData.imagem_referencia} 
-                    alt="Preview" 
-                    className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded border"
-                  />
-                )}
+          <ScrollArea className="flex-1 max-h-[60vh] pr-4">
+            <div className="space-y-4 py-2">
+              <div>
+                <Label>Nome *</Label>
+                <Input
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  placeholder="Nome do grupo"
+                />
               </div>
-              <input
-                id="grupo-imagem-referencia-upload"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileSelect(e, 'imagem_referencia')}
-                className="hidden"
-              />
-            </div>
 
-            {/* Campo Imagem para Catálogo de Produtos */}
-            <div className="border-t pt-4 mt-4">
-              <div className="mb-2">
+              <div>
+                <Label>Percentual de Comissão (%)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.percentual_comissao}
+                  onChange={(e) => setFormData({ ...formData, percentual_comissao: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+
+              {/* Imagem de Referência */}
+              <div>
                 <Label className="flex items-center gap-2">
                   <Image className="w-4 h-4" />
-                  <span>Imagem para Catálogo de Produtos</span>
+                  Imagem de Referência do Produto
                 </Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mb-2">
+                  Imagem ilustrativa para identificar o tipo de produto do grupo
+                </p>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('grupo-imagem-referencia-upload')?.click()}
+                    disabled={uploading}
+                    className="text-sm"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {selectedFileReferencia ? 'Trocar' : 'Selecionar'}
+                  </Button>
+                  {(formData.imagem_referencia || selectedFileReferencia) && (
+                    <img 
+                      src={formData.imagem_referencia} 
+                      alt="Preview" 
+                      className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded border"
+                    />
+                  )}
+                </div>
+                <input
+                  id="grupo-imagem-referencia-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileSelect(e, 'imagem_referencia')}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Campo Imagem para Catálogo de Produtos */}
+              <div className="border-t pt-4">
+                <Label className="flex items-center gap-2 mb-1">
+                  <Image className="w-4 h-4" />
+                  Imagem para Catálogo de Produtos
+                </Label>
+                <p className="text-xs text-muted-foreground mb-2">
                   Imagem que será exibida no catálogo de produtos para este grupo
                 </p>
-              </div>
-              <div className="flex items-center gap-3 mt-2">
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
+                    disabled={uploading}
+                    className="text-sm"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
+                  </Button>
+                  {(formData.imagem_catalogo || selectedFileCatalogo) && (
+                    <img 
+                      src={formData.imagem_catalogo} 
+                      alt="Preview catálogo" 
+                      className="w-12 h-12 object-cover rounded border"
+                    />
+                  )}
+                </div>
                 <input
-                  id="input-catalogo-upload"
+                  id="grupo-imagem-catalogo-upload"
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
-                  style={{ display: 'none' }}
+                  className="hidden"
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const el = document.getElementById('input-catalogo-upload');
-                    if (el) el.click();
-                  }}
-                  disabled={uploading}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  <span>{selectedFileCatalogo ? 'Trocar' : 'Selecionar'}</span>
-                </Button>
-                {formData.imagem_catalogo && (
-                  <img 
-                    src={formData.imagem_catalogo} 
-                    alt="Preview catálogo" 
-                    className="w-12 h-12 object-cover rounded border"
-                  />
-                )}
               </div>
             </div>
-          </div>
+          </ScrollArea>
 
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0">
             <Button variant="outline" onClick={() => setShowDialog(false)}>
               Cancelar
             </Button>
