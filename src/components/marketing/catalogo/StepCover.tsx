@@ -34,6 +34,14 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const [imagePrompt, setImagePrompt] = useState('');
   const [galleryOpen, setGalleryOpen] = useState(false);
   
+  // Local state for logo preview (like ProdutosCRUD uses selectedFile + formData.foto_url)
+  const [logoPreview, setLogoPreview] = useState<string | undefined>(page.logoUrl);
+  
+  // Sync local preview with parent state
+  useEffect(() => {
+    setLogoPreview(page.logoUrl);
+  }, [page.logoUrl]);
+  
   // AI Images hook for gallery
   const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
 
@@ -42,7 +50,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
     toast.success('Imagem selecionada!');
   };
 
-  // Simple logo upload - uses FileReader like ProdutoGruposCRUD
+  // Logo upload - uses local state for immediate preview like ProdutosCRUD
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -52,38 +60,39 @@ export const StepCover: React.FC<StepCoverProps> = ({
       return;
     }
 
-    console.log('[StepCover] handleLogoUpload - file selected:', file.name, file.size);
+    if (!file.type.startsWith('image/')) {
+      toast.error("Por favor selecione um arquivo de imagem");
+      return;
+    }
 
+    // Create preview URL immediately for instant feedback
+    const previewUrl = URL.createObjectURL(file);
+    setLogoPreview(previewUrl);
+
+    // Also read as base64 for persistence
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
-      console.log('[StepCover] handleLogoUpload - FileReader loaded, length:', dataUrl?.length);
       if (dataUrl) {
-        const newPage = { ...page, logoUrl: dataUrl };
-        console.log('[StepCover] handleLogoUpload - calling onChange with logoUrl length:', dataUrl.length);
-        onChange(newPage);
+        setLogoPreview(dataUrl);
+        onChange({ ...page, logoUrl: dataUrl });
         toast.success('Logo carregado!');
       }
     };
     reader.onerror = () => {
-      console.error('[StepCover] handleLogoUpload - FileReader error');
       toast.error('Erro ao carregar logo');
+      setLogoPreview(undefined);
     };
     reader.readAsDataURL(file);
   };
 
   const clearLogo = () => {
-    console.log('[StepCover] clearLogo called');
+    setLogoPreview(undefined);
     onChange({ ...page, logoUrl: undefined });
     if (logoInputRef.current) {
       logoInputRef.current.value = "";
     }
   };
-
-  // Log when page prop changes
-  useEffect(() => {
-    console.log('[StepCover] page prop updated - logoUrl:', page.logoUrl ? `exists (${page.logoUrl.length} chars)` : 'undefined');
-  }, [page.logoUrl]);
 
   const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -278,12 +287,12 @@ export const StepCover: React.FC<StepCoverProps> = ({
                 className="text-xs sm:text-sm"
               >
                 <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                {page.logoUrl ? 'Trocar' : 'Selecionar'}
+                {logoPreview ? 'Trocar' : 'Selecionar'}
               </Button>
-              {page.logoUrl && (
+              {logoPreview && (
                 <div className="relative inline-block group">
                   <img 
-                    src={page.logoUrl} 
+                    src={logoPreview} 
                     alt="Logo Preview" 
                     className="w-12 h-12 sm:w-16 sm:h-16 object-contain rounded border bg-white"
                   />
@@ -454,9 +463,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
               <div className="bg-white px-4 py-3 flex items-center justify-between">
               {/* Logo bottom left */}
               <div className="flex items-center">
-                {page.logoUrl ? (
+                {logoPreview ? (
                   <img 
-                    src={page.logoUrl}
+                    src={logoPreview}
                     alt="Logo" 
                     className="h-6 w-auto object-contain"
                   />
