@@ -360,6 +360,9 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                 Imagem que será exibida no catálogo de produtos para este grupo
               </p>
               <div className="flex items-center gap-3">
+                <Button type="button" variant="outline" className="text-sm">
+                  BOTÃO TESTE ESTÁTICO
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
