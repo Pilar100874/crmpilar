@@ -252,11 +252,6 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     const group = groupedProducts.find(g => g.nome === groupName);
     const groupImage = group ? groupImages[group.id] : undefined;
     
-    // Split group name for styling - first word light, rest bold
-    const words = groupName.split(' ');
-    const firstWord = words[0] || '';
-    const restWords = words.slice(1).join(' ');
-
     return (
       <div
         className="w-full h-full bg-white p-[6mm] relative overflow-hidden"
@@ -278,50 +273,41 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
             />
           )}
 
-          {/* Subtle gradient overlay on left for text readability */}
+          {/* Vertical Text on Left Side - "Linha" + Group Name */}
           <div 
-            className="absolute inset-y-0 left-0 w-[15%]"
-            style={{ 
-              background: 'linear-gradient(to right, rgba(0,0,0,0.15) 0%, transparent 100%)'
-            }}
-          />
-
-          {/* Vertical Text on Left Side - matching reference positioning */}
-          <div 
-            className="absolute left-3 inset-y-0 flex items-center justify-center"
+            className="absolute left-2 inset-y-0 flex items-center justify-center"
           >
             <h2 
-              className="text-white leading-[0.85]"
+              className="text-white leading-[0.9]"
               style={{ 
                 writingMode: 'vertical-rl', 
                 textOrientation: 'mixed',
                 transform: 'rotate(180deg)',
                 fontFamily: 'Helvetica Neue, Arial, sans-serif',
-                letterSpacing: '-0.02em'
               }}
             >
               <span 
                 style={{ 
-                  fontSize: '72px',
-                  fontWeight: 200, 
-                  opacity: 0.95,
-                  display: 'block'
+                  fontSize: '64px',
+                  fontWeight: 300, 
+                  color: 'rgba(255,255,255,0.85)',
+                  display: 'block',
+                  letterSpacing: '-0.01em'
                 }}
               >
-                {firstWord}
+                Linha
               </span>
-              {restWords && (
-                <span 
-                  style={{ 
-                    fontSize: '72px',
-                    fontWeight: 700,
-                    display: 'block',
-                    marginTop: '4px'
-                  }}
-                >
-                  {restWords}
-                </span>
-              )}
+              <span 
+                style={{ 
+                  fontSize: '64px',
+                  fontWeight: 700,
+                  color: '#ffffff',
+                  display: 'block',
+                  letterSpacing: '-0.01em'
+                }}
+              >
+                {groupName}
+              </span>
             </h2>
           </div>
 
