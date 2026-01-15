@@ -273,37 +273,38 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
             />
           )}
 
-          {/* Vertical Text on Left Side - "Linha" + Group Name */}
+          {/* Vertical Text on Left Side - Full Height */}
           <div 
-            className="absolute left-2 inset-y-0 flex items-center justify-center"
+            className="absolute left-0 top-0 bottom-0 flex items-stretch"
+            style={{ width: '80px' }}
           >
             <h2 
-              className="text-white leading-[0.9]"
+              className="text-white h-full flex items-center justify-center"
               style={{ 
                 writingMode: 'vertical-rl', 
                 textOrientation: 'mixed',
                 transform: 'rotate(180deg)',
                 fontFamily: 'Helvetica Neue, Arial, sans-serif',
+                width: '100%',
               }}
             >
               <span 
                 style={{ 
-                  fontSize: '64px',
+                  fontSize: '58px',
                   fontWeight: 300, 
                   color: 'rgba(255,255,255,0.85)',
-                  display: 'block',
-                  letterSpacing: '-0.01em'
+                  letterSpacing: '-0.02em'
                 }}
               >
                 Linha
               </span>
               <span 
                 style={{ 
-                  fontSize: '64px',
+                  fontSize: '58px',
                   fontWeight: 700,
                   color: '#ffffff',
-                  display: 'block',
-                  letterSpacing: '-0.01em'
+                  letterSpacing: '-0.02em',
+                  marginTop: '8px'
                 }}
               >
                 {groupName}
