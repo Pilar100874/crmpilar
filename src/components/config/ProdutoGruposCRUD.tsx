@@ -50,6 +50,10 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
   const [selectedFileReferencia, setSelectedFileReferencia] = useState<File | null>(null);
   const [selectedFileCatalogo, setSelectedFileCatalogo] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  
+  // URLs de preview separadas para garantir re-render
+  const [previewReferencia, setPreviewReferencia] = useState<string>("");
+  const [previewCatalogo, setPreviewCatalogo] = useState<string>("");
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -105,9 +109,9 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     e: React.ChangeEvent<HTMLInputElement>,
     field: 'imagem_referencia' | 'imagem_catalogo'
   ) => {
-    console.log('[ProdutoGruposCRUD v3] handleFileSelect chamado, field:', field);
+    console.log('[ProdutoGruposCRUD v4] handleFileSelect chamado, field:', field);
     const file = e.target.files?.[0];
-    console.log('[ProdutoGruposCRUD v3] arquivo:', file?.name, file?.size);
+    console.log('[ProdutoGruposCRUD v4] arquivo:', file?.name, file?.size);
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
@@ -120,24 +124,18 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
       return;
     }
 
-    // Salva o arquivo
+    // Cria preview URL
+    const previewUrl = URL.createObjectURL(file);
+    console.log('[ProdutoGruposCRUD v4] previewUrl criado:', previewUrl);
+
+    // Salva o arquivo e atualiza preview
     if (field === 'imagem_referencia') {
       setSelectedFileReferencia(file);
+      setPreviewReferencia(previewUrl);
     } else {
       setSelectedFileCatalogo(file);
+      setPreviewCatalogo(previewUrl);
     }
-    
-    // Cria preview URL e atualiza formData
-    const previewUrl = URL.createObjectURL(file);
-    console.log('[ProdutoGruposCRUD v3] previewUrl criado:', previewUrl);
-    
-    // Atualiza o estado de forma direta (não usando função)
-    const newFormData = {
-      ...formData,
-      [field]: previewUrl
-    };
-    console.log('[ProdutoGruposCRUD v3] newFormData:', newFormData);
-    setFormData(newFormData);
     
     toast.success('Imagem selecionada!');
     
@@ -149,8 +147,10 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     setFormData(prev => ({ ...prev, [field]: "" }));
     if (field === 'imagem_referencia') {
       setSelectedFileReferencia(null);
+      setPreviewReferencia("");
     } else {
       setSelectedFileCatalogo(null);
+      setPreviewCatalogo("");
     }
   };
 
@@ -240,6 +240,11 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
       imagem_referencia: grupo.imagem_referencia || "",
       imagem_catalogo: grupo.imagem_catalogo || "",
     });
+    // Inicializa previews com imagens existentes
+    setPreviewReferencia(grupo.imagem_referencia || "");
+    setPreviewCatalogo(grupo.imagem_catalogo || "");
+    setSelectedFileReferencia(null);
+    setSelectedFileCatalogo(null);
     setShowDialog(true);
   };
 
@@ -272,6 +277,10 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
         <Button onClick={() => {
           setEditingGrupo(null);
           setFormData({ nome: "", percentual_comissao: "", imagem_referencia: "", imagem_catalogo: "" });
+          setPreviewReferencia("");
+          setPreviewCatalogo("");
+          setSelectedFileReferencia(null);
+          setSelectedFileCatalogo(null);
           setShowDialog(true);
         }}>
           <Plus className="w-4 h-4 mr-2" />
@@ -390,12 +399,12 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                   className="text-sm"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  {formData.imagem_referencia ? 'Trocar' : 'Selecionar'}
+                  {previewReferencia ? 'Trocar' : 'Selecionar'}
                 </Button>
-                {formData.imagem_referencia && (
+                {previewReferencia && (
                   <div className="relative inline-block group">
                     <img
-                      src={formData.imagem_referencia}
+                      src={previewReferencia}
                       alt="Referência"
                       className="h-12 w-12 object-cover rounded border"
                     />
@@ -438,12 +447,12 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                   className="text-sm"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  {formData.imagem_catalogo ? 'Trocar' : 'Selecionar'}
+                  {previewCatalogo ? 'Trocar' : 'Selecionar'}
                 </Button>
-                {formData.imagem_catalogo && (
+                {previewCatalogo && (
                   <div className="relative inline-block group">
                     <img
-                      src={formData.imagem_catalogo}
+                      src={previewCatalogo}
                       alt="Catálogo"
                       className="h-12 w-12 object-cover rounded border"
                     />
