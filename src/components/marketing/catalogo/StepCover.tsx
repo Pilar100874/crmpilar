@@ -3,10 +3,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, ImageIcon, X, Sparkles, Loader2, Wand2 } from 'lucide-react';
+import { Upload, ImageIcon, X, Sparkles, Loader2, Wand2, FolderOpen } from 'lucide-react';
 import { CatalogPage } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useCatalogAIImages } from './hooks/useCatalogAIImages';
+import { AIImageGallery } from './AIImageGallery';
 
 interface StepCoverProps {
   page: CatalogPage;
@@ -33,6 +35,10 @@ export const StepCover: React.FC<StepCoverProps> = ({
   const [generatingText, setGeneratingText] = useState(false);
   const [imagePrompt, setImagePrompt] = useState('');
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  
+  // AI Images hook for gallery
+  const { images, loading: imagesLoading, saveImage, deleteImage } = useCatalogAIImages(estabelecimentoId || 'default');
   
   // Local state to track uploaded images for immediate display
   const [localLogoUrl, setLocalLogoUrl] = useState<string | undefined>(page.logoUrl);
@@ -43,6 +49,12 @@ export const StepCover: React.FC<StepCoverProps> = ({
     setLocalLogoUrl(page.logoUrl);
     setLocalBgImage(page.backgroundImage);
   }, [page.logoUrl, page.backgroundImage]);
+
+  const handleSelectFromGallery = (imageUrl: string) => {
+    setLocalBgImage(imageUrl);
+    onChange({ ...page, backgroundImage: imageUrl });
+    toast.success('Imagem selecionada!');
+  };
 
   const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -130,7 +142,11 @@ export const StepCover: React.FC<StepCoverProps> = ({
         setLocalBgImage(data.imageUrl);
         const newPage = { ...page, backgroundImage: data.imageUrl };
         onChange(newPage);
-        toast.success('Imagem gerada com sucesso!', { id: 'ai-image' });
+        
+        // Save to gallery
+        await saveImage(data.imageUrl, imagePrompt.trim());
+        
+        toast.success('Imagem gerada e salva na galeria!', { id: 'ai-image' });
       } else {
         console.error('[StepCover] No imageUrl in response:', data);
         toast.error('Erro: imagem não retornada', { id: 'ai-image' });
@@ -145,7 +161,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
     } finally {
       setGeneratingImage(false);
     }
-  }, [imagePrompt, onChange]);
+  }, [imagePrompt, onChange, saveImage]);
 
   const generateAIText = useCallback(async () => {
     setGeneratingText(true);
@@ -280,19 +296,36 @@ export const StepCover: React.FC<StepCoverProps> = ({
               className="min-h-[80px] resize-none text-sm"
             />
 
-            <Button
-              type="button"
-              onClick={generateAIImage}
-              disabled={generatingImage || !imagePrompt.trim()}
-              className="w-full h-11 gap-2"
-            >
-              {generatingImage ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4" />
-              )}
-              {generatingImage ? 'Gerando imagem...' : 'Gerar imagem com IA'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={generateAIImage}
+                disabled={generatingImage || !imagePrompt.trim()}
+                className="flex-1 h-11 gap-2"
+              >
+                {generatingImage ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {generatingImage ? 'Gerando...' : 'Gerar com IA'}
+              </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setGalleryOpen(true)}
+                className="h-11 gap-2"
+              >
+                <FolderOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">Galeria</span>
+                {images.length > 0 && (
+                  <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+                    {images.length}
+                  </span>
+                )}
+              </Button>
+            </div>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -402,10 +435,10 @@ export const StepCover: React.FC<StepCoverProps> = ({
               <div className="bg-white px-4 py-3 flex items-center justify-between">
               {/* Logo bottom left */}
               <div className="flex items-center">
-                {page.logoUrl ? (
+                {localLogoUrl ? (
                   <img 
-                    key={page.logoUrl.substring(0, 50)} 
-                    src={page.logoUrl} 
+                    key={`logo-${forceUpdate}`} 
+                    src={localLogoUrl} 
                     alt="Logo" 
                     className="h-6 object-contain" 
                   />
@@ -428,6 +461,16 @@ export const StepCover: React.FC<StepCoverProps> = ({
           </div>
         </div>
       </div>
+      
+      {/* AI Image Gallery Dialog */}
+      <AIImageGallery
+        open={galleryOpen}
+        onOpenChange={setGalleryOpen}
+        images={images}
+        loading={imagesLoading}
+        onSelect={handleSelectFromGallery}
+        onDelete={deleteImage}
+      />
     </div>
   );
 };
