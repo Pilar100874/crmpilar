@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, FileText, BookOpen } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, BookOpen, Loader2 } from 'lucide-react';
 import { CatalogConfig, CatalogPage, WIZARD_STEPS } from './types';
 import { CatalogWizardSteps } from './CatalogWizardSteps';
 import { StepInfo } from './StepInfo';
@@ -8,10 +8,27 @@ import { StepCover } from './StepCover';
 import { StepProducts } from './StepProducts';
 import { StepBackcover } from './StepBackcover';
 import { StepPreview } from './StepPreview';
+import { SavedCatalogsList } from './SavedCatalogsList';
+import { useSavedCatalogs, SavedCatalog } from './hooks/useSavedCatalogs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+type ViewMode = 'list' | 'editor';
 
 const MarketingCatalogo: React.FC = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [currentStep, setCurrentStep] = useState(0);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
+  const [editingCatalogId, setEditingCatalogId] = useState<string | null>(null);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [saveName, setSaveName] = useState('');
 
   const [config, setConfig] = useState<CatalogConfig>({
     name: '',
@@ -46,12 +63,111 @@ const MarketingCatalogo: React.FC = () => {
     contactInfo: {},
   });
 
+  const { 
+    catalogs, 
+    isLoading, 
+    isSaving, 
+    saveCatalog, 
+    deleteCatalog, 
+    duplicateCatalog 
+  } = useSavedCatalogs(estabelecimentoId);
+
   useEffect(() => {
     const storedId = localStorage.getItem('estabelecimentoId');
     if (storedId) {
       setEstabelecimentoId(storedId);
     }
   }, []);
+
+  const resetForm = () => {
+    setConfig({
+      name: '',
+      pages: [],
+      primaryColor: '#0f172a',
+      secondaryColor: '#64748b',
+      fontFamily: 'Inter, sans-serif',
+      showPrices: true,
+      showCodes: true,
+    });
+    setCoverPage({
+      id: 'cover',
+      type: 'cover',
+      title: '',
+      subtitle: '',
+      backgroundColor: '#0f172a',
+    });
+    setProductsPage({
+      id: 'products',
+      type: 'products',
+      products: [],
+      layout: 'grid-3',
+    });
+    setBackcoverPage({
+      id: 'backcover',
+      type: 'backcover',
+      title: 'Entre em Contato',
+      backgroundColor: '#0f172a',
+      contactInfo: {},
+    });
+    setCurrentStep(0);
+    setEditingCatalogId(null);
+  };
+
+  const handleCreateNew = () => {
+    resetForm();
+    setViewMode('editor');
+  };
+
+  const handleEditCatalog = (catalog: SavedCatalog) => {
+    setEditingCatalogId(catalog.id);
+    setConfig(catalog.config);
+    if (catalog.cover_page) setCoverPage(catalog.cover_page);
+    if (catalog.products_page) setProductsPage(catalog.products_page);
+    if (catalog.backcover_page) setBackcoverPage(catalog.backcover_page);
+    setCurrentStep(0);
+    setViewMode('editor');
+  };
+
+  const handleDeleteCatalog = async (id: string) => {
+    await deleteCatalog(id);
+  };
+
+  const handleDuplicateCatalog = async (catalog: SavedCatalog) => {
+    await duplicateCatalog(catalog);
+  };
+
+  const handleBackToList = () => {
+    setViewMode('list');
+    resetForm();
+  };
+
+  const handleSaveClick = () => {
+    setSaveName(config.name || '');
+    setSaveDialogOpen(true);
+  };
+
+  const handleSaveConfirm = async () => {
+    if (!saveName.trim()) return;
+    
+    const updatedConfig = { ...config, name: saveName };
+    await saveCatalog(
+      saveName,
+      updatedConfig,
+      coverPage,
+      productsPage,
+      backcoverPage,
+      undefined,
+      editingCatalogId || undefined
+    );
+    
+    setSaveDialogOpen(false);
+    setConfig(updatedConfig);
+    
+    if (!editingCatalogId) {
+      // If it's a new catalog, we could optionally go back to list
+      // For now, we stay in editor mode
+    }
+  };
 
   const updateConfig = (updates: Partial<CatalogConfig>) => {
     setConfig((prev) => ({ ...prev, ...updates }));
@@ -148,16 +264,56 @@ const MarketingCatalogo: React.FC = () => {
     );
   }
 
+  // Show saved catalogs list
+  if (viewMode === 'list') {
+    return (
+      <SavedCatalogsList
+        catalogs={catalogs}
+        isLoading={isLoading}
+        onCreateNew={handleCreateNew}
+        onEdit={handleEditCatalog}
+        onDelete={handleDeleteCatalog}
+        onDuplicate={handleDuplicateCatalog}
+      />
+    );
+  }
+
+  // Show catalog editor
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h2 className="text-2xl font-semibold tracking-tight">Criar Catálogo</h2>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBackToList}
+              className="rounded-lg -ml-2"
+            >
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Voltar
+            </Button>
+          </div>
+          <h2 className="text-2xl font-semibold tracking-tight">
+            {editingCatalogId ? 'Editar Catálogo' : 'Criar Catálogo'}
+          </h2>
           <p className="text-sm text-muted-foreground">
             Monte seu catálogo de produtos em poucos passos
           </p>
         </div>
+        <Button
+          onClick={handleSaveClick}
+          disabled={!config.name.trim() || isSaving}
+          className="rounded-xl"
+        >
+          {isSaving ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4 mr-2" />
+          )}
+          Salvar
+        </Button>
       </div>
 
       {/* Wizard Steps */}
@@ -194,6 +350,37 @@ const MarketingCatalogo: React.FC = () => {
           </Button>
         )}
       </div>
+
+      {/* Save Dialog */}
+      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Salvar Catálogo</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="save-name">Nome do Catálogo</Label>
+              <Input
+                id="save-name"
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                placeholder="Ex: Catálogo Primavera 2024"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveConfirm} disabled={!saveName.trim() || isSaving}>
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : null}
+              {editingCatalogId ? 'Atualizar' : 'Salvar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

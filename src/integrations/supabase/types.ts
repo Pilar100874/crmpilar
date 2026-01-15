@@ -1394,6 +1394,45 @@ export type Database = {
           },
         ]
       }
+      catalogos_salvos: {
+        Row: {
+          backcover_page: Json | null
+          config: Json
+          cover_page: Json | null
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          nome: string
+          products_page: Json | null
+          thumbnail: string | null
+          updated_at: string
+        }
+        Insert: {
+          backcover_page?: Json | null
+          config?: Json
+          cover_page?: Json | null
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          products_page?: Json | null
+          thumbnail?: string | null
+          updated_at?: string
+        }
+        Update: {
+          backcover_page?: Json | null
+          config?: Json
+          cover_page?: Json | null
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          products_page?: Json | null
+          thumbnail?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_interno_conversas: {
         Row: {
           created_at: string
