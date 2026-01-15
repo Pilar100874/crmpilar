@@ -40,17 +40,25 @@ export const StepCover: React.FC<StepCoverProps> = ({
   // AI Images hook for gallery
   const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
   
+  // Use refs to track if we're the source of the change
+  const isLocalChange = useRef(false);
+  
   // Local state to track uploaded images for immediate display
   const [localLogoUrl, setLocalLogoUrl] = useState<string | undefined>(page.logoUrl);
   const [localBgImage, setLocalBgImage] = useState<string | undefined>(page.backgroundImage);
   
-  // Sync local state with props
+  // Sync local state with props - but only if the change came from outside
   useEffect(() => {
-    setLocalLogoUrl(page.logoUrl);
-    setLocalBgImage(page.backgroundImage);
+    if (!isLocalChange.current) {
+      console.log('[StepCover] External change detected - syncing local state');
+      setLocalLogoUrl(page.logoUrl);
+      setLocalBgImage(page.backgroundImage);
+    }
+    isLocalChange.current = false;
   }, [page.logoUrl, page.backgroundImage]);
 
   const handleSelectFromGallery = (imageUrl: string) => {
+    isLocalChange.current = true;
     setLocalBgImage(imageUrl);
     onChange({ ...page, backgroundImage: imageUrl });
     toast.success('Imagem selecionada!');
@@ -67,6 +75,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
       console.log(`[StepCover] File uploaded for ${field}, size: ${dataUrl.length} chars`);
+      
+      // Mark as local change to prevent sync overwriting
+      isLocalChange.current = true;
       
       // Update local state immediately for visual feedback
       if (field === 'logoUrl') {
@@ -85,6 +96,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
   };
 
   const clearImage = (field: 'logoUrl' | 'backgroundImage') => {
+    isLocalChange.current = true;
     if (field === 'logoUrl') {
       setLocalLogoUrl(undefined);
     } else {
@@ -140,6 +152,9 @@ export const StepCover: React.FC<StepCoverProps> = ({
 
       if (data?.imageUrl) {
         console.log('[StepCover] Setting background image, URL:', data.imageUrl.substring(0, 100));
+        
+        // Mark as local change to prevent sync overwriting
+        isLocalChange.current = true;
         
         // Apply image to catalog immediately
         setLocalBgImage(data.imageUrl);
