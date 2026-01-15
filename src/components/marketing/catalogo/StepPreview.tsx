@@ -275,26 +275,26 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
 
           {/* Vertical Text on Left Side - Full Height */}
           <div 
-            className="absolute left-0 top-0 bottom-0 flex items-stretch"
-            style={{ width: '90px' }}
+            className="absolute left-0 top-0 bottom-0"
+            style={{ width: '100px' }}
           >
-            <h2 
-              className="text-white w-full h-full flex items-center justify-center"
+            <div 
+              className="h-full w-full flex flex-col items-center justify-between py-4"
               style={{ 
                 writingMode: 'vertical-rl', 
                 textOrientation: 'mixed',
                 transform: 'rotate(180deg)',
-                fontFamily: 'Helvetica Neue, Arial, sans-serif',
               }}
             >
               <span 
                 className="whitespace-nowrap"
                 style={{ 
-                  fontSize: '80px',
+                  fontSize: '90px',
                   fontWeight: 300, 
                   color: 'rgba(255,255,255,0.85)',
                   letterSpacing: '-0.02em',
-                  lineHeight: 1
+                  lineHeight: 1,
+                  fontFamily: 'Helvetica Neue, Arial, sans-serif',
                 }}
               >
                 Linha
@@ -302,17 +302,17 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
               <span 
                 className="whitespace-nowrap"
                 style={{ 
-                  fontSize: '80px',
+                  fontSize: '90px',
                   fontWeight: 700,
                   color: '#ffffff',
                   letterSpacing: '-0.02em',
-                  marginTop: '4px',
-                  lineHeight: 1
+                  lineHeight: 1,
+                  fontFamily: 'Helvetica Neue, Arial, sans-serif',
                 }}
               >
                 {groupName}
               </span>
-            </h2>
+            </div>
           </div>
 
           {/* Small descriptive text on right side */}
