@@ -504,20 +504,22 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                   {hasBasicFields && (
                     <div className="mt-1">
                       {layout === 'list' && (
-                        <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wide">Dados Básicos</p>
+                        <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Dados Básicos</p>
                       )}
                       <div className={cn(
-                        "text-gray-500",
+                        "text-gray-500 flex flex-wrap gap-x-1",
                         layout === 'list' ? "text-xs" : "text-[7px]"
                       )}>
-                        {fieldsByCategory['Dados Básicos'].map((fieldKey, i) => {
+                        {fieldsByCategory['Dados Básicos'].map((fieldKey, i, arr) => {
                           const value = formatFieldValue(product, fieldKey);
+                          const validValues = arr.filter(k => formatFieldValue(product, k) !== '-');
+                          const currentValidIndex = validValues.indexOf(fieldKey);
                           if (value === '-') return null;
                           return (
                             <span key={fieldKey}>
-                              {layout === 'list' && <span className="text-gray-400">{getFieldLabel(fieldKey)}: </span>}
-                              {value}
-                              {i < fieldsByCategory['Dados Básicos'].length - 1 && ' • '}
+                              <span className="text-gray-400">{getFieldLabel(fieldKey)}: </span>
+                              <span className="text-gray-700">{value}</span>
+                              {currentValidIndex < validValues.length - 1 && <span className="text-gray-300"> • </span>}
                             </span>
                           );
                         })}
@@ -529,20 +531,22 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                   {hasFreteFields && (
                     <div className="mt-1">
                       {layout === 'list' && (
-                        <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wide">Dados do Frete</p>
+                        <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Dados do Frete</p>
                       )}
                       <div className={cn(
-                        "text-gray-500",
+                        "text-gray-500 flex flex-wrap gap-x-1",
                         layout === 'list' ? "text-xs" : "text-[7px]"
                       )}>
-                        {fieldsByCategory['Dados do Frete'].map((fieldKey, i) => {
+                        {fieldsByCategory['Dados do Frete'].map((fieldKey, i, arr) => {
                           const value = formatFieldValue(product, fieldKey);
+                          const validValues = arr.filter(k => formatFieldValue(product, k) !== '-');
+                          const currentValidIndex = validValues.indexOf(fieldKey);
                           if (value === '-') return null;
                           return (
                             <span key={fieldKey}>
-                              {layout === 'list' && <span className="text-gray-400">{getFieldLabel(fieldKey)}: </span>}
-                              {value}
-                              {i < fieldsByCategory['Dados do Frete'].length - 1 && ' • '}
+                              <span className="text-gray-400">{getFieldLabel(fieldKey)}: </span>
+                              <span className="text-gray-700">{value}</span>
+                              {currentValidIndex < validValues.length - 1 && <span className="text-gray-300"> • </span>}
                             </span>
                           );
                         })}
@@ -554,20 +558,22 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
                   {hasEmbalagemFields && (
                     <div className="mt-1">
                       {layout === 'list' && (
-                        <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wide">Embalagem</p>
+                        <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Embalagem</p>
                       )}
                       <div className={cn(
-                        "text-gray-500",
+                        "text-gray-500 flex flex-wrap gap-x-1",
                         layout === 'list' ? "text-xs" : "text-[7px]"
                       )}>
-                        {fieldsByCategory['Embalagem'].map((fieldKey, i) => {
+                        {fieldsByCategory['Embalagem'].map((fieldKey, i, arr) => {
                           const value = formatFieldValue(product, fieldKey);
+                          const validValues = arr.filter(k => formatFieldValue(product, k) !== '-');
+                          const currentValidIndex = validValues.indexOf(fieldKey);
                           if (value === '-') return null;
                           return (
                             <span key={fieldKey}>
-                              {layout === 'list' && <span className="text-gray-400">{getFieldLabel(fieldKey)}: </span>}
-                              {value}
-                              {i < fieldsByCategory['Embalagem'].length - 1 && ' • '}
+                              <span className="text-gray-400">{getFieldLabel(fieldKey)}: </span>
+                              <span className="text-gray-700">{value}</span>
+                              {currentValidIndex < validValues.length - 1 && <span className="text-gray-300"> • </span>}
                             </span>
                           );
                         })}
