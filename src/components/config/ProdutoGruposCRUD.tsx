@@ -20,7 +20,15 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Trash2, Pencil, Plus, Upload, X, Image } from "lucide-react";
-import { ProdutoGrupo } from "@/types/orcamento";
+
+interface ProdutoGrupo {
+  id: string;
+  nome: string;
+  percentual_comissao?: number;
+  imagem_referencia?: string | null;
+  imagem_catalogo?: string | null;
+  estabelecimento_id: string;
+}
 
 interface ProdutoGruposCRUDProps {
   estabelecimentoId: string;
@@ -38,8 +46,10 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     imagem_catalogo: "",
   });
   
-  const imagemReferenciaRef = useRef<HTMLInputElement>(null);
-  const imagemCatalogoRef = useRef<HTMLInputElement>(null);
+  // Estados para arquivos selecionados (igual ProdutosCRUD)
+  const [selectedFileReferencia, setSelectedFileReferencia] = useState<File | null>(null);
+  const [selectedFileCatalogo, setSelectedFileCatalogo] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (estabelecimentoId) {
@@ -66,39 +76,66 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     }
   };
 
-  const handleFileUpload = (
+  // Upload para Supabase Storage (igual ProdutosCRUD)
+  const uploadFile = async (file: File, folder: string): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${estabelecimentoId}/${folder}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('produtos')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('produtos')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast.error("Erro ao fazer upload da imagem");
+      return null;
+    }
+  };
+
+  // Handler igual ProdutosCRUD - usa URL.createObjectURL para preview
+  const handleFileSelect = (
     e: React.ChangeEvent<HTMLInputElement>,
     field: 'imagem_referencia' | 'imagem_catalogo'
   ) => {
     const file = e.target.files?.[0];
-    console.log('[ProdutoGruposCRUD] handleFileUpload chamado, field:', field, 'file:', file?.name);
     if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error("Por favor selecione um arquivo de imagem");
+      return;
+    }
 
     if (file.size > 2 * 1024 * 1024) {
       toast.error("Imagem deve ter no máximo 2MB");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      console.log('[ProdutoGruposCRUD] Base64 gerado, tamanho:', dataUrl?.length);
-      setFormData(prev => {
-        const newData = { ...prev, [field]: dataUrl };
-        console.log('[ProdutoGruposCRUD] formData atualizado, imagem_catalogo existe?', !!newData.imagem_catalogo);
-        return newData;
-      });
-      toast.success('Imagem carregada!');
-    };
-    reader.readAsDataURL(file);
+    // Salva o arquivo e cria preview URL
+    if (field === 'imagem_referencia') {
+      setSelectedFileReferencia(file);
+    } else {
+      setSelectedFileCatalogo(file);
+    }
+    
+    const previewUrl = URL.createObjectURL(file);
+    setFormData(prev => ({ ...prev, [field]: previewUrl }));
+    toast.success('Imagem selecionada!');
   };
 
   const clearImage = (field: 'imagem_referencia' | 'imagem_catalogo') => {
     setFormData(prev => ({ ...prev, [field]: "" }));
-    if (field === 'imagem_referencia' && imagemReferenciaRef.current) {
-      imagemReferenciaRef.current.value = "";
-    } else if (field === 'imagem_catalogo' && imagemCatalogoRef.current) {
-      imagemCatalogoRef.current.value = "";
+    if (field === 'imagem_referencia') {
+      setSelectedFileReferencia(null);
+    } else {
+      setSelectedFileCatalogo(null);
     }
   };
 
@@ -109,12 +146,36 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     }
 
     try {
+      setUploading(true);
+      
+      let imagemReferenciaUrl = formData.imagem_referencia;
+      let imagemCatalogoUrl = formData.imagem_catalogo;
+
+      // Upload dos arquivos selecionados para Storage
+      if (selectedFileReferencia) {
+        const url = await uploadFile(selectedFileReferencia, 'grupos-referencia');
+        if (url) imagemReferenciaUrl = url;
+      }
+      
+      if (selectedFileCatalogo) {
+        const url = await uploadFile(selectedFileCatalogo, 'grupos-catalogo');
+        if (url) imagemCatalogoUrl = url;
+      }
+
+      // Se a URL é blob:// mas não tem arquivo selecionado, manter a URL existente do banco
+      if (imagemReferenciaUrl?.startsWith('blob:') && !selectedFileReferencia) {
+        imagemReferenciaUrl = editingGrupo?.imagem_referencia || null;
+      }
+      if (imagemCatalogoUrl?.startsWith('blob:') && !selectedFileCatalogo) {
+        imagemCatalogoUrl = editingGrupo?.imagem_catalogo || null;
+      }
+
       const grupoData: any = {
         estabelecimento_id: estabelecimentoId,
         nome: formData.nome,
         percentual_comissao: formData.percentual_comissao ? parseFloat(formData.percentual_comissao) : 0,
-        imagem_referencia: formData.imagem_referencia || null,
-        imagem_catalogo: formData.imagem_catalogo || null,
+        imagem_referencia: imagemReferenciaUrl || null,
+        imagem_catalogo: imagemCatalogoUrl || null,
       };
 
       if (editingGrupo) {
@@ -144,11 +205,15 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
 
       setShowDialog(false);
       setEditingGrupo(null);
+      setSelectedFileReferencia(null);
+      setSelectedFileCatalogo(null);
       setFormData({ nome: "", percentual_comissao: "", imagem_referencia: "", imagem_catalogo: "" });
       loadGrupos();
     } catch (error: any) {
       console.error('Erro ao salvar grupo:', error);
       toast.error("Erro ao salvar grupo");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -294,42 +359,43 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
               <p className="text-xs text-muted-foreground mb-2">
                 Imagem ilustrativa para identificar o tipo de produto do grupo
               </p>
-              <input
-                ref={imagemReferenciaRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileUpload(e, 'imagem_referencia')}
-                className="hidden"
-                id="imagem-referencia-upload"
-              />
-              {formData.imagem_referencia ? (
-                <div className="relative inline-block group">
-                  <img
-                    src={formData.imagem_referencia}
-                    alt="Referência"
-                    className="h-20 w-20 object-cover rounded-lg border"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => clearImage('imagem_referencia')}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
+              <div className="flex items-center gap-3">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => imagemReferenciaRef.current?.click()}
-                  className="w-full"
+                  onClick={() => document.getElementById('imagem-referencia-upload')?.click()}
+                  disabled={uploading}
+                  className="text-sm"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Carregar Imagem
+                  {formData.imagem_referencia || selectedFileReferencia ? 'Trocar' : 'Selecionar'}
                 </Button>
-              )}
+                {(formData.imagem_referencia || selectedFileReferencia) && (
+                  <div className="relative inline-block group">
+                    <img
+                      src={formData.imagem_referencia}
+                      alt="Referência"
+                      className="h-12 w-12 object-cover rounded border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => clearImage('imagem_referencia')}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+              <input
+                id="imagem-referencia-upload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileSelect(e, 'imagem_referencia')}
+                className="hidden"
+              />
             </div>
 
             {/* Imagem para Catálogo */}
@@ -341,30 +407,23 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
               <p className="text-xs text-muted-foreground mb-2">
                 Imagem que será exibida no catálogo de produtos para este grupo
               </p>
-              <input
-                ref={imagemCatalogoRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileUpload(e, 'imagem_catalogo')}
-                className="hidden"
-                id="imagem-catalogo-upload"
-              />
               <div className="flex items-center gap-3">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => imagemCatalogoRef.current?.click()}
+                  onClick={() => document.getElementById('imagem-catalogo-upload')?.click()}
+                  disabled={uploading}
                   className="text-sm"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  {formData.imagem_catalogo ? 'Trocar' : 'Selecionar'}
+                  {formData.imagem_catalogo || selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
                 </Button>
-                {formData.imagem_catalogo && (
+                {(formData.imagem_catalogo || selectedFileCatalogo) && (
                   <div className="relative inline-block group">
                     <img
                       src={formData.imagem_catalogo}
                       alt="Catálogo"
-                      className="h-16 w-16 object-cover rounded-lg border"
+                      className="h-12 w-12 object-cover rounded border"
                     />
                     <Button
                       type="button"
@@ -378,6 +437,13 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                   </div>
                 )}
               </div>
+              <input
+                id="imagem-catalogo-upload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileSelect(e, 'imagem_catalogo')}
+                className="hidden"
+              />
             </div>
           </div>
 
