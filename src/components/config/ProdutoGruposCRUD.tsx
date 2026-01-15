@@ -346,19 +346,12 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
       </Table>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent key={`${previewReferencia}-${previewCatalogo}`}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>
               {editingGrupo ? "Editar Grupo" : "Novo Grupo"}
             </DialogTitle>
           </DialogHeader>
-
-          {/* Debug: mostrar URLs de preview */}
-          {(previewReferencia || previewCatalogo) && (
-            <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
-              Preview Ref: {previewReferencia ? '✓' : '✗'} | Preview Cat: {previewCatalogo ? '✓' : '✗'}
-            </div>
-          )}
 
           <div className="space-y-4">
             <div>
@@ -408,24 +401,13 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                   <Upload className="w-4 h-4 mr-2" />
                   {previewReferencia ? 'Trocar' : 'Selecionar'}
                 </Button>
-                {previewReferencia && (
-                  <div className="relative inline-block group">
-                    <img
-                      src={previewReferencia}
-                      alt="Referência"
-                      className="h-12 w-12 object-cover rounded border"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => clearImage('imagem_referencia')}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                )}
+                {previewReferencia ? (
+                  <img
+                    src={previewReferencia}
+                    alt="Referência"
+                    style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4, border: '1px solid #ccc' }}
+                  />
+                ) : null}
               </div>
             </div>
 
@@ -456,24 +438,13 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                   <Upload className="w-4 h-4 mr-2" />
                   {previewCatalogo ? 'Trocar' : 'Selecionar'}
                 </Button>
-                {previewCatalogo && (
-                  <div className="relative inline-block group">
-                    <img
-                      src={previewCatalogo}
-                      alt="Catálogo"
-                      className="h-12 w-12 object-cover rounded border"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => clearImage('imagem_catalogo')}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                )}
+                {previewCatalogo ? (
+                  <img
+                    src={previewCatalogo}
+                    alt="Catálogo"
+                    style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4, border: '1px solid #ccc' }}
+                  />
+                ) : null}
               </div>
             </div>
           </div>
