@@ -19,6 +19,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Trash2, Pencil, Plus, Upload, X, Image } from "lucide-react";
 
 interface ProdutoGrupo {
@@ -320,14 +321,15 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
       </Table>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto overflow-x-visible">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>
               {editingGrupo ? "Editar Grupo" : "Novo Grupo"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <ScrollArea className="flex-1 max-h-[60vh] pr-4">
+            <div className="space-y-4">
             <div>
               <Label>Nome *</Label>
               <Input
@@ -421,7 +423,8 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                 className="hidden"
               />
             </div>
-          </div>
+            </div>
+          </ScrollArea>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>
