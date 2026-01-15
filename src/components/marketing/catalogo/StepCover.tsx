@@ -42,43 +42,48 @@ export const StepCover: React.FC<StepCoverProps> = ({
     toast.success('Imagem selecionada!');
   };
 
-  // Simple logo upload - directly updates page state
+  // Simple logo upload - uses FileReader like ProdutoGruposCRUD
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Logo deve ter no máximo 2MB");
+      return;
+    }
+
+    console.log('[StepCover] handleLogoUpload - file selected:', file.name, file.size);
+
     const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      if (result) {
-        // Directly update with new object containing all existing props + logoUrl
-        onChange({
-          id: page.id,
-          type: page.type,
-          title: page.title,
-          subtitle: page.subtitle,
-          backgroundImage: page.backgroundImage,
-          backgroundColor: page.backgroundColor,
-          logoUrl: result
-        });
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      console.log('[StepCover] handleLogoUpload - FileReader loaded, length:', dataUrl?.length);
+      if (dataUrl) {
+        const newPage = { ...page, logoUrl: dataUrl };
+        console.log('[StepCover] handleLogoUpload - calling onChange with logoUrl length:', dataUrl.length);
+        onChange(newPage);
         toast.success('Logo carregado!');
       }
     };
+    reader.onerror = () => {
+      console.error('[StepCover] handleLogoUpload - FileReader error');
+      toast.error('Erro ao carregar logo');
+    };
     reader.readAsDataURL(file);
-    e.target.value = '';
   };
 
   const clearLogo = () => {
-    onChange({
-      id: page.id,
-      type: page.type,
-      title: page.title,
-      subtitle: page.subtitle,
-      backgroundImage: page.backgroundImage,
-      backgroundColor: page.backgroundColor,
-      logoUrl: undefined
-    });
+    console.log('[StepCover] clearLogo called');
+    onChange({ ...page, logoUrl: undefined });
+    if (logoInputRef.current) {
+      logoInputRef.current.value = "";
+    }
   };
+
+  // Log when page prop changes
+  useEffect(() => {
+    console.log('[StepCover] page prop updated - logoUrl:', page.logoUrl ? `exists (${page.logoUrl.length} chars)` : 'undefined');
+  }, [page.logoUrl]);
 
   const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
