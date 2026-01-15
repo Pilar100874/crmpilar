@@ -357,38 +357,23 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
               />
             </div>
 
-            {/* Campo Imagem para Catálogo de Produtos - MOVIDO PARA CIMA */}
+            {/* Campo Imagem para Catálogo de Produtos - COMPLETAMENTE ESTÁTICO */}
             <div className="border-2 border-blue-500 p-3 rounded bg-blue-50">
-              <p className="text-red-500 font-bold text-sm mb-2">🔴 CATÁLOGO - ID: {editingGrupo?.id || 'new'}</p>
-              <Label className="flex items-center gap-2 mb-1">
-                <Image className="w-4 h-4" />
-                Imagem para Catálogo de Produtos
-              </Label>
-              <p className="text-xs text-muted-foreground mb-2">
-                Imagem que será exibida no catálogo de produtos para este grupo
-              </p>
-              <div className="flex items-center gap-3">
-                <Button type="button" variant="outline" className="text-sm">
-                  BOTÃO TESTE ESTÁTICO
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('grupo-imagem-catalogo-upload')?.click()}
-                  disabled={uploading}
-                  className="text-sm"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {selectedFileCatalogo ? 'Trocar' : 'Selecionar'}
-                </Button>
-                {(formData.imagem_catalogo || selectedFileCatalogo) && (
-                  <img 
-                    src={formData.imagem_catalogo} 
-                    alt="Preview catálogo" 
-                    className="w-12 h-12 object-cover rounded border"
-                  />
-                )}
+              <p className="text-red-500 font-bold text-sm mb-2">🔴 CATÁLOGO</p>
+              <p className="font-bold mb-2">Imagem para Catálogo de Produtos</p>
+              <p className="text-xs text-gray-500 mb-2">Descrição do campo</p>
+              
+              <p className="bg-green-300 p-2 mb-2">ANTES DO DIV FLEX</p>
+              
+              <div style={{ display: 'block', backgroundColor: 'pink', padding: '10px' }}>
+                <p style={{ color: 'black', fontWeight: 'bold' }}>DENTRO DO DIV ROSA - DEVE APARECER</p>
+                <button style={{ padding: '10px', backgroundColor: 'white', border: '2px solid black' }}>
+                  BOTÃO HTML PURO
+                </button>
               </div>
+              
+              <p className="bg-orange-300 p-2 mt-2">DEPOIS DO DIV ROSA</p>
+              
               <input
                 id="grupo-imagem-catalogo-upload"
                 type="file"
