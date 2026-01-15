@@ -40,22 +40,21 @@ export const StepGroupImages: React.FC<StepGroupImagesProps> = ({
       return [];
     }
 
-    const groupMap = new Map<string, CatalogProduct[]>();
+    const groupMap = new Map<string, { id: string; nome: string; products: CatalogProduct[] }>();
     products.forEach(product => {
       const groupName = product.grupo_nome || 'Outros';
-      const groupId = product.grupo_id || 'outros';
-      const key = `${groupId}__${groupName}`;
+      const groupId = product.grupo_id || `outros_${groupName.replace(/\s+/g, '_').toLowerCase()}`;
       
-      if (!groupMap.has(key)) {
-        groupMap.set(key, []);
+      if (!groupMap.has(groupId)) {
+        groupMap.set(groupId, { id: groupId, nome: groupName, products: [] });
       }
-      groupMap.get(key)!.push(product);
+      groupMap.get(groupId)!.products.push(product);
     });
 
-    return Array.from(groupMap.entries()).map(([key, prods]) => {
-      const [id, nome] = key.split('__');
-      return { id, nome, products: prods, backgroundImage: groupImages[id] };
-    }).sort((a, b) => a.nome.localeCompare(b.nome));
+    return Array.from(groupMap.values()).map(g => ({
+      ...g,
+      backgroundImage: groupImages[g.id]
+    })).sort((a, b) => a.nome.localeCompare(b.nome));
   }, [products, groupByCategory, groupImages]);
 
   const generateImageForGroup = async (group: ProductGroup) => {
