@@ -27,15 +27,22 @@ export const StepCover: React.FC<StepCoverProps> = ({
   businessType,
   estabelecimentoId
 }) => {
-  // Debug log to track logo state
-  console.log('[StepCover] Rendering with logoUrl:', page.logoUrl ? `${page.logoUrl.substring(0, 50)}... (${page.logoUrl.length} chars)` : 'null');
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bgInputRef = useRef<HTMLInputElement>(null);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingText, setGeneratingText] = useState(false);
   const [imagePrompt, setImagePrompt] = useState('');
-  const [forceUpdate, setForceUpdate] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  
+  // Local state for logo - independent from page to avoid async issues
+  const [localLogo, setLocalLogo] = useState<string | undefined>(page.logoUrl);
+  
+  // Sync local logo with parent when it changes externally
+  useEffect(() => {
+    if (page.logoUrl !== localLogo) {
+      setLocalLogo(page.logoUrl);
+    }
+  }, [page.logoUrl]);
   
   // AI Images hook for gallery
   const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
@@ -45,45 +52,60 @@ export const StepCover: React.FC<StepCoverProps> = ({
   useEffect(() => {
     pageRef.current = page;
   }, [page]);
-  
-  // Derived logo and background from page prop - use directly without local state
-  const logoUrl = page.logoUrl;
-  const bgImage = page.backgroundImage;
 
   const handleSelectFromGallery = (imageUrl: string) => {
-    onChange({ ...pageRef.current, backgroundImage: imageUrl });
+    onChange({ ...pageRef.current, logoUrl: localLogo, backgroundImage: imageUrl });
     toast.success('Imagem selecionada!');
   };
 
-  const handleFileUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: 'logoUrl' | 'backgroundImage'
-  ) => {
+  // Dedicated logo upload handler - completely independent
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    console.log(`[StepCover] Starting file upload for ${field}`);
-
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      console.log(`[StepCover] File uploaded for ${field}, size: ${dataUrl.length} chars`);
-      
-      // Use ref to get the latest page state
-      const currentPage = pageRef.current;
-      const newPage = { ...currentPage, [field]: dataUrl };
-      console.log(`[StepCover] Calling onChange with newPage:`, {
-        logoUrl: newPage.logoUrl ? `${newPage.logoUrl.substring(0, 30)}...` : null,
-        backgroundImage: newPage.backgroundImage ? `${newPage.backgroundImage.substring(0, 30)}...` : null
-      });
-      onChange(newPage);
-      setForceUpdate(prev => prev + 1);
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      if (dataUrl) {
+        // Update local state immediately
+        setLocalLogo(dataUrl);
+        // Then update parent with current page + new logo
+        const currentPage = pageRef.current;
+        onChange({ ...currentPage, logoUrl: dataUrl });
+        toast.success('Logo carregado!');
+      }
     };
     reader.readAsDataURL(file);
+    
+    // Reset input so same file can be selected again
+    e.target.value = '';
   };
 
-  const clearImage = (field: 'logoUrl' | 'backgroundImage') => {
-    onChange({ ...pageRef.current, [field]: undefined });
+  const clearLogo = () => {
+    setLocalLogo(undefined);
+    const currentPage = pageRef.current;
+    onChange({ ...currentPage, logoUrl: undefined });
+  };
+
+  const handleBackgroundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      if (dataUrl) {
+        const currentPage = pageRef.current;
+        onChange({ ...currentPage, logoUrl: localLogo, backgroundImage: dataUrl });
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const clearBackground = () => {
+    const currentPage = pageRef.current;
+    onChange({ ...currentPage, logoUrl: localLogo, backgroundImage: undefined });
   };
 
   const generateAIImage = useCallback(async () => {
@@ -134,8 +156,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
       if (data?.imageUrl) {
         console.log('[StepCover] Setting background image, URL:', data.imageUrl.substring(0, 100));
         
-        // Apply image to catalog immediately
-        onChange({ ...pageRef.current, backgroundImage: data.imageUrl });
+        // Apply image to catalog immediately - preserve localLogo
+        onChange({ ...pageRef.current, logoUrl: localLogo, backgroundImage: data.imageUrl });
         
         // If saved to gallery by edge function, just refresh the gallery
         if (data.savedToGallery) {
@@ -160,7 +182,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
     } finally {
       setGeneratingImage(false);
     }
-  }, [imagePrompt, onChange, saveImage, refreshGallery]);
+  }, [imagePrompt, onChange, saveImage, refreshGallery, localLogo]);
 
   const generateAIText = useCallback(async () => {
     setGeneratingText(true);
@@ -177,7 +199,8 @@ export const StepCover: React.FC<StepCoverProps> = ({
       if (data.suggestions?.length > 0) {
         const suggestion = data.suggestions[0];
         onChange({ 
-          ...pageRef.current, 
+          ...pageRef.current,
+          logoUrl: localLogo,
           title: suggestion.title,
           subtitle: suggestion.subtitle 
         });
@@ -189,7 +212,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
     } finally {
       setGeneratingText(false);
     }
-  }, [catalogName, businessType, onChange]);
+  }, [catalogName, businessType, onChange, localLogo]);
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
       {/* Form */}
@@ -226,13 +249,13 @@ export const StepCover: React.FC<StepCoverProps> = ({
             </div>
             <Input
               value={page.title || ''}
-              onChange={(e) => onChange({ ...pageRef.current, title: e.target.value })}
+              onChange={(e) => onChange({ ...pageRef.current, logoUrl: localLogo, title: e.target.value })}
               placeholder="Ex: Catálogo de Produtos"
               className="h-11 border-0 border-b rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-primary"
             />
             <Input
               value={page.subtitle || ''}
-              onChange={(e) => onChange({ ...pageRef.current, subtitle: e.target.value })}
+              onChange={(e) => onChange({ ...pageRef.current, logoUrl: localLogo, subtitle: e.target.value })}
               placeholder="Ex: Primavera/Verão 2024"
               className="h-11 border-0 border-b rounded-none bg-transparent focus-visible:ring-0 focus-visible:border-primary"
             />
@@ -241,30 +264,28 @@ export const StepCover: React.FC<StepCoverProps> = ({
           {/* Logo Upload */}
           <div className="space-y-3">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider">
-              Logo (3x3 cm)
+              Logo da Empresa
             </Label>
             <input
               ref={logoInputRef}
               type="file"
               accept="image/*"
-              onChange={(e) => handleFileUpload(e, 'logoUrl')}
+              onChange={handleLogoUpload}
               className="hidden"
             />
-            {logoUrl ? (
-              <div className="relative inline-block group" key={`logo-preview-${forceUpdate}`}>
+            {localLogo ? (
+              <div className="relative inline-block group">
                 <img
-                  src={logoUrl}
+                  src={localLogo}
                   alt="Logo"
                   className="h-16 w-auto object-contain rounded-lg border bg-white p-1"
-                  onLoad={() => console.log('[StepCover] Logo image loaded in form')}
-                  onError={(e) => console.error('[StepCover] Logo image failed to load in form', e)}
                 />
                 <Button
                   type="button"
                   variant="destructive"
                   size="icon"
                   className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => clearImage('logoUrl')}
+                  onClick={clearLogo}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -339,7 +360,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
               ref={bgInputRef}
               type="file"
               accept="image/*"
-              onChange={(e) => handleFileUpload(e, 'backgroundImage')}
+              onChange={handleBackgroundUpload}
               className="hidden"
             />
 
@@ -355,7 +376,7 @@ export const StepCover: React.FC<StepCoverProps> = ({
                   variant="destructive"
                   size="icon"
                   className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => clearImage('backgroundImage')}
+                  onClick={clearBackground}
                 >
                   <X className="h-3 w-3" />
                 </Button>
@@ -434,14 +455,11 @@ export const StepCover: React.FC<StepCoverProps> = ({
               <div className="bg-white px-4 py-3 flex items-center justify-between">
               {/* Logo bottom left */}
               <div className="flex items-center">
-                {logoUrl ? (
+                {localLogo ? (
                   <img 
-                    key={`preview-logo-${forceUpdate}`} 
-                    src={logoUrl}
+                    src={localLogo}
                     alt="Logo" 
                     className="h-6 w-auto object-contain"
-                    onLoad={() => console.log('[StepCover] Logo image loaded in preview')}
-                    onError={(e) => console.error('[StepCover] Logo image failed in preview', e)}
                   />
                 ) : (
                   <div className="w-7 h-7 border border-gray-300 rounded flex items-center justify-center">
