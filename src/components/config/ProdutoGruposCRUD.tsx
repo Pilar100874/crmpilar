@@ -342,34 +342,35 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                 className="hidden"
                 id="imagem-catalogo-upload"
               />
-              {formData.imagem_catalogo ? (
-                <div className="relative inline-block group">
-                  <img
-                    src={formData.imagem_catalogo}
-                    alt="Catálogo"
-                    className="h-20 w-20 object-cover rounded-lg border"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => clearImage('imagem_catalogo')}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
+              <div className="flex items-center gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => imagemCatalogoRef.current?.click()}
-                  className="w-full"
+                  className="text-sm"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Carregar Imagem
+                  {formData.imagem_catalogo ? 'Trocar' : 'Selecionar'}
                 </Button>
-              )}
+                {formData.imagem_catalogo && (
+                  <div className="relative inline-block group">
+                    <img
+                      src={formData.imagem_catalogo}
+                      alt="Catálogo"
+                      className="h-16 w-16 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => clearImage('imagem_catalogo')}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
