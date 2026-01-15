@@ -36,7 +36,14 @@ export const StepCover: React.FC<StepCoverProps> = ({
   
   // Estado local para arquivo selecionado e preview
   const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
-  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string>('');
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string>(page.logoUrl || '');
+  
+  // Sincronizar logoPreviewUrl quando page.logoUrl mudar externamente
+  React.useEffect(() => {
+    if (page.logoUrl && !selectedLogoFile) {
+      setLogoPreviewUrl(page.logoUrl);
+    }
+  }, [page.logoUrl, selectedLogoFile]);
   
   // AI Images hook for gallery
   const { images, loading: imagesLoading, saveImage, deleteImage, refresh: refreshGallery } = useCatalogAIImages(estabelecimentoId || 'default');
