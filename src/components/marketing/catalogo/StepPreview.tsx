@@ -337,149 +337,95 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     );
   };
 
-  // Product Page - Reference design following the image: gold accent, clean header, product grid
+  // Product Page - Reference design: clean header with "Linha + GroupName", 4-column grid, orange triangle accent
   const renderProductPage = (pageProducts: typeof products, groupName?: string, pageNumber?: number) => {
-    const displayGroupName = groupName || 'NEW';
+    const displayGroupName = groupName || 'Produtos';
     
     return (
       <div
-        className="w-full h-full flex flex-col bg-white relative overflow-hidden"
+        className="w-full h-full flex flex-col bg-white relative overflow-hidden p-8"
         style={{ fontFamily: config.fontFamily }}
       >
-        {/* Left gold accent bar */}
-        <div 
-          className="absolute left-0 top-0 bottom-0 w-[12%]"
-          style={{ 
-            background: `linear-gradient(180deg, ${config.primaryColor || '#C9A961'} 0%, ${config.primaryColor || '#C9A961'}dd 100%)`
-          }}
-        />
-
-        {/* Main content area */}
-        <div className="relative z-10 flex-1 flex flex-col ml-[12%]">
-          {/* Header Section with Group Title */}
-          <div className="px-6 pt-8 pb-4">
-            {/* Group Title - Large and prominent */}
-            <h2 className="text-2xl leading-tight">
-              <span 
-                className="font-light uppercase text-gray-800 tracking-wide"
-                style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif' }}
-              >
-                {displayGroupName.toUpperCase()}
-              </span>
-              <br />
-              <span 
-                className="font-bold uppercase text-gray-900 text-3xl tracking-tight"
-                style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif' }}
-              >
-                COLLECTION
-              </span>
-            </h2>
-            
-            {/* Description text */}
-            <p className="mt-3 text-[9px] text-gray-500 leading-relaxed max-w-[95%]">
-              Lorem ipsum dolor sit amet, cons ectetur adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nost rud exerci tation ullamcorper.
-            </p>
-          </div>
-
-          {/* Products Grid */}
-          <div className="flex-1 px-6 pb-4 pt-2">
-            <div
-              className={cn(
-                "grid gap-x-4 gap-y-6 h-full content-start",
-                layout === 'grid-2' && "grid-cols-2",
-                layout === 'grid-3' && "grid-cols-3",
-                layout === 'grid-4' && "grid-cols-4",
-                layout === 'list' && "grid-cols-1"
-              )}
+        {/* Header Section */}
+        <div className="mb-6">
+          <h2 className="text-3xl leading-tight">
+            <span 
+              className="font-light text-gray-600"
+              style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif' }}
             >
-              {pageProducts.map((product, idx) => (
-                <div
-                  key={product.id}
-                  className={cn(
-                    "flex flex-col",
-                    layout === 'list' && "flex-row items-center gap-6 p-4 bg-gray-50 rounded-xl"
-                  )}
-                >
-                  {/* Product Image - Clean with shadow */}
-                  <div
-                    className={cn(
-                      "relative overflow-hidden bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center",
-                      layout === 'list' ? "w-24 h-24 flex-shrink-0 rounded-lg" : "aspect-[4/5] rounded-sm"
-                    )}
-                    style={{ 
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-                    }}
-                  >
-                    {product.foto_url ? (
-                      <img
-                        src={product.foto_url}
-                        alt={product.nome}
-                        className="w-full h-full object-contain p-2"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Package className="h-12 w-12 text-gray-300" />
-                      </div>
-                    )}
-                  </div>
+              Linha{' '}
+            </span>
+            <span 
+              className="font-bold text-gray-900"
+              style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif' }}
+            >
+              {displayGroupName}
+            </span>
+          </h2>
+        </div>
 
-                  {/* Product Info - Following reference design */}
-                  <div className={cn("pt-3 space-y-1", layout === 'list' && "pt-0 flex-1")}>
-                    {/* Product Name with icon */}
-                    <div className="flex items-center gap-1.5">
-                      <svg 
-                        className="h-3 w-3 flex-shrink-0" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2"
-                        style={{ color: config.primaryColor || '#C9A961' }}
-                      >
-                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                        <line x1="3" y1="6" x2="21" y2="6" />
-                        <path d="M16 10a4 4 0 0 1-8 0" />
-                      </svg>
-                      <h4 className="font-semibold text-[11px] text-gray-800 line-clamp-1">
-                        {product.nome}
-                      </h4>
+        {/* Products Grid - 4 columns */}
+        <div className="flex-1">
+          <div className="grid grid-cols-4 gap-x-4 gap-y-5 h-full content-start">
+            {pageProducts.map((product, idx) => (
+              <div
+                key={product.id}
+                className="flex flex-col"
+              >
+                {/* Product Image Container */}
+                <div className="relative bg-gray-50 aspect-square flex items-center justify-center overflow-hidden">
+                  {/* Orange triangle accent - top right */}
+                  <div 
+                    className="absolute top-0 right-0 w-0 h-0"
+                    style={{
+                      borderStyle: 'solid',
+                      borderWidth: '0 32px 32px 0',
+                      borderColor: `transparent ${config.primaryColor || '#F97316'} transparent transparent`
+                    }}
+                  />
+                  
+                  {product.foto_url ? (
+                    <img
+                      src={product.foto_url}
+                      alt={product.nome}
+                      className="w-[85%] h-[85%] object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="h-10 w-10 text-gray-300" />
                     </div>
-                    
-                    {/* Price - Gold/Yellow color like reference */}
-                    {config.showPrices && product.preco_tabela ? (
-                      <p 
-                        className="text-base font-bold"
-                        style={{ color: config.primaryColor || '#C9A961' }}
-                      >
-                        {formatPrice(product.preco_tabela)}
-                      </p>
-                    ) : (
-                      <p 
-                        className="text-base font-bold"
-                        style={{ color: config.primaryColor || '#C9A961' }}
-                      >
-                        Consulte
-                      </p>
-                    )}
-                    
-                    {/* Product description or code */}
-                    <p className="text-[8px] text-gray-400 leading-relaxed line-clamp-3">
-                      {product.descricao || (config.showCodes && product.codigo ? `Ref: ${product.codigo}` : 'Produto de alta qualidade desenvolvido para atender às suas necessidades.')}
+                  )}
+                </div>
+
+                {/* Product Info */}
+                <div className="pt-2 flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    {/* Product Name */}
+                    <h4 className="font-semibold text-[9px] text-gray-800 line-clamp-1">
+                      {product.nome}
+                    </h4>
+                    {/* Description */}
+                    <p className="text-[7px] text-gray-400 line-clamp-2 leading-tight mt-0.5">
+                      {product.descricao || 'Produto de alta qualidade'}
                     </p>
                   </div>
+                  {/* Product Code */}
+                  {config.showCodes && product.codigo && (
+                    <span className="text-[9px] font-medium text-gray-600 flex-shrink-0">
+                      {product.codigo}
+                    </span>
+                  )}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
+        </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
-            {coverPage.logoUrl && (
-              <img src={coverPage.logoUrl} alt="Logo" className="h-5 object-contain opacity-50" />
-            )}
-            <span className="text-[10px] text-gray-400">
-              {String(pageNumber || 1).padStart(2, '0')}
-            </span>
-          </div>
+        {/* Footer with page number */}
+        <div className="flex items-center justify-end pt-4">
+          <span className="text-[10px] text-gray-400">
+            {String(pageNumber || 1).padStart(2, '0')}
+          </span>
         </div>
       </div>
     );
