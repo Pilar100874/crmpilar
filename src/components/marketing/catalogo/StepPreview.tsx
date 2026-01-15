@@ -374,16 +374,6 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
               >
                 {/* Product Image Container */}
                 <div className="relative bg-gray-50 aspect-square flex items-center justify-center overflow-hidden">
-                  {/* Orange triangle accent - top right */}
-                  <div 
-                    className="absolute top-0 right-0 w-0 h-0"
-                    style={{
-                      borderStyle: 'solid',
-                      borderWidth: '0 32px 32px 0',
-                      borderColor: `transparent ${config.primaryColor || '#F97316'} transparent transparent`
-                    }}
-                  />
-                  
                   {product.foto_url ? (
                     <img
                       src={product.foto_url}
