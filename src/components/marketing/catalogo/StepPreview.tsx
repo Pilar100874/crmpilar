@@ -215,7 +215,10 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
         </div>
 
         {/* Bottom Footer Section */}
-        <div className="bg-white px-6 py-4 flex items-center justify-between">
+        <div 
+          className="bg-white flex items-end justify-between"
+          style={{ padding: '5mm', paddingTop: '0' }}
+        >
           {/* Logo bottom left - 3x3 cm */}
           <div className="flex items-center">
             {coverPage.logoUrl ? (
@@ -235,13 +238,15 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
             )}
           </div>
 
-          {/* Website right */}
-          <span 
-            className="text-2xl text-gray-500 tracking-wider"
-            style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
-          >
-            www.pilar.com.br
-          </span>
+          {/* Website right - from backcover contactInfo */}
+          {backcoverPage.contactInfo?.website && (
+            <span 
+              className="text-2xl text-gray-500 tracking-wider"
+              style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
+            >
+              {backcoverPage.contactInfo.website}
+            </span>
+          )}
         </div>
       </div>
     );
