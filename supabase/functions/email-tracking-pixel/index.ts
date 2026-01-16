@@ -1,5 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
+// Email tracking pixel v2.0
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // 1x1 transparent GIF pixel
 const TRANSPARENT_PIXEL = new Uint8Array([
@@ -18,7 +19,9 @@ const corsHeaders = {
   'Expires': '0',
 };
 
-serve(async (req) => {
+const handler = async (req: Request): Promise<Response> => {
+  console.log('Email tracking pixel function called - method:', req.method);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -41,10 +44,21 @@ serve(async (req) => {
     }
 
     // Use service role to update without authentication
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing Supabase environment variables');
+      return new Response(TRANSPARENT_PIXEL, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'image/gif',
+          'Content-Length': TRANSPARENT_PIXEL.length.toString(),
+        },
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Update email tracking info
     const { data: email, error: fetchError } = await supabase
@@ -56,7 +70,9 @@ serve(async (req) => {
     if (fetchError) {
       console.error('Error fetching email:', fetchError);
     } else if (email) {
-      const updateData: any = {
+      console.log('Found email:', email.id);
+      
+      const updateData: Record<string, unknown> = {
         opened_count: (email.opened_count || 0) + 1,
       };
 
@@ -98,4 +114,6 @@ serve(async (req) => {
       },
     });
   }
-});
+};
+
+serve(handler);
