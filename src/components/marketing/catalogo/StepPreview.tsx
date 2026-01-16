@@ -883,13 +883,9 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
               )}
               {backcoverPage.contactInfo?.address && (
                 <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'flex-start', 
-                  gap: '12px', 
                   color: 'rgba(255,255,255,0.8)',
                   marginBottom: '12px'
                 }}>
-                  <span style={{ fontSize: '14px', marginTop: '2px' }}>📍</span>
                   <span style={{ fontSize: '14px' }}>{backcoverPage.contactInfo.address}</span>
                 </div>
               )}

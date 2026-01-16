@@ -979,7 +979,6 @@ const BackcoverPage: React.FC<{
           )}
           {backcoverPage.contactInfo?.address && (
             <View style={styles.backcoverContactItem}>
-              <Text style={styles.backcoverContactIcon}>📍</Text>
               <Text style={styles.backcoverContactText}>{backcoverPage.contactInfo.address}</Text>
             </View>
           )}
