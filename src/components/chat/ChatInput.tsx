@@ -131,7 +131,6 @@ export default function ChatInput({
   
   // Catalog trigger state
   const [showCatalogPopover, setShowCatalogPopover] = useState(false);
-  const catalogSelectorRef = useRef<{ openPopover: () => void } | null>(null);
   
   // Agent Assist states
   const [isGeneratingContextResponse, setIsGeneratingContextResponse] = useState(false);
@@ -210,8 +209,8 @@ export default function ChatInput({
         setShowImportReportsPopover(true);
         break;
       case 'catalog':
-        // Trigger the CatalogAttachmentSelector popover
-        catalogSelectorRef.current?.openPopover();
+        // Trigger the CatalogAttachmentSelector popover via state
+        setShowCatalogPopover(true);
         break;
       case 'context':
         handleGenerateContextResponse();
@@ -920,10 +919,12 @@ export default function ChatInput({
   allItems.push(
     <CatalogAttachmentSelector 
       key="catalog-attachment" 
-      ref={catalogSelectorRef}
+      externalOpen={showCatalogPopover}
+      onExternalOpenChange={setShowCatalogPopover}
       onSelectPdf={(file, url) => { 
         handleFileSelected(file, url); 
-        setShowToolsMenu(false); 
+        setShowToolsMenu(false);
+        setShowCatalogPopover(false);
       }} 
       disabled={disabled} 
     />
