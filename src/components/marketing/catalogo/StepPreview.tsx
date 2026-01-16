@@ -859,37 +859,25 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
             <div>
               {backcoverPage.contactInfo?.phone && (
                 <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '12px', 
                   color: 'rgba(255,255,255,0.8)',
                   marginBottom: '12px'
                 }}>
-                  <span style={{ fontSize: '14px' }}>📞</span>
                   <span style={{ fontSize: '14px' }}>{backcoverPage.contactInfo.phone}</span>
                 </div>
               )}
               {backcoverPage.contactInfo?.email && (
                 <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '12px', 
                   color: 'rgba(255,255,255,0.8)',
                   marginBottom: '12px'
                 }}>
-                  <span style={{ fontSize: '14px' }}>✉️</span>
                   <span style={{ fontSize: '14px' }}>{backcoverPage.contactInfo.email}</span>
                 </div>
               )}
               {backcoverPage.contactInfo?.website && (
                 <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '12px', 
                   color: 'rgba(255,255,255,0.8)',
                   marginBottom: '12px'
                 }}>
-                  <span style={{ fontSize: '14px' }}>🌐</span>
                   <span style={{ fontSize: '14px' }}>{backcoverPage.contactInfo.website}</span>
                 </div>
               )}
