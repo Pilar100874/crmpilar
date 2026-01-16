@@ -2051,13 +2051,14 @@ export default function Atendimento() {
   };
 
   // Carregar dados do email selecionado e buscar contato/empresa
-  const loadSelectedEmail = async (emailId: string) => {
+  const loadSelectedEmail = async (emailId: string, forceRefresh: boolean = false) => {
     try {
-      console.log("[Atendimento] Buscando email com ID:", emailId);
+      console.log("[Atendimento] Buscando email com ID:", emailId, "forceRefresh:", forceRefresh);
 
       // Tentar reaproveitar o email já carregado na lista (caso venha de servidor externo)
+      // Mas se forceRefresh for true, sempre buscar do banco para emails UUID
       let emailData: any =
-        selectedEmailData && selectedEmailData.id === emailId ? selectedEmailData : null;
+        !forceRefresh && selectedEmailData && selectedEmailData.id === emailId ? selectedEmailData : null;
 
       // Alguns emails possuem ID UUID salvo na tabela, outros usam ID externo (IMAP)
       const isUuid =
@@ -5753,7 +5754,13 @@ ${recentMessages}
               setComposeEmailDefaults({ to: '', subject: '', body: '' });
               setShowComposeEmail(true);
             }}
-            onRefresh={() => loadUserEmails()}
+            onRefresh={async () => {
+              await loadUserEmails();
+              // Também recarregar o email selecionado para atualizar dados de tracking
+              if (selectedEmailId) {
+                loadSelectedEmail(selectedEmailId, true);
+              }
+            }}
             onToggleDetails={() => setShowClientDetailsEmail(!showClientDetailsEmail)}
             showDetailsToggle={!!selectedEmailId}
             onReply={(email) => {
