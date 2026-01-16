@@ -72,12 +72,15 @@ serve(async (req) => {
     // Converter quebras de linha para HTML
     const htmlBody = body.replace(/\n/g, '<br>');
 
-    // Enviar email via Resend (tracking via webhook, sem pixel)
+    // Enviar email via Resend SEM tracking pixel (desativa open tracking)
     const { data: emailData, error: resendError } = await resend.emails.send({
       from: `${resendConfig.from_name} <${resendConfig.from_email}>`,
       to: [to],
       subject: subject,
       html: htmlBody,
+      headers: {
+        'X-Entity-Ref-ID': crypto.randomUUID(), // Evita agrupamento
+      },
     });
 
     if (resendError) {
