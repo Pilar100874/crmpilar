@@ -1,8 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Star, Paperclip, Clock } from "lucide-react";
+import { Star, Paperclip, Clock, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Email {
   id: string;
@@ -15,6 +16,9 @@ interface Email {
   starred: boolean;
   folder: "inbox" | "sent" | "trash" | "archive";
   hasAttachment?: boolean;
+  tracking_id?: string;
+  opened_at?: string | null;
+  opened_count?: number;
 }
 
 interface EmailListItemProps {
@@ -124,6 +128,43 @@ export function EmailListItem({
           {/* Attachment icon */}
           {email.hasAttachment && (
             <Paperclip className="w-3 h-3 text-muted-foreground shrink-0" />
+          )}
+
+          {/* Email opened indicator - only for sent emails */}
+          {email.folder === "sent" && email.tracking_id && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="shrink-0">
+                    {email.opened_at ? (
+                      <Eye className="w-3.5 h-3.5 text-green-500" />
+                    ) : (
+                      <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
+                    )}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {email.opened_at ? (
+                    <div className="text-xs">
+                      <p className="font-medium text-green-600">Email aberto</p>
+                      <p>
+                        Primeira abertura: {new Date(email.opened_at).toLocaleDateString("pt-BR", {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })}
+                      </p>
+                      {email.opened_count && email.opened_count > 1 && (
+                        <p>Total de aberturas: {email.opened_count}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs">Email ainda não foi aberto</p>
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
 
           {/* Date */}

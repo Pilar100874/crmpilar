@@ -2640,10 +2640,13 @@ export type Database = {
           folder: string
           from_email: string
           id: string
+          opened_at: string | null
+          opened_count: number | null
           read: boolean
           starred: boolean
           subject: string
           to_email: string
+          tracking_id: string | null
           updated_at: string
           user_id: string
         }
@@ -2654,10 +2657,13 @@ export type Database = {
           folder?: string
           from_email: string
           id?: string
+          opened_at?: string | null
+          opened_count?: number | null
           read?: boolean
           starred?: boolean
           subject: string
           to_email: string
+          tracking_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -2668,10 +2674,13 @@ export type Database = {
           folder?: string
           from_email?: string
           id?: string
+          opened_at?: string | null
+          opened_count?: number | null
           read?: boolean
           starred?: boolean
           subject?: string
           to_email?: string
+          tracking_id?: string | null
           updated_at?: string
           user_id?: string
         }

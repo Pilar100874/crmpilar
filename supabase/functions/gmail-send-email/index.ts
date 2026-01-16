@@ -55,11 +55,19 @@ serve(async (req) => {
       accessToken = await refreshAccessToken(user.id, tokenData.refresh_token, supabaseClient);
     }
 
-    // Build email in RFC 2822 format
+    // Gerar tracking_id único para este email
+    const trackingId = crypto.randomUUID();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const trackingPixelUrl = `${supabaseUrl}/functions/v1/email-tracking-pixel?id=${trackingId}`;
+    const trackingPixelHtml = `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />`;
+
+    // Build email in RFC 2822 format with tracking pixel
     const fromEmail = tokenData.email || user.email;
-    const emailContent = html 
-      ? buildHtmlEmail(fromEmail, to, subject, html, body)
-      : buildTextEmail(fromEmail, to, subject, body);
+    const htmlWithTracking = html 
+      ? `${html}${trackingPixelHtml}`
+      : `<div>${(body || '').replace(/\n/g, '<br>')}</div>${trackingPixelHtml}`;
+    
+    const emailContent = buildHtmlEmail(fromEmail, to, subject, htmlWithTracking, body);
 
     // Encode to base64url
     const encodedMessage = btoa(emailContent)
@@ -85,8 +93,9 @@ serve(async (req) => {
 
     const result = await response.json();
     console.log("Email sent successfully:", result.id);
+    console.log("Tracking ID:", trackingId);
 
-    // Save to emails table
+    // Save to emails table with tracking_id
     await supabaseClient
       .from("emails")
       .insert({
@@ -98,6 +107,7 @@ serve(async (req) => {
         folder: "sent",
         read: true,
         starred: false,
+        tracking_id: trackingId,
       });
 
     return new Response(
