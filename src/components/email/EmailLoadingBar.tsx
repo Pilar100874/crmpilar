@@ -18,9 +18,6 @@ export function EmailLoadingBar({ isLoading, progress = 0, message }: EmailLoadi
             style={{ width: `${progress}%` }}
           />
         </div>
-        <span className="text-xs font-medium text-foreground tabular-nums min-w-[32px]">
-          {Math.round(progress)}%
-        </span>
         <span className="text-xs text-muted-foreground whitespace-nowrap">
           {message || "Carregando emails..."}
         </span>
