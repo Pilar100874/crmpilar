@@ -509,6 +509,28 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
     );
   }
 
+  // Se está embutido no EmailHub, não mostra sidebar própria (EmailHub já tem)
+  const isEmbedded = !!embeddedFolder;
+
+  const handleRefresh = async () => {
+    if (useOAuth && oauthConnected) {
+      await fetchNewEmails();
+    } else {
+      await loadEmails();
+    }
+    // Também recarregar o email selecionado para atualizar dados de tracking
+    if (selectedEmailId) {
+      const { data } = await supabase
+        .from('emails')
+        .select('*')
+        .eq('id', selectedEmailId)
+        .single();
+      if (data) {
+        setSelectedEmailData(data);
+      }
+    }
+  };
+
   return (
     <div className="h-full flex bg-background">
       {/* Loading bar */}
@@ -518,33 +540,18 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         message={loadingMessage}
       />
 
-      {/* Sidebar - Single column */}
-      <div className="w-52 border-r bg-card/50 flex-shrink-0 flex flex-col">
-        <EmailFolderSidebar
-          emails={emails}
-          activeFolder={emailFolder}
-          onFolderChange={handleFolderChange}
-          onComposeClick={handleComposeNew}
-          onRefresh={async () => {
-            if (useOAuth && oauthConnected) {
-              await fetchNewEmails();
-            } else {
-              await loadEmails();
-            }
-            // Também recarregar o email selecionado para atualizar dados de tracking
-            if (selectedEmailId) {
-              const { data } = await supabase
-                .from('emails')
-                .select('*')
-                .eq('id', selectedEmailId)
-                .single();
-              if (data) {
-                setSelectedEmailData(data);
-              }
-            }
-          }}
-        />
-      </div>
+      {/* Sidebar - Only show when NOT embedded (standalone /email/:folder route) */}
+      {!isEmbedded && (
+        <div className="w-52 border-r bg-card/50 flex-shrink-0 flex flex-col">
+          <EmailFolderSidebar
+            emails={emails}
+            activeFolder={emailFolder}
+            onFolderChange={handleFolderChange}
+            onComposeClick={handleComposeNew}
+            onRefresh={handleRefresh}
+          />
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -563,24 +570,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
             setSelectedEmailData(null);
           }}
           onComposeClick={handleComposeNew}
-          onRefresh={async () => {
-            if (useOAuth && oauthConnected) {
-              await fetchNewEmails();
-            } else {
-              await loadEmails();
-            }
-            // Também recarregar o email selecionado para atualizar dados de tracking
-            if (selectedEmailId) {
-              const { data } = await supabase
-                .from('emails')
-                .select('*')
-                .eq('id', selectedEmailId)
-                .single();
-              if (data) {
-                setSelectedEmailData(data);
-              }
-            }
-          }}
+          onRefresh={handleRefresh}
           onReply={handleReply}
           onForward={handleForward}
         />
