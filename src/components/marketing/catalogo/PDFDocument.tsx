@@ -964,19 +964,16 @@ const BackcoverPage: React.FC<{
           
           {backcoverPage.contactInfo?.phone && (
             <View style={styles.backcoverContactItem}>
-              <Text style={styles.backcoverContactIcon}>📞</Text>
               <Text style={styles.backcoverContactText}>{backcoverPage.contactInfo.phone}</Text>
             </View>
           )}
           {backcoverPage.contactInfo?.email && (
             <View style={styles.backcoverContactItem}>
-              <Text style={styles.backcoverContactIcon}>✉️</Text>
               <Text style={styles.backcoverContactText}>{backcoverPage.contactInfo.email}</Text>
             </View>
           )}
           {backcoverPage.contactInfo?.website && (
             <View style={styles.backcoverContactItem}>
-              <Text style={styles.backcoverContactIcon}>🌐</Text>
               <Text style={styles.backcoverContactText}>{backcoverPage.contactInfo.website}</Text>
             </View>
           )}
