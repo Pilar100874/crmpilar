@@ -58,14 +58,51 @@ serve(async (req) => {
     // Gerar tracking_id único para este email
     const trackingId = crypto.randomUUID();
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const trackingPixelUrl = `${supabaseUrl}/functions/v1/email-tracking-pixel?id=${trackingId}`;
-    const trackingPixelHtml = `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />`;
-
-    // Build email in RFC 2822 format with tracking pixel
+    
+    // Primeiro, salvar o email no banco para obter o ID para o link tracker
     const fromEmail = tokenData.email || user.email;
+    
+    // Salvar no banco primeiro para ter o ID
+    const { data: savedEmail } = await supabaseClient
+      .from("emails")
+      .insert({
+        user_id: user.id,
+        from_email: fromEmail,
+        to_email: to,
+        subject,
+        body: body || html,
+        folder: "sent",
+        read: true,
+        starred: false,
+        tracking_id: trackingId,
+      })
+      .select('id')
+      .single();
+
+    const emailId = savedEmail?.id || '';
+    
+    // URL de tracking por clique no link/logo (mais confiável que pixel)
+    const trackingLink = `${supabaseUrl}/functions/v1/email-link-tracker?eid=${emailId}&url=https://www.pilar.com.br`;
+    
+    // Logo da empresa hospedado publicamente
+    const logoUrl = 'https://crmpilar.lovable.app/images/pilar-logo.jpg';
+    
+    // Rodapé com logo clicável e link para o site (tracking por clique)
+    const footerHtml = `
+      <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+        <a href="${trackingLink}" target="_blank" style="text-decoration: none;">
+          <img src="${logoUrl}" alt="Pilar" style="max-width: 120px; height: auto;" />
+        </a>
+        <p style="color: #666; font-size: 12px; margin-top: 10px;">
+          <a href="${trackingLink}" style="color: #666; text-decoration: none;">www.pilar.com.br</a>
+        </p>
+      </div>
+    `;
+
+    // Build email in RFC 2822 format with logo and link tracking
     const htmlWithTracking = html 
-      ? `${html}${trackingPixelHtml}`
-      : `<div>${(body || '').replace(/\n/g, '<br>')}</div>${trackingPixelHtml}`;
+      ? `<div style="font-family: Arial, sans-serif;">${html}${footerHtml}</div>`
+      : `<div style="font-family: Arial, sans-serif;">${(body || '').replace(/\n/g, '<br>')}${footerHtml}</div>`;
     
     const emailContent = buildHtmlEmail(fromEmail, to, subject, htmlWithTracking, body);
 
@@ -94,21 +131,7 @@ serve(async (req) => {
     const result = await response.json();
     console.log("Email sent successfully:", result.id);
     console.log("Tracking ID:", trackingId);
-
-    // Save to emails table with tracking_id
-    await supabaseClient
-      .from("emails")
-      .insert({
-        user_id: user.id,
-        from_email: fromEmail,
-        to_email: to,
-        subject,
-        body: body || html,
-        folder: "sent",
-        read: true,
-        starred: false,
-        tracking_id: trackingId,
-      });
+    console.log("Email ID:", emailId);
 
     return new Response(
       JSON.stringify({ 
