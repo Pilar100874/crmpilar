@@ -369,7 +369,6 @@ const MarketingCatalogo: React.FC = () => {
       />
     );
   }
-  }
 
   // Show catalog editor
   return (
