@@ -135,54 +135,93 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     }).format(price);
   };
 
-  // Render a single page to PNG image
-  const renderPageToImage = async (pageIndex: number): Promise<string> => {
-    if (!pdfRef.current) throw new Error('PDF ref not found');
-    
-    setCurrentPage(pageIndex);
-    // Wait for React to re-render and images to load
-    await new Promise((r) => setTimeout(r, 600));
-    
-    // Wait for all images inside to be fully loaded
-    const images = pdfRef.current.querySelectorAll('img');
+  // Fixed A4 dimensions in pixels (at 96 DPI for consistency)
+  const A4_WIDTH_PX = 794;
+  const A4_HEIGHT_PX = 1123;
+
+  // Create an off-screen container with fixed dimensions for reliable rendering
+  const createOffscreenContainer = (): HTMLDivElement => {
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-10000px';
+    container.style.top = '0';
+    container.style.width = `${A4_WIDTH_PX}px`;
+    container.style.height = `${A4_HEIGHT_PX}px`;
+    container.style.overflow = 'hidden';
+    container.style.backgroundColor = '#ffffff';
+    container.style.zIndex = '-9999';
+    document.body.appendChild(container);
+    return container;
+  };
+
+  // Wait for all images in an element to load
+  const waitForImages = async (element: HTMLElement): Promise<void> => {
+    const images = element.querySelectorAll('img');
     await Promise.all(
       Array.from(images).map(img => {
-        if (img.complete) return Promise.resolve();
-        return new Promise((resolve) => {
-          img.onload = resolve;
-          img.onerror = resolve;
+        if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
+        return new Promise<void>((resolve) => {
+          const timeout = setTimeout(resolve, 5000); // 5s timeout per image
+          img.onload = () => { clearTimeout(timeout); resolve(); };
+          img.onerror = () => { clearTimeout(timeout); resolve(); };
         });
       })
     );
+  };
+
+  // Render a single page to PNG image using off-screen rendering
+  const renderPageToImage = async (pageIndex: number): Promise<string> => {
+    // Update current page state
+    setCurrentPage(pageIndex);
     
-    // Additional wait for any CSS transitions/animations
-    await new Promise((r) => setTimeout(r, 200));
+    // Wait for React to update
+    await new Promise(r => setTimeout(r, 100));
     
-    // Clone the element to avoid any display issues
-    const clone = pdfRef.current.cloneNode(true) as HTMLElement;
-    clone.style.position = 'absolute';
-    clone.style.left = '-9999px';
-    clone.style.top = '0';
-    clone.style.width = `${pdfRef.current.offsetWidth}px`;
-    clone.style.height = `${pdfRef.current.offsetHeight}px`;
-    document.body.appendChild(clone);
+    if (!pdfRef.current) throw new Error('PDF ref not found');
+    
+    // Create off-screen container
+    const offscreen = createOffscreenContainer();
     
     try {
-      const canvas = await html2canvas(clone, {
-        scale: 3, // Higher scale for better quality
+      // Clone the content
+      const clone = pdfRef.current.cloneNode(true) as HTMLElement;
+      clone.style.width = `${A4_WIDTH_PX}px`;
+      clone.style.height = `${A4_HEIGHT_PX}px`;
+      clone.style.transform = 'none';
+      clone.style.position = 'relative';
+      clone.style.left = '0';
+      clone.style.top = '0';
+      
+      offscreen.appendChild(clone);
+      
+      // Wait for images to load
+      await waitForImages(offscreen);
+      
+      // Additional stabilization wait
+      await new Promise(r => setTimeout(r, 300));
+      
+      // Render with html2canvas
+      const canvas = await html2canvas(offscreen, {
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
-        width: pdfRef.current.offsetWidth,
-        height: pdfRef.current.offsetHeight,
-        imageTimeout: 15000,
-        removeContainer: false,
+        width: A4_WIDTH_PX,
+        height: A4_HEIGHT_PX,
+        windowWidth: A4_WIDTH_PX,
+        windowHeight: A4_HEIGHT_PX,
+        imageTimeout: 10000,
+        onclone: (clonedDoc, element) => {
+          // Force all elements to use computed styles
+          element.style.width = `${A4_WIDTH_PX}px`;
+          element.style.height = `${A4_HEIGHT_PX}px`;
+        }
       });
       
       return canvas.toDataURL('image/png', 1.0);
     } finally {
-      document.body.removeChild(clone);
+      document.body.removeChild(offscreen);
     }
   };
 
@@ -192,21 +231,25 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     setGenerating(true);
     const originalPage = currentPage;
     
-    toast.loading('Gerando imagens das páginas...', { id: 'pdf-gen' });
+    toast.loading('Preparando catálogo...', { id: 'pdf-gen' });
 
     try {
-      // Step 1: Render ALL pages to images first
       const pageImages: string[] = [];
       
+      // Render each page to image
       for (let i = 0; i < totalPages; i++) {
-        toast.loading(`Renderizando página ${i + 1} de ${totalPages}...`, { id: 'pdf-gen' });
+        toast.loading(`Gerando página ${i + 1} de ${totalPages}...`, { id: 'pdf-gen' });
+        
         const imageData = await renderPageToImage(i);
         pageImages.push(imageData);
+        
+        // Small delay between pages to avoid browser overload
+        await new Promise(r => setTimeout(r, 50));
       }
       
-      toast.loading('Montando PDF...', { id: 'pdf-gen' });
+      toast.loading('Montando PDF final...', { id: 'pdf-gen' });
       
-      // Step 2: Create PDF from images
+      // Create PDF from images
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -220,8 +263,6 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
         if (i > 0) {
           pdf.addPage();
         }
-        
-        // Add the pre-rendered image to PDF
         pdf.addImage(pageImages[i], 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
       }
 
@@ -236,104 +277,154 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     }
   };
 
-  // Cover Page - Exactly matching reference design
+  // Cover Page - Using inline styles for reliable PDF rendering
   const renderCoverPage = () => {
-    // Debug log
-    console.log('[StepPreview] Rendering cover page, backgroundImage:', coverPage.backgroundImage ? `${coverPage.backgroundImage.substring(0, 50)}...` : 'none');
-    
     return (
       <div
-        className="w-full h-full flex flex-col relative overflow-hidden bg-white"
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+          overflow: 'hidden',
+          backgroundColor: '#ffffff',
+          boxSizing: 'border-box'
+        }}
       >
         {/* Top White Header Section */}
-        <div className="bg-white px-8 pt-28 pb-0 text-center">
-          <h1 
-            className="text-5xl text-gray-900 tracking-[0.15em] uppercase"
-            style={{ fontFamily: 'Times New Roman, Times, serif', fontWeight: 700 }}
-          >
+        <div style={{ 
+          backgroundColor: '#ffffff', 
+          padding: '105px 30px 0 30px', 
+          textAlign: 'center' 
+        }}>
+          <h1 style={{ 
+            fontFamily: 'Times New Roman, Times, serif', 
+            fontWeight: 700,
+            fontSize: '48px',
+            color: '#111827',
+            letterSpacing: '0.15em',
+            textTransform: 'uppercase',
+            margin: 0
+          }}>
             {coverPage.title || config.name || 'CATALOG'}
           </h1>
           {coverPage.subtitle && (
-            <p 
-              className="text-[11px] text-gray-400 tracking-[0.35em] uppercase mt-4"
-              style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
-            >
+            <p style={{ 
+              fontFamily: 'Helvetica Neue, Arial, sans-serif', 
+              fontWeight: 300,
+              fontSize: '11px',
+              color: '#9ca3af',
+              letterSpacing: '0.35em',
+              textTransform: 'uppercase',
+              marginTop: '16px'
+            }}>
               {coverPage.subtitle}
             </p>
           )}
           {/* Year with decorative lines */}
-          <div className="flex items-center justify-center gap-4 mt-5">
-            <div className="w-14 h-px bg-gray-400" />
-            <span 
-              className="text-base text-gray-600 tracking-[0.2em]"
-              style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
-            >
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            gap: '16px', 
+            marginTop: '20px' 
+          }}>
+            <div style={{ width: '56px', height: '1px', backgroundColor: '#9ca3af' }} />
+            <span style={{ 
+              fontFamily: 'Helvetica Neue, Arial, sans-serif', 
+              fontWeight: 300,
+              fontSize: '16px',
+              color: '#4b5563',
+              letterSpacing: '0.2em'
+            }}>
               {currentYear}
             </span>
-            <div className="w-14 h-px bg-gray-400" />
+            <div style={{ width: '56px', height: '1px', backgroundColor: '#9ca3af' }} />
           </div>
         </div>
 
-        {/* Main Image Area: 5mm sides, 1cm (10mm) from texts above, 4cm (40mm) from bottom */}
-        <div 
-          className="relative overflow-hidden bg-gray-200"
-          style={{ 
-            margin: '10mm 5mm 40mm 5mm',
-            flex: 1,
-            minHeight: 0
-          }}
-        >
+        {/* Main Image Area */}
+        <div style={{ 
+          position: 'relative',
+          overflow: 'hidden',
+          backgroundColor: '#e5e7eb',
+          margin: '38px 19px 151px 19px',
+          flex: 1,
+          minHeight: 0
+        }}>
           {coverPage.backgroundImage ? (
             <img 
-              key={`cover-bg-${coverPage.backgroundImage.length}`}
               src={coverPage.backgroundImage}
               alt="Cover"
-              className="absolute top-0 left-0 w-full h-full object-cover object-top"
-              onError={(e) => {
-                console.error('[StepPreview] Failed to load background image');
-                e.currentTarget.style.display = 'none';
-              }}
-              onLoad={() => {
-                console.log('[StepPreview] Background image loaded successfully');
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'top'
               }}
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-              <span className="text-gray-500 text-sm">Sem imagem de fundo</span>
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'linear-gradient(135deg, #d1d5db, #9ca3af)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <span style={{ color: '#6b7280', fontSize: '14px' }}>Sem imagem de fundo</span>
             </div>
           )}
         </div>
 
         {/* Bottom Footer Section */}
-        <div 
-          className="bg-white flex items-end justify-between"
-          style={{ padding: '5mm', paddingTop: '0' }}
-        >
-          {/* Logo bottom left - 3x3 cm */}
-          <div className="flex items-center">
+        <div style={{ 
+          backgroundColor: '#ffffff',
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          padding: '0 19px 19px 19px'
+        }}>
+          {/* Logo bottom left */}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
             {coverPage.logoUrl ? (
               <img 
-                key={coverPage.logoUrl.substring(0, 100)}
                 src={coverPage.logoUrl} 
                 alt="Logo" 
-                style={{ width: '30mm', height: '30mm', objectFit: 'contain' }}
+                style={{ width: '113px', height: '113px', objectFit: 'contain' }}
               />
             ) : (
-              <div 
-                className="border border-gray-300 rounded flex items-center justify-center"
-                style={{ width: '30mm', height: '30mm' }}
-              >
-                <span className="text-[8px] text-gray-400 uppercase">Logo</span>
+              <div style={{ 
+                width: '113px', 
+                height: '113px',
+                border: '1px solid #d1d5db',
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <span style={{ fontSize: '8px', color: '#9ca3af', textTransform: 'uppercase' }}>Logo</span>
               </div>
             )}
           </div>
 
-          {/* Website right - from backcover contactInfo */}
+          {/* Website right */}
           {backcoverPage.contactInfo?.website && (
-            <span 
-              className="text-[11px] text-gray-400 tracking-[0.35em] uppercase"
-              style={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 300 }}
-            >
+            <span style={{ 
+              fontFamily: 'Helvetica Neue, Arial, sans-serif', 
+              fontWeight: 300,
+              fontSize: '11px',
+              color: '#9ca3af',
+              letterSpacing: '0.35em',
+              textTransform: 'uppercase'
+            }}>
               {backcoverPage.contactInfo.website}
             </span>
           )}
@@ -342,88 +433,123 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     );
   };
 
-  // Group Header - Full background image with vertical text (matching reference)
+  // Group Header - Using inline styles for reliable PDF rendering
   const renderGroupHeader = (groupName: string) => {
     const group = groupedProducts.find(g => g.nome === groupName);
     const groupImage = group ? groupImages[group.id] : undefined;
     
     return (
       <div
-        className="w-full h-full bg-white p-[12mm] relative overflow-hidden"
-        style={{ fontFamily: config.fontFamily }}
+        style={{
+          width: '100%',
+          height: '100%',
+          backgroundColor: '#ffffff',
+          padding: '45px',
+          position: 'relative',
+          overflow: 'hidden',
+          boxSizing: 'border-box',
+          fontFamily: config.fontFamily
+        }}
       >
         {/* Image container with white border */}
-        <div className="relative w-full h-full overflow-hidden">
+        <div style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden'
+        }}>
           {/* Background Image */}
           {groupImage ? (
             <img 
               src={groupImage} 
               alt={groupName} 
-              className="absolute inset-0 w-full h-full object-cover"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }}
             />
           ) : (
-            <div 
-              className="absolute inset-0"
-              style={{ backgroundColor: '#6b7280' }}
-            />
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: '#6b7280'
+            }} />
           )}
 
-          {/* Vertical Text on Left Side - Full Height */}
-          <div 
-            className="absolute top-0 bottom-0 flex items-stretch"
-            style={{ width: '120px', left: '19px' }}
-          >
-            <h2 
-              className="text-white w-full h-full flex items-center justify-center"
-              style={{ 
-                writingMode: 'vertical-rl', 
-                textOrientation: 'mixed',
-                transform: 'rotate(180deg)',
-                fontFamily: 'Helvetica Neue, Arial, sans-serif',
-              }}
-            >
-              <span 
-                className="whitespace-nowrap"
-                style={{ 
-                  fontSize: '140px',
-                  fontWeight: 300, 
-                  color: 'rgba(255,255,255,0.85)',
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1,
-                  marginBottom: '20px'
-                }}
-              >
+          {/* Vertical Text on Left Side */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: '19px',
+            width: '120px',
+            display: 'flex',
+            alignItems: 'stretch'
+          }}>
+            <h2 style={{
+              color: '#ffffff',
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              writingMode: 'vertical-rl',
+              textOrientation: 'mixed',
+              transform: 'rotate(180deg)',
+              fontFamily: 'Helvetica Neue, Arial, sans-serif',
+              margin: 0
+            }}>
+              <span style={{ 
+                fontSize: '120px',
+                fontWeight: 300, 
+                color: 'rgba(255,255,255,0.85)',
+                letterSpacing: '-0.02em',
+                lineHeight: 1,
+                marginBottom: '20px',
+                whiteSpace: 'nowrap'
+              }}>
                 Linha
               </span>
-              <span 
-                className="whitespace-nowrap"
-                style={{ 
-                  fontSize: '140px',
-                  fontWeight: 700,
-                  color: '#ffffff',
-                  letterSpacing: '-0.02em',
-                  marginTop: '6px',
-                  lineHeight: 1
-                }}
-              >
+              <span style={{ 
+                fontSize: '120px',
+                fontWeight: 700,
+                color: '#ffffff',
+                letterSpacing: '-0.02em',
+                marginTop: '6px',
+                lineHeight: 1,
+                whiteSpace: 'nowrap'
+              }}>
                 {groupName}
               </span>
             </h2>
           </div>
 
           {/* Small descriptive text on right side */}
-          <div 
-            className="absolute right-4 bottom-1/3 max-w-[100px] text-right"
-          >
-            <p 
-              className="text-white/70 leading-relaxed"
-              style={{ 
-                fontFamily: 'Helvetica Neue, Arial, sans-serif', 
-                fontWeight: 300,
-                fontSize: '7px',
-                letterSpacing: '0.02em'
-              }}
-            >
+          <div style={{
+            position: 'absolute',
+            right: '16px',
+            bottom: '33%',
+            maxWidth: '100px',
+            textAlign: 'right'
+          }}>
+            <p style={{ 
+              fontFamily: 'Helvetica Neue, Arial, sans-serif', 
+              fontWeight: 300,
+              fontSize: '7px',
+              letterSpacing: '0.02em',
+              color: 'rgba(255,255,255,0.7)',
+              lineHeight: 1.6,
+              margin: 0
+            }}>
               {group?.products.length || 0} produtos disponíveis nesta categoria
             </p>
           </div>
@@ -713,82 +839,190 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     );
   };
 
-  // Back Cover - Clean contact page
+  // Back Cover - Using inline styles for reliable PDF rendering
   const renderBackcoverPage = () => (
     <div
-      className="w-full h-full flex relative overflow-hidden"
-      style={{ fontFamily: config.fontFamily }}
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        position: 'relative',
+        overflow: 'hidden',
+        fontFamily: config.fontFamily,
+        boxSizing: 'border-box'
+      }}
     >
       {/* Background */}
       {backcoverPage.backgroundImage ? (
         <>
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${backcoverPage.backgroundImage})` }}
-          />
-          <div className="absolute inset-0 bg-black/60" />
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: `url(${backcoverPage.backgroundImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }} />
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)'
+          }} />
         </>
       ) : (
-        <div 
-          className="absolute inset-0"
-          style={{ backgroundColor: backcoverPage.backgroundColor || '#1a1a1a' }}
-        />
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: backcoverPage.backgroundColor || '#1a1a1a'
+        }} />
       )}
 
       {/* Left Side - Decorative */}
-      <div className="relative z-10 w-1/2 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-5xl font-light text-white/20 uppercase tracking-widest">
-            <span className="font-serif italic block">{currentYear}</span>
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        width: '50%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{
+            fontSize: '48px',
+            fontWeight: 300,
+            color: 'rgba(255,255,255,0.2)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            margin: 0
+          }}>
+            <span style={{ 
+              fontFamily: 'Times New Roman, Times, serif', 
+              fontStyle: 'italic', 
+              display: 'block' 
+            }}>
+              {currentYear}
+            </span>
           </h2>
-          <div className="mt-8">
+          <div style={{ marginTop: '32px' }}>
             {coverPage.logoUrl && (
-              <img src={coverPage.logoUrl} alt="Logo" className="h-16 object-contain mx-auto opacity-80" />
+              <img 
+                src={coverPage.logoUrl} 
+                alt="Logo" 
+                style={{ 
+                  height: '64px', 
+                  objectFit: 'contain', 
+                  margin: '0 auto', 
+                  opacity: 0.8 
+                }} 
+              />
             )}
           </div>
         </div>
       </div>
 
       {/* Right Side - Contact Info */}
-      <div className="relative z-10 w-1/2 flex flex-col justify-center p-12 bg-white/5 backdrop-blur-sm">
-        <div className="space-y-8">
-          <div className="space-y-2">
-            <h3 className="text-3xl font-light text-white">
-              <span className="font-serif italic text-white/60">Product</span>
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        width: '50%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '48px',
+        backgroundColor: 'rgba(255,255,255,0.05)'
+      }}>
+        <div>
+          <div style={{ marginBottom: '32px' }}>
+            <h3 style={{ 
+              fontSize: '30px', 
+              fontWeight: 300, 
+              color: '#ffffff',
+              margin: 0
+            }}>
+              <span style={{ 
+                fontFamily: 'Times New Roman, Times, serif', 
+                fontStyle: 'italic', 
+                color: 'rgba(255,255,255,0.6)' 
+              }}>
+                Product
+              </span>
               {' '}
-              <span className="font-bold uppercase">CATALOG</span>
+              <span style={{ fontWeight: 700, textTransform: 'uppercase' }}>CATALOG</span>
             </h3>
-            <div className="w-16 h-0.5 bg-white/30" />
+            <div style={{ 
+              width: '64px', 
+              height: '2px', 
+              backgroundColor: 'rgba(255,255,255,0.3)', 
+              marginTop: '8px' 
+            }} />
           </div>
 
-          <div className="space-y-4">
-            <p className="text-sm text-white/60 uppercase tracking-wider">
-              {backcoverPage.title || 'Contact us'}
+          <div>
+            <p style={{ 
+              fontSize: '14px', 
+              color: 'rgba(255,255,255,0.6)', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.1em',
+              marginBottom: '16px'
+            }}>
+              {backcoverPage.title || 'Entre em contato'}
             </p>
             
-            <div className="space-y-3">
+            <div>
               {backcoverPage.contactInfo?.phone && (
-                <div className="flex items-center gap-3 text-white/80">
-                  <Phone className="h-4 w-4 text-white/40" />
-                  <span className="text-sm">{backcoverPage.contactInfo.phone}</span>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px', 
+                  color: 'rgba(255,255,255,0.8)',
+                  marginBottom: '12px'
+                }}>
+                  <span style={{ fontSize: '14px' }}>📞</span>
+                  <span style={{ fontSize: '14px' }}>{backcoverPage.contactInfo.phone}</span>
                 </div>
               )}
               {backcoverPage.contactInfo?.email && (
-                <div className="flex items-center gap-3 text-white/80">
-                  <Mail className="h-4 w-4 text-white/40" />
-                  <span className="text-sm">{backcoverPage.contactInfo.email}</span>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px', 
+                  color: 'rgba(255,255,255,0.8)',
+                  marginBottom: '12px'
+                }}>
+                  <span style={{ fontSize: '14px' }}>✉️</span>
+                  <span style={{ fontSize: '14px' }}>{backcoverPage.contactInfo.email}</span>
                 </div>
               )}
               {backcoverPage.contactInfo?.website && (
-                <div className="flex items-center gap-3 text-white/80">
-                  <Globe className="h-4 w-4 text-white/40" />
-                  <span className="text-sm">{backcoverPage.contactInfo.website}</span>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px', 
+                  color: 'rgba(255,255,255,0.8)',
+                  marginBottom: '12px'
+                }}>
+                  <span style={{ fontSize: '14px' }}>🌐</span>
+                  <span style={{ fontSize: '14px' }}>{backcoverPage.contactInfo.website}</span>
                 </div>
               )}
               {backcoverPage.contactInfo?.address && (
-                <div className="flex items-start gap-3 text-white/80">
-                  <MapPin className="h-4 w-4 text-white/40 mt-0.5" />
-                  <span className="text-sm">{backcoverPage.contactInfo.address}</span>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'flex-start', 
+                  gap: '12px', 
+                  color: 'rgba(255,255,255,0.8)',
+                  marginBottom: '12px'
+                }}>
+                  <span style={{ fontSize: '14px', marginTop: '2px' }}>📍</span>
+                  <span style={{ fontSize: '14px' }}>{backcoverPage.contactInfo.address}</span>
                 </div>
               )}
             </div>
@@ -966,15 +1200,13 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
         </div>
 
         {/* Page View */}
-        <div className="flex justify-center p-8 bg-muted/20">
+        <div className="flex justify-center p-8 bg-muted/20 overflow-auto">
           <div
             ref={pdfRef}
-            className="bg-white shadow-2xl rounded-lg overflow-hidden"
+            className="bg-white shadow-2xl rounded-lg overflow-hidden flex-shrink-0"
             style={{
-              width: '210mm',
-              height: '297mm',
-              maxWidth: '100%',
-              aspectRatio: '210/297',
+              width: `${A4_WIDTH_PX}px`,
+              height: `${A4_HEIGHT_PX}px`,
             }}
           >
             {renderCurrentPage()}
