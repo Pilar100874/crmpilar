@@ -52,6 +52,9 @@ interface Email {
   starred: boolean;
   folder: "inbox" | "sent" | "trash" | "archive";
   hasAttachment?: boolean;
+  tracking_id?: string;
+  opened_at?: string | null;
+  opened_count?: number;
 }
 
 interface EmailProps {
@@ -221,7 +224,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
       const { data, error } = await supabase
         .from('emails')
-        .select('*')
+        .select('id, from_email, to_email, subject, body, date, read, starred, folder, tracking_id, opened_at, opened_count')
         .eq('user_id', user.id)
         .eq('folder', selectedFolder)
         .order('date', { ascending: false });
@@ -229,7 +232,8 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
       if (error) throw error;
       setEmails((data as any[]).map(email => ({
         ...email,
-        folder: email.folder as "inbox" | "sent" | "trash" | "archive"
+        folder: email.folder as "inbox" | "sent" | "trash" | "archive",
+        hasAttachment: email.body?.includes('attachment') || false
       })));
     } catch (error) {
       console.error('Erro ao carregar emails:', error);
