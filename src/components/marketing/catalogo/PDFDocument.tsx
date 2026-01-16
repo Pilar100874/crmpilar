@@ -570,26 +570,7 @@ const GroupHeaderPage: React.FC<{
         alignItems: 'flex-start',
         maxWidth: 400,
       }}>
-        {/* Group description text - positioned above the box */}
-        {groupDescription && (
-          <View style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            padding: 16,
-            marginBottom: 12,
-            maxWidth: 350,
-          }}>
-            <Text style={{
-              fontSize: 11,
-              color: 'rgba(255, 255, 255, 0.9)',
-              lineHeight: 1.7,
-              textAlign: 'left',
-            }}>
-              {groupDescription}
-            </Text>
-          </View>
-        )}
-        
-        {/* Primary color stripe with group name */}
+        {/* Primary color stripe with group name - on top */}
         <View style={{ 
           backgroundColor: primaryColor,
           paddingVertical: 20,
@@ -613,6 +594,25 @@ const GroupHeaderPage: React.FC<{
             {productCount} produtos
           </Text>
         </View>
+        
+        {/* Group description text - below the box */}
+        {groupDescription && (
+          <View style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            padding: 16,
+            marginTop: 12,
+            maxWidth: 350,
+          }}>
+            <Text style={{
+              fontSize: 11,
+              color: 'rgba(255, 255, 255, 0.9)',
+              lineHeight: 1.7,
+              textAlign: 'left',
+            }}>
+              {groupDescription}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   </Page>
