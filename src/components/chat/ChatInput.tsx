@@ -17,6 +17,7 @@ import EmojiPicker from "./EmojiPicker";
 import QuickRepliesSelector from "./QuickRepliesSelector";
 import QuickAttachmentsSelector from "./QuickAttachmentsSelector";
 import OrcamentoAttachmentSelector from "./OrcamentoAttachmentSelector";
+import CatalogAttachmentSelector from "./CatalogAttachmentSelector";
 import { Message } from "@/pages/ChatWebhook";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
@@ -756,6 +757,16 @@ export default function ChatInput({
         setMessage(prev => prev + (prev ? '\n' : '') + `${title}: ${link}`); 
         setShowToolsMenu(false); 
       }} 
+      onSelectPdf={(file, url) => { 
+        handleFileSelected(file, url); 
+        setShowToolsMenu(false); 
+      }} 
+      disabled={disabled} 
+    />
+  );
+  allItems.push(
+    <CatalogAttachmentSelector 
+      key="catalog-attachment" 
       onSelectPdf={(file, url) => { 
         handleFileSelected(file, url); 
         setShowToolsMenu(false); 
