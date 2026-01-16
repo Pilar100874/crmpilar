@@ -401,28 +401,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
           alignItems: 'flex-start',
           maxWidth: '450px',
         }}>
-          {/* Group description text - positioned above the box */}
-          {groupDescription && (
-            <div style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              padding: '16px 20px',
-              marginBottom: '12px',
-              maxWidth: '400px',
-              borderRadius: '4px',
-            }}>
-              <p style={{
-                fontSize: '12px',
-                color: 'rgba(255, 255, 255, 0.9)',
-                lineHeight: 1.7,
-                textAlign: 'left',
-                margin: 0,
-              }}>
-                {groupDescription}
-              </p>
-            </div>
-          )}
-          
-          {/* Primary color stripe with group name */}
+          {/* Primary color stripe with group name - on top */}
           <div style={{ 
             backgroundColor: config.primaryColor || '#1a1a2e',
             padding: '20px 25px',
@@ -447,6 +426,27 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
               {group?.products.length || 0} produtos
             </p>
           </div>
+          
+          {/* Group description text - below the box */}
+          {groupDescription && (
+            <div style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              padding: '16px 20px',
+              marginTop: '12px',
+              maxWidth: '400px',
+              borderRadius: '4px',
+            }}>
+              <p style={{
+                fontSize: '12px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                lineHeight: 1.7,
+                textAlign: 'left',
+                margin: 0,
+              }}>
+                {groupDescription}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
