@@ -1,45 +1,20 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import {
-  Inbox,
-  Send,
-  Trash2,
-  Archive,
-  Star,
-  Search,
-  Plus,
-  Paperclip,
-  Reply,
-  Forward,
   RefreshCw,
   AlertCircle,
   Settings,
-  ArrowLeft,
-  MoreVertical,
-  Clock,
-  Tag,
-  CheckCircle2,
   Mail,
-  MailOpen,
-  X,
 } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { useNavigate, useParams } from "react-router-dom";
-import { SubMenuHeader } from "@/components/SubMenuHeader";
-import { useLayout } from "@/contexts/LayoutContext";
 import { EmailLoadingBar } from "@/components/email/EmailLoadingBar";
-import { EmailToolbar } from "@/components/email/EmailToolbar";
-import { EmailListItem } from "@/components/email/EmailListItem";
-import { EmailEmptyState } from "@/components/email/EmailEmptyState";
-import { cn } from "@/lib/utils";
+import { EmailFolderSidebar } from "@/components/email/EmailFolderSidebar";
+import { EmailPanel } from "@/components/email/EmailPanel";
+import { ComposeEmailDialog } from "@/components/email/ComposeEmailDialog";
 
 interface Email {
   id: string;
@@ -50,7 +25,7 @@ interface Email {
   date: string;
   read: boolean;
   starred: boolean;
-  folder: "inbox" | "sent" | "trash" | "archive";
+  folder: string;
   hasAttachment?: boolean;
   tracking_id?: string;
   opened_at?: string | null;
@@ -64,25 +39,21 @@ interface EmailProps {
 export default function Email({ embeddedFolder }: EmailProps = {}) {
   const navigate = useNavigate();
   const { folder } = useParams<{ folder?: string }>();
-  const { openSubmenu } = useLayout();
   const effectiveFolder = embeddedFolder || folder;
-  const [selectedFolder, setSelectedFolder] = useState<"inbox" | "sent" | "trash" | "archive">(
-    (effectiveFolder as "inbox" | "sent" | "trash" | "archive") || "inbox"
-  );
-  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
-  const [composing, setComposing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  
+  const [emailFolder, setEmailFolder] = useState<string>(effectiveFolder || "inbox");
+  const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
+  const [selectedEmailData, setSelectedEmailData] = useState<Email | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [hasEmailConfig, setHasEmailConfig] = useState<boolean | null>(null);
   const [checkingConfig, setCheckingConfig] = useState(true);
-  const [selectedEmails, setSelectedEmails] = useState<Set<string>>(new Set());
   
   // Compose email states
-  const [newEmailTo, setNewEmailTo] = useState("");
-  const [newEmailSubject, setNewEmailSubject] = useState("");
-  const [newEmailBody, setNewEmailBody] = useState("");
+  const [showComposeEmail, setShowComposeEmail] = useState(false);
+  const [composeMode, setComposeMode] = useState<'compose' | 'reply' | 'forward'>('compose');
+  const [replyToEmail, setReplyToEmail] = useState<Email | null>(null);
 
   // Emails data
   const [emails, setEmails] = useState<Email[]>([]);
@@ -104,7 +75,6 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         return;
       }
 
-      // Verificar configuração de email do usuário (SMTP e IMAP)
       const { data: usuario, error } = await supabase
         .from('usuarios')
         .select('smtp, porta_smtp, imap, porta_imap, senha_email, estabelecimento_id')
@@ -124,17 +94,14 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         return;
       }
 
-      // Buscar todas as configurações de email do estabelecimento
       const { data: emailConfigs } = await supabase
         .from('email_oauth_config')
         .select('provider, enabled, client_id')
         .eq('estabelecimento_id', usuario.estabelecimento_id);
 
-      // Verificar qual modo está ativo
       const externalConfig = (emailConfigs as any[])?.find((c: any) => c.provider === 'external_server');
       const googleConfig = (emailConfigs as any[])?.find((c: any) => c.provider === 'google');
 
-      // Se external_server está habilitado, usar servidor externo (SMTP/IMAP)
       if (externalConfig?.enabled) {
         const isImapConfigured = !!(
           usuario?.smtp && 
@@ -154,12 +121,10 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         return;
       }
 
-      // Se OAuth (Google) está habilitado e tem client_id
       if (googleConfig?.enabled && googleConfig?.client_id) {
         setHasEmailConfig(true);
         setUseOAuth(true);
         
-        // Verificar se já tem tokens OAuth
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (authUser) {
           const { data: tokenData } = await supabase
@@ -176,7 +141,6 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         return;
       }
 
-      // Fallback: tentar IMAP/SMTP mesmo sem external_server explicitamente habilitado
       const isImapConfigured = !!(
         usuario?.smtp && 
         usuario?.porta_smtp && 
@@ -201,12 +165,12 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
 
   // Sincronizar pasta com a URL
   useEffect(() => {
-    if (folder && folder !== selectedFolder) {
-      setSelectedFolder(folder as "inbox" | "sent" | "trash" | "archive");
+    if (folder && folder !== emailFolder) {
+      setEmailFolder(folder);
     }
   }, [folder]);
 
-  // Carregar emails do banco ou via OAuth
+  // Carregar emails
   useEffect(() => {
     if (hasEmailConfig !== null) {
       if (useOAuth && oauthConnected) {
@@ -215,26 +179,48 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         loadEmails();
       }
     }
-  }, [selectedFolder, hasEmailConfig, oauthConnected]);
+  }, [emailFolder, hasEmailConfig, oauthConnected]);
 
   const loadEmails = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      // Load inbox emails
+      const { data: inboxData, error: inboxError } = await supabase
         .from('emails')
         .select('id, from_email, to_email, subject, body, date, read, starred, folder, tracking_id, opened_at, opened_count')
         .eq('user_id', user.id)
-        .eq('folder', selectedFolder)
-        .order('date', { ascending: false });
+        .eq('folder', 'inbox')
+        .order('date', { ascending: false })
+        .limit(50);
 
-      if (error) throw error;
-      setEmails((data as any[]).map(email => ({
-        ...email,
-        folder: email.folder as "inbox" | "sent" | "trash" | "archive",
-        hasAttachment: email.body?.includes('attachment') || false
-      })));
+      // Load sent emails
+      const { data: sentData, error: sentError } = await supabase
+        .from('emails')
+        .select('id, from_email, to_email, subject, body, date, read, starred, folder, tracking_id, opened_at, opened_count')
+        .eq('user_id', user.id)
+        .eq('folder', 'sent')
+        .order('date', { ascending: false })
+        .limit(50);
+
+      let allEmails: Email[] = [];
+      
+      if (!inboxError && inboxData) {
+        allEmails = [...allEmails, ...inboxData.map(email => ({
+          ...email,
+          hasAttachment: email.body?.includes('attachment') || false
+        }))];
+      }
+      
+      if (!sentError && sentData) {
+        allEmails = [...allEmails, ...sentData.map(email => ({
+          ...email,
+          hasAttachment: email.body?.includes('attachment') || false
+        }))];
+      }
+
+      setEmails(allEmails);
     } catch (error) {
       console.error('Erro ao carregar emails:', error);
       toast.error('Erro ao carregar emails');
@@ -277,7 +263,6 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
     setLoadingMessage("Conectando ao servidor...");
     
     try {
-      // Simular progresso inicial
       setLoadingProgress(10);
       setLoadingMessage("Autenticando...");
       
@@ -287,13 +272,15 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
       setLoadingMessage("Buscando emails...");
       
       const { data, error } = await supabase.functions.invoke(functionName, {
-        body: { folder: selectedFolder.toUpperCase(), maxResults: 50 }
+        body: { folder: 'INBOX', maxResults: 50 }
       });
       
       setLoadingProgress(70);
       setLoadingMessage("Processando mensagens...");
       
       if (error) throw error;
+      
+      let allEmails: Email[] = [];
       
       if (data?.emails) {
         const fetchedEmails = data.emails.map((email: any, index: number) => ({
@@ -305,18 +292,36 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
           date: email.date,
           read: email.read,
           starred: email.starred,
-          folder: selectedFolder,
+          folder: 'inbox',
           hasAttachment: email.body?.includes('attachment') || false,
         }));
         
-        setLoadingProgress(90);
-        setLoadingMessage("Finalizando...");
-        
-        setEmails(fetchedEmails);
-        
-        setLoadingProgress(100);
-        toast.success(`${fetchedEmails.length} emails carregados`);
+        allEmails = [...fetchedEmails];
       }
+
+      // Also load sent emails from database
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: sentData } = await supabase
+          .from('emails')
+          .select('id, from_email, to_email, subject, body, date, read, starred, folder, tracking_id, opened_at, opened_count')
+          .eq('user_id', user.id)
+          .eq('folder', 'sent')
+          .order('date', { ascending: false })
+          .limit(50);
+
+        if (sentData) {
+          allEmails = [...allEmails, ...sentData];
+        }
+      }
+      
+      setLoadingProgress(90);
+      setLoadingMessage("Finalizando...");
+      
+      setEmails(allEmails);
+      
+      setLoadingProgress(100);
+      toast.success(`${allEmails.length} emails carregados`);
     } catch (error: any) {
       console.error('Erro ao buscar emails:', error);
       toast.error(error.message || 'Erro ao buscar emails');
@@ -329,95 +334,28 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
     }
   };
 
-  const filteredEmails = emails.filter(
-    (email) =>
-      email.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      email.from_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      email.body?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const unreadCount = emails.filter(e => !e.read).length;
-
-  const handleSelectEmail = (emailId: string) => {
-    const newSelected = new Set(selectedEmails);
-    if (newSelected.has(emailId)) {
-      newSelected.delete(emailId);
-    } else {
-      newSelected.add(emailId);
-    }
-    setSelectedEmails(newSelected);
-  };
-
-  const handleSelectAll = () => {
-    setSelectedEmails(new Set(filteredEmails.map(e => e.id)));
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedEmails(new Set());
-  };
-
-  const handleStarEmail = (emailId: string) => {
-    setEmails(emails.map(e => 
-      e.id === emailId ? { ...e, starred: !e.starred } : e
-    ));
-  };
-
-  const handleMarkAsRead = () => {
-    setEmails(emails.map(e => 
-      selectedEmails.has(e.id) ? { ...e, read: true } : e
-    ));
-    setSelectedEmails(new Set());
-    toast.success('Emails marcados como lidos');
-  };
-
-  const handleMarkAsUnread = () => {
-    setEmails(emails.map(e => 
-      selectedEmails.has(e.id) ? { ...e, read: false } : e
-    ));
-    setSelectedEmails(new Set());
-    toast.success('Emails marcados como não lidos');
-  };
-
-  const handleSendEmail = async () => {
-    if (!newEmailTo || !newEmailSubject || !newEmailBody) {
-      toast.error("Preencha todos os campos obrigatórios");
-      return;
-    }
-
+  const handleSendEmail = async (emailData: { to: string; subject: string; body: string; attachments?: any[] }) => {
     setLoading(true);
-    setLoadingProgress(0);
     setLoadingMessage("Enviando email...");
     
     try {
-      setLoadingProgress(30);
-      
       const functionName = useOAuth && oauthConnected ? 'gmail-send-email' : 'send-email-smtp';
       
       const { data, error } = await supabase.functions.invoke(functionName, {
         body: {
-          to: newEmailTo,
-          subject: newEmailSubject,
-          body: newEmailBody,
-          html: `<p>${newEmailBody.replace(/\n/g, '<br>')}</p>`
+          to: emailData.to,
+          subject: emailData.subject,
+          body: emailData.body,
+          html: `<p>${emailData.body.replace(/\n/g, '<br>')}</p>`
         }
       });
 
       if (error) throw error;
-
-      setLoadingProgress(100);
       
-      const messageId = data?.messageId;
-      const successMessage = messageId 
-        ? `Email enviado com sucesso!`
-        : "Email enviado com sucesso!";
+      toast.success("Email enviado com sucesso!");
+      setShowComposeEmail(false);
       
-      toast.success(successMessage);
-      setComposing(false);
-      setNewEmailTo("");
-      setNewEmailSubject("");
-      setNewEmailBody("");
-      
-      if (selectedFolder === 'sent') {
+      if (emailFolder === 'sent') {
         if (useOAuth && oauthConnected) {
           await fetchNewEmails();
         } else {
@@ -429,33 +367,32 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
       toast.error(error.message || 'Erro ao enviar email');
     } finally {
       setLoading(false);
-      setLoadingProgress(0);
       setLoadingMessage("");
     }
   };
 
+  const handleReply = (email: Email) => {
+    setReplyToEmail(email);
+    setComposeMode('reply');
+    setShowComposeEmail(true);
+  };
+
+  const handleForward = (email: Email) => {
+    setReplyToEmail(email);
+    setComposeMode('forward');
+    setShowComposeEmail(true);
+  };
+
   const handleComposeNew = () => {
-    setNewEmailTo("");
-    setNewEmailSubject("");
-    setNewEmailBody("");
-    setSelectedEmail(null);
-    setComposing(true);
+    setReplyToEmail(null);
+    setComposeMode('compose');
+    setShowComposeEmail(true);
   };
 
-  const handleReply = () => {
-    if (!selectedEmail) return;
-    setNewEmailTo(selectedEmail.from_email);
-    setNewEmailSubject(`Re: ${selectedEmail.subject}`);
-    setNewEmailBody(`\n\n--- Original ---\n${selectedEmail.body}`);
-    setComposing(true);
-  };
-
-  const handleForward = () => {
-    if (!selectedEmail) return;
-    setComposing(true);
-    setNewEmailTo("");
-    setNewEmailSubject(`Fwd: ${selectedEmail.subject}`);
-    setNewEmailBody(`\n\n--- Email encaminhado ---\nDe: ${selectedEmail.from_email}\nAssunto: ${selectedEmail.subject}\n\n${selectedEmail.body}`);
+  const handleFolderChange = (folder: string) => {
+    setEmailFolder(folder);
+    setSelectedEmailId(null);
+    setSelectedEmailData(null);
   };
 
   // Mostrar tela de carregamento
@@ -573,7 +510,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
   }
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="h-full flex bg-background">
       {/* Loading bar */}
       <EmailLoadingBar 
         isLoading={loading} 
@@ -581,191 +518,62 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         message={loadingMessage}
       />
 
-      {/* Composing view */}
-      {composing ? (
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="border-b bg-card p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => setComposing(false)}>
-                <X className="w-5 h-5" />
-              </Button>
-              <h2 className="text-lg font-semibold">Novo E-mail</h2>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setComposing(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleSendEmail} className="gap-2" disabled={loading}>
-                {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                Enviar
-              </Button>
-            </div>
-          </div>
+      {/* Sidebar */}
+      <div className="w-56 border-r bg-card/50 flex-shrink-0">
+        <EmailFolderSidebar
+          emails={emails}
+          activeFolder={emailFolder}
+          onFolderChange={handleFolderChange}
+          onComposeClick={handleComposeNew}
+          onRefresh={fetchNewEmails}
+        />
+      </div>
 
-          <ScrollArea className="flex-1">
-            <div className="max-w-4xl mx-auto p-6 space-y-4">
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Para:</label>
-                <Input
-                  placeholder="destinatario@exemplo.com"
-                  value={newEmailTo}
-                  onChange={(e) => setNewEmailTo(e.target.value)}
-                  className="bg-background"
-                />
-              </div>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <EmailPanel
+          emails={emails}
+          selectedEmailId={selectedEmailId}
+          selectedEmailData={selectedEmailData}
+          emailFolder={emailFolder}
+          onFolderChange={handleFolderChange}
+          onEmailSelect={(id, data) => {
+            setSelectedEmailId(id);
+            setSelectedEmailData(data);
+          }}
+          onEmailClose={() => {
+            setSelectedEmailId(null);
+            setSelectedEmailData(null);
+          }}
+          onComposeClick={handleComposeNew}
+          onRefresh={fetchNewEmails}
+          onReply={handleReply}
+          onForward={handleForward}
+        />
+      </div>
 
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Assunto:</label>
-                <Input
-                  placeholder="Assunto do e-mail"
-                  value={newEmailSubject}
-                  onChange={(e) => setNewEmailSubject(e.target.value)}
-                  className="bg-background"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Mensagem:</label>
-                <Textarea
-                  placeholder="Digite sua mensagem..."
-                  value={newEmailBody}
-                  onChange={(e) => setNewEmailBody(e.target.value)}
-                  className="min-h-[400px] resize-none bg-background"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Paperclip className="w-4 h-4" />
-                  Anexar arquivo
-                </Button>
-              </div>
-            </div>
-          </ScrollArea>
-        </div>
-      ) : selectedEmail ? (
-        /* Email detail view */
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="border-b bg-card p-4">
-            <div className="flex items-center gap-3 mb-4">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setSelectedEmail(null)}
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold truncate">{selectedEmail.subject}</h2>
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={handleReply}>
-                <Reply className="w-4 h-4" />
-                Responder
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={handleForward}>
-                <Forward className="w-4 h-4" />
-                Encaminhar
-              </Button>
-              <Separator orientation="vertical" className="h-8 mx-1" />
-              <Button variant="outline" size="sm" className="gap-2">
-                <Archive className="w-4 h-4" />
-                Arquivar
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Trash2 className="w-4 h-4" />
-                Excluir
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Tag className="w-4 h-4" />
-                Etiqueta
-              </Button>
-            </div>
-          </div>
-
-          <ScrollArea className="flex-1">
-            <div className="max-w-4xl mx-auto p-6">
-              <div className="bg-card rounded-lg border shadow-sm">
-                <div className="p-6 border-b">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <Mail className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <div className="font-medium">{selectedEmail.from_email}</div>
-                          <div className="text-sm text-muted-foreground">
-                            Para: {selectedEmail.to_email}
-                          </div>
-                        </div>
-                        <div className="text-sm text-muted-foreground shrink-0 flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          {new Date(selectedEmail.date).toLocaleString("pt-BR")}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <div className="prose prose-sm max-w-none dark:prose-invert">
-                    <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                      {selectedEmail.body}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </ScrollArea>
-        </div>
-      ) : (
-        /* Email list view */
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <EmailToolbar
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onCompose={handleComposeNew}
-            onRefresh={fetchNewEmails}
-            onSettings={() => navigate('/config')}
-            loading={loading}
-            unreadCount={unreadCount}
-            totalCount={filteredEmails.length}
-            selectedCount={selectedEmails.size}
-            onMarkAsRead={handleMarkAsRead}
-            onMarkAsUnread={handleMarkAsUnread}
-            onSelectAll={handleSelectAll}
-            onDeselectAll={handleDeselectAll}
-          />
-
-          <ScrollArea className="flex-1">
-            {filteredEmails.length === 0 ? (
-              <EmailEmptyState folder={selectedFolder} />
-            ) : (
-              <div className="divide-y">
-                {filteredEmails.map((email) => (
-                  <EmailListItem
-                    key={email.id}
-                    email={email}
-                    isSelected={selectedEmails.has(email.id)}
-                    onSelect={() => handleSelectEmail(email.id)}
-                    onClick={() => {
-                      setSelectedEmail(email);
-                      // Mark as read
-                      setEmails(emails.map(e => 
-                        e.id === email.id ? { ...e, read: true } : e
-                      ));
-                    }}
-                    onStar={() => handleStarEmail(email.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </div>
-      )}
+      {/* Compose Email Dialog */}
+      <ComposeEmailDialog
+        open={showComposeEmail}
+        onOpenChange={setShowComposeEmail}
+        mode={composeMode}
+        defaultTo={composeMode === 'reply' && replyToEmail ? replyToEmail.from_email : ''}
+        defaultSubject={
+          composeMode === 'reply' && replyToEmail 
+            ? `Re: ${replyToEmail.subject}` 
+            : composeMode === 'forward' && replyToEmail 
+              ? `Fwd: ${replyToEmail.subject}` 
+              : ''
+        }
+        defaultBody={
+          composeMode === 'reply' && replyToEmail 
+            ? `\n\n--- Original ---\n${replyToEmail.body}` 
+            : composeMode === 'forward' && replyToEmail 
+              ? `\n\n--- Email encaminhado ---\nDe: ${replyToEmail.from_email}\nAssunto: ${replyToEmail.subject}\n\n${replyToEmail.body}` 
+              : ''
+        }
+        onSend={handleSendEmail}
+      />
     </div>
   );
 }
