@@ -155,17 +155,18 @@ const styles = StyleSheet.create({
     height: '100%',
     padding: 35,
     backgroundColor: '#ffffff',
+    display: 'flex',
+    flexDirection: 'column',
   },
   productPageHeader: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   productPageTitle: {
-    fontSize: 32,
-    lineHeight: 1.1,
+    fontSize: 28,
   },
   productPageTitleLight: {
     fontWeight: 300,
-    color: '#4b5563',
+    color: '#6b7280',
   },
   productPageTitleBold: {
     fontWeight: 700,
@@ -175,82 +176,95 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    alignContent: 'flex-start',
   },
+  // Grid cards - using fixed widths for reliability
   productCard2: {
     width: '48%',
-    marginBottom: 8,
+    marginRight: '2%',
+    marginBottom: 15,
+    display: 'flex',
+    flexDirection: 'column',
   },
   productCard3: {
     width: '31%',
-    marginBottom: 8,
+    marginRight: '2%',
+    marginBottom: 12,
+    display: 'flex',
+    flexDirection: 'column',
   },
   productCard4: {
     width: '23%',
-    marginBottom: 6,
+    marginRight: '2%',
+    marginBottom: 10,
+    display: 'flex',
+    flexDirection: 'column',
   },
   productCardList: {
     width: '100%',
     flexDirection: 'row',
-    padding: 8,
+    padding: 10,
     backgroundColor: '#f9fafb',
     marginBottom: 8,
-    borderRadius: 3,
+    borderRadius: 4,
   },
   productImageContainer: {
-    backgroundColor: '#f9fafb',
+    width: '100%',
+    height: 120,
+    backgroundColor: '#f3f4f6',
     alignItems: 'center',
     justifyContent: 'center',
-    aspectRatio: 1,
+    marginBottom: 8,
   },
   productImage: {
+    width: '80%',
+    height: '80%',
+    objectFit: 'contain',
+  },
+  productImageListContainer: {
+    width: 70,
+    height: 70,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 15,
+    flexShrink: 0,
+  },
+  productImageList: {
     width: '85%',
     height: '85%',
     objectFit: 'contain',
   },
-  productImageListContainer: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  productImageList: {
-    width: '90%',
-    height: '90%',
-    objectFit: 'contain',
-  },
   productInfo: {
     flex: 1,
-    paddingTop: 4,
   },
   productName: {
-    fontWeight: 600,
-    color: '#1f2937',
-    marginBottom: 2,
+    fontWeight: 700,
+    color: '#111827',
+    marginBottom: 4,
   },
-  productNameSize2: { fontSize: 9 },
-  productNameSize3: { fontSize: 7 },
-  productNameSize4: { fontSize: 6 },
-  productNameSizeList: { fontSize: 10 },
+  productNameSize2: { fontSize: 11 },
+  productNameSize3: { fontSize: 9 },
+  productNameSize4: { fontSize: 8 },
+  productNameSizeList: { fontSize: 12 },
   productField: {
-    color: '#6b7280',
+    marginTop: 2,
   },
-  productFieldSize2: { fontSize: 7 },
-  productFieldSize3: { fontSize: 6 },
-  productFieldSize4: { fontSize: 5 },
-  productFieldSizeList: { fontSize: 8 },
+  productFieldSize2: { fontSize: 8 },
+  productFieldSize3: { fontSize: 7 },
+  productFieldSize4: { fontSize: 6 },
+  productFieldSizeList: { fontSize: 9 },
   productFieldLabel: {
     color: '#9ca3af',
   },
   productFieldValue: {
-    color: '#374151',
+    color: '#4b5563',
   },
   productPageFooter: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    paddingTop: 12,
+    paddingTop: 15,
+    marginTop: 'auto',
   },
   pageNumber: {
     fontSize: 8,
@@ -534,56 +548,64 @@ const GroupHeaderPage: React.FC<{
   productCount: number;
 }> = ({ groupName, groupImage, productCount }) => (
   <Page size="A4" style={styles.page}>
-    <View style={styles.groupContainer}>
+    <View style={{ width: '100%', height: '100%', position: 'relative' }}>
       {/* Background */}
       {groupImage ? (
-        <Image src={groupImage} style={styles.groupImage} />
+        <Image src={groupImage} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
       ) : (
-        <View style={styles.groupImagePlaceholder} />
+        <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: '#4b5563' }} />
       )}
       
-      {/* Vertical Text - Simplified for @react-pdf (no transform support) */}
+      {/* Dark overlay for better text visibility */}
+      <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.3)' }} />
+      
+      {/* Text positioned at bottom left with horizontal layout */}
       <View style={{ 
         position: 'absolute', 
-        left: 30, 
-        top: 0, 
-        bottom: 0,
-        width: 100,
-        justifyContent: 'center',
+        left: 40, 
+        bottom: 80,
+        maxWidth: '80%',
       }}>
         <Text style={{
-          fontSize: 48,
+          fontSize: 72,
           fontWeight: 300,
-          color: 'rgba(255, 255, 255, 0.85)',
-          letterSpacing: -1,
+          color: 'rgba(255, 255, 255, 0.9)',
+          letterSpacing: -2,
         }}>
           Linha
         </Text>
         <Text style={{
-          fontSize: 48,
+          fontSize: 72,
           fontWeight: 700,
           color: '#ffffff',
-          letterSpacing: -1,
-          marginTop: 4,
+          letterSpacing: -2,
+          marginTop: -5,
         }}>
           {groupName}
         </Text>
       </View>
 
-      {/* Product count */}
+      {/* Product count at bottom right */}
       <View style={{ 
         position: 'absolute', 
-        right: 15, 
-        bottom: '35%',
-        width: 80,
+        right: 40, 
+        bottom: 80,
+        width: 100,
       }}>
         <Text style={{ 
-          fontSize: 6, 
-          color: 'rgba(255, 255, 255, 0.7)', 
+          fontSize: 10, 
+          color: 'rgba(255, 255, 255, 0.8)', 
           textAlign: 'right',
-          lineHeight: 1.6,
         }}>
-          {productCount} produtos{'\n'}disponíveis nesta{'\n'}categoria
+          {productCount} produtos
+        </Text>
+        <Text style={{ 
+          fontSize: 8, 
+          color: 'rgba(255, 255, 255, 0.6)', 
+          textAlign: 'right',
+          marginTop: 2,
+        }}>
+          disponíveis nesta categoria
         </Text>
       </View>
     </View>
@@ -679,6 +701,39 @@ const ProductPage: React.FC<{
     }
   };
 
+  // Get image height based on layout
+  const getImageHeight = () => {
+    switch (layout) {
+      case 'grid-2': return 140;
+      case 'grid-3': return 100;
+      case 'grid-4': return 80;
+      default: return 100;
+    }
+  };
+
+  // Get columns based on layout
+  const getCols = () => {
+    switch (layout) {
+      case 'grid-2': return 2;
+      case 'grid-3': return 3;
+      case 'grid-4': return 4;
+      case 'list': return 1;
+      default: return 3;
+    }
+  };
+
+  const cols = getCols();
+  const imageHeight = getImageHeight();
+
+  // Split products into rows
+  const rows: CatalogProduct[][] = [];
+  for (let i = 0; i < products.length; i += cols) {
+    rows.push(products.slice(i, i + cols));
+  }
+
+  // Calculate column width
+  const colWidth = layout === 'list' ? '100%' : `${Math.floor(100 / cols) - 2}%`;
+
   return (
     <Page size="A4" style={styles.page}>
       <View style={styles.productPageContainer}>
@@ -690,53 +745,83 @@ const ProductPage: React.FC<{
           </Text>
         </View>
 
-        {/* Products */}
-        <View style={styles.productsGrid}>
-          {products.map((product, idx) => (
-            <View key={product.id} style={getCardStyle()}>
-              {/* Image */}
-              {layout === 'list' ? (
-                <View style={styles.productImageListContainer}>
-                  {product.foto_url ? (
-                    <Image src={product.foto_url} style={styles.productImageList} />
+        {/* Products - Row based layout */}
+        <View style={{ flex: 1 }}>
+          {rows.map((row, rowIdx) => (
+            <View key={rowIdx} style={{ flexDirection: 'row', marginBottom: layout === 'list' ? 8 : 15 }}>
+              {row.map((product, colIdx) => (
+                <View 
+                  key={product.id} 
+                  style={{ 
+                    width: colWidth,
+                    marginRight: colIdx < row.length - 1 ? '2%' : 0,
+                    ...(layout === 'list' ? { 
+                      flexDirection: 'row', 
+                      padding: 10, 
+                      backgroundColor: '#f9fafb',
+                      borderRadius: 4,
+                    } : {})
+                  }}
+                >
+                  {/* Image */}
+                  {layout === 'list' ? (
+                    <View style={{ 
+                      width: 70, 
+                      height: 70, 
+                      backgroundColor: '#ffffff', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      marginRight: 15,
+                    }}>
+                      {product.foto_url ? (
+                        <Image src={product.foto_url} style={{ width: '85%', height: '85%', objectFit: 'contain' }} />
+                      ) : (
+                        <Text style={{ fontSize: 20, color: '#d1d5db' }}>📦</Text>
+                      )}
+                    </View>
                   ) : (
-                    <View style={styles.productPlaceholder}>
-                      <Text style={styles.productPlaceholderText}>📦</Text>
+                    <View style={{ 
+                      width: '100%', 
+                      height: imageHeight, 
+                      backgroundColor: '#f3f4f6', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      marginBottom: 6,
+                    }}>
+                      {product.foto_url ? (
+                        <Image src={product.foto_url} style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+                      ) : (
+                        <Text style={{ fontSize: 24, color: '#d1d5db' }}>📦</Text>
+                      )}
                     </View>
                   )}
-                </View>
-              ) : (
-                <View style={styles.productImageContainer}>
-                  {product.foto_url ? (
-                    <Image src={product.foto_url} style={styles.productImage} />
-                  ) : (
-                    <View style={styles.productPlaceholder}>
-                      <Text style={styles.productPlaceholderText}>📦</Text>
-                    </View>
-                  )}
-                </View>
-              )}
 
-              {/* Info */}
-              <View style={styles.productInfo}>
-                <Text style={[styles.productName, getNameStyle()]}>
-                  {product.nome.length > 40 ? product.nome.substring(0, 40) + '...' : product.nome}
-                </Text>
-                
-                {/* Fields */}
-                <View style={[styles.productField, getFieldStyle()]}>
-                  {selectedFields.slice(0, layout === 'list' ? 6 : 3).map((fieldKey, i) => {
-                    const value = formatFieldValue(product, fieldKey);
-                    if (value === '-') return null;
-                    return (
-                      <Text key={fieldKey} style={{ marginTop: 1 }}>
-                        <Text style={styles.productFieldLabel}>{getFieldLabel(fieldKey)}: </Text>
-                        <Text style={styles.productFieldValue}>{value}</Text>
-                      </Text>
-                    );
-                  })}
+                  {/* Info */}
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.productName, getNameStyle()]}>
+                      {product.nome.length > (layout === 'list' ? 50 : 30) 
+                        ? product.nome.substring(0, layout === 'list' ? 50 : 30) + '...' 
+                        : product.nome}
+                    </Text>
+                    
+                    {/* Fields */}
+                    {selectedFields.slice(0, layout === 'list' ? 4 : 2).map((fieldKey) => {
+                      const value = formatFieldValue(product, fieldKey);
+                      if (value === '-') return null;
+                      return (
+                        <Text key={fieldKey} style={[getFieldStyle(), { marginTop: 2 }]}>
+                          <Text style={styles.productFieldLabel}>{getFieldLabel(fieldKey)}: </Text>
+                          <Text style={styles.productFieldValue}>{value}</Text>
+                        </Text>
+                      );
+                    })}
+                  </View>
                 </View>
-              </View>
+              ))}
+              {/* Fill empty columns to maintain layout */}
+              {row.length < cols && layout !== 'list' && Array.from({ length: cols - row.length }).map((_, i) => (
+                <View key={`empty-${i}`} style={{ width: colWidth, marginRight: '2%' }} />
+              ))}
             </View>
           ))}
         </View>
