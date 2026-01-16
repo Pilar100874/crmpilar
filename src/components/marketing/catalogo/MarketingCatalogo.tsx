@@ -158,6 +158,26 @@ const MarketingCatalogo: React.FC = () => {
     await duplicateCatalog(catalog);
   };
 
+  const handleGeneratePDF = (catalog: SavedCatalog) => {
+    // Load the catalog and go directly to preview step
+    setEditingCatalogId(catalog.id);
+    setConfig({
+      ...catalog.config,
+      name: catalog.nome,
+    });
+    if (catalog.cover_page) setCoverPage(catalog.cover_page);
+    if (catalog.products_page) setProductsPage(catalog.products_page);
+    if (catalog.backcover_page) setBackcoverPage(catalog.backcover_page);
+    if (catalog.config.groupFieldConfigs) {
+      setGroupFieldConfigs(catalog.config.groupFieldConfigs);
+    }
+    if (catalog.config.groupImages) {
+      setGroupImages(catalog.config.groupImages);
+    }
+    setCurrentStep(6); // Go directly to preview step
+    setViewMode('editor');
+  };
+
   const handleBackToList = () => {
     setViewMode('list');
     resetForm();
@@ -339,6 +359,7 @@ const MarketingCatalogo: React.FC = () => {
         onEdit={handleEditCatalog}
         onDelete={handleDeleteCatalog}
         onDuplicate={handleDuplicateCatalog}
+        onGeneratePDF={handleGeneratePDF}
       />
     );
   }
