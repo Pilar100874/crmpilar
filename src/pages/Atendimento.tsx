@@ -1581,10 +1581,10 @@ export default function Atendimento() {
         }
       }
 
-      // Also load sent emails from local database
+      // Also load sent emails from local database (including tracking fields)
       const { data: sentEmailsData } = await supabase
         .from('emails')
-        .select('*')
+        .select('id, from_email, to_email, subject, body, date, read, starred, folder, tracking_id, opened_at, opened_count')
         .eq('user_id', user.id)
         .eq('folder', 'sent')
         .order('date', { ascending: false })
