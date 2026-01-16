@@ -233,3 +233,6 @@ verify_jwt = false
 
 [functions.generate-n8n-workflow]
 verify_jwt = false
+
+[functions.email-tracking-pixel]
+verify_jwt = false
