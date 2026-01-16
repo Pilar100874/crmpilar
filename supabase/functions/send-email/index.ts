@@ -72,27 +72,13 @@ serve(async (req) => {
     // Converter quebras de linha para HTML
     const htmlBody = body.replace(/\n/g, '<br>');
 
-    // Enviar email via Resend SEM tracking pixel (desativa open tracking)
-    const { data: emailData, error: resendError } = await resend.emails.send({
-      from: `${resendConfig.from_name} <${resendConfig.from_email}>`,
-      to: [to],
-      subject: subject,
-      html: htmlBody,
-      headers: {
-        'X-Entity-Ref-ID': crypto.randomUUID(), // Evita agrupamento
-      },
-    });
+    // Primeiro, salvar o email no banco para obter o ID
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    if (resendError) {
-      console.error('Erro ao enviar via Resend:', resendError);
-      throw new Error(`Erro ao enviar email: ${resendError.message}`);
-    }
-
-    console.log('Email enviado com sucesso via Resend:', emailData);
-    console.log('Resend Email ID:', emailData?.id);
-
-    // Salvar na pasta enviados (tracking via webhook do Resend)
-    const { error: saveError } = await supabase
+    const { data: savedEmail, error: saveError } = await supabaseAdmin
       .from('emails')
       .insert({
         user_id: user.id,
@@ -103,12 +89,56 @@ serve(async (req) => {
         folder: 'sent',
         read: true,
         starred: false,
-      });
+      })
+      .select('id')
+      .single();
 
     if (saveError) {
       console.error('Erro ao salvar email no banco:', saveError);
-      // Não lança erro aqui pois o email já foi enviado
     }
+
+    // Criar link de tracking com o ID do email
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const emailId = savedEmail?.id || '';
+    const trackingLink = `${supabaseUrl}/functions/v1/email-link-tracker?eid=${emailId}&url=https://www.pilar.com.br`;
+    
+    // Logo da empresa hospedado publicamente
+    const logoUrl = 'https://crmpilar.lovable.app/images/pilar-logo.jpg';
+
+    // HTML do email com logo clicável (tracking por clique)
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif;">
+        ${htmlBody}
+        <br><br>
+        <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+          <a href="${trackingLink}" target="_blank" style="text-decoration: none;">
+            <img src="${logoUrl}" alt="Pilar" style="max-width: 120px; height: auto;" />
+          </a>
+          <p style="color: #666; font-size: 12px; margin-top: 10px;">
+            <a href="${trackingLink}" style="color: #666; text-decoration: none;">www.pilar.com.br</a>
+          </p>
+        </div>
+      </div>
+    `;
+
+    // Enviar email via Resend SEM tracking pixel interno
+    const { data: emailData, error: resendError } = await resend.emails.send({
+      from: `${resendConfig.from_name} <${resendConfig.from_email}>`,
+      to: [to],
+      subject: subject,
+      html: emailHtml,
+      headers: {
+        'X-Entity-Ref-ID': crypto.randomUUID(),
+      },
+    });
+
+    if (resendError) {
+      console.error('Erro ao enviar via Resend:', resendError);
+      throw new Error(`Erro ao enviar email: ${resendError.message}`);
+    }
+
+    console.log('Email enviado com sucesso via Resend:', emailData);
+    console.log('Email ID no banco:', emailId);
 
     return new Response(
       JSON.stringify({ 

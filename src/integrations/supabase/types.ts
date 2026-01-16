@@ -2640,6 +2640,7 @@ export type Database = {
           folder: string
           from_email: string
           id: string
+          link_clicked_at: string | null
           opened_at: string | null
           opened_count: number | null
           read: boolean
@@ -2657,6 +2658,7 @@ export type Database = {
           folder?: string
           from_email: string
           id?: string
+          link_clicked_at?: string | null
           opened_at?: string | null
           opened_count?: number | null
           read?: boolean
@@ -2674,6 +2676,7 @@ export type Database = {
           folder?: string
           from_email?: string
           id?: string
+          link_clicked_at?: string | null
           opened_at?: string | null
           opened_count?: number | null
           read?: boolean
