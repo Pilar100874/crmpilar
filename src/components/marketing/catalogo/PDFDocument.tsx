@@ -561,24 +561,15 @@ const GroupHeaderPage: React.FC<{
       {/* Dark overlay */}
       <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.6)' }} />
       
-      {/* Centered Content - Stripe with description */}
+      {/* Bottom-left positioned content - 4cm from bottom and left */}
       <View style={{ 
         position: 'absolute', 
-        top: 0, 
-        left: 0, 
-        right: 0, 
-        bottom: 0,
-        justifyContent: 'center',
+        bottom: 113,
+        left: 113,
+        flexDirection: 'row',
         alignItems: 'center',
-        padding: 40,
+        maxWidth: 400,
       }}>
-        {/* Horizontal stripe container */}
-        <View style={{ 
-          flexDirection: 'row',
-          alignItems: 'center',
-          width: '100%',
-          maxWidth: 500,
-        }}>
           {/* Left side - Primary color stripe with group name */}
           <View style={{ 
             backgroundColor: primaryColor,
@@ -612,27 +603,18 @@ const GroupHeaderPage: React.FC<{
             marginHorizontal: 20,
           }} />
           
-          {/* Right side - Description text */}
-          <View style={{ flex: 1 }}>
-            {groupDescription ? (
-              <Text style={{
-                fontSize: 11,
-                color: 'rgba(255, 255, 255, 0.85)',
-                lineHeight: 1.6,
-                textAlign: 'left',
-              }}>
-                {groupDescription}
-              </Text>
-            ) : (
-              <Text style={{
-                fontSize: 11,
-                color: 'rgba(255, 255, 255, 0.5)',
-                fontStyle: 'italic',
-              }}>
-                Conheça nossa linha de produtos
-              </Text>
-            )}
-          </View>
+        {/* Right side - Description text */}
+        <View style={{ flex: 1, maxWidth: 180 }}>
+          {groupDescription && (
+            <Text style={{
+              fontSize: 11,
+              color: 'rgba(255, 255, 255, 0.85)',
+              lineHeight: 1.6,
+              textAlign: 'left',
+            }}>
+              {groupDescription}
+            </Text>
+          )}
         </View>
       </View>
     </View>
