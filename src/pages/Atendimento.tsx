@@ -597,24 +597,172 @@ export default function Atendimento() {
       return;
     }
 
+    const report = radialImportReports.find(r => r.id === reportId);
+    if (!report) {
+      toast.error("Relatório não encontrado");
+      return;
+    }
+
     setIsRadialProcessingReport(true);
     setRadialReportProgress(0);
 
-    const interval = setInterval(() => {
-      setRadialReportProgress(prev => Math.min(prev + 10, 90));
-    }, 200);
+    try {
+      setRadialReportProgress(10);
 
-    setTimeout(() => {
-      clearInterval(interval);
-      setRadialReportProgress(100);
-      const report = radialImportReports.find(r => r.id === reportId);
-      if (report) {
-        handleSendMessage(`Relatório: ${report.nome}`, "file", report.url_arquivo, report.nome);
-        toast.success(`Relatório "${report.nome}" enviado`);
+      // Buscar modelo de relatório
+      const { data: modelo } = await supabase
+        .from("relatorios")
+        .select("id, layout_json")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("nome", "Modelo para Produtos Importados")
+        .maybeSingle();
+
+      setRadialReportProgress(20);
+
+      // Buscar dados da API
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api-produtos-importados?estabelecimento_id=${estabelecimentoId}&relatorio_id=${reportId}`;
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) {
+        throw new Error(`Erro ao buscar dados: ${response.status}`);
       }
+
+      const data = await response.json();
+      setRadialReportProgress(40);
+
+      let records = [];
+      if (Array.isArray(data)) {
+        records = data;
+      } else if (data.data && Array.isArray(data.data)) {
+        records = data.data;
+      } else if (typeof data === 'object') {
+        records = [data];
+      }
+
+      if (records.length === 0) {
+        toast.error("Nenhum dado encontrado");
+        setIsRadialProcessingReport(false);
+        return;
+      }
+
+      setRadialReportProgress(50);
+
+      // Extrair colunas do modelo
+      let columnNames: string[] = [];
+      if (modelo) {
+        const layoutJsonObj = typeof modelo.layout_json === 'string'
+          ? JSON.parse(modelo.layout_json)
+          : modelo.layout_json;
+        const parameters = layoutJsonObj?.parameters || [];
+        const apiParam = parameters.find((p: any) => p.name === 'api_data');
+        if (apiParam && Array.isArray(apiParam.children)) {
+          apiParam.children.forEach((child: any) => {
+            if (child.name) columnNames.push(child.name);
+          });
+        }
+      }
+
+      if (columnNames.length === 0) {
+        columnNames = Object.keys(records[0] || {});
+      }
+
+      // Filtrar registros
+      const filteredRecords = records.map((record: any) => {
+        const filtered: any = {};
+        columnNames.forEach((col: string) => {
+          if (col in record) {
+            const value = record[col];
+            filtered[col] = value !== null && typeof value === 'object' ? JSON.stringify(value) : value;
+          }
+        });
+        return filtered;
+      });
+
+      setRadialReportProgress(70);
+
+      let fileBlob: Blob;
+      let fileName: string;
+
+      if (fileType === 'excel') {
+        // Gerar Excel
+        const XLSX = await import('xlsx');
+        const ws = XLSX.utils.json_to_sheet(filteredRecords);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Dados");
+        const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+        fileBlob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        fileName = `${report.nome}.xlsx`;
+      } else {
+        // Gerar PDF
+        const { jsPDF } = await import('jspdf');
+        const doc = new jsPDF({ orientation: columnNames.length > 5 ? 'l' : 'p' });
+
+        doc.setFontSize(14);
+        doc.text(report.nome, 10, 15);
+        doc.setFontSize(8);
+
+        // Headers
+        const startY = 25;
+        const cellWidth = (doc.internal.pageSize.getWidth() - 20) / columnNames.length;
+        let yPos = startY;
+
+        // Header row
+        doc.setFillColor(240, 240, 240);
+        doc.rect(10, yPos - 4, doc.internal.pageSize.getWidth() - 20, 8, 'F');
+        columnNames.forEach((col, i) => {
+          doc.text(String(col).substring(0, 15), 10 + i * cellWidth, yPos);
+        });
+        yPos += 10;
+
+        // Data rows
+        filteredRecords.slice(0, 50).forEach((record: any) => {
+          if (yPos > doc.internal.pageSize.getHeight() - 15) {
+            doc.addPage();
+            yPos = 15;
+          }
+          columnNames.forEach((col, i) => {
+            const value = record[col] ?? '';
+            doc.text(String(value).substring(0, 20), 10 + i * cellWidth, yPos);
+          });
+          yPos += 6;
+        });
+
+        fileBlob = doc.output('blob');
+        fileName = `${report.nome}.pdf`;
+      }
+
+      setRadialReportProgress(90);
+
+      // Upload para storage
+      const filePath = `reports/${Date.now()}_${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('chat-attachments')
+        .upload(filePath, fileBlob, {
+          contentType: fileType === 'excel'
+            ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            : 'application/pdf',
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('chat-attachments')
+        .getPublicUrl(filePath);
+
+      setRadialReportProgress(100);
+
+      if (urlData?.publicUrl) {
+        handleSendMessage(`Relatório: ${report.nome}`, "file", urlData.publicUrl, fileName);
+        toast.success(`Relatório "${report.nome}" anexado!`);
+      }
+
+    } catch (error) {
+      console.error("Erro ao gerar relatório:", error);
+      toast.error("Erro ao gerar relatório");
+    } finally {
       setIsRadialProcessingReport(false);
       setShowRadialReportsDialog(false);
-    }, 2000);
+    }
   };
 
   const handleTransferToUser = async () => {

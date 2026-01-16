@@ -62,6 +62,8 @@ interface PageInfo {
 interface CatalogAttachmentSelectorProps {
   onSelectPdf: (file: File, url: string) => void;
   disabled?: boolean;
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
 }
 
 const parseJsonField = <T,>(json: Json | null): T | null => {
@@ -157,13 +159,29 @@ const buildPages = (
 
 const CatalogAttachmentSelector = forwardRef<{ openPopover: () => void }, CatalogAttachmentSelectorProps>(({ 
   onSelectPdf,
-  disabled 
+  disabled,
+  externalOpen,
+  onExternalOpenChange
 }, ref) => {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Combine internal and external open state
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = (value: boolean) => {
+    setInternalOpen(value);
+    onExternalOpenChange?.(value);
+  };
   
   useImperativeHandle(ref, () => ({
     openPopover: () => setOpen(true)
   }));
+  
+  // Sync external open changes
+  useEffect(() => {
+    if (externalOpen !== undefined) {
+      setInternalOpen(externalOpen);
+    }
+  }, [externalOpen]);
   const [catalogs, setCatalogs] = useState<SavedCatalog[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
