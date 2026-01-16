@@ -328,11 +328,6 @@ export const StepBackcover: React.FC<StepBackcoverProps> = ({
                   <h2 className="text-4xl font-light text-white/20 uppercase tracking-widest">
                     <span className="font-serif italic block">{new Date().getFullYear()}</span>
                   </h2>
-                  <div className="mt-6">
-                    {logoUrl && (
-                      <img src={logoUrl} alt="Logo" className="h-12 object-contain mx-auto opacity-80" />
-                    )}
-                  </div>
                 </div>
               </div>
 
