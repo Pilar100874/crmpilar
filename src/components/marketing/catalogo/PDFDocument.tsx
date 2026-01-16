@@ -945,9 +945,6 @@ const BackcoverPage: React.FC<{
       {/* Left Side */}
       <View style={styles.backcoverLeft}>
         <Text style={styles.backcoverYear}>{currentYear}</Text>
-        {coverPage.logoUrl && (
-          <Image src={coverPage.logoUrl} style={styles.backcoverLogo} />
-        )}
       </View>
 
       {/* Right Side */}

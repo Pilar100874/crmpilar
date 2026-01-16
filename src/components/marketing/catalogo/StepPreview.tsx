@@ -805,20 +805,6 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
               {currentYear}
             </span>
           </h2>
-          <div style={{ marginTop: '32px' }}>
-            {coverPage.logoUrl && (
-              <img 
-                src={coverPage.logoUrl} 
-                alt="Logo" 
-                style={{ 
-                  height: '64px', 
-                  objectFit: 'contain', 
-                  margin: '0 auto', 
-                  opacity: 0.8 
-                }} 
-              />
-            )}
-          </div>
         </div>
       </div>
 
