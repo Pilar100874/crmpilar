@@ -588,11 +588,11 @@ const GroupHeaderPage: React.FC<{
           }}>
             <Text style={{
               fontSize: 28,
-              fontWeight: 700,
               color: '#ffffff',
               letterSpacing: 1,
             }}>
-              {groupName}
+              <Text style={{ fontWeight: 300 }}>Linha </Text>
+              <Text style={{ fontWeight: 700 }}>{groupName}</Text>
             </Text>
             <Text style={{ 
               fontSize: 10, 
