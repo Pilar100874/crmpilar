@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2 } from "lucide-react";
+import { Search, User, Clock, MessageSquare, Phone, Mail, Sparkles, Send, ArrowUp, ArrowDown, FileText, Bot, Webhook, UserPlus, ChevronRight, ChevronLeft, Building2, Plus, Receipt, Inbox, Calendar as CalendarIcon, CheckCircle2, MailOpen, ArrowUpDown, CalendarDays, PanelLeftClose, PanelLeft, File, PhoneCall, Languages, BookOpen, Wand2, Image, Paperclip, Variable, Zap, FileCheck, FileSpreadsheet, Copy, Trash2, MoreVertical, Archive, Edit3, Star, RefreshCw, Reply, Forward, Download, AlertTriangle, Play, Users, Settings2, Package, FileDown } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -25,6 +25,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -177,6 +178,14 @@ export default function Atendimento() {
   const [isRadialProcessingReport, setIsRadialProcessingReport] = useState(false);
   const [radialReportProgress, setRadialReportProgress] = useState(0);
   const [selectedRadialReport, setSelectedRadialReport] = useState<string | null>(null);
+  
+  // Catalog states for RadialMenu
+  const [showRadialCatalogDialog, setShowRadialCatalogDialog] = useState(false);
+  const [radialCatalogs, setRadialCatalogs] = useState<any[]>([]);
+  const [isRadialProcessingCatalog, setIsRadialProcessingCatalog] = useState(false);
+  const [radialCatalogProgress, setRadialCatalogProgress] = useState(0);
+  const [selectedRadialCatalog, setSelectedRadialCatalog] = useState<string | null>(null);
+  const [radialCatalogSearch, setRadialCatalogSearch] = useState("");
   
   // Confirmation dialogs for orcamento actions
   const [confirmDeleteOrcamento, setConfirmDeleteOrcamento] = useState<string | null>(null);
@@ -762,6 +771,192 @@ export default function Atendimento() {
     } finally {
       setIsRadialProcessingReport(false);
       setShowRadialReportsDialog(false);
+    }
+  };
+
+  // Load catalogs for radial menu
+  const loadRadialCatalogs = async () => {
+    try {
+      const now = new Date();
+      const { data, error } = await supabase
+        .from("catalogos_salvos")
+        .select("*")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .eq("ativo", true)
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Filter expired catalogs
+      const filtered = (data || []).filter((catalog: any) => {
+        if (!catalog.data_indeterminada && catalog.data_validade) {
+          return new Date(catalog.data_validade) > now;
+        }
+        return true;
+      });
+
+      setRadialCatalogs(filtered);
+    } catch (error) {
+      console.error("Erro ao carregar catálogos:", error);
+    }
+  };
+
+  // Handle catalog selection from radial menu
+  const handleRadialCatalogSelect = async (catalogId: string) => {
+    if (!selectedConversation) {
+      toast.error("Selecione uma conversa primeiro");
+      return;
+    }
+
+    const catalog = radialCatalogs.find(c => c.id === catalogId);
+    if (!catalog) {
+      toast.error("Catálogo não encontrado");
+      return;
+    }
+
+    // Parse pages
+    const coverPage = catalog.cover_page && typeof catalog.cover_page === 'object' ? catalog.cover_page : null;
+    const productsPage = catalog.products_page && typeof catalog.products_page === 'object' ? catalog.products_page : null;
+    const backcoverPage = catalog.backcover_page && typeof catalog.backcover_page === 'object' ? catalog.backcover_page : null;
+
+    if (!coverPage || !productsPage || !backcoverPage) {
+      toast.error("Catálogo incompleto. Edite o catálogo para completar todas as páginas.");
+      return;
+    }
+
+    setIsRadialProcessingCatalog(true);
+    setRadialCatalogProgress(0);
+
+    try {
+      setRadialCatalogProgress(20);
+
+      // Import PDF generation components dynamically
+      const { pdf } = await import("@react-pdf/renderer");
+      const { CatalogPDFDocument } = await import("@/components/marketing/catalogo/PDFDocument");
+      const { LAYOUT_OPTIONS } = await import("@/components/marketing/catalogo/types");
+
+      setRadialCatalogProgress(40);
+
+      const config = catalog.config && typeof catalog.config === 'object' ? catalog.config : {};
+      const products = (productsPage as any).products || [];
+      const layout = (productsPage as any).layout || 'grid-3';
+      const layoutConfig = LAYOUT_OPTIONS.find((l: any) => l.value === layout) || LAYOUT_OPTIONS[1];
+      const productsPerPage = layout === 'list' ? 4 : layoutConfig.cols * 2;
+      const groupByCategory = (productsPage as any).groupByCategory ?? true;
+
+      // Build grouped products
+      const groupedProducts: any[] = [];
+      if (!groupByCategory) {
+        groupedProducts.push({ id: 'all', nome: 'Todos os Produtos', products });
+      } else {
+        const groupMap = new Map();
+        products.forEach((product: any) => {
+          const groupName = product.grupo_nome || 'Outros';
+          const groupId = product.grupo_id || `outros_${groupName.replace(/\s+/g, '_').toLowerCase()}`;
+          if (!groupMap.has(groupId)) {
+            groupMap.set(groupId, { id: groupId, nome: groupName, products: [], descritivo_catalogo: product.grupo_descritivo_catalogo });
+          }
+          groupMap.get(groupId).products.push(product);
+        });
+        groupedProducts.push(...Array.from(groupMap.values()).sort((a, b) => a.nome.localeCompare(b.nome)));
+      }
+
+      setRadialCatalogProgress(50);
+
+      // Build pages array
+      const pages: any[] = [{ type: 'cover', pageNumber: 1 }];
+      let pageNum = 2;
+
+      groupedProducts.forEach(group => {
+        if (groupByCategory) {
+          pages.push({ type: 'group-header', groupName: group.nome, pageNumber: pageNum++ });
+        }
+        const totalProductPages = Math.ceil(group.products.length / productsPerPage);
+        for (let i = 0; i < totalProductPages; i++) {
+          pages.push({
+            type: 'products',
+            groupName: group.nome,
+            products: group.products.slice(i * productsPerPage, (i + 1) * productsPerPage),
+            startIdx: i * productsPerPage,
+            pageNumber: pageNum++,
+          });
+        }
+      });
+
+      if ((config as any).showPriceTable !== false) {
+        const sortedGroupsForPriceTable = [...groupedProducts]
+          .sort((a, b) => a.nome.localeCompare(b.nome))
+          .map(group => ({
+            groupName: group.nome,
+            products: [...group.products].sort((a: any, b: any) => a.nome.localeCompare(b.nome))
+          }));
+
+        const ROWS_PER_PRICE_PAGE = 28;
+        let currentPricePageProducts: any[] = [];
+        let currentRowCount = 0;
+
+        sortedGroupsForPriceTable.forEach(group => {
+          const groupRows = 1 + group.products.length;
+          if (currentRowCount + groupRows > ROWS_PER_PRICE_PAGE && currentPricePageProducts.length > 0) {
+            pages.push({ type: 'price-table', priceTableData: currentPricePageProducts, pageNumber: pageNum++ });
+            currentPricePageProducts = [];
+            currentRowCount = 0;
+          }
+          currentPricePageProducts.push(group);
+          currentRowCount += groupRows;
+        });
+
+        if (currentPricePageProducts.length > 0) {
+          pages.push({ type: 'price-table', priceTableData: currentPricePageProducts, pageNumber: pageNum++ });
+        }
+      }
+
+      pages.push({ type: 'backcover', pageNumber: pageNum });
+
+      setRadialCatalogProgress(70);
+
+      // Generate PDF
+      const pdfBlob = await pdf(
+        <CatalogPDFDocument
+          config={config as any}
+          coverPage={coverPage as any}
+          productsPage={productsPage as any}
+          backcoverPage={backcoverPage as any}
+          groupImages={(config as any).groupImages || {}}
+          groupedProducts={groupedProducts}
+          pages={pages}
+        />
+      ).toBlob();
+
+      setRadialCatalogProgress(85);
+
+      const fileName = `catalogo_${catalog.nome.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+
+      // Upload to storage
+      const filePath = `catalogs/${Date.now()}_${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('chat-attachments')
+        .upload(filePath, pdfBlob, { contentType: 'application/pdf' });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('chat-attachments')
+        .getPublicUrl(filePath);
+
+      setRadialCatalogProgress(100);
+
+      if (urlData?.publicUrl) {
+        handleSendMessage(`Catálogo: ${catalog.nome}`, "file", urlData.publicUrl, fileName);
+        toast.success(`Catálogo "${catalog.nome}" anexado!`);
+      }
+
+    } catch (error) {
+      console.error("Erro ao gerar catálogo:", error);
+      toast.error("Erro ao gerar catálogo");
+    } finally {
+      setIsRadialProcessingCatalog(false);
+      setShowRadialCatalogDialog(false);
     }
   };
 
@@ -2998,7 +3193,8 @@ ${recentMessages}
         setShowRadialTransferDialog(true);
         break;
       case "tool-catalog":
-        setTriggerTool('catalog');
+        setShowRadialCatalogDialog(true);
+        loadRadialCatalogs();
         break;
       // AI submenu items
       case "ai-chat":
@@ -3053,7 +3249,8 @@ ${recentMessages}
         setShowRadialTransferDialog(true);
         break;
       case "tool-catalog":
-        setTriggerTool('catalog');
+        setShowRadialCatalogDialog(true);
+        loadRadialCatalogs();
         break;
       case "ai-chat":
         setShowAIChat(!showAIChat);
@@ -3319,6 +3516,106 @@ ${recentMessages}
             <p className="text-sm text-muted-foreground text-center py-8">
               Nenhum relatório disponível no momento.
             </p>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Catalog Dialog for Radial Menu */}
+    <Dialog open={showRadialCatalogDialog} onOpenChange={setShowRadialCatalogDialog} modal={false}>
+      <DialogContent className="sm:max-w-lg" onInteractOutside={(e) => e.preventDefault()}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5" />
+            Catálogos Disponíveis
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          {isRadialProcessingCatalog && (
+            <div className="space-y-2">
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-primary transition-all duration-200" 
+                  style={{ width: `${radialCatalogProgress}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                Gerando catálogo PDF... {radialCatalogProgress}%
+              </p>
+            </div>
+          )}
+          
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar catálogo..."
+              value={radialCatalogSearch}
+              onChange={(e) => setRadialCatalogSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          
+          {radialCatalogs.length > 0 ? (
+            <ScrollArea className="h-64">
+              <div className="space-y-2 pr-2">
+                {radialCatalogs
+                  .filter(c => c.nome.toLowerCase().includes(radialCatalogSearch.toLowerCase()))
+                  .map((catalog) => {
+                    const productCount = catalog.products_page?.products?.length || 0;
+                    return (
+                      <div 
+                        key={catalog.id}
+                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                          selectedRadialCatalog === catalog.id 
+                            ? "border-primary bg-primary/5" 
+                            : "border-border hover:border-primary/50 hover:bg-muted/50"
+                        }`}
+                        onClick={() => setSelectedRadialCatalog(catalog.id)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                            {catalog.thumbnail ? (
+                              <img src={catalog.thumbnail} alt="" className="w-full h-full object-cover rounded" />
+                            ) : (
+                              <BookOpen className="h-5 w-5 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{catalog.nome}</p>
+                            <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Package className="h-3 w-3" />
+                                {productCount} produtos
+                              </span>
+                              {!catalog.data_indeterminada && catalog.data_validade && (
+                                <span className="text-amber-600">
+                                  Até {new Date(catalog.data_validade).toLocaleDateString('pt-BR')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </ScrollArea>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Nenhum catálogo ativo disponível.
+            </p>
+          )}
+          
+          {selectedRadialCatalog && (
+            <Button 
+              className="w-full"
+              onClick={() => handleRadialCatalogSelect(selectedRadialCatalog)} 
+              disabled={isRadialProcessingCatalog}
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              Gerar e Anexar PDF
+            </Button>
           )}
         </div>
       </DialogContent>
