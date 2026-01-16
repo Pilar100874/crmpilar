@@ -5,10 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Download, Loader2, ChevronLeft, ChevronRight, Package, FileText, Phone, Mail, Globe, MapPin, Layers, Table } from 'lucide-react';
 import { CatalogConfig, CatalogPage, CatalogProduct, LAYOUT_OPTIONS, ProductGroup, GroupFieldConfig, PRODUCT_FIELDS } from './types';
 import { cn } from '@/lib/utils';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import { pdf } from '@react-pdf/renderer';
+import { CatalogPDFDocument } from './PDFDocument';
 import { toast } from 'sonner';
-
 interface StepPreviewProps {
   config: CatalogConfig;
   coverPage: CatalogPage;
@@ -135,145 +134,44 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     }).format(price);
   };
 
-  // Fixed A4 dimensions in pixels (at 96 DPI for consistency)
+  // Fixed A4 dimensions in pixels (for preview)
   const A4_WIDTH_PX = 794;
   const A4_HEIGHT_PX = 1123;
 
-  // Create an off-screen container with fixed dimensions for reliable rendering
-  const createOffscreenContainer = (): HTMLDivElement => {
-    const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.left = '-10000px';
-    container.style.top = '0';
-    container.style.width = `${A4_WIDTH_PX}px`;
-    container.style.height = `${A4_HEIGHT_PX}px`;
-    container.style.overflow = 'hidden';
-    container.style.backgroundColor = '#ffffff';
-    container.style.zIndex = '-9999';
-    document.body.appendChild(container);
-    return container;
-  };
-
-  // Wait for all images in an element to load
-  const waitForImages = async (element: HTMLElement): Promise<void> => {
-    const images = element.querySelectorAll('img');
-    await Promise.all(
-      Array.from(images).map(img => {
-        if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
-        return new Promise<void>((resolve) => {
-          const timeout = setTimeout(resolve, 5000); // 5s timeout per image
-          img.onload = () => { clearTimeout(timeout); resolve(); };
-          img.onerror = () => { clearTimeout(timeout); resolve(); };
-        });
-      })
-    );
-  };
-
-  // Render a single page to PNG image using off-screen rendering
-  const renderPageToImage = async (pageIndex: number): Promise<string> => {
-    // Update current page state
-    setCurrentPage(pageIndex);
-    
-    // Wait for React to update
-    await new Promise(r => setTimeout(r, 100));
-    
-    if (!pdfRef.current) throw new Error('PDF ref not found');
-    
-    // Create off-screen container
-    const offscreen = createOffscreenContainer();
-    
-    try {
-      // Clone the content
-      const clone = pdfRef.current.cloneNode(true) as HTMLElement;
-      clone.style.width = `${A4_WIDTH_PX}px`;
-      clone.style.height = `${A4_HEIGHT_PX}px`;
-      clone.style.transform = 'none';
-      clone.style.position = 'relative';
-      clone.style.left = '0';
-      clone.style.top = '0';
-      
-      offscreen.appendChild(clone);
-      
-      // Wait for images to load
-      await waitForImages(offscreen);
-      
-      // Additional stabilization wait
-      await new Promise(r => setTimeout(r, 300));
-      
-      // Render with html2canvas
-      const canvas = await html2canvas(offscreen, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        width: A4_WIDTH_PX,
-        height: A4_HEIGHT_PX,
-        windowWidth: A4_WIDTH_PX,
-        windowHeight: A4_HEIGHT_PX,
-        imageTimeout: 10000,
-        onclone: (clonedDoc, element) => {
-          // Force all elements to use computed styles
-          element.style.width = `${A4_WIDTH_PX}px`;
-          element.style.height = `${A4_HEIGHT_PX}px`;
-        }
-      });
-      
-      return canvas.toDataURL('image/png', 1.0);
-    } finally {
-      document.body.removeChild(offscreen);
-    }
-  };
-
   const generatePDF = async () => {
-    if (!pdfRef.current) return;
-
     setGenerating(true);
-    const originalPage = currentPage;
-    
-    toast.loading('Preparando catálogo...', { id: 'pdf-gen' });
+    toast.loading('Gerando PDF...', { id: 'pdf-gen' });
 
     try {
-      const pageImages: string[] = [];
-      
-      // Render each page to image
-      for (let i = 0; i < totalPages; i++) {
-        toast.loading(`Gerando página ${i + 1} de ${totalPages}...`, { id: 'pdf-gen' });
-        
-        const imageData = await renderPageToImage(i);
-        pageImages.push(imageData);
-        
-        // Small delay between pages to avoid browser overload
-        await new Promise(r => setTimeout(r, 50));
-      }
-      
-      toast.loading('Montando PDF final...', { id: 'pdf-gen' });
-      
-      // Create PDF from images
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
+      // Generate PDF using @react-pdf/renderer
+      const blob = await pdf(
+        <CatalogPDFDocument
+          config={config}
+          coverPage={coverPage}
+          productsPage={productsPage}
+          backcoverPage={backcoverPage}
+          groupImages={groupImages}
+          groupedProducts={groupedProducts}
+          pages={pages}
+        />
+      ).toBlob();
 
-      const pageWidth = 210;
-      const pageHeight = 297;
+      // Download the PDF
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${config.name || 'catalogo'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
 
-      for (let i = 0; i < pageImages.length; i++) {
-        if (i > 0) {
-          pdf.addPage();
-        }
-        pdf.addImage(pageImages[i], 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
-      }
-
-      pdf.save(`${config.name || 'catalogo'}.pdf`);
       toast.success('PDF gerado com sucesso!', { id: 'pdf-gen' });
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Erro ao gerar PDF', { id: 'pdf-gen' });
     } finally {
       setGenerating(false);
-      setCurrentPage(originalPage);
     }
   };
 
