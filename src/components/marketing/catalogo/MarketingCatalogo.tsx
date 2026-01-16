@@ -177,13 +177,17 @@ const MarketingCatalogo: React.FC = () => {
       groupImages,
       groupFieldConfigs 
     };
+    
+    // Use cover background image as thumbnail
+    const thumbnail = coverPage.backgroundImage || coverPage.logoUrl || undefined;
+    
     await saveCatalog(
       saveName,
       updatedConfig,
       coverPage,
       productsPage,
       backcoverPage,
-      undefined,
+      thumbnail,
       editingCatalogId || undefined
     );
     
