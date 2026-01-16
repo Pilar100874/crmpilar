@@ -342,8 +342,6 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     const groupImage = group ? groupImages[group.id] : undefined;
     const groupDescription = group?.descritivo_catalogo;
     
-    console.log('Group header debug:', { groupName, group, groupDescription, hasDescritivo: !!groupDescription });
-    
     return (
       <div
         style={{
