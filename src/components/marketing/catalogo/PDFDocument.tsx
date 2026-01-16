@@ -566,55 +566,52 @@ const GroupHeaderPage: React.FC<{
         position: 'absolute', 
         bottom: 113,
         left: 113,
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
         maxWidth: 400,
       }}>
-          {/* Left side - Primary color stripe with group name */}
-          <View style={{ 
-            backgroundColor: primaryColor,
-            paddingVertical: 20,
-            paddingHorizontal: 25,
-            minWidth: 180,
+        {/* Group description text - positioned above the box */}
+        {groupDescription && (
+          <View style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            padding: 16,
+            marginBottom: 12,
+            maxWidth: 350,
           }}>
             <Text style={{
-              fontSize: 28,
-              color: '#ffffff',
-              letterSpacing: 1,
-            }}>
-              <Text style={{ fontWeight: 300 }}>Linha </Text>
-              <Text style={{ fontWeight: 700 }}>{groupName}</Text>
-            </Text>
-            <Text style={{ 
-              fontSize: 10, 
-              color: 'rgba(255, 255, 255, 0.7)', 
-              marginTop: 6,
-              letterSpacing: 0.5,
-            }}>
-              {productCount} produtos
-            </Text>
-          </View>
-          
-          {/* Vertical divider line */}
-          <View style={{ 
-            width: 2, 
-            height: 60, 
-            backgroundColor: 'rgba(255, 255, 255, 0.3)',
-            marginHorizontal: 20,
-          }} />
-          
-        {/* Right side - Description text */}
-        <View style={{ flex: 1, maxWidth: 180 }}>
-          {groupDescription && (
-            <Text style={{
               fontSize: 11,
-              color: 'rgba(255, 255, 255, 0.85)',
-              lineHeight: 1.6,
+              color: 'rgba(255, 255, 255, 0.9)',
+              lineHeight: 1.7,
               textAlign: 'left',
             }}>
               {groupDescription}
             </Text>
-          )}
+          </View>
+        )}
+        
+        {/* Primary color stripe with group name */}
+        <View style={{ 
+          backgroundColor: primaryColor,
+          paddingVertical: 20,
+          paddingHorizontal: 25,
+          minWidth: 180,
+        }}>
+          <Text style={{
+            fontSize: 28,
+            color: '#ffffff',
+            letterSpacing: 1,
+          }}>
+            <Text style={{ fontWeight: 300 }}>Linha </Text>
+            <Text style={{ fontWeight: 700 }}>{groupName}</Text>
+          </Text>
+          <Text style={{ 
+            fontSize: 10, 
+            color: 'rgba(255, 255, 255, 0.7)', 
+            marginTop: 6,
+            letterSpacing: 0.5,
+          }}>
+            {productCount} produtos
+          </Text>
         </View>
       </View>
     </View>
