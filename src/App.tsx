@@ -11,7 +11,7 @@ import BotBuilder from "./pages/BotBuilder";
 import BotTest from "./pages/BotTest";
 import BotCreate from "./pages/BotCreate";
 import Email from "./pages/Email";
-import EmailHub from "./pages/EmailHub";
+import EmailPage from "./pages/EmailPage";
 import Campanhas from "./pages/Campanhas";
 import Calendario from "./pages/Calendario";
 import Funil from "./pages/Funil";
@@ -132,8 +132,7 @@ const App = () => (
             <Route element={<LayoutWrapper />}>
             <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/atendimento" element={<Atendimento />} />
-              <Route path="/email" element={<EmailHub />} />
-              <Route path="/email/:folder" element={<Email />} />
+              <Route path="/email" element={<EmailPage />} />
               <Route path="/email-config" element={<EmailConfig />} />
               <Route path="/listas" element={<ListasHub />} />
               <Route path="/bot-builder" element={<BotBuilder />} />
