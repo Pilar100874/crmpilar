@@ -340,6 +340,7 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
   const renderGroupHeader = (groupName: string) => {
     const group = groupedProducts.find(g => g.nome === groupName);
     const groupImage = group ? groupImages[group.id] : undefined;
+    const groupDescription = group?.descritivo_catalogo;
     
     return (
       <div
@@ -347,31 +348,25 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
           width: '100%',
           height: '100%',
           backgroundColor: '#ffffff',
-          padding: '45px',
           position: 'relative',
           overflow: 'hidden',
           boxSizing: 'border-box',
           fontFamily: config.fontFamily
         }}
       >
-        {/* Image container with white border */}
+        {/* Background Image */}
         <div style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
-          overflow: 'hidden'
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
         }}>
-          {/* Background Image */}
           {groupImage ? (
             <img 
               src={groupImage} 
               alt={groupName} 
               style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover'
@@ -379,82 +374,99 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
             />
           ) : (
             <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: '#6b7280'
+              width: '100%',
+              height: '100%',
+              backgroundColor: '#1a1a1a'
             }} />
           )}
-
-          {/* Vertical Text on Left Side */}
+          {/* Dark overlay */}
           <div style={{
             position: 'absolute',
             top: 0,
+            left: 0,
+            right: 0,
             bottom: 0,
-            left: '19px',
-            width: '120px',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)'
+          }} />
+        </div>
+
+        {/* Centered Content - Stripe with description */}
+        <div style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '40px',
+        }}>
+          {/* Horizontal stripe container */}
+          <div style={{ 
             display: 'flex',
-            alignItems: 'stretch'
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '500px',
           }}>
-            <h2 style={{
-              color: '#ffffff',
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              writingMode: 'vertical-rl',
-              textOrientation: 'mixed',
-              transform: 'rotate(180deg)',
-              fontFamily: 'Helvetica Neue, Arial, sans-serif',
-              margin: 0
+            {/* Left side - Primary color stripe with group name */}
+            <div style={{ 
+              backgroundColor: config.primaryColor || '#1a1a2e',
+              padding: '20px 25px',
+              minWidth: '180px',
             }}>
-              <span style={{ 
-                fontSize: '120px',
-                fontWeight: 300, 
-                color: 'rgba(255,255,255,0.85)',
-                letterSpacing: '-0.02em',
-                lineHeight: 1,
-                marginBottom: '20px',
-                whiteSpace: 'nowrap'
-              }}>
-                Linha
-              </span>
-              <span style={{ 
-                fontSize: '120px',
+              <h2 style={{
+                fontSize: '28px',
                 fontWeight: 700,
                 color: '#ffffff',
-                letterSpacing: '-0.02em',
-                marginTop: '6px',
-                lineHeight: 1,
-                whiteSpace: 'nowrap'
+                letterSpacing: '1px',
+                margin: 0,
               }}>
+                <span style={{ fontWeight: 300 }}>Linha </span>
                 {groupName}
-              </span>
-            </h2>
-          </div>
-
-          {/* Small descriptive text on right side */}
-          <div style={{
-            position: 'absolute',
-            right: '16px',
-            bottom: '33%',
-            maxWidth: '100px',
-            textAlign: 'right'
-          }}>
-            <p style={{ 
-              fontFamily: 'Helvetica Neue, Arial, sans-serif', 
-              fontWeight: 300,
-              fontSize: '7px',
-              letterSpacing: '0.02em',
-              color: 'rgba(255,255,255,0.7)',
-              lineHeight: 1.6,
-              margin: 0
-            }}>
-              {group?.products.length || 0} produtos disponíveis nesta categoria
-            </p>
+              </h2>
+              <p style={{ 
+                fontSize: '10px', 
+                color: 'rgba(255, 255, 255, 0.7)', 
+                letterSpacing: '0.5px',
+                margin: '6px 0 0 0',
+              }}>
+                {group?.products.length || 0} produtos
+              </p>
+            </div>
+            
+            {/* Vertical divider line */}
+            <div style={{ 
+              width: '2px', 
+              height: '60px', 
+              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              margin: '0 20px',
+            }} />
+            
+            {/* Right side - Description text */}
+            <div style={{ flex: 1 }}>
+              {groupDescription ? (
+                <p style={{
+                  fontSize: '11px',
+                  color: 'rgba(255, 255, 255, 0.85)',
+                  lineHeight: 1.6,
+                  textAlign: 'left',
+                  margin: 0,
+                }}>
+                  {groupDescription}
+                </p>
+              ) : (
+                <p style={{
+                  fontSize: '11px',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  fontStyle: 'italic',
+                  margin: 0,
+                }}>
+                  Conheça nossa linha de produtos
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </div>
