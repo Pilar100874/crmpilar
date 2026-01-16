@@ -64,6 +64,7 @@ interface EmailPanelProps {
   onReply?: (email: Email) => void;
   onForward?: (email: Email) => void;
   toolsSlot?: React.ReactNode;
+  hideToolbar?: boolean;
 }
 
 const folders = [
@@ -90,6 +91,7 @@ export function EmailPanel({
   onReply,
   onForward,
   toolsSlot,
+  hideToolbar = false,
 }: EmailPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -279,44 +281,46 @@ export function EmailPanel({
   // Email List View
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-background">
-      {/* Toolbar */}
-      <div className="flex-shrink-0 border-b bg-gradient-to-r from-orange-50/80 to-white dark:from-orange-950/20 dark:to-background px-4 py-3">
-        <div className="flex items-center gap-3">
-          {/* Current Folder Indicator */}
-          <div className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-lg",
-            currentFolder.bg
-          )}>
-            <currentFolder.icon className={cn("w-4 h-4", currentFolder.color)} />
-            <span className={cn("font-semibold text-sm", currentFolder.color)}>
-              {currentFolder.label}
-            </span>
+      {/* Toolbar - hide when hideToolbar is true */}
+      {!hideToolbar && (
+        <div className="flex-shrink-0 border-b bg-gradient-to-r from-orange-50/80 to-white dark:from-orange-950/20 dark:to-background px-4 py-3">
+          <div className="flex items-center gap-3">
+            {/* Current Folder Indicator */}
+            <div className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-lg",
+              currentFolder.bg
+            )}>
+              <currentFolder.icon className={cn("w-4 h-4", currentFolder.color)} />
+              <span className={cn("font-semibold text-sm", currentFolder.color)}>
+                {currentFolder.label}
+              </span>
+            </div>
+            
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar emails..."
+                className="pl-10 h-10 rounded-xl bg-white dark:bg-background border-orange-100 dark:border-orange-900/30 focus:border-orange-300 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/30"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <Badge variant="secondary" className="bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 border-0 px-3 py-1">
+              {filteredEmails.length} {filteredEmails.length === 1 ? 'email' : 'emails'}
+            </Badge>
+            
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-10 w-10 hover:bg-orange-50 dark:hover:bg-orange-950/30"
+              onClick={onRefresh}
+            >
+              <RefreshCw className="w-4 h-4 text-orange-600" />
+            </Button>
           </div>
-          
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar emails..."
-              className="pl-10 h-10 rounded-xl bg-white dark:bg-background border-orange-100 dark:border-orange-900/30 focus:border-orange-300 focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/30"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <Badge variant="secondary" className="bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300 border-0 px-3 py-1">
-            {filteredEmails.length} {filteredEmails.length === 1 ? 'email' : 'emails'}
-          </Badge>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-10 w-10 hover:bg-orange-50 dark:hover:bg-orange-950/30"
-            onClick={onRefresh}
-          >
-            <RefreshCw className="w-4 h-4 text-orange-600" />
-          </Button>
         </div>
-      </div>
+      )}
 
       {/* Email List */}
       <ScrollArea className="flex-1">

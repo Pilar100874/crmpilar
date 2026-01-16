@@ -573,6 +573,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
           onRefresh={handleRefresh}
           onReply={handleReply}
           onForward={handleForward}
+          hideToolbar={isEmbedded}
         />
       </div>
 
