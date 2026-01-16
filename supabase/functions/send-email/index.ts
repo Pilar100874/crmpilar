@@ -66,23 +66,18 @@ serve(async (req) => {
     console.log('Para:', to);
     console.log('Assunto:', subject);
 
-    // Gerar tracking_id único para este email
-    const trackingId = crypto.randomUUID();
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const trackingPixelUrl = `${supabaseUrl}/functions/v1/email-tracking-pixel?id=${trackingId}`;
-
-    // Adicionar pixel de tracking no final do email
-    const bodyWithTracking = `${body.replace(/\n/g, '<br>')}<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />`;
-
     // Inicializar Resend com a API Key do estabelecimento
     const resend = new Resend(resendConfig.api_key);
 
-    // Enviar email via Resend com pixel de tracking
+    // Converter quebras de linha para HTML
+    const htmlBody = body.replace(/\n/g, '<br>');
+
+    // Enviar email via Resend (tracking via webhook, sem pixel)
     const { data: emailData, error: resendError } = await resend.emails.send({
       from: `${resendConfig.from_name} <${resendConfig.from_email}>`,
       to: [to],
       subject: subject,
-      html: bodyWithTracking,
+      html: htmlBody,
     });
 
     if (resendError) {
@@ -91,9 +86,9 @@ serve(async (req) => {
     }
 
     console.log('Email enviado com sucesso via Resend:', emailData);
-    console.log('Tracking ID:', trackingId);
+    console.log('Resend Email ID:', emailData?.id);
 
-    // Salvar na pasta enviados com tracking_id
+    // Salvar na pasta enviados (tracking via webhook do Resend)
     const { error: saveError } = await supabase
       .from('emails')
       .insert({
@@ -105,7 +100,6 @@ serve(async (req) => {
         folder: 'sent',
         read: true,
         starred: false,
-        tracking_id: trackingId,
       });
 
     if (saveError) {
