@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   Mail, 
   Star, 
@@ -18,7 +19,9 @@ import {
   Reply,
   Forward,
   MoreHorizontal,
-  Clock
+  Clock,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -35,6 +38,9 @@ interface Email {
   starred: boolean;
   folder: string;
   hasAttachment?: boolean;
+  tracking_id?: string;
+  opened_at?: string | null;
+  opened_count?: number;
   customer?: {
     id?: string;
     nome?: string;
@@ -374,6 +380,43 @@ export function EmailPanel({
                     {/* Attachment */}
                     {email.hasAttachment && (
                       <Paperclip className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                    )}
+                    
+                    {/* Email opened indicator - only for sent emails */}
+                    {email.folder === "sent" && email.tracking_id && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex-shrink-0">
+                              {email.opened_at ? (
+                                <Eye className="w-3.5 h-3.5 text-green-500" />
+                              ) : (
+                                <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            {email.opened_at ? (
+                              <div className="text-xs">
+                                <p className="font-medium text-green-600">Email aberto</p>
+                                <p>
+                                  Primeira abertura: {new Date(email.opened_at).toLocaleDateString("pt-BR", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                  })}
+                                </p>
+                                {email.opened_count && email.opened_count > 1 && (
+                                  <p>Total de aberturas: {email.opened_count}</p>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-xs">Email ainda não foi aberto</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     )}
                     
                     {/* Date */}
