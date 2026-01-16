@@ -390,26 +390,16 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
           }} />
         </div>
 
-        {/* Centered Content - Stripe with description */}
+        {/* Bottom-left positioned content */}
         <div style={{ 
           position: 'absolute', 
-          top: 0, 
-          left: 0, 
-          right: 0, 
-          bottom: 0,
+          bottom: '40px',
+          left: '40px',
           display: 'flex',
-          justifyContent: 'center',
+          flexDirection: 'row',
           alignItems: 'center',
-          padding: '40px',
+          maxWidth: '500px',
         }}>
-          {/* Horizontal stripe container */}
-          <div style={{ 
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            width: '100%',
-            maxWidth: '500px',
-          }}>
             {/* Left side - Primary color stripe with group name */}
             <div style={{ 
               backgroundColor: config.primaryColor || '#1a1a2e',
@@ -444,29 +434,19 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
               margin: '0 20px',
             }} />
             
-            {/* Right side - Description text */}
-            <div style={{ flex: 1 }}>
-              {groupDescription ? (
-                <p style={{
-                  fontSize: '11px',
-                  color: 'rgba(255, 255, 255, 0.85)',
-                  lineHeight: 1.6,
-                  textAlign: 'left',
-                  margin: 0,
-                }}>
-                  {groupDescription}
-                </p>
-              ) : (
-                <p style={{
-                  fontSize: '11px',
-                  color: 'rgba(255, 255, 255, 0.5)',
-                  fontStyle: 'italic',
-                  margin: 0,
-                }}>
-                  Conheça nossa linha de produtos
-                </p>
-              )}
-            </div>
+          {/* Right side - Description text */}
+          <div style={{ flex: 1, maxWidth: '180px' }}>
+            {groupDescription && (
+              <p style={{
+                fontSize: '11px',
+                color: 'rgba(255, 255, 255, 0.85)',
+                lineHeight: 1.6,
+                textAlign: 'left',
+                margin: 0,
+              }}>
+                {groupDescription}
+              </p>
+            )}
           </div>
         </div>
       </div>
