@@ -518,14 +518,31 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         message={loadingMessage}
       />
 
-      {/* Sidebar */}
-      <div className="w-56 border-r bg-card/50 flex-shrink-0">
+      {/* Sidebar - Single column */}
+      <div className="w-52 border-r bg-card/50 flex-shrink-0 flex flex-col">
         <EmailFolderSidebar
           emails={emails}
           activeFolder={emailFolder}
           onFolderChange={handleFolderChange}
           onComposeClick={handleComposeNew}
-          onRefresh={fetchNewEmails}
+          onRefresh={async () => {
+            if (useOAuth && oauthConnected) {
+              await fetchNewEmails();
+            } else {
+              await loadEmails();
+            }
+            // Também recarregar o email selecionado para atualizar dados de tracking
+            if (selectedEmailId) {
+              const { data } = await supabase
+                .from('emails')
+                .select('*')
+                .eq('id', selectedEmailId)
+                .single();
+              if (data) {
+                setSelectedEmailData(data);
+              }
+            }
+          }}
         />
       </div>
 
@@ -546,7 +563,24 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
             setSelectedEmailData(null);
           }}
           onComposeClick={handleComposeNew}
-          onRefresh={fetchNewEmails}
+          onRefresh={async () => {
+            if (useOAuth && oauthConnected) {
+              await fetchNewEmails();
+            } else {
+              await loadEmails();
+            }
+            // Também recarregar o email selecionado para atualizar dados de tracking
+            if (selectedEmailId) {
+              const { data } = await supabase
+                .from('emails')
+                .select('*')
+                .eq('id', selectedEmailId)
+                .single();
+              if (data) {
+                setSelectedEmailData(data);
+              }
+            }
+          }}
           onReply={handleReply}
           onForward={handleForward}
         />
