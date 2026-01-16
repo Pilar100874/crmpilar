@@ -48,13 +48,18 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
       return [{ id: 'all', nome: 'Todos os Produtos', products }];
     }
 
-    const groupMap = new Map<string, { id: string; nome: string; products: CatalogProduct[] }>();
+    const groupMap = new Map<string, { id: string; nome: string; products: CatalogProduct[]; descritivo_catalogo?: string }>();
     products.forEach(product => {
       const groupName = product.grupo_nome || 'Outros';
       const groupId = product.grupo_id || `outros_${groupName.replace(/\s+/g, '_').toLowerCase()}`;
       
       if (!groupMap.has(groupId)) {
-        groupMap.set(groupId, { id: groupId, nome: groupName, products: [] });
+        groupMap.set(groupId, { 
+          id: groupId, 
+          nome: groupName, 
+          products: [],
+          descritivo_catalogo: product.grupo_descritivo_catalogo
+        });
       }
       groupMap.get(groupId)!.products.push(product);
     });

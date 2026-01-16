@@ -8,6 +8,7 @@ export interface CatalogProduct {
   categoria_nome?: string;
   grupo_nome?: string;
   grupo_id?: string;
+  grupo_descritivo_catalogo?: string;
   // Dados Básicos
   largura?: number;
   altura?: number;
@@ -36,6 +37,7 @@ export interface ProductGroup {
   nome: string;
   products: CatalogProduct[];
   backgroundImage?: string;
+  descritivo_catalogo?: string;
 }
 
 export interface CatalogPage {
