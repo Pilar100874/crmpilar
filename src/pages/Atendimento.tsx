@@ -1650,35 +1650,7 @@ export default function Atendimento() {
 
       if (sendError) throw sendError;
 
-      // Get user's email from usuarios table
-      const { data: usuarioData } = await supabase
-        .from('usuarios')
-        .select('email')
-        .eq('auth_user_id', user.id)
-        .single();
-
-      const fromEmail = usuarioData?.email || user.email || '';
-
-      // Save sent email to local database
-      const { error: insertError } = await supabase
-        .from('emails')
-        .insert({
-          user_id: user.id,
-          from_email: fromEmail,
-          to_email: emailData.to,
-          subject: emailData.subject,
-          body: emailData.body,
-          folder: 'sent',
-          read: true,
-          starred: false,
-          date: new Date().toISOString()
-        });
-
-      if (insertError) {
-        console.error('Erro ao salvar email enviado:', insertError);
-      }
-
-      // Reload emails to update the list
+      // Email is saved by the edge function, just reload the list
       await loadUserEmails();
 
     } catch (error: any) {
