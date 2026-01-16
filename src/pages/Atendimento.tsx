@@ -1650,8 +1650,8 @@ export default function Atendimento() {
 
       if (sendError) throw sendError;
 
-      // Email is saved by the edge function, just reload the list
-      await loadUserEmails();
+      // Reload emails in background (don't wait)
+      loadUserEmails();
 
     } catch (error: any) {
       console.error('Erro ao enviar email:', error);
