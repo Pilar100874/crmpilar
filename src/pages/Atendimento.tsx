@@ -2849,6 +2849,9 @@ ${recentMessages}
       case "tool-transfer":
         setShowRadialTransferDialog(true);
         break;
+      case "tool-catalog":
+        setTriggerTool('catalog');
+        break;
       // AI submenu items
       case "ai-chat":
         setShowAIChat(!showAIChat);
@@ -2900,6 +2903,9 @@ ${recentMessages}
         break;
       case "tool-transfer":
         setShowRadialTransferDialog(true);
+        break;
+      case "tool-catalog":
+        setTriggerTool('catalog');
         break;
       case "ai-chat":
         setShowAIChat(!showAIChat);
