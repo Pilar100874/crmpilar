@@ -15,6 +15,9 @@ export interface SavedCatalog {
   thumbnail: string | null;
   created_at: string;
   updated_at: string;
+  ativo: boolean;
+  data_validade: string | null;
+  data_indeterminada: boolean;
 }
 
 const parseJsonField = <T,>(json: Json | null): T | null => {
@@ -56,6 +59,9 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
         cover_page: parseJsonField<CatalogPage>(item.cover_page),
         products_page: parseJsonField<CatalogPage>(item.products_page),
         backcover_page: parseJsonField<CatalogPage>(item.backcover_page),
+        ativo: item.ativo ?? true,
+        data_validade: item.data_validade,
+        data_indeterminada: item.data_indeterminada ?? true,
       }));
       
       setCatalogs(parsedData);
@@ -78,7 +84,10 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
     productsPage: CatalogPage,
     backcoverPage: CatalogPage,
     thumbnail?: string,
-    existingId?: string
+    existingId?: string,
+    ativo: boolean = true,
+    dataValidade: string | null = null,
+    dataIndeterminada: boolean = true
   ): Promise<SavedCatalog | null> => {
     if (!estabelecimentoId) {
       toast.error('Estabelecimento não selecionado');
@@ -95,6 +104,9 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
         products_page: productsPage as unknown as Json,
         backcover_page: backcoverPage as unknown as Json,
         thumbnail: thumbnail || null,
+        ativo,
+        data_validade: dataValidade,
+        data_indeterminada: dataIndeterminada,
       };
 
       if (existingId) {
@@ -117,6 +129,9 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
           cover_page: parseJsonField<CatalogPage>(data.cover_page),
           products_page: parseJsonField<CatalogPage>(data.products_page),
           backcover_page: parseJsonField<CatalogPage>(data.backcover_page),
+          ativo: data.ativo ?? true,
+          data_validade: data.data_validade,
+          data_indeterminada: data.data_indeterminada ?? true,
         };
       } else {
         // Create new catalog
@@ -137,6 +152,9 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
           cover_page: parseJsonField<CatalogPage>(data.cover_page),
           products_page: parseJsonField<CatalogPage>(data.products_page),
           backcover_page: parseJsonField<CatalogPage>(data.backcover_page),
+          ativo: data.ativo ?? true,
+          data_validade: data.data_validade,
+          data_indeterminada: data.data_indeterminada ?? true,
         };
       }
     } catch (error) {
@@ -196,11 +214,42 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
         cover_page: parseJsonField<CatalogPage>(data.cover_page),
         products_page: parseJsonField<CatalogPage>(data.products_page),
         backcover_page: parseJsonField<CatalogPage>(data.backcover_page),
+        ativo: data.ativo ?? true,
+        data_validade: data.data_validade,
+        data_indeterminada: data.data_indeterminada ?? true,
       };
     } catch (error) {
       console.error('Erro ao duplicar catálogo:', error);
       toast.error('Erro ao duplicar catálogo');
       return null;
+    }
+  };
+
+  const updateCatalogStatus = async (
+    id: string,
+    ativo: boolean,
+    dataValidade: string | null = null,
+    dataIndeterminada: boolean = true
+  ): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('catalogos_salvos')
+        .update({
+          ativo,
+          data_validade: dataValidade,
+          data_indeterminada: dataIndeterminada,
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast.success('Status do catálogo atualizado!');
+      await fetchCatalogs();
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast.error('Erro ao atualizar status do catálogo');
+      return false;
     }
   };
 
@@ -212,5 +261,6 @@ export const useSavedCatalogs = (estabelecimentoId: string | null) => {
     saveCatalog,
     deleteCatalog,
     duplicateCatalog,
+    updateCatalogStatus,
   };
 };

@@ -1423,10 +1423,13 @@ export type Database = {
       }
       catalogos_salvos: {
         Row: {
+          ativo: boolean | null
           backcover_page: Json | null
           config: Json
           cover_page: Json | null
           created_at: string
+          data_indeterminada: boolean | null
+          data_validade: string | null
           estabelecimento_id: string
           id: string
           nome: string
@@ -1435,10 +1438,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ativo?: boolean | null
           backcover_page?: Json | null
           config?: Json
           cover_page?: Json | null
           created_at?: string
+          data_indeterminada?: boolean | null
+          data_validade?: string | null
           estabelecimento_id: string
           id?: string
           nome: string
@@ -1447,10 +1453,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ativo?: boolean | null
           backcover_page?: Json | null
           config?: Json
           cover_page?: Json | null
           created_at?: string
+          data_indeterminada?: boolean | null
+          data_validade?: string | null
           estabelecimento_id?: string
           id?: string
           nome?: string
@@ -9787,6 +9796,7 @@ export type Database = {
         Returns: string
       }
       admins_present: { Args: never; Returns: boolean }
+      check_catalog_expiration: { Args: never; Returns: undefined }
       desativar_automacoes_vencidas: { Args: never; Returns: undefined }
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       generate_orcamento_token: { Args: never; Returns: string }

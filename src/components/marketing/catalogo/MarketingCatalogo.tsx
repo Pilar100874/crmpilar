@@ -77,7 +77,8 @@ const MarketingCatalogo: React.FC = () => {
     isSaving, 
     saveCatalog, 
     deleteCatalog, 
-    duplicateCatalog 
+    duplicateCatalog,
+    updateCatalogStatus 
   } = useSavedCatalogs(estabelecimentoId);
 
   useEffect(() => {
@@ -156,6 +157,10 @@ const MarketingCatalogo: React.FC = () => {
 
   const handleDuplicateCatalog = async (catalog: SavedCatalog) => {
     await duplicateCatalog(catalog);
+  };
+
+  const handleUpdateCatalogStatus = async (id: string, ativo: boolean, dataValidade: string | null, dataIndeterminada: boolean) => {
+    return await updateCatalogStatus(id, ativo, dataValidade, dataIndeterminada);
   };
 
   const handleGeneratePDF = (catalog: SavedCatalog) => {
@@ -360,8 +365,10 @@ const MarketingCatalogo: React.FC = () => {
         onDelete={handleDeleteCatalog}
         onDuplicate={handleDuplicateCatalog}
         onGeneratePDF={handleGeneratePDF}
+        onUpdateStatus={handleUpdateCatalogStatus}
       />
     );
+  }
   }
 
   // Show catalog editor
