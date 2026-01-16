@@ -10,7 +10,8 @@ import {
   Plus,
   Calendar,
   FileText,
-  Loader2
+  Loader2,
+  Download
 } from 'lucide-react';
 import { SavedCatalog } from './hooks/useSavedCatalogs';
 import {
@@ -32,6 +33,7 @@ interface SavedCatalogsListProps {
   onEdit: (catalog: SavedCatalog) => void;
   onDelete: (id: string) => void;
   onDuplicate: (catalog: SavedCatalog) => void;
+  onGeneratePDF?: (catalog: SavedCatalog) => void;
 }
 
 export const SavedCatalogsList: React.FC<SavedCatalogsListProps> = ({
@@ -41,6 +43,7 @@ export const SavedCatalogsList: React.FC<SavedCatalogsListProps> = ({
   onEdit,
   onDelete,
   onDuplicate,
+  onGeneratePDF,
 }) => {
   if (isLoading) {
     return (
@@ -101,11 +104,6 @@ export const SavedCatalogsList: React.FC<SavedCatalogsListProps> = ({
                     <FileText className="h-12 w-12 text-muted-foreground/50" />
                   </div>
                 )}
-                {/* Color indicator */}
-                <div 
-                  className="absolute top-3 right-3 w-6 h-6 rounded-full border-2 border-white shadow-sm"
-                  style={{ backgroundColor: catalog.config.primaryColor }}
-                />
               </div>
 
               {/* Content */}
@@ -136,11 +134,23 @@ export const SavedCatalogsList: React.FC<SavedCatalogsListProps> = ({
                     <Edit className="h-3.5 w-3.5 mr-1.5" />
                     Editar
                   </Button>
+                  {onGeneratePDF && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-lg"
+                      onClick={() => onGeneratePDF(catalog)}
+                      title="Gerar PDF"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
                     className="rounded-lg"
                     onClick={() => onDuplicate(catalog)}
+                    title="Duplicar"
                   >
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
