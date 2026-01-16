@@ -98,7 +98,7 @@ export const StepProducts: React.FC<StepProductsProps> = ({
 
   // Group selected products by grupo_nome
   const getGroupedProducts = (): ProductGroup[] => {
-    const groupMap = new Map<string, CatalogProduct[]>();
+    const groupMap = new Map<string, { products: CatalogProduct[]; descritivo_catalogo?: string }>();
     
     selectedProducts.forEach(product => {
       const groupName = product.grupo_nome || 'Outros';
@@ -106,14 +106,22 @@ export const StepProducts: React.FC<StepProductsProps> = ({
       const key = `${groupId}__${groupName}`;
       
       if (!groupMap.has(key)) {
-        groupMap.set(key, []);
+        groupMap.set(key, { 
+          products: [], 
+          descritivo_catalogo: product.grupo_descritivo_catalogo 
+        });
       }
-      groupMap.get(key)!.push(product);
+      groupMap.get(key)!.products.push(product);
     });
 
-    return Array.from(groupMap.entries()).map(([key, prods]) => {
+    return Array.from(groupMap.entries()).map(([key, data]) => {
       const [id, nome] = key.split('__');
-      return { id, nome, products: prods };
+      return { 
+        id, 
+        nome, 
+        products: data.products,
+        descritivo_catalogo: data.descritivo_catalogo
+      };
     }).sort((a, b) => a.nome.localeCompare(b.nome));
   };
 
