@@ -541,25 +541,27 @@ const CoverPage: React.FC<{
   </Page>
 );
 
-// Group Header Page Component - Simple centered design
+// Group Header Page Component - Stripe with description layout
 const GroupHeaderPage: React.FC<{
   groupName: string;
   groupImage?: string;
   productCount: number;
-}> = ({ groupName, groupImage, productCount }) => (
+  primaryColor?: string;
+  groupDescription?: string;
+}> = ({ groupName, groupImage, productCount, primaryColor = '#1a1a2e', groupDescription }) => (
   <Page size="A4" style={styles.page}>
     <View style={{ width: '100%', height: '100%', position: 'relative' }}>
       {/* Background */}
       {groupImage ? (
         <Image src={groupImage} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
       ) : (
-        <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: '#374151' }} />
+        <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: '#1a1a1a' }} />
       )}
       
       {/* Dark overlay */}
-      <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.45)' }} />
+      <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.6)' }} />
       
-      {/* Centered Content */}
+      {/* Centered Content - Stripe with description */}
       <View style={{ 
         position: 'absolute', 
         top: 0, 
@@ -568,48 +570,69 @@ const GroupHeaderPage: React.FC<{
         bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 60,
+        padding: 40,
       }}>
-        {/* Title Block */}
-        <View style={{ alignItems: 'center' }}>
-          <Text style={{
-            fontSize: 24,
-            fontWeight: 300,
-            color: 'rgba(255, 255, 255, 0.7)',
-            letterSpacing: 8,
-            textTransform: 'uppercase',
-            marginBottom: 10,
-          }}>
-            Linha
-          </Text>
-          <Text style={{
-            fontSize: 56,
-            fontWeight: 700,
-            color: '#ffffff',
-            letterSpacing: 2,
-            textAlign: 'center',
-          }}>
-            {groupName}
-          </Text>
-          
-          {/* Decorative line */}
+        {/* Horizontal stripe container */}
+        <View style={{ 
+          flexDirection: 'row',
+          alignItems: 'center',
+          width: '100%',
+          maxWidth: 500,
+        }}>
+          {/* Left side - Primary color stripe with group name */}
           <View style={{ 
-            width: 80, 
-            height: 3, 
-            backgroundColor: 'rgba(255, 255, 255, 0.5)', 
-            marginTop: 25,
-            marginBottom: 25,
+            backgroundColor: primaryColor,
+            paddingVertical: 20,
+            paddingHorizontal: 25,
+            minWidth: 180,
+          }}>
+            <Text style={{
+              fontSize: 28,
+              fontWeight: 700,
+              color: '#ffffff',
+              letterSpacing: 1,
+            }}>
+              {groupName}
+            </Text>
+            <Text style={{ 
+              fontSize: 10, 
+              color: 'rgba(255, 255, 255, 0.7)', 
+              marginTop: 6,
+              letterSpacing: 0.5,
+            }}>
+              {productCount} produtos
+            </Text>
+          </View>
+          
+          {/* Vertical divider line */}
+          <View style={{ 
+            width: 2, 
+            height: 60, 
+            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+            marginHorizontal: 20,
           }} />
           
-          {/* Product count */}
-          <Text style={{ 
-            fontSize: 12, 
-            color: 'rgba(255, 255, 255, 0.7)', 
-            textAlign: 'center',
-            letterSpacing: 1,
-          }}>
-            {productCount} produtos disponíveis
-          </Text>
+          {/* Right side - Description text */}
+          <View style={{ flex: 1 }}>
+            {groupDescription ? (
+              <Text style={{
+                fontSize: 11,
+                color: 'rgba(255, 255, 255, 0.85)',
+                lineHeight: 1.6,
+                textAlign: 'left',
+              }}>
+                {groupDescription}
+              </Text>
+            ) : (
+              <Text style={{
+                fontSize: 11,
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontStyle: 'italic',
+              }}>
+                Conheça nossa linha de produtos
+              </Text>
+            )}
+          </View>
         </View>
       </View>
     </View>
@@ -1029,6 +1052,8 @@ export const CatalogPDFDocument: React.FC<PDFDocumentProps> = ({
                 groupName={pageInfo.groupName!}
                 groupImage={group ? groupImages[group.id] : undefined}
                 productCount={group?.products.length || 0}
+                primaryColor={config.primaryColor}
+                groupDescription={group?.descritivo_catalogo}
               />
             );
           

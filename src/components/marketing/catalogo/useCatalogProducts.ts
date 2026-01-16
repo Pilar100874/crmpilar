@@ -97,7 +97,7 @@ export function useCatalogProducts(estabelecimentoId: string | null) {
           ean_14_1,
           ean_14_2,
           produto_categorias(nome),
-          produto_grupos(id, nome)
+          produto_grupos(id, nome, descritivo_catalogo)
         `)
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('ativo', true)
@@ -129,6 +129,7 @@ export function useCatalogProducts(estabelecimentoId: string | null) {
         categoria_nome: p.produto_categorias?.nome,
         grupo_nome: p.produto_grupos?.nome,
         grupo_id: p.produto_grupos?.id || p.grupo_id,
+        grupo_descritivo_catalogo: p.produto_grupos?.descritivo_catalogo,
         // Dados Básicos
         largura: p.largura,
         altura: p.altura,
