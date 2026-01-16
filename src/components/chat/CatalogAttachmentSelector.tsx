@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, forwardRef, useImperativeHandle } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
@@ -155,11 +155,15 @@ const buildPages = (
   return result;
 };
 
-export default function CatalogAttachmentSelector({ 
+const CatalogAttachmentSelector = forwardRef<{ openPopover: () => void }, CatalogAttachmentSelectorProps>(({ 
   onSelectPdf,
   disabled 
-}: CatalogAttachmentSelectorProps) {
+}, ref) => {
   const [open, setOpen] = useState(false);
+  
+  useImperativeHandle(ref, () => ({
+    openPopover: () => setOpen(true)
+  }));
   const [catalogs, setCatalogs] = useState<SavedCatalog[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -398,4 +402,8 @@ export default function CatalogAttachmentSelector({
       </PopoverContent>
     </Popover>
   );
-}
+});
+
+CatalogAttachmentSelector.displayName = 'CatalogAttachmentSelector';
+
+export default CatalogAttachmentSelector;
