@@ -73,7 +73,8 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
     let pageNum = 2;
 
     groupedProducts.forEach(group => {
-      if (groupByCategory && groupedProducts.length > 1) {
+      // Always create group header page for each group when groupByCategory is enabled
+      if (groupByCategory) {
         result.push({ type: 'group-header', groupName: group.nome, pageNumber: pageNum++ });
       }
       
@@ -396,57 +397,55 @@ export const StepPreview: React.FC<StepPreviewProps> = ({
           bottom: '40px',
           left: '40px',
           display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          maxWidth: '500px',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          maxWidth: '450px',
         }}>
-            {/* Left side - Primary color stripe with group name */}
-            <div style={{ 
-              backgroundColor: config.primaryColor || '#1a1a2e',
-              padding: '20px 25px',
-              minWidth: '180px',
+          {/* Group description text - positioned above the box */}
+          {groupDescription && (
+            <div style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              padding: '16px 20px',
+              marginBottom: '12px',
+              maxWidth: '400px',
+              borderRadius: '4px',
             }}>
-              <h2 style={{
-                fontSize: '28px',
-                fontWeight: 700,
-                color: '#ffffff',
-                letterSpacing: '1px',
-                margin: 0,
-              }}>
-                <span style={{ fontWeight: 300 }}>Linha </span>
-                {groupName}
-              </h2>
-              <p style={{ 
-                fontSize: '10px', 
-                color: 'rgba(255, 255, 255, 0.7)', 
-                letterSpacing: '0.5px',
-                margin: '6px 0 0 0',
-              }}>
-                {group?.products.length || 0} produtos
-              </p>
-            </div>
-            
-            {/* Vertical divider line */}
-            <div style={{ 
-              width: '2px', 
-              height: '60px', 
-              backgroundColor: 'rgba(255, 255, 255, 0.3)',
-              margin: '0 20px',
-            }} />
-            
-          {/* Right side - Description text */}
-          <div style={{ flex: 1, maxWidth: '180px' }}>
-            {groupDescription && (
               <p style={{
-                fontSize: '11px',
-                color: 'rgba(255, 255, 255, 0.85)',
-                lineHeight: 1.6,
+                fontSize: '12px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                lineHeight: 1.7,
                 textAlign: 'left',
                 margin: 0,
               }}>
                 {groupDescription}
               </p>
-            )}
+            </div>
+          )}
+          
+          {/* Primary color stripe with group name */}
+          <div style={{ 
+            backgroundColor: config.primaryColor || '#1a1a2e',
+            padding: '20px 25px',
+            minWidth: '180px',
+          }}>
+            <h2 style={{
+              fontSize: '28px',
+              fontWeight: 700,
+              color: '#ffffff',
+              letterSpacing: '1px',
+              margin: 0,
+            }}>
+              <span style={{ fontWeight: 300 }}>Linha </span>
+              {groupName}
+            </h2>
+            <p style={{ 
+              fontSize: '10px', 
+              color: 'rgba(255, 255, 255, 0.7)', 
+              letterSpacing: '0.5px',
+              margin: '6px 0 0 0',
+            }}>
+              {group?.products.length || 0} produtos
+            </p>
           </div>
         </div>
       </div>
