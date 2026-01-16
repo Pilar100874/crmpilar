@@ -4,6 +4,7 @@ import { toast } from "@/lib/toast-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -25,6 +26,7 @@ interface ProdutoGrupo {
   id: string;
   nome: string;
   percentual_comissao?: number;
+  descritivo_catalogo?: string;
   estabelecimento_id: string;
 }
 
@@ -40,6 +42,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
   const [formData, setFormData] = useState({
     nome: "",
     percentual_comissao: "",
+    descritivo_catalogo: "",
   });
 
   useEffect(() => {
@@ -78,6 +81,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
         estabelecimento_id: estabelecimentoId,
         nome: formData.nome,
         percentual_comissao: formData.percentual_comissao ? parseFloat(formData.percentual_comissao) : 0,
+        descritivo_catalogo: formData.descritivo_catalogo || null,
       };
 
       if (editingGrupo) {
@@ -107,7 +111,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
 
       setShowDialog(false);
       setEditingGrupo(null);
-      setFormData({ nome: "", percentual_comissao: "" });
+      setFormData({ nome: "", percentual_comissao: "", descritivo_catalogo: "" });
       loadGrupos();
     } catch (error: any) {
       console.error('Erro ao salvar grupo:', error);
@@ -120,6 +124,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
     setFormData({
       nome: grupo.nome,
       percentual_comissao: grupo.percentual_comissao?.toString() || "0",
+      descritivo_catalogo: grupo.descritivo_catalogo || "",
     });
     setShowDialog(true);
   };
@@ -152,7 +157,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
         <h3 className="text-lg font-semibold">Grupos de Produtos</h3>
         <Button onClick={() => {
           setEditingGrupo(null);
-          setFormData({ nome: "", percentual_comissao: "" });
+          setFormData({ nome: "", percentual_comissao: "", descritivo_catalogo: "" });
           setShowDialog(true);
         }}>
           <Plus className="w-4 h-4 mr-2" />
@@ -165,6 +170,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>% Comissão</TableHead>
+            <TableHead className="hidden md:table-cell">Descritivo Catálogo</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -173,6 +179,9 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
             <TableRow key={grupo.id}>
               <TableCell className="font-medium">{grupo.nome}</TableCell>
               <TableCell>{grupo.percentual_comissao}%</TableCell>
+              <TableCell className="hidden md:table-cell max-w-[200px] truncate text-muted-foreground">
+                {grupo.descritivo_catalogo || '-'}
+              </TableCell>
               <TableCell className="text-right">
                 <Button
                   variant="ghost"
@@ -193,7 +202,7 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
           ))}
           {grupos.length === 0 && (
             <TableRow>
-              <TableCell colSpan={3} className="text-center text-muted-foreground">
+              <TableCell colSpan={4} className="text-center text-muted-foreground">
                 Nenhum grupo cadastrado
               </TableCell>
             </TableRow>
@@ -228,6 +237,19 @@ export function ProdutoGruposCRUD({ estabelecimentoId }: ProdutoGruposCRUDProps)
                 onChange={(e) => setFormData({ ...formData, percentual_comissao: e.target.value })}
                 placeholder="0.00"
               />
+            </div>
+
+            <div>
+              <Label>Descritivo Catálogo</Label>
+              <Textarea
+                value={formData.descritivo_catalogo}
+                onChange={(e) => setFormData({ ...formData, descritivo_catalogo: e.target.value })}
+                placeholder="Descrição do grupo para o catálogo de produtos..."
+                rows={3}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Este texto será exibido na página do grupo no catálogo PDF
+              </p>
             </div>
           </div>
 

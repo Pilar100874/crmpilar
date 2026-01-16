@@ -6576,6 +6576,7 @@ export type Database = {
       produto_grupos: {
         Row: {
           created_at: string | null
+          descritivo_catalogo: string | null
           estabelecimento_id: string | null
           id: string
           nome: string
@@ -6584,6 +6585,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          descritivo_catalogo?: string | null
           estabelecimento_id?: string | null
           id?: string
           nome: string
@@ -6592,6 +6594,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          descritivo_catalogo?: string | null
           estabelecimento_id?: string | null
           id?: string
           nome?: string
