@@ -7259,6 +7259,7 @@ export type Database = {
       prospects_b2b_config: {
         Row: {
           api_provider: string | null
+          campos_place_details: Json | null
           created_at: string
           custo_por_chamada: number | null
           custo_por_requisicao: number | null
@@ -7272,6 +7273,7 @@ export type Database = {
         }
         Insert: {
           api_provider?: string | null
+          campos_place_details?: Json | null
           created_at?: string
           custo_por_chamada?: number | null
           custo_por_requisicao?: number | null
@@ -7285,6 +7287,7 @@ export type Database = {
         }
         Update: {
           api_provider?: string | null
+          campos_place_details?: Json | null
           created_at?: string
           custo_por_chamada?: number | null
           custo_por_requisicao?: number | null

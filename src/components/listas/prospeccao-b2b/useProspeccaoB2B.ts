@@ -122,8 +122,8 @@ export function useProspeccaoB2B() {
     }
   };
 
-  // Registrar log de API
-  const logApiCall = async (buscaId: string | null, tipoRequisicao: string, sucesso: boolean) => {
+  // Registrar log de API com custo específico
+  const logApiCall = async (buscaId: string | null, tipoRequisicao: string, sucesso: boolean, custoCustom?: number) => {
     if (!estabelecimentoId || !config) return;
     const cfg = config as any;
 
@@ -131,9 +131,47 @@ export function useProspeccaoB2B() {
       estabelecimento_id: estabelecimentoId,
       busca_id: buscaId,
       tipo_chamada: tipoRequisicao,
-      custo_chamada: cfg.custo_por_chamada || 0.017,
+      custo_chamada: custoCustom ?? cfg.custo_por_chamada ?? 0.032,
       resposta_status: sucesso ? 200 : 500
     });
+  };
+
+  // Buscar Place Details para obter telefone, website, etc.
+  const fetchPlaceDetails = async (
+    placeId: string, 
+    apiKey: string, 
+    campos: { contact: boolean; atmosphere: boolean }
+  ): Promise<{ telefone?: string; website?: string; horario_funcionamento?: any; google_maps_url?: string } | null> => {
+    // Construir lista de campos a buscar
+    const fieldsList: string[] = [];
+    if (campos.contact) {
+      fieldsList.push('formatted_phone_number', 'international_phone_number', 'website', 'opening_hours');
+    }
+    if (campos.atmosphere) {
+      fieldsList.push('url', 'reviews', 'photos');
+    }
+    
+    if (fieldsList.length === 0) return null;
+
+    try {
+      const proxyUrl = 'https://corsproxy.io/?';
+      const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fieldsList.join(',')}&key=${apiKey}`;
+      
+      const response = await fetch(proxyUrl + encodeURIComponent(detailsUrl));
+      const data = await response.json();
+      
+      if (data.status === 'OK' && data.result) {
+        return {
+          telefone: data.result.formatted_phone_number || data.result.international_phone_number,
+          website: data.result.website,
+          horario_funcionamento: data.result.opening_hours,
+          google_maps_url: data.result.url
+        };
+      }
+    } catch (error) {
+      console.error('Erro ao buscar Place Details:', error);
+    }
+    return null;
   };
 
   // Verificar se o limite de gastos foi atingido
@@ -306,13 +344,21 @@ export function useProspeccaoB2B() {
 
       const newProspects: ProspectB2BInsert[] = [];
       let parouPorLimite = false;
+      const camposDetails = cfg.campos_place_details || { contact: false, atmosphere: false };
+      const buscarDetalhes = camposDetails.contact || camposDetails.atmosphere;
+      
+      // Calcular custo por empresa para detalhes
+      let custoPorDetalhe = 0;
+      if (camposDetails.contact) custoPorDetalhe += 0.003;
+      if (camposDetails.atmosphere) custoPorDetalhe += 0.005;
 
       for (let i = 0; i < novosResults.length; i++) {
         const place = novosResults[i];
         setSearchProgress(40 + ((i / novosResults.length) * 50));
 
         // VERIFICAR LIMITE A CADA ITERAÇÃO
-        if (limiteGasto && custoAcumulado >= limiteGasto) {
+        const custoProximaOperacao = buscarDetalhes ? custoPorDetalhe : 0;
+        if (limiteGasto && custoAcumulado + custoProximaOperacao > limiteGasto) {
           parouPorLimite = true;
           toast({ 
             title: 'Limite de gastos atingido', 
@@ -320,6 +366,18 @@ export function useProspeccaoB2B() {
             variant: 'default' 
           });
           break;
+        }
+
+        // Buscar detalhes adicionais se configurado
+        let detalhes: { telefone?: string; website?: string; horario_funcionamento?: any; google_maps_url?: string } | null = null;
+        if (buscarDetalhes) {
+          detalhes = await fetchPlaceDetails(place.place_id, cfg.google_places_api_key, camposDetails);
+          
+          // Registrar custo da chamada de detalhes
+          if (detalhes) {
+            await logApiCall(buscaId, 'place_details', true, custoPorDetalhe);
+            custoAcumulado += custoPorDetalhe;
+          }
         }
 
         // Extrair cidade/estado do endereço
@@ -339,7 +397,11 @@ export function useProspeccaoB2B() {
           fonte_dados: 'google_places',
           status_lead: 'novo',
           busca_id: buscaId,
-          palavra_chave_busca: keyword
+          palavra_chave_busca: keyword,
+          // Dados do Place Details
+          telefone: detalhes?.telefone,
+          website: detalhes?.website,
+          google_maps_link: detalhes?.google_maps_url
         });
       }
 
