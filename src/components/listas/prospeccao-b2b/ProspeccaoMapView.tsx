@@ -466,7 +466,7 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
               placeholder="Ex: papelaria, gráfica, embalagem, restaurante..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              disabled={searching || !hasApiKey}
+              disabled={searching}
             />
           </div>
 
@@ -493,7 +493,7 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
                     value={selectedUF}
                     onChange={(e) => setSelectedUF(e.target.value)}
                     className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                    disabled={searching || !hasApiKey}
+                    disabled={searching}
                   >
                     <option value="">Selecione o estado</option>
                     {ESTADOS_BRASIL.map(estado => (
@@ -601,7 +601,7 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
                   <Button
                     variant="outline"
                     onClick={startDrawing}
-                    disabled={searching || !hasApiKey}
+                    disabled={searching}
                   >
                     <Pencil className="h-4 w-4 mr-2" />
                     Desenhar Área no Mapa
