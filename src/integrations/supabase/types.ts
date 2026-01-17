@@ -7264,6 +7264,7 @@ export type Database = {
           custo_por_chamada: number | null
           custo_por_requisicao: number | null
           estabelecimento_id: string | null
+          extrair_contatos_website: Json | null
           google_places_api_key: string | null
           id: string
           limite_custo_mensal: number | null
@@ -7278,6 +7279,7 @@ export type Database = {
           custo_por_chamada?: number | null
           custo_por_requisicao?: number | null
           estabelecimento_id?: string | null
+          extrair_contatos_website?: Json | null
           google_places_api_key?: string | null
           id?: string
           limite_custo_mensal?: number | null
@@ -7292,6 +7294,7 @@ export type Database = {
           custo_por_chamada?: number | null
           custo_por_requisicao?: number | null
           estabelecimento_id?: string | null
+          extrair_contatos_website?: Json | null
           google_places_api_key?: string | null
           id?: string
           limite_custo_mensal?: number | null
