@@ -98,7 +98,129 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* API Key Configuration */}
+      {/* Fonte de Dados */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Fonte de Dados
+          </CardTitle>
+          <CardDescription>
+            Escolha de onde buscar as empresas. Fontes gratuitas têm dados limitados.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <RadioGroup
+            value={fonteDados}
+            onValueChange={(value: FonteDados) => setFonteDados(value)}
+            className="space-y-3"
+          >
+            {/* Google Places - Pago */}
+            <div className={`p-4 border rounded-lg transition-colors ${fonteDados === 'google_places' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' : ''}`}>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <RadioGroupItem value="google_places" className="mt-1" />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-blue-500" />
+                      Google Places API
+                    </span>
+                    <Badge variant="outline" className="text-blue-600 border-blue-300">
+                      ~$0.032/20 empresas
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Dados precisos e atualizados do Google. Inclui telefone, website, avaliações.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Badge variant="secondary" className="text-xs">⭐ Alta qualidade</Badge>
+                    <Badge variant="secondary" className="text-xs">📍 Geolocalização</Badge>
+                    <Badge variant="secondary" className="text-xs">📞 Contatos</Badge>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            {/* Dados Abertos (CNPJ/Receita) - Grátis */}
+            <div className={`p-4 border rounded-lg transition-colors ${fonteDados === 'dados_abertos' ? 'border-green-500 bg-green-50 dark:bg-green-950' : ''}`}>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <RadioGroupItem value="dados_abertos" className="mt-1" />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium flex items-center gap-2">
+                      <Database className="h-4 w-4 text-green-600" />
+                      Dados Abertos (CNPJ/Receita Federal)
+                    </span>
+                    <Badge variant="secondary" className="text-green-600">
+                      Grátis
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Base de dados do governo com CNPJs ativos. Dados cadastrais oficiais.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs text-green-600">💰 Sem custo</Badge>
+                    <Badge variant="outline" className="text-xs">📋 CNPJ/Razão Social</Badge>
+                    <Badge variant="outline" className="text-xs text-amber-600">⚠️ Sem telefone</Badge>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            {/* Web Scraping de Diretórios - Grátis */}
+            <div className={`p-4 border rounded-lg transition-colors ${fonteDados === 'web_scraping' ? 'border-purple-500 bg-purple-50 dark:bg-purple-950' : ''}`}>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <RadioGroupItem value="web_scraping" className="mt-1" />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium flex items-center gap-2">
+                      <Search className="h-4 w-4 text-purple-600" />
+                      Web Scraping de Diretórios
+                    </span>
+                    <Badge variant="secondary" className="text-green-600">
+                      Grátis
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Extração de dados de diretórios públicos como TeleListas, Guia Mais, etc.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs text-green-600">💰 Sem custo</Badge>
+                    <Badge variant="outline" className="text-xs">📞 Pode ter telefone</Badge>
+                    <Badge variant="outline" className="text-xs text-amber-600">⚠️ Dados variáveis</Badge>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </RadioGroup>
+
+          {/* Alertas por fonte */}
+          {fonteDados === 'dados_abertos' && (
+            <Alert className="border-green-200 bg-green-50 dark:bg-green-950">
+              <Database className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-700 dark:text-green-300">
+                <strong>Dados Abertos:</strong> Usa a base de CNPJs da Receita Federal. 
+                Retorna razão social, endereço, CNAE e situação cadastral. 
+                Não inclui telefone ou website por padrão.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {fonteDados === 'web_scraping' && (
+            <Alert className="border-purple-200 bg-purple-50 dark:bg-purple-950">
+              <Search className="h-4 w-4 text-purple-600" />
+              <AlertDescription className="text-purple-700 dark:text-purple-300">
+                <strong>Web Scraping:</strong> Extrai dados de diretórios públicos. 
+                A qualidade e disponibilidade dos dados varia por região e segmento.
+                Pode ser mais lento que outras fontes.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* API Key Configuration - Apenas para Google Places */}
+      {fonteDados === 'google_places' && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -172,8 +294,10 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
           </div>
         </CardContent>
       </Card>
+      )}
 
-      {/* Campos do Place Details */}
+      {/* Campos do Place Details - Apenas para Google Places */}
+      {fonteDados === 'google_places' && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -281,8 +405,10 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
           </div>
         </CardContent>
       </Card>
+      )}
 
-      {/* Extração de Email/WhatsApp do Website */}
+      {/* Extração de Email/WhatsApp do Website - Apenas para Google Places */}
+      {fonteDados === 'google_places' && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -409,6 +535,7 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* Limites */}
       <Card>
