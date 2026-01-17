@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Map, Table, Settings, BarChart3, Database } from 'lucide-react';
+import { Map, Table, Settings, BarChart3, Database, Search } from 'lucide-react';
 import ProspeccaoMapView from './ProspeccaoMapView';
 import ProspeccaoTableView from './ProspeccaoTableView';
 import ProspeccaoConfigView from './ProspeccaoConfigView';
 import ProspeccaoGastosView from './ProspeccaoGastosView';
 import ProspeccaoDadosAbertosView from './ProspeccaoDadosAbertosView';
+import ProspeccaoWebScrapingView from './ProspeccaoWebScrapingView';
 import { useProspeccaoB2B } from './useProspeccaoB2B';
 
 const ProspeccaoB2BView: React.FC = () => {
@@ -18,19 +19,26 @@ const ProspeccaoB2BView: React.FC = () => {
   const isDadosAbertos = fonteDados === 'dados_abertos';
   const isWebScraping = fonteDados === 'web_scraping';
 
+  // Ícone e label da primeira tab baseado na fonte
+  const getFirstTabContent = () => {
+    if (isDadosAbertos) {
+      return { icon: <Database className="h-4 w-4" />, label: 'Buscar' };
+    }
+    if (isWebScraping) {
+      return { icon: <Search className="h-4 w-4" />, label: 'Buscar' };
+    }
+    return { icon: <Map className="h-4 w-4" />, label: 'Mapa' };
+  };
+
+  const firstTab = getFirstTabContent();
+
   return (
     <div className="h-full flex flex-col">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <TabsList className="grid w-full grid-cols-4 mb-4">
           <TabsTrigger value="mapa" className="flex items-center gap-2">
-            {isDadosAbertos ? (
-              <Database className="h-4 w-4" />
-            ) : (
-              <Map className="h-4 w-4" />
-            )}
-            <span className="hidden sm:inline">
-              {isDadosAbertos ? 'Buscar' : 'Mapa'}
-            </span>
+            {firstTab.icon}
+            <span className="hidden sm:inline">{firstTab.label}</span>
           </TabsTrigger>
           <TabsTrigger value="prospects" className="flex items-center gap-2">
             <Table className="h-4 w-4" />
@@ -50,6 +58,12 @@ const ProspeccaoB2BView: React.FC = () => {
           {isDadosAbertos ? (
             <ProspeccaoDadosAbertosView 
               estabelecimentoId={prospeccao.estabelecimentoId}
+              onProspectsFound={() => prospeccao.loadProspects()}
+            />
+          ) : isWebScraping ? (
+            <ProspeccaoWebScrapingView 
+              estabelecimentoId={prospeccao.estabelecimentoId}
+              config={prospeccao.config}
               onProspectsFound={() => prospeccao.loadProspects()}
             />
           ) : (
