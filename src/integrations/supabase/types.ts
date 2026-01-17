@@ -1811,6 +1811,157 @@ export type Database = {
         }
         Relationships: []
       }
+      cnpj_base_local: {
+        Row: {
+          bairro: string | null
+          capital_social: number | null
+          cep: string | null
+          cnae_fiscal: string | null
+          cnae_fiscal_descricao: string | null
+          cnpj: string
+          cnpj_basico: string | null
+          codigo_municipio: string | null
+          complemento: string | null
+          created_at: string
+          data_inicio_atividade: string | null
+          data_situacao_cadastral: string | null
+          email: string | null
+          estabelecimento_id: string
+          id: string
+          logradouro: string | null
+          municipio: string | null
+          natureza_juridica: string | null
+          nome_fantasia: string | null
+          numero: string | null
+          porte_empresa: string | null
+          razao_social: string | null
+          situacao_cadastral: string | null
+          telefone1: string | null
+          telefone2: string | null
+          uf: string | null
+          updated_at: string
+        }
+        Insert: {
+          bairro?: string | null
+          capital_social?: number | null
+          cep?: string | null
+          cnae_fiscal?: string | null
+          cnae_fiscal_descricao?: string | null
+          cnpj: string
+          cnpj_basico?: string | null
+          codigo_municipio?: string | null
+          complemento?: string | null
+          created_at?: string
+          data_inicio_atividade?: string | null
+          data_situacao_cadastral?: string | null
+          email?: string | null
+          estabelecimento_id: string
+          id?: string
+          logradouro?: string | null
+          municipio?: string | null
+          natureza_juridica?: string | null
+          nome_fantasia?: string | null
+          numero?: string | null
+          porte_empresa?: string | null
+          razao_social?: string | null
+          situacao_cadastral?: string | null
+          telefone1?: string | null
+          telefone2?: string | null
+          uf?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bairro?: string | null
+          capital_social?: number | null
+          cep?: string | null
+          cnae_fiscal?: string | null
+          cnae_fiscal_descricao?: string | null
+          cnpj?: string
+          cnpj_basico?: string | null
+          codigo_municipio?: string | null
+          complemento?: string | null
+          created_at?: string
+          data_inicio_atividade?: string | null
+          data_situacao_cadastral?: string | null
+          email?: string | null
+          estabelecimento_id?: string
+          id?: string
+          logradouro?: string | null
+          municipio?: string | null
+          natureza_juridica?: string | null
+          nome_fantasia?: string | null
+          numero?: string | null
+          porte_empresa?: string | null
+          razao_social?: string | null
+          situacao_cadastral?: string | null
+          telefone1?: string | null
+          telefone2?: string | null
+          uf?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cnpj_base_local_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cnpj_importacoes: {
+        Row: {
+          created_at: string
+          erro_mensagem: string | null
+          estabelecimento_id: string
+          filtros_aplicados: Json | null
+          id: string
+          nome_arquivo: string
+          registros_ignorados: number | null
+          registros_importados: number | null
+          status: string | null
+          tipo_arquivo: string
+          total_registros: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          erro_mensagem?: string | null
+          estabelecimento_id: string
+          filtros_aplicados?: Json | null
+          id?: string
+          nome_arquivo: string
+          registros_ignorados?: number | null
+          registros_importados?: number | null
+          status?: string | null
+          tipo_arquivo: string
+          total_registros?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          erro_mensagem?: string | null
+          estabelecimento_id?: string
+          filtros_aplicados?: Json | null
+          id?: string
+          nome_arquivo?: string
+          registros_ignorados?: number | null
+          registros_importados?: number | null
+          status?: string | null
+          tipo_arquivo?: string
+          total_registros?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cnpj_importacoes_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       combustiveis_precos: {
         Row: {
           created_at: string
