@@ -33,7 +33,9 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
 }) => {
   const [fonteDados, setFonteDados] = useState<FonteDados>('google_places');
   const [apiKey, setApiKey] = useState('');
+  const [firecrawlApiKey, setFirecrawlApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showFirecrawlKey, setShowFirecrawlKey] = useState(false);
   const [limiteResultados, setLimiteResultados] = useState(50);
   const [limiteCustoMensal, setLimiteCustoMensal] = useState<number | ''>('');
   const [custoPorChamada, setCustoPorChamada] = useState(0.032);
@@ -52,6 +54,7 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
       const cfg = config as any;
       setFonteDados(cfg.fonte_dados || 'google_places');
       setApiKey(cfg.google_places_api_key || '');
+      setFirecrawlApiKey(cfg.firecrawl_api_key || '');
       setLimiteResultados(cfg.limite_resultados_por_busca || 50);
       setLimiteCustoMensal(cfg.limite_custo_mensal || '');
       setCustoPorChamada(cfg.custo_por_chamada || 0.032);
@@ -81,6 +84,7 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
     await saveConfig({
       fonte_dados: fonteDados,
       google_places_api_key: apiKey || null,
+      firecrawl_api_key: firecrawlApiKey || null,
       limite_resultados_por_busca: limiteResultados,
       limite_custo_mensal: limiteCustoMensal ? Number(limiteCustoMensal) : null,
       custo_por_chamada: custoPorChamada,
@@ -91,6 +95,7 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
   };
 
   const hasApiKey = !!(config as any)?.google_places_api_key;
+  const hasFirecrawlKey = !!(config as any)?.firecrawl_api_key;
   const custoPorEmpresa = calcularCustoPorEmpresa();
   const custoEstimado50Empresas = fonteDados === 'google_places' 
     ? (0.032 + (50 * custoPorEmpresa)).toFixed(2) 
@@ -210,14 +215,96 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
             <Alert className="border-purple-200 bg-purple-50 dark:bg-purple-950">
               <Search className="h-4 w-4 text-purple-600" />
               <AlertDescription className="text-purple-700 dark:text-purple-300">
-                <strong>Web Scraping:</strong> Extrai dados de diretórios públicos. 
-                A qualidade e disponibilidade dos dados varia por região e segmento.
-                Pode ser mais lento que outras fontes.
+                <strong>Web Scraping:</strong> Extrai dados de diretórios públicos (TeleListas, Guia Mais, etc). 
+                Requer API Key do Firecrawl. A qualidade dos dados varia por região e segmento.
               </AlertDescription>
             </Alert>
           )}
         </CardContent>
       </Card>
+
+      {/* Firecrawl API Key - Apenas para Web Scraping */}
+      {fonteDados === 'web_scraping' && (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            Firecrawl API Key
+          </CardTitle>
+          <CardDescription>
+            Configure sua chave de API do Firecrawl para fazer Web Scraping
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {!hasFirecrawlKey && (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Você precisa configurar uma API Key do Firecrawl para usar o Web Scraping.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {hasFirecrawlKey && (
+            <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-700 dark:text-green-300">
+                API Key do Firecrawl configurada! Você pode realizar buscas.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="firecrawlApiKey">API Key do Firecrawl</Label>
+            <div className="relative">
+              <Input
+                id="firecrawlApiKey"
+                type={showFirecrawlKey ? 'text' : 'password'}
+                value={firecrawlApiKey}
+                onChange={(e) => setFirecrawlApiKey(e.target.value)}
+                placeholder="fc-..."
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3"
+                onClick={() => setShowFirecrawlKey(!showFirecrawlKey)}
+              >
+                {showFirecrawlKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
+            <p className="font-medium">Como obter sua API Key:</p>
+            <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+              <li>Acesse o site do Firecrawl</li>
+              <li>Crie uma conta gratuita</li>
+              <li>Copie sua API Key do dashboard</li>
+            </ol>
+            <a
+              href="https://firecrawl.dev"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-primary hover:underline mt-2"
+            >
+              Acessar Firecrawl
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+
+          <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950">
+            <DollarSign className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-700 dark:text-blue-300">
+              <strong>Custo:</strong> Firecrawl oferece 500 créditos grátis por mês. 
+              Cada busca usa aproximadamente 3-5 créditos (1 por diretório consultado).
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+      )}
 
       {/* API Key Configuration - Apenas para Google Places */}
       {fonteDados === 'google_places' && (

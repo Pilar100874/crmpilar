@@ -245,3 +245,6 @@ verify_jwt = false
 
 [functions.prospeccao-dados-abertos]
 verify_jwt = true
+
+[functions.prospeccao-web-scraping]
+verify_jwt = true
