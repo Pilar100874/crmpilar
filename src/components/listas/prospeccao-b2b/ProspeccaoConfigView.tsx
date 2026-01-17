@@ -20,15 +20,16 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
   const [showApiKey, setShowApiKey] = useState(false);
   const [limiteResultados, setLimiteResultados] = useState(50);
   const [limiteCustoMensal, setLimiteCustoMensal] = useState<number | ''>('');
-  const [custoPorRequisicao, setCustoPorRequisicao] = useState(0.017);
+  const [custoPorChamada, setCustoPorChamada] = useState(0.017);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (config) {
-      setApiKey(config.google_places_api_key || '');
-      setLimiteResultados(config.limite_resultados_busca || 50);
-      setLimiteCustoMensal(config.limite_custo_mensal || '');
-      setCustoPorRequisicao(config.custo_por_requisicao || 0.017);
+      const cfg = config as any;
+      setApiKey(cfg.google_places_api_key || '');
+      setLimiteResultados(cfg.limite_resultados_por_busca || 50);
+      setLimiteCustoMensal(cfg.limite_custo_mensal || '');
+      setCustoPorChamada(cfg.custo_por_chamada || 0.017);
     }
   }, [config]);
 
@@ -36,14 +37,14 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
     setSaving(true);
     await saveConfig({
       google_places_api_key: apiKey || null,
-      limite_resultados_busca: limiteResultados,
+      limite_resultados_por_busca: limiteResultados,
       limite_custo_mensal: limiteCustoMensal ? Number(limiteCustoMensal) : null,
-      custo_por_requisicao: custoPorRequisicao
-    });
+      custo_por_chamada: custoPorChamada
+    } as any);
     setSaving(false);
   };
 
-  const hasApiKey = !!config?.google_places_api_key;
+  const hasApiKey = !!(config as any)?.google_places_api_key;
 
   return (
     <div className="space-y-6">
@@ -170,8 +171,8 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
                 type="number"
                 min={0}
                 step={0.001}
-                value={custoPorRequisicao}
-                onChange={(e) => setCustoPorRequisicao(Number(e.target.value))}
+                value={custoPorChamada}
+                onChange={(e) => setCustoPorChamada(Number(e.target.value))}
               />
               <p className="text-xs text-muted-foreground">
                 Custo médio da API (padrão: $0.017)
