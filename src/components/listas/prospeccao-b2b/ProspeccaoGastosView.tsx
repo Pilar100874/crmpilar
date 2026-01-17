@@ -31,6 +31,8 @@ interface ProspeccaoGastosViewProps {
     requisicoesDoMes: number;
     limiteAtingido: boolean;
     limiteMensal: number | null;
+    percentualUsado: number;
+    saldoRestante: number | null;
   };
 }
 
@@ -74,10 +76,6 @@ const ProspeccaoGastosView: React.FC<ProspeccaoGastosViewProps> = ({
       custoMedio
     };
   }, [apiLogs, buscas, gastosInfo]);
-
-  const progressPercent = gastosInfo.limiteMensal 
-    ? Math.min((gastosInfo.custoMensal / gastosInfo.limiteMensal) * 100, 100)
-    : 0;
 
   return (
     <div className="space-y-6">
@@ -145,7 +143,7 @@ const ProspeccaoGastosView: React.FC<ProspeccaoGastosViewProps> = ({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Status
+              Saldo Disponível
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -154,11 +152,23 @@ const ProspeccaoGastosView: React.FC<ProspeccaoGastosViewProps> = ({
                 <AlertTriangle className="h-4 w-4 mr-1" />
                 Limite Atingido
               </Badge>
+            ) : gastosInfo.saldoRestante !== null ? (
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-emerald-500" />
+                <span className="text-2xl font-bold text-emerald-600">
+                  ${gastosInfo.saldoRestante.toFixed(2)}
+                </span>
+              </div>
             ) : (
               <Badge variant="outline" className="text-sm bg-green-50 text-green-700 border-green-200">
                 <CheckCircle className="h-4 w-4 mr-1" />
-                Operacional
+                Sem limite
               </Badge>
+            )}
+            {gastosInfo.limiteAtingido && (
+              <p className="text-xs text-destructive mt-1">
+                Buscas bloqueadas até próximo mês
+              </p>
             )}
           </CardContent>
         </Card>
@@ -166,23 +176,36 @@ const ProspeccaoGastosView: React.FC<ProspeccaoGastosViewProps> = ({
 
       {/* Barra de progresso do limite */}
       {gastosInfo.limiteMensal && (
-        <Card>
+        <Card className={gastosInfo.limiteAtingido ? 'border-destructive' : ''}>
           <CardHeader>
-            <CardTitle className="text-sm">Uso do Limite Mensal</CardTitle>
+            <CardTitle className="text-sm flex items-center justify-between">
+              <span>Uso do Limite Mensal</span>
+              {gastosInfo.limiteAtingido && (
+                <Badge variant="destructive">
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  BLOQUEADO
+                </Badge>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>${gastosInfo.custoMensal.toFixed(2)}</span>
+                <span className="font-medium">${gastosInfo.custoMensal.toFixed(2)}</span>
                 <span className="text-muted-foreground">${gastosInfo.limiteMensal.toFixed(2)}</span>
               </div>
               <Progress 
-                value={progressPercent} 
-                className={progressPercent >= 90 ? 'bg-red-100' : ''}
+                value={gastosInfo.percentualUsado} 
+                className={`h-3 ${gastosInfo.percentualUsado >= 90 ? '[&>div]:bg-destructive' : gastosInfo.percentualUsado >= 70 ? '[&>div]:bg-yellow-500' : ''}`}
               />
-              <p className="text-xs text-muted-foreground">
-                {progressPercent.toFixed(0)}% do limite utilizado
-              </p>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{gastosInfo.percentualUsado.toFixed(1)}% utilizado</span>
+                {gastosInfo.saldoRestante !== null && (
+                  <span className="text-emerald-600 font-medium">
+                    ${gastosInfo.saldoRestante.toFixed(2)} restante
+                  </span>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -231,6 +254,16 @@ const ProspeccaoGastosView: React.FC<ProspeccaoGastosViewProps> = ({
                         <Badge variant="outline" className="bg-blue-50 text-blue-700">
                           <Clock className="h-3 w-3 mr-1" />
                           Em andamento
+                        </Badge>
+                      ) : busca.status === 'parada_limite_gasto' ? (
+                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          Parada (limite)
+                        </Badge>
+                      ) : busca.status === 'cancelada_limite_gasto' ? (
+                        <Badge variant="destructive">
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Cancelada
                         </Badge>
                       ) : (
                         <Badge variant="destructive">

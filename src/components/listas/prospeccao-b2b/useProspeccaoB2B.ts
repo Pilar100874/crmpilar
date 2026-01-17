@@ -136,6 +136,46 @@ export function useProspeccaoB2B() {
     });
   };
 
+  // Verificar se o limite de gastos foi atingido
+  const checkGastoLimite = useCallback(async (): Promise<{ permitido: boolean; gastoAtual: number; limite: number | null }> => {
+    const cfg = config as any;
+    const limite = cfg?.limite_custo_mensal;
+    
+    if (!limite || !estabelecimentoId) {
+      return { permitido: true, gastoAtual: 0, limite: null };
+    }
+
+    const hoje = new Date();
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString();
+    
+    const { data: logsDoMes } = await supabase
+      .from('prospects_b2b_api_log')
+      .select('custo_chamada')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .gte('created_at', inicioMes);
+
+    const gastoAtual = (logsDoMes || []).reduce((sum, log) => sum + (log.custo_chamada || 0), 0);
+    
+    return {
+      permitido: gastoAtual < limite,
+      gastoAtual,
+      limite
+    };
+  }, [config, estabelecimentoId]);
+
+  // Verificar se place_id já existe na base (ANTES de gastar dinheiro)
+  const checkDuplicados = async (placeIds: string[]): Promise<Set<string>> => {
+    if (!estabelecimentoId || placeIds.length === 0) return new Set();
+
+    const { data: existentes } = await supabase
+      .from('prospects_b2b')
+      .select('place_id')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .in('place_id', placeIds);
+
+    return new Set((existentes || []).map(e => e.place_id).filter(Boolean));
+  };
+
   // Buscar empresas usando Google Places API
   const searchPlaces = async (keyword: string, polygon: PolygonPoint[]) => {
     const cfg = config as any;
@@ -157,8 +197,23 @@ export function useProspeccaoB2B() {
       return;
     }
 
+    // VERIFICAR LIMITE DE GASTOS ANTES DE COMEÇAR
+    const gastoCheck = await checkGastoLimite();
+    if (!gastoCheck.permitido) {
+      toast({ 
+        title: 'Limite de gastos atingido', 
+        description: `Você já gastou $${gastoCheck.gastoAtual.toFixed(2)} de $${gastoCheck.limite?.toFixed(2)} neste mês. Aumente o limite nos parâmetros.`, 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
     setSearching(true);
     setSearchProgress(0);
+
+    let custoAcumulado = gastoCheck.gastoAtual;
+    const limiteGasto = gastoCheck.limite;
+    const custoPorChamada = cfg.custo_por_chamada || 0.017;
 
     try {
       // Calcular bounding box do polígono
@@ -200,6 +255,21 @@ export function useProspeccaoB2B() {
 
       setSearchProgress(10);
 
+      // Verificar se ainda há orçamento para a chamada de busca
+      if (limiteGasto && custoAcumulado + custoPorChamada > limiteGasto) {
+        await supabase
+          .from('prospects_b2b_buscas')
+          .update({ status: 'cancelada_limite_gasto' })
+          .eq('id', buscaId);
+        
+        toast({ 
+          title: 'Busca cancelada', 
+          description: 'Limite de gastos seria excedido', 
+          variant: 'destructive' 
+        });
+        return;
+      }
+
       // Usar CORS proxy para chamar a API do Google Places
       const proxyUrl = 'https://corsproxy.io/?';
       const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${centerLat},${centerLng}&radius=${radius}&keyword=${encodeURIComponent(keyword)}&key=${cfg.google_places_api_key}`;
@@ -207,51 +277,70 @@ export function useProspeccaoB2B() {
       const response = await fetch(proxyUrl + encodeURIComponent(placesUrl));
       const data = await response.json();
 
+      // Registrar custo da chamada de busca
       await logApiCall(buscaId, 'nearbysearch', data.status === 'OK');
+      custoAcumulado += custoPorChamada;
 
       if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
         throw new Error(data.error_message || `API Error: ${data.status}`);
       }
 
-      setSearchProgress(40);
+      setSearchProgress(30);
 
       const results = data.results || [];
       const limitedResults = results.slice(0, cfg.limite_resultados_por_busca || 50);
+      
+      // VERIFICAR DUPLICADOS ANTES DE PROCESSAR (economia de dinheiro!)
+      const todosPlaceIds = limitedResults.map((p: any) => p.place_id);
+      const duplicados = await checkDuplicados(todosPlaceIds);
+      
+      // Filtrar apenas os que não existem
+      const novosResults = limitedResults.filter((p: any) => !duplicados.has(p.place_id));
+      
+      const duplicadosCount = limitedResults.length - novosResults.length;
+      if (duplicadosCount > 0) {
+        console.log(`💰 Economia: ${duplicadosCount} empresas já existentes ignoradas (evitou gastar $${(duplicadosCount * custoPorChamada).toFixed(3)})`);
+      }
+
+      setSearchProgress(40);
+
       const newProspects: ProspectB2BInsert[] = [];
+      let parouPorLimite = false;
 
-      for (let i = 0; i < limitedResults.length; i++) {
-        const place = limitedResults[i];
-        setSearchProgress(40 + ((i / limitedResults.length) * 50));
+      for (let i = 0; i < novosResults.length; i++) {
+        const place = novosResults[i];
+        setSearchProgress(40 + ((i / novosResults.length) * 50));
 
-        // Verificar se já existe
-        const { data: existing } = await supabase
-          .from('prospects_b2b')
-          .select('id')
-          .eq('estabelecimento_id', estabelecimentoId)
-          .eq('place_id', place.place_id)
-          .maybeSingle();
-
-        if (!existing) {
-          // Extrair cidade/estado do endereço
-          const addressParts = (place.vicinity || '').split(',').map((s: string) => s.trim());
-          
-          newProspects.push({
-            estabelecimento_id: estabelecimentoId,
-            place_id: place.place_id,
-            nome: place.name,
-            categoria: place.types?.join(', '),
-            endereco_completo: place.vicinity,
-            cidade: addressParts[addressParts.length - 1] || '',
-            latitude: place.geometry?.location?.lat,
-            longitude: place.geometry?.location?.lng,
-            rating: place.rating,
-            total_avaliacoes: place.user_ratings_total,
-            fonte_dados: 'google_places',
-            status_lead: 'novo',
-            busca_id: buscaId,
-            palavra_chave_busca: keyword
+        // VERIFICAR LIMITE A CADA ITERAÇÃO
+        if (limiteGasto && custoAcumulado >= limiteGasto) {
+          parouPorLimite = true;
+          toast({ 
+            title: 'Limite de gastos atingido', 
+            description: `Busca interrompida ao atingir $${limiteGasto.toFixed(2)}. ${newProspects.length} empresas processadas.`, 
+            variant: 'default' 
           });
+          break;
         }
+
+        // Extrair cidade/estado do endereço
+        const addressParts = (place.vicinity || '').split(',').map((s: string) => s.trim());
+        
+        newProspects.push({
+          estabelecimento_id: estabelecimentoId,
+          place_id: place.place_id,
+          nome: place.name,
+          categoria: place.types?.join(', '),
+          endereco_completo: place.vicinity,
+          cidade: addressParts[addressParts.length - 1] || '',
+          latitude: place.geometry?.location?.lat,
+          longitude: place.geometry?.location?.lng,
+          rating: place.rating,
+          total_avaliacoes: place.user_ratings_total,
+          fonte_dados: 'google_places',
+          status_lead: 'novo',
+          busca_id: buscaId,
+          palavra_chave_busca: keyword
+        });
       }
 
       if (newProspects.length > 0) {
@@ -267,16 +356,20 @@ export function useProspeccaoB2B() {
         .from('prospects_b2b_buscas')
         .update({ 
           total_resultados: newProspects.length,
-          status: 'concluida',
-          custo_estimado: (limitedResults.length + 1) * (cfg.custo_por_chamada || 0.017)
+          status: parouPorLimite ? 'parada_limite_gasto' : 'concluida',
+          custo_estimado: custoAcumulado - gastoCheck.gastoAtual
         })
         .eq('id', buscaId);
 
       setSearchProgress(100);
       
+      const mensagem = duplicadosCount > 0 
+        ? `${newProspects.length} novas empresas encontradas (${duplicadosCount} duplicadas ignoradas)` 
+        : `${newProspects.length} novas empresas encontradas`;
+      
       toast({ 
-        title: 'Busca concluída', 
-        description: `${newProspects.length} novas empresas encontradas` 
+        title: parouPorLimite ? 'Busca interrompida' : 'Busca concluída', 
+        description: mensagem 
       });
 
       await loadProspects();
@@ -339,15 +432,17 @@ export function useProspeccaoB2B() {
 
     const custoTotal = logsDoMes.reduce((sum, log) => sum + (log.custo_chamada || 0), 0);
     const requisicoes = logsDoMes.length;
-    const limiteAtingido = cfg?.limite_custo_mensal 
-      ? custoTotal >= cfg.limite_custo_mensal 
-      : false;
+    const limite = cfg?.limite_custo_mensal;
+    const limiteAtingido = limite ? custoTotal >= limite : false;
+    const percentualUsado = limite ? (custoTotal / limite) * 100 : 0;
 
     return {
       custoMensal: custoTotal,
       requisicoesDoMes: requisicoes,
       limiteAtingido,
-      limiteMensal: cfg?.limite_custo_mensal || null
+      limiteMensal: limite || null,
+      percentualUsado: Math.min(percentualUsado, 100),
+      saldoRestante: limite ? Math.max(limite - custoTotal, 0) : null
     };
   }, [apiLogs, config]);
 
