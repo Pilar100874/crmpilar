@@ -26,18 +26,18 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
   useEffect(() => {
     if (config) {
       setApiKey(config.google_places_api_key || '');
-      setLimiteResultados(config.limite_resultados_busca);
+      setLimiteResultados(config.limite_resultados_busca || 50);
       setLimiteCustoMensal(config.limite_custo_mensal || '');
-      setCustoPorRequisicao(config.custo_por_requisicao);
+      setCustoPorRequisicao(config.custo_por_requisicao || 0.017);
     }
   }, [config]);
 
   const handleSave = async () => {
     setSaving(true);
     await saveConfig({
-      google_places_api_key: apiKey || undefined,
+      google_places_api_key: apiKey || null,
       limite_resultados_busca: limiteResultados,
-      limite_custo_mensal: limiteCustoMensal ? Number(limiteCustoMensal) : undefined,
+      limite_custo_mensal: limiteCustoMensal ? Number(limiteCustoMensal) : null,
       custo_por_requisicao: custoPorRequisicao
     });
     setSaving(false);

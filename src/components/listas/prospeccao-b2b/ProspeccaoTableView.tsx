@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table,
@@ -38,7 +37,7 @@ import { useToast } from '@/hooks/use-toast';
 interface ProspeccaoTableViewProps {
   prospects: ProspectB2B[];
   loading: boolean;
-  updateProspectStatus: (id: string, status: ProspectB2B['status_lead']) => Promise<void>;
+  updateProspectStatus: (id: string, status: string) => Promise<void>;
   deleteProspect: (id: string) => Promise<void>;
 }
 
@@ -104,7 +103,7 @@ const ProspeccaoTableView: React.FC<ProspeccaoTableViewProps> = ({
     const data = filteredProspects.map(p => ({
       Nome: p.nome,
       Categoria: p.categoria,
-      Endereço: p.endereco,
+      Endereço: p.endereco_completo,
       Cidade: p.cidade,
       Estado: p.estado,
       CEP: p.cep,
@@ -112,8 +111,8 @@ const ProspeccaoTableView: React.FC<ProspeccaoTableViewProps> = ({
       Website: p.website,
       Rating: p.rating,
       Avaliações: p.total_avaliacoes,
-      Status: statusLabels[p.status_lead]?.label,
-      'Google Maps': p.google_maps_url,
+      Status: statusLabels[p.status_lead || 'novo']?.label,
+      'Google Maps': p.google_maps_link,
       Fonte: p.fonte_dados
     }));
 
@@ -129,13 +128,13 @@ const ProspeccaoTableView: React.FC<ProspeccaoTableViewProps> = ({
     const data = filteredProspects.map(p => ({
       Nome: p.nome,
       Categoria: p.categoria,
-      Endereço: p.endereco,
+      Endereço: p.endereco_completo,
       Cidade: p.cidade,
       Estado: p.estado,
       Telefone: p.telefone,
       Website: p.website,
       Rating: p.rating,
-      Status: statusLabels[p.status_lead]?.label
+      Status: statusLabels[p.status_lead || 'novo']?.label
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
@@ -282,9 +281,9 @@ const ProspeccaoTableView: React.FC<ProspeccaoTableViewProps> = ({
                   <TableRow key={prospect.id}>
                     <TableCell>
                       <div className="font-medium">{prospect.nome}</div>
-                      {prospect.endereco && (
+                      {prospect.endereco_completo && (
                         <div className="text-xs text-muted-foreground truncate max-w-[200px]">
-                          {prospect.endereco}
+                          {prospect.endereco_completo}
                         </div>
                       )}
                     </TableCell>
@@ -312,8 +311,8 @@ const ProspeccaoTableView: React.FC<ProspeccaoTableViewProps> = ({
                             <Globe className="h-4 w-4" />
                           </a>
                         )}
-                        {prospect.google_maps_url && (
-                          <a href={prospect.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-primary">
+                        {prospect.google_maps_link && (
+                          <a href={prospect.google_maps_link} target="_blank" rel="noopener noreferrer" className="text-primary">
                             <ExternalLink className="h-4 w-4" />
                           </a>
                         )}
@@ -332,8 +331,8 @@ const ProspeccaoTableView: React.FC<ProspeccaoTableViewProps> = ({
                     </TableCell>
                     <TableCell>
                       <Select
-                        value={prospect.status_lead}
-                        onValueChange={(value) => updateProspectStatus(prospect.id, value as ProspectB2B['status_lead'])}
+                        value={prospect.status_lead || 'novo'}
+                        onValueChange={(value) => updateProspectStatus(prospect.id, value)}
                       >
                         <SelectTrigger className="h-7 w-[130px]">
                           <SelectValue />
@@ -353,9 +352,9 @@ const ProspeccaoTableView: React.FC<ProspeccaoTableViewProps> = ({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {prospect.google_maps_url && (
+                          {prospect.google_maps_link && (
                             <DropdownMenuItem asChild>
-                              <a href={prospect.google_maps_url} target="_blank" rel="noopener noreferrer">
+                              <a href={prospect.google_maps_link} target="_blank" rel="noopener noreferrer">
                                 <ExternalLink className="h-4 w-4 mr-2" />
                                 Ver no Google Maps
                               </a>

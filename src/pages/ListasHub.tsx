@@ -8,7 +8,8 @@ import {
   PanelLeft,
   PanelLeftClose,
   LucideIcon,
-  MapPin
+  MapPin,
+  Target
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -24,6 +25,7 @@ import Todos from './Todos';
 import VinculosEmpresas from './VinculosEmpresas';
 import VinculosContatos from './VinculosContatos';
 import MapaClientesView from '@/components/listas/MapaClientesView';
+import { ProspeccaoB2BView } from '@/components/listas/prospeccao-b2b';
 
 interface TabItem {
   id: string;
@@ -39,6 +41,7 @@ const tabItems: TabItem[] = [
   { id: 'vinculos-empresas', label: 'Vínculo Empresas', icon: Link2, description: 'Vínculo Empresas X Usuário / Segmento' },
   { id: 'vinculos-contatos', label: 'Vínculo Contatos', icon: Link2, description: 'Vínculo Contatos X Usuário / Segmento' },
   { id: 'mapa-clientes', label: 'Mapa Clientes', icon: MapPin, description: 'Visualização geográfica das empresas' },
+  { id: 'prospeccao-b2b', label: 'Prospecção B2B', icon: Target, description: 'Busca de empresas por região e segmento' },
 ];
 
 const ListasHub: React.FC = () => {
@@ -62,6 +65,8 @@ const ListasHub: React.FC = () => {
         return <VinculosContatos />;
       case 'mapa-clientes':
         return <MapaClientesView />;
+      case 'prospeccao-b2b':
+        return <ProspeccaoB2BView />;
       default:
         return null;
     }
