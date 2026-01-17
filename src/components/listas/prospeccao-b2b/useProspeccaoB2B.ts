@@ -42,8 +42,8 @@ export function useProspeccaoB2B() {
         .from('prospects_b2b_config')
         .insert({
           estabelecimento_id: estabelecimentoId,
-          limite_resultados_busca: 50,
-          custo_por_requisicao: 0.017
+          limite_resultados_por_busca: 50,
+          custo_por_chamada: 0.017
         })
         .select()
         .single();
@@ -111,13 +111,13 @@ export function useProspeccaoB2B() {
 
     const { error } = await supabase
       .from('prospects_b2b_config')
-      .update(newConfig)
+      .update(newConfig as any)
       .eq('id', config.id);
 
     if (error) {
       toast({ title: 'Erro', description: 'Falha ao salvar configuração', variant: 'destructive' });
     } else {
-      setConfig({ ...config, ...newConfig });
+      setConfig({ ...config, ...newConfig } as ConfigB2B);
       toast({ title: 'Sucesso', description: 'Configuração salva' });
     }
   };
@@ -125,19 +125,21 @@ export function useProspeccaoB2B() {
   // Registrar log de API
   const logApiCall = async (buscaId: string | null, tipoRequisicao: string, sucesso: boolean) => {
     if (!estabelecimentoId || !config) return;
+    const cfg = config as any;
 
     await supabase.from('prospects_b2b_api_log').insert({
       estabelecimento_id: estabelecimentoId,
       busca_id: buscaId,
       tipo_chamada: tipoRequisicao,
-      custo_chamada: config.custo_por_requisicao,
+      custo_chamada: cfg.custo_por_chamada || 0.017,
       resposta_status: sucesso ? 200 : 500
     });
   };
 
   // Buscar empresas usando Google Places API
   const searchPlaces = async (keyword: string, polygon: PolygonPoint[]) => {
-    if (!estabelecimentoId || !config?.google_places_api_key) {
+    const cfg = config as any;
+    if (!estabelecimentoId || !cfg?.google_places_api_key) {
       toast({ 
         title: 'Configuração necessária', 
         description: 'Configure sua API Key do Google Places nos parâmetros', 
@@ -200,7 +202,7 @@ export function useProspeccaoB2B() {
 
       // Usar CORS proxy para chamar a API do Google Places
       const proxyUrl = 'https://corsproxy.io/?';
-      const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${centerLat},${centerLng}&radius=${radius}&keyword=${encodeURIComponent(keyword)}&key=${config.google_places_api_key}`;
+      const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${centerLat},${centerLng}&radius=${radius}&keyword=${encodeURIComponent(keyword)}&key=${cfg.google_places_api_key}`;
       
       const response = await fetch(proxyUrl + encodeURIComponent(placesUrl));
       const data = await response.json();
@@ -214,7 +216,7 @@ export function useProspeccaoB2B() {
       setSearchProgress(40);
 
       const results = data.results || [];
-      const limitedResults = results.slice(0, config.limite_resultados_busca);
+      const limitedResults = results.slice(0, cfg.limite_resultados_por_busca || 50);
       const newProspects: ProspectB2BInsert[] = [];
 
       for (let i = 0; i < limitedResults.length; i++) {
@@ -266,7 +268,7 @@ export function useProspeccaoB2B() {
         .update({ 
           total_resultados: newProspects.length,
           status: 'concluida',
-          custo_estimado: (limitedResults.length + 1) * config.custo_por_requisicao
+          custo_estimado: (limitedResults.length + 1) * (cfg.custo_por_chamada || 0.017)
         })
         .eq('id', buscaId);
 
@@ -327,6 +329,7 @@ export function useProspeccaoB2B() {
 
   // Calcular gastos
   const getGastosInfo = useCallback(() => {
+    const cfg = config as any;
     const hoje = new Date();
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     
@@ -336,15 +339,15 @@ export function useProspeccaoB2B() {
 
     const custoTotal = logsDoMes.reduce((sum, log) => sum + (log.custo_chamada || 0), 0);
     const requisicoes = logsDoMes.length;
-    const limiteAtingido = config?.limite_custo_mensal 
-      ? custoTotal >= config.limite_custo_mensal 
+    const limiteAtingido = cfg?.limite_custo_mensal 
+      ? custoTotal >= cfg.limite_custo_mensal 
       : false;
 
     return {
       custoMensal: custoTotal,
       requisicoesDoMes: requisicoes,
       limiteAtingido,
-      limiteMensal: config?.limite_custo_mensal || null
+      limiteMensal: cfg?.limite_custo_mensal || null
     };
   }, [apiLogs, config]);
 

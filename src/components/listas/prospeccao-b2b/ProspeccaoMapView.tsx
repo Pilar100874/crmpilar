@@ -233,7 +233,8 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
     await searchPlaces(keyword, polygonPoints);
   };
 
-  const hasApiKey = !!config?.google_places_api_key;
+  const cfg = config as any;
+  const hasApiKey = !!cfg?.google_places_api_key;
 
   return (
     <div className="space-y-4">

@@ -7261,7 +7261,9 @@ export type Database = {
           api_provider: string | null
           created_at: string
           custo_por_chamada: number | null
+          custo_por_requisicao: number | null
           estabelecimento_id: string | null
+          google_places_api_key: string | null
           id: string
           limite_custo_mensal: number | null
           limite_custo_por_busca: number | null
@@ -7272,7 +7274,9 @@ export type Database = {
           api_provider?: string | null
           created_at?: string
           custo_por_chamada?: number | null
+          custo_por_requisicao?: number | null
           estabelecimento_id?: string | null
+          google_places_api_key?: string | null
           id?: string
           limite_custo_mensal?: number | null
           limite_custo_por_busca?: number | null
@@ -7283,7 +7287,9 @@ export type Database = {
           api_provider?: string | null
           created_at?: string
           custo_por_chamada?: number | null
+          custo_por_requisicao?: number | null
           estabelecimento_id?: string | null
+          google_places_api_key?: string | null
           id?: string
           limite_custo_mensal?: number | null
           limite_custo_por_busca?: number | null
