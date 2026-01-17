@@ -1,12 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Search, 
   Pencil, 
@@ -17,7 +20,9 @@ import {
   Building2,
   AlertTriangle,
   Loader2,
-  Settings
+  Settings,
+  MapPin,
+  Globe
 } from 'lucide-react';
 import { ProspectB2B, PolygonPoint, ConfigB2B } from './types';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +34,42 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
+
+// Estados do Brasil
+const ESTADOS_BRASIL = [
+  { uf: 'AC', nome: 'Acre' },
+  { uf: 'AL', nome: 'Alagoas' },
+  { uf: 'AP', nome: 'Amapá' },
+  { uf: 'AM', nome: 'Amazonas' },
+  { uf: 'BA', nome: 'Bahia' },
+  { uf: 'CE', nome: 'Ceará' },
+  { uf: 'DF', nome: 'Distrito Federal' },
+  { uf: 'ES', nome: 'Espírito Santo' },
+  { uf: 'GO', nome: 'Goiás' },
+  { uf: 'MA', nome: 'Maranhão' },
+  { uf: 'MT', nome: 'Mato Grosso' },
+  { uf: 'MS', nome: 'Mato Grosso do Sul' },
+  { uf: 'MG', nome: 'Minas Gerais' },
+  { uf: 'PA', nome: 'Pará' },
+  { uf: 'PB', nome: 'Paraíba' },
+  { uf: 'PR', nome: 'Paraná' },
+  { uf: 'PE', nome: 'Pernambuco' },
+  { uf: 'PI', nome: 'Piauí' },
+  { uf: 'RJ', nome: 'Rio de Janeiro' },
+  { uf: 'RN', nome: 'Rio Grande do Norte' },
+  { uf: 'RS', nome: 'Rio Grande do Sul' },
+  { uf: 'RO', nome: 'Rondônia' },
+  { uf: 'RR', nome: 'Roraima' },
+  { uf: 'SC', nome: 'Santa Catarina' },
+  { uf: 'SP', nome: 'São Paulo' },
+  { uf: 'SE', nome: 'Sergipe' },
+  { uf: 'TO', nome: 'Tocantins' }
+];
+
+interface Municipio {
+  id: number;
+  nome: string;
+}
 
 interface ProspeccaoMapViewProps {
   prospects: ProspectB2B[];
@@ -50,22 +91,60 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
-  const polygonLayerRef = useRef<L.Polygon | null>(null);
   const drawingLayerRef = useRef<L.LayerGroup | null>(null);
   
   const [keyword, setKeyword] = useState('');
+  const [searchMode, setSearchMode] = useState<'area' | 'cidade'>('cidade');
   const [isDrawing, setIsDrawing] = useState(false);
   const [polygonPoints, setPolygonPoints] = useState<PolygonPoint[]>([]);
   const [mapReady, setMapReady] = useState(false);
+  
+  // Estados para busca por cidade
+  const [selectedUF, setSelectedUF] = useState<string>('');
+  const [municipios, setMunicipios] = useState<Municipio[]>([]);
+  const [selectedMunicipios, setSelectedMunicipios] = useState<string[]>([]);
+  const [loadingMunicipios, setLoadingMunicipios] = useState(false);
+  const [municipioFilter, setMunicipioFilter] = useState('');
+  
   const { toast } = useToast();
-
   const gastosInfo = getGastosInfo();
+
+  // Carregar municípios quando selecionar UF
+  useEffect(() => {
+    if (!selectedUF) {
+      setMunicipios([]);
+      setSelectedMunicipios([]);
+      return;
+    }
+
+    const loadMunicipios = async () => {
+      setLoadingMunicipios(true);
+      try {
+        const response = await fetch(
+          `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${selectedUF}/municipios?orderBy=nome`
+        );
+        const data = await response.json();
+        setMunicipios(data.map((m: any) => ({ id: m.id, nome: m.nome })));
+      } catch (error) {
+        console.error('Erro ao carregar municípios:', error);
+        toast({ title: 'Erro', description: 'Falha ao carregar municípios', variant: 'destructive' });
+      } finally {
+        setLoadingMunicipios(false);
+      }
+    };
+
+    loadMunicipios();
+  }, [selectedUF, toast]);
 
   // Initialize map
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    const map = L.map(mapContainerRef.current).setView([-15.7801, -47.9292], 4);
+    const map = L.map(mapContainerRef.current, {
+      center: [-15.7801, -47.9292],
+      zoom: 4,
+      zoomControl: true
+    });
     
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
@@ -86,22 +165,21 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
   }, []);
 
   // Handle map click for polygon drawing
+  const handleMapClick = useCallback((e: L.LeafletMouseEvent) => {
+    if (!isDrawing) return;
+    const newPoint: PolygonPoint = { lat: e.latlng.lat, lng: e.latlng.lng };
+    setPolygonPoints(prev => [...prev, newPoint]);
+  }, [isDrawing]);
+
   useEffect(() => {
     if (!mapRef.current || !mapReady) return;
 
-    const handleClick = (e: L.LeafletMouseEvent) => {
-      if (!isDrawing) return;
-
-      const newPoint: PolygonPoint = { lat: e.latlng.lat, lng: e.latlng.lng };
-      setPolygonPoints(prev => [...prev, newPoint]);
-    };
-
-    mapRef.current.on('click', handleClick);
+    mapRef.current.on('click', handleMapClick);
 
     return () => {
-      mapRef.current?.off('click', handleClick);
+      mapRef.current?.off('click', handleMapClick);
     };
-  }, [isDrawing, mapReady]);
+  }, [handleMapClick, mapReady]);
 
   // Update polygon visualization
   useEffect(() => {
@@ -112,32 +190,34 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
       // Draw points
       polygonPoints.forEach((point, index) => {
         L.circleMarker([point.lat, point.lng], {
-          radius: 6,
+          radius: 8,
           color: '#3b82f6',
           fillColor: '#3b82f6',
-          fillOpacity: 1
+          fillOpacity: 1,
+          weight: 2
         })
-          .bindTooltip(`Ponto ${index + 1}`)
+          .bindTooltip(`Ponto ${index + 1}`, { permanent: false })
           .addTo(drawingLayerRef.current!);
       });
 
-      // Draw lines
+      // Draw lines connecting points
       if (polygonPoints.length > 1) {
         const latLngs = polygonPoints.map(p => [p.lat, p.lng] as [number, number]);
         L.polyline(latLngs, {
           color: '#3b82f6',
-          weight: 2,
-          dashArray: '5, 5'
+          weight: 3,
+          dashArray: '8, 8'
         }).addTo(drawingLayerRef.current!);
       }
 
-      // Draw filled polygon if closed
+      // Draw filled polygon when finished
       if (polygonPoints.length >= 3 && !isDrawing) {
         const latLngs = polygonPoints.map(p => [p.lat, p.lng] as [number, number]);
-        polygonLayerRef.current = L.polygon(latLngs, {
+        L.polygon(latLngs, {
           color: '#3b82f6',
           fillColor: '#3b82f6',
-          fillOpacity: 0.2
+          fillOpacity: 0.2,
+          weight: 3
         }).addTo(drawingLayerRef.current!);
       }
     }
@@ -190,12 +270,18 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
   const startDrawing = () => {
     setIsDrawing(true);
     setPolygonPoints([]);
-    toast({ title: 'Modo desenho', description: 'Clique no mapa para adicionar pontos' });
+    if (mapRef.current) {
+      mapRef.current.getContainer().style.cursor = 'crosshair';
+    }
+    toast({ title: 'Modo desenho ativado', description: 'Clique no mapa para adicionar pontos da área' });
   };
 
   const cancelDrawing = () => {
     setIsDrawing(false);
     setPolygonPoints([]);
+    if (mapRef.current) {
+      mapRef.current.getContainer().style.cursor = '';
+    }
   };
 
   const undoLastPoint = () => {
@@ -206,12 +292,16 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
     if (polygonPoints.length < 3) {
       toast({ 
         title: 'Área inválida', 
-        description: 'Desenhe pelo menos 3 pontos', 
+        description: 'Desenhe pelo menos 3 pontos para formar uma área', 
         variant: 'destructive' 
       });
       return;
     }
     setIsDrawing(false);
+    if (mapRef.current) {
+      mapRef.current.getContainer().style.cursor = '';
+    }
+    toast({ title: 'Área definida', description: `Polígono com ${polygonPoints.length} pontos criado` });
   };
 
   const clearPolygon = () => {
@@ -221,7 +311,53 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
     }
   };
 
-  const handleSearch = async () => {
+  // Geocodificar cidade para obter coordenadas
+  const geocodeCidade = async (cidade: string, uf: string): Promise<PolygonPoint[] | null> => {
+    try {
+      const query = encodeURIComponent(`${cidade}, ${uf}, Brasil`);
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&polygon_geojson=1`
+      );
+      const data = await response.json();
+      
+      if (data.length === 0) return null;
+      
+      const result = data[0];
+      
+      // Se tem polígono, usar os pontos do polígono
+      if (result.geojson && result.geojson.type === 'Polygon') {
+        const coords = result.geojson.coordinates[0];
+        return coords.slice(0, -1).map((c: number[]) => ({ lat: c[1], lng: c[0] }));
+      }
+      
+      // Senão, criar um bounding box baseado nos limites
+      if (result.boundingbox) {
+        const [south, north, west, east] = result.boundingbox.map(Number);
+        return [
+          { lat: north, lng: west },
+          { lat: north, lng: east },
+          { lat: south, lng: east },
+          { lat: south, lng: west }
+        ];
+      }
+      
+      // Fallback: criar círculo ao redor do ponto central
+      const lat = parseFloat(result.lat);
+      const lng = parseFloat(result.lon);
+      const offset = 0.1; // ~10km
+      return [
+        { lat: lat + offset, lng: lng - offset },
+        { lat: lat + offset, lng: lng + offset },
+        { lat: lat - offset, lng: lng + offset },
+        { lat: lat - offset, lng: lng - offset }
+      ];
+    } catch (error) {
+      console.error('Erro ao geocodificar:', error);
+      return null;
+    }
+  };
+
+  const handleSearchByArea = async () => {
     if (gastosInfo.limiteAtingido) {
       toast({ 
         title: 'Limite de custo atingido', 
@@ -232,6 +368,65 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
     }
     await searchPlaces(keyword, polygonPoints);
   };
+
+  const handleSearchByCidade = async () => {
+    if (gastosInfo.limiteAtingido) {
+      toast({ 
+        title: 'Limite de custo atingido', 
+        description: 'Você atingiu o limite de custo mensal configurado', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    if (!keyword || selectedMunicipios.length === 0) {
+      toast({ 
+        title: 'Dados incompletos', 
+        description: 'Informe a palavra-chave e selecione pelo menos um município', 
+        variant: 'destructive' 
+      });
+      return;
+    }
+
+    // Buscar cada município
+    for (let i = 0; i < selectedMunicipios.length; i++) {
+      const municipioNome = selectedMunicipios[i];
+      toast({ 
+        title: `Buscando ${i + 1}/${selectedMunicipios.length}`, 
+        description: `Processando: ${municipioNome}` 
+      });
+
+      const polygon = await geocodeCidade(municipioNome, selectedUF);
+      if (polygon && polygon.length >= 3) {
+        await searchPlaces(keyword, polygon);
+      } else {
+        console.warn(`Não foi possível geocodificar: ${municipioNome}`);
+      }
+    }
+  };
+
+  const toggleMunicipio = (nome: string) => {
+    setSelectedMunicipios(prev => 
+      prev.includes(nome) 
+        ? prev.filter(m => m !== nome)
+        : [...prev, nome]
+    );
+  };
+
+  const selectAllMunicipios = () => {
+    const filtered = municipios.filter(m => 
+      m.nome.toLowerCase().includes(municipioFilter.toLowerCase())
+    );
+    setSelectedMunicipios(filtered.map(m => m.nome));
+  };
+
+  const clearMunicipios = () => {
+    setSelectedMunicipios([]);
+  };
+
+  const filteredMunicipios = municipios.filter(m => 
+    m.nome.toLowerCase().includes(municipioFilter.toLowerCase())
+  );
 
   const cfg = config as any;
   const hasApiKey = !!cfg?.google_places_api_key;
@@ -260,72 +455,214 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
 
       {/* Search Controls */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Keyword Input */}
-            <div className="flex-1">
-              <Input
-                placeholder="Palavra-chave (ex: papelaria, gráfica, embalagem)"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                disabled={searching || !hasApiKey}
-              />
-            </div>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Configurar Busca</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Keyword Input */}
+          <div>
+            <label className="text-sm font-medium mb-1 block">Palavra-chave</label>
+            <Input
+              placeholder="Ex: papelaria, gráfica, embalagem, restaurante..."
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              disabled={searching || !hasApiKey}
+            />
+          </div>
 
-            {/* Drawing Controls */}
-            <div className="flex gap-2 flex-wrap">
-              {!isDrawing && polygonPoints.length === 0 && (
-                <Button
-                  variant="outline"
-                  onClick={startDrawing}
-                  disabled={searching || !hasApiKey}
-                >
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Desenhar Área
-                </Button>
+          {/* Search Mode Tabs */}
+          <Tabs value={searchMode} onValueChange={(v) => setSearchMode(v as 'area' | 'cidade')}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="cidade" className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Por Cidade
+              </TabsTrigger>
+              <TabsTrigger value="area" className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                Por Área
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Busca por Cidade */}
+            <TabsContent value="cidade" className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Seleção de UF */}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Estado (UF)</label>
+                  <select
+                    value={selectedUF}
+                    onChange={(e) => setSelectedUF(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                    disabled={searching || !hasApiKey}
+                  >
+                    <option value="">Selecione o estado</option>
+                    {ESTADOS_BRASIL.map(estado => (
+                      <option key={estado.uf} value={estado.uf}>
+                        {estado.uf} - {estado.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Filtro de municípios */}
+                {selectedUF && (
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Filtrar municípios</label>
+                    <Input
+                      placeholder="Digite para filtrar..."
+                      value={municipioFilter}
+                      onChange={(e) => setMunicipioFilter(e.target.value)}
+                      disabled={searching || loadingMunicipios}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Lista de municípios */}
+              {selectedUF && (
+                <div className="border rounded-lg">
+                  <div className="p-2 border-b bg-muted/50 flex items-center justify-between">
+                    <span className="text-sm font-medium">
+                      {loadingMunicipios ? 'Carregando...' : `${filteredMunicipios.length} municípios`}
+                    </span>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={selectAllMunicipios}
+                        disabled={searching || loadingMunicipios}
+                      >
+                        Selecionar todos
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={clearMunicipios}
+                        disabled={searching}
+                      >
+                        Limpar
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {loadingMunicipios ? (
+                    <div className="p-4 text-center">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                    </div>
+                  ) : (
+                    <ScrollArea className="h-[200px]">
+                      <div className="p-2 space-y-1">
+                        {filteredMunicipios.map(municipio => (
+                          <label 
+                            key={municipio.id} 
+                            className="flex items-center gap-2 p-2 hover:bg-muted rounded cursor-pointer"
+                          >
+                            <Checkbox
+                              checked={selectedMunicipios.includes(municipio.nome)}
+                              onCheckedChange={() => toggleMunicipio(municipio.nome)}
+                              disabled={searching}
+                            />
+                            <span className="text-sm">{municipio.nome}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+
+                  {selectedMunicipios.length > 0 && (
+                    <div className="p-2 border-t bg-muted/50">
+                      <Badge variant="secondary">
+                        {selectedMunicipios.length} município(s) selecionado(s)
+                      </Badge>
+                    </div>
+                  )}
+                </div>
               )}
+
+              {/* Botão de busca por cidade */}
+              <Button
+                onClick={handleSearchByCidade}
+                disabled={searching || !keyword || selectedMunicipios.length === 0 || !hasApiKey || gastosInfo.limiteAtingido}
+                className="w-full"
+              >
+                {searching ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4 mr-2" />
+                )}
+                Buscar em {selectedMunicipios.length} município(s)
+              </Button>
+            </TabsContent>
+
+            {/* Busca por Área */}
+            <TabsContent value="area" className="space-y-4 mt-4">
+              <div className="flex gap-2 flex-wrap">
+                {!isDrawing && polygonPoints.length === 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={startDrawing}
+                    disabled={searching || !hasApiKey}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Desenhar Área no Mapa
+                  </Button>
+                )}
+
+                {isDrawing && (
+                  <>
+                    <Button variant="outline" onClick={undoLastPoint} disabled={polygonPoints.length === 0}>
+                      <Undo2 className="h-4 w-4 mr-1" />
+                      Desfazer
+                    </Button>
+                    <Button variant="outline" onClick={cancelDrawing}>
+                      <X className="h-4 w-4 mr-1" />
+                      Cancelar
+                    </Button>
+                    <Button onClick={finishDrawing} disabled={polygonPoints.length < 3}>
+                      <Check className="h-4 w-4 mr-2" />
+                      Finalizar ({polygonPoints.length} pontos)
+                    </Button>
+                  </>
+                )}
+
+                {!isDrawing && polygonPoints.length >= 3 && (
+                  <>
+                    <Badge variant="secondary" className="flex items-center gap-1 px-3 py-2">
+                      <Check className="h-3 w-3" />
+                      Área definida ({polygonPoints.length} pontos)
+                    </Badge>
+                    <Button variant="ghost" size="sm" onClick={clearPolygon}>
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Limpar
+                    </Button>
+                  </>
+                )}
+              </div>
 
               {isDrawing && (
-                <>
-                  <Button variant="outline" onClick={undoLastPoint} disabled={polygonPoints.length === 0}>
-                    <Undo2 className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" onClick={cancelDrawing}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                  <Button onClick={finishDrawing} disabled={polygonPoints.length < 3}>
-                    <Check className="h-4 w-4 mr-2" />
-                    Finalizar ({polygonPoints.length} pts)
-                  </Button>
-                </>
+                <Alert>
+                  <MapPin className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Modo de desenho ativo!</strong> Clique no mapa abaixo para adicionar pontos. 
+                    Adicione pelo menos 3 pontos para formar uma área de busca.
+                  </AlertDescription>
+                </Alert>
               )}
 
-              {!isDrawing && polygonPoints.length >= 3 && (
-                <>
-                  <Badge variant="secondary" className="flex items-center gap-1">
-                    <Check className="h-3 w-3" />
-                    Área definida
-                  </Badge>
-                  <Button variant="ghost" size="sm" onClick={clearPolygon}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
-
-            {/* Search Button */}
-            <Button
-              onClick={handleSearch}
-              disabled={searching || !keyword || polygonPoints.length < 3 || !hasApiKey || gastosInfo.limiteAtingido}
-            >
-              {searching ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Search className="h-4 w-4 mr-2" />
-              )}
-              Buscar Empresas
-            </Button>
-          </div>
+              <Button
+                onClick={handleSearchByArea}
+                disabled={searching || !keyword || polygonPoints.length < 3 || !hasApiKey || gastosInfo.limiteAtingido}
+                className="w-full"
+              >
+                {searching ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4 mr-2" />
+                )}
+                Buscar na Área Desenhada
+              </Button>
+            </TabsContent>
+          </Tabs>
 
           {/* Progress Bar */}
           {searching && (
@@ -360,9 +697,14 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
             style={{ zIndex: 0 }}
           />
           {isDrawing && (
-            <div className="absolute top-4 left-4 bg-background/90 backdrop-blur p-3 rounded-lg shadow-lg z-10">
-              <p className="text-sm font-medium">Modo de desenho ativo</p>
-              <p className="text-xs text-muted-foreground">Clique no mapa para adicionar pontos</p>
+            <div className="absolute top-4 left-4 bg-background/95 backdrop-blur p-3 rounded-lg shadow-lg z-[1000] border">
+              <p className="text-sm font-medium text-primary">🎯 Modo de desenho ativo</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Clique no mapa para adicionar pontos
+              </p>
+              <p className="text-xs font-medium mt-2">
+                Pontos: {polygonPoints.length} / mín. 3
+              </p>
             </div>
           )}
         </CardContent>
