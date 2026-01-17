@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
-import { ProspectB2B, BuscaB2B, ConfigB2B, ApiLogB2B, PolygonPoint } from './types';
+import { ProspectB2B, ProspectB2BInsert, BuscaB2B, ConfigB2B, ApiLogB2B, PolygonPoint } from './types';
 import { useToast } from '@/hooks/use-toast';
 
 export function useProspeccaoB2B() {
@@ -35,7 +35,7 @@ export function useProspeccaoB2B() {
       .maybeSingle();
 
     if (data) {
-      setConfig(data as unknown as ConfigB2B);
+      setConfig(data);
     } else if (!error) {
       // Criar config padrão
       const { data: newConfig } = await supabase
@@ -49,7 +49,7 @@ export function useProspeccaoB2B() {
         .single();
       
       if (newConfig) {
-        setConfig(newConfig as unknown as ConfigB2B);
+        setConfig(newConfig);
       }
     }
   }, [estabelecimentoId]);
@@ -68,7 +68,7 @@ export function useProspeccaoB2B() {
     if (error) {
       toast({ title: 'Erro', description: 'Falha ao carregar prospects', variant: 'destructive' });
     } else {
-      setProspects((data || []) as unknown as ProspectB2B[]);
+      setProspects(data || []);
     }
     setLoading(false);
   }, [estabelecimentoId, toast]);
@@ -85,7 +85,7 @@ export function useProspeccaoB2B() {
       .limit(10);
 
     if (data) {
-      setBuscas(data as unknown as BuscaB2B[]);
+      setBuscas(data);
     }
   }, [estabelecimentoId]);
 
@@ -101,7 +101,7 @@ export function useProspeccaoB2B() {
       .limit(100);
 
     if (data) {
-      setApiLogs(data as unknown as ApiLogB2B[]);
+      setApiLogs(data);
     }
   }, [estabelecimentoId]);
 
@@ -123,7 +123,7 @@ export function useProspeccaoB2B() {
   };
 
   // Registrar log de API
-  const logApiCall = async (buscaId: string | null, tipoRequisicao: string, sucesso: boolean, mensagemErro?: string) => {
+  const logApiCall = async (buscaId: string | null, tipoRequisicao: string, sucesso: boolean) => {
     if (!estabelecimentoId || !config) return;
 
     await supabase.from('prospects_b2b_api_log').insert({
@@ -185,8 +185,8 @@ export function useProspeccaoB2B() {
         .insert({
           estabelecimento_id: estabelecimentoId,
           palavra_chave: keyword,
-          area_poligono: polygon,
-          bounding_box: boundingBox,
+          area_poligono: polygon as any,
+          bounding_box: boundingBox as any,
           total_resultados: 0,
           status: 'em_andamento'
         })
@@ -215,7 +215,7 @@ export function useProspeccaoB2B() {
 
       const results = data.results || [];
       const limitedResults = results.slice(0, config.limite_resultados_busca);
-      const newProspects: Partial<ProspectB2B>[] = [];
+      const newProspects: ProspectB2BInsert[] = [];
 
       for (let i = 0; i < limitedResults.length; i++) {
         const place = limitedResults[i];
@@ -246,7 +246,8 @@ export function useProspeccaoB2B() {
             total_avaliacoes: place.user_ratings_total,
             fonte_dados: 'google_places',
             status_lead: 'novo',
-            busca_id: buscaId
+            busca_id: buscaId,
+            palavra_chave_busca: keyword
           });
         }
       }
@@ -254,7 +255,7 @@ export function useProspeccaoB2B() {
       if (newProspects.length > 0) {
         const { error: insertError } = await supabase
           .from('prospects_b2b')
-          .insert(newProspects as any);
+          .insert(newProspects);
 
         if (insertError) throw insertError;
       }
@@ -294,7 +295,7 @@ export function useProspeccaoB2B() {
   };
 
   // Atualizar status do prospect
-  const updateProspectStatus = async (prospectId: string, status: ProspectB2B['status_lead']) => {
+  const updateProspectStatus = async (prospectId: string, status: string) => {
     const { error } = await supabase
       .from('prospects_b2b')
       .update({ status_lead: status })
@@ -333,7 +334,7 @@ export function useProspeccaoB2B() {
       new Date(log.created_at || '') >= inicioMes
     );
 
-    const custoTotal = logsDoMes.reduce((sum, log) => sum + (log.custo || 0), 0);
+    const custoTotal = logsDoMes.reduce((sum, log) => sum + (log.custo_chamada || 0), 0);
     const requisicoes = logsDoMes.length;
     const limiteAtingido = config?.limite_custo_mensal 
       ? custoTotal >= config.limite_custo_mensal 

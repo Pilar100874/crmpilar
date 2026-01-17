@@ -52,15 +52,15 @@ const ProspeccaoGastosView: React.FC<ProspeccaoGastosViewProps> = ({
     const logsDoMes = apiLogs.filter(log => new Date(log.created_at || '') >= inicioMes);
     const logsDaSemana = apiLogs.filter(log => new Date(log.created_at || '') >= inicioSemana);
     
-    const custoSemana = logsDaSemana.reduce((sum, log) => sum + (log.custo || 0), 0);
-    const requisicoesSucesso = logsDoMes.filter(log => log.sucesso).length;
-    const requisicoesErro = logsDoMes.filter(log => !log.sucesso).length;
+    const custoSemana = logsDaSemana.reduce((sum, log) => sum + (log.custo_chamada || 0), 0);
+    const requisicoesSucesso = logsDoMes.filter(log => log.resposta_status === 200).length;
+    const requisicoesErro = logsDoMes.filter(log => log.resposta_status !== 200).length;
     const taxaSucesso = logsDoMes.length > 0 
       ? (requisicoesSucesso / logsDoMes.length) * 100 
       : 100;
 
     const buscasDoMes = buscas.filter(b => new Date(b.created_at || '') >= inicioMes);
-    const totalProspects = buscasDoMes.reduce((sum, b) => sum + b.total_resultados, 0);
+    const totalProspects = buscasDoMes.reduce((sum, b) => sum + (b.total_resultados || 0), 0);
     const custoMedio = totalProspects > 0 
       ? gastosInfo.custoMensal / totalProspects 
       : 0;
@@ -270,10 +270,10 @@ const ProspeccaoGastosView: React.FC<ProspeccaoGastosViewProps> = ({
                     <TableCell className="text-xs">
                       {log.created_at && format(new Date(log.created_at), 'dd/MM HH:mm:ss', { locale: ptBR })}
                     </TableCell>
-                    <TableCell className="text-xs font-mono">{log.tipo_requisicao}</TableCell>
-                    <TableCell className="text-xs">${log.custo.toFixed(4)}</TableCell>
+                    <TableCell className="text-xs font-mono">{log.tipo_chamada}</TableCell>
+                    <TableCell className="text-xs">${(log.custo_chamada || 0).toFixed(4)}</TableCell>
                     <TableCell>
-                      {log.sucesso ? (
+                      {log.resposta_status === 200 ? (
                         <CheckCircle className="h-4 w-4 text-green-500" />
                       ) : (
                         <XCircle className="h-4 w-4 text-red-500" />

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card, CardContent } from '@/components/ui/card';
@@ -159,7 +159,7 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
         cliente: '#f59e0b'
       };
 
-      const color = statusColors[prospect.status_lead] || '#22c55e';
+      const color = statusColors[prospect.status_lead || 'novo'] || '#22c55e';
 
       const customIcon = L.divIcon({
         className: 'custom-marker',
@@ -178,7 +178,7 @@ const ProspeccaoMapView: React.FC<ProspeccaoMapViewProps> = ({
           <div class="p-2 min-w-[200px]">
             <strong class="text-base">${prospect.nome}</strong>
             ${prospect.categoria ? `<br/><span class="text-xs text-gray-500">${prospect.categoria}</span>` : ''}
-            ${prospect.endereco ? `<br/><small>${prospect.endereco}</small>` : ''}
+            ${prospect.endereco_completo ? `<br/><small>${prospect.endereco_completo}</small>` : ''}
             ${prospect.rating ? `<br/><span class="text-sm">⭐ ${prospect.rating} (${prospect.total_avaliacoes || 0} avaliações)</span>` : ''}
             ${prospect.telefone ? `<br/><a href="tel:${prospect.telefone}" class="text-blue-600">${prospect.telefone}</a>` : ''}
             ${prospect.website ? `<br/><a href="${prospect.website}" target="_blank" class="text-blue-600 text-xs">Visitar site</a>` : ''}
