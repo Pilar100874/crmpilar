@@ -6,12 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, Save, Key, AlertTriangle, ExternalLink, CheckCircle, Phone, Globe, Star, Image, DollarSign } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Eye, EyeOff, Save, Key, AlertTriangle, ExternalLink, CheckCircle, Phone, Globe, Star, Image, DollarSign, Mail, MessageCircle, Zap, Server } from 'lucide-react';
 import { ConfigB2B } from './types';
 
 interface CamposPlaceDetails {
   contact: boolean;
   atmosphere: boolean;
+}
+
+interface ExtrairContatosWebsite {
+  enabled: boolean;
+  method: 'basic' | 'firecrawl';
 }
 
 interface ProspeccaoConfigViewProps {
@@ -32,6 +38,10 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
     contact: false,
     atmosphere: false
   });
+  const [extrairContatosWebsite, setExtrairContatosWebsite] = useState<ExtrairContatosWebsite>({
+    enabled: false,
+    method: 'basic'
+  });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -44,6 +54,9 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
       if (cfg.campos_place_details) {
         setCamposPlaceDetails(cfg.campos_place_details);
       }
+      if (cfg.extrair_contatos_website) {
+        setExtrairContatosWebsite(cfg.extrair_contatos_website);
+      }
     }
   }, [config]);
 
@@ -52,6 +65,9 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
     let custo = 0; // Nearby Search é por requisição, não por empresa
     if (camposPlaceDetails.contact) custo += 0.003;
     if (camposPlaceDetails.atmosphere) custo += 0.005;
+    if (extrairContatosWebsite.enabled && extrairContatosWebsite.method === 'firecrawl') {
+      custo += 0.001; // Firecrawl cost estimate
+    }
     return custo;
   };
 
@@ -62,7 +78,8 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
       limite_resultados_por_busca: limiteResultados,
       limite_custo_mensal: limiteCustoMensal ? Number(limiteCustoMensal) : null,
       custo_por_chamada: custoPorChamada,
-      campos_place_details: camposPlaceDetails
+      campos_place_details: camposPlaceDetails,
+      extrair_contatos_website: extrairContatosWebsite
     } as any);
     setSaving(false);
   };
@@ -254,6 +271,134 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
               </p>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Extração de Email/WhatsApp do Website */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5" />
+            Extração de Email/WhatsApp
+          </CardTitle>
+          <CardDescription>
+            Extrair email e WhatsApp do website das empresas encontradas (requer Contact Fields ativado)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Toggle principal */}
+          <div className={`p-4 border rounded-lg transition-colors ${extrairContatosWebsite.enabled ? 'border-primary bg-primary/5' : ''}`}>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <Checkbox
+                checked={extrairContatosWebsite.enabled}
+                onCheckedChange={(checked) => 
+                  setExtrairContatosWebsite(prev => ({ ...prev, enabled: !!checked }))
+                }
+                disabled={!camposPlaceDetails.contact}
+                className="mt-1"
+              />
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-green-500" />
+                    <MessageCircle className="h-4 w-4 text-green-500" />
+                    Extrair Email e WhatsApp do Website
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Faz scraping do website da empresa para encontrar email e WhatsApp
+                </p>
+                {!camposPlaceDetails.contact && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    ⚠️ Ative "Contato (Contact Fields)" para usar esta opção
+                  </p>
+                )}
+              </div>
+            </label>
+          </div>
+
+          {/* Opções de método */}
+          {extrairContatosWebsite.enabled && (
+            <div className="ml-6 space-y-3">
+              <Label className="text-sm font-medium">Método de extração:</Label>
+              <RadioGroup
+                value={extrairContatosWebsite.method}
+                onValueChange={(value: 'basic' | 'firecrawl') => 
+                  setExtrairContatosWebsite(prev => ({ ...prev, method: value }))
+                }
+                className="space-y-3"
+              >
+                {/* Opção Básica */}
+                <div className={`p-3 border rounded-lg transition-colors ${extrairContatosWebsite.method === 'basic' ? 'border-green-500 bg-green-50 dark:bg-green-950' : ''}`}>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <RadioGroupItem value="basic" className="mt-1" />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium flex items-center gap-2">
+                          <Server className="h-4 w-4" />
+                          Scraping Básico
+                        </span>
+                        <Badge variant="secondary" className="text-green-600">
+                          Grátis
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Usa fetch + regex para extrair contatos. Funciona bem para sites simples.
+                      </p>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant="outline" className="text-xs">Rápido</Badge>
+                        <Badge variant="outline" className="text-xs">Sem custo</Badge>
+                        <Badge variant="outline" className="text-xs text-amber-600">Menos preciso</Badge>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Opção Firecrawl */}
+                <div className={`p-3 border rounded-lg transition-colors ${extrairContatosWebsite.method === 'firecrawl' ? 'border-purple-500 bg-purple-50 dark:bg-purple-950' : ''}`}>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <RadioGroupItem value="firecrawl" className="mt-1" />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium flex items-center gap-2">
+                          <Zap className="h-4 w-4 text-purple-500" />
+                          Firecrawl (API)
+                        </span>
+                        <Badge variant="outline" className="text-purple-600 border-purple-300">
+                          ~$0.001/empresa
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        API profissional de scraping. Lida com JavaScript, anti-bot e sites complexos.
+                      </p>
+                      <div className="flex gap-2 mt-2">
+                        <Badge variant="outline" className="text-xs text-purple-600">Mais preciso</Badge>
+                        <Badge variant="outline" className="text-xs">JavaScript</Badge>
+                        <Badge variant="outline" className="text-xs">Requer API Key</Badge>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </RadioGroup>
+
+              {extrairContatosWebsite.method === 'firecrawl' && (
+                <Alert className="border-purple-200 bg-purple-50 dark:bg-purple-950">
+                  <Zap className="h-4 w-4 text-purple-600" />
+                  <AlertDescription className="text-purple-700 dark:text-purple-300">
+                    Para usar Firecrawl, conecte o conector nas configurações do projeto.
+                    <a
+                      href="https://firecrawl.dev"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-1 underline inline-flex items-center gap-1"
+                    >
+                      Saiba mais <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
