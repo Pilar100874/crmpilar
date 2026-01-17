@@ -7047,6 +7047,259 @@ export type Database = {
           },
         ]
       }
+      prospects_b2b: {
+        Row: {
+          area_busca: Json | null
+          busca_id: string | null
+          categoria: string | null
+          cep: string | null
+          cidade: string | null
+          created_at: string
+          endereco_completo: string | null
+          estabelecimento_id: string | null
+          estado: string | null
+          fonte_dados: string | null
+          google_maps_link: string | null
+          horario_funcionamento: Json | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          nome: string
+          palavra_chave_busca: string | null
+          place_id: string
+          rating: number | null
+          status_lead: string | null
+          telefone: string | null
+          total_avaliacoes: number | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          area_busca?: Json | null
+          busca_id?: string | null
+          categoria?: string | null
+          cep?: string | null
+          cidade?: string | null
+          created_at?: string
+          endereco_completo?: string | null
+          estabelecimento_id?: string | null
+          estado?: string | null
+          fonte_dados?: string | null
+          google_maps_link?: string | null
+          horario_funcionamento?: Json | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nome: string
+          palavra_chave_busca?: string | null
+          place_id: string
+          rating?: number | null
+          status_lead?: string | null
+          telefone?: string | null
+          total_avaliacoes?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          area_busca?: Json | null
+          busca_id?: string | null
+          categoria?: string | null
+          cep?: string | null
+          cidade?: string | null
+          created_at?: string
+          endereco_completo?: string | null
+          estabelecimento_id?: string | null
+          estado?: string | null
+          fonte_dados?: string | null
+          google_maps_link?: string | null
+          horario_funcionamento?: Json | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          nome?: string
+          palavra_chave_busca?: string | null
+          place_id?: string
+          rating?: number | null
+          status_lead?: string | null
+          telefone?: string | null
+          total_avaliacoes?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospects_b2b_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospects_b2b_api_log: {
+        Row: {
+          busca_id: string | null
+          created_at: string
+          custo_chamada: number | null
+          endpoint: string | null
+          estabelecimento_id: string | null
+          id: string
+          parametros: Json | null
+          resposta_status: number | null
+          resultados_retornados: number | null
+          tempo_resposta_ms: number | null
+          tipo_chamada: string
+        }
+        Insert: {
+          busca_id?: string | null
+          created_at?: string
+          custo_chamada?: number | null
+          endpoint?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          parametros?: Json | null
+          resposta_status?: number | null
+          resultados_retornados?: number | null
+          tempo_resposta_ms?: number | null
+          tipo_chamada: string
+        }
+        Update: {
+          busca_id?: string | null
+          created_at?: string
+          custo_chamada?: number | null
+          endpoint?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          parametros?: Json | null
+          resposta_status?: number | null
+          resultados_retornados?: number | null
+          tempo_resposta_ms?: number | null
+          tipo_chamada?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospects_b2b_api_log_busca_id_fkey"
+            columns: ["busca_id"]
+            isOneToOne: false
+            referencedRelation: "prospects_b2b_buscas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospects_b2b_api_log_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospects_b2b_buscas: {
+        Row: {
+          area_poligono: Json
+          bounding_box: Json | null
+          chamadas_api: number | null
+          created_at: string
+          custo_estimado: number | null
+          erro_mensagem: string | null
+          estabelecimento_id: string | null
+          id: string
+          palavra_chave: string
+          status: string | null
+          total_resultados: number | null
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          area_poligono: Json
+          bounding_box?: Json | null
+          chamadas_api?: number | null
+          created_at?: string
+          custo_estimado?: number | null
+          erro_mensagem?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          palavra_chave: string
+          status?: string | null
+          total_resultados?: number | null
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          area_poligono?: Json
+          bounding_box?: Json | null
+          chamadas_api?: number | null
+          created_at?: string
+          custo_estimado?: number | null
+          erro_mensagem?: string | null
+          estabelecimento_id?: string | null
+          id?: string
+          palavra_chave?: string
+          status?: string | null
+          total_resultados?: number | null
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospects_b2b_buscas_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prospects_b2b_buscas_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prospects_b2b_config: {
+        Row: {
+          api_provider: string | null
+          created_at: string
+          custo_por_chamada: number | null
+          estabelecimento_id: string | null
+          id: string
+          limite_custo_mensal: number | null
+          limite_custo_por_busca: number | null
+          limite_resultados_por_busca: number | null
+          updated_at: string
+        }
+        Insert: {
+          api_provider?: string | null
+          created_at?: string
+          custo_por_chamada?: number | null
+          estabelecimento_id?: string | null
+          id?: string
+          limite_custo_mensal?: number | null
+          limite_custo_por_busca?: number | null
+          limite_resultados_por_busca?: number | null
+          updated_at?: string
+        }
+        Update: {
+          api_provider?: string | null
+          created_at?: string
+          custo_por_chamada?: number | null
+          estabelecimento_id?: string | null
+          id?: string
+          limite_custo_mensal?: number | null
+          limite_custo_por_busca?: number | null
+          limite_resultados_por_busca?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospects_b2b_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       qa_avaliacoes: {
         Row: {
           atendente_id: string
