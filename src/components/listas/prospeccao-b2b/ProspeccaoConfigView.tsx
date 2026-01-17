@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Eye, EyeOff, Save, Key, AlertTriangle, ExternalLink, CheckCircle, Phone, Globe, Star, Image, DollarSign, Mail, MessageCircle, Zap, Server } from 'lucide-react';
+import { Eye, EyeOff, Save, Key, AlertTriangle, ExternalLink, CheckCircle, Phone, Globe, Star, Image, DollarSign, Mail, MessageCircle, Zap, Server, Database, Search, MapPin } from 'lucide-react';
 import { ConfigB2B } from './types';
 
 interface CamposPlaceDetails {
@@ -20,6 +20,8 @@ interface ExtrairContatosWebsite {
   method: 'basic' | 'firecrawl';
 }
 
+type FonteDados = 'google_places' | 'dados_abertos' | 'web_scraping';
+
 interface ProspeccaoConfigViewProps {
   config: ConfigB2B | null;
   saveConfig: (config: Partial<ConfigB2B>) => Promise<void>;
@@ -29,6 +31,7 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
   config,
   saveConfig
 }) => {
+  const [fonteDados, setFonteDados] = useState<FonteDados>('google_places');
   const [apiKey, setApiKey] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
   const [limiteResultados, setLimiteResultados] = useState(50);
@@ -47,6 +50,7 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
   useEffect(() => {
     if (config) {
       const cfg = config as any;
+      setFonteDados(cfg.fonte_dados || 'google_places');
       setApiKey(cfg.google_places_api_key || '');
       setLimiteResultados(cfg.limite_resultados_por_busca || 50);
       setLimiteCustoMensal(cfg.limite_custo_mensal || '');
@@ -62,11 +66,12 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
 
   // Calcular custo estimado por empresa
   const calcularCustoPorEmpresa = () => {
-    let custo = 0; // Nearby Search é por requisição, não por empresa
+    if (fonteDados !== 'google_places') return 0; // Fontes gratuitas
+    let custo = 0;
     if (camposPlaceDetails.contact) custo += 0.003;
     if (camposPlaceDetails.atmosphere) custo += 0.005;
     if (extrairContatosWebsite.enabled && extrairContatosWebsite.method === 'firecrawl') {
-      custo += 0.001; // Firecrawl cost estimate
+      custo += 0.001;
     }
     return custo;
   };
@@ -74,6 +79,7 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
   const handleSave = async () => {
     setSaving(true);
     await saveConfig({
+      fonte_dados: fonteDados,
       google_places_api_key: apiKey || null,
       limite_resultados_por_busca: limiteResultados,
       limite_custo_mensal: limiteCustoMensal ? Number(limiteCustoMensal) : null,
@@ -86,7 +92,9 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
 
   const hasApiKey = !!(config as any)?.google_places_api_key;
   const custoPorEmpresa = calcularCustoPorEmpresa();
-  const custoEstimado50Empresas = (0.032 + (50 * custoPorEmpresa)).toFixed(2);
+  const custoEstimado50Empresas = fonteDados === 'google_places' 
+    ? (0.032 + (50 * custoPorEmpresa)).toFixed(2) 
+    : '0.00';
 
   return (
     <div className="space-y-6">
