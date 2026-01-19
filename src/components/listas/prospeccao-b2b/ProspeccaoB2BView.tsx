@@ -30,6 +30,7 @@ import ProspeccaoConfigView from './ProspeccaoConfigView';
 import ProspeccaoGastosView from './ProspeccaoGastosView';
 import ProspeccaoDadosAbertosView from './ProspeccaoDadosAbertosView';
 import ProspeccaoWebScrapingView from './ProspeccaoWebScrapingView';
+import ProspeccaoScrapingDiretoView from './ProspeccaoScrapingDiretoView';
 import { useProspeccaoB2B } from './useProspeccaoB2B';
 import { cn } from '@/lib/utils';
 
@@ -73,16 +74,17 @@ const ProspeccaoB2BView: React.FC = () => {
   const isGooglePlaces = fonteDados === 'google_places';
   const isDadosAbertos = fonteDados === 'dados_abertos';
   const isWebScraping = fonteDados === 'web_scraping';
+  const isScrapingDireto = fonteDados === 'scraping_direto';
 
   // Verificar se a configuração está completa
   const hasApiKey = isGooglePlaces 
     ? !!(prospeccao.config as any)?.google_places_api_key
     : isWebScraping 
       ? !!(prospeccao.config as any)?.firecrawl_api_key
-      : true; // Dados abertos não precisa de API key
+      : true; // Dados abertos e scraping direto não precisam de API key
 
-  // Verificar parâmetros de busca do Web Scraping
-  const wsSearchComplete = isWebScraping 
+  // Verificar parâmetros de busca do Web Scraping ou Scraping Direto
+  const wsSearchComplete = (isWebScraping || isScrapingDireto)
     ? !!((prospeccao.config as any)?.ws_termo_busca && 
          (prospeccao.config as any)?.ws_cidade && 
          (prospeccao.config as any)?.ws_uf)
@@ -120,18 +122,21 @@ const ProspeccaoB2BView: React.FC = () => {
   const getSourceIcon = () => {
     if (isDadosAbertos) return <Database className="h-4 w-4" />;
     if (isWebScraping) return <Globe className="h-4 w-4" />;
+    if (isScrapingDireto) return <Search className="h-4 w-4" />;
     return <MapPin className="h-4 w-4" />;
   };
 
   const getSourceLabel = () => {
     if (isDadosAbertos) return 'Dados Abertos (Grátis)';
-    if (isWebScraping) return 'Web Scraping (Grátis)';
+    if (isWebScraping) return 'Web Scraping + IA';
+    if (isScrapingDireto) return 'Scraping Direto (Grátis)';
     return 'Google Places (Pago)';
   };
 
   const getSourceColor = () => {
     if (isDadosAbertos) return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
     if (isWebScraping) return 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300';
+    if (isScrapingDireto) return 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300';
     return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
   };
 
@@ -155,6 +160,15 @@ const ProspeccaoB2BView: React.FC = () => {
         if (isWebScraping) {
           return (
             <ProspeccaoWebScrapingView 
+              estabelecimentoId={prospeccao.estabelecimentoId}
+              config={prospeccao.config}
+              onProspectsFound={() => prospeccao.loadProspects()}
+            />
+          );
+        }
+        if (isScrapingDireto) {
+          return (
+            <ProspeccaoScrapingDiretoView 
               estabelecimentoId={prospeccao.estabelecimentoId}
               config={prospeccao.config}
               onProspectsFound={() => prospeccao.loadProspects()}
