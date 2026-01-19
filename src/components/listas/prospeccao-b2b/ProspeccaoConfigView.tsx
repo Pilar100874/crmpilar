@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, EyeOff, Save, Key, AlertTriangle, ExternalLink, CheckCircle, Phone, Globe, Star, Image, DollarSign, Mail, MessageCircle, Zap, Server, Database, Search, MapPin } from 'lucide-react';
 import { ConfigB2B } from './types';
 
@@ -21,6 +22,12 @@ interface ExtrairContatosWebsite {
 }
 
 type FonteDados = 'google_places' | 'dados_abertos' | 'web_scraping';
+
+const UFS_BRASIL = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
+  'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
+  'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+];
 
 interface ProspeccaoConfigViewProps {
   config: ConfigB2B | null;
@@ -49,6 +56,11 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
   });
   const [saving, setSaving] = useState(false);
 
+  // Campos específicos de Web Scraping
+  const [wsTermoBusca, setWsTermoBusca] = useState('');
+  const [wsCidade, setWsCidade] = useState('');
+  const [wsUf, setWsUf] = useState('');
+
   useEffect(() => {
     if (config) {
       const cfg = config as any;
@@ -58,6 +70,10 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
       setLimiteResultados(cfg.limite_resultados_por_busca || 50);
       setLimiteCustoMensal(cfg.limite_custo_mensal || '');
       setCustoPorChamada(cfg.custo_por_chamada || 0.032);
+      // Campos de Web Scraping
+      setWsTermoBusca(cfg.ws_termo_busca || '');
+      setWsCidade(cfg.ws_cidade || '');
+      setWsUf(cfg.ws_uf || '');
       if (cfg.campos_place_details) {
         setCamposPlaceDetails(cfg.campos_place_details);
       }
@@ -89,7 +105,11 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
       limite_custo_mensal: limiteCustoMensal ? Number(limiteCustoMensal) : null,
       custo_por_chamada: custoPorChamada,
       campos_place_details: camposPlaceDetails,
-      extrair_contatos_website: extrairContatosWebsite
+      extrair_contatos_website: extrairContatosWebsite,
+      // Campos de Web Scraping
+      ws_termo_busca: wsTermoBusca || null,
+      ws_cidade: wsCidade || null,
+      ws_uf: wsUf || null
     } as any);
     setSaving(false);
   };
@@ -100,6 +120,9 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
   const custoEstimado50Empresas = fonteDados === 'google_places' 
     ? (0.032 + (50 * custoPorEmpresa)).toFixed(2) 
     : '0.00';
+
+  // Verificar se os parâmetros de busca do Web Scraping estão completos
+  const wsSearchConfigComplete = wsTermoBusca.trim() && wsCidade.trim() && wsUf;
 
   return (
     <div className="space-y-6">
@@ -302,6 +325,77 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
               Cada busca usa aproximadamente 3-5 créditos (1 por diretório consultado).
             </AlertDescription>
           </Alert>
+        </CardContent>
+      </Card>
+      )}
+
+      {/* Parâmetros de Busca - Apenas para Web Scraping */}
+      {fonteDados === 'web_scraping' && (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Parâmetros de Busca
+          </CardTitle>
+          <CardDescription>
+            Configure o que você deseja buscar nos diretórios
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="wsTermoBusca">Termo de busca *</Label>
+            <Input
+              id="wsTermoBusca"
+              value={wsTermoBusca}
+              onChange={(e) => setWsTermoBusca(e.target.value)}
+              placeholder="Ex: Restaurantes, Oficinas mecânicas, Clínicas..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Tipo de negócio ou categoria que deseja buscar
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="wsCidade">Cidade *</Label>
+              <Input
+                id="wsCidade"
+                value={wsCidade}
+                onChange={(e) => setWsCidade(e.target.value)}
+                placeholder="Ex: São Paulo"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="wsUf">UF *</Label>
+              <Select value={wsUf} onValueChange={setWsUf}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  {UFS_BRASIL.map(u => (
+                    <SelectItem key={u} value={u}>{u}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Status dos parâmetros */}
+          {wsTermoBusca && wsCidade && wsUf ? (
+            <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-700 dark:text-green-300">
+                Parâmetros configurados! Salve e avance para a etapa de busca.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Preencha todos os campos para configurar a busca.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
       )}

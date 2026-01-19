@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Loader2, AlertTriangle, Building2, Phone, Mail, Globe, MapPin, Plus, CheckCircle, Key } from 'lucide-react';
+import { Search, Loader2, AlertTriangle, Building2, Phone, Mail, Globe, MapPin, Plus, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -36,38 +34,33 @@ interface EmpresaEncontrada {
   selecionada?: boolean;
 }
 
-const UFS_BRASIL = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
-  'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
-  'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-];
-
 const ProspeccaoWebScrapingView: React.FC<ProspeccaoWebScrapingViewProps> = ({
   estabelecimentoId,
   config,
   onProspectsFound
 }) => {
-  const [termo, setTermo] = useState('');
-  const [cidade, setCidade] = useState('');
-  const [uf, setUf] = useState('');
   const [buscando, setBuscando] = useState(false);
   const [empresas, setEmpresas] = useState<EmpresaEncontrada[]>([]);
   const [adicionando, setAdicionando] = useState(false);
   const [fontesConsultadas, setFontesConsultadas] = useState<string[]>([]);
   const [erros, setErros] = useState<string[]>([]);
 
-  // Obter API Key das configurações
+  // Obter parâmetros das configurações
   const firecrawlApiKey = config?.firecrawl_api_key || '';
+  const termo = config?.ws_termo_busca || '';
+  const cidade = config?.ws_cidade || '';
+  const uf = config?.ws_uf || '';
   const hasApiKey = !!firecrawlApiKey;
+  const hasSearchParams = !!(termo && cidade && uf);
 
   const handleBuscar = async () => {
-    if (!termo.trim() || !cidade.trim() || !uf) {
-      toast.error('Preencha todos os campos de busca');
+    if (!termo || !cidade || !uf) {
+      toast.error('Configure os parâmetros de busca na etapa anterior');
       return;
     }
 
     if (!firecrawlApiKey) {
-      toast.error('Configure a API Key do Firecrawl nas Configurações');
+      toast.error('Configure a API Key do Firecrawl na etapa anterior');
       return;
     }
 
@@ -79,8 +72,8 @@ const ProspeccaoWebScrapingView: React.FC<ProspeccaoWebScrapingViewProps> = ({
     try {
       const { data, error } = await supabase.functions.invoke('prospeccao-web-scraping', {
         body: {
-          termo: termo.trim(),
-          cidade: cidade.trim(),
+          termo: termo,
+          cidade: cidade,
           uf,
           firecrawl_api_key: firecrawlApiKey,
           limit: 30
@@ -177,8 +170,7 @@ const ProspeccaoWebScrapingView: React.FC<ProspeccaoWebScrapingViewProps> = ({
 
   return (
     <div className="space-y-4">
-
-      {/* Card de Busca */}
+      {/* Card de Resumo da Busca */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -190,51 +182,50 @@ const ProspeccaoWebScrapingView: React.FC<ProspeccaoWebScrapingViewProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="termo">Termo de busca</Label>
-              <Input
-                id="termo"
-                placeholder="Ex: Restaurantes, Oficinas mecânicas..."
-                value={termo}
-                onChange={(e) => setTermo(e.target.value)}
-                disabled={!hasApiKey}
-              />
+          {/* Resumo dos parâmetros configurados */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
+            <div>
+              <Label className="text-xs text-muted-foreground">Termo de busca</Label>
+              <p className="font-medium">{termo || <span className="text-muted-foreground italic">Não configurado</span>}</p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="cidade">Cidade</Label>
-              <Input
-                id="cidade"
-                placeholder="Ex: São Paulo"
-                value={cidade}
-                onChange={(e) => setCidade(e.target.value)}
-                disabled={!hasApiKey}
-              />
+            <div>
+              <Label className="text-xs text-muted-foreground">Cidade</Label>
+              <p className="font-medium">{cidade || <span className="text-muted-foreground italic">Não configurado</span>}</p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="uf">UF</Label>
-              <Select value={uf} onValueChange={setUf} disabled={!hasApiKey}>
-                <SelectTrigger>
-                  <SelectValue placeholder="UF" />
-                </SelectTrigger>
-                <SelectContent>
-                  {UFS_BRASIL.map(u => (
-                    <SelectItem key={u} value={u}>{u}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div>
+              <Label className="text-xs text-muted-foreground">UF</Label>
+              <p className="font-medium">{uf || <span className="text-muted-foreground italic">Não configurado</span>}</p>
             </div>
           </div>
 
+          {!hasSearchParams && (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Configure os parâmetros de busca na <strong>Etapa 1 (Configurar)</strong> antes de realizar a busca.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {hasSearchParams && hasApiKey && (
+            <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-700 dark:text-green-300">
+                Tudo configurado! Clique no botão abaixo para iniciar a busca.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Button 
             onClick={handleBuscar} 
-            disabled={buscando || !hasApiKey}
-            className="w-full md:w-auto"
+            disabled={buscando || !hasApiKey || !hasSearchParams}
+            className="w-full"
+            size="lg"
           >
             {buscando ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Buscando...
+                Buscando empresas...
               </>
             ) : (
               <>
@@ -383,10 +374,10 @@ const ProspeccaoWebScrapingView: React.FC<ProspeccaoWebScrapingViewProps> = ({
       )}
 
       {/* Mensagem quando não há resultados */}
-      {!buscando && empresas.length === 0 && termo && (
+      {!buscando && empresas.length === 0 && hasSearchParams && (
         <div className="text-center py-8 text-muted-foreground">
           <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>Realize uma busca para encontrar empresas</p>
+          <p>Clique em "Buscar Empresas" para encontrar prospects</p>
         </div>
       )}
     </div>
