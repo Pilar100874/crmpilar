@@ -81,7 +81,14 @@ const ProspeccaoB2BView: React.FC = () => {
       ? !!(prospeccao.config as any)?.firecrawl_api_key
       : true; // Dados abertos não precisa de API key
 
-  const isConfigComplete = hasApiKey;
+  // Verificar parâmetros de busca do Web Scraping
+  const wsSearchComplete = isWebScraping 
+    ? !!((prospeccao.config as any)?.ws_termo_busca && 
+         (prospeccao.config as any)?.ws_cidade && 
+         (prospeccao.config as any)?.ws_uf)
+    : true;
+
+  const isConfigComplete = hasApiKey && wsSearchComplete;
   const hasProspects = prospeccao.prospects.length > 0;
 
   // Obter info de gastos
@@ -308,9 +315,12 @@ const ProspeccaoB2BView: React.FC = () => {
                 <Settings className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-blue-700 dark:text-blue-300 text-sm">
                   <strong>Etapa 1:</strong> Escolha sua fonte de dados preferida. 
-                  {!isGooglePlaces && " Fontes gratuitas não precisam de API key."}
+                  {!isGooglePlaces && !isWebScraping && " Fontes gratuitas não precisam de API key."}
                   {isGooglePlaces && !hasApiKey && " Configure sua API Key do Google Places para continuar."}
                   {isGooglePlaces && hasApiKey && " API configurada! Você pode avançar para buscar empresas."}
+                  {isWebScraping && !hasApiKey && " Configure sua API Key do Firecrawl para continuar."}
+                  {isWebScraping && hasApiKey && !wsSearchComplete && " Configure os parâmetros de busca (termo, cidade, UF)."}
+                  {isWebScraping && hasApiKey && wsSearchComplete && " Tudo configurado! Avance para executar a busca."}
                 </AlertDescription>
               </Alert>
             )}
@@ -322,7 +332,7 @@ const ProspeccaoB2BView: React.FC = () => {
                   <strong>Etapa 2:</strong> 
                   {isGooglePlaces && " Desenhe uma área no mapa ou selecione uma cidade para buscar empresas."}
                   {isDadosAbertos && " Selecione estado e município para buscar empresas na base de CNPJs."}
-                  {isWebScraping && " Informe o termo de busca e localização para extrair dados de diretórios."}
+                  {isWebScraping && " Clique no botão para executar a busca com os parâmetros configurados."}
                 </AlertDescription>
               </Alert>
             )}
