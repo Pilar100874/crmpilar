@@ -177,16 +177,6 @@ const ProspeccaoWebScrapingView: React.FC<ProspeccaoWebScrapingViewProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Alerta se não tem API Key */}
-      {!hasApiKey && (
-        <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950">
-          <Key className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-700 dark:text-amber-300">
-            <strong>API Key do Firecrawl não configurada.</strong> Vá para a aba "Parâmetros" e configure sua chave 
-            na seção "Web Scraping" para realizar buscas.
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* Card de Busca */}
       <Card>
