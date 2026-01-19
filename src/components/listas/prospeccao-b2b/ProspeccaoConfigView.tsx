@@ -21,7 +21,7 @@ interface ExtrairContatosWebsite {
   method: 'basic' | 'firecrawl';
 }
 
-type FonteDados = 'google_places' | 'dados_abertos' | 'web_scraping';
+type FonteDados = 'google_places' | 'dados_abertos' | 'web_scraping' | 'scraping_direto';
 
 const UFS_BRASIL = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -195,27 +195,53 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
               </label>
             </div>
 
-            {/* Web Scraping de Diretórios - Grátis */}
+            {/* Web Scraping com Firecrawl - Requer API */}
             <div className={`p-4 border rounded-lg transition-colors ${fonteDados === 'web_scraping' ? 'border-purple-500 bg-purple-50 dark:bg-purple-950' : ''}`}>
               <label className="flex items-start gap-3 cursor-pointer">
                 <RadioGroupItem value="web_scraping" className="mt-1" />
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-medium flex items-center gap-2">
-                      <Search className="h-4 w-4 text-purple-600" />
-                      Web Scraping de Diretórios
+                      <Zap className="h-4 w-4 text-purple-600" />
+                      Web Scraping (Firecrawl + IA)
                     </span>
-                    <Badge variant="secondary" className="text-green-600">
-                      Grátis
+                    <Badge variant="outline" className="text-purple-600 border-purple-300">
+                      Requer API
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Extração de dados de diretórios públicos como TeleListas, Guia Mais, etc.
+                    Extração avançada com IA. Melhor qualidade de dados e estruturação automática.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs text-purple-600">🤖 IA + Firecrawl</Badge>
+                    <Badge variant="outline" className="text-xs">📞 Alta taxa de telefones</Badge>
+                    <Badge variant="outline" className="text-xs">⭐ Melhor qualidade</Badge>
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            {/* Scraping Direto - Grátis sem API */}
+            <div className={`p-4 border rounded-lg transition-colors ${fonteDados === 'scraping_direto' ? 'border-orange-500 bg-orange-50 dark:bg-orange-950' : ''}`}>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <RadioGroupItem value="scraping_direto" className="mt-1" />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium flex items-center gap-2">
+                      <Search className="h-4 w-4 text-orange-600" />
+                      Scraping Direto (Sem API)
+                    </span>
+                    <Badge variant="secondary" className="text-green-600">
+                      100% Grátis
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Extração direta de diretórios públicos. Não requer nenhuma API externa.
                   </p>
                   <div className="flex flex-wrap gap-2 mt-2">
                     <Badge variant="outline" className="text-xs text-green-600">💰 Sem custo</Badge>
-                    <Badge variant="outline" className="text-xs">📞 Pode ter telefone</Badge>
-                    <Badge variant="outline" className="text-xs text-amber-600">⚠️ Dados variáveis</Badge>
+                    <Badge variant="outline" className="text-xs text-amber-600">⚠️ Resultados limitados</Badge>
+                    <Badge variant="outline" className="text-xs">🔓 Sem API Key</Badge>
                   </div>
                 </div>
               </label>
@@ -236,10 +262,20 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
 
           {fonteDados === 'web_scraping' && (
             <Alert className="border-purple-200 bg-purple-50 dark:bg-purple-950">
-              <Search className="h-4 w-4 text-purple-600" />
+              <Zap className="h-4 w-4 text-purple-600" />
               <AlertDescription className="text-purple-700 dark:text-purple-300">
-                <strong>Web Scraping:</strong> Extrai dados de diretórios públicos (TeleListas, Guia Mais, etc). 
-                Requer API Key do Firecrawl. A qualidade dos dados varia por região e segmento.
+                <strong>Web Scraping com IA:</strong> Usa Firecrawl + Gemini para extrair e estruturar dados. 
+                Melhor qualidade de dados mas requer API Key do Firecrawl.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {fonteDados === 'scraping_direto' && (
+            <Alert className="border-orange-200 bg-orange-50 dark:bg-orange-950">
+              <Search className="h-4 w-4 text-orange-600" />
+              <AlertDescription className="text-orange-700 dark:text-orange-300">
+                <strong>Scraping Direto:</strong> Extração sem APIs externas de diretórios (TeleListas, Guia Mais, Apontador). 
+                Resultados podem ser limitados e sujeitos a bloqueios. Ideal para testes e uso ocasional.
               </AlertDescription>
             </Alert>
           )}
@@ -329,8 +365,8 @@ const ProspeccaoConfigView: React.FC<ProspeccaoConfigViewProps> = ({
       </Card>
       )}
 
-      {/* Parâmetros de Busca - Apenas para Web Scraping */}
-      {fonteDados === 'web_scraping' && (
+      {/* Parâmetros de Busca - Para Web Scraping e Scraping Direto */}
+      {(fonteDados === 'web_scraping' || fonteDados === 'scraping_direto') && (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

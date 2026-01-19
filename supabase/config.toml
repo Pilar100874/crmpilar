@@ -248,3 +248,6 @@ verify_jwt = true
 
 [functions.prospeccao-web-scraping]
 verify_jwt = true
+
+[functions.prospeccao-scraping-direto]
+verify_jwt = true
