@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Image, Paperclip, Variable, Zap, FileCheck, Languages, FileText, Bot, Webhook, UserPlus, Wand2, Sparkles, BookOpen, type LucideIcon } from 'lucide-react';
+import { Image, Paperclip, Variable, Zap, FileCheck, Languages, FileText, Bot, Webhook, UserPlus, Wand2, Sparkles, BookOpen, CalendarPlus, Target, type LucideIcon } from 'lucide-react';
 
 // Mapa de ícones disponíveis
 const ICON_MAP: Record<string, LucideIcon> = {
-  Image, Paperclip, Variable, Zap, FileCheck, Languages, FileText, Bot, Webhook, UserPlus, Wand2, Sparkles, BookOpen
+  Image, Paperclip, Variable, Zap, FileCheck, Languages, FileText, Bot, Webhook, UserPlus, Wand2, Sparkles, BookOpen, CalendarPlus, Target
 };
 
 export interface FerramentaConfig {
