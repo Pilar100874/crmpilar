@@ -3169,6 +3169,9 @@ ${recentMessages}
         setShowRadialCatalogDialog(true);
         loadRadialCatalogs();
         break;
+      case "tool-agenda-email":
+        setTriggerTool('agenda-tracking');
+        break;
       // AI submenu items
       case "ai-chat":
         setShowAIChat(!showAIChat);
@@ -3224,6 +3227,9 @@ ${recentMessages}
       case "tool-catalog":
         setShowRadialCatalogDialog(true);
         loadRadialCatalogs();
+        break;
+      case "tool-agenda-email":
+        setTriggerTool('agenda-tracking');
         break;
       case "ai-chat":
         setShowAIChat(!showAIChat);
