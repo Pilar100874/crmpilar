@@ -645,10 +645,11 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
         estab: estabId || '',
         uid: usuario.id,
         email: recipientEmail || '',
-        name: recipientEmail?.split('@')[0] || '',
+        name: '', // Will be resolved by edge function via email lookup
         titulo: agendaTitulo,
         desc: agendaDescricao,
         url: agendaRedirectUrl,
+        source: 'email'
       });
 
       const trackingUrl = `${supabaseUrl}/functions/v1/email-agenda-tracker?${params.toString()}`;
@@ -725,11 +726,12 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
         estab: estabId || '',
         uid: usuario.id,
         email: recipientEmail || '',
-        name: recipientEmail?.split('@')[0] || '',
+        name: '', // Will be resolved by edge function via email lookup
         titulo: agendaTitulo,
         desc: agendaDescricao,
-        url: filePublicUrl, // Redirect to the file itself
+        url: filePublicUrl,
         tipo: 'anexo',
+        source: 'email'
       });
 
       const trackingUrl = `${supabaseUrl}/functions/v1/email-agenda-tracker?${params.toString()}`;

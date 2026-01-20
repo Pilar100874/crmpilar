@@ -114,7 +114,7 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        // If not found by phone, try by email
+        // If not found by phone, try by email in customers table
         if (!customerId && recipientEmail) {
           const { data: customer } = await supabase
             .from('customers')
@@ -128,6 +128,24 @@ Deno.serve(async (req: Request) => {
             customerId = customer.id;
             customerName = customer.nome || customerName;
             console.log('Customer found by email:', customer.nome);
+          }
+        }
+
+        // If still not found, try to find company by emails_vinculados array
+        let empresaEncontrada: { id: string; nome: string; razao_social: string } | null = null;
+        if (!customerId && recipientEmail) {
+          const { data: empresa } = await supabase
+            .from('empresas')
+            .select('id, nome, razao_social')
+            .eq('estabelecimento_id', estabelecimentoId)
+            .contains('emails_vinculados', [recipientEmail])
+            .limit(1)
+            .maybeSingle();
+
+          if (empresa) {
+            empresaEncontrada = empresa;
+            customerName = empresa.nome || empresa.razao_social || customerName;
+            console.log('Company found by linked email:', empresa.nome);
           }
         }
 
@@ -156,9 +174,14 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        // If we have a customer, check for linked company
+        // Determine displayName - prioritize company found directly, then customer's linked company
         displayName = customerName;
-        if (customerId) {
+        
+        // If we found a company directly by email, use it
+        if (empresaEncontrada) {
+          displayName = empresaEncontrada.nome || empresaEncontrada.razao_social || customerName;
+          console.log('Using directly found company:', displayName);
+        } else if (customerId) {
           // Check if customer has a linked company (prefer primary company)
           const { data: customerEmpresa } = await supabase
             .from('customer_empresas')
