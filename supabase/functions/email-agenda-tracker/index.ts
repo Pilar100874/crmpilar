@@ -47,37 +47,6 @@ serve(async (req: Request) => {
         // Get today's date in YYYY-MM-DD format
         const hoje = new Date().toISOString().split('T')[0];
 
-        // The userId coming in is actually the auth_user_id, we need to get the usuarios.id
-        // First check if it's already a usuarios.id, otherwise look up by auth_user_id
-        let realUserId = userId;
-        
-        // Try to find the usuario by auth_user_id first
-        const { data: usuario } = await supabase
-          .from('usuarios')
-          .select('id')
-          .eq('auth_user_id', userId)
-          .maybeSingle();
-        
-        if (usuario) {
-          realUserId = usuario.id;
-          console.log('Found usuario id:', realUserId, 'from auth_user_id:', userId);
-        } else {
-          // Check if userId is directly a usuarios.id
-          const { data: directUsuario } = await supabase
-            .from('usuarios')
-            .select('id')
-            .eq('id', userId)
-            .maybeSingle();
-          
-          if (directUsuario) {
-            realUserId = directUsuario.id;
-            console.log('userId is already a valid usuarios.id:', realUserId);
-          } else {
-            console.error('Could not find usuario for userId:', userId);
-            // Still try with the original userId
-          }
-        }
-
         // Try to find customer by email or phone
         let customerId: string | null = null;
         let customerName = recipientName || 'Cliente';
@@ -149,12 +118,12 @@ serve(async (req: Request) => {
         // Valid values based on existing data: 'bot', 'email_enviado'
         const origem = source === 'chat' ? 'bot' : 'email_enviado';
 
-        // Create task in calendario_tarefas using the correct usuario id
+        // Create task in calendario_tarefas
         const { data: tarefa, error: tarefaError } = await supabase
           .from('calendario_tarefas')
           .insert({
             estabelecimento_id: estabelecimentoId,
-            user_id: realUserId,
+            user_id: userId,
             contact_id: customerId,
             contact_name: customerName,
             title: tituloTarefa,
