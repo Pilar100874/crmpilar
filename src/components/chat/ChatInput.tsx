@@ -80,6 +80,7 @@ interface ChatInputProps {
   // Customer info for tracking tools
   customerPhone?: string;
   customerName?: string;
+  customerId?: string;
 }
 
 export default function ChatInput({ 
@@ -114,7 +115,8 @@ export default function ChatInput({
   triggerTool,
   onToolTriggered,
   customerPhone,
-  customerName
+  customerName,
+  customerId
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -961,6 +963,8 @@ export default function ChatInput({
       disabled={disabled}
       customerPhone={customerPhone}
       customerName={customerName}
+      customerId={customerId}
+      conversationId={conversationId}
     />
   );
 

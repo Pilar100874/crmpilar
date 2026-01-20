@@ -17,6 +17,8 @@ interface AgendaTrackingToolProps {
   buttonClassName?: string;
   customerPhone?: string;
   customerName?: string;
+  customerId?: string;
+  conversationId?: string;
   externalOpen?: boolean;
   onExternalOpenChange?: (open: boolean) => void;
 }
@@ -28,6 +30,8 @@ export default function AgendaTrackingTool({
   buttonClassName,
   customerPhone,
   customerName,
+  customerId,
+  conversationId,
   externalOpen,
   onExternalOpenChange
 }: AgendaTrackingToolProps) {
@@ -86,6 +90,8 @@ export default function AgendaTrackingTool({
         uid: usuario.id,
         phone: customerPhone || '',
         name: customerName || '',
+        cid: customerId || '',
+        convid: conversationId || '',
         titulo: titulo,
         desc: descricao,
         url: redirectUrl,
@@ -156,6 +162,8 @@ export default function AgendaTrackingTool({
         uid: usuario.id,
         phone: customerPhone || '',
         name: customerName || '',
+        cid: customerId || '',
+        convid: conversationId || '',
         titulo: titulo,
         desc: descricao,
         url: filePublicUrl,
