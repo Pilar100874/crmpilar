@@ -82,7 +82,7 @@ const DEFAULT_TOOLS = [
   { ferramenta_id: 'tool-attachments', nome: 'Anexos Rápidos', icone: 'FileCheck', descricao: 'Anexos pré-configurados', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'tool-budget', nome: 'Anexar Orçamento', icone: 'FileText', descricao: 'Anexar orçamento ao atendimento', tipo: 'ferramenta', aba_chat: true, aba_orcamento: true, radial_chat: true, radial_orcamento: true },
   { ferramenta_id: 'tool-catalog', nome: 'Anexar Catálogo', icone: 'BookOpen', descricao: 'Anexar catálogo em PDF', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
-  { ferramenta_id: 'tool-agenda-email', nome: 'Link Agenda Email', icone: 'CalendarPlus', descricao: 'Link que cria tarefa ao clicar', tipo: 'ferramenta', aba_email: true, radial_email: true },
+  { ferramenta_id: 'tool-agenda-email', nome: 'Link Rastreio e Agendamento', icone: 'CalendarPlus', descricao: 'Link ou anexo que rastreia e agenda', tipo: 'ferramenta', aba_email: true, radial_email: true },
   { ferramenta_id: 'tool-translate', nome: 'Traduzir', icone: 'Languages', descricao: 'Traduzir texto', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'tool-reports', nome: 'Relatórios', icone: 'FileText', descricao: 'Importar relatórios', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
   { ferramenta_id: 'tool-bot', nome: 'Redirecionar Bot', icone: 'Bot', descricao: 'Redirecionar para bot', tipo: 'ferramenta', aba_chat: true, radial_chat: true },
