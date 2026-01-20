@@ -8,7 +8,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Plus, FileText, FileSpreadsheet, Upload, Search, BookOpen, FileDown, Loader2, Calendar, Package, AlertCircle } from "lucide-react";
+import { Plus, FileText, FileSpreadsheet, Upload, Search, BookOpen, FileDown, Loader2, Calendar, Package, AlertCircle, CalendarPlus, Link2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/hooks/use-toast";
@@ -208,6 +209,13 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
   const [catalogs, setCatalogs] = useState<SavedCatalog[]>([]);
   const [catalogSearch, setCatalogSearch] = useState("");
   const [generatingCatalogPdf, setGeneratingCatalogPdf] = useState<string | null>(null);
+
+  // Agenda Email states
+  const [agendaTitulo, setAgendaTitulo] = useState("Agende seu atendimento");
+  const [agendaDescricao, setAgendaDescricao] = useState("Cliente clicou no link do email");
+  const [agendaTextoLink, setAgendaTextoLink] = useState("Clique aqui para agendar");
+  const [agendaRedirectUrl, setAgendaRedirectUrl] = useState("https://www.pilar.com.br");
+  const [insertingAgendaLink, setInsertingAgendaLink] = useState(false);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -461,7 +469,7 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
 
   const hasSubMenu = (toolId: string) => {
     // All tools have sub-menus now
-    return ['tool-attachments', 'tool-image', 'tool-file', 'tool-quick-replies', 'tool-budget', 'tool-catalog'].includes(toolId);
+    return ['tool-attachments', 'tool-image', 'tool-file', 'tool-quick-replies', 'tool-budget', 'tool-catalog', 'tool-agenda-email'].includes(toolId);
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -603,7 +611,66 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
     }, 1500);
   };
 
-  const filteredQuickReplies = quickReplies.filter(r => 
+  // Handle agenda email link insertion
+  const handleInsertAgendaLink = async () => {
+    setInsertingAgendaLink(true);
+    try {
+      const estabId = estabelecimentoId || await getEstabelecimentoId();
+      
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: "Erro", description: "Usuário não autenticado", variant: "destructive" });
+        return;
+      }
+
+      // Get usuario record
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+
+      if (!usuario) {
+        toast({ title: "Erro", description: "Usuário não encontrado", variant: "destructive" });
+        return;
+      }
+
+      // Build the tracking URL
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const params = new URLSearchParams({
+        estab: estabId || '',
+        uid: usuario.id,
+        email: recipientEmail || '',
+        name: recipientEmail?.split('@')[0] || '',
+        titulo: agendaTitulo,
+        desc: agendaDescricao,
+        url: agendaRedirectUrl,
+      });
+
+      const trackingUrl = `${supabaseUrl}/functions/v1/email-agenda-tracker?${params.toString()}`;
+
+      // Insert HTML link into email body
+      const htmlLink = `<a href="${trackingUrl}" style="display: inline-block; padding: 12px 24px; background-color: #f97316; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">${agendaTextoLink}</a>`;
+      
+      onInsertText?.(htmlLink);
+      
+      toast({ 
+        title: "Link de agenda inserido", 
+        description: "Quando o cliente clicar, será criada uma tarefa para hoje" 
+      });
+      
+      setActiveToolId(null);
+      setShowToolsMenu(false);
+    } catch (error) {
+      console.error('Erro ao inserir link de agenda:', error);
+      toast({ title: "Erro", description: "Não foi possível inserir o link", variant: "destructive" });
+    } finally {
+      setInsertingAgendaLink(false);
+    }
+  };
+
+  const filteredQuickReplies = quickReplies.filter(r =>
     r.title?.toLowerCase().includes(quickReplySearch.toLowerCase()) ||
     r.content?.toLowerCase().includes(quickReplySearch.toLowerCase())
   );
@@ -911,6 +978,81 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
                 </div>
               )}
             </ScrollArea>
+          </div>
+        );
+
+      case 'tool-agenda-email':
+        return (
+          <div className="space-y-3">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <CalendarPlus className="h-4 w-4 text-orange-500" />
+              Link de Agenda Rápida
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Insere um link no email que, ao ser clicado pelo cliente, cria automaticamente uma tarefa no calendário para hoje.
+            </p>
+            
+            <div className="space-y-2">
+              <Label className="text-xs">Título da Tarefa</Label>
+              <Input
+                value={agendaTitulo}
+                onChange={(e) => setAgendaTitulo(e.target.value)}
+                placeholder="Ex: Retorno cliente"
+                className="h-8 text-sm"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-xs">Descrição da Tarefa</Label>
+              <Textarea
+                value={agendaDescricao}
+                onChange={(e) => setAgendaDescricao(e.target.value)}
+                placeholder="Ex: Cliente clicou no link do email"
+                className="text-sm min-h-[60px]"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-xs">Texto do Botão no Email</Label>
+              <Input
+                value={agendaTextoLink}
+                onChange={(e) => setAgendaTextoLink(e.target.value)}
+                placeholder="Ex: Clique para agendar"
+                className="h-8 text-sm"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-xs">URL de Redirecionamento</Label>
+              <Input
+                value={agendaRedirectUrl}
+                onChange={(e) => setAgendaRedirectUrl(e.target.value)}
+                placeholder="https://..."
+                className="h-8 text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Para onde o cliente será direcionado após clicar
+              </p>
+            </div>
+            
+            <Button 
+              size="sm" 
+              className="w-full bg-orange-500 hover:bg-orange-600"
+              onClick={handleInsertAgendaLink}
+              disabled={insertingAgendaLink || !agendaTitulo.trim() || !agendaTextoLink.trim()}
+            >
+              {insertingAgendaLink ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Inserindo...
+                </>
+              ) : (
+                <>
+                  <Link2 className="h-4 w-4 mr-2" />
+                  Inserir Link no Email
+                </>
+              )}
+            </Button>
           </div>
         );
       
