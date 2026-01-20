@@ -34,6 +34,7 @@ export default function EmailPage() {
     showComposeEmail,
     composeEmailMode,
     composeEmailDefaults,
+    estabelecimentoId,
     setShowComposeEmail,
     loadEmails,
     sendEmail,
@@ -235,6 +236,7 @@ export default function EmailPage() {
         defaultSubject={composeEmailDefaults.subject}
         defaultBody={composeEmailDefaults.body}
         onSend={sendEmail}
+        estabelecimentoId={estabelecimentoId}
       />
     </div>
   );

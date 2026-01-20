@@ -35,6 +35,7 @@ export function useEmailManager(options?: UseEmailManagerOptions) {
   const [showComposeEmail, setShowComposeEmail] = useState(false);
   const [composeEmailMode, setComposeEmailMode] = useState<'compose' | 'reply' | 'forward'>('compose');
   const [composeEmailDefaults, setComposeEmailDefaults] = useState<{ to: string; subject: string; body: string }>({ to: '', subject: '', body: '' });
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
 
   const getEstabelecimentoId = async (): Promise<string | null> => {
     try {
@@ -61,6 +62,9 @@ export function useEmailManager(options?: UseEmailManagerOptions) {
 
       const estabId = await getEstabelecimentoId();
       if (!estabId) return;
+      
+      // Store estabelecimento_id for tools menu
+      setEstabelecimentoId(estabId);
 
       // Check email mode configuration
       const { data: emailConfigs } = await supabase
@@ -323,6 +327,7 @@ export function useEmailManager(options?: UseEmailManagerOptions) {
     showComposeEmail,
     composeEmailMode,
     composeEmailDefaults,
+    estabelecimentoId,
     
     // Setters
     setEmails,
