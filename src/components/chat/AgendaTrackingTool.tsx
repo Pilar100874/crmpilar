@@ -193,7 +193,7 @@ export default function AgendaTrackingTool({
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={setOpen} modal={false}>
           <TooltipTrigger asChild>
             <PopoverTrigger asChild>
               <button 
@@ -206,12 +206,10 @@ export default function AgendaTrackingTool({
             </PopoverTrigger>
           </TooltipTrigger>
           <PopoverContent 
-            className="w-80 p-4 rounded-xl shadow-xl border-border/50" 
+            className="w-80 p-4 rounded-xl shadow-xl border-border/50 select-text" 
             align="start" 
             sideOffset={8}
             style={{ zIndex: 9999 }}
-            onPointerDownOutside={(e) => e.preventDefault()}
-            onInteractOutside={(e) => e.preventDefault()}
           >
             <div className="space-y-3">
               <Label className="text-sm font-medium flex items-center gap-2">
