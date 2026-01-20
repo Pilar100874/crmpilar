@@ -49,6 +49,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
   const [loadingMessage, setLoadingMessage] = useState("");
   const [hasEmailConfig, setHasEmailConfig] = useState<boolean | null>(null);
   const [checkingConfig, setCheckingConfig] = useState(true);
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   
   // Compose email states
   const [showComposeEmail, setShowComposeEmail] = useState(false);
@@ -93,6 +94,9 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
         setCheckingConfig(false);
         return;
       }
+
+      // Store estabelecimento_id for tools menu
+      setEstabelecimentoId(usuario.estabelecimento_id);
 
       const { data: emailConfigs } = await supabase
         .from('email_oauth_config')
@@ -598,6 +602,7 @@ export default function Email({ embeddedFolder }: EmailProps = {}) {
               : ''
         }
         onSend={handleSendEmail}
+        estabelecimentoId={estabelecimentoId}
       />
     </div>
   );
