@@ -173,9 +173,19 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
   const imageInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Debug log
+  useEffect(() => {
+    console.log('[EmailToolsMenu] estabelecimentoId:', estabelecimentoId);
+  }, [estabelecimentoId]);
+  
   // Load ferramentas from database
   const { getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId);
   const emailFerramentas = getToolbarFerramentas('email');
+  
+  // Debug log
+  useEffect(() => {
+    console.log('[EmailToolsMenu] loadingFerramentas:', loadingFerramentas, 'emailFerramentas:', emailFerramentas?.length);
+  }, [loadingFerramentas, emailFerramentas]);
   
   // Active tool state for sub-menus
   const [activeToolId, setActiveToolId] = useState<string | null>(null);
@@ -1012,6 +1022,7 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                console.log('[EmailToolsMenu] Button clicked, showToolsMenu:', !showToolsMenu, 'disabled:', disabled, 'loadingFerramentas:', loadingFerramentas);
                 setShowToolsMenu(!showToolsMenu);
               }}
               onPointerDown={(e) => e.stopPropagation()}
