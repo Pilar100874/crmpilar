@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Plus, FileText, FileSpreadsheet, Upload, Search, BookOpen, FileDown, Loader2, Calendar, Package, AlertCircle, CalendarPlus, Link2, Paperclip } from "lucide-react";
+import { Plus, FileText, FileSpreadsheet, Upload, Search, BookOpen, FileDown, Loader2, Calendar, Package, AlertCircle, CalendarPlus, Link2, Paperclip, Target } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -1082,8 +1082,8 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
         return (
           <div className="space-y-3">
             <Label className="text-sm font-medium flex items-center gap-2">
-              <CalendarPlus className="h-4 w-4 text-orange-500" />
-              Link para Rastreio e Agendamento
+              <Target className="h-4 w-4 text-orange-500" />
+              Rastreio com Agendamento
             </Label>
             <p className="text-xs text-muted-foreground">
               Rastreia quando o cliente interage e cria automaticamente uma tarefa no calendário para hoje.
