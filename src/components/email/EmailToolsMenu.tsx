@@ -997,7 +997,7 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
       )}
 
       {/* Main trigger button */}
-      <TooltipProvider delayDuration={200}>
+      <TooltipProvider delayDuration={300}>
         <Tooltip>
           <TooltipTrigger asChild>
             <button 
@@ -1009,14 +1009,21 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
                 "text-orange-600 hover:text-orange-700",
                 showToolsMenu && "bg-orange-500 text-white rotate-45 shadow-md"
               )}
-              onClick={() => setShowToolsMenu(!showToolsMenu)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowToolsMenu(!showToolsMenu);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
               type="button"
               disabled={loadingFerramentas}
             >
               <Plus className="h-5 w-5" />
             </button>
           </TooltipTrigger>
-          <TooltipContent>{showToolsMenu ? "Fechar menu" : "Abrir ferramentas"}</TooltipContent>
+          <TooltipContent side="top" sideOffset={8}>
+            {showToolsMenu ? "Fechar menu" : "Abrir ferramentas"}
+          </TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>
