@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus, Sparkles, FileText, FileSpreadsheet, MessageSquareText, BookOpen, Languages, FileCheck, Plus } from "lucide-react";
+import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus, Sparkles, FileText, FileSpreadsheet, MessageSquareText, BookOpen, Languages, FileCheck, Plus, Target } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +18,7 @@ import QuickRepliesSelector from "./QuickRepliesSelector";
 import QuickAttachmentsSelector from "./QuickAttachmentsSelector";
 import OrcamentoAttachmentSelector from "./OrcamentoAttachmentSelector";
 import CatalogAttachmentSelector from "./CatalogAttachmentSelector";
+import AgendaTrackingTool from "./AgendaTrackingTool";
 import { Message } from "@/pages/ChatWebhook";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
@@ -29,7 +30,7 @@ const toolbarBtnActiveClass = "h-9 w-9 rounded-xl bg-primary/15 border border-pr
 export type ChatToolTrigger = 
   | 'image' | 'file' | 'variables' | 'quick-replies' | 'quick-attachments' 
   | 'translate' | 'bot' | 'webhook' | 'transfer' | 'reports' | 'catalog'
-  | 'context' | 'summary' | 'kb' | 'realtime-translate' | null;
+  | 'context' | 'summary' | 'kb' | 'realtime-translate' | 'agenda-tracking' | null;
 
 interface ChatInputProps {
   onSendMessage: (
@@ -132,6 +133,9 @@ export default function ChatInput({
   // Catalog trigger state
   const [showCatalogPopover, setShowCatalogPopover] = useState(false);
   
+  // Agenda tracking state
+  const [showAgendaTrackingPopover, setShowAgendaTrackingPopover] = useState(false);
+  
   // Agent Assist states
   const [isGeneratingContextResponse, setIsGeneratingContextResponse] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
@@ -223,6 +227,9 @@ export default function ChatInput({
         break;
       case 'realtime-translate':
         setShowRealTimeTranslatePopover(true);
+        break;
+      case 'agenda-tracking':
+        setShowAgendaTrackingPopover(true);
         break;
     }
     
@@ -927,6 +934,25 @@ export default function ChatInput({
         setShowCatalogPopover(false);
       }} 
       disabled={disabled} 
+    />
+  );
+
+  // Agenda Tracking Tool (Rastreio com Agendamento)
+  allItems.push(
+    <AgendaTrackingTool
+      key="agenda-tracking"
+      externalOpen={showAgendaTrackingPopover}
+      onExternalOpenChange={setShowAgendaTrackingPopover}
+      onInsertLink={(url, text) => {
+        setMessage(prev => prev + (prev ? '\n' : '') + `${text}: ${url}`);
+        setShowToolsMenu(false);
+        setShowAgendaTrackingPopover(false);
+      }}
+      onClose={() => {
+        setShowToolsMenu(false);
+        setShowAgendaTrackingPopover(false);
+      }}
+      disabled={disabled}
     />
   );
 
