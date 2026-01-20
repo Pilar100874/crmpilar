@@ -5624,6 +5624,7 @@ ${recentMessages}
                   onToolTriggered={() => setTriggerTool(null)}
                   customerPhone={selectedConv?.customer?.telefone}
                   customerName={selectedConv?.customer?.nome}
+                  customerId={selectedConv?.customer?.id}
                 />
               </div>
             </div>
@@ -6914,6 +6915,7 @@ function MobileMainContent({
             onToolTriggered={() => setTriggerTool(null)}
             customerPhone={selectedConv?.customer?.telefone}
             customerName={selectedConv?.customer?.nome}
+            customerId={selectedConv?.customer?.id}
           />
         </div>
       </div>
