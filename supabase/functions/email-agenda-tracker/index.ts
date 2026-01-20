@@ -49,6 +49,7 @@ Deno.serve(async (req: Request) => {
         // Try to find customer by email or phone
         let customerId: string | null = null;
         let customerName = recipientName || 'Cliente';
+        let displayName = customerName; // This will be company name if linked, otherwise contact name
 
         // First try by phone (for chat source)
         if (recipientPhone) {
@@ -113,6 +114,35 @@ Deno.serve(async (req: Request) => {
           }
         }
 
+        // If we have a customer, check for linked company
+        displayName = customerName;
+        if (customerId) {
+          // Check if customer has a linked company (prefer primary company)
+          const { data: customerEmpresa } = await supabase
+            .from('customer_empresas')
+            .select(`
+              empresa_id,
+              is_primary,
+              empresas:empresa_id (
+                id,
+                nome,
+                razao_social
+              )
+            `)
+            .eq('customer_id', customerId)
+            .order('is_primary', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (customerEmpresa?.empresas) {
+            const empresa = customerEmpresa.empresas as unknown as { id: string; nome: string; razao_social: string };
+            displayName = empresa.nome || empresa.razao_social || customerName;
+            console.log('Customer has linked company:', displayName);
+          } else {
+            console.log('No linked company, using contact name:', customerName);
+          }
+        }
+
         // Determine origem based on source - use valid values from check constraint
         // Valid values based on existing data: 'bot', 'email_enviado'
         const origem = source === 'chat' ? 'bot' : 'email_enviado';
@@ -124,7 +154,7 @@ Deno.serve(async (req: Request) => {
             estabelecimento_id: estabelecimentoId,
             user_id: userId,
             contact_id: customerId,
-            contact_name: customerName,
+            contact_name: displayName, // Use company name if linked, otherwise contact name
             title: tituloTarefa,
             description: descricaoTarefa,
             date: hoje,
@@ -138,7 +168,7 @@ Deno.serve(async (req: Request) => {
         if (tarefaError) {
           console.error('Error creating task:', tarefaError);
         } else {
-          console.log('Task created successfully:', tarefa?.id, 'for customer:', customerName);
+          console.log('Task created successfully:', tarefa?.id, 'for:', displayName);
         }
 
         // Also update email tracking if emailId provided
