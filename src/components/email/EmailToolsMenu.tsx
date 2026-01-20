@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Plus, FileText, FileSpreadsheet, Upload, Search, BookOpen, FileDown, Loader2, Calendar, Package, AlertCircle, CalendarPlus, Link2 } from "lucide-react";
+import { Plus, FileText, FileSpreadsheet, Upload, Search, BookOpen, FileDown, Loader2, Calendar, Package, AlertCircle, CalendarPlus, Link2, Paperclip } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
@@ -216,6 +216,9 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
   const [agendaTextoLink, setAgendaTextoLink] = useState("Clique aqui para agendar");
   const [agendaRedirectUrl, setAgendaRedirectUrl] = useState("https://www.pilar.com.br");
   const [insertingAgendaLink, setInsertingAgendaLink] = useState(false);
+  const [agendaTipoRastreio, setAgendaTipoRastreio] = useState<'link' | 'anexo'>('link');
+  const [agendaAnexoFile, setAgendaAnexoFile] = useState<File | null>(null);
+  const agendaAnexoInputRef = useRef<HTMLInputElement>(null);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -656,7 +659,7 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
       onInsertText?.(htmlLink);
       
       toast({ 
-        title: "Link de agenda inserido", 
+        title: "Link de rastreio inserido", 
         description: "Quando o cliente clicar, será criada uma tarefa para hoje" 
       });
       
@@ -667,6 +670,100 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
       toast({ title: "Erro", description: "Não foi possível inserir o link", variant: "destructive" });
     } finally {
       setInsertingAgendaLink(false);
+    }
+  };
+
+  // Handle agenda email attachment insertion
+  const handleInsertAgendaAnexo = async () => {
+    if (!agendaAnexoFile) {
+      toast({ title: "Erro", description: "Selecione um arquivo para anexar", variant: "destructive" });
+      return;
+    }
+
+    setInsertingAgendaLink(true);
+    try {
+      const estabId = estabelecimentoId || await getEstabelecimentoId();
+      
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: "Erro", description: "Usuário não autenticado", variant: "destructive" });
+        return;
+      }
+
+      // Get usuario record
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+
+      if (!usuario) {
+        toast({ title: "Erro", description: "Usuário não encontrado", variant: "destructive" });
+        return;
+      }
+
+      // Upload the file to storage
+      const fileExt = agendaAnexoFile.name.split('.').pop();
+      const fileName = `${Date.now()}_${agendaAnexoFile.name}`;
+      const filePath = `email-rastreio-anexos/${estabId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('bot-media')
+        .upload(filePath, agendaAnexoFile);
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data: { publicUrl: filePublicUrl } } = supabase.storage
+        .from('bot-media')
+        .getPublicUrl(filePath);
+
+      // Build the tracking URL that will serve/redirect to the file
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const params = new URLSearchParams({
+        estab: estabId || '',
+        uid: usuario.id,
+        email: recipientEmail || '',
+        name: recipientEmail?.split('@')[0] || '',
+        titulo: agendaTitulo,
+        desc: agendaDescricao,
+        url: filePublicUrl, // Redirect to the file itself
+        tipo: 'anexo',
+      });
+
+      const trackingUrl = `${supabaseUrl}/functions/v1/email-agenda-tracker?${params.toString()}`;
+
+      // Add as attachment with tracking
+      const attachmentType = fileExt?.toLowerCase() === 'pdf' ? 'pdf' : fileExt?.toLowerCase() === 'xlsx' || fileExt?.toLowerCase() === 'xls' ? 'excel' : 'file';
+      onAddAttachment?.({
+        id: `rastreio-${Date.now()}`,
+        name: agendaAnexoFile.name,
+        type: attachmentType as 'pdf' | 'excel' | 'file',
+        url: trackingUrl, // Use tracking URL instead of direct URL
+        size: `${(agendaAnexoFile.size / 1024).toFixed(1)} KB`
+      });
+      
+      toast({ 
+        title: "Anexo rastreável adicionado", 
+        description: "Quando o cliente abrir, será criada uma tarefa para hoje" 
+      });
+      
+      setAgendaAnexoFile(null);
+      setActiveToolId(null);
+      setShowToolsMenu(false);
+    } catch (error) {
+      console.error('Erro ao inserir anexo rastreável:', error);
+      toast({ title: "Erro", description: "Não foi possível adicionar o anexo", variant: "destructive" });
+    } finally {
+      setInsertingAgendaLink(false);
+    }
+  };
+
+  const handleAgendaAnexoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAgendaAnexoFile(file);
     }
   };
 
@@ -986,11 +1083,38 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
           <div className="space-y-3">
             <Label className="text-sm font-medium flex items-center gap-2">
               <CalendarPlus className="h-4 w-4 text-orange-500" />
-              Link de Agenda Rápida
+              Link para Rastreio e Agendamento
             </Label>
             <p className="text-xs text-muted-foreground">
-              Insere um link no email que, ao ser clicado pelo cliente, cria automaticamente uma tarefa no calendário para hoje.
+              Rastreia quando o cliente interage e cria automaticamente uma tarefa no calendário para hoje.
             </p>
+            
+            {/* Tipo de rastreamento */}
+            <div className="space-y-2">
+              <Label className="text-xs">Tipo de Rastreamento</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={agendaTipoRastreio === 'link' ? 'default' : 'outline'}
+                  className={cn("flex-1 h-8 text-xs", agendaTipoRastreio === 'link' && "bg-orange-500 hover:bg-orange-600")}
+                  onClick={() => setAgendaTipoRastreio('link')}
+                >
+                  <Link2 className="h-3 w-3 mr-1" />
+                  Link no Email
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={agendaTipoRastreio === 'anexo' ? 'default' : 'outline'}
+                  className={cn("flex-1 h-8 text-xs", agendaTipoRastreio === 'anexo' && "bg-orange-500 hover:bg-orange-600")}
+                  onClick={() => setAgendaTipoRastreio('anexo')}
+                >
+                  <Paperclip className="h-3 w-3 mr-1" />
+                  Anexo Rastreável
+                </Button>
+              </div>
+            </div>
             
             <div className="space-y-2">
               <Label className="text-xs">Título da Tarefa</Label>
@@ -1012,47 +1136,108 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
               />
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-xs">Texto do Botão no Email</Label>
-              <Input
-                value={agendaTextoLink}
-                onChange={(e) => setAgendaTextoLink(e.target.value)}
-                placeholder="Ex: Clique para agendar"
-                className="h-8 text-sm"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-xs">URL de Redirecionamento</Label>
-              <Input
-                value={agendaRedirectUrl}
-                onChange={(e) => setAgendaRedirectUrl(e.target.value)}
-                placeholder="https://..."
-                className="h-8 text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                Para onde o cliente será direcionado após clicar
-              </p>
-            </div>
-            
-            <Button 
-              size="sm" 
-              className="w-full bg-orange-500 hover:bg-orange-600"
-              onClick={handleInsertAgendaLink}
-              disabled={insertingAgendaLink || !agendaTitulo.trim() || !agendaTextoLink.trim()}
-            >
-              {insertingAgendaLink ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Inserindo...
-                </>
-              ) : (
-                <>
-                  <Link2 className="h-4 w-4 mr-2" />
-                  Inserir Link no Email
-                </>
-              )}
-            </Button>
+            {agendaTipoRastreio === 'link' ? (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-xs">Texto do Botão no Email</Label>
+                  <Input
+                    value={agendaTextoLink}
+                    onChange={(e) => setAgendaTextoLink(e.target.value)}
+                    placeholder="Ex: Clique para agendar"
+                    className="h-8 text-sm"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-xs">URL de Redirecionamento</Label>
+                  <Input
+                    value={agendaRedirectUrl}
+                    onChange={(e) => setAgendaRedirectUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="h-8 text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Para onde o cliente será direcionado após clicar
+                  </p>
+                </div>
+                
+                <Button 
+                  size="sm" 
+                  className="w-full bg-orange-500 hover:bg-orange-600"
+                  onClick={handleInsertAgendaLink}
+                  disabled={insertingAgendaLink || !agendaTitulo.trim() || !agendaTextoLink.trim()}
+                >
+                  {insertingAgendaLink ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Inserindo...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 className="h-4 w-4 mr-2" />
+                      Inserir Link no Email
+                    </>
+                  )}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-xs">Selecionar Arquivo</Label>
+                  <input
+                    ref={agendaAnexoInputRef}
+                    type="file"
+                    className="hidden"
+                    onChange={handleAgendaAnexoChange}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 h-8 text-xs"
+                      onClick={() => agendaAnexoInputRef.current?.click()}
+                    >
+                      <Upload className="h-3 w-3 mr-1" />
+                      {agendaAnexoFile ? agendaAnexoFile.name : 'Escolher arquivo'}
+                    </Button>
+                    {agendaAnexoFile && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() => setAgendaAnexoFile(null)}
+                      >
+                        ×
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Quando o cliente abrir o anexo, será criada uma tarefa
+                  </p>
+                </div>
+                
+                <Button 
+                  size="sm" 
+                  className="w-full bg-orange-500 hover:bg-orange-600"
+                  onClick={handleInsertAgendaAnexo}
+                  disabled={insertingAgendaLink || !agendaTitulo.trim() || !agendaAnexoFile}
+                >
+                  {insertingAgendaLink ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Anexando...
+                    </>
+                  ) : (
+                    <>
+                      <Paperclip className="h-4 w-4 mr-2" />
+                      Adicionar Anexo Rastreável
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
           </div>
         );
       
