@@ -77,6 +77,9 @@ interface ChatInputProps {
   // External tool trigger
   triggerTool?: ChatToolTrigger;
   onToolTriggered?: () => void;
+  // Customer info for tracking tools
+  customerPhone?: string;
+  customerName?: string;
 }
 
 export default function ChatInput({ 
@@ -109,7 +112,9 @@ export default function ChatInput({
   translationLanguage = "pt",
   onTranslationLanguageChange,
   triggerTool,
-  onToolTriggered
+  onToolTriggered,
+  customerPhone,
+  customerName
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -954,6 +959,8 @@ export default function ChatInput({
         setShowAgendaTrackingPopover(false);
       }}
       disabled={disabled}
+      customerPhone={customerPhone}
+      customerName={customerName}
     />
   );
 

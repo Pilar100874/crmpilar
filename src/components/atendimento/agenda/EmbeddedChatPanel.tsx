@@ -245,6 +245,8 @@ export function EmbeddedChatPanel({
           disabled={false}
           conversationId={conversationId || undefined}
           conversationMessages={conversationMessages}
+          customerPhone={customerPhone}
+          customerName={customerName}
         />
       </div>
     </div>
