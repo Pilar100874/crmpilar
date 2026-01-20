@@ -17,8 +17,10 @@ Deno.serve(async (req: Request) => {
     const estabelecimentoId = url.searchParams.get('estab');
     const userId = url.searchParams.get('uid');
     const recipientEmail = url.searchParams.get('email');
-    const recipientPhone = url.searchParams.get('phone');
-    const recipientName = url.searchParams.get('name');
+    let recipientPhone = url.searchParams.get('phone');
+    let recipientName = url.searchParams.get('name');
+    const directCustomerId = url.searchParams.get('cid');
+    const conversationId = url.searchParams.get('convid');
     const tituloTarefa = url.searchParams.get('titulo') || 'Retorno Cliente';
     const descricaoTarefa = url.searchParams.get('desc') || 'Cliente clicou no link';
     const redirectUrl = url.searchParams.get('url') || 'https://www.pilar.com.br';
@@ -31,6 +33,8 @@ Deno.serve(async (req: Request) => {
       recipientEmail,
       recipientPhone,
       recipientName,
+      directCustomerId,
+      conversationId,
       tituloTarefa,
       redirectUrl,
       source
@@ -46,12 +50,50 @@ Deno.serve(async (req: Request) => {
         // Get today's date in YYYY-MM-DD format
         const hoje = new Date().toISOString().split('T')[0];
 
-        // Try to find customer by email or phone
-        let customerId: string | null = null;
+        // Try to find customer - first check if we have a direct customer ID
+        let customerId: string | null = directCustomerId || null;
         let customerName = recipientName || 'Cliente';
-        let displayName = customerName; // This will be company name if linked, otherwise contact name
+        let displayName = customerName;
 
-        // First try by phone (for chat source)
+        // If we have direct customer ID, fetch their info
+        if (customerId) {
+          const { data: directCustomer } = await supabase
+            .from('customers')
+            .select('id, nome, telefone')
+            .eq('id', customerId)
+            .maybeSingle();
+          
+          if (directCustomer) {
+            customerName = directCustomer.nome || customerName;
+            recipientPhone = recipientPhone || directCustomer.telefone;
+            console.log('Customer found by direct ID:', directCustomer.nome);
+          }
+        }
+
+        // If no customer yet but we have conversationId, get customer from conversation
+        if (!customerId && conversationId) {
+          const { data: conversation } = await supabase
+            .from('conversations')
+            .select(`
+              customer_id,
+              customers:customer_id (
+                id,
+                nome,
+                telefone,
+                email
+              )
+            `)
+            .eq('id', conversationId)
+            .maybeSingle();
+
+          if (conversation?.customers) {
+            const customer = conversation.customers as unknown as { id: string; nome: string; telefone: string; email: string };
+            customerId = customer.id;
+            customerName = customer.nome || customerName;
+            recipientPhone = recipientPhone || customer.telefone;
+            console.log('Customer found via conversation:', customer.nome);
+          }
+        }
         if (recipientPhone) {
           // Clean phone number for search
           const cleanPhone = recipientPhone.replace(/\D/g, '');
