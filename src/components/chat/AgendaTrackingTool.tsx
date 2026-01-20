@@ -212,8 +212,13 @@ export default function AgendaTrackingTool({
             style={{ zIndex: 9999 }}
             onOpenAutoFocus={(e) => e.preventDefault()}
             onCloseAutoFocus={(e) => e.preventDefault()}
+            onPointerDownOutside={(e) => e.preventDefault()}
           >
-            <div className="space-y-3">
+            <div 
+              className="space-y-3"
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
               <Label className="text-sm font-medium flex items-center gap-2">
                 <Target className="h-4 w-4 text-orange-500" />
                 Rastreio com Agendamento
