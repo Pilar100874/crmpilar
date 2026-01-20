@@ -1092,25 +1092,25 @@ export function EmailToolsMenu({ estabelecimentoId, onInsertText, onAddAttachmen
             {/* Tipo de rastreamento */}
             <div className="space-y-2">
               <Label className="text-xs">Tipo de Rastreamento</Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-1.5">
                 <Button
                   type="button"
                   size="sm"
                   variant={agendaTipoRastreio === 'link' ? 'default' : 'outline'}
-                  className={cn("flex-1 h-8 text-xs", agendaTipoRastreio === 'link' && "bg-orange-500 hover:bg-orange-600")}
+                  className={cn("w-full h-7 text-xs justify-start", agendaTipoRastreio === 'link' && "bg-orange-500 hover:bg-orange-600")}
                   onClick={() => setAgendaTipoRastreio('link')}
                 >
-                  <Link2 className="h-3 w-3 mr-1" />
+                  <Link2 className="h-3 w-3 mr-1.5 shrink-0" />
                   Link no Email
                 </Button>
                 <Button
                   type="button"
                   size="sm"
                   variant={agendaTipoRastreio === 'anexo' ? 'default' : 'outline'}
-                  className={cn("flex-1 h-8 text-xs", agendaTipoRastreio === 'anexo' && "bg-orange-500 hover:bg-orange-600")}
+                  className={cn("w-full h-7 text-xs justify-start", agendaTipoRastreio === 'anexo' && "bg-orange-500 hover:bg-orange-600")}
                   onClick={() => setAgendaTipoRastreio('anexo')}
                 >
-                  <Paperclip className="h-3 w-3 mr-1" />
+                  <Paperclip className="h-3 w-3 mr-1.5 shrink-0" />
                   Anexo Rastreável
                 </Button>
               </div>
