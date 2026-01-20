@@ -206,10 +206,12 @@ export default function AgendaTrackingTool({
             </PopoverTrigger>
           </TooltipTrigger>
           <PopoverContent 
-            className="w-80 p-4 rounded-xl shadow-xl border-border/50 select-text" 
+            className="w-80 p-4 rounded-xl shadow-xl border-border/50" 
             align="start" 
             sideOffset={8}
             style={{ zIndex: 9999 }}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            onCloseAutoFocus={(e) => e.preventDefault()}
           >
             <div className="space-y-3">
               <Label className="text-sm font-medium flex items-center gap-2">
