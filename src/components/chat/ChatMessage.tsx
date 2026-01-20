@@ -17,19 +17,20 @@ const URL_REGEX = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g;
 const renderTextWithLinks = (text: string): React.ReactNode => {
   if (!text) return null;
   
-  const parts = text.split(URL_REGEX);
+  // Criar nova regex para cada chamada para evitar problemas com lastIndex
+  const urlPattern = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g;
+  const parts = text.split(urlPattern);
   
   return parts.map((part, index) => {
-    if (URL_REGEX.test(part)) {
-      // Reset regex lastIndex
-      URL_REGEX.lastIndex = 0;
+    // Verificar se é uma URL usando match em vez de test
+    if (part && part.match(/^https?:\/\//)) {
       return (
         <a
           key={index}
           href={part}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary underline hover:text-primary/80 break-all"
+          className="text-blue-500 underline hover:text-blue-600 break-all cursor-pointer"
           onClick={(e) => e.stopPropagation()}
         >
           {part}
