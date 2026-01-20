@@ -5622,6 +5622,8 @@ ${recentMessages}
                   onTranslationLanguageChange={setTranslationLanguage}
                   triggerTool={triggerTool}
                   onToolTriggered={() => setTriggerTool(null)}
+                  customerPhone={selectedConv?.customer?.telefone}
+                  customerName={selectedConv?.customer?.nome}
                 />
               </div>
             </div>
@@ -6910,6 +6912,8 @@ function MobileMainContent({
             onTranslationLanguageChange={setTranslationLanguage}
             triggerTool={triggerTool}
             onToolTriggered={() => setTriggerTool(null)}
+            customerPhone={selectedConv?.customer?.telefone}
+            customerName={selectedConv?.customer?.nome}
           />
         </div>
       </div>
