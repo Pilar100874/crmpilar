@@ -3,10 +3,42 @@ import { Badge } from "@/components/ui/badge";
 import { User, Webhook, Music, Image as ImageIcon, File, Variable, Download } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
+
 interface ChatMessageProps {
   message: Message;
   translation?: string | null;
 }
+
+// Regex para detectar URLs
+const URL_REGEX = /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g;
+
+// Função para renderizar texto com URLs clicáveis
+const renderTextWithLinks = (text: string): React.ReactNode => {
+  if (!text) return null;
+  
+  const parts = text.split(URL_REGEX);
+  
+  return parts.map((part, index) => {
+    if (URL_REGEX.test(part)) {
+      // Reset regex lastIndex
+      URL_REGEX.lastIndex = 0;
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline hover:text-primary/80 break-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+};
 
 export default function ChatMessage({ message, translation }: ChatMessageProps) {
   const isUser = message.role === "user";
@@ -102,16 +134,16 @@ export default function ChatMessage({ message, translation }: ChatMessageProps) 
             {translation && (
               <div className="mb-2 pb-2 border-b border-border/50">
                 <p className="text-xs text-muted-foreground font-semibold mb-1">Original:</p>
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <p className="text-sm whitespace-pre-wrap">{renderTextWithLinks(message.content)}</p>
               </div>
             )}
             {translation ? (
               <div>
                 <p className="text-xs text-muted-foreground font-semibold mb-1">Tradução:</p>
-                <p className="text-sm whitespace-pre-wrap">{translation}</p>
+                <p className="text-sm whitespace-pre-wrap">{renderTextWithLinks(translation)}</p>
               </div>
             ) : (
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              <p className="text-sm whitespace-pre-wrap">{renderTextWithLinks(message.content)}</p>
             )}
           </div>
         );
