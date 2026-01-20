@@ -122,6 +122,9 @@ export class FlowEngine {
       case "crm_gerar_relatorio":
         await this.handleCRMGerarRelatorio(node);
         break;
+      case "crm_agenda_rapida":
+        await this.handleCRMAgendaRapida(node);
+        break;
       default:
         console.log(`Node type ${data.type} not implemented yet`);
         const nextNodes = this.getNextNodes(node.id);
@@ -1033,6 +1036,197 @@ export class FlowEngine {
         content: `Erro ao gerar relatório: ${error.message}`,
       });
       return;
+    }
+
+    // Continuar para próximo bloco
+    const nextNodes = this.getNextNodes(node.id);
+    for (const next of nextNodes) {
+      await this.executeNode(next);
+    }
+  }
+
+  private async handleCRMAgendaRapida(node: Node): Promise<void> {
+    const data = node.data as FlowNodeData;
+    const config = data.config as any;
+
+    console.log("📅 Iniciando Agenda Rápida - config:", config);
+
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { getEstabelecimentoId } = await import("@/lib/estabelecimentoUtils");
+      const estabId = await getEstabelecimentoId();
+
+      if (!estabId) {
+        console.error("❌ Estabelecimento ID não encontrado!");
+        await this.onResponse({
+          type: "text",
+          content: "Erro: Estabelecimento não identificado.",
+        });
+        return;
+      }
+
+      // Obter telefone do contexto (normalmente vem do chat/sessão)
+      const telefone = this.context.vars.telefone || 
+                       this.context.vars.phone || 
+                       this.context.vars.sender ||
+                       this.context.vars.from ||
+                       "";
+      
+      console.log("📞 Telefone identificado:", telefone);
+
+      if (!telefone) {
+        console.error("❌ Telefone não encontrado no contexto");
+        await this.onResponse({
+          type: "text",
+          content: "Não foi possível identificar o número do cliente.",
+        });
+        
+        const outputVariable = config.outputVariable || "tarefa_criada";
+        this.context.vars[outputVariable] = "";
+        
+        const nextNodes = this.getNextNodes(node.id);
+        for (const next of nextNodes) {
+          await this.executeNode(next);
+        }
+        return;
+      }
+
+      // Normalizar telefone para busca (remover caracteres especiais)
+      const telefoneNormalizado = telefone.replace(/\D/g, "");
+      const telefoneVariacoes = [
+        telefoneNormalizado,
+        telefoneNormalizado.slice(-11), // últimos 11 dígitos
+        telefoneNormalizado.slice(-10), // últimos 10 dígitos
+        telefoneNormalizado.slice(-9),  // últimos 9 dígitos
+      ];
+
+      console.log("🔍 Buscando cliente por telefone...", telefoneVariacoes);
+
+      // Buscar cliente pelo telefone
+      let customer: { id: string; nome: string; telefone: string } | null = null;
+      for (const tel of telefoneVariacoes) {
+        if (tel.length < 8) continue;
+        
+        const { data: found } = await supabase
+          .from("customers")
+          .select("id, nome, telefone")
+          .eq("estabelecimento_id", estabId)
+          .ilike("telefone", `%${tel}%`)
+          .limit(1)
+          .maybeSingle();
+        
+        if (found) {
+          customer = found;
+          break;
+        }
+      }
+
+      let contactId = customer?.id || null;
+      let contactName = customer?.nome || `Cliente ${telefone}`;
+
+      console.log("👤 Cliente encontrado:", customer ? customer.nome : "Não encontrado (será criado genérico)");
+
+      // Se não encontrou, tentar criar um customer básico
+      if (!customer) {
+        console.log("➕ Criando customer básico para o telefone...");
+        const { data: novoCustomer, error: createError } = await supabase
+          .from("customers")
+          .insert({
+            estabelecimento_id: estabId,
+            nome: `Lead Bot - ${telefone}`,
+            telefone: telefone,
+            email: `lead_${telefoneNormalizado}@bot.temp`,
+          })
+          .select("id, nome")
+          .maybeSingle();
+
+        if (!createError && novoCustomer) {
+          contactId = novoCustomer.id;
+          contactName = novoCustomer.nome;
+          console.log("✅ Customer criado:", novoCustomer.id);
+        }
+      }
+
+      // Interpolar valores
+      const valorAgenda = this.interpolate(config.valorAgenda || "Contato via Bot");
+      const tituloTarefa = this.interpolate(config.tituloTarefa || "Retorno Bot");
+      
+      // Data de hoje formatada
+      const hoje = new Date();
+      const dataFormatada = hoje.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      console.log("📝 Criando tarefa na agenda...");
+      console.log("   - Título:", tituloTarefa);
+      console.log("   - Descrição:", valorAgenda);
+      console.log("   - Data:", dataFormatada);
+      console.log("   - Contact ID:", contactId);
+
+      // Buscar um usuário padrão do estabelecimento para atribuir a tarefa
+      let userId = estabId; // fallback para estab ID se não achar usuário
+      try {
+        const { data: usuarioData } = await (supabase as any)
+          .from("usuarios")
+          .select("id")
+          .eq("estabelecimento_id", estabId)
+          .eq("ativo", true)
+          .limit(1)
+          .maybeSingle();
+        
+        if (usuarioData?.id) {
+          userId = usuarioData.id;
+        }
+      } catch (e) {
+        console.log("⚠️ Não foi possível buscar usuário padrão, usando estabelecimento ID");
+      }
+
+      // Criar a tarefa na agenda
+      const { data: tarefa, error: tarefaError } = await supabase
+        .from("calendario_tarefas")
+        .insert({
+          user_id: userId,
+          estabelecimento_id: estabId,
+          contact_id: contactId,
+          contact_name: contactName,
+          title: tituloTarefa,
+          description: valorAgenda,
+          date: dataFormatada,
+          status: "pendente",
+          origem: "bot",
+          origem_sub_item: "agenda_rapida",
+        })
+        .select("id")
+        .maybeSingle();
+
+      if (tarefaError) {
+        console.error("❌ Erro ao criar tarefa:", tarefaError);
+        await this.onResponse({
+          type: "text",
+          content: `Erro ao criar tarefa na agenda: ${tarefaError.message}`,
+        });
+        
+        const outputVariable = config.outputVariable || "tarefa_criada";
+        this.context.vars[outputVariable] = "";
+      } else {
+        console.log("✅ Tarefa criada com sucesso! ID:", tarefa?.id);
+        
+        const outputVariable = config.outputVariable || "tarefa_criada";
+        this.context.vars[outputVariable] = tarefa?.id || "Sucesso";
+        
+        await this.onResponse({
+          type: "text",
+          content: `✅ Tarefa agendada para hoje: ${tituloTarefa}`,
+        });
+      }
+
+    } catch (error: any) {
+      console.error("❌ Erro ao processar agenda rápida:", error);
+      await this.onResponse({
+        type: "text",
+        content: `Erro ao criar agenda: ${error.message}`,
+      });
+      
+      const outputVariable = config.outputVariable || "tarefa_criada";
+      this.context.vars[outputVariable] = "";
     }
 
     // Continuar para próximo bloco

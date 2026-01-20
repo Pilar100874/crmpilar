@@ -357,12 +357,12 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   {
     type: "crm_agenda_rapida",
     label: "Agenda rápida",
-    description: "Criar tarefa na agenda após consultar empresa",
+    description: "Cria tarefa na agenda identificando cliente pelo telefone",
     icon: "Calendar",
     color: "text-success",
     defaultData: { 
-      cnpjVariable: "cnpj",
-      observacaoVariable: "observacao",
+      valorAgenda: "",
+      tituloTarefa: "Retorno Bot",
       outputVariable: "tarefa_criada"
     },
   },
