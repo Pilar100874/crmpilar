@@ -210,6 +210,8 @@ export default function AgendaTrackingTool({
             align="start" 
             sideOffset={8}
             style={{ zIndex: 9999 }}
+            onPointerDownOutside={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
           >
             <div className="space-y-3">
               <Label className="text-sm font-medium flex items-center gap-2">
