@@ -1,12 +1,11 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -173,12 +172,18 @@ serve(async (req: Request) => {
       console.log('Missing required parameters: estabelecimentoId or userId');
     }
 
+    // Ensure redirect URL has protocol
+    let finalRedirectUrl = redirectUrl;
+    if (!finalRedirectUrl.startsWith('http://') && !finalRedirectUrl.startsWith('https://')) {
+      finalRedirectUrl = 'https://' + finalRedirectUrl;
+    }
+
     // Redirect to the target URL
     return new Response(null, {
       status: 302,
       headers: {
         ...corsHeaders,
-        'Location': redirectUrl,
+        'Location': finalRedirectUrl,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
       },
     });
