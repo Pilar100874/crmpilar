@@ -944,7 +944,8 @@ export default function ChatInput({
       externalOpen={showAgendaTrackingPopover}
       onExternalOpenChange={setShowAgendaTrackingPopover}
       onInsertLink={(url, text) => {
-        setMessage(prev => prev + (prev ? '\n' : '') + `${text}: ${url}`);
+        // Enviar apenas a URL para ser clicável no WhatsApp, com texto opcional antes
+        setMessage(prev => prev + (prev ? '\n' : '') + `${text}\n${url}`);
         setShowToolsMenu(false);
         setShowAgendaTrackingPopover(false);
       }}
