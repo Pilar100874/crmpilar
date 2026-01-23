@@ -111,9 +111,26 @@ serve(async (req) => {
         
         console.log(`📡 URL: ${url}`);
         
-        const response = await fetch(url, {
-          headers: { 'Accept': 'application/json' }
-        });
+        // Timeout de 15 segundos para evitar travamentos
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        
+        let response;
+        try {
+          response = await fetch(url, {
+            headers: { 'Accept': 'application/json' },
+            signal: controller.signal
+          });
+        } catch (fetchError: any) {
+          clearTimeout(timeoutId);
+          if (fetchError.name === 'AbortError') {
+            console.error(`⏱️ Timeout na modalidade ${modalidade} (15s)`);
+          } else {
+            console.error(`❌ Erro de rede na modalidade ${modalidade}:`, fetchError.message);
+          }
+          continue;
+        }
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           console.error(`❌ Erro HTTP ${response.status} na modalidade ${modalidade}`);
