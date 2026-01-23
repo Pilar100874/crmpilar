@@ -10,7 +10,7 @@ const PNCP_BASE_URL = 'https://pncp.gov.br/api/consulta/v1';
 
 interface PNCPContratacao {
   orgaoEntidade?: { razaoSocial?: string; cnpj?: string };
-  unidadeOrgao?: { ufNome?: string; municipioNome?: string };
+  unidadeOrgao?: { ufNome?: string; municipioNome?: string; ufSigla?: string };
   modalidadeNome?: string;
   numeroCompra?: string;
   anoCompra?: number;
@@ -104,39 +104,59 @@ serve(async (req) => {
     const dataInicio = new Date();
     dataInicio.setDate(dataInicio.getDate() - 7);
 
-    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+    // Formato YYYYMMDD (sem hífens) exigido pela API PNCP
+    const formatDate = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}${month}${day}`;
+    };
 
     let itemsFound = 0;
     let itemsInserted = 0;
     const errors: string[] = [];
+    const processedIds = new Set<string>();
 
-    // Buscar para cada keyword principal (limitado a 5 para evitar timeout)
-    const keywordsToSearch = keywords.slice(0, 10);
+    // Buscar várias páginas de contratações recentes
+    // Usar endpoint de propostas abertas que retorna licitações ativas
+    const modalidades = [4, 6, 8]; // Concorrência Eletrônica, Pregão Eletrônico, Dispensa
     
-    for (const kw of keywordsToSearch) {
+    for (const modalidade of modalidades) {
       try {
-        console.log(`🔎 Buscando: ${kw.keyword}`);
+        console.log(`🔎 Buscando modalidade ${modalidade}...`);
         
+        // Usar endpoint de publicação com datas no formato correto
         const url = `${PNCP_BASE_URL}/contratacoes/publicacao?` + 
           `dataInicial=${formatDate(dataInicio)}&dataFinal=${formatDate(dataFim)}` +
-          `&codigoModalidadeContratacao=8&pagina=1&tamanhoPagina=50`;
+          `&codigoModalidadeContratacao=${modalidade}&pagina=1&tamanhoPagina=100`;
+        
+        console.log(`📡 URL: ${url}`);
         
         const response = await fetch(url, {
-          headers: { 'Accept': 'application/json' }
+          headers: { 
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (compatible; LicitacoesBot/1.0)'
+          }
         });
 
         if (!response.ok) {
-          console.log(`⚠️ PNCP retornou ${response.status} para ${kw.keyword}`);
+          const errorText = await response.text();
+          console.log(`⚠️ PNCP retornou ${response.status} para modalidade ${modalidade}: ${errorText.substring(0, 200)}`);
           continue;
         }
 
         const data = await response.json();
-        const contratacoes: PNCPContratacao[] = data.data || [];
+        const contratacoes: PNCPContratacao[] = data.data || data || [];
         
-        console.log(`📦 Encontradas ${contratacoes.length} contratações`);
+        console.log(`📦 Encontradas ${contratacoes.length} contratações na modalidade ${modalidade}`);
 
         for (const cont of contratacoes) {
           const objeto = (cont.objetoCompra || '').toLowerCase();
+          const sourceId = cont.numeroControlePNCP || `${cont.numeroCompra}-${cont.anoCompra}`;
+          
+          // Evitar processar duplicatas
+          if (processedIds.has(sourceId)) continue;
+          processedIds.add(sourceId);
           
           // Verificar se objeto contém alguma keyword
           const matchedKeywords: string[] = [];
@@ -168,7 +188,8 @@ serve(async (req) => {
                   }
                   break;
                 case 'uf_prioridade':
-                  if (ufPrioridade && cont.unidadeOrgao?.ufNome?.toUpperCase().includes(ufPrioridade.toUpperCase())) {
+                  const ufValue = cont.unidadeOrgao?.ufSigla || cont.unidadeOrgao?.ufNome || '';
+                  if (ufPrioridade && ufValue.toUpperCase().includes(ufPrioridade.toUpperCase())) {
                     totalScore += sc.peso || 5;
                   }
                   break;
@@ -186,7 +207,8 @@ serve(async (req) => {
             }
           }
 
-          const sourceId = cont.numeroControlePNCP || `${cont.numeroCompra}-${cont.anoCompra}`;
+          // Extrair UF de forma mais robusta
+          const ufValue = cont.unidadeOrgao?.ufSigla || cont.unidadeOrgao?.ufNome || null;
 
           // Inserir ou atualizar oportunidade
           const { error: insertError } = await supabase
@@ -197,7 +219,7 @@ serve(async (req) => {
               source_id: sourceId,
               orgao_nome: cont.orgaoEntidade?.razaoSocial,
               orgao_cnpj: cont.orgaoEntidade?.cnpj,
-              uf: cont.unidadeOrgao?.ufNome,
+              uf: ufValue,
               municipio: cont.unidadeOrgao?.municipioNome,
               modalidade: cont.modalidadeNome,
               numero: cont.numeroCompra,
@@ -223,11 +245,11 @@ serve(async (req) => {
         }
 
         // Pequena pausa entre requisições
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300));
 
-      } catch (kwErr) {
-        console.error(`Erro ao buscar ${kw.keyword}:`, kwErr);
-        errors.push(`${kw.keyword}: ${kwErr instanceof Error ? kwErr.message : 'Erro'}`);
+      } catch (modErr) {
+        console.error(`Erro na modalidade ${modalidade}:`, modErr);
+        errors.push(`Modalidade ${modalidade}: ${modErr instanceof Error ? modErr.message : 'Erro'}`);
       }
     }
 
