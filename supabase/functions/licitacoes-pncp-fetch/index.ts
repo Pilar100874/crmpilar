@@ -149,6 +149,14 @@ serve(async (req) => {
         const contratacoes: PNCPContratacao[] = data.data || data || [];
         
         console.log(`📦 Encontradas ${contratacoes.length} contratações na modalidade ${modalidade}`);
+        
+        // Log de exemplos para debug (primeiros 3 objetos)
+        if (contratacoes.length > 0 && modalidade === 4) {
+          console.log(`📋 Exemplos de objetos (modalidade ${modalidade}):`);
+          contratacoes.slice(0, 3).forEach((c, i) => {
+            console.log(`   ${i + 1}. ${(c.objetoCompra || 'Sem objeto').substring(0, 120)}`);
+          });
+        }
 
         for (const cont of contratacoes) {
           const objeto = (cont.objetoCompra || '').toLowerCase();
@@ -158,15 +166,22 @@ serve(async (req) => {
           if (processedIds.has(sourceId)) continue;
           processedIds.add(sourceId);
           
-          // Verificar se objeto contém alguma keyword
+          // Verificar se objeto contém alguma keyword (busca por substring)
           const matchedKeywords: string[] = [];
           let totalScore = 0;
 
           for (const k of keywords) {
-            if (objeto.includes(k.keyword.toLowerCase())) {
+            const kw = k.keyword.toLowerCase().trim();
+            // Busca substring simples - a keyword pode aparecer em qualquer parte do objeto
+            if (objeto.includes(kw)) {
               matchedKeywords.push(k.keyword);
               totalScore += k.peso || 5;
             }
+          }
+
+          // Log de match para debug
+          if (matchedKeywords.length > 0) {
+            console.log(`✅ Match encontrado: "${objeto.substring(0, 80)}..." => [${matchedKeywords.join(', ')}]`);
           }
 
           if (matchedKeywords.length === 0) continue;
