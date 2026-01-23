@@ -4362,6 +4362,56 @@ export type Database = {
           },
         ]
       }
+      licitacoes_fontes: {
+        Row: {
+          api_key: string | null
+          ativo: boolean | null
+          config: Json | null
+          created_at: string | null
+          estabelecimento_id: string
+          fonte: string
+          id: string
+          nome_display: string
+          total_importados: number | null
+          ultima_sincronizacao: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          ativo?: boolean | null
+          config?: Json | null
+          created_at?: string | null
+          estabelecimento_id: string
+          fonte: string
+          id?: string
+          nome_display: string
+          total_importados?: number | null
+          ultima_sincronizacao?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          ativo?: boolean | null
+          config?: Json | null
+          created_at?: string | null
+          estabelecimento_id?: string
+          fonte?: string
+          id?: string
+          nome_display?: string
+          total_importados?: number | null
+          ultima_sincronizacao?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licitacoes_fontes_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       licitacoes_keywords: {
         Row: {
           ativo: boolean | null
@@ -4410,6 +4460,7 @@ export type Database = {
           descartado: boolean | null
           estabelecimento_id: string
           id: string
+          itens_licitacao: Json | null
           keywords_matched: string[] | null
           modalidade: string | null
           municipio: string | null
@@ -4419,6 +4470,7 @@ export type Database = {
           orgao_nome: string | null
           score: number | null
           source: string
+          source_details: Json | null
           source_id: string
           status: string | null
           summary_ai: string | null
@@ -4437,6 +4489,7 @@ export type Database = {
           descartado?: boolean | null
           estabelecimento_id: string
           id?: string
+          itens_licitacao?: Json | null
           keywords_matched?: string[] | null
           modalidade?: string | null
           municipio?: string | null
@@ -4446,6 +4499,7 @@ export type Database = {
           orgao_nome?: string | null
           score?: number | null
           source?: string
+          source_details?: Json | null
           source_id: string
           status?: string | null
           summary_ai?: string | null
@@ -4464,6 +4518,7 @@ export type Database = {
           descartado?: boolean | null
           estabelecimento_id?: string
           id?: string
+          itens_licitacao?: Json | null
           keywords_matched?: string[] | null
           modalidade?: string | null
           municipio?: string | null
@@ -4473,6 +4528,7 @@ export type Database = {
           orgao_nome?: string | null
           score?: number | null
           source?: string
+          source_details?: Json | null
           source_id?: string
           status?: string | null
           summary_ai?: string | null
