@@ -254,3 +254,15 @@ verify_jwt = true
 
 [functions.email-agenda-tracker]
 verify_jwt = false
+
+[functions.licitacoes-pncp-fetch]
+verify_jwt = false
+
+[functions.licitacoes-summarize-ai]
+verify_jwt = false
+
+[functions.licitacoes-notify-team]
+verify_jwt = false
+
+[functions.licitacoes-cron-runner]
+verify_jwt = false
