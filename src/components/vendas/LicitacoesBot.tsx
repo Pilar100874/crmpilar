@@ -103,6 +103,7 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
   const [filterScore, setFilterScore] = useState('');
   const [filterKeyword, setFilterKeyword] = useState('');
   const [newKeyword, setNewKeyword] = useState({ keyword: '', categoria: 'tissue_higiene', peso: 5 });
+  const [keywordSearch, setKeywordSearch] = useState('');
 
   useEffect(() => {
     loadData();
@@ -451,6 +452,23 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
             <Button onClick={addKeyword}><Plus className="h-4 w-4" /></Button>
           </div>
 
+          <div className="flex gap-2 items-center">
+            <div className="relative flex-1 max-w-xs">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar keywords..."
+                value={keywordSearch}
+                onChange={(e) => setKeywordSearch(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            {keywordSearch && (
+              <Button variant="ghost" size="sm" onClick={() => setKeywordSearch('')}>
+                Limpar
+              </Button>
+            )}
+          </div>
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -462,7 +480,13 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
               </TableRow>
             </TableHeader>
             <TableBody>
-              {keywords.map(kw => (
+              {keywords
+                .filter(kw => 
+                  !keywordSearch || 
+                  kw.keyword.toLowerCase().includes(keywordSearch.toLowerCase()) ||
+                  kw.categoria?.toLowerCase().includes(keywordSearch.toLowerCase())
+                )
+                .map(kw => (
                 <TableRow key={kw.id}>
                   <TableCell>{kw.keyword}</TableCell>
                   <TableCell><Badge variant="outline">{kw.categoria}</Badge></TableCell>
