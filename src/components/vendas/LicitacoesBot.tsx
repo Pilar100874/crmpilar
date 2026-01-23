@@ -312,19 +312,19 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
 
         <TabsContent value="oportunidades" className="space-y-4">
           <div className="flex gap-2 flex-wrap">
-            <Select value={filterUf} onValueChange={setFilterUf}>
+            <Select value={filterUf || "all"} onValueChange={(v) => setFilterUf(v === "all" ? "" : v)}>
               <SelectTrigger className="w-32"><SelectValue placeholder="UF" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas UFs</SelectItem>
+                <SelectItem value="all">Todas UFs</SelectItem>
                 {[...new Set(opportunities.map(o => o.uf).filter(Boolean))].map(uf => (
                   <SelectItem key={uf} value={uf!}>{uf}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select value={filterScore} onValueChange={setFilterScore}>
+            <Select value={filterScore || "all"} onValueChange={(v) => setFilterScore(v === "all" ? "" : v)}>
               <SelectTrigger className="w-40"><SelectValue placeholder="Score" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="high">🔥 Quente (10+)</SelectItem>
                 <SelectItem value="medium">⚡ Morno (5-9)</SelectItem>
               </SelectContent>
