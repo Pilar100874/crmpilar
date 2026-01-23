@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { 
   Search, RefreshCw, Plus, Trash2, ExternalLink, Bot, 
   Settings, Play, Eye, Sparkles, Filter, TrendingUp,
-  Building2, MapPin, Calendar, DollarSign, Tag
+  Building2, MapPin, Calendar, DollarSign, Tag, Package
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -104,6 +104,7 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
   const [filterKeyword, setFilterKeyword] = useState('');
   const [newKeyword, setNewKeyword] = useState({ keyword: '', categoria: 'tissue_higiene', peso: 5 });
   const [keywordSearch, setKeywordSearch] = useState('');
+  const [importingProducts, setImportingProducts] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -243,6 +244,59 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
   const deleteKeyword = async (id: string) => {
     await supabase.from('licitacoes_keywords').delete().eq('id', id);
     loadData();
+  };
+
+  const importProductsAsKeywords = async () => {
+    setImportingProducts(true);
+    try {
+      // Buscar todos os produtos ativos do estabelecimento
+      const { data: produtos, error } = await supabase
+        .from('produtos')
+        .select('nome')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('ativo', true);
+
+      if (error) throw error;
+
+      if (!produtos || produtos.length === 0) {
+        toast.warning('Nenhum produto encontrado no cadastro');
+        return;
+      }
+
+      // Filtrar produtos que já existem como keywords
+      const existingKeywords = keywords.map(k => k.keyword.toLowerCase());
+      const newProducts = produtos.filter(p => 
+        !existingKeywords.includes(p.nome.toLowerCase())
+      );
+
+      if (newProducts.length === 0) {
+        toast.info('Todos os produtos já estão cadastrados como keywords');
+        return;
+      }
+
+      // Inserir novos produtos como keywords
+      const keywordsToInsert = newProducts.map(p => ({
+        keyword: p.nome,
+        categoria: 'produtos',
+        peso: 5,
+        estabelecimento_id: estabelecimentoId,
+        ativo: true
+      }));
+
+      const { error: insertError } = await supabase
+        .from('licitacoes_keywords')
+        .insert(keywordsToInsert);
+
+      if (insertError) throw insertError;
+
+      toast.success(`${newProducts.length} produtos importados como keywords`);
+      loadData();
+    } catch (err) {
+      console.error('Erro ao importar produtos:', err);
+      toast.error('Erro ao importar produtos');
+    } finally {
+      setImportingProducts(false);
+    }
   };
 
   const discardOpportunity = async (id: string) => {
@@ -437,6 +491,7 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
                   <SelectItem value="ondulado">Ondulado</SelectItem>
                   <SelectItem value="protecao_pintura">Proteção</SelectItem>
                   <SelectItem value="termos_genericos">Genéricos</SelectItem>
+                  <SelectItem value="produtos">Produtos</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -450,6 +505,17 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
               />
             </div>
             <Button onClick={addKeyword}><Plus className="h-4 w-4" /></Button>
+          </div>
+
+          <div className="flex gap-2 items-center flex-wrap">
+            <Button 
+              variant="outline" 
+              onClick={importProductsAsKeywords}
+              disabled={importingProducts}
+            >
+              <Package className={`h-4 w-4 mr-2 ${importingProducts ? 'animate-pulse' : ''}`} />
+              {importingProducts ? 'Importando...' : 'Importar do Cadastro de Produtos'}
+            </Button>
           </div>
 
           <div className="flex gap-2 items-center">
