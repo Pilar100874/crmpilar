@@ -125,10 +125,10 @@ serve(async (req) => {
       try {
         console.log(`🔎 Buscando modalidade ${modalidade}...`);
         
-        // Usar endpoint de publicação com datas no formato correto
+        // Usar endpoint de publicação com datas no formato correto (max 50 por página)
         const url = `${PNCP_BASE_URL}/contratacoes/publicacao?` + 
           `dataInicial=${formatDate(dataInicio)}&dataFinal=${formatDate(dataFim)}` +
-          `&codigoModalidadeContratacao=${modalidade}&pagina=1&tamanhoPagina=100`;
+          `&codigoModalidadeContratacao=${modalidade}&pagina=1&tamanhoPagina=50`;
         
         console.log(`📡 URL: ${url}`);
         
