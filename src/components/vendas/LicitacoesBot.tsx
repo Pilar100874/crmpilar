@@ -314,7 +314,7 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
           <div className="flex gap-2 flex-wrap">
             <Select value={filterUf || "all"} onValueChange={(v) => setFilterUf(v === "all" ? "" : v)}>
               <SelectTrigger className="w-32"><SelectValue placeholder="UF" /></SelectTrigger>
-              <SelectContent className="bg-background border shadow-lg z-50" position="popper">
+              <SelectContent>
                 <SelectItem value="all">Todas UFs</SelectItem>
                 {['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].map(uf => (
                   <SelectItem key={uf} value={uf}>{uf}</SelectItem>
@@ -323,7 +323,7 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
             </Select>
             <Select value={filterScore || "all"} onValueChange={(v) => setFilterScore(v === "all" ? "" : v)}>
               <SelectTrigger className="w-40"><SelectValue placeholder="Score" /></SelectTrigger>
-              <SelectContent className="bg-background border shadow-lg z-50" position="popper">
+              <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="high">🔥 Quente (10+)</SelectItem>
                 <SelectItem value="medium">⚡ Morno (5-9)</SelectItem>
