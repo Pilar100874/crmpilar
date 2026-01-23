@@ -19,7 +19,8 @@ import {
   Globe,
   MessageCircle,
   FileUp,
-  FileText
+  FileText,
+  Bot
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +42,7 @@ import PedagioAPIConfigCRUD from '@/components/config/PedagioAPIConfigCRUD';
 import { ImportacaoApiTab } from '@/components/config/ImportacaoApiTab';
 import { ImportacaoTerceirosTab } from '@/components/config/ImportacaoTerceirosTab';
 import { OrcamentoReportConfigContent } from '@/components/config/OrcamentoReportConfigContent';
+import LicitacoesBot from '@/components/vendas/LicitacoesBot';
 import { useQuery } from '@tanstack/react-query';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
@@ -67,6 +69,7 @@ const tabItems: TabItem[] = [
   { id: 'importacao-api', label: 'Importação via API', icon: Globe },
   { id: 'importacao-terceiros', label: 'Importação de Terceiros', icon: FileUp },
   { id: 'whatsapp-catalogo', label: 'Lista de Produtos no WhatsApp', icon: MessageCircle },
+  { id: 'licitacoes-bot', label: 'Bot Caça Licitações', icon: Bot },
 ];
 
 export default function VendasConfig() {
@@ -455,6 +458,23 @@ export default function VendasConfig() {
                       Abrir Lista de Produtos
                     </Link>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="licitacoes-bot" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Bot Caça Licitações
+                  </CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Monitore automaticamente licitações públicas de papéis e descartáveis
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">
+                  {estabelecimentoId && <LicitacoesBot estabelecimentoId={estabelecimentoId} />}
                 </CardContent>
               </Card>
             </TabsContent>
