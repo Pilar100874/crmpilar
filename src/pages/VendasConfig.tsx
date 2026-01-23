@@ -470,7 +470,7 @@ export default function VendasConfig() {
                     Bot Caça Licitações
                   </CardTitle>
                   <CardDescription className="text-xs sm:text-sm">
-                    Monitore automaticamente licitações públicas de papéis e descartáveis
+                    Monitore automaticamente licitações públicas com base nas suas palavras-chave
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">

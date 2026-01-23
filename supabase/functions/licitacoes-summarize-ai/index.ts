@@ -48,7 +48,7 @@ serve(async (req) => {
     }
 
     // Gerar resumo com IA
-    const prompt = `Analise esta licitação pública e forneça um resumo executivo conciso para um vendedor de papéis e descartáveis.
+    const prompt = `Analise esta licitação pública e forneça um resumo executivo conciso para avaliação comercial.
 
 DADOS DA LICITAÇÃO:
 - Órgão: ${opportunity.orgao_nome || 'Não informado'}
@@ -74,7 +74,7 @@ RESPONDA EM NO MÁXIMO 150 PALAVRAS:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'Você é um assistente especializado em análise de licitações para empresas do setor de papéis e descartáveis. Seja direto e objetivo.' },
+          { role: 'system', content: 'Você é um assistente especializado em análise de licitações públicas. Seja direto e objetivo.' },
           { role: 'user', content: prompt }
         ],
         max_tokens: 500

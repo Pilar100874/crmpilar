@@ -271,7 +271,7 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
         <Bot className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
         <h3 className="text-lg font-semibold mb-2">Bot Caça Licitações</h3>
         <p className="text-muted-foreground mb-4">
-          Configure o bot para monitorar automaticamente licitações públicas de papéis e descartáveis.
+          Configure o bot para monitorar automaticamente licitações públicas com base nas suas palavras-chave.
         </p>
         <Button onClick={initializeBot}>
           <Play className="h-4 w-4 mr-2" />
