@@ -4563,6 +4563,7 @@ export type Database = {
           id: string
           items_found: number | null
           items_inserted: number | null
+          source: string | null
           started_at: string | null
           status: string | null
         }
@@ -4573,6 +4574,7 @@ export type Database = {
           id?: string
           items_found?: number | null
           items_inserted?: number | null
+          source?: string | null
           started_at?: string | null
           status?: string | null
         }
@@ -4583,6 +4585,7 @@ export type Database = {
           id?: string
           items_found?: number | null
           items_inserted?: number | null
+          source?: string | null
           started_at?: string | null
           status?: string | null
         }

@@ -18,11 +18,12 @@ import {
   Search, RefreshCw, Plus, Trash2, ExternalLink, Bot, 
   Settings, Play, Eye, Sparkles, Filter, TrendingUp,
   Building2, MapPin, Calendar, DollarSign, Tag, Package, Database,
-  CheckCircle2, XCircle, Loader2
+  CheckCircle2, XCircle, Loader2, Activity
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import LicitacoesFontesManager from './LicitacoesFontesManager';
+import LicitacoesMonitor from './LicitacoesMonitor';
 
 interface LicitacoesBotProps {
   estabelecimentoId: string;
@@ -597,6 +598,10 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="oportunidades">Oportunidades ({opportunities.length})</TabsTrigger>
+          <TabsTrigger value="monitor" className="flex items-center gap-1">
+            <Activity className="h-3 w-3" />
+            Monitor
+          </TabsTrigger>
           <TabsTrigger value="fontes" className="flex items-center gap-1">
             <Database className="h-3 w-3" />
             Fontes
@@ -604,6 +609,10 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
           <TabsTrigger value="keywords">Keywords ({keywords.length})</TabsTrigger>
           <TabsTrigger value="config">Configurações</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="monitor">
+          <LicitacoesMonitor estabelecimentoId={estabelecimentoId} />
+        </TabsContent>
 
         <TabsContent value="oportunidades" className="space-y-4">
           <div className="flex gap-2 flex-wrap items-center">
