@@ -58,6 +58,7 @@ serve(async (req) => {
     let itemsFound = 0;
     let itemsInserted = 0;
     const processedIds = new Set<string>();
+    const timeoutErrors: string[] = [];
 
     // Buscar datasets de licitações no portal SP
     // IDs de datasets conhecidos de licitações
@@ -87,7 +88,9 @@ serve(async (req) => {
         } catch (fetchError: any) {
           clearTimeout(timeoutId);
           if (fetchError.name === 'AbortError') {
-            console.log(`⏱️ Timeout no dataset ${datasetId} (${timeout_seconds}s)`);
+            const timeoutMsg = `Timeout no dataset ${datasetId} (${timeout_seconds}s)`;
+            console.log(`⏱️ ${timeoutMsg}`);
+            timeoutErrors.push(timeoutMsg);
           } else {
             console.log(`⚠️ Erro de rede no dataset ${datasetId}: ${fetchError.message}`);
           }
@@ -218,10 +221,26 @@ serve(async (req) => {
       .eq('estabelecimento_id', estabelecimento_id)
       .eq('fonte', 'dados_sp');
 
-    console.log(`✅ Busca Dados SP concluída: ${itemsFound} encontrados, ${itemsInserted} inseridos`);
+    const hasTimeouts = timeoutErrors.length > 0;
+    const allTimedOut = timeoutErrors.length === datasetIds.length;
+    
+    if (allTimedOut) {
+      console.log(`❌ Busca Dados SP: Todos os endpoints deram timeout`);
+    } else if (hasTimeouts) {
+      console.log(`⚠️ Busca Dados SP concluída com timeouts: ${itemsFound} encontrados, ${itemsInserted} inseridos`);
+    } else {
+      console.log(`✅ Busca Dados SP concluída: ${itemsFound} encontrados, ${itemsInserted} inseridos`);
+    }
 
     return new Response(
-      JSON.stringify({ success: true, items_found: itemsFound, items_inserted: itemsInserted }),
+      JSON.stringify({ 
+        success: !allTimedOut, 
+        items_found: itemsFound, 
+        items_inserted: itemsInserted,
+        has_timeouts: hasTimeouts,
+        timeout_details: timeoutErrors.length > 0 ? timeoutErrors.join('; ') : undefined,
+        error: allTimedOut ? `API não respondeu: ${timeoutErrors.join('; ')}` : undefined
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

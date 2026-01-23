@@ -94,6 +94,7 @@ serve(async (req) => {
     let itemsFound = 0;
     let itemsInserted = 0;
     const processedIds = new Set<string>();
+    const timeoutErrors: string[] = [];
 
     // Buscar licitações recentes por diferentes categorias
     // Modalidades: 1=Concorrência, 2=Tomada de Preços, 3=Convite, 4=Concurso, 5=Leilão, 6=Dispensa, 7=Inexigibilidade, 8=Pregão
@@ -125,7 +126,9 @@ serve(async (req) => {
         } catch (fetchError: any) {
           clearTimeout(timeoutId);
           if (fetchError.name === 'AbortError') {
-            console.error(`⏱️ Timeout na modalidade ${modalidade} (${timeout_seconds}s)`);
+            const timeoutMsg = `Timeout na modalidade ${modalidade} (${timeout_seconds}s)`;
+            console.error(`⏱️ ${timeoutMsg}`);
+            timeoutErrors.push(timeoutMsg);
           } else {
             console.error(`❌ Erro de rede na modalidade ${modalidade}:`, fetchError.message);
           }
@@ -245,10 +248,26 @@ serve(async (req) => {
       .eq('estabelecimento_id', estabelecimento_id)
       .eq('fonte', 'compras_gov');
 
-    console.log(`✅ Busca Compras.gov concluída: ${itemsFound} encontrados, ${itemsInserted} inseridos`);
+    const hasTimeouts = timeoutErrors.length > 0;
+    const allTimedOut = timeoutErrors.length === modalidades.length;
+    
+    if (allTimedOut) {
+      console.log(`❌ Busca Compras.gov: Todos os endpoints deram timeout`);
+    } else if (hasTimeouts) {
+      console.log(`⚠️ Busca Compras.gov concluída com timeouts: ${itemsFound} encontrados, ${itemsInserted} inseridos`);
+    } else {
+      console.log(`✅ Busca Compras.gov concluída: ${itemsFound} encontrados, ${itemsInserted} inseridos`);
+    }
 
     return new Response(
-      JSON.stringify({ success: true, items_found: itemsFound, items_inserted: itemsInserted }),
+      JSON.stringify({ 
+        success: !allTimedOut, 
+        items_found: itemsFound, 
+        items_inserted: itemsInserted,
+        has_timeouts: hasTimeouts,
+        timeout_details: timeoutErrors.length > 0 ? timeoutErrors.join('; ') : undefined,
+        error: allTimedOut ? `API não respondeu: ${timeoutErrors.join('; ')}` : undefined
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

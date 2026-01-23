@@ -18,7 +18,7 @@ import {
   Search, RefreshCw, Plus, Trash2, ExternalLink, Bot, 
   Settings, Play, Eye, Sparkles, Filter, TrendingUp,
   Building2, MapPin, Calendar, DollarSign, Tag, Package, Database,
-  CheckCircle2, XCircle, Loader2, Activity
+  CheckCircle2, XCircle, Loader2, Activity, AlertTriangle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -99,11 +99,12 @@ const DEFAULT_SCORE_CONFIGS = [
 interface SourceProgress {
   fonte: string;
   nome: string;
-  status: 'pending' | 'running' | 'success' | 'error';
+  status: 'pending' | 'running' | 'success' | 'error' | 'warning';
   progress: number;
   items_found?: number;
   items_inserted?: number;
   error?: string;
+  timeout_details?: string;
 }
 
 export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps) {
@@ -306,6 +307,50 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
               status: 'error',
               progress: 100,
               error: error.message
+            });
+          } else if (data?.success === false || data?.error) {
+            // API retornou erro explícito (todos os endpoints falharam)
+            setSourceProgress(prev => prev.map((p, idx) => 
+              idx === i ? { 
+                ...p, 
+                status: 'error' as const, 
+                progress: 100,
+                items_found: data?.items_found || 0,
+                items_inserted: data?.items_inserted || 0,
+                error: data?.error || 'Falha na API externa',
+                timeout_details: data?.timeout_details
+              } : p
+            ));
+            results.push({
+              fonte: fonte.fonte,
+              nome: fonte.nome_display,
+              status: 'error',
+              progress: 100,
+              items_found: data?.items_found || 0,
+              items_inserted: data?.items_inserted || 0,
+              error: data?.error || 'Falha na API externa',
+              timeout_details: data?.timeout_details
+            });
+          } else if (data?.has_timeouts) {
+            // Alguns endpoints deram timeout mas não todos
+            setSourceProgress(prev => prev.map((p, idx) => 
+              idx === i ? { 
+                ...p, 
+                status: 'warning' as const, 
+                progress: 100,
+                items_found: data?.items_found || 0,
+                items_inserted: data?.items_inserted || 0,
+                timeout_details: data?.timeout_details
+              } : p
+            ));
+            results.push({
+              fonte: fonte.fonte,
+              nome: fonte.nome_display,
+              status: 'warning',
+              progress: 100,
+              items_found: data?.items_found || 0,
+              items_inserted: data?.items_inserted || 0,
+              timeout_details: data?.timeout_details
             });
           } else {
             setSourceProgress(prev => prev.map((p, idx) => 
@@ -558,6 +603,8 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
         <Card className={`border-primary/50 ${
           sourceProgress.some(s => s.status === 'error') 
             ? 'bg-red-50 dark:bg-red-950/20 border-red-300' 
+            : sourceProgress.some(s => s.status === 'warning')
+            ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-300'
             : 'bg-primary/5'
         }`}>
           <CardHeader className="py-3">
@@ -567,11 +614,14 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : sourceProgress.some(s => s.status === 'error') ? (
                   <XCircle className="h-4 w-4 text-red-500" />
+                ) : sourceProgress.some(s => s.status === 'warning') ? (
+                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
                 ) : (
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
                 )}
                 {running ? 'Progresso da Busca' : 
-                 sourceProgress.some(s => s.status === 'error') ? 'Busca Concluída com Erros' : 
+                 sourceProgress.some(s => s.status === 'error') ? 'Busca Concluída com Erros' :
+                 sourceProgress.some(s => s.status === 'warning') ? 'Busca Concluída com Alertas' :
                  'Busca Concluída'}
               </CardTitle>
               {!running && (
@@ -600,6 +650,9 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
                     {source.status === 'success' && (
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                     )}
+                    {source.status === 'warning' && (
+                      <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                    )}
                     {source.status === 'error' && (
                       <XCircle className="h-4 w-4 text-red-500" />
                     )}
@@ -615,6 +668,11 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
                         {source.items_found} encontrados, {source.items_inserted} novos
                       </span>
                     )}
+                    {source.status === 'warning' && (
+                      <span className="text-yellow-600">
+                        {source.items_found} encontrados, {source.items_inserted} novos (com timeouts)
+                      </span>
+                    )}
                     {source.status === 'error' && (
                       <span className="text-red-500 max-w-xs truncate block">
                         {source.error || 'Erro desconhecido'}
@@ -622,10 +680,16 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
                     )}
                   </div>
                 </div>
+                {(source.status === 'warning' || source.status === 'error') && source.timeout_details && (
+                  <div className="text-xs text-yellow-700 dark:text-yellow-400 ml-6 bg-yellow-100 dark:bg-yellow-900/30 p-1.5 rounded">
+                    ⏱️ {source.timeout_details}
+                  </div>
+                )}
                 <Progress 
                   value={source.progress} 
                   className={`h-2 ${
                     source.status === 'error' ? '[&>div]:bg-red-500' : 
+                    source.status === 'warning' ? '[&>div]:bg-yellow-500' :
                     source.status === 'success' ? '[&>div]:bg-green-500' : ''
                   }`}
                 />
