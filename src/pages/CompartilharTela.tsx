@@ -146,8 +146,8 @@ const CompartilharTela = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Compartilhar Tela</h1>
-        <p className="text-muted-foreground">Compartilhe sua tela para treinamento ou suporte</p>
+        <h1 className="text-2xl font-bold">Compartilhar ou Ver Tela</h1>
+        <p className="text-muted-foreground">Compartilhe sua tela ou visualize a de outro usuário</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mt-8">
