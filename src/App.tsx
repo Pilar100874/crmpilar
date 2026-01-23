@@ -52,6 +52,7 @@ import DashboardSupervisorPage from "./pages/DashboardSupervisor";
 import OmnichannelBuilder from "./pages/OmnichannelBuilder";
 import GerenciarAtalhos from "./pages/GerenciarAtalhos";
 import Perfil from "./pages/Perfil";
+import CompartilharTela from "./pages/CompartilharTela";
 import TestRoteamento from "./pages/TestRoteamento";
 import SLADashboardPage from "./pages/SLADashboard";
 import ConfigSLAPage from "./pages/ConfigSLA";
@@ -195,6 +196,7 @@ const App = () => (
               <Route path="/meus-conjuntos" element={<MeusConjuntos />} />
               <Route path="/gerenciar-atalhos" element={<GerenciarAtalhos />} />
               <Route path="/perfil" element={<Perfil />} />
+              <Route path="/compartilhar-tela" element={<CompartilharTela />} />
               <Route path="/logistica" element={<LogisticaHub />} />
               <Route path="/logistica/monitoramento" element={<LogisticaMonitoramento />} />
               <Route path="/logistica/veiculos" element={<LogisticaVeiculos />} />

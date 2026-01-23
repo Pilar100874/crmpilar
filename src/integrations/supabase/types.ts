@@ -8757,6 +8757,109 @@ export type Database = {
           },
         ]
       }
+      screen_share_sessions: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          estabelecimento_id: string
+          guest_user_id: string | null
+          host_user_id: string
+          id: string
+          session_code: string
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          estabelecimento_id: string
+          guest_user_id?: string | null
+          host_user_id: string
+          id?: string
+          session_code: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          estabelecimento_id?: string
+          guest_user_id?: string | null
+          host_user_id?: string
+          id?: string
+          session_code?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screen_share_sessions_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "screen_share_sessions_guest_user_id_fkey"
+            columns: ["guest_user_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "screen_share_sessions_host_user_id_fkey"
+            columns: ["host_user_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      screen_share_signals: {
+        Row: {
+          created_at: string
+          id: string
+          sender_user_id: string
+          session_id: string
+          signal_data: Json
+          signal_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sender_user_id: string
+          session_id: string
+          signal_data: Json
+          signal_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sender_user_id?: string
+          session_id?: string
+          signal_data?: Json
+          signal_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screen_share_signals_sender_user_id_fkey"
+            columns: ["sender_user_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "screen_share_signals_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "screen_share_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       segmentos: {
         Row: {
           created_at: string | null
@@ -10605,6 +10708,7 @@ export type Database = {
       }
       admins_present: { Args: never; Returns: boolean }
       check_catalog_expiration: { Args: never; Returns: undefined }
+      current_user_is_host: { Args: { host_user_id: string }; Returns: boolean }
       desativar_automacoes_vencidas: { Args: never; Returns: undefined }
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       generate_orcamento_token: { Args: never; Returns: string }
@@ -10624,6 +10728,11 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_screen_share_host: { Args: { session_id: string }; Returns: boolean }
+      is_screen_share_participant: {
+        Args: { session_id: string }
         Returns: boolean
       }
       is_system_admin: { Args: never; Returns: boolean }
