@@ -73,9 +73,26 @@ serve(async (req) => {
         // Primeiro buscar informações do dataset
         const searchUrl = `${DADOS_SP_BASE_URL}/package_search?q=licitacao&rows=10`;
         
-        const response = await fetch(searchUrl, {
-          headers: { 'Accept': 'application/json' }
-        });
+        // Timeout de 10 segundos para evitar travamentos
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        let response;
+        try {
+          response = await fetch(searchUrl, {
+            headers: { 'Accept': 'application/json' },
+            signal: controller.signal
+          });
+        } catch (fetchError: any) {
+          clearTimeout(timeoutId);
+          if (fetchError.name === 'AbortError') {
+            console.log(`⏱️ Timeout no dataset ${datasetId} (10s)`);
+          } else {
+            console.log(`⚠️ Erro de rede no dataset ${datasetId}: ${fetchError.message}`);
+          }
+          continue;
+        }
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           console.log(`⚠️ Dataset ${datasetId} não encontrado, tentando busca geral`);
