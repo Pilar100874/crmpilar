@@ -38,13 +38,14 @@ serve(async (req) => {
   }
 
   try {
-    const { estabelecimento_id } = await req.json();
+    const { estabelecimento_id, timeout_seconds = 15 } = await req.json();
     
     if (!estabelecimento_id) {
       throw new Error('estabelecimento_id é obrigatório');
     }
 
-    console.log(`🔍 Iniciando busca Compras.gov para estabelecimento: ${estabelecimento_id}`);
+    const timeoutMs = (timeout_seconds || 15) * 1000;
+    console.log(`🔍 Iniciando busca Compras.gov para estabelecimento: ${estabelecimento_id} (timeout: ${timeout_seconds}s)`);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -111,9 +112,9 @@ serve(async (req) => {
         
         console.log(`📡 URL: ${url}`);
         
-        // Timeout de 15 segundos para evitar travamentos
+        // Timeout configurável para evitar travamentos
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
         
         let response;
         try {
@@ -124,7 +125,7 @@ serve(async (req) => {
         } catch (fetchError: any) {
           clearTimeout(timeoutId);
           if (fetchError.name === 'AbortError') {
-            console.error(`⏱️ Timeout na modalidade ${modalidade} (15s)`);
+            console.error(`⏱️ Timeout na modalidade ${modalidade} (${timeout_seconds}s)`);
           } else {
             console.error(`❌ Erro de rede na modalidade ${modalidade}:`, fetchError.message);
           }

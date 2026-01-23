@@ -4372,6 +4372,7 @@ export type Database = {
           fonte: string
           id: string
           nome_display: string
+          timeout_seconds: number | null
           total_importados: number | null
           ultima_sincronizacao: string | null
           updated_at: string | null
@@ -4385,6 +4386,7 @@ export type Database = {
           fonte: string
           id?: string
           nome_display: string
+          timeout_seconds?: number | null
           total_importados?: number | null
           ultima_sincronizacao?: string | null
           updated_at?: string | null
@@ -4398,6 +4400,7 @@ export type Database = {
           fonte?: string
           id?: string
           nome_display?: string
+          timeout_seconds?: number | null
           total_importados?: number | null
           ultima_sincronizacao?: string | null
           updated_at?: string | null

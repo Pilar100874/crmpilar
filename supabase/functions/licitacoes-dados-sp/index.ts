@@ -16,13 +16,14 @@ serve(async (req) => {
   }
 
   try {
-    const { estabelecimento_id } = await req.json();
+    const { estabelecimento_id, timeout_seconds = 10 } = await req.json();
     
     if (!estabelecimento_id) {
       throw new Error('estabelecimento_id é obrigatório');
     }
 
-    console.log(`🔍 Iniciando busca Dados SP para estabelecimento: ${estabelecimento_id}`);
+    const timeoutMs = (timeout_seconds || 10) * 1000;
+    console.log(`🔍 Iniciando busca Dados SP para estabelecimento: ${estabelecimento_id} (timeout: ${timeout_seconds}s)`);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -73,9 +74,9 @@ serve(async (req) => {
         // Primeiro buscar informações do dataset
         const searchUrl = `${DADOS_SP_BASE_URL}/package_search?q=licitacao&rows=10`;
         
-        // Timeout de 10 segundos para evitar travamentos
+        // Timeout configurável para evitar travamentos
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
         
         let response;
         try {
@@ -86,7 +87,7 @@ serve(async (req) => {
         } catch (fetchError: any) {
           clearTimeout(timeoutId);
           if (fetchError.name === 'AbortError') {
-            console.log(`⏱️ Timeout no dataset ${datasetId} (10s)`);
+            console.log(`⏱️ Timeout no dataset ${datasetId} (${timeout_seconds}s)`);
           } else {
             console.log(`⚠️ Erro de rede no dataset ${datasetId}: ${fetchError.message}`);
           }
