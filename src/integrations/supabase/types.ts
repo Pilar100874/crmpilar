@@ -4273,6 +4273,314 @@ export type Database = {
           },
         ]
       }
+      licitacoes_alerts: {
+        Row: {
+          channel: string | null
+          estabelecimento_id: string
+          id: string
+          opportunity_id: string
+          recipients: string[] | null
+          sent_at: string | null
+          status: string | null
+        }
+        Insert: {
+          channel?: string | null
+          estabelecimento_id: string
+          id?: string
+          opportunity_id: string
+          recipients?: string[] | null
+          sent_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          channel?: string | null
+          estabelecimento_id?: string
+          id?: string
+          opportunity_id?: string
+          recipients?: string[] | null
+          sent_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licitacoes_alerts_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licitacoes_alerts_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "licitacoes_opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      licitacoes_config: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          emails_notificacao: string[] | null
+          estabelecimento_id: string
+          id: string
+          intervalo_minutos: number | null
+          score_minimo_alerta: number | null
+          uf_prioridade: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          emails_notificacao?: string[] | null
+          estabelecimento_id: string
+          id?: string
+          intervalo_minutos?: number | null
+          score_minimo_alerta?: number | null
+          uf_prioridade?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          emails_notificacao?: string[] | null
+          estabelecimento_id?: string
+          id?: string
+          intervalo_minutos?: number | null
+          score_minimo_alerta?: number | null
+          uf_prioridade?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licitacoes_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      licitacoes_keywords: {
+        Row: {
+          ativo: boolean | null
+          categoria: string
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          keyword: string
+          peso: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria: string
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          keyword: string
+          peso?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          keyword?: string
+          peso?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licitacoes_keywords_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      licitacoes_opportunities: {
+        Row: {
+          ano: number | null
+          created_at: string | null
+          data_abertura: string | null
+          data_fim: string | null
+          data_publicacao: string | null
+          descartado: boolean | null
+          estabelecimento_id: string
+          id: string
+          keywords_matched: string[] | null
+          modalidade: string | null
+          municipio: string | null
+          numero: string | null
+          objeto: string | null
+          orgao_cnpj: string | null
+          orgao_nome: string | null
+          score: number | null
+          source: string
+          source_id: string
+          status: string | null
+          summary_ai: string | null
+          uf: string | null
+          updated_at: string | null
+          url_detalhe: string | null
+          valor_estimado: number | null
+          vendedor_atribuido_id: string | null
+        }
+        Insert: {
+          ano?: number | null
+          created_at?: string | null
+          data_abertura?: string | null
+          data_fim?: string | null
+          data_publicacao?: string | null
+          descartado?: boolean | null
+          estabelecimento_id: string
+          id?: string
+          keywords_matched?: string[] | null
+          modalidade?: string | null
+          municipio?: string | null
+          numero?: string | null
+          objeto?: string | null
+          orgao_cnpj?: string | null
+          orgao_nome?: string | null
+          score?: number | null
+          source?: string
+          source_id: string
+          status?: string | null
+          summary_ai?: string | null
+          uf?: string | null
+          updated_at?: string | null
+          url_detalhe?: string | null
+          valor_estimado?: number | null
+          vendedor_atribuido_id?: string | null
+        }
+        Update: {
+          ano?: number | null
+          created_at?: string | null
+          data_abertura?: string | null
+          data_fim?: string | null
+          data_publicacao?: string | null
+          descartado?: boolean | null
+          estabelecimento_id?: string
+          id?: string
+          keywords_matched?: string[] | null
+          modalidade?: string | null
+          municipio?: string | null
+          numero?: string | null
+          objeto?: string | null
+          orgao_cnpj?: string | null
+          orgao_nome?: string | null
+          score?: number | null
+          source?: string
+          source_id?: string
+          status?: string | null
+          summary_ai?: string | null
+          uf?: string | null
+          updated_at?: string | null
+          url_detalhe?: string | null
+          valor_estimado?: number | null
+          vendedor_atribuido_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licitacoes_opportunities_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "licitacoes_opportunities_vendedor_atribuido_id_fkey"
+            columns: ["vendedor_atribuido_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      licitacoes_runs: {
+        Row: {
+          error: string | null
+          estabelecimento_id: string
+          finished_at: string | null
+          id: string
+          items_found: number | null
+          items_inserted: number | null
+          started_at: string | null
+          status: string | null
+        }
+        Insert: {
+          error?: string | null
+          estabelecimento_id: string
+          finished_at?: string | null
+          id?: string
+          items_found?: number | null
+          items_inserted?: number | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          error?: string | null
+          estabelecimento_id?: string
+          finished_at?: string | null
+          id?: string
+          items_found?: number | null
+          items_inserted?: number | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licitacoes_runs_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      licitacoes_score_config: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          peso: number | null
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          peso?: number | null
+          tipo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          peso?: number | null
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licitacoes_score_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       linhas_arquivo_precos: {
         Row: {
           arquivo_id: string
