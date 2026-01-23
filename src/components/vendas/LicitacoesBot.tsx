@@ -113,6 +113,7 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
   const [config, setConfig] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
+  const [cancelled, setCancelled] = useState(false);
   const [selectedOpp, setSelectedOpp] = useState<Opportunity | null>(null);
   const [filterUf, setFilterUf] = useState('');
   const [filterScore, setFilterScore] = useState('');
@@ -122,6 +123,7 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
   const [keywordSearch, setKeywordSearch] = useState('');
   const [importingProducts, setImportingProducts] = useState(false);
   const [sourceProgress, setSourceProgress] = useState<SourceProgress[]>([]);
+  const cancelledRef = React.useRef(false);
 
   useEffect(() => {
     loadData();
@@ -198,24 +200,32 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
     }
   };
 
+  const cancelBot = () => {
+    cancelledRef.current = true;
+    setCancelled(true);
+    toast.info('Busca será interrompida após a fonte atual...');
+  };
+
   const runBot = async () => {
     setRunning(true);
+    setCancelled(false);
+    cancelledRef.current = false;
     setSourceProgress([]);
     
     try {
-      // Buscar fontes ativas para mostrar progresso
+      // Buscar fontes ativas para mostrar progresso (incluindo timeout_seconds)
       const { data: fontesAtivas } = await supabase
         .from('licitacoes_fontes')
-        .select('fonte, nome_display')
+        .select('fonte, nome_display, timeout_seconds')
         .eq('estabelecimento_id', estabelecimentoId)
         .eq('ativo', true);
 
       const fontes = fontesAtivas || [
-        { fonte: 'pncp', nome_display: 'PNCP' }
+        { fonte: 'pncp', nome_display: 'PNCP', timeout_seconds: 15 }
       ];
 
       // Inicializar progresso
-      const initialProgress: SourceProgress[] = fontes.map((f, index) => ({
+      const initialProgress: SourceProgress[] = fontes.map((f) => ({
         fonte: f.fonte,
         nome: f.nome_display,
         status: 'pending' as const,
@@ -227,6 +237,24 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
       const results: SourceProgress[] = [];
       
       for (let i = 0; i < fontes.length; i++) {
+        // Verificar se foi cancelado
+        if (cancelledRef.current) {
+          // Marcar fontes restantes como skipped
+          for (let j = i; j < fontes.length; j++) {
+            setSourceProgress(prev => prev.map((p, idx) => 
+              idx === j ? { ...p, status: 'error' as const, progress: 100, error: 'Cancelado' } : p
+            ));
+            results.push({
+              fonte: fontes[j].fonte,
+              nome: fontes[j].nome_display,
+              status: 'error',
+              progress: 100,
+              error: 'Cancelado pelo usuário'
+            });
+          }
+          break;
+        }
+
         const fonte = fontes[i];
         
         // Atualizar status para running
@@ -255,7 +283,10 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
           }, 500);
 
           const { data, error } = await supabase.functions.invoke(functionName, {
-            body: { estabelecimento_id: estabelecimentoId }
+            body: { 
+              estabelecimento_id: estabelecimentoId,
+              timeout_seconds: fonte.timeout_seconds || 15
+            }
           });
 
           clearInterval(progressInterval);
@@ -318,15 +349,21 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
       const totalFound = results.reduce((acc, r) => acc + (r.items_found || 0), 0);
       const totalInserted = results.reduce((acc, r) => acc + (r.items_inserted || 0), 0);
       
-      toast.success(
-        `Busca concluída: ${totalFound} encontrados, ${totalInserted} novos (${successCount}/${results.length} fontes)`
-      );
+      if (cancelledRef.current) {
+        toast.warning(`Busca interrompida: ${totalFound} encontrados, ${totalInserted} novos`);
+      } else {
+        toast.success(
+          `Busca concluída: ${totalFound} encontrados, ${totalInserted} novos (${successCount}/${results.length} fontes)`
+        );
+      }
       loadData();
     } catch (err) {
       console.error('Erro ao executar bot:', err);
       toast.error('Erro ao executar busca');
     } finally {
       setRunning(false);
+      setCancelled(false);
+      cancelledRef.current = false;
     }
   };
 
@@ -502,10 +539,17 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
             onCheckedChange={(v) => updateConfig({ ativo: v })}
           />
           <span className="text-sm">{config?.ativo ? 'Ativo' : 'Inativo'}</span>
-          <Button onClick={runBot} disabled={running} size="sm">
-            <RefreshCw className={`h-4 w-4 mr-2 ${running ? 'animate-spin' : ''}`} />
-            {running ? 'Buscando...' : 'Buscar Agora'}
-          </Button>
+          {running ? (
+            <Button onClick={cancelBot} variant="destructive" size="sm">
+              <XCircle className="h-4 w-4 mr-2" />
+              Interromper
+            </Button>
+          ) : (
+            <Button onClick={runBot} disabled={running} size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Buscar Agora
+            </Button>
+          )}
         </div>
       </div>
 

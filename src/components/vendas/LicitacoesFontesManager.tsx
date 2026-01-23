@@ -30,6 +30,7 @@ interface Fonte {
   config: any;
   ultima_sincronizacao: string | null;
   total_importados: number;
+  timeout_seconds: number;
 }
 
 // Definição das fontes disponíveis
@@ -75,6 +76,7 @@ export default function LicitacoesFontesManager({ estabelecimentoId, onFontesCha
   const [syncing, setSyncing] = useState<string | null>(null);
   const [apiKeyDialog, setApiKeyDialog] = useState<{ fonte: string; nome: string } | null>(null);
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [editingTimeout, setEditingTimeout] = useState<{ fonte: string; value: number } | null>(null);
 
   useEffect(() => {
     loadFontes();
@@ -103,7 +105,8 @@ export default function LicitacoesFontesManager({ estabelecimentoId, onFontesCha
           api_key: null,
           config: {},
           ultima_sincronizacao: null,
-          total_importados: 0
+          total_importados: 0,
+          timeout_seconds: 15
         };
       });
 
@@ -323,6 +326,29 @@ export default function LicitacoesFontesManager({ estabelecimentoId, onFontesCha
                       {fonte?.total_importados > 0 && (
                         <span>{fonte.total_importados} importados</span>
                       )}
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>Timeout:</span>
+                        <Input
+                          type="number"
+                          min={5}
+                          max={120}
+                          value={editingTimeout?.fonte === fonteInfo.id ? editingTimeout.value : (fonte?.timeout_seconds || 15)}
+                          onChange={(e) => setEditingTimeout({ fonte: fonteInfo.id, value: parseInt(e.target.value) || 15 })}
+                          onBlur={async () => {
+                            if (editingTimeout?.fonte === fonteInfo.id && fonte?.id) {
+                              await supabase
+                                .from('licitacoes_fontes')
+                                .update({ timeout_seconds: editingTimeout.value })
+                                .eq('id', fonte.id);
+                              loadFontes();
+                              setEditingTimeout(null);
+                            }
+                          }}
+                          className="w-14 h-6 text-xs px-1 text-center"
+                        />
+                        <span>s</span>
+                      </div>
                     </div>
                   </div>
 
