@@ -492,10 +492,6 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Bot className="h-5 w-5" />
-            Bot Caça Licitações
-          </h3>
           <p className="text-sm text-muted-foreground">
             Monitoramento automático de licitações públicas (múltiplas fontes)
           </p>
