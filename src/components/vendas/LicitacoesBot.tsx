@@ -101,6 +101,7 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
   const [selectedOpp, setSelectedOpp] = useState<Opportunity | null>(null);
   const [filterUf, setFilterUf] = useState('');
   const [filterScore, setFilterScore] = useState('');
+  const [filterKeyword, setFilterKeyword] = useState('');
   const [newKeyword, setNewKeyword] = useState({ keyword: '', categoria: 'tissue_higiene', peso: 5 });
 
   useEffect(() => {
@@ -259,6 +260,7 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
     if (filterUf && o.uf !== filterUf) return false;
     if (filterScore === 'high' && o.score < 10) return false;
     if (filterScore === 'medium' && (o.score < 5 || o.score >= 10)) return false;
+    if (filterKeyword && !o.keywords_matched?.some(k => k.toLowerCase().includes(filterKeyword.toLowerCase()))) return false;
     return true;
   });
 
@@ -311,7 +313,16 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
         </TabsList>
 
         <TabsContent value="oportunidades" className="space-y-4">
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar keyword..."
+                value={filterKeyword}
+                onChange={(e) => setFilterKeyword(e.target.value)}
+                className="pl-8 w-48"
+              />
+            </div>
             <Select value={filterUf || "all"} onValueChange={(v) => setFilterUf(v === "all" ? "" : v)}>
               <SelectTrigger className="w-32"><SelectValue placeholder="UF" /></SelectTrigger>
               <SelectContent>
@@ -329,6 +340,11 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
                 <SelectItem value="medium">⚡ Morno (5-9)</SelectItem>
               </SelectContent>
             </Select>
+            {filterKeyword && (
+              <Button variant="ghost" size="sm" onClick={() => setFilterKeyword('')}>
+                Limpar
+              </Button>
+            )}
           </div>
 
           <ScrollArea className="h-[500px]">
