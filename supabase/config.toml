@@ -266,3 +266,15 @@ verify_jwt = false
 
 [functions.licitacoes-cron-runner]
 verify_jwt = false
+
+[functions.licitacoes-multi-fetch]
+verify_jwt = false
+
+[functions.licitacoes-compras-gov]
+verify_jwt = false
+
+[functions.licitacoes-dados-sp]
+verify_jwt = false
+
+[functions.licitacoes-alerta-api]
+verify_jwt = false
