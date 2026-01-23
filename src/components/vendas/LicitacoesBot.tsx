@@ -512,14 +512,38 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
         </div>
       </div>
 
-      {/* Progress Panel */}
-      {running && sourceProgress.length > 0 && (
-        <Card className="border-primary/50 bg-primary/5">
+      {/* Progress Panel - Mantém visível se houver erros */}
+      {sourceProgress.length > 0 && (
+        <Card className={`border-primary/50 ${
+          sourceProgress.some(s => s.status === 'error') 
+            ? 'bg-red-50 dark:bg-red-950/20 border-red-300' 
+            : 'bg-primary/5'
+        }`}>
           <CardHeader className="py-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Progresso da Busca
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                {running ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : sourceProgress.some(s => s.status === 'error') ? (
+                  <XCircle className="h-4 w-4 text-red-500" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                )}
+                {running ? 'Progresso da Busca' : 
+                 sourceProgress.some(s => s.status === 'error') ? 'Busca Concluída com Erros' : 
+                 'Busca Concluída'}
+              </CardTitle>
+              {!running && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSourceProgress([])}
+                  className="h-6 px-2 text-xs"
+                >
+                  Fechar
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="py-2 space-y-3">
             {sourceProgress.map((source) => (
@@ -551,7 +575,9 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
                       </span>
                     )}
                     {source.status === 'error' && (
-                      <span className="text-red-500">{source.error || 'Erro'}</span>
+                      <span className="text-red-500 max-w-xs truncate block">
+                        {source.error || 'Erro desconhecido'}
+                      </span>
                     )}
                   </div>
                 </div>
