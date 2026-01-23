@@ -24,11 +24,16 @@ export const useScreenShare = () => {
   const localStreamRef = useRef<MediaStream | null>(null);
   const currentUserIdRef = useRef<string | null>(null);
   const currentSessionRef = useRef<ScreenShareSession | null>(null);
+  const isSharingRef = useRef<boolean>(false);
 
-  // Keep ref in sync with state
+  // Keep refs in sync with state
   useEffect(() => {
     currentSessionRef.current = currentSession;
   }, [currentSession]);
+
+  useEffect(() => {
+    isSharingRef.current = isSharing;
+  }, [isSharing]);
 
   const generateSessionCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -225,9 +230,13 @@ export const useScreenShare = () => {
       setHostName(sessionData.host?.nome || 'Anfitrião');
       setIsViewing(true);
 
+      // Create peer connection for viewer before subscribing to signals
+      createPeerConnection();
+
       // Subscribe to signals
       subscribeToSignals(session.id, usuario.id, false);
 
+      console.log('Viewer joined, waiting for host offer...');
       toast.success('Conectado à sessão!');
       return true;
     } catch (error) {
@@ -252,8 +261,9 @@ export const useScreenShare = () => {
           const updatedSession = payload.new as ScreenShareSession;
           setCurrentSession(updatedSession);
 
-          if (updatedSession.status === 'connected' && isSharing && updatedSession.guest_user_id) {
+          if (updatedSession.status === 'connected' && isSharingRef.current && updatedSession.guest_user_id) {
             // Guest joined, initiate WebRTC as host
+            console.log('Guest joined, initiating WebRTC...');
             const { data: guest } = await supabase
               .from('usuarios')
               .select('nome')
@@ -304,14 +314,17 @@ export const useScreenShare = () => {
 
           try {
             if (signal.signal_type === 'offer') {
+              console.log('Processing offer from host...');
               await pc.setRemoteDescription(new RTCSessionDescription(signal.signal_data));
               const answer = await pc.createAnswer();
               await pc.setLocalDescription(answer);
-              
+              console.log('Sending answer to host...');
               await sendSignal(sessionId, 'answer', answer);
             } else if (signal.signal_type === 'answer') {
+              console.log('Processing answer from viewer...');
               await pc.setRemoteDescription(new RTCSessionDescription(signal.signal_data));
             } else if (signal.signal_type === 'ice-candidate' && signal.signal_data.candidate) {
+              console.log('Adding ICE candidate...');
               await pc.addIceCandidate(new RTCIceCandidate(signal.signal_data.candidate));
             }
           } catch (error) {
@@ -327,12 +340,17 @@ export const useScreenShare = () => {
   };
 
   const initiateWebRTC = async (sessionId: string) => {
-    if (!localStreamRef.current) return;
+    if (!localStreamRef.current) {
+      console.error('No local stream available for WebRTC');
+      return;
+    }
 
+    console.log('Initiating WebRTC connection as host...');
     const pc = createPeerConnection();
     
     // Add local stream tracks
     localStreamRef.current.getTracks().forEach(track => {
+      console.log('Adding track to peer connection:', track.kind);
       pc.addTrack(track, localStreamRef.current!);
     });
 
@@ -340,6 +358,7 @@ export const useScreenShare = () => {
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
+    console.log('Sending offer to viewer...');
     await sendSignal(sessionId, 'offer', offer);
   };
 
