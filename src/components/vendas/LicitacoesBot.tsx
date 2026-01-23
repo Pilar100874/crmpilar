@@ -16,10 +16,11 @@ import { toast } from 'sonner';
 import { 
   Search, RefreshCw, Plus, Trash2, ExternalLink, Bot, 
   Settings, Play, Eye, Sparkles, Filter, TrendingUp,
-  Building2, MapPin, Calendar, DollarSign, Tag, Package
+  Building2, MapPin, Calendar, DollarSign, Tag, Package, Database
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import LicitacoesFontesManager from './LicitacoesFontesManager';
 
 interface LicitacoesBotProps {
   estabelecimentoId: string;
@@ -27,6 +28,7 @@ interface LicitacoesBotProps {
 
 interface Opportunity {
   id: string;
+  source: string;
   orgao_nome: string | null;
   uf: string | null;
   municipio: string | null;
@@ -102,6 +104,7 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
   const [filterUf, setFilterUf] = useState('');
   const [filterScore, setFilterScore] = useState('');
   const [filterKeyword, setFilterKeyword] = useState('');
+  const [filterSource, setFilterSource] = useState('');
   const [newKeyword, setNewKeyword] = useState({ keyword: '', categoria: 'tissue_higiene', peso: 5 });
   const [keywordSearch, setKeywordSearch] = useState('');
   const [importingProducts, setImportingProducts] = useState(false);
@@ -184,11 +187,16 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
   const runBot = async () => {
     setRunning(true);
     try {
-      const { data, error } = await supabase.functions.invoke('licitacoes-pncp-fetch', {
+      // Usar busca multi-fonte
+      const { data, error } = await supabase.functions.invoke('licitacoes-multi-fetch', {
         body: { estabelecimento_id: estabelecimentoId }
       });
       if (error) throw error;
-      toast.success(`Busca concluída: ${data.items_found || 0} encontrados, ${data.items_inserted || 0} novos`);
+      
+      const totals = data?.totals || {};
+      toast.success(
+        `Busca concluída: ${totals.items_found || 0} encontrados, ${totals.items_inserted || 0} novos (${totals.sources_success || 0} fontes)`
+      );
       loadData();
     } catch (err) {
       console.error('Erro ao executar bot:', err);
@@ -316,8 +324,29 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
     if (filterScore === 'high' && o.score < 10) return false;
     if (filterScore === 'medium' && (o.score < 5 || o.score >= 10)) return false;
     if (filterKeyword && !o.keywords_matched?.some(k => k.toLowerCase().includes(filterKeyword.toLowerCase()))) return false;
+    if (filterSource && o.source !== filterSource) return false;
     return true;
   });
+
+  const getSourceLabel = (source: string) => {
+    const labels: Record<string, string> = {
+      'pncp': 'PNCP',
+      'compras_gov': 'Compras.gov',
+      'dados_sp': 'Dados SP',
+      'alerta_licitacao': 'Alerta Licitação'
+    };
+    return labels[source] || source;
+  };
+
+  const getSourceColor = (source: string) => {
+    const colors: Record<string, string> = {
+      'pncp': 'bg-blue-500',
+      'compras_gov': 'bg-green-500',
+      'dados_sp': 'bg-purple-500',
+      'alerta_licitacao': 'bg-orange-500'
+    };
+    return colors[source] || 'bg-gray-500';
+  };
 
   if (!config && !loading) {
     return (
@@ -341,10 +370,10 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Bot className="h-5 w-5" />
-            Bot Caça Licitações - PNCP
+            Bot Caça Licitações
           </h3>
           <p className="text-sm text-muted-foreground">
-            Monitoramento automático de licitações públicas
+            Monitoramento automático de licitações públicas (múltiplas fontes)
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -361,8 +390,12 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="oportunidades">Oportunidades ({opportunities.length})</TabsTrigger>
+          <TabsTrigger value="fontes" className="flex items-center gap-1">
+            <Database className="h-3 w-3" />
+            Fontes
+          </TabsTrigger>
           <TabsTrigger value="keywords">Keywords ({keywords.length})</TabsTrigger>
           <TabsTrigger value="config">Configurações</TabsTrigger>
         </TabsList>
@@ -389,10 +422,20 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
             </Select>
             <Select value={filterScore || "all"} onValueChange={(v) => setFilterScore(v === "all" ? "" : v)}>
               <SelectTrigger className="w-40"><SelectValue placeholder="Score" /></SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="high">🔥 Quente (10+)</SelectItem>
                 <SelectItem value="medium">⚡ Morno (5-9)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterSource || "all"} onValueChange={(v) => setFilterSource(v === "all" ? "" : v)}>
+              <SelectTrigger className="w-40"><SelectValue placeholder="Fonte" /></SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value="all">Todas Fontes</SelectItem>
+                <SelectItem value="pncp">🏛️ PNCP</SelectItem>
+                <SelectItem value="compras_gov">🇧🇷 Compras.gov</SelectItem>
+                <SelectItem value="dados_sp">📊 Dados SP</SelectItem>
+                <SelectItem value="alerta_licitacao">🔔 Alerta Licitação</SelectItem>
               </SelectContent>
             </Select>
             {filterKeyword && (
@@ -468,6 +511,13 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
               )}
             </div>
           </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="fontes" className="space-y-4">
+          <LicitacoesFontesManager 
+            estabelecimentoId={estabelecimentoId} 
+            onFontesChanged={loadData}
+          />
         </TabsContent>
 
         <TabsContent value="keywords" className="space-y-4">
