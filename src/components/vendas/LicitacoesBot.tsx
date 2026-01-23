@@ -11,12 +11,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
   Search, RefreshCw, Plus, Trash2, ExternalLink, Bot, 
   Settings, Play, Eye, Sparkles, Filter, TrendingUp,
-  Building2, MapPin, Calendar, DollarSign, Tag, Package, Database
+  Building2, MapPin, Calendar, DollarSign, Tag, Package, Database,
+  CheckCircle2, XCircle, Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -93,6 +95,16 @@ const DEFAULT_SCORE_CONFIGS = [
   { tipo: 'valor_baixo', descricao: 'Valor estimado < R$ 5.000 (penalidade)', peso: 5 },
 ];
 
+interface SourceProgress {
+  fonte: string;
+  nome: string;
+  status: 'pending' | 'running' | 'success' | 'error';
+  progress: number;
+  items_found?: number;
+  items_inserted?: number;
+  error?: string;
+}
+
 export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps) {
   const [activeTab, setActiveTab] = useState('oportunidades');
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
@@ -108,6 +120,7 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
   const [newKeyword, setNewKeyword] = useState({ keyword: '', categoria: 'tissue_higiene', peso: 5 });
   const [keywordSearch, setKeywordSearch] = useState('');
   const [importingProducts, setImportingProducts] = useState(false);
+  const [sourceProgress, setSourceProgress] = useState<SourceProgress[]>([]);
 
   useEffect(() => {
     loadData();
@@ -186,16 +199,126 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
 
   const runBot = async () => {
     setRunning(true);
+    setSourceProgress([]);
+    
     try {
-      // Usar busca multi-fonte
-      const { data, error } = await supabase.functions.invoke('licitacoes-multi-fetch', {
-        body: { estabelecimento_id: estabelecimentoId }
-      });
-      if (error) throw error;
+      // Buscar fontes ativas para mostrar progresso
+      const { data: fontesAtivas } = await supabase
+        .from('licitacoes_fontes')
+        .select('fonte, nome_display')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('ativo', true);
+
+      const fontes = fontesAtivas || [
+        { fonte: 'pncp', nome_display: 'PNCP' }
+      ];
+
+      // Inicializar progresso
+      const initialProgress: SourceProgress[] = fontes.map((f, index) => ({
+        fonte: f.fonte,
+        nome: f.nome_display,
+        status: 'pending' as const,
+        progress: 0
+      }));
+      setSourceProgress(initialProgress);
+
+      // Executar cada fonte sequencialmente com atualização de progresso
+      const results: SourceProgress[] = [];
       
-      const totals = data?.totals || {};
+      for (let i = 0; i < fontes.length; i++) {
+        const fonte = fontes[i];
+        
+        // Atualizar status para running
+        setSourceProgress(prev => prev.map((p, idx) => 
+          idx === i ? { ...p, status: 'running' as const, progress: 10 } : p
+        ));
+
+        try {
+          // Mapear fonte para função
+          const functionMap: Record<string, string> = {
+            'pncp': 'licitacoes-pncp-fetch',
+            'compras_gov': 'licitacoes-compras-gov',
+            'dados_sp': 'licitacoes-dados-sp',
+            'alerta_licitacao': 'licitacoes-alerta-api',
+          };
+          
+          const functionName = functionMap[fonte.fonte] || 'licitacoes-pncp-fetch';
+          
+          // Simular progresso durante a chamada
+          const progressInterval = setInterval(() => {
+            setSourceProgress(prev => prev.map((p, idx) => 
+              idx === i && p.progress < 90 
+                ? { ...p, progress: Math.min(p.progress + 10, 90) } 
+                : p
+            ));
+          }, 500);
+
+          const { data, error } = await supabase.functions.invoke(functionName, {
+            body: { estabelecimento_id: estabelecimentoId }
+          });
+
+          clearInterval(progressInterval);
+
+          if (error) {
+            setSourceProgress(prev => prev.map((p, idx) => 
+              idx === i ? { 
+                ...p, 
+                status: 'error' as const, 
+                progress: 100, 
+                error: error.message 
+              } : p
+            ));
+            results.push({
+              fonte: fonte.fonte,
+              nome: fonte.nome_display,
+              status: 'error',
+              progress: 100,
+              error: error.message
+            });
+          } else {
+            setSourceProgress(prev => prev.map((p, idx) => 
+              idx === i ? { 
+                ...p, 
+                status: 'success' as const, 
+                progress: 100,
+                items_found: data?.items_found || 0,
+                items_inserted: data?.items_inserted || 0
+              } : p
+            ));
+            results.push({
+              fonte: fonte.fonte,
+              nome: fonte.nome_display,
+              status: 'success',
+              progress: 100,
+              items_found: data?.items_found || 0,
+              items_inserted: data?.items_inserted || 0
+            });
+          }
+        } catch (err: any) {
+          setSourceProgress(prev => prev.map((p, idx) => 
+            idx === i ? { 
+              ...p, 
+              status: 'error' as const, 
+              progress: 100, 
+              error: err.message 
+            } : p
+          ));
+          results.push({
+            fonte: fonte.fonte,
+            nome: fonte.nome_display,
+            status: 'error',
+            progress: 100,
+            error: err.message
+          });
+        }
+      }
+
+      const successCount = results.filter(r => r.status === 'success').length;
+      const totalFound = results.reduce((acc, r) => acc + (r.items_found || 0), 0);
+      const totalInserted = results.reduce((acc, r) => acc + (r.items_inserted || 0), 0);
+      
       toast.success(
-        `Busca concluída: ${totals.items_found || 0} encontrados, ${totals.items_inserted || 0} novos (${totals.sources_success || 0} fontes)`
+        `Busca concluída: ${totalFound} encontrados, ${totalInserted} novos (${successCount}/${results.length} fontes)`
       );
       loadData();
     } catch (err) {
@@ -388,6 +511,62 @@ export default function LicitacoesBot({ estabelecimentoId }: LicitacoesBotProps)
           </Button>
         </div>
       </div>
+
+      {/* Progress Panel */}
+      {running && sourceProgress.length > 0 && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardHeader className="py-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Progresso da Busca
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="py-2 space-y-3">
+            {sourceProgress.map((source) => (
+              <div key={source.fonte} className="space-y-1">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    {source.status === 'pending' && (
+                      <div className="h-4 w-4 rounded-full bg-muted" />
+                    )}
+                    {source.status === 'running' && (
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    )}
+                    {source.status === 'success' && (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    )}
+                    {source.status === 'error' && (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className={source.status === 'running' ? 'font-medium' : ''}>
+                      {source.nome}
+                    </span>
+                  </div>
+                  <div className="text-muted-foreground text-xs">
+                    {source.status === 'pending' && 'Aguardando...'}
+                    {source.status === 'running' && `${source.progress}%`}
+                    {source.status === 'success' && (
+                      <span className="text-green-600">
+                        {source.items_found} encontrados, {source.items_inserted} novos
+                      </span>
+                    )}
+                    {source.status === 'error' && (
+                      <span className="text-red-500">{source.error || 'Erro'}</span>
+                    )}
+                  </div>
+                </div>
+                <Progress 
+                  value={source.progress} 
+                  className={`h-2 ${
+                    source.status === 'error' ? '[&>div]:bg-red-500' : 
+                    source.status === 'success' ? '[&>div]:bg-green-500' : ''
+                  }`}
+                />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex-wrap">
