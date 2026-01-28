@@ -47,8 +47,7 @@ serve(async (req) => {
       .from('licitacoes_runs')
       .insert({
         estabelecimento_id,
-        status: 'running',
-        fonte: 'pncp'
+        status: 'running'
       })
       .select()
       .single();
