@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { format, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
   Car, Gauge, Clock, MapPin, AlertTriangle, 
   Wifi, WifiOff, Activity, RefreshCw, Tv,
-  Navigation, Circle, Fuel, Route
+  Navigation, Circle, Fuel, Route, Timer, Zap
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -23,6 +23,16 @@ const statusConfig = {
   offline: { label: 'Offline', color: 'bg-gray-400', textColor: 'text-gray-500', icon: WifiOff }
 };
 
+// Configuração de consumo por tipo de veículo (L/100km)
+const consumoPorTipo: Record<string, number> = {
+  'carro': 10,
+  'moto': 5,
+  'van': 12,
+  'caminhao': 25,
+  'caminhonete': 14,
+  'default': 12,
+};
+
 export default function TvDashboardVeiculos() {
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
   const [paradasMarcadas, setParadasMarcadas] = useState<ParadaMarcada[]>([]);
@@ -30,6 +40,12 @@ export default function TvDashboardVeiculos() {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [selectedVeiculoId, setSelectedVeiculoId] = useState<string | null>(null);
+  const [precosCombustivel, setPrecosCombustivel] = useState<{
+    gasolina: number;
+    diesel: number;
+    etanol: number;
+  }>({ gasolina: 5.50, diesel: 5.80, etanol: 4.20 });
+  const [kmRodadosHoje, setKmRodadosHoje] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fetchEstabelecimento = async () => {
@@ -38,6 +54,79 @@ export default function TvDashboardVeiculos() {
     };
     fetchEstabelecimento();
   }, []);
+
+  const fetchPrecosCombustivel = useCallback(async () => {
+    if (!estabelecimentoId) return;
+    
+    const { data, error } = await supabase
+      .from('combustiveis_precos')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .maybeSingle();
+
+    if (!error && data) {
+      setPrecosCombustivel({
+        gasolina: data.preco_gasolina || 5.50,
+        diesel: data.preco_diesel || 5.80,
+        etanol: data.preco_etanol || 4.20,
+      });
+    }
+  }, [estabelecimentoId]);
+
+  const fetchKmRodadosHoje = useCallback(async () => {
+    if (!estabelecimentoId) return;
+    
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    // Buscar todas as posições de hoje para calcular distância
+    const { data: veiculosData } = await supabase
+      .from('veiculos')
+      .select('id')
+      .eq('ativo', true);
+
+    if (!veiculosData) return;
+
+    const kmMap: Record<string, number> = {};
+
+    for (const veiculo of veiculosData) {
+      const { data: posicoes } = await supabase
+        .from('veiculo_posicoes')
+        .select('lat, lng')
+        .eq('veiculo_id', veiculo.id)
+        .gte('data_hora', hoje.toISOString())
+        .order('data_hora', { ascending: true });
+
+      if (posicoes && posicoes.length > 1) {
+        let totalKm = 0;
+        for (let i = 1; i < posicoes.length; i++) {
+          const dist = calcularDistancia(
+            posicoes[i - 1].lat, posicoes[i - 1].lng,
+            posicoes[i].lat, posicoes[i].lng
+          );
+          totalKm += dist;
+        }
+        kmMap[veiculo.id] = Math.round(totalKm * 10) / 10;
+      } else {
+        kmMap[veiculo.id] = 0;
+      }
+    }
+
+    setKmRodadosHoje(kmMap);
+  }, [estabelecimentoId]);
+
+  // Fórmula de Haversine para calcular distância entre dois pontos
+  const calcularDistancia = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371; // Raio da Terra em km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
   const fetchParadasMarcadas = useCallback(async () => {
     if (!estabelecimentoId) return;
@@ -97,20 +186,24 @@ export default function TvDashboardVeiculos() {
 
       setVeiculos(veiculosComStatus);
       setLastUpdate(new Date());
-      await fetchParadasMarcadas();
+      await Promise.all([
+        fetchParadasMarcadas(),
+        fetchKmRodadosHoje(),
+      ]);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       toast.error('Erro ao carregar veículos');
     } finally {
       setLoading(false);
     }
-  }, [estabelecimentoId, fetchParadasMarcadas]);
+  }, [estabelecimentoId, fetchParadasMarcadas, fetchKmRodadosHoje]);
 
   useEffect(() => {
     if (estabelecimentoId) {
       fetchVeiculos();
+      fetchPrecosCombustivel();
     }
-  }, [estabelecimentoId, fetchVeiculos]);
+  }, [estabelecimentoId, fetchVeiculos, fetchPrecosCombustivel]);
 
   useEffect(() => {
     if (!estabelecimentoId) return;
@@ -145,6 +238,39 @@ export default function TvDashboardVeiculos() {
 
   const veiculosComPosicao = veiculos.filter(v => v.ultima_posicao);
 
+  // Calcular veículos parados há muito tempo (mais de 30 min)
+  const veiculosParadosAlerta = useMemo(() => {
+    return veiculos.filter(v => {
+      if (v.status !== 'parado' || !v.ultima_posicao) return false;
+      const minutosParado = differenceInMinutes(new Date(), new Date(v.ultima_posicao.data_hora));
+      return minutosParado >= 30;
+    });
+  }, [veiculos]);
+
+  // Calcular consumo estimado de combustível
+  const consumoEstimado = useMemo(() => {
+    let totalKm = 0;
+    let totalCusto = 0;
+
+    veiculos.forEach(v => {
+      const km = kmRodadosHoje[v.id] || 0;
+      totalKm += km;
+      
+      const tipoVeiculo = v.tipo_veiculo?.toLowerCase() || 'default';
+      const consumoL100km = consumoPorTipo[tipoVeiculo] || consumoPorTipo.default;
+      const litrosGastos = (km / 100) * consumoL100km;
+      
+      // Assumir gasolina como padrão
+      totalCusto += litrosGastos * precosCombustivel.gasolina;
+    });
+
+    return {
+      totalKm: Math.round(totalKm),
+      totalCusto: Math.round(totalCusto * 100) / 100,
+      litrosEstimados: Math.round((totalKm / 100) * 12), // Média de 12L/100km
+    };
+  }, [veiculos, kmRodadosHoje, precosCombustivel]);
+
   const stats = {
     total: veiculos.length,
     movendo: veiculos.filter(v => v.status === 'movendo').length,
@@ -156,6 +282,10 @@ export default function TvDashboardVeiculos() {
     velocidadeMax: veiculosComPosicao.length > 0
       ? Math.round(Math.max(...veiculosComPosicao.map(v => v.ultima_posicao?.velocidade || 0)))
       : 0,
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
   if (loading) {
@@ -184,58 +314,80 @@ export default function TvDashboardVeiculos() {
           </div>
 
           {/* Stats Cards - Horizontal */}
-          <div className="flex items-center gap-3">
-            <Card className="p-3 bg-background/80 backdrop-blur-sm border-primary/20">
+          <div className="flex items-center gap-2">
+            <Card className="p-2 bg-background/80 backdrop-blur-sm border-primary/20">
               <div className="flex items-center gap-2">
-                <Car className="h-5 w-5 text-primary" />
+                <Car className="h-4 w-4 text-primary" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Total</p>
-                  <p className="text-xl font-bold">{stats.total}</p>
+                  <p className="text-[10px] text-muted-foreground">Total</p>
+                  <p className="text-lg font-bold">{stats.total}</p>
                 </div>
               </div>
             </Card>
             
-            <Card className="p-3 bg-green-500/10 backdrop-blur-sm border-green-500/30">
+            <Card className="p-2 bg-green-500/10 backdrop-blur-sm border-green-500/30">
               <div className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-green-500" />
+                <Activity className="h-4 w-4 text-green-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Movendo</p>
-                  <p className="text-xl font-bold text-green-600">{stats.movendo}</p>
+                  <p className="text-[10px] text-muted-foreground">Movendo</p>
+                  <p className="text-lg font-bold text-green-600">{stats.movendo}</p>
                 </div>
               </div>
             </Card>
 
-            <Card className="p-3 bg-amber-500/10 backdrop-blur-sm border-amber-500/30">
+            <Card className="p-2 bg-amber-500/10 backdrop-blur-sm border-amber-500/30">
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-amber-500" />
+                <Clock className="h-4 w-4 text-amber-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Parado</p>
-                  <p className="text-xl font-bold text-amber-600">{stats.parado}</p>
+                  <p className="text-[10px] text-muted-foreground">Parado</p>
+                  <p className="text-lg font-bold text-amber-600">{stats.parado}</p>
                 </div>
               </div>
             </Card>
 
-            <Card className="p-3 bg-gray-500/10 backdrop-blur-sm border-gray-500/30">
+            <Card className="p-2 bg-gray-500/10 backdrop-blur-sm border-gray-500/30">
               <div className="flex items-center gap-2">
-                <WifiOff className="h-5 w-5 text-gray-400" />
+                <WifiOff className="h-4 w-4 text-gray-400" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Offline</p>
-                  <p className="text-xl font-bold text-gray-500">{stats.offline}</p>
+                  <p className="text-[10px] text-muted-foreground">Offline</p>
+                  <p className="text-lg font-bold text-gray-500">{stats.offline}</p>
                 </div>
               </div>
             </Card>
 
-            <Card className="p-3 bg-blue-500/10 backdrop-blur-sm border-blue-500/30">
+            <Card className="p-2 bg-blue-500/10 backdrop-blur-sm border-blue-500/30">
               <div className="flex items-center gap-2">
-                <Gauge className="h-5 w-5 text-blue-500" />
+                <Gauge className="h-4 w-4 text-blue-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Vel. Média</p>
-                  <p className="text-xl font-bold text-blue-600">{stats.velocidadeMedia} km/h</p>
+                  <p className="text-[10px] text-muted-foreground">Vel. Média</p>
+                  <p className="text-lg font-bold text-blue-600">{stats.velocidadeMedia} km/h</p>
                 </div>
               </div>
             </Card>
 
-            <Badge variant="outline" className="text-base px-3 py-1">
+            {/* KM Rodados Hoje */}
+            <Card className="p-2 bg-purple-500/10 backdrop-blur-sm border-purple-500/30">
+              <div className="flex items-center gap-2">
+                <Route className="h-4 w-4 text-purple-500" />
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Km Hoje</p>
+                  <p className="text-lg font-bold text-purple-600">{consumoEstimado.totalKm}</p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Consumo Estimado */}
+            <Card className="p-2 bg-orange-500/10 backdrop-blur-sm border-orange-500/30">
+              <div className="flex items-center gap-2">
+                <Fuel className="h-4 w-4 text-orange-500" />
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Combustível</p>
+                  <p className="text-lg font-bold text-orange-600">{formatCurrency(consumoEstimado.totalCusto)}</p>
+                </div>
+              </div>
+            </Card>
+
+            <Badge variant="outline" className="text-sm px-2 py-1">
               {format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}
             </Badge>
           </div>
@@ -274,12 +426,16 @@ export default function TvDashboardVeiculos() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <ScrollArea className="h-[calc(100vh-220px)]">
+            <ScrollArea className="h-[calc(100vh-280px)]">
               <div className="p-2 space-y-1">
                 {veiculos.map(v => {
                   const config = statusConfig[v.status];
                   const StatusIcon = config.icon;
                   const isSelected = selectedVeiculoId === v.id;
+                  const minutosParado = v.ultima_posicao && v.status === 'parado'
+                    ? differenceInMinutes(new Date(), new Date(v.ultima_posicao.data_hora))
+                    : 0;
+                  const kmHoje = kmRodadosHoje[v.id] || 0;
                   
                   return (
                     <div
@@ -288,7 +444,9 @@ export default function TvDashboardVeiculos() {
                         "p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md",
                         isSelected 
                           ? "bg-primary/10 border-primary" 
-                          : "bg-background hover:bg-muted/50 border-border"
+                          : minutosParado >= 30
+                            ? "bg-amber-500/10 border-amber-500/50"
+                            : "bg-background hover:bg-muted/50 border-border"
                       )}
                       onClick={() => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
                     >
@@ -296,6 +454,12 @@ export default function TvDashboardVeiculos() {
                         <div className="flex items-center gap-2">
                           <div className={cn("w-2 h-2 rounded-full", config.color)} />
                           <span className="font-bold text-sm">{v.placa}</span>
+                          {minutosParado >= 30 && (
+                            <Badge variant="destructive" className="text-[10px] px-1 py-0">
+                              <Timer className="h-2 w-2 mr-0.5" />
+                              {minutosParado}min
+                            </Badge>
+                          )}
                         </div>
                         <Badge variant="outline" className={cn("text-xs", config.textColor)}>
                           <StatusIcon className="h-3 w-3 mr-1" />
@@ -308,7 +472,7 @@ export default function TvDashboardVeiculos() {
                       )}
                       
                       {v.ultima_posicao && (
-                        <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="grid grid-cols-3 gap-2 text-xs">
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <Gauge className="h-3 w-3" />
                             <span className={v.ultima_posicao.velocidade > 100 ? 'text-red-500 font-bold' : ''}>
@@ -322,11 +486,9 @@ export default function TvDashboardVeiculos() {
                             />
                             <span>{v.ultima_posicao.direcao || 0}°</span>
                           </div>
-                          <div className="col-span-2 flex items-center gap-1 text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            <span>
-                              {format(new Date(v.ultima_posicao.data_hora), 'HH:mm:ss', { locale: ptBR })}
-                            </span>
+                          <div className="flex items-center gap-1 text-purple-500">
+                            <Route className="h-3 w-3" />
+                            <span>{kmHoje} km</span>
                           </div>
                         </div>
                       )}
@@ -348,21 +510,42 @@ export default function TvDashboardVeiculos() {
       </div>
 
       {/* Alerts Panel - Bottom */}
-      {veiculos.some(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100) && (
-        <div className="absolute bottom-4 left-4 right-96 z-10">
+      <div className="absolute bottom-4 left-4 right-96 z-10 space-y-2">
+        {/* Alerta de Velocidade */}
+        {veiculos.some(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100) && (
           <Card className="bg-red-500/10 border-red-500/30 backdrop-blur-sm">
             <CardContent className="p-3">
               <div className="flex items-center gap-2 text-red-500">
-                <AlertTriangle className="h-5 w-5 animate-pulse" />
+                <Zap className="h-5 w-5 animate-pulse" />
                 <span className="font-medium">Alerta de Velocidade!</span>
                 <span className="text-sm">
-                  {veiculos.filter(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100).map(v => v.placa).join(', ')}
+                  {veiculos.filter(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100).map(v => 
+                    `${v.placa} (${Math.round(v.ultima_posicao!.velocidade)}km/h)`
+                  ).join(', ')}
                 </span>
               </div>
             </CardContent>
           </Card>
-        </div>
-      )}
+        )}
+
+        {/* Alerta de Veículos Parados */}
+        {veiculosParadosAlerta.length > 0 && (
+          <Card className="bg-amber-500/10 border-amber-500/30 backdrop-blur-sm">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2 text-amber-600">
+                <Timer className="h-5 w-5" />
+                <span className="font-medium">Veículos Parados há Muito Tempo</span>
+                <span className="text-sm">
+                  {veiculosParadosAlerta.map(v => {
+                    const minutos = differenceInMinutes(new Date(), new Date(v.ultima_posicao!.data_hora));
+                    return `${v.placa} (${minutos}min)`;
+                  }).join(', ')}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
