@@ -18,7 +18,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    const { usuario_id, action, frame_data } = await req.json()
+    const { usuario_id, action } = await req.json()
 
     if (!usuario_id) {
       return new Response(
@@ -99,6 +99,77 @@ serve(async (req) => {
         )
       }
 
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+
+    } else if (action === 'check-viewer') {
+      // Verificar se há viewer ativo para este usuário
+      const { data, error } = await supabase
+        .from('screen_monitor_consent')
+        .select('viewer_active')
+        .eq('usuario_id', usuario_id)
+        .single()
+
+      if (error) {
+        console.error('[extension-status] Erro ao verificar viewer:', error)
+        return new Response(
+          JSON.stringify({ viewer_active: false }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      return new Response(
+        JSON.stringify({ viewer_active: data?.viewer_active || false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+
+    } else if (action === 'viewer-start') {
+      // Admin começou a visualizar - ativar viewer
+      const { error } = await supabase
+        .from('screen_monitor_consent')
+        .update({
+          viewer_active: true,
+          viewer_started_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('usuario_id', usuario_id)
+
+      if (error) {
+        console.error('[extension-status] Erro ao iniciar viewer:', error)
+        return new Response(
+          JSON.stringify({ error: error.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      console.log('[extension-status] Viewer iniciado para:', usuario_id)
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+
+    } else if (action === 'viewer-stop') {
+      // Admin parou de visualizar - desativar viewer
+      const { error } = await supabase
+        .from('screen_monitor_consent')
+        .update({
+          viewer_active: false,
+          viewer_started_at: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('usuario_id', usuario_id)
+
+      if (error) {
+        console.error('[extension-status] Erro ao parar viewer:', error)
+        return new Response(
+          JSON.stringify({ error: error.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      console.log('[extension-status] Viewer parado para:', usuario_id)
       return new Response(
         JSON.stringify({ success: true }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
