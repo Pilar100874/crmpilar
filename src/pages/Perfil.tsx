@@ -370,7 +370,7 @@ export default function Perfil() {
                 ) : (
                   <Download className="h-4 w-4" />
                 )}
-                {isDownloading ? 'Gerando ZIP...' : 'Baixar Extensão para Chrome'}
+                {isDownloading ? 'Gerando ZIP...' : 'Baixar Extensão (Chrome/Edge)'}
               </Button>
               
               <ExtensionInstallManual />
