@@ -139,6 +139,15 @@ const menuItems: MenuItem[] = [
   { id: "Marketplaces", title: "Marketplaces", url: "/marketplaces", icon: LucideIcons.Store },
   { id: "Ads", title: "Ads", url: "/ads", icon: LucideIcons.Megaphone },
   { id: "Robô de Preços", title: "Robô de Preços", url: "/robo-precos", icon: LucideIcons.Bot },
+  { 
+    id: "TV",
+    title: "TV", 
+    icon: LucideIcons.Tv,
+    subItems: [
+      { id: "TV Vendas", title: "Dashboard Vendas", url: "/tv/vendas", icon: FileBarChart },
+      { id: "TV Veículos", title: "Dashboard Veículos", url: "/tv/veiculos", icon: LucideIcons.Truck },
+    ]
+  },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
 
