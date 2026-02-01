@@ -306,7 +306,7 @@ const offscreenHtml = `<!DOCTYPE html>
 </body>
 </html>`;
 
-// Offscreen document JS - usando getDisplayMedia que funciona em offscreen documents
+// Offscreen document JS - usando getUserMedia com chromeMediaSourceId do desktopCapture
 const offscreenJs = `let mediaStream = null;
 let captureInterval = null;
 let userId = null;
@@ -329,38 +329,40 @@ async function startRecording(streamId) {
   try {
     console.log('Offscreen: Starting recording with streamId:', streamId);
     
-    // Usar getDisplayMedia - funciona em offscreen documents
-    // O streamId do desktopCapture pode ser usado para pré-selecionar a fonte
+    if (!streamId) {
+      console.error('Offscreen: No streamId provided');
+      chrome.runtime.sendMessage({ 
+        action: 'recordingError', 
+        error: 'No streamId provided' 
+      });
+      return;
+    }
+    
+    // IMPORTANTE: Usar getUserMedia com chromeMediaSourceId do desktopCapture
+    // Esta é a forma correta de usar o streamId obtido de chrome.desktopCapture.chooseDesktopMedia
     const constraints = {
       video: {
-        displaySurface: 'monitor',
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-        frameRate: { ideal: 1, max: 5 }
+        mandatory: {
+          chromeMediaSource: 'desktop',
+          chromeMediaSourceId: streamId,
+          maxWidth: 1920,
+          maxHeight: 1080,
+          maxFrameRate: 5
+        }
       },
-      audio: false,
-      // Tentar usar o streamId se disponível
-      preferCurrentTab: false
+      audio: false
     };
     
-    // No Chrome, podemos usar o streamId do desktopCapture
-    // Mas em alguns casos precisamos usar getDisplayMedia diretamente
-    try {
-      // Primeiro tentar com constraintts padrão
-      mediaStream = await navigator.mediaDevices.getDisplayMedia(constraints);
-    } catch (displayError) {
-      console.log('Offscreen: getDisplayMedia failed, trying alternative:', displayError);
-      // Fallback para constraints mais simples
-      mediaStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: false
-      });
-    }
+    console.log('Offscreen: Requesting getUserMedia with constraints:', JSON.stringify(constraints));
+    
+    mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
     
     if (!mediaStream) {
       console.error('Offscreen: No media stream obtained');
       return;
     }
+    
+    console.log('Offscreen: Got media stream, tracks:', mediaStream.getTracks().length);
     
     const video = document.getElementById('video');
     video.srcObject = mediaStream;
@@ -369,7 +371,7 @@ async function startRecording(streamId) {
     video.onloadedmetadata = async () => {
       try {
         await video.play();
-        console.log('Offscreen: Video playing, starting frame capture');
+        console.log('Offscreen: Video playing, starting frame capture. Size:', video.videoWidth, 'x', video.videoHeight);
         
         // Capturar primeiro frame imediatamente
         captureFrame(video);
@@ -379,6 +381,10 @@ async function startRecording(streamId) {
       } catch (playError) {
         console.error('Offscreen: Error playing video:', playError);
       }
+    };
+    
+    video.onerror = (e) => {
+      console.error('Offscreen: Video error:', e);
     };
     
     // Detectar quando o stream é parado pelo usuário
@@ -393,7 +399,7 @@ async function startRecording(streamId) {
     // Notificar background sobre o erro
     chrome.runtime.sendMessage({ 
       action: 'recordingError', 
-      error: error.message 
+      error: error.name + ': ' + error.message 
     });
   }
 }
@@ -401,7 +407,7 @@ async function startRecording(streamId) {
 function captureFrame(video) {
   try {
     if (!video || video.readyState < 2) {
-      console.log('Offscreen: Video not ready yet');
+      console.log('Offscreen: Video not ready yet, readyState:', video ? video.readyState : 'no video');
       return;
     }
     
@@ -411,6 +417,12 @@ function captureFrame(video) {
     // Usar dimensões reais do vídeo, redimensionando para max 1280x720
     const videoWidth = video.videoWidth || 1920;
     const videoHeight = video.videoHeight || 1080;
+    
+    if (videoWidth === 0 || videoHeight === 0) {
+      console.log('Offscreen: Video dimensions not ready');
+      return;
+    }
+    
     const aspectRatio = videoWidth / videoHeight;
     
     let targetWidth = 1280;
