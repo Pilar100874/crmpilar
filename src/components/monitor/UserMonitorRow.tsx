@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   ChevronDown, 
@@ -11,7 +11,11 @@ import {
   MonitorOff,
   Circle,
   Monitor,
-  Eye
+  Eye,
+  Maximize2,
+  Minimize2,
+  RefreshCw,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -77,7 +81,7 @@ interface PedidoDetail {
   cliente_nome?: string;
 }
 
-type ExpandedSection = 'chats' | 'emails' | 'pedidos' | 'spy' | null;
+type ExpandedSection = 'chats' | 'emails' | 'pedidos' | 'spy' | 'screen' | null;
 
 export function UserMonitorRow({
   usuario,
@@ -105,6 +109,78 @@ export function UserMonitorRow({
   const [emailsDetail, setEmailsDetail] = useState<ConversationDetail[]>([]);
   const [pedidosDetail, setPedidosDetail] = useState<PedidoDetail[]>([]);
   const [filaDetail, setFilaDetail] = useState<ConversationDetail[]>([]);
+  
+  // Screen viewer state
+  const [currentFrame, setCurrentFrame] = useState<string | null>(null);
+  const [isScreenConnecting, setIsScreenConnecting] = useState(false);
+  const [lastScreenUpdate, setLastScreenUpdate] = useState<Date | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const screenChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+  // Screen viewer realtime connection
+  useEffect(() => {
+    if (expandedSection !== 'screen') {
+      // Cleanup screen channel when not viewing
+      if (screenChannelRef.current) {
+        // Notify viewer stop
+        supabase.functions.invoke('extension-status', {
+          body: { usuario_id: usuarioId, action: 'viewer-stop' }
+        }).catch(err => console.error('[Screen] Erro ao parar viewer:', err));
+        
+        supabase.removeChannel(screenChannelRef.current);
+        screenChannelRef.current = null;
+        setCurrentFrame(null);
+        setLastScreenUpdate(null);
+      }
+      return;
+    }
+
+    // Start screen viewer
+    const startScreenViewer = async () => {
+      setIsScreenConnecting(true);
+      
+      try {
+        // Notify viewer start
+        await supabase.functions.invoke('extension-status', {
+          body: { usuario_id: usuarioId, action: 'viewer-start' }
+        });
+        console.log('[Screen] Viewer iniciado para:', usuarioId);
+      } catch (err) {
+        console.error('[Screen] Erro ao iniciar viewer:', err);
+      }
+
+      // Connect to broadcast channel
+      const channel = supabase.channel(`screen-share-${usuarioId}`)
+        .on('broadcast', { event: 'frame' }, (payload) => {
+          if (payload.payload?.frame) {
+            setCurrentFrame(payload.payload.frame);
+            setLastScreenUpdate(new Date());
+            setIsScreenConnecting(false);
+          }
+        })
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('[Screen] Conectado ao canal de tela');
+            setIsScreenConnecting(false);
+          }
+        });
+
+      screenChannelRef.current = channel;
+    };
+
+    startScreenViewer();
+
+    return () => {
+      if (screenChannelRef.current) {
+        supabase.functions.invoke('extension-status', {
+          body: { usuario_id: usuarioId, action: 'viewer-stop' }
+        }).catch(err => console.error('[Screen] Erro ao parar viewer:', err));
+        
+        supabase.removeChannel(screenChannelRef.current);
+        screenChannelRef.current = null;
+      }
+    };
+  }, [expandedSection, usuarioId]);
 
   // Realtime para mensagens
   useEffect(() => {
@@ -488,29 +564,27 @@ export function UserMonitorRow({
           </Button>
 
           {/* Botão Ver Tela */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-8 w-8 ${extensionActive ? 'text-green-500 hover:text-green-600' : 'text-muted-foreground'}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (extensionActive) onViewScreen();
-                }}
-                disabled={!extensionActive}
-              >
-                {extensionActive ? <Tv className="h-4 w-4" /> : <MonitorOff className="h-4 w-4" />}
-              </Button>
-            </PopoverTrigger>
-            {!extensionActive && (
-              <PopoverContent className="w-48 p-2">
-                <p className="text-xs text-muted-foreground">
-                  Extensão de monitoramento não está ativa para este usuário.
-                </p>
-              </PopoverContent>
-            )}
-          </Popover>
+          <Button
+            variant={expandedSection === 'screen' ? 'secondary' : 'ghost'}
+            size="sm"
+            className={`h-8 gap-1.5 ${
+              expandedSection === 'screen' 
+                ? 'ring-2 ring-green-500/50 text-green-600' 
+                : extensionActive 
+                  ? 'hover:bg-green-100 dark:hover:bg-green-900/30 text-green-500'
+                  : 'text-muted-foreground'
+            }`}
+            onClick={() => handleSectionClick('screen')}
+            disabled={!extensionActive}
+          >
+            {extensionActive ? <Tv className="h-4 w-4" /> : <MonitorOff className="h-4 w-4" />}
+            <span className="text-xs">Monitor</span>
+            {expandedSection === 'screen' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </Button>
+          
+          {!extensionActive && (
+            <span className="text-[10px] text-muted-foreground">Extensão inativa</span>
+          )}
         </div>
       </div>
 
@@ -727,6 +801,85 @@ export function UserMonitorRow({
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Monitor de Tela em Tempo Real */}
+          {expandedSection === 'screen' && (
+            <div className={`space-y-3 ${isFullscreen ? 'fixed inset-0 z-50 bg-black p-4' : ''}`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Tv className="h-4 w-4 text-green-500" />
+                  <p className="font-medium text-sm">Monitor de Tela: {usuario.nome}</p>
+                  <Badge 
+                    variant={currentFrame ? "default" : "secondary"} 
+                    className={`text-[10px] ${currentFrame ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : ''}`}
+                  >
+                    {currentFrame ? (
+                      <>
+                        <Circle className="h-2 w-2 fill-current mr-1 animate-pulse" />
+                        AO VIVO
+                      </>
+                    ) : (
+                      'Aguardando'
+                    )}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  {lastScreenUpdate && (
+                    <span className="text-xs text-muted-foreground">
+                      Última atualização: {lastScreenUpdate.toLocaleTimeString('pt-BR')}
+                    </span>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7" 
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                  >
+                    {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                  </Button>
+                  {isFullscreen && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7" 
+                      onClick={() => {
+                        setIsFullscreen(false);
+                        setExpandedSection(null);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              <div className={`bg-background rounded-lg border-2 border-green-500/30 overflow-hidden ${isFullscreen ? 'h-[calc(100vh-100px)]' : ''}`}>
+                {isScreenConnecting ? (
+                  <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                    <RefreshCw className="h-8 w-8 mb-4 animate-spin text-green-500" />
+                    <p className="text-sm">Conectando ao canal de monitoramento...</p>
+                    <p className="text-xs mt-2 text-muted-foreground">Aguardando frames da extensão do colaborador</p>
+                  </div>
+                ) : currentFrame ? (
+                  <div className={`relative ${isFullscreen ? 'h-full flex items-center justify-center' : ''}`}>
+                    <img 
+                      src={currentFrame} 
+                      alt="Tela do usuário"
+                      className={`${isFullscreen ? 'max-h-full max-w-full object-contain' : 'w-full rounded-lg'}`}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                    <Monitor className="h-12 w-12 mb-4 opacity-30" />
+                    <p className="text-sm">Aguardando frames da extensão...</p>
+                    <p className="text-xs mt-2 text-muted-foreground">
+                      O colaborador precisa ter a extensão ativa e compartilhando tela
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
