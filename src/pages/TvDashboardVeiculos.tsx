@@ -336,7 +336,10 @@ export default function TvDashboardVeiculos() {
       </div>
 
       {/* Top Right - Legend */}
-      <div className="absolute top-3 right-3 z-[9999] flex items-center gap-2 px-3 py-2 bg-background backdrop-blur-sm rounded-lg shadow-lg border border-border">
+      <div 
+        className="flex items-center gap-2 px-3 py-2 bg-background rounded-lg shadow-lg border border-border"
+        style={{ position: 'fixed', top: 12, right: 12, zIndex: 99999 }}
+      >
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-green-500 border border-white" />
           <span className="text-xs text-muted-foreground">Movendo</span>
