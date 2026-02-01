@@ -28,6 +28,7 @@ interface LazyLogisticaMapProps {
   onParadaClick?: (parada: ParadaMarcada) => void;
   className?: string;
   fitBounds?: boolean;
+  compactIcons?: boolean;
 }
 
 const LogisticaMapInternal = lazy(() => import('./LogisticaMapInternal'));
