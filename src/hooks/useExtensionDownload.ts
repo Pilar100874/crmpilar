@@ -6,7 +6,7 @@ import { toast } from '@/lib/toast-config';
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Extensão para monitoramento de tela do CRM Pilar",
   "permissions": [
     "tabs",
@@ -34,15 +34,14 @@ const manifestJson = `{
   }
 }`;
 
-const backgroundJs = `// Background service worker for screen monitoring v1.6.0
+const backgroundJs = `// Background service worker for screen monitoring v1.7.0
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
 let currentUserId = null;
-let broadcastChannel = null;
 let framesSent = 0;
 let lastFrameUpdate = 0;
-let wsReady = false;
+let lastBroadcast = 0;
 
 // Recuperar estado salvo na inicialização
 chrome.storage.local.get(['userId'], (data) => {
@@ -78,7 +77,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ success: true });
     
   } else if (request.action === 'startCapture') {
-    // Definir userId ANTES de qualquer operação
     const captureUserId = request.userId;
     currentUserId = captureUserId;
     
@@ -86,7 +84,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     chrome.storage.local.set({ userId: captureUserId, isCapturing: true }, async () => {
       try {
-        const result = await callEdgeFunction('start', captureUserId);
+        const result = await callEdgeFunction('extension-status', { usuario_id: captureUserId, action: 'start' });
         console.log('Background: Status atualizado para ATIVO:', result);
         sendResponse({ success: result.success, error: result.error });
       } catch (err) {
@@ -101,13 +99,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     getUserId().then(async (uid) => {
       try {
-        const result = await callEdgeFunction('stop', uid);
+        const result = await callEdgeFunction('extension-status', { usuario_id: uid, action: 'stop' });
         console.log('Background: Status atualizado para INATIVO:', result);
-        if (broadcastChannel) {
-          broadcastChannel.close();
-          broadcastChannel = null;
-        }
-        wsReady = false;
         framesSent = 0;
         sendResponse({ success: result.success });
       } catch (err) {
@@ -118,19 +111,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
     
   } else if (request.action === 'sendFrame') {
-    getUserId().then((uid) => {
+    getUserId().then(async (uid) => {
       if (!uid) {
         console.error('Background: Não pode enviar frame sem userId');
         sendResponse({ success: false, error: 'userId não definido' });
         return;
       }
       
-      broadcastFrame(request.frame, uid);
-      
-      // Atualizar timestamp a cada 5 segundos
       const now = Date.now();
+      
+      // Broadcast do frame via Edge Function (a cada 2 segundos para não sobrecarregar)
+      if (now - lastBroadcast > 2000) {
+        try {
+          const result = await callEdgeFunction('broadcast-frame', { usuario_id: uid, frame: request.frame });
+          if (result.success) {
+            console.log('Background: Frame broadcast #' + framesSent);
+          } else {
+            console.error('Background: Erro no broadcast:', result.error);
+          }
+        } catch (e) {
+          console.error('Background: Erro ao enviar frame:', e.message);
+        }
+        lastBroadcast = now;
+      }
+      
+      // Atualizar timestamp no banco a cada 5 segundos
       if (now - lastFrameUpdate > 5000) {
-        callEdgeFunction('frame', uid);
+        callEdgeFunction('extension-status', { usuario_id: uid, action: 'frame' });
         lastFrameUpdate = now;
       }
       
@@ -152,31 +159,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
-async function callEdgeFunction(action, uid) {
-  const userIdToUse = uid || currentUserId;
-  
-  if (!userIdToUse) {
-    console.error('Background: userId não definido para edge function');
-    return { success: false, error: 'userId não definido' };
-  }
-  
+async function callEdgeFunction(functionName, body) {
   try {
-    console.log('Background: Chamando edge function, action:', action, 'userId:', userIdToUse.substring(0,8) + '...');
+    console.log('Background: Chamando', functionName);
     
-    const response = await fetch(\`\${SUPABASE_URL}/functions/v1/extension-status\`, {
+    const response = await fetch(\`\${SUPABASE_URL}/functions/v1/\${functionName}\`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`
       },
-      body: JSON.stringify({
-        usuario_id: userIdToUse,
-        action: action
-      })
+      body: JSON.stringify(body)
     });
     
     const data = await response.json();
-    console.log('Background: Resposta edge function:', response.status, data.success ? 'OK' : data.error);
     
     if (!response.ok) {
       return { success: false, error: data.error || 'Erro na requisição' };
@@ -189,131 +185,18 @@ async function callEdgeFunction(action, uid) {
   }
 }
 
-function initBroadcastChannel(uid) {
-  if (broadcastChannel && broadcastChannel.readyState === WebSocket.OPEN) return;
-  
-  const userIdToUse = uid || currentUserId;
-  if (!userIdToUse) {
-    console.error('Background: userId não definido para WebSocket');
-    return;
-  }
-  
-  const wsUrl = \`wss://ioxugupvxlcdweldocmq.supabase.co/realtime/v1/websocket?apikey=\${SUPABASE_ANON_KEY}&vsn=1.0.0\`;
-  
-  console.log('Background: Conectando WebSocket para usuário:', userIdToUse.substring(0,8) + '...');
-  broadcastChannel = new WebSocket(wsUrl);
-  
-  // Guardar o userId usado para este canal
-  broadcastChannel.channelUserId = userIdToUse;
-  
-  broadcastChannel.onopen = () => {
-    console.log('Background: WebSocket conectado, entrando no canal...');
-    
-    // Join com configuração de broadcast
-    const joinMessage = {
-      topic: \`realtime:screen-share-\${broadcastChannel.channelUserId}\`,
-      event: 'phx_join',
-      payload: {
-        config: {
-          broadcast: {
-            self: true
-          }
-        }
-      },
-      ref: '1'
-    };
-    broadcastChannel.send(JSON.stringify(joinMessage));
-  };
-  
-  broadcastChannel.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      if (data.event === 'phx_reply') {
-        if (data.payload?.status === 'ok') {
-          console.log('Background: Canal joined com sucesso!');
-          wsReady = true;
-        } else {
-          console.log('Background: phx_reply status:', data.payload?.status);
-        }
-      } else if (data.event !== 'heartbeat') {
-        console.log('Background: WS evento:', data.event);
-      }
-    } catch (e) {
-      console.log('Background: WS parse error');
-    }
-  };
-  
-  broadcastChannel.onerror = (error) => {
-    console.error('Background: WebSocket error');
-    wsReady = false;
-  };
-  
-  broadcastChannel.onclose = () => {
-    console.log('Background: WebSocket fechado');
-    broadcastChannel = null;
-    wsReady = false;
-  };
-}
-
-function broadcastFrame(base64Frame, uid) {
-  const userIdToUse = uid || currentUserId;
-  
-  if (!userIdToUse) {
-    console.error('Background: userId não definido para broadcast');
-    return;
-  }
-  
-  initBroadcastChannel(userIdToUse);
-  
-  if (!broadcastChannel || broadcastChannel.readyState !== WebSocket.OPEN) {
-    console.log('Background: WebSocket não conectado, estado:', broadcastChannel?.readyState);
-    return;
-  }
-  
-  if (!wsReady) {
-    console.log('Background: Canal ainda não está pronto, aguardando...');
-    return;
-  }
-  
-  // Formato correto de broadcast para Supabase Realtime
-  const message = {
-    topic: \`realtime:screen-share-\${userIdToUse}\`,
-    event: 'broadcast',
-    payload: {
-      type: 'broadcast',
-      event: 'frame',
-      payload: { 
-        frame: base64Frame, 
-        timestamp: Date.now(),
-        userId: userIdToUse
-      }
-    },
-    ref: Date.now().toString()
-  };
-  
-  try {
-    broadcastChannel.send(JSON.stringify(message));
-    if (framesSent % 10 === 0) {
-      console.log('Background: Frame broadcast enviado #' + framesSent);
-    }
-  } catch (e) {
-    console.error('Background: Erro ao enviar frame:', e.message);
-  }
-}
-
 // Manter service worker ativo
 setInterval(() => {
   if (framesSent > 0) {
-    console.log('Background: Heartbeat - frames enviados:', framesSent, 'wsReady:', wsReady);
+    console.log('Background: Heartbeat - frames enviados:', framesSent);
   }
 }, 25000);
 
 chrome.runtime.onSuspend.addListener(() => {
   console.log('Background: Suspendendo...');
   getUserId().then(uid => {
-    if (uid) callEdgeFunction('stop', uid);
+    if (uid) callEdgeFunction('extension-status', { usuario_id: uid, action: 'stop' });
   });
-  if (broadcastChannel) broadcastChannel.close();
 });`;
 
 const popupHtml = `<!DOCTYPE html>
