@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Pilar - Extensão de Monitoramento</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 40px 20px;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    .logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 32px;
+      margin: 0 auto 20px;
+    }
+    
+    h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      color: rgba(255,255,255,0.6);
+      font-size: 16px;
+    }
+    
+    .card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .card h2 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .files-list {
+      list-style: none;
+    }
+    
+    .files-list li {
+      margin-bottom: 12px;
+    }
+    
+    .files-list a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: #fff;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    
+    .files-list a:hover {
+      background: rgba(255,255,255,0.15);
+      transform: translateX(4px);
+    }
+    
+    .file-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(102, 126, 234, 0.3);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    
+    .file-info {
+      flex: 1;
+    }
+    
+    .file-name {
+      font-weight: 500;
+    }
+    
+    .file-desc {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+    }
+    
+    .instructions {
+      counter-reset: step;
+    }
+    
+    .instructions li {
+      position: relative;
+      padding-left: 40px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    
+    .instructions li::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    
+    code {
+      background: rgba(255,255,255,0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    
+    .warning {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+    
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255,255,255,0.6);
+      text-decoration: none;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+    
+    .back-link:hover {
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">
+      ← Voltar ao CRM
+    </a>
+    
+    <div class="header">
+      <div class="logo">CP</div>
+      <h1>Extensão de Monitoramento</h1>
+      <p class="subtitle">CRM Pilar - Monitor de Tela para Chrome</p>
+    </div>
+    
+    <div class="card">
+      <h2>📁 Arquivos da Extensão</h2>
+      <p style="margin-bottom: 16px; color: rgba(255,255,255,0.7); font-size: 14px;">
+        Clique com botão direito em cada arquivo e selecione "Salvar link como..." para baixar.
+        Salve todos os arquivos na mesma pasta.
+      </p>
+      <ul class="files-list">
+        <li>
+          <a href="manifest.json" download>
+            <div class="file-icon">📄</div>
+            <div class="file-info">
+              <div class="file-name">manifest.json</div>
+              <div class="file-desc">Configuração da extensão (obrigatório)</div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="background.js" download>
+            <div class="file-icon">⚙️</div>
+            <div class="file-info">
+              <div class="file-name">background.js</div>
+              <div class="file-desc">Script principal de captura (obrigatório)</div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="popup.html" download>
+            <div class="file-icon">🖼️</div>
+            <div class="file-info">
+              <div class="file-name">popup.html</div>
+              <div class="file-desc">Interface do popup (obrigatório)</div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="popup.js" download>
+            <div class="file-icon">📜</div>
+            <div class="file-info">
+              <div class="file-name">popup.js</div>
+              <div class="file-desc">Script do popup (obrigatório)</div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="icons/icon16.png" download>
+            <div class="file-icon">🖼️</div>
+            <div class="file-info">
+              <div class="file-name">icons/icon16.png</div>
+              <div class="file-desc">Ícone 16x16 (criar pasta icons/)</div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="icons/icon48.png" download>
+            <div class="file-icon">🖼️</div>
+            <div class="file-info">
+              <div class="file-name">icons/icon48.png</div>
+              <div class="file-desc">Ícone 48x48 (criar pasta icons/)</div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="icons/icon128.png" download>
+            <div class="file-icon">🖼️</div>
+            <div class="file-info">
+              <div class="file-name">icons/icon128.png</div>
+              <div class="file-desc">Ícone 128x128 (criar pasta icons/)</div>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+    
+    <div class="card">
+      <h2>📋 Instruções de Instalação</h2>
+      <ol class="instructions">
+        <li>Crie uma pasta no seu computador chamada <code>crm-extension</code></li>
+        <li>Baixe todos os arquivos acima para essa pasta</li>
+        <li>Crie uma subpasta chamada <code>icons</code> e mova os ícones para lá</li>
+        <li>Abra o Chrome e acesse <code>chrome://extensions</code></li>
+        <li>Ative o <strong>"Modo do desenvolvedor"</strong> no canto superior direito</li>
+        <li>Clique em <strong>"Carregar sem compactação"</strong></li>
+        <li>Selecione a pasta <code>crm-extension</code> que você criou</li>
+        <li>Clique no ícone da extensão na barra do Chrome</li>
+        <li>Cole seu <strong>ID de usuário</strong> (disponível no seu Perfil) e clique em <strong>"Iniciar"</strong></li>
+      </ol>
+      
+      <div class="warning">
+        ⚠️ <strong>Importante:</strong> Você precisará selecionar qual tela/janela compartilhar apenas uma vez. 
+        Depois disso, o monitoramento funcionará automaticamente em segundo plano.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
