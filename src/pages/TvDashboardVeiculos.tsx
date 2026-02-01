@@ -335,41 +335,36 @@ export default function TvDashboardVeiculos() {
         </div>
       </div>
 
-      {/* Top Right - Stats Overlay */}
-      <div className="absolute top-3 right-3 z-[1000] flex items-center gap-1.5">
-        <div className="flex items-center gap-1 px-2 py-1 bg-background/90 backdrop-blur-sm rounded-lg shadow-lg">
-          <Car className="h-3 w-3 text-primary" />
-          <span className="text-sm font-bold">{stats.total}</span>
-        </div>
-        
-        <div className="flex items-center gap-1 px-2 py-1 bg-green-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-green-500/30">
-          <Activity className="h-3 w-3 text-green-500" />
+      {/* Top Right - Legend */}
+      <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2 px-3 py-2 bg-background/90 backdrop-blur-sm rounded-lg shadow-lg">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-green-500" />
+          <span className="text-xs text-muted-foreground">Movendo</span>
           <span className="text-sm font-bold text-green-600">{stats.movendo}</span>
         </div>
-
-        <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-amber-500/30">
-          <Clock className="h-3 w-3 text-amber-500" />
+        
+        <div className="w-px h-4 bg-border" />
+        
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-amber-500" />
+          <span className="text-xs text-muted-foreground">Parado</span>
           <span className="text-sm font-bold text-amber-600">{stats.parado}</span>
         </div>
-
-        <div className="flex items-center gap-1 px-2 py-1 bg-gray-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-gray-500/30">
-          <WifiOff className="h-3 w-3 text-gray-400" />
+        
+        <div className="w-px h-4 bg-border" />
+        
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-gray-400" />
+          <span className="text-xs text-muted-foreground">Offline</span>
           <span className="text-sm font-bold text-gray-500">{stats.offline}</span>
         </div>
-
-        <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-blue-500/30">
-          <Gauge className="h-3 w-3 text-blue-500" />
-          <span className="text-sm font-bold text-blue-600">{stats.velocidadeMedia} km/h</span>
-        </div>
-
-        <div className="flex items-center gap-1 px-2 py-1 bg-purple-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-purple-500/30">
-          <Route className="h-3 w-3 text-purple-500" />
-          <span className="text-sm font-bold text-purple-600">{consumoEstimado.totalKm} km</span>
-        </div>
-
-        <div className="flex items-center gap-1 px-2 py-1 bg-orange-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-orange-500/30">
-          <Fuel className="h-3 w-3 text-orange-500" />
-          <span className="text-sm font-bold text-orange-600">{formatCurrency(consumoEstimado.totalCusto)}</span>
+        
+        <div className="w-px h-4 bg-border" />
+        
+        <div className="flex items-center gap-1.5">
+          <Car className="h-3 w-3 text-primary" />
+          <span className="text-xs text-muted-foreground">Total</span>
+          <span className="text-sm font-bold">{stats.total}</span>
         </div>
       </div>
 
