@@ -6,13 +6,14 @@ import { toast } from '@/lib/toast-config';
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "1.0.0",
-  "description": "Extensão para monitoramento de tela silencioso do CRM Pilar",
+  "version": "1.1.0",
+  "description": "Extensão para monitoramento de tela do CRM Pilar",
   "permissions": [
     "desktopCapture",
     "tabs",
     "activeTab",
-    "storage"
+    "storage",
+    "offscreen"
   ],
   "host_permissions": [
     "https://ioxugupvxlcdweldocmq.supabase.co/*"
@@ -39,34 +40,40 @@ const backgroundJs = `// Background service worker for screen monitoring
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
-let mediaStream = null;
-let captureInterval = null;
 let userId = null;
-let broadcastChannel = null;
 
 // Recuperar estado salvo quando o service worker reinicia
-chrome.storage.local.get(['isCapturing', 'userId'], (data) => {
+chrome.storage.local.get(['userId'], (data) => {
   if (data.userId) userId = data.userId;
-  console.log('Restored state:', data);
+  console.log('Restored userId:', userId);
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('Received message:', request.action);
+  
   if (request.action === 'startCapture') {
     userId = request.userId;
-    startScreenCapture(sender.tab);
-    sendResponse({ success: true });
+    startScreenCapture(sender.tab).then(() => {
+      sendResponse({ success: true });
+    });
+    return true;
   } else if (request.action === 'stopCapture') {
-    stopScreenCapture();
-    sendResponse({ success: true });
+    stopScreenCapture().then(() => {
+      sendResponse({ success: true });
+    });
+    return true;
   } else if (request.action === 'getStatus') {
-    // Verificar storage para estado persistente
     chrome.storage.local.get(['isCapturing', 'userId'], (data) => {
       sendResponse({ 
-        isCapturing: data.isCapturing || mediaStream !== null,
+        isCapturing: data.isCapturing || false,
         userId: data.userId || userId
       });
     });
-    return true; // Importante para resposta async
+    return true;
+  } else if (request.action === 'frameFromOffscreen') {
+    // Recebe frame do offscreen document e transmite
+    broadcastFrame(request.frame);
+    updateLastFrameTimestamp();
   }
   return true;
 });
@@ -87,78 +94,78 @@ async function startScreenCapture(senderTab) {
     
     console.log('Starting capture with tab:', targetTab.id);
     
-    chrome.desktopCapture.chooseDesktopMedia(
-      ['screen', 'window', 'tab'],
-      targetTab,
-      async (streamId) => {
-        if (!streamId) {
-          console.log('User cancelled screen selection');
-          return;
-        }
+    return new Promise((resolve) => {
+      chrome.desktopCapture.chooseDesktopMedia(
+        ['screen', 'window', 'tab'],
+        targetTab,
+        async (streamId) => {
+          if (!streamId) {
+            console.log('User cancelled screen selection');
+            resolve();
+            return;
+          }
 
-        try {
           console.log('Got streamId:', streamId);
-          mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              mandatory: {
-                chromeMediaSource: 'desktop',
-                chromeMediaSourceId: streamId
-              }
-            }
+          
+          // Salvar streamId e estado
+          await chrome.storage.local.set({ 
+            isCapturing: true, 
+            userId: userId,
+            streamId: streamId
           });
-
-          // Salvar estado no storage para persistir entre suspensões do SW
-          await chrome.storage.local.set({ isCapturing: true, userId: userId });
           
-          startFrameCapture();
+          // Criar offscreen document para captura
+          await setupOffscreenDocument(streamId);
           
-          const statusUpdated = await updateConsentStatus(true);
-          console.log('Screen capture started, DB updated:', statusUpdated);
-        } catch (err) {
-          console.error('Error getting media stream:', err);
-          await chrome.storage.local.set({ isCapturing: false });
+          // Atualizar banco de dados
+          await updateConsentStatus(true);
+          
+          console.log('Screen capture started successfully');
+          resolve();
         }
-      }
-    );
+      );
+    });
   } catch (error) {
     console.error('Error starting screen capture:', error);
   }
 }
 
-function startFrameCapture() {
-  if (!mediaStream || !userId) return;
-
-  const videoTrack = mediaStream.getVideoTracks()[0];
-  const imageCapture = new ImageCapture(videoTrack);
+async function setupOffscreenDocument(streamId) {
+  const existingContexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT']
+  });
   
-  initBroadcastChannel();
-
-  captureInterval = setInterval(async () => {
-    try {
-      const bitmap = await imageCapture.grabFrame();
-      
-      const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(bitmap, 0, 0);
-      
-      const scaledCanvas = new OffscreenCanvas(1280, 720);
-      const scaledCtx = scaledCanvas.getContext('2d');
-      scaledCtx.drawImage(canvas, 0, 0, 1280, 720);
-      
-      const blob = await scaledCanvas.convertToBlob({ type: 'image/jpeg', quality: 0.5 });
-      const arrayBuffer = await blob.arrayBuffer();
-      const base64 = arrayBufferToBase64(arrayBuffer);
-      
-      await broadcastFrame(base64);
-      await updateLastFrameTimestamp();
-      
-    } catch (error) {
-      console.error('Error capturing frame:', error);
-    }
-  }, 3000);
+  if (existingContexts.length > 0) {
+    // Já existe, enviar novo streamId
+    chrome.runtime.sendMessage({ 
+      action: 'startRecording', 
+      streamId: streamId,
+      userId: userId
+    });
+    return;
+  }
+  
+  await chrome.offscreen.createDocument({
+    url: 'offscreen.html',
+    reasons: ['USER_MEDIA'],
+    justification: 'Screen capture for employee monitoring'
+  });
+  
+  // Aguardar documento carregar e iniciar gravação
+  setTimeout(() => {
+    chrome.runtime.sendMessage({ 
+      action: 'startRecording', 
+      streamId: streamId,
+      userId: userId
+    });
+  }, 500);
 }
 
+let broadcastChannel = null;
+
 function initBroadcastChannel() {
+  if (broadcastChannel && broadcastChannel.readyState === WebSocket.OPEN) return;
+  
   const wsUrl = \`wss://ioxugupvxlcdweldocmq.supabase.co/realtime/v1/websocket?apikey=\${SUPABASE_ANON_KEY}&vsn=1.0.0\`;
   
   broadcastChannel = new WebSocket(wsUrl);
@@ -181,10 +188,13 @@ function initBroadcastChannel() {
   
   broadcastChannel.onclose = () => {
     console.log('Broadcast channel closed');
+    broadcastChannel = null;
   };
 }
 
 async function broadcastFrame(base64Frame) {
+  initBroadcastChannel();
+  
   if (!broadcastChannel || broadcastChannel.readyState !== WebSocket.OPEN) {
     console.log('Broadcast channel not ready');
     return;
@@ -226,19 +236,8 @@ async function updateConsentStatus(isSharing) {
       })
     });
     
-    const responseText = await response.text();
-    console.log('Update response:', response.status, responseText);
-    
-    if (!response.ok) {
-      console.error('Error updating consent status:', response.status, responseText);
-      if (response.status === 404 || responseText.includes('[]') || responseText === '[]') {
-        alert('Registro não encontrado. Por favor, copie seu ID de usuário na página de Perfil primeiro.');
-      }
-      return false;
-    }
-    
-    console.log('Consent status updated successfully:', isSharing ? 'SHARING' : 'NOT SHARING');
-    return true;
+    console.log('Update response status:', response.status);
+    return response.ok;
   } catch (error) {
     console.error('Error updating consent status:', error);
     return false;
@@ -265,6 +264,114 @@ async function updateLastFrameTimestamp() {
 }
 
 async function stopScreenCapture() {
+  // Fechar offscreen document
+  const existingContexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT']
+  });
+  
+  if (existingContexts.length > 0) {
+    await chrome.offscreen.closeDocument();
+  }
+  
+  if (broadcastChannel) {
+    broadcastChannel.close();
+    broadcastChannel = null;
+  }
+  
+  await chrome.storage.local.set({ isCapturing: false, streamId: null });
+  
+  if (userId) {
+    await updateConsentStatus(false);
+  }
+  
+  console.log('Screen capture stopped');
+}
+
+chrome.runtime.onSuspend.addListener(() => {
+  if (broadcastChannel) {
+    broadcastChannel.close();
+  }
+});`;
+
+// Offscreen document HTML
+const offscreenHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Screen Capture</title>
+</head>
+<body>
+  <video id="video" autoplay muted style="display:none;"></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <script src="offscreen.js"><\/script>
+</body>
+</html>`;
+
+// Offscreen document JS - aqui temos acesso ao DOM e navigator.mediaDevices
+const offscreenJs = `let mediaStream = null;
+let captureInterval = null;
+let userId = null;
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'startRecording') {
+    userId = request.userId;
+    startRecording(request.streamId);
+  } else if (request.action === 'stopRecording') {
+    stopRecording();
+  }
+});
+
+async function startRecording(streamId) {
+  try {
+    console.log('Offscreen: Starting recording with streamId:', streamId);
+    
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        mandatory: {
+          chromeMediaSource: 'desktop',
+          chromeMediaSourceId: streamId
+        }
+      }
+    });
+    
+    const video = document.getElementById('video');
+    video.srcObject = mediaStream;
+    await video.play();
+    
+    console.log('Offscreen: Video playing, starting frame capture');
+    
+    // Capturar frames a cada 3 segundos
+    captureInterval = setInterval(() => captureFrame(video), 3000);
+    
+  } catch (error) {
+    console.error('Offscreen: Error starting recording:', error);
+  }
+}
+
+function captureFrame(video) {
+  try {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Redimensionar para 1280x720
+    canvas.width = 1280;
+    canvas.height = 720;
+    ctx.drawImage(video, 0, 0, 1280, 720);
+    
+    const base64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+    
+    // Enviar frame para o background script
+    chrome.runtime.sendMessage({
+      action: 'frameFromOffscreen',
+      frame: base64
+    });
+    
+    console.log('Offscreen: Frame captured and sent');
+  } catch (error) {
+    console.error('Offscreen: Error capturing frame:', error);
+  }
+}
+
+function stopRecording() {
   if (captureInterval) {
     clearInterval(captureInterval);
     captureInterval = null;
@@ -275,34 +382,8 @@ async function stopScreenCapture() {
     mediaStream = null;
   }
   
-  if (broadcastChannel) {
-    broadcastChannel.close();
-    broadcastChannel = null;
-  }
-  
-  // Limpar estado persistente
-  await chrome.storage.local.set({ isCapturing: false });
-  
-  if (userId) {
-    await updateConsentStatus(false);
-  }
-  
-  console.log('Screen capture stopped');
-}
-
-function arrayBufferToBase64(buffer) {
-  let binary = '';
-  const bytes = new Uint8Array(buffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-chrome.runtime.onSuspend.addListener(() => {
-  stopScreenCapture();
-});`;
+  console.log('Offscreen: Recording stopped');
+}`;
 
 const popupHtml = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -475,6 +556,10 @@ export const useExtensionDownload = () => {
       zip.file('background.js', backgroundJs);
       zip.file('popup.html', popupHtml);
       zip.file('popup.js', popupJs);
+      
+      // Add offscreen files for MV3 media capture
+      zip.file('offscreen.html', offscreenHtml);
+      zip.file('offscreen.js', offscreenJs);
       
       // Add icons folder
       const iconsFolder = zip.folder('icons');
