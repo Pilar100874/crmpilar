@@ -6,8 +6,8 @@ import { toast } from '@/lib/toast-config';
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "2.3.0",
-  "description": "Extensão para monitoramento de tela com auto-inicialização e tratamento de erros melhorado",
+  "version": "2.3.1",
+  "description": "Extensão para monitoramento de tela com auto-recovery",
   "permissions": [
     "tabs",
     "activeTab",
@@ -35,8 +35,8 @@ const manifestJson = `{
   }
 }`;
 
-const backgroundJs = `// Background service worker for screen monitoring v2.3.0
-// Auto-starts on browser launch if enabled - with improved error handling
+const backgroundJs = `// Background service worker for screen monitoring v2.3.1
+// Auto-starts on browser launch - with auto-recovery mechanism
 
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
@@ -50,7 +50,11 @@ let viewerCheckInterval = null;
 let lastViewerActive = false;
 let autoStartPending = false;
 let consecutiveErrors = 0;
+let lastSuccessfulCheck = Date.now();
+let watchdogInterval = null;
 const MAX_CONSECUTIVE_ERRORS = 5;
+const WATCHDOG_INTERVAL = 30000; // 30 segundos
+const MAX_IDLE_TIME = 60000; // 60 segundos sem sucesso = restart
 
 // Recuperar estado salvo na inicialização
 chrome.storage.local.get(['userId', 'isCapturing', 'autoStart'], (data) => {
@@ -116,8 +120,12 @@ function startViewerPolling() {
   
   console.log('Background: Iniciando polling de viewer (5s)...');
   consecutiveErrors = 0;
-  viewerCheckInterval = setInterval(checkViewer, 5000); // Aumentado para 5 segundos
+  lastSuccessfulCheck = Date.now();
+  viewerCheckInterval = setInterval(checkViewer, 5000);
   checkViewer();
+  
+  // Iniciar watchdog se não estiver rodando
+  startWatchdog();
 }
 
 function stopViewerPolling() {
@@ -125,6 +133,41 @@ function stopViewerPolling() {
     clearInterval(viewerCheckInterval);
     viewerCheckInterval = null;
     console.log('Background: Polling de viewer parado');
+  }
+  stopWatchdog();
+}
+
+// Watchdog: verifica se o sistema está funcionando e reinicia se necessário
+function startWatchdog() {
+  if (watchdogInterval) return;
+  
+  console.log('Background: Watchdog iniciado');
+  watchdogInterval = setInterval(() => {
+    const timeSinceSuccess = Date.now() - lastSuccessfulCheck;
+    
+    chrome.storage.local.get(['isCapturing'], (data) => {
+      if (data.isCapturing && timeSinceSuccess > MAX_IDLE_TIME) {
+        console.log('Background: Watchdog detectou inatividade (' + Math.round(timeSinceSuccess/1000) + 's), reiniciando polling...');
+        
+        // Reiniciar polling
+        stopViewerPolling();
+        consecutiveErrors = 0;
+        lastSuccessfulCheck = Date.now();
+        
+        // Re-iniciar após pequeno delay
+        setTimeout(() => {
+          startViewerPolling();
+        }, 1000);
+      }
+    });
+  }, WATCHDOG_INTERVAL);
+}
+
+function stopWatchdog() {
+  if (watchdogInterval) {
+    clearInterval(watchdogInterval);
+    watchdogInterval = null;
+    console.log('Background: Watchdog parado');
   }
 }
 
@@ -137,8 +180,9 @@ async function checkViewer() {
       action: 'check-viewer' 
     });
     
-    // Resetar contador de erros em sucesso
+    // Marcar sucesso
     consecutiveErrors = 0;
+    lastSuccessfulCheck = Date.now();
     
     const viewerActive = result.data?.viewer_active || false;
     
@@ -146,15 +190,11 @@ async function checkViewer() {
       console.log('Background: Viewer status mudou:', viewerActive);
       lastViewerActive = viewerActive;
       
-      // Usar try-catch para evitar erros se offscreen não existe
-      try {
-        chrome.runtime.sendMessage({ 
-          action: 'offscreen-viewer-status', 
-          viewerActive: viewerActive 
-        });
-      } catch (e) {
-        // Ignorar erro de mensagem
-      }
+      // Notificar offscreen (com try-catch)
+      safeSendMessage({ 
+        action: 'offscreen-viewer-status', 
+        viewerActive: viewerActive 
+      });
     }
   } catch (e) {
     consecutiveErrors++;
@@ -171,6 +211,20 @@ async function checkViewer() {
         startViewerPolling();
       }, 30000);
     }
+  }
+}
+
+// Função segura para enviar mensagens (evita erros quando não há receptor)
+function safeSendMessage(message) {
+  try {
+    chrome.runtime.sendMessage(message, () => {
+      // Ignorar erro de "no receiving end"
+      if (chrome.runtime.lastError) {
+        // Silenciosamente ignorar
+      }
+    });
+  } catch (e) {
+    // Ignorar qualquer erro
   }
 }
 
@@ -240,11 +294,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const offscreenOk = await createOffscreenDocument();
         
         if (offscreenOk) {
-          try {
-            chrome.runtime.sendMessage({ action: 'offscreen-start-capture', userId: captureUserId });
-          } catch (e) {
-            // Ignorar
-          }
+          safeSendMessage({ action: 'offscreen-start-capture', userId: captureUserId });
           startViewerPolling();
           sendResponse({ success: true });
         } else {
@@ -263,11 +313,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     (async () => {
       try {
-        try {
-          chrome.runtime.sendMessage({ action: 'offscreen-stop-capture' });
-        } catch (e) {
-          // Ignorar
-        }
+        safeSendMessage({ action: 'offscreen-stop-capture' });
         await closeOffscreenDocument();
         
         if (currentUserId) {
