@@ -9,7 +9,8 @@ import {
   Clock, 
   Tv, 
   MonitorOff,
-  Circle
+  Circle,
+  Monitor
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,8 @@ interface UserMonitorRowProps {
   pedidosFechados: number;
   filaEspera: number;
   extensionActive: boolean;
+  currentPage: string | null;
+  currentRoute: string | null;
   onViewScreen: () => void;
   estabelecimentoId: string;
 }
@@ -81,6 +84,8 @@ export function UserMonitorRow({
   pedidosFechados,
   filaEspera,
   extensionActive,
+  currentPage,
+  currentRoute,
   onViewScreen,
   estabelecimentoId
 }: UserMonitorRowProps) {
@@ -331,8 +336,8 @@ export function UserMonitorRow({
         {/* Linha Resumo */}
         <CollapsibleTrigger asChild>
           <div className="flex items-center gap-4 p-3 hover:bg-accent/50 cursor-pointer transition-colors">
-            {/* Avatar + Nome */}
-            <div className="flex items-center gap-3 min-w-[200px]">
+            {/* Avatar + Nome + Tela Atual */}
+            <div className="flex items-center gap-3 min-w-[280px]">
               <div className="relative">
                 <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
                   {usuario.nome?.charAt(0)?.toUpperCase() || '?'}
@@ -341,12 +346,27 @@ export function UserMonitorRow({
                   isOnline ? 'bg-green-500' : 'bg-gray-400'
                 }`} />
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{usuario.nome}</p>
-                <div className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
-                  <span className="text-xs text-muted-foreground">{getStatusLabel(status)}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium truncate">{usuario.nome}</p>
+                  <div className="flex items-center gap-1">
+                    <div className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
+                    <span className="text-xs text-muted-foreground">{getStatusLabel(status)}</span>
+                  </div>
                 </div>
+                {/* Tela Atual */}
+                {isOnline && currentPage && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                    <Monitor className="h-3 w-3" />
+                    <span className="truncate max-w-[200px]">{currentPage}</span>
+                  </div>
+                )}
+                {isOnline && !currentPage && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground/50 mt-0.5">
+                    <Monitor className="h-3 w-3" />
+                    <span>Sem rastreamento</span>
+                  </div>
+                )}
               </div>
             </div>
 
