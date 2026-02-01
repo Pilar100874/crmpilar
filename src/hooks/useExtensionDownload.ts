@@ -6,7 +6,7 @@ import { toast } from '@/lib/toast-config';
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Extensão para monitoramento de tela do CRM Pilar",
   "permissions": [
     "tabs",
@@ -34,13 +34,14 @@ const manifestJson = `{
   }
 }`;
 
-const backgroundJs = `// Background service worker for screen monitoring v1.3.0
+const backgroundJs = `// Background service worker for screen monitoring v1.4.0
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
 let userId = null;
 let broadcastChannel = null;
 let framesSent = 0;
+let lastFrameUpdate = 0;
 
 // Recuperar estado salvo
 chrome.storage.local.get(['userId'], (data) => {
@@ -61,9 +62,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === 'startCapture') {
     userId = request.userId;
     chrome.storage.local.set({ userId: userId, isCapturing: true });
-    updateConsentStatus(true).then(result => {
+    callEdgeFunction('start').then(result => {
       console.log('Background: Status atualizado para ATIVO:', result);
-      sendResponse({ success: result });
+      sendResponse({ success: result.success, error: result.error });
     }).catch(err => {
       console.error('Background: Erro ao atualizar status:', err);
       sendResponse({ success: false, error: err.message });
@@ -71,14 +72,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   } else if (request.action === 'stopCapture') {
     chrome.storage.local.set({ isCapturing: false });
-    updateConsentStatus(false).then(result => {
+    callEdgeFunction('stop').then(result => {
       console.log('Background: Status atualizado para INATIVO:', result);
       if (broadcastChannel) {
         broadcastChannel.close();
         broadcastChannel = null;
       }
       framesSent = 0;
-      sendResponse({ success: result });
+      sendResponse({ success: result.success });
     }).catch(err => {
       console.error('Background: Erro ao atualizar status:', err);
       sendResponse({ success: false, error: err.message });
@@ -86,7 +87,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   } else if (request.action === 'sendFrame') {
     broadcastFrame(request.frame);
-    updateLastFrameTimestamp();
+    
+    // Atualizar timestamp a cada 5 segundos para não sobrecarregar
+    const now = Date.now();
+    if (now - lastFrameUpdate > 5000) {
+      callEdgeFunction('frame');
+      lastFrameUpdate = now;
+    }
+    
     framesSent++;
     sendResponse({ success: true, framesSent });
   } else if (request.action === 'getStatus') {
@@ -101,6 +109,41 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   return true;
 });
+
+async function callEdgeFunction(action) {
+  if (!userId) {
+    console.error('Background: userId não definido');
+    return { success: false, error: 'userId não definido' };
+  }
+  
+  try {
+    console.log('Background: Chamando edge function, action:', action, 'userId:', userId);
+    
+    const response = await fetch(\`\${SUPABASE_URL}/functions/v1/extension-status\`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`
+      },
+      body: JSON.stringify({
+        usuario_id: userId,
+        action: action
+      })
+    });
+    
+    const data = await response.json();
+    console.log('Background: Resposta edge function:', response.status, data);
+    
+    if (!response.ok) {
+      return { success: false, error: data.error || 'Erro na requisição' };
+    }
+    
+    return { success: true, data };
+  } catch (error) {
+    console.error('Background: Erro ao chamar edge function:', error);
+    return { success: false, error: error.message };
+  }
+}
 
 function initBroadcastChannel() {
   if (broadcastChannel && broadcastChannel.readyState === WebSocket.OPEN) return;
@@ -127,7 +170,10 @@ function initBroadcastChannel() {
   };
   
   broadcastChannel.onmessage = (event) => {
-    console.log('Background: WebSocket message:', event.data);
+    const data = JSON.parse(event.data);
+    if (data.event !== 'phx_reply') {
+      console.log('Background: WebSocket message:', data.event);
+    }
   };
   
   broadcastChannel.onerror = (error) => {
@@ -160,74 +206,7 @@ function broadcastFrame(base64Frame) {
   };
   
   broadcastChannel.send(JSON.stringify(message));
-  console.log('Background: Frame enviado #' + framesSent);
-}
-
-async function updateConsentStatus(isSharing) {
-  if (!userId) {
-    console.error('Background: userId não definido para atualizar status');
-    return false;
-  }
-  
-  try {
-    console.log('Background: Atualizando status para', isSharing, 'userId:', userId);
-    
-    const body = {
-      is_sharing: isSharing,
-      sharing_started_at: isSharing ? new Date().toISOString() : null,
-      updated_at: new Date().toISOString()
-    };
-    
-    if (isSharing) {
-      body.last_frame_at = new Date().toISOString();
-    }
-    
-    const response = await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent?usuario_id=eq.\${userId}\`, {
-      method: 'PATCH',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify(body)
-    });
-    
-    const responseText = await response.text();
-    console.log('Background: Resposta do servidor:', response.status, responseText);
-    
-    if (!response.ok) {
-      console.error('Background: Erro na resposta:', response.status, responseText);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Background: Erro ao atualizar status:', error.message);
-    return false;
-  }
-}
-
-async function updateLastFrameTimestamp() {
-  if (!userId) return;
-  
-  try {
-    await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent?usuario_id=eq.\${userId}\`, {
-      method: 'PATCH',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ 
-        last_frame_at: new Date().toISOString(),
-        is_sharing: true 
-      })
-    });
-  } catch (error) {
-    console.error('Background: Erro ao atualizar timestamp:', error);
-  }
+  console.log('Background: Frame broadcast #' + framesSent);
 }
 
 // Manter service worker ativo
@@ -237,6 +216,9 @@ setInterval(() => {
 
 chrome.runtime.onSuspend.addListener(() => {
   console.log('Background: Suspendendo...');
+  if (userId) {
+    callEdgeFunction('stop');
+  }
   if (broadcastChannel) broadcastChannel.close();
 });`;
 
