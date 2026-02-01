@@ -4,6 +4,7 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   Users, 
   MessageSquare, 
@@ -14,7 +15,8 @@ import {
   Circle,
   RefreshCw,
   ArrowRight,
-  Tv
+  Tv,
+  MonitorOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
@@ -35,6 +37,7 @@ interface UserActivity {
     nome: string;
     email: string;
   };
+  extensionActive?: boolean;
 }
 
 interface AtendenteInfo {
@@ -78,6 +81,7 @@ export default function MonitorFuncionarios() {
   const [loading, setLoading] = useState(true);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   const [viewingScreen, setViewingScreen] = useState<{usuarioId: string, nome: string} | null>(null);
+  const [extensionStatuses, setExtensionStatuses] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     init();
@@ -92,6 +96,7 @@ export default function MonitorFuncionarios() {
         loadAtendentes(estabId),
         loadFilaEspera(estabId),
         loadChatsAtivos(estabId),
+        loadExtensionStatuses(estabId),
       ]);
       setupRealtime(estabId);
     }
@@ -129,6 +134,28 @@ export default function MonitorFuncionarios() {
     return () => {
       supabase.removeChannel(channel);
     };
+  };
+
+  const loadExtensionStatuses = async (estabId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('screen_monitor_consent')
+        .select('usuario_id, is_sharing, last_frame_at')
+        .eq('estabelecimento_id', estabId);
+
+      if (error) throw error;
+
+      const statuses: Record<string, boolean> = {};
+      (data || []).forEach((item: any) => {
+        // Considera ativo se is_sharing=true e teve frame nos últimos 30 segundos
+        const lastFrame = item.last_frame_at ? new Date(item.last_frame_at) : null;
+        const isRecent = lastFrame && (Date.now() - lastFrame.getTime()) < 30000;
+        statuses[item.usuario_id] = item.is_sharing && isRecent;
+      });
+      setExtensionStatuses(statuses);
+    } catch (error) {
+      console.error('Erro ao carregar status das extensões:', error);
+    }
   };
 
   const loadActivities = async (estabId: string) => {
@@ -401,20 +428,35 @@ export default function MonitorFuncionarios() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          {activity.is_online && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => setViewingScreen({
-                                usuarioId: activity.usuario_id,
-                                nome: activity.usuario?.nome || 'Usuário'
-                              })}
-                              title="Ver tela"
-                            >
-                              <Tv className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                {extensionStatuses[activity.usuario_id] ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-green-500 hover:text-green-600"
+                                    onClick={() => setViewingScreen({
+                                      usuarioId: activity.usuario_id,
+                                      nome: activity.usuario?.nome || 'Usuário'
+                                    })}
+                                  >
+                                    <Tv className="h-4 w-4" />
+                                  </Button>
+                                ) : (
+                                  <div className="h-7 w-7 flex items-center justify-center text-muted-foreground">
+                                    <MonitorOff className="h-4 w-4" />
+                                  </div>
+                                )}
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {extensionStatuses[activity.usuario_id] 
+                                  ? "Extensão ativa - clique para ver tela" 
+                                  : "Extensão não instalada ou inativa"
+                                }
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           <div className="text-right">
                             <Badge variant={activity.is_online ? "default" : "secondary"} className="text-[10px] px-1.5">
                               {activity.is_online ? 'Online' : 'Offline'}

@@ -61,7 +61,7 @@ import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
 import { useActivityTracking } from "@/hooks/useActivityTracking";
-import { useAutoScreenShare } from "@/hooks/useAutoScreenShare";
+// useAutoScreenShare removido - agora usamos extensão do Chrome
 import * as LucideIcons from "lucide-react";
 
 
@@ -175,8 +175,7 @@ export default function Layout({ children }: LayoutProps) {
   // Tracking de atividade do usuário em tempo real
   useActivityTracking();
   
-  // Auto compartilhamento de tela se usuário autorizou
-  useAutoScreenShare();
+  // Auto screen share removido - agora usamos extensão do Chrome
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
