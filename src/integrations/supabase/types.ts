@@ -9757,6 +9757,66 @@ export type Database = {
           },
         ]
       }
+      user_activity_tracking: {
+        Row: {
+          created_at: string
+          current_page_title: string | null
+          current_route: string | null
+          estabelecimento_id: string
+          id: string
+          is_online: boolean | null
+          last_activity_at: string
+          metadata: Json | null
+          session_started_at: string
+          total_active_time_seconds: number | null
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_page_title?: string | null
+          current_route?: string | null
+          estabelecimento_id: string
+          id?: string
+          is_online?: boolean | null
+          last_activity_at?: string
+          metadata?: Json | null
+          session_started_at?: string
+          total_active_time_seconds?: number | null
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          current_page_title?: string | null
+          current_route?: string | null
+          estabelecimento_id?: string
+          id?: string
+          is_online?: boolean | null
+          last_activity_at?: string
+          metadata?: Json | null
+          session_started_at?: string
+          total_active_time_seconds?: number | null
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_tracking_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_activity_tracking_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_atalhos: {
         Row: {
           created_at: string | null

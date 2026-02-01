@@ -47,6 +47,7 @@ import WebChat from "./pages/WebChat";
 import ChatInterno from "./pages/ChatInterno";
 import ConfigSkills from "./pages/ConfigSkills";
 import MonitorarFilas from "./pages/MonitorarFilas";
+import MonitorFuncionarios from "./pages/MonitorFuncionarios";
 import DashboardAtendentePage from "./pages/DashboardAtendente";
 import DashboardSupervisorPage from "./pages/DashboardSupervisor";
 import OmnichannelBuilder from "./pages/OmnichannelBuilder";
@@ -172,6 +173,7 @@ const App = () => (
               <Route path="/stimulsoft-viewer" element={<StimulsoftViewer />} />
               <Route path="/config/skills" element={<ConfigSkills />} />
               <Route path="/monitor-filas" element={<MonitorarFilas />} />
+              <Route path="/monitor-funcionarios" element={<MonitorFuncionarios />} />
               <Route path="/omnichannel-builder" element={<OmnichannelBuilder />} />
               <Route path="/omnichannel-builder/:id" element={<OmnichannelBuilder />} />
               <Route path="/dashboard-atendente" element={<DashboardAtendentePage />} />
