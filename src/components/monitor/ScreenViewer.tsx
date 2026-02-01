@@ -19,6 +19,20 @@ export function ScreenViewer({ usuarioId, usuarioNome, onClose }: ScreenViewerPr
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
+    // Notificar que viewer está ativo
+    const notifyViewerStart = async () => {
+      try {
+        await supabase.functions.invoke('extension-status', {
+          body: { usuario_id: usuarioId, action: 'viewer-start' }
+        });
+        console.log('[ScreenViewer] Viewer iniciado para:', usuarioId);
+      } catch (err) {
+        console.error('[ScreenViewer] Erro ao notificar viewer-start:', err);
+      }
+    };
+
+    notifyViewerStart();
+
     // Conectar ao canal de broadcast do usuário
     const channel = supabase.channel(`screen-share-${usuarioId}`)
       .on('broadcast', { event: 'frame' }, (payload) => {
@@ -38,6 +52,20 @@ export function ScreenViewer({ usuarioId, usuarioNome, onClose }: ScreenViewerPr
     channelRef.current = channel;
 
     return () => {
+      // Notificar que viewer parou
+      const notifyViewerStop = async () => {
+        try {
+          await supabase.functions.invoke('extension-status', {
+            body: { usuario_id: usuarioId, action: 'viewer-stop' }
+          });
+          console.log('[ScreenViewer] Viewer parado para:', usuarioId);
+        } catch (err) {
+          console.error('[ScreenViewer] Erro ao notificar viewer-stop:', err);
+        }
+      };
+
+      notifyViewerStop();
+
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
@@ -59,13 +87,13 @@ export function ScreenViewer({ usuarioId, usuarioNome, onClose }: ScreenViewerPr
             </CardTitle>
             <CardDescription className="text-xs">
               {isConnecting ? (
-                <span className="text-yellow-500">Aguardando compartilhamento...</span>
+                <span className="text-yellow-500">Conectando ao canal...</span>
               ) : lastUpdate ? (
                 <span className="text-green-500">
                   Última atualização: {lastUpdate.toLocaleTimeString('pt-BR')}
                 </span>
               ) : (
-                <span className="text-muted-foreground">Conectado</span>
+                <span className="text-muted-foreground">Aguardando frames da extensão...</span>
               )}
             </CardDescription>
           </div>
@@ -85,8 +113,7 @@ export function ScreenViewer({ usuarioId, usuarioNome, onClose }: ScreenViewerPr
           {isConnecting ? (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
               <RefreshCw className="h-8 w-8 mb-4 animate-spin" />
-              <p className="text-sm">Aguardando compartilhamento de tela...</p>
-              <p className="text-xs mt-2">O usuário precisa aceitar o compartilhamento</p>
+              <p className="text-sm">Conectando ao canal de monitoramento...</p>
             </div>
           ) : currentFrame ? (
             <div className={`relative ${isFullscreen ? 'h-full' : ''}`}>
@@ -99,8 +126,8 @@ export function ScreenViewer({ usuarioId, usuarioNome, onClose }: ScreenViewerPr
           ) : (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
               <Monitor className="h-12 w-12 mb-4 opacity-30" />
-              <p className="text-sm">Usuário conectado mas sem tela compartilhada</p>
-              <p className="text-xs mt-2">O compartilhamento pode ter sido recusado</p>
+              <p className="text-sm">Aguardando frames da extensão...</p>
+              <p className="text-xs mt-2">O colaborador precisa ter a extensão ativa e compartilhando tela</p>
             </div>
           )}
         </CardContent>

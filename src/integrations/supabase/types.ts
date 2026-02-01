@@ -8769,6 +8769,8 @@ export type Database = {
           sharing_started_at: string | null
           updated_at: string
           usuario_id: string
+          viewer_active: boolean | null
+          viewer_started_at: string | null
         }
         Insert: {
           consent_given?: boolean
@@ -8781,6 +8783,8 @@ export type Database = {
           sharing_started_at?: string | null
           updated_at?: string
           usuario_id: string
+          viewer_active?: boolean | null
+          viewer_started_at?: string | null
         }
         Update: {
           consent_given?: boolean
@@ -8793,6 +8797,8 @@ export type Database = {
           sharing_started_at?: string | null
           updated_at?: string
           usuario_id?: string
+          viewer_active?: boolean | null
+          viewer_started_at?: string | null
         }
         Relationships: [
           {
