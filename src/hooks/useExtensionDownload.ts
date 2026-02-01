@@ -6,7 +6,7 @@ import { toast } from '@/lib/toast-config';
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Extensão para monitoramento de tela do CRM Pilar",
   "permissions": [
     "tabs",
@@ -34,7 +34,7 @@ const manifestJson = `{
   }
 }`;
 
-const backgroundJs = `// Background service worker for screen monitoring v1.8.0
+const backgroundJs = `// Background service worker for screen monitoring v1.9.0
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
@@ -47,7 +47,7 @@ let lastBroadcast = 0;
 chrome.storage.local.get(['userId'], (data) => {
   if (data.userId) {
     currentUserId = data.userId;
-    console.log('Background v1.8: userId recuperado do storage:', currentUserId);
+    console.log('Background v1.9: userId recuperado do storage:', currentUserId);
   }
 });
 
@@ -68,7 +68,7 @@ async function getUserId() {
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Background v1.8 received:', request.action);
+  console.log('Background v1.9 received:', request.action);
   
   if (request.action === 'setUserId') {
     currentUserId = request.userId;
@@ -82,7 +82,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     console.log('Background: Iniciando captura com userId:', captureUserId);
     
-    chrome.storage.local.set({ userId: captureUserId, isCapturing: true }, async () => {
+    chrome.storage.local.set({ userId: captureUserId, isCapturing: true, captureStartTime: Date.now() }, async () => {
       try {
         const result = await callEdgeFunction('extension-status', { usuario_id: captureUserId, action: 'start' });
         console.log('Background: Status atualizado para ATIVO:', result);
@@ -95,7 +95,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
     
   } else if (request.action === 'stopCapture') {
-    chrome.storage.local.set({ isCapturing: false });
+    chrome.storage.local.set({ isCapturing: false, captureStartTime: null });
     
     getUserId().then(async (uid) => {
       try {
@@ -154,11 +154,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
     
   } else if (request.action === 'getStatus') {
-    chrome.storage.local.get(['isCapturing', 'userId'], (data) => {
+    chrome.storage.local.get(['isCapturing', 'userId', 'captureStartTime'], (data) => {
       sendResponse({ 
         isCapturing: data.isCapturing || false,
         userId: data.userId || currentUserId,
-        framesSent: framesSent
+        framesSent: framesSent,
+        captureStartTime: data.captureStartTime
       });
     });
     return true;
@@ -170,11 +171,11 @@ async function callEdgeFunction(functionName, body) {
   try {
     console.log('Background: Chamando edge function:', functionName);
     
-    const response = await fetch(\`\${SUPABASE_URL}/functions/v1/\${functionName}\`, {
+    const response = await fetch(SUPABASE_URL + '/functions/v1/' + functionName, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
       },
       body: JSON.stringify(body)
     });
@@ -241,11 +242,17 @@ const popupHtml = `<!DOCTYPE html>
     .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
     .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
     .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; }
+    .btn-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .info-text { font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-top: 16px; line-height: 1.5; }
+    .warning-box { background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 8px; padding: 12px; margin-bottom: 16px; }
+    .warning-text { font-size: 12px; color: #fbbf24; line-height: 1.4; }
     .hidden { display: none; }
     .preview { width: 100%; height: 120px; background: #000; border-radius: 8px; margin-bottom: 12px; object-fit: contain; }
     .frame-info { font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 12px; }
+    .resume-section { background: rgba(245, 158, 11, 0.1); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .resume-title { font-size: 14px; font-weight: 600; color: #fbbf24; margin-bottom: 8px; }
+    .resume-text { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 12px; }
   </style>
 </head>
 <body>
@@ -253,7 +260,7 @@ const popupHtml = `<!DOCTYPE html>
     <div class="logo">CP</div>
     <div>
       <div class="title">CRM Pilar</div>
-      <div class="subtitle">Monitor de Tela</div>
+      <div class="subtitle">Monitor de Tela v1.9</div>
     </div>
   </div>
   <div class="status-card">
@@ -268,6 +275,17 @@ const popupHtml = `<!DOCTYPE html>
       <span class="status-label">Usuário</span>
       <span class="status-value" id="userIdDisplay">-</span>
     </div>
+  </div>
+  
+  <div id="resumeSection" class="resume-section hidden">
+    <div class="resume-title">⚠️ Captura Interrompida</div>
+    <div class="resume-text">O popup foi fechado e a captura parou. Clique abaixo para retomar o monitoramento.</div>
+    <button id="resumeBtn" class="btn btn-warning">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+      </svg>
+      Retomar Monitoramento
+    </button>
   </div>
   
   <div id="loginSection">
@@ -286,6 +304,9 @@ const popupHtml = `<!DOCTYPE html>
   </div>
   
   <div id="activeSection" class="hidden">
+    <div class="warning-box">
+      <div class="warning-text">⚠️ <strong>Importante:</strong> Mantenha este popup aberto para continuar o monitoramento. Se fechar, a captura será pausada.</div>
+    </div>
     <img id="preview" class="preview" src="" alt="Preview">
     <div id="frameInfo" class="frame-info">Aguardando frames...</div>
     <button id="stopBtn" class="btn btn-danger">
@@ -296,7 +317,7 @@ const popupHtml = `<!DOCTYPE html>
     </button>
   </div>
   
-  <p class="info-text">Esta extensão captura sua tela periodicamente para monitoramento corporativo. Mantenha o popup aberto durante o uso.</p>
+  <p class="info-text">Esta extensão captura sua tela periodicamente para monitoramento corporativo.</p>
   
   <video id="video" style="display:none;" autoplay muted></video>
   <canvas id="canvas" style="display:none;"></canvas>
@@ -313,8 +334,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const userIdInput = document.getElementById('userId');
   const startBtn = document.getElementById('startBtn');
   const stopBtn = document.getElementById('stopBtn');
+  const resumeBtn = document.getElementById('resumeBtn');
   const loginSection = document.getElementById('loginSection');
   const activeSection = document.getElementById('activeSection');
+  const resumeSection = document.getElementById('resumeSection');
   const statusDot = document.getElementById('statusDot');
   const statusText = document.getElementById('statusText');
   const userRow = document.getElementById('userRow');
@@ -324,39 +347,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   const video = document.getElementById('video');
   const canvas = document.getElementById('canvas');
 
-  console.log('Popup: Iniciando...');
+  console.log('Popup v1.9: Iniciando...');
 
   // Carregar userId salvo
-  const saved = await chrome.storage.local.get(['userId', 'isCapturing']);
+  const saved = await chrome.storage.local.get(['userId', 'isCapturing', 'captureStartTime']);
   console.log('Popup: Dados salvos:', saved);
   
   if (saved.userId) {
     userIdInput.value = saved.userId;
   }
   
-  updateUI(saved.isCapturing);
+  // Verificar se estava capturando antes (popup foi fechado)
+  if (saved.isCapturing && saved.captureStartTime) {
+    console.log('Popup: Detectado estado anterior de captura - mostrando opção de retomar');
+    showResumeState(saved.userId);
+  } else {
+    updateUI(false);
+  }
 
-  startBtn.addEventListener('click', async () => {
-    const userId = userIdInput.value.trim();
-    console.log('Popup: Iniciando com userId:', userId);
-    
-    if (!userId) {
-      alert('Por favor, insira o ID do usuário');
-      return;
-    }
-    
-    // Validar formato UUID
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(userId)) {
-      alert('ID de usuário inválido. Copie o ID correto da tela de Perfil.');
-      return;
-    }
-    
-    startBtn.disabled = true;
-    startBtn.textContent = 'Iniciando...';
+  function showResumeState(userId) {
+    loginSection.classList.add('hidden');
+    activeSection.classList.add('hidden');
+    resumeSection.classList.remove('hidden');
+    statusDot.classList.remove('inactive');
+    statusDot.classList.add('active');
+    statusText.textContent = 'Pausado';
+    userRow.style.display = 'flex';
+    userIdDisplay.textContent = userId ? userId.substring(0, 8) + '...' : '-';
+  }
+
+  async function startCapture(userId) {
+    console.log('Popup: Iniciando captura com userId:', userId);
     
     try {
-      // Primeiro, atualizar status no banco ANTES de pedir a tela
+      // Primeiro, atualizar status no banco
       console.log('Popup: Enviando startCapture para background...');
       const statusResult = await new Promise((resolve) => {
         chrome.runtime.sendMessage({ action: 'startCapture', userId }, (response) => {
@@ -369,7 +393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         throw new Error('Falha ao atualizar status no servidor');
       }
       
-      // Agora solicitar compartilhamento de tela
+      // Solicitar compartilhamento de tela
       console.log('Popup: Solicitando getDisplayMedia...');
       mediaStream = await navigator.mediaDevices.getDisplayMedia({
         video: { 
@@ -420,9 +444,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Erro: ' + error.message);
       }
       
-      startBtn.disabled = false;
-      startBtn.textContent = 'Iniciar Monitoramento';
+      updateUI(false);
     }
+  }
+
+  startBtn.addEventListener('click', async () => {
+    const userId = userIdInput.value.trim();
+    
+    if (!userId) {
+      alert('Por favor, insira o ID do usuário');
+      return;
+    }
+    
+    // Validar formato UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      alert('ID de usuário inválido. Copie o ID correto da tela de Perfil.');
+      return;
+    }
+    
+    startBtn.disabled = true;
+    startBtn.textContent = 'Iniciando...';
+    
+    await startCapture(userId);
+    
+    startBtn.disabled = false;
+    startBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg> Iniciar Monitoramento';
+  });
+
+  resumeBtn.addEventListener('click', async () => {
+    const userId = userIdInput.value.trim();
+    
+    if (!userId) {
+      alert('ID do usuário não encontrado. Por favor, insira novamente.');
+      updateUI(false);
+      return;
+    }
+    
+    resumeBtn.disabled = true;
+    resumeBtn.textContent = 'Retomando...';
+    
+    await startCapture(userId);
+    
+    resumeBtn.disabled = false;
+    resumeBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Retomar Monitoramento';
   });
 
   stopBtn.addEventListener('click', stopCapture);
@@ -491,13 +556,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     updateUI(false);
-    
-    startBtn.disabled = false;
-    startBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg> Iniciar Monitoramento';
   }
 
   function updateUI(isCapturing) {
     console.log('Popup: updateUI isCapturing:', isCapturing);
+    
+    resumeSection.classList.add('hidden');
     
     if (isCapturing) {
       loginSection.classList.add('hidden');
@@ -526,7 +590,7 @@ const icon16Base64 = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA
 
 const icon48Base64 = 'iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAC1klEQVR4nO2Zy2oUQRSGv4wZFBdxIYqIC8GdN9woLnwAH8DgA7hyq6i4ceMT+AKCj+BCwYUbH8BVXLhSQVFEUBQFb4gXYhIzOfKXnKJmuqenpmemkv7h0N1V1ef8p6rOqeoJFChQoMD/DgcYA+4Ak8BHYAFYBuaB98BL4DlwH9gX18ByFNgNXAIm0MXbMuB84BLwINYBFqH1n4EvwIPY7gBOAuvD5M/XqR24ATyvSwD/2r/JXsCE7gV2Ai3A0RjPwHa0A4eAG8Ar4BPwWMfU0b4InAAGBHq7gItK+9u0vk90Cr2K6SdgjmB/ABhS+y0NdP6v0/M3dD6uJ40fVt/1GPoROA08Bj7rObfXMHO3lSYJbAc2A2uA1cAqoFVxq41HGR6S0qJxHRO16JN5Afkd+CQv3QzMqH1SiXYNMW1G7j6GzvVZYJ3anqvPNzXkc5J4ILMEnAEuAB+AX8BTrYEptd8CNqpdz68h3kJiRfcC2Kb1MqH7JvDbZNKIPhd4B5wDXum5X5X+WmPAl3ReAd4DPUC31tgS0G8x6XCa4LQV+CrlJk1SkKBHGXAKeAO0ATuAdmCH1kO/5uqQJulJAzarzzHgmub+pNb4hCb3mzRMqPKwZNvV/zRwWulzQqnvmFJkJw3T+oQmqZRaTQp0K/WdV9+z6ntO/U/rDM2bJE+cEqdbWkJPAt1an/fV90r12a3+p9R/SPMhSeJRCfwC7AX6gB6tzz7gq/p8Ld9YU2z3kib5oJQITAPntN4G1e+0+h5Wv0Pqe0D996v/PupIIxJuqf2b7EF2aQ30aM0NavK3a62fVJ+T6rtPfferX3/SJBN4DRQAPgJDSmyj6ntMfc4o/Y2o7yH1O6B++9VvL3WmEUn3F2JHc7JH63JAiW5c6W9UaW9MfQ6r30H126O+e0mTTMQ9qP2jdWBM62FC62BYa2BI86BP82CAxs2DAgWy4h+59xnB5M5n+wAAAABJRU5ErkJggg==';
 
-const icon128Base64 = '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';
+const icon128Base64 = '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';
 
 export const useExtensionDownload = () => {
   const [isDownloading, setIsDownloading] = useState(false);
