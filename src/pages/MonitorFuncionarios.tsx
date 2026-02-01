@@ -60,6 +60,8 @@ interface UserMetrics {
   pedidosFechados: number;
   filaEspera: number;
   extensionActive: boolean;
+  currentPage: string | null;
+  currentRoute: string | null;
 }
 
 export default function MonitorFuncionarios() {
@@ -289,8 +291,10 @@ export default function MonitorFuncionarios() {
           chatsAtivos: atendente.chats_ativos,
           emailsAtivos: atendente.emails_ativos,
           pedidosFechados: pedidosPorUsuario[atendente.usuario_id] || 0,
-          filaEspera: 0, // Será calculado pela fila geral
+          filaEspera: 0,
           extensionActive: extensionStatuses[atendente.usuario_id] || false,
+          currentPage: activity?.current_page_title || null,
+          currentRoute: activity?.current_route || null,
         });
       }
     });
@@ -309,6 +313,8 @@ export default function MonitorFuncionarios() {
           pedidosFechados: pedidosPorUsuario[activity.usuario_id] || 0,
           filaEspera: 0,
           extensionActive: extensionStatuses[activity.usuario_id] || false,
+          currentPage: activity.current_page_title,
+          currentRoute: activity.current_route,
         });
       }
     });
@@ -389,6 +395,8 @@ export default function MonitorFuncionarios() {
                     pedidosFechados={user.pedidosFechados}
                     filaEspera={filaEsperaTotal}
                     extensionActive={user.extensionActive}
+                    currentPage={user.currentPage}
+                    currentRoute={user.currentRoute}
                     onViewScreen={() => setViewingScreen({
                       usuarioId: user.usuarioId,
                       nome: user.nome
