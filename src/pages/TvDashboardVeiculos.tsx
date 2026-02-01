@@ -336,9 +336,9 @@ export default function TvDashboardVeiculos() {
       </div>
 
       {/* Top Right - Legend */}
-      <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2 px-3 py-2 bg-background/90 backdrop-blur-sm rounded-lg shadow-lg">
+      <div className="absolute top-3 right-3 z-[9999] flex items-center gap-2 px-3 py-2 bg-background backdrop-blur-sm rounded-lg shadow-lg border border-border">
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-green-500" />
+          <div className="w-3 h-3 rounded-full bg-green-500 border border-white" />
           <span className="text-xs text-muted-foreground">Movendo</span>
           <span className="text-sm font-bold text-green-600">{stats.movendo}</span>
         </div>
@@ -346,7 +346,7 @@ export default function TvDashboardVeiculos() {
         <div className="w-px h-4 bg-border" />
         
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-amber-500" />
+          <div className="w-3 h-3 rounded-full bg-amber-500 border border-white" />
           <span className="text-xs text-muted-foreground">Parado</span>
           <span className="text-sm font-bold text-amber-600">{stats.parado}</span>
         </div>
@@ -354,7 +354,7 @@ export default function TvDashboardVeiculos() {
         <div className="w-px h-4 bg-border" />
         
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-gray-400" />
+          <div className="w-3 h-3 rounded-full bg-gray-400 border border-white" />
           <span className="text-xs text-muted-foreground">Offline</span>
           <span className="text-sm font-bold text-gray-500">{stats.offline}</span>
         </div>
