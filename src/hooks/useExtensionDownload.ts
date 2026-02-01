@@ -6,7 +6,7 @@ import { toast } from '@/lib/toast-config';
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Extensão para monitoramento de tela do CRM Pilar",
   "permissions": [
     "tabs",
@@ -34,16 +34,20 @@ const manifestJson = `{
   }
 }`;
 
-const backgroundJs = `// Background service worker for screen monitoring
+const backgroundJs = `// Background service worker for screen monitoring v1.3.0
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
 let userId = null;
 let broadcastChannel = null;
+let framesSent = 0;
 
 // Recuperar estado salvo
 chrome.storage.local.get(['userId'], (data) => {
-  if (data.userId) userId = data.userId;
+  if (data.userId) {
+    userId = data.userId;
+    console.log('Background: userId recuperado:', userId);
+  }
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -52,21 +56,45 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'setUserId') {
     userId = request.userId;
     chrome.storage.local.set({ userId: userId });
+    console.log('Background: userId definido:', userId);
     sendResponse({ success: true });
-  } else if (request.action === 'updateStatus') {
-    updateConsentStatus(request.isSharing).then(() => {
-      sendResponse({ success: true });
+  } else if (request.action === 'startCapture') {
+    userId = request.userId;
+    chrome.storage.local.set({ userId: userId, isCapturing: true });
+    updateConsentStatus(true).then(result => {
+      console.log('Background: Status atualizado para ATIVO:', result);
+      sendResponse({ success: result });
+    }).catch(err => {
+      console.error('Background: Erro ao atualizar status:', err);
+      sendResponse({ success: false, error: err.message });
+    });
+    return true;
+  } else if (request.action === 'stopCapture') {
+    chrome.storage.local.set({ isCapturing: false });
+    updateConsentStatus(false).then(result => {
+      console.log('Background: Status atualizado para INATIVO:', result);
+      if (broadcastChannel) {
+        broadcastChannel.close();
+        broadcastChannel = null;
+      }
+      framesSent = 0;
+      sendResponse({ success: result });
+    }).catch(err => {
+      console.error('Background: Erro ao atualizar status:', err);
+      sendResponse({ success: false, error: err.message });
     });
     return true;
   } else if (request.action === 'sendFrame') {
     broadcastFrame(request.frame);
     updateLastFrameTimestamp();
-    sendResponse({ success: true });
+    framesSent++;
+    sendResponse({ success: true, framesSent });
   } else if (request.action === 'getStatus') {
     chrome.storage.local.get(['isCapturing', 'userId'], (data) => {
       sendResponse({ 
         isCapturing: data.isCapturing || false,
-        userId: data.userId || userId
+        userId: data.userId || userId,
+        framesSent: framesSent
       });
     });
     return true;
@@ -77,12 +105,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function initBroadcastChannel() {
   if (broadcastChannel && broadcastChannel.readyState === WebSocket.OPEN) return;
   
+  if (!userId) {
+    console.error('Background: userId não definido para WebSocket');
+    return;
+  }
+  
   const wsUrl = \`wss://ioxugupvxlcdweldocmq.supabase.co/realtime/v1/websocket?apikey=\${SUPABASE_ANON_KEY}&vsn=1.0.0\`;
   
+  console.log('Background: Conectando WebSocket...');
   broadcastChannel = new WebSocket(wsUrl);
   
   broadcastChannel.onopen = () => {
-    console.log('WebSocket connected');
+    console.log('Background: WebSocket conectado');
     const joinMessage = {
       topic: \`realtime:screen-share-\${userId}\`,
       event: 'phx_join',
@@ -92,15 +126,25 @@ function initBroadcastChannel() {
     broadcastChannel.send(JSON.stringify(joinMessage));
   };
   
-  broadcastChannel.onerror = (error) => console.error('WebSocket error:', error);
-  broadcastChannel.onclose = () => { broadcastChannel = null; };
+  broadcastChannel.onmessage = (event) => {
+    console.log('Background: WebSocket message:', event.data);
+  };
+  
+  broadcastChannel.onerror = (error) => {
+    console.error('Background: WebSocket error:', error);
+  };
+  
+  broadcastChannel.onclose = () => {
+    console.log('Background: WebSocket fechado');
+    broadcastChannel = null;
+  };
 }
 
 function broadcastFrame(base64Frame) {
   initBroadcastChannel();
   
   if (!broadcastChannel || broadcastChannel.readyState !== WebSocket.OPEN) {
-    console.log('WebSocket not ready');
+    console.log('Background: WebSocket não está pronto, estado:', broadcastChannel?.readyState);
     return;
   }
   
@@ -116,11 +160,27 @@ function broadcastFrame(base64Frame) {
   };
   
   broadcastChannel.send(JSON.stringify(message));
+  console.log('Background: Frame enviado #' + framesSent);
 }
 
 async function updateConsentStatus(isSharing) {
+  if (!userId) {
+    console.error('Background: userId não definido para atualizar status');
+    return false;
+  }
+  
   try {
-    await chrome.storage.local.set({ isCapturing: isSharing });
+    console.log('Background: Atualizando status para', isSharing, 'userId:', userId);
+    
+    const body = {
+      is_sharing: isSharing,
+      sharing_started_at: isSharing ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString()
+    };
+    
+    if (isSharing) {
+      body.last_frame_at = new Date().toISOString();
+    }
     
     const response = await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent?usuario_id=eq.\${userId}\`, {
       method: 'PATCH',
@@ -128,21 +188,29 @@ async function updateConsentStatus(isSharing) {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`,
         'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
+        'Prefer': 'return=representation'
       },
-      body: JSON.stringify({
-        is_sharing: isSharing,
-        sharing_started_at: isSharing ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString()
-      })
+      body: JSON.stringify(body)
     });
-    console.log('Status update:', response.status);
+    
+    const responseText = await response.text();
+    console.log('Background: Resposta do servidor:', response.status, responseText);
+    
+    if (!response.ok) {
+      console.error('Background: Erro na resposta:', response.status, responseText);
+      return false;
+    }
+    
+    return true;
   } catch (error) {
-    console.error('Error updating status:', error);
+    console.error('Background: Erro ao atualizar status:', error.message);
+    return false;
   }
 }
 
 async function updateLastFrameTimestamp() {
+  if (!userId) return;
+  
   try {
     await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent?usuario_id=eq.\${userId}\`, {
       method: 'PATCH',
@@ -152,14 +220,23 @@ async function updateLastFrameTimestamp() {
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ last_frame_at: new Date().toISOString() })
+      body: JSON.stringify({ 
+        last_frame_at: new Date().toISOString(),
+        is_sharing: true 
+      })
     });
   } catch (error) {
-    console.error('Error updating timestamp:', error);
+    console.error('Background: Erro ao atualizar timestamp:', error);
   }
 }
 
+// Manter service worker ativo
+setInterval(() => {
+  console.log('Background: Heartbeat - frames enviados:', framesSent);
+}, 25000);
+
 chrome.runtime.onSuspend.addListener(() => {
+  console.log('Background: Suspendendo...');
   if (broadcastChannel) broadcastChannel.close();
 });`;
 
@@ -280,8 +357,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const video = document.getElementById('video');
   const canvas = document.getElementById('canvas');
 
+  console.log('Popup: Iniciando...');
+
   // Carregar userId salvo
   const saved = await chrome.storage.local.get(['userId', 'isCapturing']);
+  console.log('Popup: Dados salvos:', saved);
+  
   if (saved.userId) {
     userIdInput.value = saved.userId;
   }
@@ -290,35 +371,69 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   startBtn.addEventListener('click', async () => {
     const userId = userIdInput.value.trim();
+    console.log('Popup: Iniciando com userId:', userId);
+    
     if (!userId) {
       alert('Por favor, insira o ID do usuário');
       return;
     }
     
+    // Validar formato UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      alert('ID de usuário inválido. Copie o ID correto da tela de Perfil.');
+      return;
+    }
+    
+    startBtn.disabled = true;
+    startBtn.textContent = 'Iniciando...';
+    
     try {
-      // Solicitar compartilhamento de tela
+      // Primeiro, atualizar status no banco ANTES de pedir a tela
+      console.log('Popup: Enviando startCapture para background...');
+      const statusResult = await new Promise((resolve) => {
+        chrome.runtime.sendMessage({ action: 'startCapture', userId }, (response) => {
+          console.log('Popup: Resposta do startCapture:', response);
+          resolve(response);
+        });
+      });
+      
+      if (!statusResult || !statusResult.success) {
+        throw new Error('Falha ao atualizar status no servidor');
+      }
+      
+      // Agora solicitar compartilhamento de tela
+      console.log('Popup: Solicitando getDisplayMedia...');
       mediaStream = await navigator.mediaDevices.getDisplayMedia({
         video: { 
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          frameRate: { ideal: 1, max: 5 }
+          width: { ideal: 1920, max: 1920 },
+          height: { ideal: 1080, max: 1080 },
+          frameRate: { ideal: 1, max: 3 }
         },
         audio: false
       });
       
+      console.log('Popup: Stream obtido:', mediaStream.getVideoTracks()[0].label);
+      
       // Configurar video element
       video.srcObject = mediaStream;
+      
+      video.onloadedmetadata = () => {
+        console.log('Popup: Video metadata carregado:', video.videoWidth, 'x', video.videoHeight);
+        video.play();
+      };
+      
       await video.play();
+      console.log('Popup: Video playing');
       
-      // Salvar userId e atualizar status
-      await chrome.storage.local.set({ userId, isCapturing: true });
-      chrome.runtime.sendMessage({ action: 'setUserId', userId });
-      chrome.runtime.sendMessage({ action: 'updateStatus', isSharing: true });
-      
-      // Detectar quando stream é parado
+      // Detectar quando stream é parado pelo usuário
       mediaStream.getVideoTracks()[0].onended = () => {
+        console.log('Popup: Stream terminado pelo usuário');
         stopCapture();
       };
+      
+      // Aguardar video ficar pronto antes de capturar
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Iniciar captura de frames
       captureFrame();
@@ -327,8 +442,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateUI(true);
       
     } catch (error) {
-      console.error('Erro ao iniciar captura:', error);
-      alert('Não foi possível iniciar o compartilhamento de tela. Tente novamente.');
+      console.error('Popup: Erro ao iniciar captura:', error.name, error.message);
+      
+      // Reverter status se deu erro
+      chrome.runtime.sendMessage({ action: 'stopCapture' });
+      
+      if (error.name === 'NotAllowedError') {
+        alert('Permissão de compartilhamento negada. Clique em Iniciar e selecione uma tela para compartilhar.');
+      } else {
+        alert('Erro: ' + error.message);
+      }
+      
+      startBtn.disabled = false;
+      startBtn.textContent = 'Iniciar Monitoramento';
     }
   });
 
@@ -336,7 +462,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   function captureFrame() {
     if (!video || video.readyState < 2) {
-      console.log('Video não está pronto');
+      console.log('Popup: Video não está pronto, readyState:', video?.readyState);
       return;
     }
     
@@ -359,18 +485,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     canvas.height = targetHeight;
     ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
     
-    const base64 = canvas.toDataURL('image/jpeg', 0.6);
+    const base64 = canvas.toDataURL('image/jpeg', 0.5);
     
     // Atualizar preview
     preview.src = base64;
     frameCount++;
-    frameInfo.textContent = 'Frame #' + frameCount + ' - ' + targetWidth + 'x' + targetHeight;
+    
+    const sizeKB = Math.round(base64.length / 1024);
+    frameInfo.textContent = 'Frame #' + frameCount + ' - ' + targetWidth + 'x' + targetHeight + ' (' + sizeKB + 'KB)';
     
     // Enviar para background
-    chrome.runtime.sendMessage({ action: 'sendFrame', frame: base64 });
+    chrome.runtime.sendMessage({ action: 'sendFrame', frame: base64 }, (response) => {
+      if (response) {
+        console.log('Popup: Frame enviado, total:', response.framesSent);
+      }
+    });
   }
   
   async function stopCapture() {
+    console.log('Popup: Parando captura...');
+    
     if (captureInterval) {
       clearInterval(captureInterval);
       captureInterval = null;
@@ -384,13 +518,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     video.srcObject = null;
     frameCount = 0;
     
-    await chrome.storage.local.set({ isCapturing: false });
-    chrome.runtime.sendMessage({ action: 'updateStatus', isSharing: false });
+    // Notificar background para atualizar status
+    chrome.runtime.sendMessage({ action: 'stopCapture' }, (response) => {
+      console.log('Popup: stopCapture response:', response);
+    });
     
     updateUI(false);
+    
+    startBtn.disabled = false;
+    startBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg> Iniciar Monitoramento';
   }
 
   function updateUI(isCapturing) {
+    console.log('Popup: updateUI isCapturing:', isCapturing);
+    
     if (isCapturing) {
       loginSection.classList.add('hidden');
       activeSection.classList.remove('hidden');
