@@ -6,8 +6,8 @@ import { toast } from '@/lib/toast-config';
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "2.2.0",
-  "description": "Extensão para monitoramento de tela com auto-inicialização",
+  "version": "2.3.0",
+  "description": "Extensão para monitoramento de tela com auto-inicialização e tratamento de erros melhorado",
   "permissions": [
     "tabs",
     "activeTab",
@@ -35,8 +35,8 @@ const manifestJson = `{
   }
 }`;
 
-const backgroundJs = `// Background service worker for screen monitoring v2.2.0
-// Auto-starts on browser launch if enabled
+const backgroundJs = `// Background service worker for screen monitoring v2.3.0
+// Auto-starts on browser launch if enabled - with improved error handling
 
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
@@ -49,42 +49,44 @@ let offscreenCreated = false;
 let viewerCheckInterval = null;
 let lastViewerActive = false;
 let autoStartPending = false;
+let consecutiveErrors = 0;
+const MAX_CONSECUTIVE_ERRORS = 5;
 
 // Recuperar estado salvo na inicialização
 chrome.storage.local.get(['userId', 'isCapturing', 'autoStart'], (data) => {
   if (data.userId) {
     currentUserId = data.userId;
-    console.log('Background v2.2: userId recuperado:', currentUserId);
+    console.log('Background v2.3: userId recuperado:', currentUserId);
   }
   
-  // Se estava capturando, retomar polling
   if (data.isCapturing) {
-    console.log('Background v2.2: Captura estava ativa, verificando offscreen...');
+    console.log('Background v2.3: Captura estava ativa, verificando offscreen...');
     checkAndResumeCapture();
   }
   
-  // Se auto-start está habilitado mas não estava capturando, marcar para auto-start
   if (data.autoStart && data.userId && !data.isCapturing) {
-    console.log('Background v2.2: Auto-start habilitado, marcando para início automático');
+    console.log('Background v2.3: Auto-start habilitado, marcando para início automático');
     autoStartPending = true;
   }
 });
 
 // Auto-iniciar quando o navegador abre (se configurado)
 chrome.runtime.onStartup.addListener(() => {
-  console.log('Background v2.2: Browser iniciou');
+  console.log('Background v2.3: Browser iniciou');
   chrome.storage.local.get(['userId', 'autoStart'], async (data) => {
     if (data.autoStart && data.userId) {
-      console.log('Background v2.2: Auto-start ativado, aguardando interação do usuário...');
+      console.log('Background v2.3: Auto-start ativado, aguardando interação do usuário...');
       currentUserId = data.userId;
-      // Marcar que auto-start está pendente (precisa interação do usuário para getDisplayMedia)
       autoStartPending = true;
       
-      // Registrar status no servidor
-      await callEdgeFunction('extension-status', { 
-        usuario_id: data.userId, 
-        action: 'start' 
-      });
+      try {
+        await callEdgeFunction('extension-status', { 
+          usuario_id: data.userId, 
+          action: 'start' 
+        });
+      } catch (e) {
+        console.log('Background v2.3: Erro ao registrar status:', e);
+      }
       
       chrome.storage.local.set({ isCapturing: false, autoStartPending: true });
     }
@@ -93,18 +95,17 @@ chrome.runtime.onStartup.addListener(() => {
 
 // Quando a extensão é instalada
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Background v2.2: Extensão instalada/atualizada');
+  console.log('Background v2.3: Extensão instalada/atualizada');
 });
 
 async function checkAndResumeCapture() {
   await checkOffscreenDocument();
   
   if (offscreenCreated) {
-    console.log('Background v2.2: Offscreen existe, retomando polling');
+    console.log('Background v2.3: Offscreen existe, retomando polling');
     startViewerPolling();
   } else {
-    console.log('Background v2.2: Offscreen não existe, aguardando interação do usuário');
-    // Marcar como auto-start pendente para quando o usuário abrir o popup
+    console.log('Background v2.3: Offscreen não existe, aguardando interação do usuário');
     autoStartPending = true;
     chrome.storage.local.set({ isCapturing: false, autoStartPending: true });
   }
@@ -113,8 +114,9 @@ async function checkAndResumeCapture() {
 function startViewerPolling() {
   if (viewerCheckInterval) return;
   
-  console.log('Background: Iniciando polling de viewer...');
-  viewerCheckInterval = setInterval(checkViewer, 2000);
+  console.log('Background: Iniciando polling de viewer (5s)...');
+  consecutiveErrors = 0;
+  viewerCheckInterval = setInterval(checkViewer, 5000); // Aumentado para 5 segundos
   checkViewer();
 }
 
@@ -135,19 +137,40 @@ async function checkViewer() {
       action: 'check-viewer' 
     });
     
+    // Resetar contador de erros em sucesso
+    consecutiveErrors = 0;
+    
     const viewerActive = result.data?.viewer_active || false;
     
     if (viewerActive !== lastViewerActive) {
       console.log('Background: Viewer status mudou:', viewerActive);
       lastViewerActive = viewerActive;
       
-      chrome.runtime.sendMessage({ 
-        action: 'offscreen-viewer-status', 
-        viewerActive: viewerActive 
-      });
+      // Usar try-catch para evitar erros se offscreen não existe
+      try {
+        chrome.runtime.sendMessage({ 
+          action: 'offscreen-viewer-status', 
+          viewerActive: viewerActive 
+        });
+      } catch (e) {
+        // Ignorar erro de mensagem
+      }
     }
   } catch (e) {
-    console.log('Background: Erro ao verificar viewer:', e.message);
+    consecutiveErrors++;
+    console.log('Background: Erro ao verificar viewer (' + consecutiveErrors + '/' + MAX_CONSECUTIVE_ERRORS + '):', e.message || e);
+    
+    // Se muitos erros consecutivos, parar polling temporariamente
+    if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+      console.log('Background: Muitos erros, pausando polling por 30s...');
+      stopViewerPolling();
+      
+      setTimeout(() => {
+        console.log('Background: Retomando polling após pausa...');
+        consecutiveErrors = 0;
+        startViewerPolling();
+      }, 30000);
+    }
   }
 }
 
@@ -199,16 +222,17 @@ async function closeOffscreenDocument() {
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Background v2.2 received:', request.action);
+  console.log('Background v2.3 received:', request.action);
   
   if (request.action === 'startCapture') {
     const captureUserId = request.userId;
     currentUserId = captureUserId;
     autoStartPending = false;
+    consecutiveErrors = 0;
     
     chrome.storage.local.set({ userId: captureUserId, isCapturing: true, autoStartPending: false }, async () => {
       try {
-        const result = await callEdgeFunction('extension-status', { 
+        await callEdgeFunction('extension-status', { 
           usuario_id: captureUserId, 
           action: 'start' 
         });
@@ -216,14 +240,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const offscreenOk = await createOffscreenDocument();
         
         if (offscreenOk) {
-          chrome.runtime.sendMessage({ action: 'offscreen-start-capture', userId: captureUserId });
+          try {
+            chrome.runtime.sendMessage({ action: 'offscreen-start-capture', userId: captureUserId });
+          } catch (e) {
+            // Ignorar
+          }
           startViewerPolling();
           sendResponse({ success: true });
         } else {
           sendResponse({ success: false, error: 'Falha ao criar documento offscreen' });
         }
       } catch (err) {
-        sendResponse({ success: false, error: err.message });
+        sendResponse({ success: false, error: err.message || 'Erro desconhecido' });
       }
     });
     return true;
@@ -235,7 +263,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     (async () => {
       try {
-        chrome.runtime.sendMessage({ action: 'offscreen-stop-capture' });
+        try {
+          chrome.runtime.sendMessage({ action: 'offscreen-stop-capture' });
+        } catch (e) {
+          // Ignorar
+        }
         await closeOffscreenDocument();
         
         if (currentUserId) {
@@ -246,7 +278,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         lastViewerActive = false;
         sendResponse({ success: true });
       } catch (err) {
-        sendResponse({ success: false, error: err.message });
+        sendResponse({ success: false, error: err.message || 'Erro desconhecido' });
       }
     })();
     return true;
@@ -261,13 +293,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === 'sendFrame') {
     if (!currentUserId) {
       sendResponse({ success: false });
-      return;
+      return true;
     }
     
     if (!lastViewerActive) {
-      console.log('Background: Frame ignorado (sem viewer ativo)');
       sendResponse({ success: true, skipped: true });
-      return;
+      return true;
     }
     
     const now = Date.now();
@@ -275,12 +306,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
     if (now - lastBroadcast > 2000) {
       console.log('Background: Enviando frame #' + framesSent + ' (viewer ativo)');
-      callEdgeFunction('broadcast-frame', { usuario_id: currentUserId, frame: request.frame });
+      callEdgeFunction('broadcast-frame', { usuario_id: currentUserId, frame: request.frame })
+        .catch(e => console.log('Background: Erro ao enviar frame:', e));
       lastBroadcast = now;
     }
     
     if (now - lastFrameUpdate > 5000) {
-      callEdgeFunction('extension-status', { usuario_id: currentUserId, action: 'frame' });
+      callEdgeFunction('extension-status', { usuario_id: currentUserId, action: 'frame' })
+        .catch(e => console.log('Background: Erro ao atualizar status:', e));
       lastFrameUpdate = now;
     }
     
@@ -308,13 +341,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     stopViewerPolling();
     closeOffscreenDocument();
     autoStartPending = false;
-    return;
+    sendResponse({ success: true });
+    return true;
   }
   
+  // Sempre retornar true para indicar resposta assíncrona
   return true;
 });
 
 async function callEdgeFunction(functionName, body) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  
   try {
     const response = await fetch(SUPABASE_URL + '/functions/v1/' + functionName, {
       method: 'POST',
@@ -322,25 +360,33 @@ async function callEdgeFunction(functionName, body) {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
     
     const data = await response.json();
     
     if (!response.ok) {
-      return { success: false, error: data.error };
+      throw new Error(data.error || 'HTTP ' + response.status);
     }
     
     return { success: true, data };
   } catch (error) {
-    return { success: false, error: error.message };
+    clearTimeout(timeoutId);
+    
+    if (error.name === 'AbortError') {
+      throw new Error('Timeout');
+    }
+    throw error;
   }
 }
 
-// Heartbeat
+// Heartbeat menos frequente
 setInterval(() => {
-  console.log('Background: Heartbeat - frames:', framesSent, 'viewer:', lastViewerActive, 'autoStartPending:', autoStartPending);
-}, 25000);
+  console.log('Background: Heartbeat - frames:', framesSent, 'viewer:', lastViewerActive, 'errors:', consecutiveErrors);
+}, 60000);
 `;
 
 const offscreenHtml = `<!DOCTYPE html>
