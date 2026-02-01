@@ -60,6 +60,7 @@ import { LayoutContext } from "@/contexts/LayoutContext";
 import { useAtalhos } from "@/hooks/useAtalhos";
 import { useAvisosSistema } from "@/hooks/useAvisosSistema";
 import { ChangePasswordDialog } from "@/components/ChangePasswordDialog";
+import { useActivityTracking } from "@/hooks/useActivityTracking";
 import * as LucideIcons from "lucide-react";
 
 
@@ -109,6 +110,7 @@ const menuItems: MenuItem[] = [
     subItems: [
       { id: "Painel Chats", title: "Painel", url: "/atendimento", icon: MessageSquare },
       { id: "Monitor de Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: Activity },
+      { id: "Monitor de Funcionários", title: "Monitor de Funcionários", url: "/monitor-funcionarios", icon: Monitor },
       { id: "Teste Roteamento", title: "Teste de Roteamento", url: "/test-roteamento", icon: TestTube2 },
       { id: "Config Atendimento", title: "Configurações", url: "/atendimento-config", icon: Settings },
     ]
@@ -168,6 +170,9 @@ export default function Layout({ children }: LayoutProps) {
   const menuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { atalhos } = useAtalhos();
   const { avisosPendentes } = useAvisosSistema();
+  
+  // Tracking de atividade do usuário em tempo real
+  useActivityTracking();
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
