@@ -178,22 +178,26 @@ async function broadcastFrame(base64Frame) {
 
 async function updateConsentStatus(isSharing) {
   try {
-    const response = await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent?usuario_id=eq.\${userId}\`, {
-      method: 'PATCH',
+    // Use POST com upsert para garantir que o registro existe
+    const response = await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent\`, {
+      method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`,
         'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
       },
       body: JSON.stringify({
+        usuario_id: userId,
         is_sharing: isSharing,
         updated_at: new Date().toISOString()
       })
     });
     
     if (!response.ok) {
-      console.error('Error updating consent status');
+      console.error('Error updating consent status:', response.status);
+    } else {
+      console.log('Consent status updated:', isSharing ? 'SHARING' : 'NOT SHARING');
     }
   } catch (error) {
     console.error('Error updating consent status:', error);
@@ -202,15 +206,16 @@ async function updateConsentStatus(isSharing) {
 
 async function updateLastFrameTimestamp() {
   try {
-    await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent?usuario_id=eq.\${userId}\`, {
-      method: 'PATCH',
+    await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent\`, {
+      method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`,
         'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
       },
       body: JSON.stringify({
+        usuario_id: userId,
         last_frame_at: new Date().toISOString()
       })
     });
