@@ -302,7 +302,7 @@ export default function TvDashboardVeiculos() {
   return (
     <div className="fixed inset-0 bg-background overflow-hidden">
       {/* Fullscreen Map */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 z-0">
         {veiculosComPosicao.length === 0 ? (
           <div className="h-full w-full flex items-center justify-center bg-muted/50">
             <div className="text-center">
@@ -324,7 +324,7 @@ export default function TvDashboardVeiculos() {
       </div>
 
       {/* Top Left - Back Button & Clock */}
-      <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
+      <div className="absolute top-3 left-3 z-[1000] flex items-center gap-2">
         <Button 
           variant="secondary" 
           size="icon"
@@ -341,7 +341,7 @@ export default function TvDashboardVeiculos() {
       </div>
 
       {/* Top Right - Stats Overlay */}
-      <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+      <div className="absolute top-3 right-3 z-[1000] flex items-center gap-1.5">
         <div className="flex items-center gap-1 px-2 py-1 bg-background/90 backdrop-blur-sm rounded-lg shadow-lg">
           <Car className="h-3 w-3 text-primary" />
           <span className="text-sm font-bold">{stats.total}</span>
@@ -379,7 +379,7 @@ export default function TvDashboardVeiculos() {
       </div>
 
       {/* Bottom Left - Alerts */}
-      <div className="absolute bottom-3 left-3 right-3 z-20 space-y-1.5 max-w-[60%]">
+      <div className="absolute bottom-3 left-3 z-[1000] space-y-1.5 max-w-[60%]">
         {/* Alerta de Velocidade */}
         {veiculos.some(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100) && (
           <div className="flex items-center gap-2 px-3 py-2 bg-red-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-red-500/30">
@@ -407,7 +407,7 @@ export default function TvDashboardVeiculos() {
       </div>
 
       {/* Bottom Right - Mini Vehicle List */}
-      <div className="absolute bottom-3 right-3 z-20 max-h-[40%] w-64 overflow-hidden">
+      <div className="absolute bottom-3 right-3 z-[1000] max-h-[40%] w-64 overflow-hidden">
         <div className="bg-background/90 backdrop-blur-sm rounded-lg shadow-lg border border-border/50 overflow-hidden">
           <ScrollArea className="max-h-[calc(40vh-24px)]">
             <div className="p-1.5 space-y-0.5">
