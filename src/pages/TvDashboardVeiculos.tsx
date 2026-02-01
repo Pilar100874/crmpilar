@@ -313,6 +313,7 @@ export default function TvDashboardVeiculos() {
             className="absolute inset-0"
             fitBounds
             compactIcons
+            disableInteraction
           />
         )}
       </div>
