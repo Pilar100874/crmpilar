@@ -6,7 +6,7 @@ import { toast } from '@/lib/toast-config';
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Extensão para monitoramento de tela do CRM Pilar",
   "permissions": [
     "tabs",
@@ -34,74 +34,116 @@ const manifestJson = `{
   }
 }`;
 
-const backgroundJs = `// Background service worker for screen monitoring v1.5.0
+const backgroundJs = `// Background service worker for screen monitoring v1.6.0
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
-let userId = null;
+let currentUserId = null;
 let broadcastChannel = null;
 let framesSent = 0;
 let lastFrameUpdate = 0;
+let wsReady = false;
 
-// Recuperar estado salvo
+// Recuperar estado salvo na inicialização
 chrome.storage.local.get(['userId'], (data) => {
   if (data.userId) {
-    userId = data.userId;
-    console.log('Background: userId recuperado:', userId);
+    currentUserId = data.userId;
+    console.log('Background: userId recuperado do storage:', currentUserId);
   }
 });
 
+// Função helper para obter userId do storage
+async function getUserId() {
+  if (currentUserId) return currentUserId;
+  
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['userId'], (data) => {
+      if (data.userId) {
+        currentUserId = data.userId;
+        resolve(data.userId);
+      } else {
+        resolve(null);
+      }
+    });
+  });
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Background received:', request.action);
+  console.log('Background received:', request.action, request.userId ? 'userId: ' + request.userId.substring(0,8) + '...' : '');
   
   if (request.action === 'setUserId') {
-    userId = request.userId;
-    chrome.storage.local.set({ userId: userId });
-    console.log('Background: userId definido:', userId);
+    currentUserId = request.userId;
+    chrome.storage.local.set({ userId: request.userId });
+    console.log('Background: userId definido:', currentUserId);
     sendResponse({ success: true });
+    
   } else if (request.action === 'startCapture') {
-    userId = request.userId;
-    chrome.storage.local.set({ userId: userId, isCapturing: true });
-    callEdgeFunction('start').then(result => {
-      console.log('Background: Status atualizado para ATIVO:', result);
-      sendResponse({ success: result.success, error: result.error });
-    }).catch(err => {
-      console.error('Background: Erro ao atualizar status:', err);
-      sendResponse({ success: false, error: err.message });
+    // Definir userId ANTES de qualquer operação
+    const captureUserId = request.userId;
+    currentUserId = captureUserId;
+    
+    console.log('Background: Iniciando captura com userId:', captureUserId);
+    
+    chrome.storage.local.set({ userId: captureUserId, isCapturing: true }, async () => {
+      try {
+        const result = await callEdgeFunction('start', captureUserId);
+        console.log('Background: Status atualizado para ATIVO:', result);
+        sendResponse({ success: result.success, error: result.error });
+      } catch (err) {
+        console.error('Background: Erro ao atualizar status:', err);
+        sendResponse({ success: false, error: err.message });
+      }
     });
     return true;
+    
   } else if (request.action === 'stopCapture') {
     chrome.storage.local.set({ isCapturing: false });
-    callEdgeFunction('stop').then(result => {
-      console.log('Background: Status atualizado para INATIVO:', result);
-      if (broadcastChannel) {
-        broadcastChannel.close();
-        broadcastChannel = null;
+    
+    getUserId().then(async (uid) => {
+      try {
+        const result = await callEdgeFunction('stop', uid);
+        console.log('Background: Status atualizado para INATIVO:', result);
+        if (broadcastChannel) {
+          broadcastChannel.close();
+          broadcastChannel = null;
+        }
+        wsReady = false;
+        framesSent = 0;
+        sendResponse({ success: result.success });
+      } catch (err) {
+        console.error('Background: Erro ao atualizar status:', err);
+        sendResponse({ success: false, error: err.message });
       }
-      framesSent = 0;
-      sendResponse({ success: result.success });
-    }).catch(err => {
-      console.error('Background: Erro ao atualizar status:', err);
-      sendResponse({ success: false, error: err.message });
     });
     return true;
+    
   } else if (request.action === 'sendFrame') {
-    broadcastFrame(request.frame);
+    getUserId().then((uid) => {
+      if (!uid) {
+        console.error('Background: Não pode enviar frame sem userId');
+        sendResponse({ success: false, error: 'userId não definido' });
+        return;
+      }
+      
+      broadcastFrame(request.frame, uid);
+      
+      // Atualizar timestamp a cada 5 segundos
+      const now = Date.now();
+      if (now - lastFrameUpdate > 5000) {
+        callEdgeFunction('frame', uid);
+        lastFrameUpdate = now;
+      }
+      
+      framesSent++;
+      sendResponse({ success: true, framesSent });
+    });
+    return true;
     
-    // Atualizar timestamp a cada 5 segundos para não sobrecarregar
-    const now = Date.now();
-    if (now - lastFrameUpdate > 5000) {
-      callEdgeFunction('frame');
-      lastFrameUpdate = now;
-    }
-    
-    framesSent++;
-    sendResponse({ success: true, framesSent });
   } else if (request.action === 'getStatus') {
     chrome.storage.local.get(['isCapturing', 'userId'], (data) => {
       sendResponse({ 
         isCapturing: data.isCapturing || false,
-        userId: data.userId || userId,
+        userId: data.userId || currentUserId,
         framesSent: framesSent
       });
     });
@@ -110,14 +152,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
-async function callEdgeFunction(action) {
-  if (!userId) {
-    console.error('Background: userId não definido');
+async function callEdgeFunction(action, uid) {
+  const userIdToUse = uid || currentUserId;
+  
+  if (!userIdToUse) {
+    console.error('Background: userId não definido para edge function');
     return { success: false, error: 'userId não definido' };
   }
   
   try {
-    console.log('Background: Chamando edge function, action:', action, 'userId:', userId);
+    console.log('Background: Chamando edge function, action:', action, 'userId:', userIdToUse.substring(0,8) + '...');
     
     const response = await fetch(\`\${SUPABASE_URL}/functions/v1/extension-status\`, {
       method: 'POST',
@@ -126,13 +170,13 @@ async function callEdgeFunction(action) {
         'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`
       },
       body: JSON.stringify({
-        usuario_id: userId,
+        usuario_id: userIdToUse,
         action: action
       })
     });
     
     const data = await response.json();
-    console.log('Background: Resposta edge function:', response.status, data);
+    console.log('Background: Resposta edge function:', response.status, data.success ? 'OK' : data.error);
     
     if (!response.ok) {
       return { success: false, error: data.error || 'Erro na requisição' };
@@ -140,30 +184,34 @@ async function callEdgeFunction(action) {
     
     return { success: true, data };
   } catch (error) {
-    console.error('Background: Erro ao chamar edge function:', error);
+    console.error('Background: Erro ao chamar edge function:', error.message);
     return { success: false, error: error.message };
   }
 }
 
-function initBroadcastChannel() {
+function initBroadcastChannel(uid) {
   if (broadcastChannel && broadcastChannel.readyState === WebSocket.OPEN) return;
   
-  if (!userId) {
+  const userIdToUse = uid || currentUserId;
+  if (!userIdToUse) {
     console.error('Background: userId não definido para WebSocket');
     return;
   }
   
   const wsUrl = \`wss://ioxugupvxlcdweldocmq.supabase.co/realtime/v1/websocket?apikey=\${SUPABASE_ANON_KEY}&vsn=1.0.0\`;
   
-  console.log('Background: Conectando WebSocket para usuário:', userId);
+  console.log('Background: Conectando WebSocket para usuário:', userIdToUse.substring(0,8) + '...');
   broadcastChannel = new WebSocket(wsUrl);
+  
+  // Guardar o userId usado para este canal
+  broadcastChannel.channelUserId = userIdToUse;
   
   broadcastChannel.onopen = () => {
     console.log('Background: WebSocket conectado, entrando no canal...');
     
     // Join com configuração de broadcast
     const joinMessage = {
-      topic: \`realtime:screen-share-\${userId}\`,
+      topic: \`realtime:screen-share-\${broadcastChannel.channelUserId}\`,
       event: 'phx_join',
       payload: {
         config: {
@@ -180,14 +228,18 @@ function initBroadcastChannel() {
   broadcastChannel.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
-      console.log('Background: WS recebeu:', data.event, data.payload?.status || '');
-      
-      if (data.event === 'phx_reply' && data.payload?.status === 'ok') {
-        console.log('Background: Canal joined com sucesso!');
-        wsReady = true;
+      if (data.event === 'phx_reply') {
+        if (data.payload?.status === 'ok') {
+          console.log('Background: Canal joined com sucesso!');
+          wsReady = true;
+        } else {
+          console.log('Background: phx_reply status:', data.payload?.status);
+        }
+      } else if (data.event !== 'heartbeat') {
+        console.log('Background: WS evento:', data.event);
       }
     } catch (e) {
-      console.log('Background: WS raw message:', event.data);
+      console.log('Background: WS parse error');
     }
   };
   
@@ -203,10 +255,15 @@ function initBroadcastChannel() {
   };
 }
 
-let wsReady = false;
-
-function broadcastFrame(base64Frame) {
-  initBroadcastChannel();
+function broadcastFrame(base64Frame, uid) {
+  const userIdToUse = uid || currentUserId;
+  
+  if (!userIdToUse) {
+    console.error('Background: userId não definido para broadcast');
+    return;
+  }
+  
+  initBroadcastChannel(userIdToUse);
   
   if (!broadcastChannel || broadcastChannel.readyState !== WebSocket.OPEN) {
     console.log('Background: WebSocket não conectado, estado:', broadcastChannel?.readyState);
@@ -214,13 +271,13 @@ function broadcastFrame(base64Frame) {
   }
   
   if (!wsReady) {
-    console.log('Background: Canal ainda não está pronto');
+    console.log('Background: Canal ainda não está pronto, aguardando...');
     return;
   }
   
   // Formato correto de broadcast para Supabase Realtime
   const message = {
-    topic: \`realtime:screen-share-\${userId}\`,
+    topic: \`realtime:screen-share-\${userIdToUse}\`,
     event: 'broadcast',
     payload: {
       type: 'broadcast',
@@ -228,7 +285,7 @@ function broadcastFrame(base64Frame) {
       payload: { 
         frame: base64Frame, 
         timestamp: Date.now(),
-        userId: userId
+        userId: userIdToUse
       }
     },
     ref: Date.now().toString()
@@ -236,22 +293,26 @@ function broadcastFrame(base64Frame) {
   
   try {
     broadcastChannel.send(JSON.stringify(message));
-    console.log('Background: Frame broadcast enviado #' + framesSent);
+    if (framesSent % 10 === 0) {
+      console.log('Background: Frame broadcast enviado #' + framesSent);
+    }
   } catch (e) {
-    console.error('Background: Erro ao enviar frame:', e);
+    console.error('Background: Erro ao enviar frame:', e.message);
   }
 }
 
 // Manter service worker ativo
 setInterval(() => {
-  console.log('Background: Heartbeat - frames enviados:', framesSent);
+  if (framesSent > 0) {
+    console.log('Background: Heartbeat - frames enviados:', framesSent, 'wsReady:', wsReady);
+  }
 }, 25000);
 
 chrome.runtime.onSuspend.addListener(() => {
   console.log('Background: Suspendendo...');
-  if (userId) {
-    callEdgeFunction('stop');
-  }
+  getUserId().then(uid => {
+    if (uid) callEdgeFunction('stop', uid);
+  });
   if (broadcastChannel) broadcastChannel.close();
 });`;
 
