@@ -6,14 +6,12 @@ import { toast } from '@/lib/toast-config';
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Extensão para monitoramento de tela do CRM Pilar",
   "permissions": [
-    "desktopCapture",
     "tabs",
     "activeTab",
-    "storage",
-    "offscreen"
+    "storage"
   ],
   "host_permissions": [
     "https://ioxugupvxlcdweldocmq.supabase.co/*"
@@ -41,27 +39,29 @@ const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
 let userId = null;
+let broadcastChannel = null;
 
-// Recuperar estado salvo quando o service worker reinicia
+// Recuperar estado salvo
 chrome.storage.local.get(['userId'], (data) => {
   if (data.userId) userId = data.userId;
-  console.log('Restored userId:', userId);
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Received message:', request.action);
+  console.log('Background received:', request.action);
   
-  if (request.action === 'startCapture') {
+  if (request.action === 'setUserId') {
     userId = request.userId;
-    startScreenCapture(sender.tab).then(() => {
+    chrome.storage.local.set({ userId: userId });
+    sendResponse({ success: true });
+  } else if (request.action === 'updateStatus') {
+    updateConsentStatus(request.isSharing).then(() => {
       sendResponse({ success: true });
     });
     return true;
-  } else if (request.action === 'stopCapture') {
-    stopScreenCapture().then(() => {
-      sendResponse({ success: true });
-    });
-    return true;
+  } else if (request.action === 'sendFrame') {
+    broadcastFrame(request.frame);
+    updateLastFrameTimestamp();
+    sendResponse({ success: true });
   } else if (request.action === 'getStatus') {
     chrome.storage.local.get(['isCapturing', 'userId'], (data) => {
       sendResponse({ 
@@ -70,98 +70,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
     });
     return true;
-  } else if (request.action === 'frameFromOffscreen') {
-    // Recebe frame do offscreen document e transmite
-    broadcastFrame(request.frame);
-    updateLastFrameTimestamp();
   }
   return true;
 });
-
-async function startScreenCapture(senderTab) {
-  try {
-    let targetTab = senderTab;
-    
-    if (!targetTab || !targetTab.id) {
-      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-      targetTab = tabs[0];
-    }
-    
-    if (!targetTab || !targetTab.id) {
-      console.error('No active tab found');
-      return;
-    }
-    
-    console.log('Starting capture with tab:', targetTab.id);
-    
-    return new Promise((resolve) => {
-      chrome.desktopCapture.chooseDesktopMedia(
-        ['screen', 'window', 'tab'],
-        targetTab,
-        async (streamId) => {
-          if (!streamId) {
-            console.log('User cancelled screen selection');
-            resolve();
-            return;
-          }
-
-          console.log('Got streamId:', streamId);
-          
-          // Salvar streamId e estado
-          await chrome.storage.local.set({ 
-            isCapturing: true, 
-            userId: userId,
-            streamId: streamId
-          });
-          
-          // Criar offscreen document para captura
-          await setupOffscreenDocument(streamId);
-          
-          // Atualizar banco de dados
-          await updateConsentStatus(true);
-          
-          console.log('Screen capture started successfully');
-          resolve();
-        }
-      );
-    });
-  } catch (error) {
-    console.error('Error starting screen capture:', error);
-  }
-}
-
-async function setupOffscreenDocument(streamId) {
-  const existingContexts = await chrome.runtime.getContexts({
-    contextTypes: ['OFFSCREEN_DOCUMENT']
-  });
-  
-  if (existingContexts.length > 0) {
-    // Já existe, enviar novo streamId
-    chrome.runtime.sendMessage({ 
-      action: 'startRecording', 
-      streamId: streamId,
-      userId: userId
-    });
-    return;
-  }
-  
-  await chrome.offscreen.createDocument({
-    url: 'offscreen.html',
-    reasons: ['USER_MEDIA'],
-    justification: 'Screen capture for employee monitoring'
-  });
-  
-  // Aguardar documento carregar e iniciar gravação
-  setTimeout(() => {
-    chrome.runtime.sendMessage({ 
-      action: 'startRecording', 
-      streamId: streamId,
-      userId: userId
-    });
-  }, 500);
-}
-
-let broadcastChannel = null;
 
 function initBroadcastChannel() {
   if (broadcastChannel && broadcastChannel.readyState === WebSocket.OPEN) return;
@@ -171,8 +82,7 @@ function initBroadcastChannel() {
   broadcastChannel = new WebSocket(wsUrl);
   
   broadcastChannel.onopen = () => {
-    console.log('Broadcast channel connected');
-    
+    console.log('WebSocket connected');
     const joinMessage = {
       topic: \`realtime:screen-share-\${userId}\`,
       event: 'phx_join',
@@ -182,21 +92,15 @@ function initBroadcastChannel() {
     broadcastChannel.send(JSON.stringify(joinMessage));
   };
   
-  broadcastChannel.onerror = (error) => {
-    console.error('Broadcast channel error:', error);
-  };
-  
-  broadcastChannel.onclose = () => {
-    console.log('Broadcast channel closed');
-    broadcastChannel = null;
-  };
+  broadcastChannel.onerror = (error) => console.error('WebSocket error:', error);
+  broadcastChannel.onclose = () => { broadcastChannel = null; };
 }
 
-async function broadcastFrame(base64Frame) {
+function broadcastFrame(base64Frame) {
   initBroadcastChannel();
   
   if (!broadcastChannel || broadcastChannel.readyState !== WebSocket.OPEN) {
-    console.log('Broadcast channel not ready');
+    console.log('WebSocket not ready');
     return;
   }
   
@@ -205,11 +109,8 @@ async function broadcastFrame(base64Frame) {
     event: 'broadcast',
     payload: {
       type: 'broadcast',
-      event: 'screen-frame',
-      payload: {
-        frame: base64Frame,
-        timestamp: Date.now()
-      }
+      event: 'frame',
+      payload: { frame: base64Frame, timestamp: Date.now() }
     },
     ref: Date.now().toString()
   };
@@ -219,7 +120,7 @@ async function broadcastFrame(base64Frame) {
 
 async function updateConsentStatus(isSharing) {
   try {
-    console.log('Updating consent status to:', isSharing, 'for user:', userId);
+    await chrome.storage.local.set({ isCapturing: isSharing });
     
     const response = await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent?usuario_id=eq.\${userId}\`, {
       method: 'PATCH',
@@ -227,7 +128,7 @@ async function updateConsentStatus(isSharing) {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`,
         'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
+        'Prefer': 'return=minimal'
       },
       body: JSON.stringify({
         is_sharing: isSharing,
@@ -235,12 +136,9 @@ async function updateConsentStatus(isSharing) {
         updated_at: new Date().toISOString()
       })
     });
-    
-    console.log('Update response status:', response.status);
-    return response.ok;
+    console.log('Status update:', response.status);
   } catch (error) {
-    console.error('Error updating consent status:', error);
-    return false;
+    console.error('Error updating status:', error);
   }
 }
 
@@ -254,221 +152,16 @@ async function updateLastFrameTimestamp() {
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({
-        last_frame_at: new Date().toISOString()
-      })
+      body: JSON.stringify({ last_frame_at: new Date().toISOString() })
     });
   } catch (error) {
-    console.error('Error updating last frame timestamp:', error);
+    console.error('Error updating timestamp:', error);
   }
-}
-
-async function stopScreenCapture() {
-  // Fechar offscreen document
-  const existingContexts = await chrome.runtime.getContexts({
-    contextTypes: ['OFFSCREEN_DOCUMENT']
-  });
-  
-  if (existingContexts.length > 0) {
-    await chrome.offscreen.closeDocument();
-  }
-  
-  if (broadcastChannel) {
-    broadcastChannel.close();
-    broadcastChannel = null;
-  }
-  
-  await chrome.storage.local.set({ isCapturing: false, streamId: null });
-  
-  if (userId) {
-    await updateConsentStatus(false);
-  }
-  
-  console.log('Screen capture stopped');
 }
 
 chrome.runtime.onSuspend.addListener(() => {
-  if (broadcastChannel) {
-    broadcastChannel.close();
-  }
+  if (broadcastChannel) broadcastChannel.close();
 });`;
-
-// Offscreen document HTML
-const offscreenHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <title>Screen Capture</title>
-</head>
-<body>
-  <video id="video" autoplay muted style="display:none;"></video>
-  <canvas id="canvas" style="display:none;"></canvas>
-  <script src="offscreen.js"><\/script>
-</body>
-</html>`;
-
-// Offscreen document JS - usando getUserMedia com chromeMediaSourceId do desktopCapture
-const offscreenJs = `let mediaStream = null;
-let captureInterval = null;
-let userId = null;
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Offscreen received message:', request.action);
-  
-  if (request.action === 'startRecording') {
-    userId = request.userId;
-    startRecording(request.streamId);
-    sendResponse({ success: true });
-  } else if (request.action === 'stopRecording') {
-    stopRecording();
-    sendResponse({ success: true });
-  }
-  return true;
-});
-
-async function startRecording(streamId) {
-  try {
-    console.log('Offscreen: Starting recording with streamId:', streamId);
-    
-    if (!streamId) {
-      console.error('Offscreen: No streamId provided');
-      chrome.runtime.sendMessage({ 
-        action: 'recordingError', 
-        error: 'No streamId provided' 
-      });
-      return;
-    }
-    
-    // IMPORTANTE: Usar getUserMedia com chromeMediaSourceId do desktopCapture
-    // Esta é a forma correta de usar o streamId obtido de chrome.desktopCapture.chooseDesktopMedia
-    const constraints = {
-      video: {
-        mandatory: {
-          chromeMediaSource: 'desktop',
-          chromeMediaSourceId: streamId,
-          maxWidth: 1920,
-          maxHeight: 1080,
-          maxFrameRate: 5
-        }
-      },
-      audio: false
-    };
-    
-    console.log('Offscreen: Requesting getUserMedia with constraints:', JSON.stringify(constraints));
-    
-    mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-    
-    if (!mediaStream) {
-      console.error('Offscreen: No media stream obtained');
-      return;
-    }
-    
-    console.log('Offscreen: Got media stream, tracks:', mediaStream.getTracks().length);
-    
-    const video = document.getElementById('video');
-    video.srcObject = mediaStream;
-    
-    // Aguardar o vídeo carregar
-    video.onloadedmetadata = async () => {
-      try {
-        await video.play();
-        console.log('Offscreen: Video playing, starting frame capture. Size:', video.videoWidth, 'x', video.videoHeight);
-        
-        // Capturar primeiro frame imediatamente
-        captureFrame(video);
-        
-        // Capturar frames a cada 3 segundos
-        captureInterval = setInterval(() => captureFrame(video), 3000);
-      } catch (playError) {
-        console.error('Offscreen: Error playing video:', playError);
-      }
-    };
-    
-    video.onerror = (e) => {
-      console.error('Offscreen: Video error:', e);
-    };
-    
-    // Detectar quando o stream é parado pelo usuário
-    mediaStream.getVideoTracks()[0].onended = () => {
-      console.log('Offscreen: Stream ended by user');
-      stopRecording();
-      chrome.runtime.sendMessage({ action: 'streamEnded' });
-    };
-    
-  } catch (error) {
-    console.error('Offscreen: Error starting recording:', error.name, error.message);
-    // Notificar background sobre o erro
-    chrome.runtime.sendMessage({ 
-      action: 'recordingError', 
-      error: error.name + ': ' + error.message 
-    });
-  }
-}
-
-function captureFrame(video) {
-  try {
-    if (!video || video.readyState < 2) {
-      console.log('Offscreen: Video not ready yet, readyState:', video ? video.readyState : 'no video');
-      return;
-    }
-    
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Usar dimensões reais do vídeo, redimensionando para max 1280x720
-    const videoWidth = video.videoWidth || 1920;
-    const videoHeight = video.videoHeight || 1080;
-    
-    if (videoWidth === 0 || videoHeight === 0) {
-      console.log('Offscreen: Video dimensions not ready');
-      return;
-    }
-    
-    const aspectRatio = videoWidth / videoHeight;
-    
-    let targetWidth = 1280;
-    let targetHeight = Math.round(targetWidth / aspectRatio);
-    
-    if (targetHeight > 720) {
-      targetHeight = 720;
-      targetWidth = Math.round(targetHeight * aspectRatio);
-    }
-    
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-    ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
-    
-    const base64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
-    
-    // Enviar frame para o background script
-    chrome.runtime.sendMessage({
-      action: 'frameFromOffscreen',
-      frame: 'data:image/jpeg;base64,' + base64
-    });
-    
-    console.log('Offscreen: Frame captured and sent (' + targetWidth + 'x' + targetHeight + ')');
-  } catch (error) {
-    console.error('Offscreen: Error capturing frame:', error);
-  }
-}
-
-function stopRecording() {
-  if (captureInterval) {
-    clearInterval(captureInterval);
-    captureInterval = null;
-  }
-  
-  if (mediaStream) {
-    mediaStream.getTracks().forEach(track => track.stop());
-    mediaStream = null;
-  }
-  
-  const video = document.getElementById('video');
-  if (video) {
-    video.srcObject = null;
-  }
-  
-  console.log('Offscreen: Recording stopped');
-}`;
 
 const popupHtml = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -501,12 +194,14 @@ const popupHtml = `<!DOCTYPE html>
     .input-field { width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; font-size: 14px; outline: none; }
     .input-field:focus { border-color: #667eea; }
     .input-field::placeholder { color: rgba(255,255,255,0.4); }
-    .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
     .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
     .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .info-text { font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-top: 16px; line-height: 1.5; }
     .hidden { display: none; }
+    .preview { width: 100%; height: 120px; background: #000; border-radius: 8px; margin-bottom: 12px; object-fit: contain; }
+    .frame-info { font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 12px; }
   </style>
 </head>
 <body>
@@ -519,7 +214,7 @@ const popupHtml = `<!DOCTYPE html>
   </div>
   <div class="status-card">
     <div class="status-row">
-      <span class="status-label">Status do Monitoramento</span>
+      <span class="status-label">Status</span>
       <span class="status-value">
         <span id="statusDot" class="status-dot inactive"></span>
         <span id="statusText">Inativo</span>
@@ -530,9 +225,10 @@ const popupHtml = `<!DOCTYPE html>
       <span class="status-value" id="userIdDisplay">-</span>
     </div>
   </div>
+  
   <div id="loginSection">
     <div class="input-group">
-      <label class="input-label">ID do Usuário</label>
+      <label class="input-label">ID do Usuário (copie do Perfil no CRM)</label>
       <input type="text" id="userId" class="input-field" placeholder="Cole seu ID de usuário aqui">
     </div>
     <button id="startBtn" class="btn btn-primary">
@@ -544,7 +240,10 @@ const popupHtml = `<!DOCTYPE html>
       Iniciar Monitoramento
     </button>
   </div>
+  
   <div id="activeSection" class="hidden">
+    <img id="preview" class="preview" src="" alt="Preview">
+    <div id="frameInfo" class="frame-info">Aguardando frames...</div>
     <button id="stopBtn" class="btn btn-danger">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="6" y="6" width="12" height="12"></rect>
@@ -552,12 +251,21 @@ const popupHtml = `<!DOCTYPE html>
       Parar Monitoramento
     </button>
   </div>
-  <p class="info-text">Esta extensão captura sua tela periodicamente para monitoramento corporativo.</p>
-  <script src="popup.js"></script>
+  
+  <p class="info-text">Esta extensão captura sua tela periodicamente para monitoramento corporativo. Mantenha o popup aberto durante o uso.</p>
+  
+  <video id="video" style="display:none;" autoplay muted></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  
+  <script src="popup.js"><\/script>
 </body>
 </html>`;
 
-const popupJs = `document.addEventListener('DOMContentLoaded', async () => {
+const popupJs = `let mediaStream = null;
+let captureInterval = null;
+let frameCount = 0;
+
+document.addEventListener('DOMContentLoaded', async () => {
   const userIdInput = document.getElementById('userId');
   const startBtn = document.getElementById('startBtn');
   const stopBtn = document.getElementById('stopBtn');
@@ -567,13 +275,18 @@ const popupJs = `document.addEventListener('DOMContentLoaded', async () => {
   const statusText = document.getElementById('statusText');
   const userRow = document.getElementById('userRow');
   const userIdDisplay = document.getElementById('userIdDisplay');
+  const preview = document.getElementById('preview');
+  const frameInfo = document.getElementById('frameInfo');
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
 
-  const saved = await chrome.storage.local.get(['userId']);
+  // Carregar userId salvo
+  const saved = await chrome.storage.local.get(['userId', 'isCapturing']);
   if (saved.userId) {
     userIdInput.value = saved.userId;
   }
-
-  updateUI();
+  
+  updateUI(saved.isCapturing);
 
   startBtn.addEventListener('click', async () => {
     const userId = userIdInput.value.trim();
@@ -581,42 +294,122 @@ const popupJs = `document.addEventListener('DOMContentLoaded', async () => {
       alert('Por favor, insira o ID do usuário');
       return;
     }
-    await chrome.storage.local.set({ userId });
-    chrome.runtime.sendMessage({ action: 'startCapture', userId }, (response) => {
-      if (response.success) {
-        // Aguarda 2s para dar tempo de selecionar a tela e captura começar
-        setTimeout(updateUI, 2000);
-        // Verifica novamente após 5s
-        setTimeout(updateUI, 5000);
-      }
-    });
+    
+    try {
+      // Solicitar compartilhamento de tela
+      mediaStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { 
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          frameRate: { ideal: 1, max: 5 }
+        },
+        audio: false
+      });
+      
+      // Configurar video element
+      video.srcObject = mediaStream;
+      await video.play();
+      
+      // Salvar userId e atualizar status
+      await chrome.storage.local.set({ userId, isCapturing: true });
+      chrome.runtime.sendMessage({ action: 'setUserId', userId });
+      chrome.runtime.sendMessage({ action: 'updateStatus', isSharing: true });
+      
+      // Detectar quando stream é parado
+      mediaStream.getVideoTracks()[0].onended = () => {
+        stopCapture();
+      };
+      
+      // Iniciar captura de frames
+      captureFrame();
+      captureInterval = setInterval(captureFrame, 3000);
+      
+      updateUI(true);
+      
+    } catch (error) {
+      console.error('Erro ao iniciar captura:', error);
+      alert('Não foi possível iniciar o compartilhamento de tela. Tente novamente.');
+    }
   });
 
-  stopBtn.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ action: 'stopCapture' }, (response) => {
-      if (response.success) updateUI();
-    });
-  });
+  stopBtn.addEventListener('click', stopCapture);
+  
+  function captureFrame() {
+    if (!video || video.readyState < 2) {
+      console.log('Video não está pronto');
+      return;
+    }
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Calcular dimensões mantendo aspect ratio
+    const videoWidth = video.videoWidth || 1920;
+    const videoHeight = video.videoHeight || 1080;
+    const aspectRatio = videoWidth / videoHeight;
+    
+    let targetWidth = 1280;
+    let targetHeight = Math.round(targetWidth / aspectRatio);
+    
+    if (targetHeight > 720) {
+      targetHeight = 720;
+      targetWidth = Math.round(targetHeight * aspectRatio);
+    }
+    
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
+    
+    const base64 = canvas.toDataURL('image/jpeg', 0.6);
+    
+    // Atualizar preview
+    preview.src = base64;
+    frameCount++;
+    frameInfo.textContent = 'Frame #' + frameCount + ' - ' + targetWidth + 'x' + targetHeight;
+    
+    // Enviar para background
+    chrome.runtime.sendMessage({ action: 'sendFrame', frame: base64 });
+  }
+  
+  async function stopCapture() {
+    if (captureInterval) {
+      clearInterval(captureInterval);
+      captureInterval = null;
+    }
+    
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(track => track.stop());
+      mediaStream = null;
+    }
+    
+    video.srcObject = null;
+    frameCount = 0;
+    
+    await chrome.storage.local.set({ isCapturing: false });
+    chrome.runtime.sendMessage({ action: 'updateStatus', isSharing: false });
+    
+    updateUI(false);
+  }
 
-  function updateUI() {
-    chrome.runtime.sendMessage({ action: 'getStatus' }, (response) => {
-      if (response.isCapturing) {
-        loginSection.classList.add('hidden');
-        activeSection.classList.remove('hidden');
-        statusDot.classList.remove('inactive');
-        statusDot.classList.add('active');
-        statusText.textContent = 'Ativo';
-        userRow.style.display = 'flex';
-        userIdDisplay.textContent = response.userId?.substring(0, 8) + '...';
-      } else {
-        loginSection.classList.remove('hidden');
-        activeSection.classList.add('hidden');
-        statusDot.classList.remove('active');
-        statusDot.classList.add('inactive');
-        statusText.textContent = 'Inativo';
-        userRow.style.display = 'none';
-      }
-    });
+  function updateUI(isCapturing) {
+    if (isCapturing) {
+      loginSection.classList.add('hidden');
+      activeSection.classList.remove('hidden');
+      statusDot.classList.remove('inactive');
+      statusDot.classList.add('active');
+      statusText.textContent = 'Ativo';
+      userRow.style.display = 'flex';
+      const userId = userIdInput.value;
+      userIdDisplay.textContent = userId.substring(0, 8) + '...';
+    } else {
+      loginSection.classList.remove('hidden');
+      activeSection.classList.add('hidden');
+      statusDot.classList.remove('active');
+      statusDot.classList.add('inactive');
+      statusText.textContent = 'Inativo';
+      userRow.style.display = 'none';
+      preview.src = '';
+      frameInfo.textContent = 'Aguardando frames...';
+    }
   }
 });`;
 
@@ -641,10 +434,6 @@ export const useExtensionDownload = () => {
       zip.file('background.js', backgroundJs);
       zip.file('popup.html', popupHtml);
       zip.file('popup.js', popupJs);
-      
-      // Add offscreen files for MV3 media capture
-      zip.file('offscreen.html', offscreenHtml);
-      zip.file('offscreen.js', offscreenJs);
       
       // Add icons folder
       const iconsFolder = zip.folder('icons');

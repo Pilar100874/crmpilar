@@ -304,18 +304,18 @@ export default function MonitorFuncionarios() {
       
       const { data, error } = await supabase
         .from('orcamentos')
-        .select('id, usuario_id')
+        .select('id, vendedor_id')
         .eq('estabelecimento_id', estabId)
         .in('status', ['aprovado', 'finalizado', 'faturado'])
         .gte('created_at', hoje.toISOString());
 
       if (error) throw error;
 
-      // Agrupar por usuario_id
+      // Agrupar por vendedor_id
       const porUsuario: Record<string, number> = {};
       (data || []).forEach((orcamento: any) => {
-        if (orcamento.usuario_id) {
-          porUsuario[orcamento.usuario_id] = (porUsuario[orcamento.usuario_id] || 0) + 1;
+        if (orcamento.vendedor_id) {
+          porUsuario[orcamento.vendedor_id] = (porUsuario[orcamento.vendedor_id] || 0) + 1;
         }
       });
 
