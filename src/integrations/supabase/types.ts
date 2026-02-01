@@ -8757,6 +8757,60 @@ export type Database = {
           },
         ]
       }
+      screen_monitor_consent: {
+        Row: {
+          consent_given: boolean
+          consent_given_at: string
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          is_sharing: boolean
+          last_frame_at: string | null
+          sharing_started_at: string | null
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          consent_given?: boolean
+          consent_given_at?: string
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          is_sharing?: boolean
+          last_frame_at?: string | null
+          sharing_started_at?: string | null
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          consent_given?: boolean
+          consent_given_at?: string
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          is_sharing?: boolean
+          last_frame_at?: string | null
+          sharing_started_at?: string | null
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screen_monitor_consent_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "screen_monitor_consent_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       screen_share_sessions: {
         Row: {
           created_at: string

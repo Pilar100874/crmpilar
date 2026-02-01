@@ -13,11 +13,13 @@ import {
   Eye,
   Circle,
   RefreshCw,
-  ArrowRight
+  ArrowRight,
+  Tv
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ScreenViewer } from "@/components/monitor/ScreenViewer";
 
 interface UserActivity {
   id: string;
@@ -75,6 +77,7 @@ export default function MonitorFuncionarios() {
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
+  const [viewingScreen, setViewingScreen] = useState<{usuarioId: string, nome: string} | null>(null);
 
   useEffect(() => {
     init();
@@ -397,13 +400,29 @@ export default function MonitorFuncionarios() {
                             <span className="truncate">{activity.current_page_title || 'N/A'}</span>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <Badge variant={activity.is_online ? "default" : "secondary"} className="text-[10px] px-1.5">
-                            {activity.is_online ? 'Online' : 'Offline'}
-                          </Badge>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
-                            {formatDuration(activity.total_active_time_seconds)}
-                          </p>
+                        <div className="flex items-center gap-2">
+                          {activity.is_online && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => setViewingScreen({
+                                usuarioId: activity.usuario_id,
+                                nome: activity.usuario?.nome || 'Usuário'
+                              })}
+                              title="Ver tela"
+                            >
+                              <Tv className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <div className="text-right">
+                            <Badge variant={activity.is_online ? "default" : "secondary"} className="text-[10px] px-1.5">
+                              {activity.is_online ? 'Online' : 'Offline'}
+                            </Badge>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              {formatDuration(activity.total_active_time_seconds)}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     ))
@@ -593,6 +612,19 @@ export default function MonitorFuncionarios() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de visualização de tela */}
+      {viewingScreen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-4xl">
+            <ScreenViewer
+              usuarioId={viewingScreen.usuarioId}
+              usuarioNome={viewingScreen.nome}
+              onClose={() => setViewingScreen(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

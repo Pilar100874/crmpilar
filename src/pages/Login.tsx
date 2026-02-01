@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
@@ -17,6 +18,7 @@ export default function Login() {
   // User login
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
+  const [monitorConsent, setMonitorConsent] = useState(true); // Pré-marcado
 
   useEffect(() => {
     const clearSession = async () => {
@@ -56,10 +58,25 @@ export default function Login() {
         return;
       }
 
+      // Salvar consentimento de monitoramento
+      if (monitorConsent) {
+        await supabase
+          .from("screen_monitor_consent")
+          .upsert({
+            usuario_id: usuario.id,
+            estabelecimento_id: usuario.estabelecimento_id,
+            consent_given: true,
+            consent_given_at: new Date().toISOString(),
+          }, {
+            onConflict: 'usuario_id,estabelecimento_id'
+          });
+      }
+
       // Salvar informações no localStorage
       localStorage.setItem("userType", "user");
       localStorage.setItem("userId", usuario.id);
       localStorage.setItem("estabelecimentoId", usuario.estabelecimento_id);
+      localStorage.setItem("monitorConsent", monitorConsent ? "true" : "false");
       
       toast.success("Login realizado com sucesso!");
       navigate("/dashboard");
@@ -115,6 +132,19 @@ export default function Login() {
                   onChange={(e) => setUserPassword(e.target.value)}
                   required
                 />
+              </div>
+              <div className="flex items-start space-x-2 pt-2">
+                <Checkbox
+                  id="monitor-consent"
+                  checked={monitorConsent}
+                  onCheckedChange={(checked) => setMonitorConsent(checked === true)}
+                />
+                <label
+                  htmlFor="monitor-consent"
+                  className="text-xs text-muted-foreground leading-tight cursor-pointer"
+                >
+                  Autorizo o monitoramento de tela pelo supervisor para fins de qualidade e treinamento
+                </label>
               </div>
             </CardContent>
             <CardContent className="space-y-2 pt-0">
