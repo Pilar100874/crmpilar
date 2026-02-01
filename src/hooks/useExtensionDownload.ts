@@ -47,7 +47,7 @@ let broadcastChannel = null;
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'startCapture') {
     userId = request.userId;
-    startScreenCapture();
+    startScreenCapture(sender.tab);
     sendResponse({ success: true });
   } else if (request.action === 'stopCapture') {
     stopScreenCapture();
@@ -61,10 +61,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
-async function startScreenCapture() {
+async function startScreenCapture(senderTab) {
   try {
+    // No MV3, precisamos de uma aba ativa para o desktopCapture
+    let targetTab = senderTab;
+    
+    if (!targetTab || !targetTab.id) {
+      // Se não temos a aba do sender, pegar a aba ativa
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      targetTab = tabs[0];
+    }
+    
+    if (!targetTab || !targetTab.id) {
+      console.error('No active tab found');
+      return;
+    }
+    
+    console.log('Starting capture with tab:', targetTab.id);
+    
     chrome.desktopCapture.chooseDesktopMedia(
       ['screen', 'window', 'tab'],
+      targetTab,
       async (streamId) => {
         if (!streamId) {
           console.log('User cancelled screen selection');
@@ -72,6 +89,7 @@ async function startScreenCapture() {
         }
 
         try {
+          console.log('Got streamId:', streamId);
           mediaStream = await navigator.mediaDevices.getUserMedia({
             video: {
               mandatory: {
