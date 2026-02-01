@@ -1,27 +1,22 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   Users, 
   MessageSquare, 
   Clock, 
   Activity, 
   Monitor as MonitorIcon, 
-  Eye,
   Circle,
   RefreshCw,
-  ArrowRight,
-  Tv,
-  MonitorOff
+  ShoppingCart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { ScreenViewer } from "@/components/monitor/ScreenViewer";
+import { UserMonitorRow } from "@/components/monitor/UserMonitorRow";
 
 interface UserActivity {
   id: string;
@@ -37,11 +32,11 @@ interface UserActivity {
     nome: string;
     email: string;
   };
-  extensionActive?: boolean;
 }
 
 interface AtendenteInfo {
   id: string;
+  usuario_id: string;
   status: string;
   aceita_novos_chats: boolean;
   max_chats_simultaneos: number;
@@ -51,37 +46,33 @@ interface AtendenteInfo {
     email: string;
   };
   chats_ativos: number;
+  emails_ativos: number;
 }
 
-interface ConversationPreview {
-  id: string;
-  canal: string;
-  chat_status: string;
-  created_at: string;
-  updated_at: string;
-  customer: {
-    id: string;
-    nome: string;
-    telefone?: string;
-  };
-  atendente?: {
-    usuario: {
-      nome: string;
-    };
-  };
+interface UserMetrics {
+  usuarioId: string;
+  nome: string;
+  email: string;
+  isOnline: boolean;
+  status: string;
+  chatsAtivos: number;
+  emailsAtivos: number;
+  pedidosFechados: number;
+  filaEspera: number;
+  extensionActive: boolean;
 }
 
 export default function MonitorFuncionarios() {
   const [activities, setActivities] = useState<UserActivity[]>([]);
   const [atendentes, setAtendentes] = useState<AtendenteInfo[]>([]);
-  const [filaEspera, setFilaEspera] = useState<ConversationPreview[]>([]);
-  const [chatsAtivos, setChatsAtivos] = useState<ConversationPreview[]>([]);
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [filaEsperaTotal, setFilaEsperaTotal] = useState(0);
+  const [chatsAtivosTotal, setChatsAtivosTotal] = useState(0);
+  const [pedidosHojeTotal, setPedidosHojeTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   const [viewingScreen, setViewingScreen] = useState<{usuarioId: string, nome: string} | null>(null);
   const [extensionStatuses, setExtensionStatuses] = useState<Record<string, boolean>>({});
+  const [pedidosPorUsuario, setPedidosPorUsuario] = useState<Record<string, number>>({});
 
   useEffect(() => {
     init();
@@ -97,6 +88,7 @@ export default function MonitorFuncionarios() {
         loadFilaEspera(estabId),
         loadChatsAtivos(estabId),
         loadExtensionStatuses(estabId),
+        loadPedidosHoje(estabId),
       ]);
       setupRealtime(estabId);
     }
@@ -122,12 +114,12 @@ export default function MonitorFuncionarios() {
         }
       )
       .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'messages' },
-        (payload: any) => {
-          if (selectedChat && payload.new?.conversation_id === selectedChat) {
-            loadChatMessages(selectedChat);
-          }
-        }
+        { event: '*', schema: 'public', table: 'orcamentos', filter: `estabelecimento_id=eq.${estabId}` },
+        () => loadPedidosHoje(estabId)
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'screen_monitor_consent', filter: `estabelecimento_id=eq.${estabId}` },
+        () => loadExtensionStatuses(estabId)
       )
       .subscribe();
 
@@ -147,7 +139,6 @@ export default function MonitorFuncionarios() {
 
       const statuses: Record<string, boolean> = {};
       (data || []).forEach((item: any) => {
-        // Considera ativo se is_sharing=true e teve frame nos últimos 30 segundos
         const lastFrame = item.last_frame_at ? new Date(item.last_frame_at) : null;
         const isRecent = lastFrame && (Date.now() - lastFrame.getTime()) < 30000;
         statuses[item.usuario_id] = item.is_sharing && isRecent;
@@ -182,6 +173,7 @@ export default function MonitorFuncionarios() {
         .from('atendentes')
         .select(`
           id,
+          usuario_id,
           status,
           aceita_novos_chats,
           max_chats_simultaneos,
@@ -191,20 +183,31 @@ export default function MonitorFuncionarios() {
 
       if (error) throw error;
 
-      const atendentesComChats = await Promise.all((data || []).map(async (atendente) => {
-        const { count } = await supabase
+      const atendentesComMetricas = await Promise.all((data || []).map(async (atendente) => {
+        // Contar chats (WhatsApp, webchat, etc)
+        const { count: chatsCount } = await supabase
           .from('conversations')
           .select('*', { count: 'exact', head: true })
           .eq('atendente_atual_id', atendente.id)
-          .eq('chat_status', 'em_atendimento');
+          .eq('chat_status', 'em_atendimento')
+          .neq('canal', 'email');
+
+        // Contar emails
+        const { count: emailsCount } = await supabase
+          .from('conversations')
+          .select('*', { count: 'exact', head: true })
+          .eq('atendente_atual_id', atendente.id)
+          .eq('chat_status', 'em_atendimento')
+          .eq('canal', 'email');
 
         return {
           ...atendente,
-          chats_ativos: count || 0,
+          chats_ativos: chatsCount || 0,
+          emails_ativos: emailsCount || 0,
         };
       }));
 
-      setAtendentes(atendentesComChats as AtendenteInfo[]);
+      setAtendentes(atendentesComMetricas as AtendenteInfo[]);
     } catch (error) {
       console.error('Erro ao carregar atendentes:', error);
     }
@@ -212,22 +215,14 @@ export default function MonitorFuncionarios() {
 
   const loadFilaEspera = async (estabId: string) => {
     try {
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from('conversations')
-        .select(`
-          id,
-          canal,
-          chat_status,
-          created_at,
-          updated_at,
-          customer:customers!conversations_customer_id_fkey(id, nome, telefone)
-        `)
+        .select('*', { count: 'exact', head: true })
         .eq('estabelecimento_id', estabId)
-        .eq('chat_status', 'em_fila')
-        .order('created_at', { ascending: true });
+        .eq('chat_status', 'em_fila');
 
       if (error) throw error;
-      setFilaEspera(data || []);
+      setFilaEsperaTotal(count || 0);
     } catch (error) {
       console.error('Erro ao carregar fila:', error);
     }
@@ -235,73 +230,95 @@ export default function MonitorFuncionarios() {
 
   const loadChatsAtivos = async (estabId: string) => {
     try {
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from('conversations')
-        .select(`
-          id,
-          canal,
-          chat_status,
-          created_at,
-          updated_at,
-          customer:customers!conversations_customer_id_fkey(id, nome, telefone),
-          atendente:atendentes!conversations_atendente_atual_id_fkey(
-            usuario:usuarios!atendentes_usuario_id_fkey(nome)
-          )
-        `)
+        .select('*', { count: 'exact', head: true })
         .eq('estabelecimento_id', estabId)
-        .eq('chat_status', 'em_atendimento')
-        .order('updated_at', { ascending: false });
+        .eq('chat_status', 'em_atendimento');
 
       if (error) throw error;
-      setChatsAtivos(data || []);
+      setChatsAtivosTotal(count || 0);
     } catch (error) {
       console.error('Erro ao carregar chats ativos:', error);
     }
   };
 
-  const loadChatMessages = async (chatId: string) => {
+  const loadPedidosHoje = async (estabId: string) => {
     try {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      
       const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', chatId)
-        .order('created_at', { ascending: true })
-        .limit(50);
+        .from('orcamentos')
+        .select('id, usuario_id')
+        .eq('estabelecimento_id', estabId)
+        .in('status', ['aprovado', 'finalizado', 'faturado'])
+        .gte('created_at', hoje.toISOString());
 
       if (error) throw error;
-      setChatMessages(data || []);
-      setSelectedChat(chatId);
+
+      // Agrupar por usuario_id
+      const porUsuario: Record<string, number> = {};
+      (data || []).forEach((orcamento: any) => {
+        if (orcamento.usuario_id) {
+          porUsuario[orcamento.usuario_id] = (porUsuario[orcamento.usuario_id] || 0) + 1;
+        }
+      });
+
+      setPedidosPorUsuario(porUsuario);
+      setPedidosHojeTotal(data?.length || 0);
     } catch (error) {
-      console.error('Erro ao carregar mensagens:', error);
+      console.error('Erro ao carregar pedidos:', error);
     }
   };
 
-  const formatDuration = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    if (hours > 0) return `${hours}h ${minutes}min`;
-    return `${minutes}min`;
-  };
+  // Combinar dados dos atendentes com atividades para criar métricas
+  const userMetrics: UserMetrics[] = useMemo(() => {
+    const metricsMap = new Map<string, UserMetrics>();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'disponivel': return 'bg-green-500';
-      case 'ocupado': return 'bg-yellow-500';
-      case 'pausa': return 'bg-orange-500';
-      case 'offline': return 'bg-gray-500';
-      default: return 'bg-gray-500';
-    }
-  };
+    // Primeiro, adicionar todos os atendentes
+    atendentes.forEach(atendente => {
+      if (atendente.usuario) {
+        const activity = activities.find(a => a.usuario_id === atendente.usuario_id);
+        metricsMap.set(atendente.usuario_id, {
+          usuarioId: atendente.usuario_id,
+          nome: atendente.usuario.nome,
+          email: atendente.usuario.email,
+          isOnline: activity?.is_online || false,
+          status: atendente.status,
+          chatsAtivos: atendente.chats_ativos,
+          emailsAtivos: atendente.emails_ativos,
+          pedidosFechados: pedidosPorUsuario[atendente.usuario_id] || 0,
+          filaEspera: 0, // Será calculado pela fila geral
+          extensionActive: extensionStatuses[atendente.usuario_id] || false,
+        });
+      }
+    });
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'disponivel': return 'Disponível';
-      case 'ocupado': return 'Ocupado';
-      case 'pausa': return 'Em Pausa';
-      case 'offline': return 'Offline';
-      default: return status;
-    }
-  };
+    // Adicionar usuários que não são atendentes mas estão no tracking
+    activities.forEach(activity => {
+      if (!metricsMap.has(activity.usuario_id) && activity.usuario) {
+        metricsMap.set(activity.usuario_id, {
+          usuarioId: activity.usuario_id,
+          nome: activity.usuario.nome,
+          email: activity.usuario.email,
+          isOnline: activity.is_online,
+          status: 'offline',
+          chatsAtivos: 0,
+          emailsAtivos: 0,
+          pedidosFechados: pedidosPorUsuario[activity.usuario_id] || 0,
+          filaEspera: 0,
+          extensionActive: extensionStatuses[activity.usuario_id] || false,
+        });
+      }
+    });
+
+    return Array.from(metricsMap.values()).sort((a, b) => {
+      // Online primeiro, depois por nome
+      if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
+      return a.nome.localeCompare(b.nome);
+    });
+  }, [atendentes, activities, extensionStatuses, pedidosPorUsuario]);
 
   const onlineUsers = useMemo(() => 
     activities.filter(a => a.is_online), 
@@ -337,8 +354,8 @@ export default function MonitorFuncionarios() {
         </div>
       </div>
 
-      {/* Stats Cards - Compacto */}
-      <div className="grid gap-3 grid-cols-4">
+      {/* Stats Cards */}
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <Card className="p-3">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
@@ -357,303 +374,83 @@ export default function MonitorFuncionarios() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Chats Ativos</p>
-              <p className="text-xl font-bold">{chatsAtivos.length}</p>
+              <p className="text-xl font-bold">{chatsAtivosTotal}</p>
             </div>
           </div>
         </Card>
         <Card className="p-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-              <Clock className="h-5 w-5 text-yellow-600" />
+            <div className={`p-2 rounded-lg ${filaEsperaTotal > 0 ? 'bg-yellow-100 dark:bg-yellow-900/30' : 'bg-gray-100 dark:bg-gray-900/30'}`}>
+              <Clock className={`h-5 w-5 ${filaEsperaTotal > 0 ? 'text-yellow-600' : 'text-gray-600'}`} />
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Na Fila</p>
-              <p className="text-xl font-bold">{filaEspera.length}</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-              <Activity className="h-5 w-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Atendentes</p>
-              <p className="text-xl font-bold">
-                {atendentes.filter(a => a.status === 'disponivel' || a.status === 'ocupado').length}/{atendentes.length}
+              <p className={`text-xl font-bold ${filaEsperaTotal > 0 ? 'text-yellow-600' : ''}`}>
+                {filaEsperaTotal}
               </p>
             </div>
           </div>
         </Card>
-      </div>
-
-      {/* Main Grid - 3 colunas */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* Coluna 1: Usuários no Sistema + Atendentes */}
-        <div className="space-y-4">
-          {/* Usuários no Sistema */}
-          <Card>
-            <CardHeader className="py-3 px-4">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <MonitorIcon className="h-4 w-4" />
-                Usuários no Sistema ({activities.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[280px]">
-                <div className="space-y-1 p-2">
-                  {activities.length === 0 ? (
-                    <div className="text-center py-4 text-muted-foreground text-sm">
-                      Nenhum usuário rastreado
-                    </div>
-                  ) : (
-                    activities.map((activity) => (
-                      <div
-                        key={activity.id}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent/50 transition-colors"
-                      >
-                        <div className="relative">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
-                            {activity.usuario?.nome?.charAt(0)?.toUpperCase() || '?'}
-                          </div>
-                          <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background ${
-                            activity.is_online ? 'bg-green-500' : 'bg-gray-400'
-                          }`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{activity.usuario?.nome || 'Usuário'}</p>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <MonitorIcon className="h-3 w-3" />
-                            <span className="truncate">{activity.current_page_title || 'N/A'}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                {extensionStatuses[activity.usuario_id] ? (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-green-500 hover:text-green-600"
-                                    onClick={() => setViewingScreen({
-                                      usuarioId: activity.usuario_id,
-                                      nome: activity.usuario?.nome || 'Usuário'
-                                    })}
-                                  >
-                                    <Tv className="h-4 w-4" />
-                                  </Button>
-                                ) : (
-                                  <div className="h-7 w-7 flex items-center justify-center text-muted-foreground">
-                                    <MonitorOff className="h-4 w-4" />
-                                  </div>
-                                )}
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {extensionStatuses[activity.usuario_id] 
-                                  ? "Extensão ativa - clique para ver tela" 
-                                  : "Extensão não instalada ou inativa"
-                                }
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                          <div className="text-right">
-                            <Badge variant={activity.is_online ? "default" : "secondary"} className="text-[10px] px-1.5">
-                              {activity.is_online ? 'Online' : 'Offline'}
-                            </Badge>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
-                              {formatDuration(activity.total_active_time_seconds)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-
-          {/* Atendentes */}
-          <Card>
-            <CardHeader className="py-3 px-4">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Status dos Atendentes ({atendentes.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[200px]">
-                <div className="space-y-1 p-2">
-                  {atendentes.map((atendente) => (
-                    <div key={atendente.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent/50">
-                      <div className="relative">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
-                          {atendente.usuario?.nome?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
-                        <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background ${getStatusColor(atendente.status)}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{atendente.usuario?.nome}</p>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-[10px] px-1">
-                            {getStatusLabel(atendente.status)}
-                          </Badge>
-                          <span className="text-[10px] text-muted-foreground">
-                            {atendente.chats_ativos}/{atendente.max_chats_simultaneos} chats
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Coluna 2: Fila + Chats Ativos */}
-        <div className="space-y-4">
-          {/* Fila de Espera */}
-          <Card className={filaEspera.length > 0 ? 'border-yellow-500/50' : ''}>
-            <CardHeader className="py-3 px-4">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Fila de Espera ({filaEspera.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[200px]">
-                {filaEspera.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground text-sm">
-                    Nenhum cliente na fila
-                  </div>
-                ) : (
-                  <div className="space-y-1 p-2">
-                    {filaEspera.map((chat, index) => (
-                      <div
-                        key={chat.id}
-                        className="flex items-center gap-3 p-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/10"
-                      >
-                        <div className="w-6 h-6 rounded-full bg-yellow-500 text-white flex items-center justify-center text-xs font-bold">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{chat.customer?.nome || 'Cliente'}</p>
-                          <p className="text-[10px] text-muted-foreground">{chat.customer?.telefone}</p>
-                        </div>
-                        <div className="text-right">
-                          <Badge variant="outline" className="text-[10px]">{chat.canal}</Badge>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
-                            {formatDistanceToNow(new Date(chat.created_at), { locale: ptBR })}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-
-          {/* Chats Ativos */}
-          <Card>
-            <CardHeader className="py-3 px-4">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Chats em Atendimento ({chatsAtivos.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[280px]">
-                {chatsAtivos.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground text-sm">
-                    Nenhum chat ativo
-                  </div>
-                ) : (
-                  <div className="space-y-1 p-2">
-                    {chatsAtivos.map((chat) => (
-                      <div
-                        key={chat.id}
-                        onClick={() => loadChatMessages(chat.id)}
-                        className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                          selectedChat === chat.id 
-                            ? 'bg-primary/10 border border-primary/30' 
-                            : 'hover:bg-accent/50'
-                        }`}
-                      >
-                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                          <MessageSquare className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{chat.customer?.nome || 'Cliente'}</p>
-                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <ArrowRight className="h-2.5 w-2.5" />
-                            <span className="truncate">{chat.atendente?.usuario?.nome || 'N/A'}</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <Badge variant="outline" className="text-[10px]">{chat.canal}</Badge>
-                          <Eye className="h-3 w-3 text-muted-foreground ml-auto mt-1" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Coluna 3: Preview do Chat */}
-        <Card className="h-fit">
-          <CardHeader className="py-3 px-4">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Eye className="h-4 w-4" />
-              Visualização da Conversa
-            </CardTitle>
-            <CardDescription className="text-xs">
-              {selectedChat ? 'Mensagens em tempo real' : 'Selecione um chat ao lado'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <ScrollArea className="h-[500px]">
-              {!selectedChat ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Eye className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                  <p className="text-sm">Clique em um chat para visualizar</p>
-                </div>
-              ) : chatMessages.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                  <p className="text-sm">Nenhuma mensagem</p>
-                </div>
-              ) : (
-                <div className="space-y-2 p-3">
-                  {chatMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`p-2.5 rounded-lg max-w-[90%] ${
-                        msg.sender === 'agent' || msg.direction === 'outgoing'
-                          ? 'ml-auto bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap break-words">{msg.content || msg.body}</p>
-                      <p className="text-[10px] opacity-70 mt-1">
-                        {new Date(msg.created_at).toLocaleTimeString('pt-BR', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </CardContent>
+        <Card className="p-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+              <ShoppingCart className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Pedidos Hoje</p>
+              <p className="text-xl font-bold">{pedidosHojeTotal}</p>
+            </div>
+          </div>
         </Card>
       </div>
+
+      {/* Lista de Usuários */}
+      <Card>
+        <CardHeader className="py-3 px-4">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Equipe ({userMetrics.length})
+            <span className="text-xs text-muted-foreground ml-2">
+              Clique em um usuário para ver conversas em tempo real
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-2">
+          <ScrollArea className="max-h-[calc(100vh-320px)]">
+            <div className="space-y-2">
+              {userMetrics.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Nenhum usuário encontrado
+                </div>
+              ) : (
+                userMetrics.map((user) => (
+                  <UserMonitorRow
+                    key={user.usuarioId}
+                    usuario={{
+                      id: user.usuarioId,
+                      nome: user.nome,
+                      email: user.email,
+                    }}
+                    usuarioId={user.usuarioId}
+                    isOnline={user.isOnline}
+                    status={user.status}
+                    chatsAtivos={user.chatsAtivos}
+                    emailsAtivos={user.emailsAtivos}
+                    pedidosFechados={user.pedidosFechados}
+                    filaEspera={filaEsperaTotal}
+                    extensionActive={user.extensionActive}
+                    onViewScreen={() => setViewingScreen({
+                      usuarioId: user.usuarioId,
+                      nome: user.nome
+                    })}
+                    estabelecimentoId={estabelecimentoId}
+                  />
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
 
       {/* Modal de visualização de tela */}
       {viewingScreen && (
