@@ -6,7 +6,7 @@ import { toast } from '@/lib/toast-config';
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Extensão para monitoramento de tela do CRM Pilar",
   "permissions": [
     "tabs",
@@ -34,7 +34,7 @@ const manifestJson = `{
   }
 }`;
 
-const backgroundJs = `// Background service worker for screen monitoring v1.7.0
+const backgroundJs = `// Background service worker for screen monitoring v1.8.0
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
@@ -47,7 +47,7 @@ let lastBroadcast = 0;
 chrome.storage.local.get(['userId'], (data) => {
   if (data.userId) {
     currentUserId = data.userId;
-    console.log('Background: userId recuperado do storage:', currentUserId);
+    console.log('Background v1.8: userId recuperado do storage:', currentUserId);
   }
 });
 
@@ -68,7 +68,7 @@ async function getUserId() {
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Background received:', request.action, request.userId ? 'userId: ' + request.userId.substring(0,8) + '...' : '');
+  console.log('Background v1.8 received:', request.action);
   
   if (request.action === 'setUserId') {
     currentUserId = request.userId;
@@ -111,6 +111,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
     
   } else if (request.action === 'sendFrame') {
+    console.log('Background: Recebeu sendFrame, frame length:', request.frame?.length);
+    
     getUserId().then(async (uid) => {
       if (!uid) {
         console.error('Background: Não pode enviar frame sem userId');
@@ -119,29 +121,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
       
       const now = Date.now();
+      framesSent++;
       
-      // Broadcast do frame via Edge Function (a cada 2 segundos para não sobrecarregar)
+      // Broadcast do frame via Edge Function (a cada 2 segundos)
       if (now - lastBroadcast > 2000) {
+        console.log('Background: Enviando frame #' + framesSent + ' para broadcast-frame...');
         try {
           const result = await callEdgeFunction('broadcast-frame', { usuario_id: uid, frame: request.frame });
+          console.log('Background: Resultado broadcast:', result);
           if (result.success) {
-            console.log('Background: Frame broadcast #' + framesSent);
+            console.log('Background: ✓ Frame broadcast enviado com sucesso');
           } else {
-            console.error('Background: Erro no broadcast:', result.error);
+            console.error('Background: ✗ Erro no broadcast:', result.error);
           }
         } catch (e) {
-          console.error('Background: Erro ao enviar frame:', e.message);
+          console.error('Background: ✗ Exceção ao enviar frame:', e.message);
         }
         lastBroadcast = now;
+      } else {
+        console.log('Background: Frame ignorado (throttle), próximo em', 2000 - (now - lastBroadcast), 'ms');
       }
       
       // Atualizar timestamp no banco a cada 5 segundos
       if (now - lastFrameUpdate > 5000) {
+        console.log('Background: Atualizando is_sharing no banco...');
         callEdgeFunction('extension-status', { usuario_id: uid, action: 'frame' });
         lastFrameUpdate = now;
       }
       
-      framesSent++;
       sendResponse({ success: true, framesSent });
     });
     return true;
@@ -161,7 +168,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 async function callEdgeFunction(functionName, body) {
   try {
-    console.log('Background: Chamando', functionName);
+    console.log('Background: Chamando edge function:', functionName);
     
     const response = await fetch(\`\${SUPABASE_URL}/functions/v1/\${functionName}\`, {
       method: 'POST',
@@ -172,7 +179,10 @@ async function callEdgeFunction(functionName, body) {
       body: JSON.stringify(body)
     });
     
+    console.log('Background: Resposta HTTP:', response.status, response.statusText);
+    
     const data = await response.json();
+    console.log('Background: Dados da resposta:', data);
     
     if (!response.ok) {
       return { success: false, error: data.error || 'Erro na requisição' };
@@ -187,9 +197,7 @@ async function callEdgeFunction(functionName, body) {
 
 // Manter service worker ativo
 setInterval(() => {
-  if (framesSent > 0) {
-    console.log('Background: Heartbeat - frames enviados:', framesSent);
-  }
+  console.log('Background: Heartbeat - frames enviados total:', framesSent);
 }, 25000);
 
 chrome.runtime.onSuspend.addListener(() => {
