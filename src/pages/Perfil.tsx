@@ -135,15 +135,23 @@ export default function Perfil() {
     try {
       const estabId = await getEstabelecimentoId();
       if (estabId) {
-        await supabase
+        const now = new Date().toISOString();
+        const { error } = await supabase
           .from("screen_monitor_consent")
           .upsert({
             usuario_id: userData.id,
             estabelecimento_id: estabId,
-            has_given_consent: true,
+            consent_given: true,
+            consent_given_at: now,
             is_sharing: false,
-            updated_at: new Date().toISOString()
+            updated_at: now
           }, { onConflict: 'usuario_id,estabelecimento_id' });
+        
+        if (error) {
+          console.error("Erro ao criar registro de consentimento:", error);
+        } else {
+          console.log("Registro de consentimento criado/atualizado com sucesso");
+        }
       }
     } catch (error) {
       console.error("Erro ao preparar registro:", error);
