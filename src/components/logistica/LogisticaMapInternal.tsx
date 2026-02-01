@@ -12,13 +12,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-const createVeiculoIcon = (status: string) => {
+const createVeiculoIcon = (status: string, compact = false) => {
   const color = status === 'movendo' ? '#22c55e' : status === 'parado' ? '#eab308' : '#6b7280';
+  const size = compact ? 14 : 24;
+  const borderWidth = compact ? 2 : 3;
   return L.divIcon({
     className: 'custom-vehicle-icon',
-    html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
+    html: `<div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: ${borderWidth}px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
   });
 };
 
@@ -117,6 +119,7 @@ interface LogisticaMapInternalProps {
   onParadaClick?: (parada: ParadaMarcada) => void;
   className?: string;
   fitBounds?: boolean;
+  compactIcons?: boolean;
 }
 
 const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
@@ -131,6 +134,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   onParadaClick,
   className = 'h-full w-full',
   fitBounds = true,
+  compactIcons = false,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -198,9 +202,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
       if (existingMarker) {
         existingMarker.setLatLng(pos);
-        existingMarker.setIcon(createVeiculoIcon(veiculo.status));
+        existingMarker.setIcon(createVeiculoIcon(veiculo.status, compactIcons));
       } else {
-        const marker = L.marker(pos, { icon: createVeiculoIcon(veiculo.status) })
+        const marker = L.marker(pos, { icon: createVeiculoIcon(veiculo.status, compactIcons) })
           .addTo(map)
           .bindPopup(`
             <div class="text-sm">
@@ -238,7 +242,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
       const bounds = L.latLngBounds(allPoints);
       map.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [veiculos, fitBounds, onVeiculoClick, routes, paradasMarcadas]);
+  }, [veiculos, fitBounds, onVeiculoClick, routes, paradasMarcadas, compactIcons]);
 
   // Update paradas marcadas markers
   useEffect(() => {

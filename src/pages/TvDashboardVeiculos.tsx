@@ -300,262 +300,151 @@ export default function TvDashboardVeiculos() {
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-background via-background to-muted/20 overflow-hidden">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-background via-background/95 to-transparent">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="h-10 w-10 rounded-xl"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="p-2 rounded-xl bg-primary/10">
-              <Tv className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Monitoramento de Frota</h1>
-              <p className="text-sm text-muted-foreground">
-                Atualizado às {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
-              </p>
+    <div className="fixed inset-0 bg-background overflow-hidden">
+      {/* Fullscreen Map */}
+      <div className="absolute inset-0">
+        {veiculosComPosicao.length === 0 ? (
+          <div className="h-full w-full flex items-center justify-center bg-muted/50">
+            <div className="text-center">
+              <MapPin className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <p className="text-xl text-muted-foreground">Nenhum veículo com posição</p>
+              <p className="text-sm text-muted-foreground mt-2">Aguardando dados de GPS...</p>
             </div>
           </div>
+        ) : (
+          <LazyLogisticaMap
+            veiculos={veiculosComPosicao}
+            paradasMarcadas={paradasMarcadas}
+            onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
+            className="absolute inset-0"
+            fitBounds
+            compactIcons
+          />
+        )}
+      </div>
 
-          {/* Stats Cards - Horizontal */}
-          <div className="flex items-center gap-2">
-            <Card className="p-2 bg-background/80 backdrop-blur-sm border-primary/20">
-              <div className="flex items-center gap-2">
-                <Car className="h-4 w-4 text-primary" />
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Total</p>
-                  <p className="text-lg font-bold">{stats.total}</p>
-                </div>
-              </div>
-            </Card>
-            
-            <Card className="p-2 bg-green-500/10 backdrop-blur-sm border-green-500/30">
-              <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 text-green-500" />
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Movendo</p>
-                  <p className="text-lg font-bold text-green-600">{stats.movendo}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-2 bg-amber-500/10 backdrop-blur-sm border-amber-500/30">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-amber-500" />
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Parado</p>
-                  <p className="text-lg font-bold text-amber-600">{stats.parado}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-2 bg-gray-500/10 backdrop-blur-sm border-gray-500/30">
-              <div className="flex items-center gap-2">
-                <WifiOff className="h-4 w-4 text-gray-400" />
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Offline</p>
-                  <p className="text-lg font-bold text-gray-500">{stats.offline}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-2 bg-blue-500/10 backdrop-blur-sm border-blue-500/30">
-              <div className="flex items-center gap-2">
-                <Gauge className="h-4 w-4 text-blue-500" />
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Vel. Média</p>
-                  <p className="text-lg font-bold text-blue-600">{stats.velocidadeMedia} km/h</p>
-                </div>
-              </div>
-            </Card>
-
-            {/* KM Rodados Hoje */}
-            <Card className="p-2 bg-purple-500/10 backdrop-blur-sm border-purple-500/30">
-              <div className="flex items-center gap-2">
-                <Route className="h-4 w-4 text-purple-500" />
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Km Hoje</p>
-                  <p className="text-lg font-bold text-purple-600">{consumoEstimado.totalKm}</p>
-                </div>
-              </div>
-            </Card>
-
-            {/* Consumo Estimado */}
-            <Card className="p-2 bg-orange-500/10 backdrop-blur-sm border-orange-500/30">
-              <div className="flex items-center gap-2">
-                <Fuel className="h-4 w-4 text-orange-500" />
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Combustível</p>
-                  <p className="text-lg font-bold text-orange-600">{formatCurrency(consumoEstimado.totalCusto)}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Badge variant="outline" className="text-sm px-2 py-1">
-              {format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}
-            </Badge>
-          </div>
+      {/* Top Left - Back Button & Clock */}
+      <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
+        <Button 
+          variant="secondary" 
+          size="icon"
+          onClick={() => navigate(-1)}
+          className="h-9 w-9 rounded-lg bg-background/90 backdrop-blur-sm shadow-lg"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div className="px-3 py-1.5 bg-background/90 backdrop-blur-sm rounded-lg shadow-lg">
+          <p className="text-xs text-muted-foreground">
+            {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
+          </p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="absolute inset-0 pt-24 flex">
-        {/* Map - Takes most of the screen */}
-        <div className="flex-1 relative">
-          {veiculosComPosicao.length === 0 ? (
-            <div className="h-full w-full flex items-center justify-center bg-muted/50">
-              <div className="text-center">
-                <MapPin className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-xl text-muted-foreground">Nenhum veículo com posição</p>
-                <p className="text-sm text-muted-foreground mt-2">Aguardando dados de GPS...</p>
-              </div>
-            </div>
-          ) : (
-            <LazyLogisticaMap
-              veiculos={veiculosComPosicao}
-              paradasMarcadas={paradasMarcadas}
-              onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
-              className="absolute inset-0"
-              fitBounds
-            />
-          )}
+      {/* Top Right - Stats Overlay */}
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+        <div className="flex items-center gap-1 px-2 py-1 bg-background/90 backdrop-blur-sm rounded-lg shadow-lg">
+          <Car className="h-3 w-3 text-primary" />
+          <span className="text-sm font-bold">{stats.total}</span>
+        </div>
+        
+        <div className="flex items-center gap-1 px-2 py-1 bg-green-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-green-500/30">
+          <Activity className="h-3 w-3 text-green-500" />
+          <span className="text-sm font-bold text-green-600">{stats.movendo}</span>
         </div>
 
-        {/* Right Panel - Vehicle List */}
-        <Card className="w-80 m-4 ml-0 bg-background/95 backdrop-blur-sm border-primary/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Car className="h-4 w-4" />
-              Veículos ({veiculos.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <ScrollArea className="h-[calc(100vh-280px)]">
-              <div className="p-2 space-y-1">
-                {veiculos.map(v => {
-                  const config = statusConfig[v.status];
-                  const StatusIcon = config.icon;
-                  const isSelected = selectedVeiculoId === v.id;
-                  const minutosParado = v.ultima_posicao && v.status === 'parado'
-                    ? differenceInMinutes(new Date(), new Date(v.ultima_posicao.data_hora))
-                    : 0;
-                  const kmHoje = kmRodadosHoje[v.id] || 0;
-                  
-                  return (
-                    <div
-                      key={v.id}
-                      className={cn(
-                        "p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md",
-                        isSelected 
-                          ? "bg-primary/10 border-primary" 
-                          : minutosParado >= 30
-                            ? "bg-amber-500/10 border-amber-500/50"
-                            : "bg-background hover:bg-muted/50 border-border"
-                      )}
-                      onClick={() => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className={cn("w-2 h-2 rounded-full", config.color)} />
-                          <span className="font-bold text-sm">{v.placa}</span>
-                          {minutosParado >= 30 && (
-                            <Badge variant="destructive" className="text-[10px] px-1 py-0">
-                              <Timer className="h-2 w-2 mr-0.5" />
-                              {minutosParado}min
-                            </Badge>
-                          )}
-                        </div>
-                        <Badge variant="outline" className={cn("text-xs", config.textColor)}>
-                          <StatusIcon className="h-3 w-3 mr-1" />
-                          {config.label}
-                        </Badge>
-                      </div>
-                      
-                      {v.descricao && (
-                        <p className="text-xs text-muted-foreground mb-2 truncate">{v.descricao}</p>
-                      )}
-                      
-                      {v.ultima_posicao && (
-                        <div className="grid grid-cols-3 gap-2 text-xs">
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Gauge className="h-3 w-3" />
-                            <span className={v.ultima_posicao.velocidade > 100 ? 'text-red-500 font-bold' : ''}>
-                              {Math.round(v.ultima_posicao.velocidade)} km/h
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Navigation 
-                              className="h-3 w-3" 
-                              style={{ transform: `rotate(${v.ultima_posicao.direcao || 0}deg)` }}
-                            />
-                            <span>{v.ultima_posicao.direcao || 0}°</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-purple-500">
-                            <Route className="h-3 w-3" />
-                            <span>{kmHoje} km</span>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {v.motorista && (
-                        <div className="mt-2 pt-2 border-t border-border/50">
-                          <p className="text-xs text-muted-foreground">
-                            🧑‍✈️ {v.motorista}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-amber-500/30">
+          <Clock className="h-3 w-3 text-amber-500" />
+          <span className="text-sm font-bold text-amber-600">{stats.parado}</span>
+        </div>
+
+        <div className="flex items-center gap-1 px-2 py-1 bg-gray-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-gray-500/30">
+          <WifiOff className="h-3 w-3 text-gray-400" />
+          <span className="text-sm font-bold text-gray-500">{stats.offline}</span>
+        </div>
+
+        <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-blue-500/30">
+          <Gauge className="h-3 w-3 text-blue-500" />
+          <span className="text-sm font-bold text-blue-600">{stats.velocidadeMedia} km/h</span>
+        </div>
+
+        <div className="flex items-center gap-1 px-2 py-1 bg-purple-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-purple-500/30">
+          <Route className="h-3 w-3 text-purple-500" />
+          <span className="text-sm font-bold text-purple-600">{consumoEstimado.totalKm} km</span>
+        </div>
+
+        <div className="flex items-center gap-1 px-2 py-1 bg-orange-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-orange-500/30">
+          <Fuel className="h-3 w-3 text-orange-500" />
+          <span className="text-sm font-bold text-orange-600">{formatCurrency(consumoEstimado.totalCusto)}</span>
+        </div>
       </div>
 
-      {/* Alerts Panel - Bottom */}
-      <div className="absolute bottom-4 left-4 right-96 z-10 space-y-2">
+      {/* Bottom Left - Alerts */}
+      <div className="absolute bottom-3 left-3 right-3 z-20 space-y-1.5 max-w-[60%]">
         {/* Alerta de Velocidade */}
         {veiculos.some(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100) && (
-          <Card className="bg-red-500/10 border-red-500/30 backdrop-blur-sm">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2 text-red-500">
-                <Zap className="h-5 w-5 animate-pulse" />
-                <span className="font-medium">Alerta de Velocidade!</span>
-                <span className="text-sm">
-                  {veiculos.filter(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100).map(v => 
-                    `${v.placa} (${Math.round(v.ultima_posicao!.velocidade)}km/h)`
-                  ).join(', ')}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex items-center gap-2 px-3 py-2 bg-red-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-red-500/30">
+            <Zap className="h-4 w-4 text-red-500 animate-pulse flex-shrink-0" />
+            <span className="text-xs text-red-500 font-medium truncate">
+              Velocidade: {veiculos.filter(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100).map(v => 
+                `${v.placa} (${Math.round(v.ultima_posicao!.velocidade)}km/h)`
+              ).join(', ')}
+            </span>
+          </div>
         )}
 
         {/* Alerta de Veículos Parados */}
         {veiculosParadosAlerta.length > 0 && (
-          <Card className="bg-amber-500/10 border-amber-500/30 backdrop-blur-sm">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2 text-amber-600">
-                <Timer className="h-5 w-5" />
-                <span className="font-medium">Veículos Parados há Muito Tempo</span>
-                <span className="text-sm">
-                  {veiculosParadosAlerta.map(v => {
-                    const minutos = differenceInMinutes(new Date(), new Date(v.ultima_posicao!.data_hora));
-                    return `${v.placa} (${minutos}min)`;
-                  }).join(', ')}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-amber-500/30">
+            <Timer className="h-4 w-4 text-amber-500 flex-shrink-0" />
+            <span className="text-xs text-amber-600 font-medium truncate">
+              Parados: {veiculosParadosAlerta.map(v => {
+                const minutos = differenceInMinutes(new Date(), new Date(v.ultima_posicao!.data_hora));
+                return `${v.placa} (${minutos}min)`;
+              }).join(', ')}
+            </span>
+          </div>
         )}
+      </div>
+
+      {/* Bottom Right - Mini Vehicle List */}
+      <div className="absolute bottom-3 right-3 z-20 max-h-[40%] w-64 overflow-hidden">
+        <div className="bg-background/90 backdrop-blur-sm rounded-lg shadow-lg border border-border/50 overflow-hidden">
+          <ScrollArea className="max-h-[calc(40vh-24px)]">
+            <div className="p-1.5 space-y-0.5">
+              {veiculos.map(v => {
+                const config = statusConfig[v.status];
+                const isSelected = selectedVeiculoId === v.id;
+                const kmHoje = kmRodadosHoje[v.id] || 0;
+                
+                return (
+                  <div
+                    key={v.id}
+                    className={cn(
+                      "flex items-center justify-between px-2 py-1 rounded cursor-pointer transition-colors text-xs",
+                      isSelected 
+                        ? "bg-primary/20" 
+                        : "hover:bg-muted/50"
+                    )}
+                    onClick={() => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <div className={cn("w-2 h-2 rounded-full flex-shrink-0", config.color)} />
+                      <span className="font-medium">{v.placa}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      {v.ultima_posicao && (
+                        <span className={v.ultima_posicao.velocidade > 100 ? 'text-red-500 font-bold' : ''}>
+                          {Math.round(v.ultima_posicao.velocidade)}km/h
+                        </span>
+                      )}
+                      <span className="text-purple-500">{kmHoje}km</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </div>
       </div>
     </div>
   );
