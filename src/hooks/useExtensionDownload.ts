@@ -2,12 +2,12 @@ import { useState } from 'react';
 import JSZip from 'jszip';
 import { toast } from '@/lib/toast-config';
 
-// Extension file contents embedded as strings - v2.1.0 with on-demand frame sending
+// Extension file contents embedded as strings - v2.2.0 with auto-start on browser launch
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "2.1.0",
-  "description": "Extensão para monitoramento de tela sob demanda do CRM Pilar",
+  "version": "2.2.0",
+  "description": "Extensão para monitoramento de tela com auto-inicialização",
   "permissions": [
     "tabs",
     "activeTab",
@@ -35,8 +35,8 @@ const manifestJson = `{
   }
 }`;
 
-const backgroundJs = `// Background service worker for screen monitoring v2.1.0
-// Only sends frames when admin is viewing (on-demand)
+const backgroundJs = `// Background service worker for screen monitoring v2.2.0
+// Auto-starts on browser launch if enabled
 
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
@@ -48,25 +48,74 @@ let lastFrameUpdate = 0;
 let offscreenCreated = false;
 let viewerCheckInterval = null;
 let lastViewerActive = false;
+let autoStartPending = false;
 
 // Recuperar estado salvo na inicialização
-chrome.storage.local.get(['userId', 'isCapturing'], (data) => {
+chrome.storage.local.get(['userId', 'isCapturing', 'autoStart'], (data) => {
   if (data.userId) {
     currentUserId = data.userId;
-    console.log('Background v2.1: userId recuperado:', currentUserId);
+    console.log('Background v2.2: userId recuperado:', currentUserId);
   }
+  
+  // Se estava capturando, retomar polling
   if (data.isCapturing) {
-    console.log('Background v2.1: Captura estava ativa, iniciando polling de viewer...');
-    startViewerPolling();
+    console.log('Background v2.2: Captura estava ativa, verificando offscreen...');
+    checkAndResumeCapture();
+  }
+  
+  // Se auto-start está habilitado mas não estava capturando, marcar para auto-start
+  if (data.autoStart && data.userId && !data.isCapturing) {
+    console.log('Background v2.2: Auto-start habilitado, marcando para início automático');
+    autoStartPending = true;
   }
 });
+
+// Auto-iniciar quando o navegador abre (se configurado)
+chrome.runtime.onStartup.addListener(() => {
+  console.log('Background v2.2: Browser iniciou');
+  chrome.storage.local.get(['userId', 'autoStart'], async (data) => {
+    if (data.autoStart && data.userId) {
+      console.log('Background v2.2: Auto-start ativado, aguardando interação do usuário...');
+      currentUserId = data.userId;
+      // Marcar que auto-start está pendente (precisa interação do usuário para getDisplayMedia)
+      autoStartPending = true;
+      
+      // Registrar status no servidor
+      await callEdgeFunction('extension-status', { 
+        usuario_id: data.userId, 
+        action: 'start' 
+      });
+      
+      chrome.storage.local.set({ isCapturing: false, autoStartPending: true });
+    }
+  });
+});
+
+// Quando a extensão é instalada
+chrome.runtime.onInstalled.addListener(() => {
+  console.log('Background v2.2: Extensão instalada/atualizada');
+});
+
+async function checkAndResumeCapture() {
+  await checkOffscreenDocument();
+  
+  if (offscreenCreated) {
+    console.log('Background v2.2: Offscreen existe, retomando polling');
+    startViewerPolling();
+  } else {
+    console.log('Background v2.2: Offscreen não existe, aguardando interação do usuário');
+    // Marcar como auto-start pendente para quando o usuário abrir o popup
+    autoStartPending = true;
+    chrome.storage.local.set({ isCapturing: false, autoStartPending: true });
+  }
+}
 
 function startViewerPolling() {
   if (viewerCheckInterval) return;
   
   console.log('Background: Iniciando polling de viewer...');
   viewerCheckInterval = setInterval(checkViewer, 2000);
-  checkViewer(); // Verificar imediatamente
+  checkViewer();
 }
 
 function stopViewerPolling() {
@@ -92,7 +141,6 @@ async function checkViewer() {
       console.log('Background: Viewer status mudou:', viewerActive);
       lastViewerActive = viewerActive;
       
-      // Notificar offscreen sobre mudança de status
       chrome.runtime.sendMessage({ 
         action: 'offscreen-viewer-status', 
         viewerActive: viewerActive 
@@ -151,13 +199,14 @@ async function closeOffscreenDocument() {
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Background v2.1 received:', request.action);
+  console.log('Background v2.2 received:', request.action);
   
   if (request.action === 'startCapture') {
     const captureUserId = request.userId;
     currentUserId = captureUserId;
+    autoStartPending = false;
     
-    chrome.storage.local.set({ userId: captureUserId, isCapturing: true }, async () => {
+    chrome.storage.local.set({ userId: captureUserId, isCapturing: true, autoStartPending: false }, async () => {
       try {
         const result = await callEdgeFunction('extension-status', { 
           usuario_id: captureUserId, 
@@ -180,8 +229,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
     
   } else if (request.action === 'stopCapture') {
-    chrome.storage.local.set({ isCapturing: false });
+    chrome.storage.local.set({ isCapturing: false, autoStartPending: false });
     stopViewerPolling();
+    autoStartPending = false;
     
     (async () => {
       try {
@@ -201,15 +251,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     })();
     return true;
     
+  } else if (request.action === 'setAutoStart') {
+    chrome.storage.local.set({ autoStart: request.enabled }, () => {
+      console.log('Background: Auto-start configurado:', request.enabled);
+      sendResponse({ success: true });
+    });
+    return true;
+    
   } else if (request.action === 'sendFrame') {
-    // Frame recebido do offscreen - só envia se viewer está ativo
     if (!currentUserId) {
       sendResponse({ success: false });
       return;
     }
     
     if (!lastViewerActive) {
-      // Viewer não está ativo, não enviar frame
       console.log('Background: Frame ignorado (sem viewer ativo)');
       sendResponse({ success: true, skipped: true });
       return;
@@ -218,14 +273,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const now = Date.now();
     framesSent++;
     
-    // Broadcast do frame (a cada 2 segundos quando viewer está ativo)
     if (now - lastBroadcast > 2000) {
       console.log('Background: Enviando frame #' + framesSent + ' (viewer ativo)');
       callEdgeFunction('broadcast-frame', { usuario_id: currentUserId, frame: request.frame });
       lastBroadcast = now;
     }
     
-    // Heartbeat no banco a cada 5 segundos
     if (now - lastFrameUpdate > 5000) {
       callEdgeFunction('extension-status', { usuario_id: currentUserId, action: 'frame' });
       lastFrameUpdate = now;
@@ -235,23 +288,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
     
   } else if (request.action === 'getStatus') {
-    chrome.storage.local.get(['isCapturing', 'userId'], async (data) => {
+    chrome.storage.local.get(['isCapturing', 'userId', 'autoStart', 'autoStartPending'], async (data) => {
       await checkOffscreenDocument();
       sendResponse({ 
         isCapturing: data.isCapturing && offscreenCreated,
         userId: data.userId || currentUserId,
         framesSent: framesSent,
         offscreenActive: offscreenCreated,
-        viewerActive: lastViewerActive
+        viewerActive: lastViewerActive,
+        autoStart: data.autoStart || false,
+        autoStartPending: data.autoStartPending || autoStartPending
       });
     });
     return true;
     
   } else if (request.action === 'captureError') {
     console.error('Background: Erro de captura:', request.error);
-    chrome.storage.local.set({ isCapturing: false });
+    chrome.storage.local.set({ isCapturing: false, autoStartPending: false });
     stopViewerPolling();
     closeOffscreenDocument();
+    autoStartPending = false;
     return;
   }
   
@@ -283,7 +339,7 @@ async function callEdgeFunction(functionName, body) {
 
 // Heartbeat
 setInterval(() => {
-  console.log('Background: Heartbeat - frames:', framesSent, 'viewer:', lastViewerActive);
+  console.log('Background: Heartbeat - frames:', framesSent, 'viewer:', lastViewerActive, 'autoStartPending:', autoStartPending);
 }, 25000);
 `;
 
@@ -300,7 +356,7 @@ const offscreenHtml = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const offscreenJs = `// Offscreen document for persistent screen capture v2.1.0
+const offscreenJs = `// Offscreen document for persistent screen capture v2.2.0
 let mediaStream = null;
 let captureInterval = null;
 let currentUserId = null;
@@ -308,7 +364,7 @@ let currentUserId = null;
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 
-console.log('Offscreen v2.1: Documento carregado');
+console.log('Offscreen v2.2: Documento carregado');
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log('Offscreen received:', request.action);
@@ -324,7 +380,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     
   } else if (request.action === 'offscreen-viewer-status') {
     console.log('Offscreen: Viewer status:', request.viewerActive);
-    // Apenas log, a captura continua mas background decide se envia
   }
   
   return true;
@@ -356,7 +411,6 @@ async function startCapture() {
     
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Captura de frames a cada 3 segundos (background decide se envia)
     captureFrame();
     captureInterval = setInterval(captureFrame, 3000);
     
@@ -391,7 +445,6 @@ function captureFrame() {
   
   const base64 = canvas.toDataURL('image/jpeg', 0.5);
   
-  // Enviar frame para background (ele decide se envia para servidor)
   chrome.runtime.sendMessage({ action: 'sendFrame', frame: base64 });
 }
 
@@ -438,12 +491,21 @@ const popupHtml = `<!DOCTYPE html>
     .status-dot.active { background: #10b981; box-shadow: 0 0 8px #10b981; animation: pulse 2s infinite; }
     .status-dot.inactive { background: #6b7280; }
     .status-dot.viewing { background: #3b82f6; box-shadow: 0 0 8px #3b82f6; animation: pulse 1s infinite; }
+    .status-dot.pending { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     .input-group { margin-bottom: 16px; }
     .input-label { display: block; font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
     .input-field { width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; font-size: 14px; outline: none; }
     .input-field:focus { border-color: #667eea; }
     .input-field::placeholder { color: rgba(255,255,255,0.4); }
+    .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer; }
+    .checkbox-group:hover { background: rgba(255,255,255,0.08); }
+    .checkbox { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .checkbox.checked { background: #667eea; border-color: #667eea; }
+    .checkbox svg { display: none; }
+    .checkbox.checked svg { display: block; }
+    .checkbox-label { font-size: 13px; color: rgba(255,255,255,0.8); flex: 1; }
+    .checkbox-desc { font-size: 11px; color: rgba(255,255,255,0.5); }
     .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; transition: transform 0.1s, opacity 0.1s; }
     .btn:hover { opacity: 0.9; }
     .btn:active { transform: scale(0.98); }
@@ -451,7 +513,9 @@ const popupHtml = `<!DOCTYPE html>
     .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     .info-box { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px; }
+    .info-box.warning { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); }
     .info-text { font-size: 12px; color: #6ee7b7; line-height: 1.4; }
+    .info-box.warning .info-text { color: #fcd34d; }
     .footer-text { font-size: 11px; color: rgba(255,255,255,0.4); text-align: center; margin-top: 16px; line-height: 1.5; }
     .hidden { display: none; }
   </style>
@@ -461,7 +525,7 @@ const popupHtml = `<!DOCTYPE html>
     <div class="logo">CP</div>
     <div>
       <div class="title">CRM Pilar</div>
-      <div class="subtitle">Monitor de Tela v2.1</div>
+      <div class="subtitle">Monitor de Tela v2.2</div>
     </div>
   </div>
   
@@ -487,11 +551,38 @@ const popupHtml = `<!DOCTYPE html>
     </div>
   </div>
   
+  <div id="pendingSection" class="hidden">
+    <div class="info-box warning">
+      <div class="info-text">⏳ <strong>Auto-iniciar pendente</strong><br>Clique abaixo para selecionar a tela e ativar o monitoramento automático.</div>
+    </div>
+    <button id="resumeBtn" class="btn btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+        <line x1="8" y1="21" x2="16" y2="21"></line>
+        <line x1="12" y1="17" x2="12" y2="21"></line>
+      </svg>
+      Ativar Monitoramento
+    </button>
+  </div>
+  
   <div id="loginSection">
     <div class="input-group">
       <label class="input-label">ID do Usuário (copie do Perfil no CRM)</label>
       <input type="text" id="userId" class="input-field" placeholder="Cole seu ID de usuário aqui">
     </div>
+    
+    <div class="checkbox-group" id="autoStartToggle">
+      <div class="checkbox" id="autoStartCheckbox">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <div>
+        <div class="checkbox-label">Iniciar com o navegador</div>
+        <div class="checkbox-desc">Ativa automaticamente ao abrir o Chrome</div>
+      </div>
+    </div>
+    
     <button id="startBtn" class="btn btn-primary">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
@@ -504,8 +595,21 @@ const popupHtml = `<!DOCTYPE html>
   
   <div id="activeSection" class="hidden">
     <div class="info-box">
-      <div class="info-text">✓ <strong>Monitoramento ativo em background!</strong><br>Frames só são enviados quando o admin está visualizando sua tela.</div>
+      <div class="info-text">✓ <strong>Monitoramento ativo!</strong><br>Frames só são enviados quando o admin visualiza.</div>
     </div>
+    
+    <div class="checkbox-group" id="autoStartToggleActive">
+      <div class="checkbox" id="autoStartCheckboxActive">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      <div>
+        <div class="checkbox-label">Iniciar com o navegador</div>
+        <div class="checkbox-desc">Na próxima vez, basta selecionar a tela</div>
+      </div>
+    </div>
+    
     <button id="stopBtn" class="btn btn-danger">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="6" y="6" width="12" height="12"></rect>
@@ -514,7 +618,7 @@ const popupHtml = `<!DOCTYPE html>
     </button>
   </div>
   
-  <p class="footer-text">Captura sob demanda - economiza recursos quando admin não está visualizando.</p>
+  <p class="footer-text">v2.2 - Com auto-inicialização ao abrir o navegador</p>
   
   <script src="popup.js"></script>
 </body>
@@ -524,8 +628,10 @@ const popupJs = `document.addEventListener('DOMContentLoaded', async () => {
   const userIdInput = document.getElementById('userId');
   const startBtn = document.getElementById('startBtn');
   const stopBtn = document.getElementById('stopBtn');
+  const resumeBtn = document.getElementById('resumeBtn');
   const loginSection = document.getElementById('loginSection');
   const activeSection = document.getElementById('activeSection');
+  const pendingSection = document.getElementById('pendingSection');
   const statusDot = document.getElementById('statusDot');
   const statusText = document.getElementById('statusText');
   const userRow = document.getElementById('userRow');
@@ -534,8 +640,26 @@ const popupJs = `document.addEventListener('DOMContentLoaded', async () => {
   const viewerDisplay = document.getElementById('viewerDisplay');
   const framesRow = document.getElementById('framesRow');
   const framesDisplay = document.getElementById('framesDisplay');
+  const autoStartCheckbox = document.getElementById('autoStartCheckbox');
+  const autoStartCheckboxActive = document.getElementById('autoStartCheckboxActive');
+  const autoStartToggle = document.getElementById('autoStartToggle');
+  const autoStartToggleActive = document.getElementById('autoStartToggleActive');
 
-  console.log('Popup v2.1: Iniciando...');
+  let autoStartEnabled = false;
+
+  console.log('Popup v2.2: Iniciando...');
+
+  // Carregar userId salvo
+  const saved = await new Promise(resolve => {
+    chrome.storage.local.get(['userId', 'autoStart'], resolve);
+  });
+  
+  if (saved.userId) {
+    userIdInput.value = saved.userId;
+  }
+  
+  autoStartEnabled = saved.autoStart || false;
+  updateAutoStartUI();
 
   await checkStatus();
   setInterval(checkStatus, 2000);
@@ -544,12 +668,33 @@ const popupJs = `document.addEventListener('DOMContentLoaded', async () => {
     return new Promise((resolve) => {
       chrome.runtime.sendMessage({ action: 'getStatus' }, (response) => {
         if (response) {
-          updateUI(response.isCapturing, response.userId, response.framesSent, response.viewerActive);
+          autoStartEnabled = response.autoStart || false;
+          updateAutoStartUI();
+          updateUI(response.isCapturing, response.userId, response.framesSent, response.viewerActive, response.autoStartPending);
         }
         resolve();
       });
     });
   }
+
+  function updateAutoStartUI() {
+    if (autoStartEnabled) {
+      autoStartCheckbox.classList.add('checked');
+      autoStartCheckboxActive.classList.add('checked');
+    } else {
+      autoStartCheckbox.classList.remove('checked');
+      autoStartCheckboxActive.classList.remove('checked');
+    }
+  }
+
+  function toggleAutoStart() {
+    autoStartEnabled = !autoStartEnabled;
+    updateAutoStartUI();
+    chrome.runtime.sendMessage({ action: 'setAutoStart', enabled: autoStartEnabled });
+  }
+
+  autoStartToggle.addEventListener('click', toggleAutoStart);
+  autoStartToggleActive.addEventListener('click', toggleAutoStart);
 
   startBtn.addEventListener('click', async () => {
     const userId = userIdInput.value.trim();
@@ -570,7 +715,7 @@ const popupJs = `document.addEventListener('DOMContentLoaded', async () => {
     
     chrome.runtime.sendMessage({ action: 'startCapture', userId }, (response) => {
       if (response && response.success) {
-        updateUI(true, userId, 0, false);
+        updateUI(true, userId, 0, false, false);
       } else {
         alert('Erro ao iniciar: ' + (response?.error || 'Erro desconhecido'));
       }
@@ -579,21 +724,68 @@ const popupJs = `document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  resumeBtn.addEventListener('click', async () => {
+    const userId = userIdInput.value.trim();
+    
+    if (!userId) {
+      alert('ID do usuário não encontrado');
+      return;
+    }
+    
+    resumeBtn.disabled = true;
+    resumeBtn.textContent = 'Ativando...';
+    
+    chrome.runtime.sendMessage({ action: 'startCapture', userId }, (response) => {
+      if (response && response.success) {
+        updateUI(true, userId, 0, false, false);
+      } else {
+        alert('Erro ao ativar: ' + (response?.error || 'Erro desconhecido'));
+      }
+      resumeBtn.disabled = false;
+      resumeBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg> Ativar Monitoramento';
+    });
+  });
+
   stopBtn.addEventListener('click', () => {
     stopBtn.disabled = true;
     stopBtn.textContent = 'Parando...';
     
     chrome.runtime.sendMessage({ action: 'stopCapture' }, (response) => {
-      updateUI(false, null, 0, false);
+      updateUI(false, null, 0, false, false);
       stopBtn.disabled = false;
       stopBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12"></rect></svg> Parar Monitoramento';
     });
   });
 
-  function updateUI(isCapturing, userId, framesSent, viewerActive) {
-    if (isCapturing) {
+  function updateUI(isCapturing, userId, framesSent, viewerActive, autoStartPending) {
+    // Carregar userId salvo se não recebido
+    if (!userId && userIdInput.value) {
+      userId = userIdInput.value;
+    }
+    
+    if (autoStartPending && !isCapturing) {
+      // Estado: auto-start pendente (precisa selecionar tela)
+      loginSection.classList.add('hidden');
+      activeSection.classList.add('hidden');
+      pendingSection.classList.remove('hidden');
+      
+      statusDot.className = 'status-dot pending';
+      statusText.textContent = 'Pendente';
+      
+      userRow.style.display = 'flex';
+      viewerRow.style.display = 'none';
+      framesRow.style.display = 'none';
+      
+      if (userId) {
+        userIdDisplay.textContent = userId.substring(0, 8) + '...';
+        userIdInput.value = userId;
+      }
+      
+    } else if (isCapturing) {
+      // Estado: monitorando
       loginSection.classList.add('hidden');
       activeSection.classList.remove('hidden');
+      pendingSection.classList.add('hidden');
       
       if (viewerActive) {
         statusDot.className = 'status-dot viewing';
@@ -613,9 +805,13 @@ const popupJs = `document.addEventListener('DOMContentLoaded', async () => {
       }
       viewerDisplay.textContent = viewerActive ? 'Sim' : 'Não';
       framesDisplay.textContent = framesSent || 0;
+      
     } else {
+      // Estado: inativo
       loginSection.classList.remove('hidden');
       activeSection.classList.add('hidden');
+      pendingSection.classList.add('hidden');
+      
       statusDot.className = 'status-dot inactive';
       statusText.textContent = 'Inativo';
       userRow.style.display = 'none';
@@ -661,14 +857,14 @@ export const useExtensionDownload = () => {
       
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'crm-pilar-monitor-extension-v2.1.zip';
+      link.download = 'crm-pilar-monitor-extension-v2.2.zip';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
       URL.revokeObjectURL(url);
       
-      toast.success('Extensão v2.1 baixada! Só envia frames quando admin está visualizando.');
+      toast.success('Extensão v2.2 baixada! Com auto-inicialização ao abrir o navegador.');
     } catch (error) {
       console.error('Erro ao gerar ZIP:', error);
       toast.error('Erro ao baixar extensão');
