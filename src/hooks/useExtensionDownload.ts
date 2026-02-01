@@ -6,7 +6,7 @@ import { toast } from '@/lib/toast-config';
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Extensão para monitoramento de tela do CRM Pilar",
   "permissions": [
     "tabs",
@@ -34,7 +34,7 @@ const manifestJson = `{
   }
 }`;
 
-const backgroundJs = `// Background service worker for screen monitoring v1.4.0
+const backgroundJs = `// Background service worker for screen monitoring v1.5.0
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
@@ -155,58 +155,91 @@ function initBroadcastChannel() {
   
   const wsUrl = \`wss://ioxugupvxlcdweldocmq.supabase.co/realtime/v1/websocket?apikey=\${SUPABASE_ANON_KEY}&vsn=1.0.0\`;
   
-  console.log('Background: Conectando WebSocket...');
+  console.log('Background: Conectando WebSocket para usuário:', userId);
   broadcastChannel = new WebSocket(wsUrl);
   
   broadcastChannel.onopen = () => {
-    console.log('Background: WebSocket conectado');
+    console.log('Background: WebSocket conectado, entrando no canal...');
+    
+    // Join com configuração de broadcast
     const joinMessage = {
       topic: \`realtime:screen-share-\${userId}\`,
       event: 'phx_join',
-      payload: {},
+      payload: {
+        config: {
+          broadcast: {
+            self: true
+          }
+        }
+      },
       ref: '1'
     };
     broadcastChannel.send(JSON.stringify(joinMessage));
   };
   
   broadcastChannel.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.event !== 'phx_reply') {
-      console.log('Background: WebSocket message:', data.event);
+    try {
+      const data = JSON.parse(event.data);
+      console.log('Background: WS recebeu:', data.event, data.payload?.status || '');
+      
+      if (data.event === 'phx_reply' && data.payload?.status === 'ok') {
+        console.log('Background: Canal joined com sucesso!');
+        wsReady = true;
+      }
+    } catch (e) {
+      console.log('Background: WS raw message:', event.data);
     }
   };
   
   broadcastChannel.onerror = (error) => {
-    console.error('Background: WebSocket error:', error);
+    console.error('Background: WebSocket error');
+    wsReady = false;
   };
   
   broadcastChannel.onclose = () => {
     console.log('Background: WebSocket fechado');
     broadcastChannel = null;
+    wsReady = false;
   };
 }
+
+let wsReady = false;
 
 function broadcastFrame(base64Frame) {
   initBroadcastChannel();
   
   if (!broadcastChannel || broadcastChannel.readyState !== WebSocket.OPEN) {
-    console.log('Background: WebSocket não está pronto, estado:', broadcastChannel?.readyState);
+    console.log('Background: WebSocket não conectado, estado:', broadcastChannel?.readyState);
     return;
   }
   
+  if (!wsReady) {
+    console.log('Background: Canal ainda não está pronto');
+    return;
+  }
+  
+  // Formato correto de broadcast para Supabase Realtime
   const message = {
     topic: \`realtime:screen-share-\${userId}\`,
     event: 'broadcast',
     payload: {
       type: 'broadcast',
       event: 'frame',
-      payload: { frame: base64Frame, timestamp: Date.now() }
+      payload: { 
+        frame: base64Frame, 
+        timestamp: Date.now(),
+        userId: userId
+      }
     },
     ref: Date.now().toString()
   };
   
-  broadcastChannel.send(JSON.stringify(message));
-  console.log('Background: Frame broadcast #' + framesSent);
+  try {
+    broadcastChannel.send(JSON.stringify(message));
+    console.log('Background: Frame broadcast enviado #' + framesSent);
+  } catch (e) {
+    console.error('Background: Erro ao enviar frame:', e);
+  }
 }
 
 // Manter service worker ativo
