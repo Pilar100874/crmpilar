@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
-import { User, Mail, Phone, Building2, Users } from "lucide-react";
+import { User, Mail, Phone, Building2, Users, Monitor, Download, ExternalLink, CheckCircle2, XCircle } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
 export default function Perfil() {
@@ -15,6 +16,7 @@ export default function Perfil() {
   const [userData, setUserData] = useState<any>(null);
   const [estabelecimentoName, setEstabelecimentoName] = useState("");
   const [grupoAcessoName, setGrupoAcessoName] = useState("");
+  const [extensionStatus, setExtensionStatus] = useState<{isSharing: boolean, lastFrameAt: string | null} | null>(null);
 
   useEffect(() => {
     loadUserData();
@@ -52,6 +54,21 @@ export default function Perfil() {
           
           if (estabData) {
             setEstabelecimentoName(estabData.nome);
+          }
+
+          // Verificar status da extensão
+          const { data: consentData } = await supabase
+            .from("screen_monitor_consent")
+            .select("is_sharing, last_frame_at")
+            .eq("usuario_id", usuario.id)
+            .eq("estabelecimento_id", estabId)
+            .maybeSingle();
+
+          if (consentData) {
+            setExtensionStatus({
+              isSharing: consentData.is_sharing || false,
+              lastFrameAt: consentData.last_frame_at
+            });
           }
         }
 
@@ -202,6 +219,97 @@ export default function Perfil() {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Extensão de Monitoramento */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Monitor className="h-5 w-5" />
+              Extensão de Monitoramento
+            </CardTitle>
+            <CardDescription>
+              Extensão do Chrome para monitoramento de tela corporativo
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Status da Extensão */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <div className="flex items-center gap-3">
+                {extensionStatus?.isSharing ? (
+                  <>
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    <div>
+                      <p className="text-sm font-medium text-green-700 dark:text-green-400">Extensão Ativa</p>
+                      <p className="text-xs text-muted-foreground">
+                        Última captura: {extensionStatus.lastFrameAt 
+                          ? new Date(extensionStatus.lastFrameAt).toLocaleString('pt-BR')
+                          : 'Aguardando...'
+                        }
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">Extensão Inativa</p>
+                      <p className="text-xs text-muted-foreground">
+                        Instale e ative a extensão para habilitar o monitoramento
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <Badge variant={extensionStatus?.isSharing ? "default" : "secondary"}>
+                {extensionStatus?.isSharing ? "Conectado" : "Desconectado"}
+              </Badge>
+            </div>
+
+            {/* Seu ID para a Extensão */}
+            <div className="space-y-2">
+              <Label>Seu ID de Usuário (para a extensão)</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={userData?.id || ""}
+                  readOnly
+                  className="font-mono text-xs"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(userData?.id || "");
+                    toast.success("ID copiado!");
+                  }}
+                  title="Copiar ID"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Cole este ID na extensão do Chrome para vincular seu monitoramento
+              </p>
+            </div>
+
+            {/* Botão de Download */}
+            <div className="pt-2">
+              <Button 
+                variant="outline" 
+                className="w-full gap-2"
+                onClick={() => {
+                  // Abre instruções ou baixa a extensão
+                  toast.info("Solicite ao administrador o arquivo da extensão ou acesse o repositório do projeto.");
+                }}
+              >
+                <Download className="h-4 w-4" />
+                Como Instalar a Extensão
+              </Button>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                A extensão deve ser instalada manualmente no Chrome via "Carregar sem compactação"
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
