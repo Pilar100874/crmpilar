@@ -44,6 +44,12 @@ let captureInterval = null;
 let userId = null;
 let broadcastChannel = null;
 
+// Recuperar estado salvo quando o service worker reinicia
+chrome.storage.local.get(['isCapturing', 'userId'], (data) => {
+  if (data.userId) userId = data.userId;
+  console.log('Restored state:', data);
+});
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'startCapture') {
     userId = request.userId;
@@ -53,21 +59,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     stopScreenCapture();
     sendResponse({ success: true });
   } else if (request.action === 'getStatus') {
-    sendResponse({ 
-      isCapturing: mediaStream !== null,
-      userId: userId
+    // Verificar storage para estado persistente
+    chrome.storage.local.get(['isCapturing', 'userId'], (data) => {
+      sendResponse({ 
+        isCapturing: data.isCapturing || mediaStream !== null,
+        userId: data.userId || userId
+      });
     });
+    return true; // Importante para resposta async
   }
   return true;
 });
 
 async function startScreenCapture(senderTab) {
   try {
-    // No MV3, precisamos de uma aba ativa para o desktopCapture
     let targetTab = senderTab;
     
     if (!targetTab || !targetTab.id) {
-      // Se não temos a aba do sender, pegar a aba ativa
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       targetTab = tabs[0];
     }
@@ -99,11 +107,16 @@ async function startScreenCapture(senderTab) {
             }
           });
 
+          // Salvar estado no storage para persistir entre suspensões do SW
+          await chrome.storage.local.set({ isCapturing: true, userId: userId });
+          
           startFrameCapture();
-          await updateConsentStatus(true);
-          console.log('Screen capture started successfully');
+          
+          const statusUpdated = await updateConsentStatus(true);
+          console.log('Screen capture started, DB updated:', statusUpdated);
         } catch (err) {
           console.error('Error getting media stream:', err);
+          await chrome.storage.local.set({ isCapturing: false });
         }
       }
     );
@@ -196,14 +209,15 @@ async function broadcastFrame(base64Frame) {
 
 async function updateConsentStatus(isSharing) {
   try {
-    // Use PATCH para atualizar o registro existente
+    console.log('Updating consent status to:', isSharing, 'for user:', userId);
+    
     const response = await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent?usuario_id=eq.\${userId}\`, {
       method: 'PATCH',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`,
         'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
+        'Prefer': 'return=representation'
       },
       body: JSON.stringify({
         is_sharing: isSharing,
@@ -212,19 +226,22 @@ async function updateConsentStatus(isSharing) {
       })
     });
     
+    const responseText = await response.text();
+    console.log('Update response:', response.status, responseText);
+    
     if (!response.ok) {
-      const text = await response.text();
-      console.error('Error updating consent status:', response.status, text);
-      // Se falhou, pode ser que o registro não existe ainda
-      // Mostrar mensagem para o usuário copiar o ID primeiro
-      if (response.status === 404 || text.includes('0 rows')) {
+      console.error('Error updating consent status:', response.status, responseText);
+      if (response.status === 404 || responseText.includes('[]') || responseText === '[]') {
         alert('Registro não encontrado. Por favor, copie seu ID de usuário na página de Perfil primeiro.');
       }
-    } else {
-      console.log('Consent status updated:', isSharing ? 'SHARING' : 'NOT SHARING');
+      return false;
     }
+    
+    console.log('Consent status updated successfully:', isSharing ? 'SHARING' : 'NOT SHARING');
+    return true;
   } catch (error) {
     console.error('Error updating consent status:', error);
+    return false;
   }
 }
 
@@ -247,7 +264,7 @@ async function updateLastFrameTimestamp() {
   }
 }
 
-function stopScreenCapture() {
+async function stopScreenCapture() {
   if (captureInterval) {
     clearInterval(captureInterval);
     captureInterval = null;
@@ -263,8 +280,11 @@ function stopScreenCapture() {
     broadcastChannel = null;
   }
   
+  // Limpar estado persistente
+  await chrome.storage.local.set({ isCapturing: false });
+  
   if (userId) {
-    updateConsentStatus(false);
+    await updateConsentStatus(false);
   }
   
   console.log('Screen capture stopped');
