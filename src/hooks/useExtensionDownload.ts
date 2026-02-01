@@ -178,24 +178,30 @@ async function broadcastFrame(base64Frame) {
 
 async function updateConsentStatus(isSharing) {
   try {
-    // Use POST com upsert para garantir que o registro existe
-    const response = await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent\`, {
-      method: 'POST',
+    // Use PATCH para atualizar o registro existente
+    const response = await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent?usuario_id=eq.\${userId}\`, {
+      method: 'PATCH',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`,
         'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=minimal'
+        'Prefer': 'return=minimal'
       },
       body: JSON.stringify({
-        usuario_id: userId,
         is_sharing: isSharing,
+        sharing_started_at: isSharing ? new Date().toISOString() : null,
         updated_at: new Date().toISOString()
       })
     });
     
     if (!response.ok) {
-      console.error('Error updating consent status:', response.status);
+      const text = await response.text();
+      console.error('Error updating consent status:', response.status, text);
+      // Se falhou, pode ser que o registro não existe ainda
+      // Mostrar mensagem para o usuário copiar o ID primeiro
+      if (response.status === 404 || text.includes('0 rows')) {
+        alert('Registro não encontrado. Por favor, copie seu ID de usuário na página de Perfil primeiro.');
+      }
     } else {
       console.log('Consent status updated:', isSharing ? 'SHARING' : 'NOT SHARING');
     }
@@ -206,16 +212,15 @@ async function updateConsentStatus(isSharing) {
 
 async function updateLastFrameTimestamp() {
   try {
-    await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent\`, {
-      method: 'POST',
+    await fetch(\`\${SUPABASE_URL}/rest/v1/screen_monitor_consent?usuario_id=eq.\${userId}\`, {
+      method: 'PATCH',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': \`Bearer \${SUPABASE_ANON_KEY}\`,
         'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=minimal'
+        'Prefer': 'return=minimal'
       },
       body: JSON.stringify({
-        usuario_id: userId,
         last_frame_at: new Date().toISOString()
       })
     });
