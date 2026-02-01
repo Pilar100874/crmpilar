@@ -2,16 +2,17 @@ import { useState } from 'react';
 import JSZip from 'jszip';
 import { toast } from '@/lib/toast-config';
 
-// Extension file contents embedded as strings
+// Extension file contents embedded as strings - v2.0.0 with Offscreen Document for background capture
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "1.9.0",
-  "description": "Extensão para monitoramento de tela do CRM Pilar",
+  "version": "2.0.0",
+  "description": "Extensão para monitoramento de tela contínuo do CRM Pilar",
   "permissions": [
     "tabs",
     "activeTab",
-    "storage"
+    "storage",
+    "offscreen"
   ],
   "host_permissions": [
     "https://ioxugupvxlcdweldocmq.supabase.co/*"
@@ -34,143 +35,200 @@ const manifestJson = `{
   }
 }`;
 
-const backgroundJs = `// Background service worker for screen monitoring v1.9.0
+const backgroundJs = `// Background service worker for screen monitoring v2.0.0
+// Uses Offscreen Document for persistent screen capture
+
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
 
 let currentUserId = null;
 let framesSent = 0;
-let lastFrameUpdate = 0;
 let lastBroadcast = 0;
+let lastFrameUpdate = 0;
+let offscreenCreated = false;
 
 // Recuperar estado salvo na inicialização
-chrome.storage.local.get(['userId'], (data) => {
+chrome.storage.local.get(['userId', 'isCapturing'], (data) => {
   if (data.userId) {
     currentUserId = data.userId;
-    console.log('Background v1.9: userId recuperado do storage:', currentUserId);
+    console.log('Background v2.0: userId recuperado:', currentUserId);
+  }
+  // Se estava capturando, verificar se offscreen ainda existe
+  if (data.isCapturing) {
+    console.log('Background v2.0: Captura estava ativa, verificando offscreen...');
+    checkOffscreenDocument();
   }
 });
 
-// Função helper para obter userId do storage
-async function getUserId() {
-  if (currentUserId) return currentUserId;
-  
-  return new Promise((resolve) => {
-    chrome.storage.local.get(['userId'], (data) => {
-      if (data.userId) {
-        currentUserId = data.userId;
-        resolve(data.userId);
-      } else {
-        resolve(null);
-      }
+async function checkOffscreenDocument() {
+  try {
+    const contexts = await chrome.runtime.getContexts({
+      contextTypes: ['OFFSCREEN_DOCUMENT']
     });
-  });
+    offscreenCreated = contexts.length > 0;
+    console.log('Background: Offscreen document existe:', offscreenCreated);
+  } catch (e) {
+    console.log('Background: Erro ao verificar offscreen:', e.message);
+    offscreenCreated = false;
+  }
+}
+
+async function createOffscreenDocument() {
+  await checkOffscreenDocument();
+  
+  if (offscreenCreated) {
+    console.log('Background: Offscreen já existe');
+    return true;
+  }
+  
+  try {
+    await chrome.offscreen.createDocument({
+      url: 'offscreen.html',
+      reasons: ['DISPLAY_MEDIA'],
+      justification: 'Screen capture for employee monitoring'
+    });
+    offscreenCreated = true;
+    console.log('Background: Offscreen document criado com sucesso');
+    return true;
+  } catch (e) {
+    console.error('Background: Erro ao criar offscreen:', e.message);
+    return false;
+  }
+}
+
+async function closeOffscreenDocument() {
+  await checkOffscreenDocument();
+  
+  if (!offscreenCreated) {
+    return;
+  }
+  
+  try {
+    await chrome.offscreen.closeDocument();
+    offscreenCreated = false;
+    console.log('Background: Offscreen document fechado');
+  } catch (e) {
+    console.error('Background: Erro ao fechar offscreen:', e.message);
+  }
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  console.log('Background v1.9 received:', request.action);
+  console.log('Background v2.0 received:', request.action);
   
-  if (request.action === 'setUserId') {
-    currentUserId = request.userId;
-    chrome.storage.local.set({ userId: request.userId });
-    console.log('Background: userId definido:', currentUserId);
-    sendResponse({ success: true });
-    
-  } else if (request.action === 'startCapture') {
+  if (request.action === 'startCapture') {
     const captureUserId = request.userId;
     currentUserId = captureUserId;
     
     console.log('Background: Iniciando captura com userId:', captureUserId);
     
-    chrome.storage.local.set({ userId: captureUserId, isCapturing: true, captureStartTime: Date.now() }, async () => {
+    chrome.storage.local.set({ userId: captureUserId, isCapturing: true }, async () => {
       try {
+        // Atualizar status no servidor
         const result = await callEdgeFunction('extension-status', { usuario_id: captureUserId, action: 'start' });
         console.log('Background: Status atualizado para ATIVO:', result);
-        sendResponse({ success: result.success, error: result.error });
+        
+        // Criar offscreen document para captura persistente
+        const offscreenOk = await createOffscreenDocument();
+        
+        if (offscreenOk) {
+          // Enviar comando para iniciar captura no offscreen
+          chrome.runtime.sendMessage({ action: 'offscreen-start-capture', userId: captureUserId });
+          sendResponse({ success: true });
+        } else {
+          sendResponse({ success: false, error: 'Falha ao criar documento offscreen' });
+        }
       } catch (err) {
-        console.error('Background: Erro ao atualizar status:', err);
+        console.error('Background: Erro ao iniciar:', err);
         sendResponse({ success: false, error: err.message });
       }
     });
     return true;
     
   } else if (request.action === 'stopCapture') {
-    chrome.storage.local.set({ isCapturing: false, captureStartTime: null });
+    chrome.storage.local.set({ isCapturing: false });
     
-    getUserId().then(async (uid) => {
+    (async () => {
       try {
-        const result = await callEdgeFunction('extension-status', { usuario_id: uid, action: 'stop' });
-        console.log('Background: Status atualizado para INATIVO:', result);
+        // Parar captura no offscreen
+        chrome.runtime.sendMessage({ action: 'offscreen-stop-capture' });
+        
+        // Fechar offscreen document
+        await closeOffscreenDocument();
+        
+        // Atualizar status no servidor
+        if (currentUserId) {
+          await callEdgeFunction('extension-status', { usuario_id: currentUserId, action: 'stop' });
+        }
+        
         framesSent = 0;
-        sendResponse({ success: result.success });
+        console.log('Background: Captura parada com sucesso');
+        sendResponse({ success: true });
       } catch (err) {
-        console.error('Background: Erro ao atualizar status:', err);
+        console.error('Background: Erro ao parar:', err);
         sendResponse({ success: false, error: err.message });
       }
-    });
+    })();
     return true;
     
   } else if (request.action === 'sendFrame') {
-    console.log('Background: Recebeu sendFrame, frame length:', request.frame?.length);
+    // Frame recebido do offscreen document
+    const frame = request.frame;
     
-    getUserId().then(async (uid) => {
-      if (!uid) {
-        console.error('Background: Não pode enviar frame sem userId');
-        sendResponse({ success: false, error: 'userId não definido' });
-        return;
-      }
-      
-      const now = Date.now();
-      framesSent++;
-      
-      // Broadcast do frame via Edge Function (a cada 2 segundos)
-      if (now - lastBroadcast > 2000) {
-        console.log('Background: Enviando frame #' + framesSent + ' para broadcast-frame...');
-        try {
-          const result = await callEdgeFunction('broadcast-frame', { usuario_id: uid, frame: request.frame });
-          console.log('Background: Resultado broadcast:', result);
+    if (!currentUserId) {
+      console.error('Background: Não pode enviar frame sem userId');
+      sendResponse({ success: false });
+      return;
+    }
+    
+    const now = Date.now();
+    framesSent++;
+    
+    // Broadcast do frame via Edge Function (a cada 2 segundos)
+    if (now - lastBroadcast > 2000) {
+      console.log('Background: Enviando frame #' + framesSent + ' para broadcast...');
+      callEdgeFunction('broadcast-frame', { usuario_id: currentUserId, frame: frame })
+        .then(result => {
           if (result.success) {
-            console.log('Background: ✓ Frame broadcast enviado com sucesso');
-          } else {
-            console.error('Background: ✗ Erro no broadcast:', result.error);
+            console.log('Background: ✓ Frame broadcast enviado');
           }
-        } catch (e) {
-          console.error('Background: ✗ Exceção ao enviar frame:', e.message);
-        }
-        lastBroadcast = now;
-      } else {
-        console.log('Background: Frame ignorado (throttle), próximo em', 2000 - (now - lastBroadcast), 'ms');
-      }
-      
-      // Atualizar timestamp no banco a cada 5 segundos
-      if (now - lastFrameUpdate > 5000) {
-        console.log('Background: Atualizando is_sharing no banco...');
-        callEdgeFunction('extension-status', { usuario_id: uid, action: 'frame' });
-        lastFrameUpdate = now;
-      }
-      
-      sendResponse({ success: true, framesSent });
-    });
+        });
+      lastBroadcast = now;
+    }
+    
+    // Atualizar heartbeat no banco a cada 5 segundos
+    if (now - lastFrameUpdate > 5000) {
+      callEdgeFunction('extension-status', { usuario_id: currentUserId, action: 'frame' });
+      lastFrameUpdate = now;
+    }
+    
+    sendResponse({ success: true, framesSent });
     return true;
     
   } else if (request.action === 'getStatus') {
-    chrome.storage.local.get(['isCapturing', 'userId', 'captureStartTime'], (data) => {
+    chrome.storage.local.get(['isCapturing', 'userId'], async (data) => {
+      await checkOffscreenDocument();
       sendResponse({ 
-        isCapturing: data.isCapturing || false,
+        isCapturing: data.isCapturing && offscreenCreated,
         userId: data.userId || currentUserId,
         framesSent: framesSent,
-        captureStartTime: data.captureStartTime
+        offscreenActive: offscreenCreated
       });
     });
     return true;
+    
+  } else if (request.action === 'captureError') {
+    // Erro recebido do offscreen
+    console.error('Background: Erro de captura:', request.error);
+    chrome.storage.local.set({ isCapturing: false });
+    closeOffscreenDocument();
+    return;
   }
+  
   return true;
 });
 
 async function callEdgeFunction(functionName, body) {
   try {
-    console.log('Background: Chamando edge function:', functionName);
-    
     const response = await fetch(SUPABASE_URL + '/functions/v1/' + functionName, {
       method: 'POST',
       headers: {
@@ -180,10 +238,7 @@ async function callEdgeFunction(functionName, body) {
       body: JSON.stringify(body)
     });
     
-    console.log('Background: Resposta HTTP:', response.status, response.statusText);
-    
     const data = await response.json();
-    console.log('Background: Dados da resposta:', data);
     
     if (!response.ok) {
       return { success: false, error: data.error || 'Erro na requisição' };
@@ -191,22 +246,143 @@ async function callEdgeFunction(functionName, body) {
     
     return { success: true, data };
   } catch (error) {
-    console.error('Background: Erro ao chamar edge function:', error.message);
+    console.error('Background: Erro edge function:', error.message);
     return { success: false, error: error.message };
   }
 }
 
-// Manter service worker ativo
+// Heartbeat para manter service worker ativo
 setInterval(() => {
-  console.log('Background: Heartbeat - frames enviados total:', framesSent);
+  console.log('Background: Heartbeat - frames:', framesSent, 'offscreen:', offscreenCreated);
 }, 25000);
+`;
 
-chrome.runtime.onSuspend.addListener(() => {
-  console.log('Background: Suspendendo...');
-  getUserId().then(uid => {
-    if (uid) callEdgeFunction('extension-status', { usuario_id: uid, action: 'stop' });
-  });
-});`;
+const offscreenHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CRM Pilar - Offscreen Capture</title>
+</head>
+<body>
+  <video id="video" autoplay muted style="display:none;"></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <script src="offscreen.js"></script>
+</body>
+</html>`;
+
+const offscreenJs = `// Offscreen document for persistent screen capture v2.0.0
+let mediaStream = null;
+let captureInterval = null;
+let currentUserId = null;
+
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+
+console.log('Offscreen: Documento carregado');
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('Offscreen received:', request.action);
+  
+  if (request.action === 'offscreen-start-capture') {
+    currentUserId = request.userId;
+    startCapture();
+    sendResponse({ success: true });
+    
+  } else if (request.action === 'offscreen-stop-capture') {
+    stopCapture();
+    sendResponse({ success: true });
+  }
+  
+  return true;
+});
+
+async function startCapture() {
+  console.log('Offscreen: Iniciando captura...');
+  
+  try {
+    // Solicitar compartilhamento de tela
+    mediaStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { 
+        width: { ideal: 1920, max: 1920 },
+        height: { ideal: 1080, max: 1080 },
+        frameRate: { ideal: 1, max: 3 }
+      },
+      audio: false
+    });
+    
+    console.log('Offscreen: Stream obtido:', mediaStream.getVideoTracks()[0].label);
+    
+    video.srcObject = mediaStream;
+    await video.play();
+    
+    // Detectar quando usuário para o compartilhamento
+    mediaStream.getVideoTracks()[0].onended = () => {
+      console.log('Offscreen: Stream terminado pelo usuário');
+      stopCapture();
+      chrome.runtime.sendMessage({ action: 'captureError', error: 'Usuário parou o compartilhamento' });
+    };
+    
+    // Aguardar video estar pronto
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Iniciar captura de frames a cada 3 segundos
+    captureFrame();
+    captureInterval = setInterval(captureFrame, 3000);
+    
+    console.log('Offscreen: Captura iniciada com sucesso');
+    
+  } catch (error) {
+    console.error('Offscreen: Erro ao iniciar captura:', error.name, error.message);
+    chrome.runtime.sendMessage({ action: 'captureError', error: error.message });
+  }
+}
+
+function captureFrame() {
+  if (!video || video.readyState < 2) {
+    console.log('Offscreen: Video não pronto');
+    return;
+  }
+  
+  const ctx = canvas.getContext('2d');
+  
+  const videoWidth = video.videoWidth || 1920;
+  const videoHeight = video.videoHeight || 1080;
+  const aspectRatio = videoWidth / videoHeight;
+  
+  let targetWidth = 1280;
+  let targetHeight = Math.round(targetWidth / aspectRatio);
+  
+  if (targetHeight > 720) {
+    targetHeight = 720;
+    targetWidth = Math.round(targetHeight * aspectRatio);
+  }
+  
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+  ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
+  
+  const base64 = canvas.toDataURL('image/jpeg', 0.5);
+  
+  // Enviar frame para background
+  chrome.runtime.sendMessage({ action: 'sendFrame', frame: base64 });
+}
+
+function stopCapture() {
+  console.log('Offscreen: Parando captura...');
+  
+  if (captureInterval) {
+    clearInterval(captureInterval);
+    captureInterval = null;
+  }
+  
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(track => track.stop());
+    mediaStream = null;
+  }
+  
+  video.srcObject = null;
+}
+`;
 
 const popupHtml = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -229,30 +405,28 @@ const popupHtml = `<!DOCTYPE html>
     .subtitle { font-size: 12px; color: rgba(255,255,255,0.6); }
     .status-card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
     .status-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .status-row:last-child { margin-bottom: 0; }
     .status-label { font-size: 13px; color: rgba(255,255,255,0.7); }
     .status-value { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
     .status-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .status-dot.active { background: #10b981; box-shadow: 0 0 8px #10b981; }
+    .status-dot.active { background: #10b981; box-shadow: 0 0 8px #10b981; animation: pulse 2s infinite; }
     .status-dot.inactive { background: #6b7280; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     .input-group { margin-bottom: 16px; }
     .input-label { display: block; font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
     .input-field { width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; font-size: 14px; outline: none; }
     .input-field:focus { border-color: #667eea; }
     .input-field::placeholder { color: rgba(255,255,255,0.4); }
-    .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; transition: transform 0.1s, opacity 0.1s; }
+    .btn:hover { opacity: 0.9; }
+    .btn:active { transform: scale(0.98); }
     .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
     .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; }
-    .btn-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .info-text { font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-top: 16px; line-height: 1.5; }
-    .warning-box { background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 8px; padding: 12px; margin-bottom: 16px; }
-    .warning-text { font-size: 12px; color: #fbbf24; line-height: 1.4; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .info-box { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 16px; }
+    .info-text { font-size: 12px; color: #6ee7b7; line-height: 1.4; }
+    .footer-text { font-size: 11px; color: rgba(255,255,255,0.4); text-align: center; margin-top: 16px; line-height: 1.5; }
     .hidden { display: none; }
-    .preview { width: 100%; height: 120px; background: #000; border-radius: 8px; margin-bottom: 12px; object-fit: contain; }
-    .frame-info { font-size: 11px; color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 12px; }
-    .resume-section { background: rgba(245, 158, 11, 0.1); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-    .resume-title { font-size: 14px; font-weight: 600; color: #fbbf24; margin-bottom: 8px; }
-    .resume-text { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 12px; }
   </style>
 </head>
 <body>
@@ -260,9 +434,10 @@ const popupHtml = `<!DOCTYPE html>
     <div class="logo">CP</div>
     <div>
       <div class="title">CRM Pilar</div>
-      <div class="subtitle">Monitor de Tela v1.9</div>
+      <div class="subtitle">Monitor de Tela v2.0</div>
     </div>
   </div>
+  
   <div class="status-card">
     <div class="status-row">
       <span class="status-label">Status</span>
@@ -275,17 +450,10 @@ const popupHtml = `<!DOCTYPE html>
       <span class="status-label">Usuário</span>
       <span class="status-value" id="userIdDisplay">-</span>
     </div>
-  </div>
-  
-  <div id="resumeSection" class="resume-section hidden">
-    <div class="resume-title">⚠️ Captura Interrompida</div>
-    <div class="resume-text">O popup foi fechado e a captura parou. Clique abaixo para retomar o monitoramento.</div>
-    <button id="resumeBtn" class="btn btn-warning">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-      </svg>
-      Retomar Monitoramento
-    </button>
+    <div class="status-row" id="framesRow" style="display: none;">
+      <span class="status-label">Frames enviados</span>
+      <span class="status-value" id="framesDisplay">0</span>
+    </div>
   </div>
   
   <div id="loginSection">
@@ -304,11 +472,9 @@ const popupHtml = `<!DOCTYPE html>
   </div>
   
   <div id="activeSection" class="hidden">
-    <div class="warning-box">
-      <div class="warning-text">⚠️ <strong>Importante:</strong> Mantenha este popup aberto para continuar o monitoramento. Se fechar, a captura será pausada.</div>
+    <div class="info-box">
+      <div class="info-text">✓ <strong>Monitoramento ativo em background!</strong><br>Você pode fechar este popup. A captura continuará funcionando.</div>
     </div>
-    <img id="preview" class="preview" src="" alt="Preview">
-    <div id="frameInfo" class="frame-info">Aguardando frames...</div>
     <button id="stopBtn" class="btn btn-danger">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="6" y="6" width="12" height="12"></rect>
@@ -317,135 +483,43 @@ const popupHtml = `<!DOCTYPE html>
     </button>
   </div>
   
-  <p class="info-text">Esta extensão captura sua tela periodicamente para monitoramento corporativo.</p>
+  <p class="footer-text">Esta extensão captura sua tela periodicamente para monitoramento corporativo.</p>
   
-  <video id="video" style="display:none;" autoplay muted></video>
-  <canvas id="canvas" style="display:none;"></canvas>
-  
-  <script src="popup.js"><\/script>
+  <script src="popup.js"></script>
 </body>
 </html>`;
 
-const popupJs = `let mediaStream = null;
-let captureInterval = null;
-let frameCount = 0;
-
-document.addEventListener('DOMContentLoaded', async () => {
+const popupJs = `document.addEventListener('DOMContentLoaded', async () => {
   const userIdInput = document.getElementById('userId');
   const startBtn = document.getElementById('startBtn');
   const stopBtn = document.getElementById('stopBtn');
-  const resumeBtn = document.getElementById('resumeBtn');
   const loginSection = document.getElementById('loginSection');
   const activeSection = document.getElementById('activeSection');
-  const resumeSection = document.getElementById('resumeSection');
   const statusDot = document.getElementById('statusDot');
   const statusText = document.getElementById('statusText');
   const userRow = document.getElementById('userRow');
   const userIdDisplay = document.getElementById('userIdDisplay');
-  const preview = document.getElementById('preview');
-  const frameInfo = document.getElementById('frameInfo');
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
+  const framesRow = document.getElementById('framesRow');
+  const framesDisplay = document.getElementById('framesDisplay');
 
-  console.log('Popup v1.9: Iniciando...');
+  console.log('Popup v2.0: Iniciando...');
 
-  // Carregar userId salvo
-  const saved = await chrome.storage.local.get(['userId', 'isCapturing', 'captureStartTime']);
-  console.log('Popup: Dados salvos:', saved);
+  // Verificar status atual
+  await checkStatus();
   
-  if (saved.userId) {
-    userIdInput.value = saved.userId;
-  }
-  
-  // Verificar se estava capturando antes (popup foi fechado)
-  if (saved.isCapturing && saved.captureStartTime) {
-    console.log('Popup: Detectado estado anterior de captura - mostrando opção de retomar');
-    showResumeState(saved.userId);
-  } else {
-    updateUI(false);
-  }
+  // Atualizar status periodicamente
+  setInterval(checkStatus, 2000);
 
-  function showResumeState(userId) {
-    loginSection.classList.add('hidden');
-    activeSection.classList.add('hidden');
-    resumeSection.classList.remove('hidden');
-    statusDot.classList.remove('inactive');
-    statusDot.classList.add('active');
-    statusText.textContent = 'Pausado';
-    userRow.style.display = 'flex';
-    userIdDisplay.textContent = userId ? userId.substring(0, 8) + '...' : '-';
-  }
-
-  async function startCapture(userId) {
-    console.log('Popup: Iniciando captura com userId:', userId);
-    
-    try {
-      // Primeiro, atualizar status no banco
-      console.log('Popup: Enviando startCapture para background...');
-      const statusResult = await new Promise((resolve) => {
-        chrome.runtime.sendMessage({ action: 'startCapture', userId }, (response) => {
-          console.log('Popup: Resposta do startCapture:', response);
-          resolve(response);
-        });
+  async function checkStatus() {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage({ action: 'getStatus' }, (response) => {
+        console.log('Popup: Status:', response);
+        if (response) {
+          updateUI(response.isCapturing, response.userId, response.framesSent);
+        }
+        resolve();
       });
-      
-      if (!statusResult || !statusResult.success) {
-        throw new Error('Falha ao atualizar status no servidor');
-      }
-      
-      // Solicitar compartilhamento de tela
-      console.log('Popup: Solicitando getDisplayMedia...');
-      mediaStream = await navigator.mediaDevices.getDisplayMedia({
-        video: { 
-          width: { ideal: 1920, max: 1920 },
-          height: { ideal: 1080, max: 1080 },
-          frameRate: { ideal: 1, max: 3 }
-        },
-        audio: false
-      });
-      
-      console.log('Popup: Stream obtido:', mediaStream.getVideoTracks()[0].label);
-      
-      // Configurar video element
-      video.srcObject = mediaStream;
-      
-      video.onloadedmetadata = () => {
-        console.log('Popup: Video metadata carregado:', video.videoWidth, 'x', video.videoHeight);
-        video.play();
-      };
-      
-      await video.play();
-      console.log('Popup: Video playing');
-      
-      // Detectar quando stream é parado pelo usuário
-      mediaStream.getVideoTracks()[0].onended = () => {
-        console.log('Popup: Stream terminado pelo usuário');
-        stopCapture();
-      };
-      
-      // Aguardar video ficar pronto antes de capturar
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Iniciar captura de frames
-      captureFrame();
-      captureInterval = setInterval(captureFrame, 3000);
-      
-      updateUI(true);
-      
-    } catch (error) {
-      console.error('Popup: Erro ao iniciar captura:', error.name, error.message);
-      
-      // Reverter status se deu erro
-      chrome.runtime.sendMessage({ action: 'stopCapture' });
-      
-      if (error.name === 'NotAllowedError') {
-        alert('Permissão de compartilhamento negada. Clique em Iniciar e selecione uma tela para compartilhar.');
-      } else {
-        alert('Erro: ' + error.message);
-      }
-      
-      updateUI(false);
-    }
+    });
   }
 
   startBtn.addEventListener('click', async () => {
@@ -466,103 +540,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     startBtn.disabled = true;
     startBtn.textContent = 'Iniciando...';
     
-    await startCapture(userId);
-    
-    startBtn.disabled = false;
-    startBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg> Iniciar Monitoramento';
-  });
-
-  resumeBtn.addEventListener('click', async () => {
-    const userId = userIdInput.value.trim();
-    
-    if (!userId) {
-      alert('ID do usuário não encontrado. Por favor, insira novamente.');
-      updateUI(false);
-      return;
-    }
-    
-    resumeBtn.disabled = true;
-    resumeBtn.textContent = 'Retomando...';
-    
-    await startCapture(userId);
-    
-    resumeBtn.disabled = false;
-    resumeBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Retomar Monitoramento';
-  });
-
-  stopBtn.addEventListener('click', stopCapture);
-  
-  function captureFrame() {
-    if (!video || video.readyState < 2) {
-      console.log('Popup: Video não está pronto, readyState:', video?.readyState);
-      return;
-    }
-    
-    const ctx = canvas.getContext('2d');
-    
-    // Calcular dimensões mantendo aspect ratio
-    const videoWidth = video.videoWidth || 1920;
-    const videoHeight = video.videoHeight || 1080;
-    const aspectRatio = videoWidth / videoHeight;
-    
-    let targetWidth = 1280;
-    let targetHeight = Math.round(targetWidth / aspectRatio);
-    
-    if (targetHeight > 720) {
-      targetHeight = 720;
-      targetWidth = Math.round(targetHeight * aspectRatio);
-    }
-    
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-    ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
-    
-    const base64 = canvas.toDataURL('image/jpeg', 0.5);
-    
-    // Atualizar preview
-    preview.src = base64;
-    frameCount++;
-    
-    const sizeKB = Math.round(base64.length / 1024);
-    frameInfo.textContent = 'Frame #' + frameCount + ' - ' + targetWidth + 'x' + targetHeight + ' (' + sizeKB + 'KB)';
-    
-    // Enviar para background
-    chrome.runtime.sendMessage({ action: 'sendFrame', frame: base64 }, (response) => {
-      if (response) {
-        console.log('Popup: Frame enviado, total:', response.framesSent);
+    chrome.runtime.sendMessage({ action: 'startCapture', userId }, (response) => {
+      console.log('Popup: Resposta startCapture:', response);
+      
+      if (response && response.success) {
+        updateUI(true, userId, 0);
+      } else {
+        alert('Erro ao iniciar: ' + (response?.error || 'Erro desconhecido'));
+        startBtn.disabled = false;
+        startBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg> Iniciar Monitoramento';
       }
     });
-  }
-  
-  async function stopCapture() {
-    console.log('Popup: Parando captura...');
-    
-    if (captureInterval) {
-      clearInterval(captureInterval);
-      captureInterval = null;
-    }
-    
-    if (mediaStream) {
-      mediaStream.getTracks().forEach(track => track.stop());
-      mediaStream = null;
-    }
-    
-    video.srcObject = null;
-    frameCount = 0;
-    
-    // Notificar background para atualizar status
-    chrome.runtime.sendMessage({ action: 'stopCapture' }, (response) => {
-      console.log('Popup: stopCapture response:', response);
-    });
-    
-    updateUI(false);
-  }
+  });
 
-  function updateUI(isCapturing) {
-    console.log('Popup: updateUI isCapturing:', isCapturing);
+  stopBtn.addEventListener('click', () => {
+    stopBtn.disabled = true;
+    stopBtn.textContent = 'Parando...';
     
-    resumeSection.classList.add('hidden');
-    
+    chrome.runtime.sendMessage({ action: 'stopCapture' }, (response) => {
+      console.log('Popup: Resposta stopCapture:', response);
+      updateUI(false, null, 0);
+      stopBtn.disabled = false;
+      stopBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12"></rect></svg> Parar Monitoramento';
+    });
+  });
+
+  function updateUI(isCapturing, userId, framesSent) {
     if (isCapturing) {
       loginSection.classList.add('hidden');
       activeSection.classList.remove('hidden');
@@ -570,8 +573,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusDot.classList.add('active');
       statusText.textContent = 'Ativo';
       userRow.style.display = 'flex';
-      const userId = userIdInput.value;
-      userIdDisplay.textContent = userId.substring(0, 8) + '...';
+      framesRow.style.display = 'flex';
+      if (userId) {
+        userIdDisplay.textContent = userId.substring(0, 8) + '...';
+        userIdInput.value = userId;
+      }
+      framesDisplay.textContent = framesSent || 0;
     } else {
       loginSection.classList.remove('hidden');
       activeSection.classList.add('hidden');
@@ -579,13 +586,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusDot.classList.add('inactive');
       statusText.textContent = 'Inativo';
       userRow.style.display = 'none';
-      preview.src = '';
-      frameInfo.textContent = 'Aguardando frames...';
+      framesRow.style.display = 'none';
+      
+      startBtn.disabled = false;
+      startBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg> Iniciar Monitoramento';
     }
   }
 });`;
 
-// Simple icon as base64 PNG (purple gradient square with CP letters)
+// Simple icon as base64 PNG
 const icon16Base64 = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAABBklEQVR4nGNgGAWDBTAyMDDIMjAwKDIwMCgBsQQDAwMjEwMDAx+QvB+o4X+Q1v/A8P+/f/8YGQE2BgYGJaD+/0C6H4j/A9l/gfgPEP8G4l9A/BOIfwDxdyD+BsTfgPgrEH8B4s9A/AmIPwLxByB+D8TvgPgtEL8B4tdA/AqIXwLxCyB+DsTPgPgpED8B4sdA/AiIHwLxAyC+D8T3gPguEN8B4ttAfAuIbwLxDSC+DsTXgPgqEF8B4stAfAmILwLxBSA+D8TngPgsEJ8B4tNAfAqITwLxCSA+DsTHgPgoEB8B4sNAfAiIDwLxASDeD8T7gHgvEO8B4t1AvAuIdwLxDiDeDsRbgXjLKBhsAADj4l+Ov7xzlgAAAABJRU5ErkJggg==';
 
 const icon48Base64 = 'iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAC1klEQVR4nO2Zy2oUQRSGv4wZFBdxIYqIC8GdN9woLnwAH8DgA7hyq6i4ceMT+AKCj+BCwYUbH8BVXLhSQVFEUBQFb4gXYhIzOfKXnKJmuqenpmemkv7h0N1V1ef8p6rOqeoJFChQoMD/DgcYA+4Ak8BHYAFYBuaB98BL4DlwH9gX18ByFNgNXAIm0MXbMuB84BLwINYBFqH1n4EvwIPY7gBOAuvD5M/XqR24ATyvSwD/2r/JXsCE7gV2Ai3A0RjPwHa0A4eAG8Ar4BPwWMfU0b4InAAGBHq7gItK+9u0vk90Cr2K6SdgjmB/ABhS+y0NdP6v0/M3dD6uJ40fVt/1GPoROA08Bj7rObfXMHO3lSYJbAc2A2uA1cAqoFVxq41HGR6S0qJxHRO16JN5Afkd+CQv3QzMqH1SiXYNMW1G7j6GzvVZYJ3anqvPNzXkc5J4ILMEnAEuAB+AX8BTrYEptd8CNqpdz68h3kJiRfcC2Kb1MqH7JvDbZNKIPhd4B5wDXum5X5X+WmPAl3ReAd4DPUC31tgS0G8x6XCa4LQV+CrlJk1SkKBHGXAKeAO0ATuAdmCH1kO/5uqQJulJAzarzzHgmub+pNb4hCb3mzRMqPKwZNvV/zRwWulzQqnvmFJkJw3T+oQmqZRaTQp0K/WdV9+z6ntO/U/rDM2bJE+cEqdbWkJPAt1an/fV90r12a3+p9R/SPMhSeJRCfwC7AX6gB6tzz7gq/p8Ld9YU2z3kib5oJQITAPntN4G1e+0+h5Wv0Pqe0D996v/PupIIxJuqf2b7EF2aQ30aM0NavK3a62fVJ+T6rtPfferX3/SJBN4DRQAPgJDSmyj6ntMfc4o/Y2o7yH1O6B++9VvL3WmEUn3F2JHc7JH63JAiW5c6W9UaW9MfQ6r30H126O+e0mTTMQ9qP2jdWBM62FC62BYa2BI86BP82CAxs2DAgWy4h+59xnB5M5n+wAAAABJRU5ErkJggg==';
@@ -606,6 +615,8 @@ export const useExtensionDownload = () => {
       zip.file('background.js', backgroundJs);
       zip.file('popup.html', popupHtml);
       zip.file('popup.js', popupJs);
+      zip.file('offscreen.html', offscreenHtml);
+      zip.file('offscreen.js', offscreenJs);
       
       // Add icons folder
       const iconsFolder = zip.folder('icons');
@@ -619,14 +630,14 @@ export const useExtensionDownload = () => {
       
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'crm-pilar-monitor-extension.zip';
+      link.download = 'crm-pilar-monitor-extension-v2.zip';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
       URL.revokeObjectURL(url);
       
-      toast.success('Extensão baixada! Extraia o ZIP e carregue no Chrome.');
+      toast.success('Extensão v2.0 baixada! Extraia o ZIP e carregue no Chrome.');
     } catch (error) {
       console.error('Erro ao gerar ZIP:', error);
       toast.error('Erro ao baixar extensão');
