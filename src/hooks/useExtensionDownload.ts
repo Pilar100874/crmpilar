@@ -6,8 +6,8 @@ import { toast } from '@/lib/toast-config';
 const manifestJson = `{
   "manifest_version": 3,
   "name": "CRM Pilar - Monitor de Tela",
-  "version": "2.3.1",
-  "description": "Extensão para monitoramento de tela com auto-recovery",
+  "version": "2.4.0",
+  "description": "Extensão para monitoramento de tela inteira com auto-recovery",
   "permissions": [
     "tabs",
     "activeTab",
@@ -35,8 +35,8 @@ const manifestJson = `{
   }
 }`;
 
-const backgroundJs = `// Background service worker for screen monitoring v2.3.1
-// Auto-starts on browser launch - with auto-recovery mechanism
+const backgroundJs = `// Background service worker for screen monitoring v2.4.0
+// Auto-starts on browser launch - with full screen pre-selection
 
 const SUPABASE_URL = 'https://ioxugupvxlcdweldocmq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlveHVndXB2eGxjZHdlbGRvY21xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3MTEwODUsImV4cCI6MjA3NjI4NzA4NX0.WKRpPgsfohk4BRyHthLmz23F2Iab-vPObkioUeFkzWc';
@@ -478,16 +478,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 async function startCapture() {
-  console.log('Offscreen: Iniciando captura...');
+  console.log('Offscreen: Iniciando captura de tela inteira...');
   
   try {
+    // Pré-selecionar "Tela inteira" no seletor do navegador
     mediaStream = await navigator.mediaDevices.getDisplayMedia({
       video: { 
+        displaySurface: 'monitor', // Prioriza tela inteira
         width: { ideal: 1920, max: 1920 },
         height: { ideal: 1080, max: 1080 },
         frameRate: { ideal: 1, max: 3 }
       },
-      audio: false
+      audio: false,
+      preferCurrentTab: false, // NÃO priorizar aba atual
+      selfBrowserSurface: 'exclude', // Excluir janelas do próprio navegador
+      systemAudio: 'exclude',
+      surfaceSwitching: 'exclude', // Desabilitar troca de superfície
+      monitorTypeSurfaces: 'include' // Incluir monitores
     });
     
     console.log('Offscreen: Stream obtido:', mediaStream.getVideoTracks()[0].label);
