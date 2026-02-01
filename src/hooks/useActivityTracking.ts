@@ -54,14 +54,23 @@ export function useActivityTracking() {
 
   // Atualizar atividade no banco
   const updateActivity = async (isOnline: boolean = true) => {
-    if (!usuarioIdRef.current || !estabelecimentoIdRef.current) return;
+    if (!usuarioIdRef.current || !estabelecimentoIdRef.current) {
+      console.log('[ActivityTracking] Aguardando usuario_id ou estabelecimento_id');
+      return;
+    }
 
     const pageTitle = routeTitles[location.pathname] || location.pathname;
     const now = Date.now();
     const sessionDuration = Math.floor((now - sessionStartRef.current) / 1000);
 
     try {
-      await supabase
+      console.log('[ActivityTracking] Atualizando:', { 
+        usuario_id: usuarioIdRef.current, 
+        page: pageTitle, 
+        isOnline 
+      });
+
+      const { error } = await supabase
         .from('user_activity_tracking')
         .upsert({
           usuario_id: usuarioIdRef.current,
@@ -72,11 +81,18 @@ export function useActivityTracking() {
           total_active_time_seconds: sessionDuration,
           is_online: isOnline,
           updated_at: new Date().toISOString(),
+          session_started_at: new Date(sessionStartRef.current).toISOString(),
         }, {
           onConflict: 'usuario_id,estabelecimento_id'
         });
+
+      if (error) {
+        console.error('[ActivityTracking] Erro upsert:', error);
+      } else {
+        console.log('[ActivityTracking] Atualizado com sucesso');
+      }
     } catch (error) {
-      console.error('Erro ao atualizar atividade:', error);
+      console.error('[ActivityTracking] Erro ao atualizar atividade:', error);
     }
   };
 
