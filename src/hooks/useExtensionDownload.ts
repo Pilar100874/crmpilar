@@ -397,7 +397,12 @@ const popupJs = `document.addEventListener('DOMContentLoaded', async () => {
     }
     await chrome.storage.local.set({ userId });
     chrome.runtime.sendMessage({ action: 'startCapture', userId }, (response) => {
-      if (response.success) updateUI();
+      if (response.success) {
+        // Aguarda 2s para dar tempo de selecionar a tela e captura começar
+        setTimeout(updateUI, 2000);
+        // Verifica novamente após 5s
+        setTimeout(updateUI, 5000);
+      }
     });
   });
 
