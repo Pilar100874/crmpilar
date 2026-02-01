@@ -107,6 +107,8 @@ import WatchLogisticaVeiculos from "./pages/watch/WatchLogisticaVeiculos";
 import WatchLogisticaMapa from "./pages/watch/WatchLogisticaMapa";
 import WatchLogisticaRota from "./pages/watch/WatchLogisticaRota";
 import WatchLogisticaHistorico from "./pages/watch/WatchLogisticaHistorico";
+import TvDashboardVendas from "./pages/TvDashboardVendas";
+import TvDashboardVeiculos from "./pages/TvDashboardVeiculos";
 import { MacroProvider } from "./contexts/MacroContext";
 import WatchRedirectWrapper from "./components/WatchRedirectWrapper";
 
@@ -239,6 +241,8 @@ const App = () => (
             <Route path="/watch/logistica/mapa" element={<WatchLogisticaMapa />} />
             <Route path="/watch/logistica/rota" element={<WatchLogisticaRota />} />
             <Route path="/watch/logistica/historico" element={<WatchLogisticaHistorico />} />
+            <Route path="/tv/vendas" element={<TvDashboardVendas />} />
+            <Route path="/tv/veiculos" element={<TvDashboardVeiculos />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
