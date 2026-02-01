@@ -25,6 +25,37 @@ export default function Perfil() {
     loadUserData();
   }, []);
 
+  // Realtime para monitorar status da extensão
+  useEffect(() => {
+    if (!userData?.id) return;
+
+    const channel = supabase
+      .channel('screen-monitor-status')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'screen_monitor_consent',
+          filter: `usuario_id=eq.${userData.id}`
+        },
+        (payload: any) => {
+          console.log('[Perfil] Status de monitoramento atualizado:', payload);
+          if (payload.new) {
+            setExtensionStatus({
+              isSharing: payload.new.is_sharing || false,
+              lastFrameAt: payload.new.last_frame_at
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userData?.id]);
+
   const loadUserData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -91,6 +122,31 @@ export default function Perfil() {
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       toast.error("Erro ao carregar dados do perfil");
+    }
+  };
+
+  const handleCopyUserId = async () => {
+    if (!userData?.id) return;
+    
+    navigator.clipboard.writeText(userData.id);
+    toast.success("ID copiado! Cole na extensão para iniciar.");
+    
+    // Garantir que existe registro de consentimento para a extensão usar
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (estabId) {
+        await supabase
+          .from("screen_monitor_consent")
+          .upsert({
+            usuario_id: userData.id,
+            estabelecimento_id: estabId,
+            has_given_consent: true,
+            is_sharing: false,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'usuario_id,estabelecimento_id' });
+      }
+    } catch (error) {
+      console.error("Erro ao preparar registro:", error);
     }
   };
 
@@ -282,10 +338,7 @@ export default function Perfil() {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => {
-                    navigator.clipboard.writeText(userData?.id || "");
-                    toast.success("ID copiado!");
-                  }}
+                  onClick={handleCopyUserId}
                   title="Copiar ID"
                 >
                   <ExternalLink className="h-4 w-4" />
