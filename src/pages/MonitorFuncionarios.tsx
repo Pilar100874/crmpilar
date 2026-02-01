@@ -4,7 +4,6 @@ import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, 
   MessageSquare, 
@@ -13,10 +12,9 @@ import {
   Monitor as MonitorIcon, 
   Eye,
   Circle,
-  Search,
-  RefreshCw
+  RefreshCw,
+  ArrowRight
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -24,8 +22,8 @@ import { ptBR } from "date-fns/locale";
 interface UserActivity {
   id: string;
   usuario_id: string;
-  current_route: string;
-  current_page_title: string;
+  current_route: string | null;
+  current_page_title: string | null;
   session_started_at: string;
   last_activity_at: string;
   total_active_time_seconds: number;
@@ -34,7 +32,6 @@ interface UserActivity {
     id: string;
     nome: string;
     email: string;
-    avatar_url?: string;
   };
 }
 
@@ -67,7 +64,6 @@ interface ConversationPreview {
       nome: string;
     };
   };
-  ultima_mensagem?: string;
 }
 
 export default function MonitorFuncionarios() {
@@ -78,7 +74,6 @@ export default function MonitorFuncionarios() {
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
 
   useEffect(() => {
@@ -116,6 +111,14 @@ export default function MonitorFuncionarios() {
         () => {
           loadFilaEspera(estabId);
           loadChatsAtivos(estabId);
+        }
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'messages' },
+        (payload: any) => {
+          if (selectedChat && payload.new?.conversation_id === selectedChat) {
+            loadChatMessages(selectedChat);
+          }
         }
       )
       .subscribe();
@@ -158,7 +161,6 @@ export default function MonitorFuncionarios() {
 
       if (error) throw error;
 
-      // Contar chats ativos por atendente
       const atendentesComChats = await Promise.all((data || []).map(async (atendente) => {
         const { count } = await supabase
           .from('conversations')
@@ -276,14 +278,6 @@ export default function MonitorFuncionarios() {
     [activities]
   );
 
-  const filteredActivities = useMemo(() => 
-    activities.filter(a => 
-      a.usuario?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      a.current_page_title?.toLowerCase().includes(searchTerm.toLowerCase())
-    ),
-    [activities, searchTerm]
-  );
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -293,17 +287,14 @@ export default function MonitorFuncionarios() {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-6 space-y-6">
+    <div className="container mx-auto p-4 space-y-4">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <MonitorIcon className="h-8 w-8" />
-            Monitor de Funcionários
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <MonitorIcon className="h-6 w-6" />
+            Monitor em Tempo Real
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Acompanhe atividades, chats e filas em tempo real
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="gap-1">
@@ -311,174 +302,108 @@ export default function MonitorFuncionarios() {
             {onlineUsers.length} online
           </Badge>
           <Button variant="outline" size="sm" onClick={() => init()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Atualizar
+            <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <Users className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Usuários Online</p>
-                <p className="text-2xl font-bold">{onlineUsers.length}</p>
-              </div>
+      {/* Stats Cards - Compacto */}
+      <div className="grid gap-3 grid-cols-4">
+        <Card className="p-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <Users className="h-5 w-5 text-green-600" />
             </div>
-          </CardContent>
+            <div>
+              <p className="text-xs text-muted-foreground">Online</p>
+              <p className="text-xl font-bold">{onlineUsers.length}</p>
+            </div>
+          </div>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <MessageSquare className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Chats Ativos</p>
-                <p className="text-2xl font-bold">{chatsAtivos.length}</p>
-              </div>
+        <Card className="p-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <MessageSquare className="h-5 w-5 text-blue-600" />
             </div>
-          </CardContent>
+            <div>
+              <p className="text-xs text-muted-foreground">Chats Ativos</p>
+              <p className="text-xl font-bold">{chatsAtivos.length}</p>
+            </div>
+          </div>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Na Fila</p>
-                <p className="text-2xl font-bold">{filaEspera.length}</p>
-              </div>
+        <Card className="p-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+              <Clock className="h-5 w-5 text-yellow-600" />
             </div>
-          </CardContent>
+            <div>
+              <p className="text-xs text-muted-foreground">Na Fila</p>
+              <p className="text-xl font-bold">{filaEspera.length}</p>
+            </div>
+          </div>
         </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                <Activity className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Atendentes</p>
-                <p className="text-2xl font-bold">
-                  {atendentes.filter(a => a.status === 'disponivel' || a.status === 'ocupado').length}/{atendentes.length}
-                </p>
-              </div>
+        <Card className="p-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+              <Activity className="h-5 w-5 text-purple-600" />
             </div>
-          </CardContent>
+            <div>
+              <p className="text-xs text-muted-foreground">Atendentes</p>
+              <p className="text-xl font-bold">
+                {atendentes.filter(a => a.status === 'disponivel' || a.status === 'ocupado').length}/{atendentes.length}
+              </p>
+            </div>
+          </div>
         </Card>
       </div>
 
-      {/* Main Content */}
-      <Tabs defaultValue="atividades" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="atividades" className="gap-2">
-            <MonitorIcon className="h-4 w-4" />
-            Atividades
-          </TabsTrigger>
-          <TabsTrigger value="atendentes" className="gap-2">
-            <Users className="h-4 w-4" />
-            Atendentes
-          </TabsTrigger>
-          <TabsTrigger value="fila" className="gap-2">
-            <Clock className="h-4 w-4" />
-            Fila de Espera ({filaEspera.length})
-          </TabsTrigger>
-          <TabsTrigger value="chats" className="gap-2">
-            <MessageSquare className="h-4 w-4" />
-            Chats Ativos ({chatsAtivos.length})
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Tab: Atividades dos Usuários */}
-        <TabsContent value="atividades" className="space-y-4">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar usuário ou tela..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
+      {/* Main Grid - 3 colunas */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Coluna 1: Usuários no Sistema + Atendentes */}
+        <div className="space-y-4">
+          {/* Usuários no Sistema */}
           <Card>
-            <CardHeader>
-              <CardTitle>Usuários no Sistema</CardTitle>
-              <CardDescription>Veja em tempo real onde cada usuário está navegando</CardDescription>
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <MonitorIcon className="h-4 w-4" />
+                Usuários no Sistema ({activities.length})
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[500px]">
-                <div className="space-y-3">
-                  {filteredActivities.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Nenhuma atividade registrada
+            <CardContent className="p-0">
+              <ScrollArea className="h-[280px]">
+                <div className="space-y-1 p-2">
+                  {activities.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground text-sm">
+                      Nenhum usuário rastreado
                     </div>
                   ) : (
-                    filteredActivities.map((activity) => (
+                    activities.map((activity) => (
                       <div
                         key={activity.id}
-                        className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors"
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent/50 transition-colors"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="relative">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <span className="text-sm font-medium">
-                                {activity.usuario?.nome?.charAt(0)?.toUpperCase() || '?'}
-                              </span>
-                            </div>
-                            <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-background ${
-                              activity.is_online ? 'bg-green-500' : 'bg-gray-400'
-                            }`} />
+                        <div className="relative">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
+                            {activity.usuario?.nome?.charAt(0)?.toUpperCase() || '?'}
                           </div>
-                          <div>
-                            <p className="font-medium">{activity.usuario?.nome || 'Usuário'}</p>
-                            <p className="text-sm text-muted-foreground">{activity.usuario?.email}</p>
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background ${
+                            activity.is_online ? 'bg-green-500' : 'bg-gray-400'
+                          }`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{activity.usuario?.nome || 'Usuário'}</p>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <MonitorIcon className="h-3 w-3" />
+                            <span className="truncate">{activity.current_page_title || 'N/A'}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6">
-                          <div className="text-right">
-                            <div className="flex items-center gap-2">
-                              <MonitorIcon className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">{activity.current_page_title || 'Desconhecido'}</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              {activity.current_route}
-                            </p>
-                          </div>
-                          <div className="text-right min-w-[120px]">
-                            <p className="text-sm">
-                              {activity.is_online ? (
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                  Online
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="bg-gray-50 text-gray-600">
-                                  Offline
-                                </Badge>
-                              )}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {formatDistanceToNow(new Date(activity.last_activity_at), {
-                                addSuffix: true,
-                                locale: ptBR
-                              })}
-                            </p>
-                          </div>
-                          <div className="text-right min-w-[80px]">
-                            <p className="text-sm font-medium">
-                              {formatDuration(activity.total_active_time_seconds)}
-                            </p>
-                            <p className="text-xs text-muted-foreground">tempo ativo</p>
-                          </div>
+                        <div className="text-right">
+                          <Badge variant={activity.is_online ? "default" : "secondary"} className="text-[10px] px-1.5">
+                            {activity.is_online ? 'Online' : 'Offline'}
+                          </Badge>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {formatDuration(activity.total_active_time_seconds)}
+                          </p>
                         </div>
                       </div>
                     ))
@@ -487,111 +412,80 @@ export default function MonitorFuncionarios() {
               </ScrollArea>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Tab: Status dos Atendentes */}
-        <TabsContent value="atendentes" className="space-y-4">
+          {/* Atendentes */}
           <Card>
-            <CardHeader>
-              <CardTitle>Status dos Atendentes</CardTitle>
-              <CardDescription>Visão geral dos atendentes e suas capacidades</CardDescription>
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Status dos Atendentes ({atendentes.length})
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[500px]">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <CardContent className="p-0">
+              <ScrollArea className="h-[200px]">
+                <div className="space-y-1 p-2">
                   {atendentes.map((atendente) => (
-                    <Card key={atendente.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="relative">
-                              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                <span className="text-lg font-medium">
-                                  {atendente.usuario?.nome?.charAt(0)?.toUpperCase() || '?'}
-                                </span>
-                              </div>
-                              <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-background ${getStatusColor(atendente.status)}`} />
-                            </div>
-                            <div>
-                              <p className="font-medium">{atendente.usuario?.nome}</p>
-                              <Badge variant="outline" className="mt-1">
-                                {getStatusLabel(atendente.status)}
-                              </Badge>
-                            </div>
-                          </div>
+                    <div key={atendente.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent/50">
+                      <div className="relative">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
+                          {atendente.usuario?.nome?.charAt(0)?.toUpperCase() || '?'}
                         </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Chats ativos</span>
-                            <span className="font-medium">
-                              {atendente.chats_ativos} / {atendente.max_chats_simultaneos}
-                            </span>
-                          </div>
-                          <div className="w-full bg-secondary rounded-full h-2">
-                            <div 
-                              className="bg-primary rounded-full h-2 transition-all"
-                              style={{ 
-                                width: `${Math.min((atendente.chats_ativos / atendente.max_chats_simultaneos) * 100, 100)}%` 
-                              }}
-                            />
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className={`w-2 h-2 rounded-full ${atendente.aceita_novos_chats ? 'bg-green-500' : 'bg-red-500'}`} />
-                            <span className="text-muted-foreground">
-                              {atendente.aceita_novos_chats ? 'Aceita novos chats' : 'Não aceita novos chats'}
-                            </span>
-                          </div>
+                        <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background ${getStatusColor(atendente.status)}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{atendente.usuario?.nome}</p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-[10px] px-1">
+                            {getStatusLabel(atendente.status)}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">
+                            {atendente.chats_ativos}/{atendente.max_chats_simultaneos} chats
+                          </span>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </ScrollArea>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
 
-        {/* Tab: Fila de Espera */}
-        <TabsContent value="fila" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Fila de Espera</CardTitle>
-              <CardDescription>Clientes aguardando atendimento</CardDescription>
+        {/* Coluna 2: Fila + Chats Ativos */}
+        <div className="space-y-4">
+          {/* Fila de Espera */}
+          <Card className={filaEspera.length > 0 ? 'border-yellow-500/50' : ''}>
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Fila de Espera ({filaEspera.length})
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[500px]">
+            <CardContent className="p-0">
+              <ScrollArea className="h-[200px]">
                 {filaEspera.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Nenhum cliente na fila</p>
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    Nenhum cliente na fila
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-1 p-2">
                     {filaEspera.map((chat, index) => (
                       <div
                         key={chat.id}
-                        className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors"
+                        className="flex items-center gap-3 p-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/10"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-8 h-8 rounded-full bg-yellow-100 text-yellow-700 flex items-center justify-center font-bold text-sm">
-                            {index + 1}
-                          </div>
-                          <div>
-                            <p className="font-medium">{chat.customer?.nome || 'Cliente'}</p>
-                            <p className="text-sm text-muted-foreground">{chat.customer?.telefone}</p>
-                          </div>
+                        <div className="w-6 h-6 rounded-full bg-yellow-500 text-white flex items-center justify-center text-xs font-bold">
+                          {index + 1}
                         </div>
-                        <div className="flex items-center gap-4">
-                          <Badge variant="outline">{chat.canal}</Badge>
-                          <div className="text-right">
-                            <p className="text-sm font-medium">
-                              {formatDistanceToNow(new Date(chat.created_at), {
-                                addSuffix: false,
-                                locale: ptBR
-                              })}
-                            </p>
-                            <p className="text-xs text-muted-foreground">aguardando</p>
-                          </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{chat.customer?.nome || 'Cliente'}</p>
+                          <p className="text-[10px] text-muted-foreground">{chat.customer?.telefone}</p>
+                        </div>
+                        <div className="text-right">
+                          <Badge variant="outline" className="text-[10px]">{chat.canal}</Badge>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {formatDistanceToNow(new Date(chat.created_at), { locale: ptBR })}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -600,107 +494,105 @@ export default function MonitorFuncionarios() {
               </ScrollArea>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Tab: Chats Ativos */}
-        <TabsContent value="chats" className="space-y-4">
-          <div className="grid gap-4 lg:grid-cols-2">
-            {/* Lista de Chats */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Conversas em Andamento</CardTitle>
-                <CardDescription>Clique para visualizar a conversa</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[500px]">
-                  {chatsAtivos.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Nenhum chat ativo</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {chatsAtivos.map((chat) => (
-                        <div
-                          key={chat.id}
-                          onClick={() => loadChatMessages(chat.id)}
-                          className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                            selectedChat === chat.id 
-                              ? 'border-primary bg-primary/5' 
-                              : 'hover:bg-accent/50'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium">{chat.customer?.nome || 'Cliente'}</p>
-                              <p className="text-sm text-muted-foreground">
-                                Atendente: {chat.atendente?.usuario?.nome || 'N/A'}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline">{chat.canal}</Badge>
-                              <Eye className="h-4 w-4 text-muted-foreground" />
-                            </div>
+          {/* Chats Ativos */}
+          <Card>
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Chats em Atendimento ({chatsAtivos.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[280px]">
+                {chatsAtivos.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    Nenhum chat ativo
+                  </div>
+                ) : (
+                  <div className="space-y-1 p-2">
+                    {chatsAtivos.map((chat) => (
+                      <div
+                        key={chat.id}
+                        onClick={() => loadChatMessages(chat.id)}
+                        className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
+                          selectedChat === chat.id 
+                            ? 'bg-primary/10 border border-primary/30' 
+                            : 'hover:bg-accent/50'
+                        }`}
+                      >
+                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <MessageSquare className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{chat.customer?.nome || 'Cliente'}</p>
+                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                            <ArrowRight className="h-2.5 w-2.5" />
+                            <span className="truncate">{chat.atendente?.usuario?.nome || 'N/A'}</span>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-
-            {/* Preview do Chat */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Eye className="h-5 w-5" />
-                  Visualização da Conversa
-                </CardTitle>
-                <CardDescription>
-                  {selectedChat ? 'Mensagens do chat selecionado' : 'Selecione um chat para visualizar'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[500px]">
-                  {!selectedChat ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Selecione um chat à esquerda</p>
-                    </div>
-                  ) : chatMessages.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Nenhuma mensagem encontrada</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {chatMessages.map((msg) => (
-                        <div
-                          key={msg.id}
-                          className={`p-3 rounded-lg max-w-[85%] ${
-                            msg.sender === 'agent' || msg.direction === 'outgoing'
-                              ? 'ml-auto bg-primary text-primary-foreground'
-                              : 'bg-muted'
-                          }`}
-                        >
-                          <p className="text-sm whitespace-pre-wrap">{msg.content || msg.body}</p>
-                          <p className="text-xs opacity-70 mt-1">
-                            {new Date(msg.created_at).toLocaleTimeString('pt-BR', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
+                        <div className="text-right">
+                          <Badge variant="outline" className="text-[10px]">{chat.canal}</Badge>
+                          <Eye className="h-3 w-3 text-muted-foreground ml-auto mt-1" />
                         </div>
-                      ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Coluna 3: Preview do Chat */}
+        <Card className="h-fit">
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              Visualização da Conversa
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {selectedChat ? 'Mensagens em tempo real' : 'Selecione um chat ao lado'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[500px]">
+              {!selectedChat ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Eye className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                  <p className="text-sm">Clique em um chat para visualizar</p>
+                </div>
+              ) : chatMessages.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                  <p className="text-sm">Nenhuma mensagem</p>
+                </div>
+              ) : (
+                <div className="space-y-2 p-3">
+                  {chatMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`p-2.5 rounded-lg max-w-[90%] ${
+                        msg.sender === 'agent' || msg.direction === 'outgoing'
+                          ? 'ml-auto bg-primary text-primary-foreground'
+                          : 'bg-muted'
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-wrap break-words">{msg.content || msg.body}</p>
+                      <p className="text-[10px] opacity-70 mt-1">
+                        {new Date(msg.created_at).toLocaleTimeString('pt-BR', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
                     </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
