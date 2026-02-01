@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
-import { User, Mail, Phone, Building2, Users, Monitor, Download, ExternalLink, CheckCircle2, XCircle } from "lucide-react";
+import { User, Mail, Phone, Building2, Users, Monitor, Download, ExternalLink, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { useExtensionDownload } from "@/hooks/useExtensionDownload";
 
 export default function Perfil() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function Perfil() {
   const [estabelecimentoName, setEstabelecimentoName] = useState("");
   const [grupoAcessoName, setGrupoAcessoName] = useState("");
   const [extensionStatus, setExtensionStatus] = useState<{isSharing: boolean, lastFrameAt: string | null} | null>(null);
+  const { downloadExtension, isDownloading } = useExtensionDownload();
 
   useEffect(() => {
     loadUserData();
@@ -298,20 +300,25 @@ export default function Perfil() {
               <Button 
                 variant="default" 
                 className="w-full gap-2"
-                onClick={() => window.open('/browser-extension/', '_blank')}
+                onClick={downloadExtension}
+                disabled={isDownloading}
               >
-                <Download className="h-4 w-4" />
-                Baixar Extensão para Chrome
+                {isDownloading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4" />
+                )}
+                {isDownloading ? 'Gerando ZIP...' : 'Baixar Extensão para Chrome'}
               </Button>
               
               <div className="text-xs text-muted-foreground space-y-1 p-3 bg-muted/50 rounded-lg">
                 <p className="font-medium mb-2">Como instalar:</p>
-                <p>1. Clique no botão acima para abrir a pasta da extensão</p>
-                <p>2. Baixe todos os arquivos (manifest.json, background.js, popup.html, popup.js e pasta icons)</p>
+                <p>1. Clique no botão acima para baixar o ZIP</p>
+                <p>2. Extraia o arquivo ZIP em uma pasta</p>
                 <p>3. Acesse <code className="bg-background px-1 py-0.5 rounded">chrome://extensions</code> no Chrome</p>
                 <p>4. Ative o "Modo do desenvolvedor" no canto superior direito</p>
                 <p>5. Clique em "Carregar sem compactação"</p>
-                <p>6. Selecione a pasta com os arquivos baixados</p>
+                <p>6. Selecione a pasta extraída</p>
                 <p>7. Cole seu ID de usuário na extensão e clique em "Iniciar"</p>
               </div>
             </div>
