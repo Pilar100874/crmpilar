@@ -29,6 +29,7 @@ interface LazyLogisticaMapProps {
   className?: string;
   fitBounds?: boolean;
   compactIcons?: boolean;
+  disableInteraction?: boolean;
 }
 
 const LogisticaMapInternal = lazy(() => import('./LogisticaMapInternal'));

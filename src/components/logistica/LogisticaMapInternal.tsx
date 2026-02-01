@@ -120,6 +120,7 @@ interface LogisticaMapInternalProps {
   className?: string;
   fitBounds?: boolean;
   compactIcons?: boolean;
+  disableInteraction?: boolean;
 }
 
 const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
@@ -135,6 +136,7 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   className = 'h-full w-full',
   fitBounds = true,
   compactIcons = false,
+  disableInteraction = false,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -154,7 +156,17 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
-    mapRef.current = L.map(mapContainerRef.current).setView(center, zoom);
+    const mapOptions: L.MapOptions = {
+      zoomControl: !disableInteraction,
+      scrollWheelZoom: !disableInteraction,
+      doubleClickZoom: !disableInteraction,
+      touchZoom: !disableInteraction,
+      dragging: !disableInteraction,
+      keyboard: !disableInteraction,
+      boxZoom: !disableInteraction,
+    };
+
+    mapRef.current = L.map(mapContainerRef.current, mapOptions).setView(center, zoom);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
