@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
-  Car, Gauge, Clock, MapPin, AlertTriangle, 
-  Wifi, WifiOff, Activity, RefreshCw, Tv,
-  Navigation, Circle, Fuel, Route, Timer, Zap, ArrowLeft
+  Car, Gauge, Clock, MapPin, 
+  WifiOff, Activity, RefreshCw,
+  Fuel, Route, Timer, Zap, ArrowLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,10 +13,6 @@ import { toast } from 'sonner';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logistica';
 import { ParadaMarcada } from '@/types/automacaoLogistica';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
 
 const statusConfig = {
@@ -42,7 +38,6 @@ export default function TvDashboardVeiculos() {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
-  const [selectedVeiculoId, setSelectedVeiculoId] = useState<string | null>(null);
   const [precosCombustivel, setPrecosCombustivel] = useState<{
     gasolina: number;
     diesel: number;
@@ -315,7 +310,6 @@ export default function TvDashboardVeiculos() {
           <LazyLogisticaMap
             veiculos={veiculosComPosicao}
             paradasMarcadas={paradasMarcadas}
-            onVeiculoClick={(v) => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
             className="absolute inset-0"
             fitBounds
             compactIcons
@@ -404,47 +398,6 @@ export default function TvDashboardVeiculos() {
             </span>
           </div>
         )}
-      </div>
-
-      {/* Bottom Right - Mini Vehicle List */}
-      <div className="absolute bottom-3 right-3 z-[1000] max-h-[40%] w-64 overflow-hidden">
-        <div className="bg-background/90 backdrop-blur-sm rounded-lg shadow-lg border border-border/50 overflow-hidden">
-          <ScrollArea className="max-h-[calc(40vh-24px)]">
-            <div className="p-1.5 space-y-0.5">
-              {veiculos.map(v => {
-                const config = statusConfig[v.status];
-                const isSelected = selectedVeiculoId === v.id;
-                const kmHoje = kmRodadosHoje[v.id] || 0;
-                
-                return (
-                  <div
-                    key={v.id}
-                    className={cn(
-                      "flex items-center justify-between px-2 py-1 rounded cursor-pointer transition-colors text-xs",
-                      isSelected 
-                        ? "bg-primary/20" 
-                        : "hover:bg-muted/50"
-                    )}
-                    onClick={() => setSelectedVeiculoId(v.id === selectedVeiculoId ? null : v.id)}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <div className={cn("w-2 h-2 rounded-full flex-shrink-0", config.color)} />
-                      <span className="font-medium">{v.placa}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      {v.ultima_posicao && (
-                        <span className={v.ultima_posicao.velocidade > 100 ? 'text-red-500 font-bold' : ''}>
-                          {Math.round(v.ultima_posicao.velocidade)}km/h
-                        </span>
-                      )}
-                      <span className="text-purple-500">{kmHoje}km</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </ScrollArea>
-        </div>
       </div>
     </div>
   );
