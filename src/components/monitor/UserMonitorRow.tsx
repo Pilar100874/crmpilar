@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface UserMonitorRowProps {
@@ -53,6 +53,24 @@ interface ActiveConversation {
   };
 }
 
+interface ConversationDetail {
+  id: string;
+  canal: string;
+  created_at: string;
+  customer: {
+    nome: string;
+  };
+}
+
+interface PedidoDetail {
+  id: string;
+  numero: string;
+  status: string;
+  total: number;
+  created_at: string;
+  cliente_nome?: string;
+}
+
 export function UserMonitorRow({
   usuario,
   usuarioId,
@@ -71,6 +89,12 @@ export function UserMonitorRow({
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [loadingChats, setLoadingChats] = useState(false);
+  
+  // Detalhes para popovers
+  const [chatsDetail, setChatsDetail] = useState<ConversationDetail[]>([]);
+  const [emailsDetail, setEmailsDetail] = useState<ConversationDetail[]>([]);
+  const [pedidosDetail, setPedidosDetail] = useState<PedidoDetail[]>([]);
+  const [filaDetail, setFilaDetail] = useState<ConversationDetail[]>([]);
 
   // Carregar conversas do atendente quando expandir
   useEffect(() => {
@@ -98,10 +122,128 @@ export function UserMonitorRow({
     };
   }, [selectedChatId]);
 
+  const loadChatsDetail = async () => {
+    try {
+      const { data: atendenteData } = await supabase
+        .from('atendentes')
+        .select('id')
+        .eq('usuario_id', usuarioId)
+        .eq('estabelecimento_id', estabelecimentoId)
+        .single();
+
+      if (!atendenteData) return;
+
+      const { data } = await supabase
+        .from('conversations')
+        .select(`
+          id,
+          canal,
+          created_at,
+          customer:customers!conversations_customer_id_fkey(nome)
+        `)
+        .eq('atendente_atual_id', atendenteData.id)
+        .eq('chat_status', 'em_atendimento')
+        .neq('canal', 'email')
+        .order('updated_at', { ascending: false })
+        .limit(10);
+
+      setChatsDetail((data as any) || []);
+    } catch (error) {
+      console.error('Erro ao carregar detalhes dos chats:', error);
+    }
+  };
+
+  const loadEmailsDetail = async () => {
+    try {
+      const { data: atendenteData } = await supabase
+        .from('atendentes')
+        .select('id')
+        .eq('usuario_id', usuarioId)
+        .eq('estabelecimento_id', estabelecimentoId)
+        .single();
+
+      if (!atendenteData) return;
+
+      const { data } = await supabase
+        .from('conversations')
+        .select(`
+          id,
+          canal,
+          created_at,
+          customer:customers!conversations_customer_id_fkey(nome)
+        `)
+        .eq('atendente_atual_id', atendenteData.id)
+        .eq('chat_status', 'em_atendimento')
+        .eq('canal', 'email')
+        .order('updated_at', { ascending: false })
+        .limit(10);
+
+      setEmailsDetail((data as any) || []);
+    } catch (error) {
+      console.error('Erro ao carregar detalhes dos emails:', error);
+    }
+  };
+
+  const loadPedidosDetail = async () => {
+    try {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      // @ts-ignore - tipo muito complexo para inferir
+      const result = await supabase
+        .from('orcamentos')
+        .select('id, numero, status, total, created_at, cliente_nome')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('usuario_id', usuarioId)
+        .gte('created_at', hoje.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      const data: any[] = result.data || [];
+      
+      const filtered = data.filter((p) => 
+        ['aprovado', 'finalizado', 'faturado'].includes(p.status)
+      );
+
+      const formatted: PedidoDetail[] = filtered.map((p) => ({
+        id: p.id,
+        numero: p.numero || '-',
+        status: p.status,
+        total: p.total || 0,
+        created_at: p.created_at,
+        cliente_nome: p.cliente_nome || 'Cliente'
+      }));
+
+      setPedidosDetail(formatted);
+    } catch (error) {
+      console.error('Erro ao carregar detalhes dos pedidos:', error);
+    }
+  };
+
+  const loadFilaDetail = async () => {
+    try {
+      const { data } = await supabase
+        .from('conversations')
+        .select(`
+          id,
+          canal,
+          created_at,
+          customer:customers!conversations_customer_id_fkey(nome)
+        `)
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('chat_status', 'em_fila')
+        .order('created_at', { ascending: true })
+        .limit(10);
+
+      setFilaDetail((data as any) || []);
+    } catch (error) {
+      console.error('Erro ao carregar detalhes da fila:', error);
+    }
+  };
+
   const loadConversations = async () => {
     setLoadingChats(true);
     try {
-      // Buscar o atendente_id pelo usuario_id
       const { data: atendenteData } = await supabase
         .from('atendentes')
         .select('id')
@@ -128,7 +270,6 @@ export function UserMonitorRow({
       if (error) throw error;
       setConversations((data as any) || []);
       
-      // Auto-seleciona o primeiro chat se houver
       if (data && data.length > 0) {
         loadChatMessages(data[0].id);
       }
@@ -176,6 +317,14 @@ export function UserMonitorRow({
     }
   };
 
+  const formatTime = (date: string) => {
+    return new Date(date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  };
+
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <div className="border rounded-lg bg-card overflow-hidden">
@@ -201,87 +350,220 @@ export function UserMonitorRow({
               </div>
             </div>
 
-            {/* Métricas */}
+            {/* Métricas com Popovers */}
             <div className="flex items-center gap-6 flex-1">
               {/* Chats */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-auto p-1 hover:bg-blue-100 dark:hover:bg-blue-900/30"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      loadChatsDetail();
+                    }}
+                  >
                     <div className="flex items-center gap-1.5">
                       <MessageSquare className="h-4 w-4 text-blue-500" />
                       <span className="text-sm font-medium">{chatsAtivos}</span>
                     </div>
-                  </TooltipTrigger>
-                  <TooltipContent>Chats ativos</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 p-0" onClick={(e) => e.stopPropagation()}>
+                  <div className="p-3 border-b">
+                    <p className="font-medium text-sm flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-blue-500" />
+                      Chats Ativos ({chatsAtivos})
+                    </p>
+                  </div>
+                  <ScrollArea className="max-h-[200px]">
+                    {chatsDetail.length === 0 ? (
+                      <p className="p-3 text-sm text-muted-foreground">Nenhum chat ativo</p>
+                    ) : (
+                      <div className="p-2 space-y-1">
+                        {chatsDetail.map((chat) => (
+                          <div key={chat.id} className="flex items-center justify-between p-2 rounded hover:bg-accent/50">
+                            <div>
+                              <p className="text-sm font-medium">{chat.customer?.nome || 'Cliente'}</p>
+                              <Badge variant="outline" className="text-[10px]">{chat.canal}</Badge>
+                            </div>
+                            <span className="text-xs text-muted-foreground">{formatTime(chat.created_at)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
 
               {/* Emails */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-auto p-1 hover:bg-purple-100 dark:hover:bg-purple-900/30"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      loadEmailsDetail();
+                    }}
+                  >
                     <div className="flex items-center gap-1.5">
                       <Mail className="h-4 w-4 text-purple-500" />
                       <span className="text-sm font-medium">{emailsAtivos}</span>
                     </div>
-                  </TooltipTrigger>
-                  <TooltipContent>Emails ativos</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 p-0" onClick={(e) => e.stopPropagation()}>
+                  <div className="p-3 border-b">
+                    <p className="font-medium text-sm flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-purple-500" />
+                      Emails Ativos ({emailsAtivos})
+                    </p>
+                  </div>
+                  <ScrollArea className="max-h-[200px]">
+                    {emailsDetail.length === 0 ? (
+                      <p className="p-3 text-sm text-muted-foreground">Nenhum email ativo</p>
+                    ) : (
+                      <div className="p-2 space-y-1">
+                        {emailsDetail.map((email) => (
+                          <div key={email.id} className="flex items-center justify-between p-2 rounded hover:bg-accent/50">
+                            <p className="text-sm font-medium">{email.customer?.nome || 'Cliente'}</p>
+                            <span className="text-xs text-muted-foreground">{formatTime(email.created_at)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
 
               {/* Pedidos Fechados */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-auto p-1 hover:bg-green-100 dark:hover:bg-green-900/30"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      loadPedidosDetail();
+                    }}
+                  >
                     <div className="flex items-center gap-1.5">
                       <ShoppingCart className="h-4 w-4 text-green-500" />
                       <span className="text-sm font-medium">{pedidosFechados}</span>
                     </div>
-                  </TooltipTrigger>
-                  <TooltipContent>Pedidos fechados hoje</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" onClick={(e) => e.stopPropagation()}>
+                  <div className="p-3 border-b">
+                    <p className="font-medium text-sm flex items-center gap-2">
+                      <ShoppingCart className="h-4 w-4 text-green-500" />
+                      Pedidos Fechados Hoje ({pedidosFechados})
+                    </p>
+                  </div>
+                  <ScrollArea className="max-h-[200px]">
+                    {pedidosDetail.length === 0 ? (
+                      <p className="p-3 text-sm text-muted-foreground">Nenhum pedido fechado hoje</p>
+                    ) : (
+                      <div className="p-2 space-y-1">
+                        {pedidosDetail.map((pedido) => (
+                          <div key={pedido.id} className="flex items-center justify-between p-2 rounded hover:bg-accent/50">
+                            <div>
+                              <p className="text-sm font-medium">#{pedido.numero}</p>
+                              <p className="text-xs text-muted-foreground">{pedido.cliente_nome || 'Cliente'}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-medium text-green-600">{formatCurrency(pedido.total)}</p>
+                              <Badge variant="outline" className="text-[10px]">{pedido.status}</Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
 
               {/* Fila de Espera */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={`h-auto p-1 ${filaEspera > 0 ? 'hover:bg-yellow-100 dark:hover:bg-yellow-900/30' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      loadFilaDetail();
+                    }}
+                  >
                     <div className="flex items-center gap-1.5">
                       <Clock className={`h-4 w-4 ${filaEspera > 0 ? 'text-yellow-500' : 'text-muted-foreground'}`} />
                       <span className={`text-sm font-medium ${filaEspera > 0 ? 'text-yellow-600' : ''}`}>
                         {filaEspera}
                       </span>
                     </div>
-                  </TooltipTrigger>
-                  <TooltipContent>Clientes na fila</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 p-0" onClick={(e) => e.stopPropagation()}>
+                  <div className="p-3 border-b">
+                    <p className="font-medium text-sm flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-yellow-500" />
+                      Fila de Espera ({filaEspera})
+                    </p>
+                  </div>
+                  <ScrollArea className="max-h-[200px]">
+                    {filaDetail.length === 0 ? (
+                      <p className="p-3 text-sm text-muted-foreground">Nenhum cliente na fila</p>
+                    ) : (
+                      <div className="p-2 space-y-1">
+                        {filaDetail.map((item, index) => (
+                          <div key={item.id} className="flex items-center gap-2 p-2 rounded hover:bg-accent/50">
+                            <div className="w-5 h-5 rounded-full bg-yellow-500 text-white flex items-center justify-center text-xs font-bold">
+                              {index + 1}
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{item.customer?.nome || 'Cliente'}</p>
+                              <Badge variant="outline" className="text-[10px]">{item.canal}</Badge>
+                            </div>
+                            <span className="text-xs text-muted-foreground">{formatTime(item.created_at)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ScrollArea>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Ações */}
             <div className="flex items-center gap-2">
               {/* Botão Ver Tela */}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`h-8 w-8 ${extensionActive ? 'text-green-500 hover:text-green-600' : 'text-muted-foreground'}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (extensionActive) onViewScreen();
-                      }}
-                      disabled={!extensionActive}
-                    >
-                      {extensionActive ? <Tv className="h-4 w-4" /> : <MonitorOff className="h-4 w-4" />}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {extensionActive ? 'Ver tela' : 'Extensão inativa'}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 ${extensionActive ? 'text-green-500 hover:text-green-600' : 'text-muted-foreground'}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (extensionActive) onViewScreen();
+                    }}
+                    disabled={!extensionActive}
+                  >
+                    {extensionActive ? <Tv className="h-4 w-4" /> : <MonitorOff className="h-4 w-4" />}
+                  </Button>
+                </PopoverTrigger>
+                {!extensionActive && (
+                  <PopoverContent className="w-48 p-2" onClick={(e) => e.stopPropagation()}>
+                    <p className="text-xs text-muted-foreground">
+                      Extensão de monitoramento não está ativa para este usuário.
+                    </p>
+                  </PopoverContent>
+                )}
+              </Popover>
 
               {/* Indicador de chats para expandir */}
               {chatsAtivos > 0 && (
@@ -313,7 +595,10 @@ export function UserMonitorRow({
                   {conversations.map((conv) => (
                     <div
                       key={conv.id}
-                      onClick={() => loadChatMessages(conv.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        loadChatMessages(conv.id);
+                      }}
                       className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
                         selectedChatId === conv.id 
                           ? 'bg-primary/10 border border-primary/30' 
