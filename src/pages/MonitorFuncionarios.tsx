@@ -75,10 +75,44 @@ export default function MonitorFuncionarios() {
   const [viewingScreen, setViewingScreen] = useState<{usuarioId: string, nome: string} | null>(null);
   const [extensionStatuses, setExtensionStatuses] = useState<Record<string, boolean>>({});
   const [pedidosPorUsuario, setPedidosPorUsuario] = useState<Record<string, number>>({});
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(30); // segundos
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [countdown, setCountdown] = useState<number>(30);
 
   useEffect(() => {
     init();
   }, []);
+
+  // Auto-refresh timer
+  useEffect(() => {
+    if (!estabelecimentoId || autoRefreshInterval === 0) return;
+
+    const refreshData = async () => {
+      await Promise.all([
+        loadActivities(estabelecimentoId),
+        loadAtendentes(estabelecimentoId),
+        loadFilaEspera(estabelecimentoId),
+        loadChatsAtivos(estabelecimentoId),
+        loadExtensionStatuses(estabelecimentoId),
+        loadPedidosHoje(estabelecimentoId),
+      ]);
+      setLastRefresh(new Date());
+      setCountdown(autoRefreshInterval);
+    };
+
+    // Intervalo de refresh
+    const refreshInterval = setInterval(refreshData, autoRefreshInterval * 1000);
+
+    // Countdown timer
+    const countdownInterval = setInterval(() => {
+      setCountdown(prev => prev > 0 ? prev - 1 : autoRefreshInterval);
+    }, 1000);
+
+    return () => {
+      clearInterval(refreshInterval);
+      clearInterval(countdownInterval);
+    };
+  }, [estabelecimentoId, autoRefreshInterval]);
 
   const init = async () => {
     const estabId = await getEstabelecimentoId();
@@ -93,7 +127,25 @@ export default function MonitorFuncionarios() {
         loadPedidosHoje(estabId),
       ]);
       setupRealtime(estabId);
+      setLastRefresh(new Date());
+      setCountdown(autoRefreshInterval);
     }
+    setLoading(false);
+  };
+
+  const handleManualRefresh = async () => {
+    if (!estabelecimentoId) return;
+    setLoading(true);
+    await Promise.all([
+      loadActivities(estabelecimentoId),
+      loadAtendentes(estabelecimentoId),
+      loadFilaEspera(estabelecimentoId),
+      loadChatsAtivos(estabelecimentoId),
+      loadExtensionStatuses(estabelecimentoId),
+      loadPedidosHoje(estabelecimentoId),
+    ]);
+    setLastRefresh(new Date());
+    setCountdown(autoRefreshInterval);
     setLoading(false);
   };
 
@@ -349,13 +401,44 @@ export default function MonitorFuncionarios() {
             Monitor em Tempo Real
           </h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Timer Controls */}
+          <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <select 
+              value={autoRefreshInterval} 
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                setAutoRefreshInterval(val);
+                setCountdown(val);
+              }}
+              className="bg-transparent text-sm border-none focus:ring-0 cursor-pointer"
+            >
+              <option value={10}>10s</option>
+              <option value={30}>30s</option>
+              <option value={60}>1min</option>
+              <option value={120}>2min</option>
+              <option value={0}>Off</option>
+            </select>
+            {autoRefreshInterval > 0 && (
+              <span className="text-xs text-muted-foreground min-w-[32px]">
+                ({countdown}s)
+              </span>
+            )}
+          </div>
+          
           <Badge variant="secondary" className="gap-1">
             <Circle className="h-2 w-2 fill-green-500 text-green-500" />
             {onlineUsers.length} online
           </Badge>
-          <Button variant="outline" size="sm" onClick={() => init()}>
-            <RefreshCw className="h-4 w-4" />
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleManualRefresh}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
