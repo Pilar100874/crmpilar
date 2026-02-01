@@ -10,6 +10,7 @@ import { toast } from "@/lib/toast-config";
 import { User, Mail, Phone, Building2, Users, Monitor, Download, ExternalLink, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { useExtensionDownload } from "@/hooks/useExtensionDownload";
+import { ExtensionInstallManual } from "@/components/ExtensionInstallManual";
 
 export default function Perfil() {
   const navigate = useNavigate();
@@ -311,16 +312,7 @@ export default function Perfil() {
                 {isDownloading ? 'Gerando ZIP...' : 'Baixar Extensão para Chrome'}
               </Button>
               
-              <div className="text-xs text-muted-foreground space-y-1 p-3 bg-muted/50 rounded-lg">
-                <p className="font-medium mb-2">Como instalar:</p>
-                <p>1. Clique no botão acima para baixar o ZIP</p>
-                <p>2. Extraia o arquivo ZIP em uma pasta</p>
-                <p>3. Acesse <code className="bg-background px-1 py-0.5 rounded">chrome://extensions</code> no Chrome</p>
-                <p>4. Ative o "Modo do desenvolvedor" no canto superior direito</p>
-                <p>5. Clique em "Carregar sem compactação"</p>
-                <p>6. Selecione a pasta extraída</p>
-                <p>7. Cole seu ID de usuário na extensão e clique em "Iniciar"</p>
-              </div>
+              <ExtensionInstallManual />
             </div>
           </CardContent>
         </Card>
