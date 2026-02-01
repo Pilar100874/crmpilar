@@ -354,56 +354,6 @@ export default function MonitorFuncionarios() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <Card className="p-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <Users className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Online</p>
-              <p className="text-xl font-bold">{onlineUsers.length}</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <MessageSquare className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Chats Ativos</p>
-              <p className="text-xl font-bold">{chatsAtivosTotal}</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-3">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${filaEsperaTotal > 0 ? 'bg-yellow-100 dark:bg-yellow-900/30' : 'bg-gray-100 dark:bg-gray-900/30'}`}>
-              <Clock className={`h-5 w-5 ${filaEsperaTotal > 0 ? 'text-yellow-600' : 'text-gray-600'}`} />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Na Fila</p>
-              <p className={`text-xl font-bold ${filaEsperaTotal > 0 ? 'text-yellow-600' : ''}`}>
-                {filaEsperaTotal}
-              </p>
-            </div>
-          </div>
-        </Card>
-        <Card className="p-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-              <ShoppingCart className="h-5 w-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Pedidos Hoje</p>
-              <p className="text-xl font-bold">{pedidosHojeTotal}</p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
       {/* Lista de Usuários */}
       <Card>
         <CardHeader className="py-3 px-4">
