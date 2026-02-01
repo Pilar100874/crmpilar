@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { 
   ShoppingCart, 
   Users, 
@@ -22,7 +24,8 @@ import {
   Circle,
   Percent,
   Timer,
-  Zap
+  Zap,
+  ArrowLeft
 } from "lucide-react";
 import { format, startOfHour, subHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -55,6 +58,7 @@ interface VendasPorHora {
 }
 
 export default function TvDashboardVendas() {
+  const navigate = useNavigate();
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   const [vendedores, setVendedores] = useState<VendedorMetrics[]>([]);
   const [statusResumo, setStatusResumo] = useState<OrcamentoStatus[]>([]);
@@ -544,6 +548,14 @@ export default function TvDashboardVendas() {
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="h-10 w-10 rounded-xl"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <div className="p-2 rounded-xl bg-primary/10">
             <Tv className="h-6 w-6 text-primary" />
           </div>

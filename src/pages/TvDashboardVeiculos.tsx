@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { 
   Car, Gauge, Clock, MapPin, AlertTriangle, 
   Wifi, WifiOff, Activity, RefreshCw, Tv,
-  Navigation, Circle, Fuel, Route, Timer, Zap
+  Navigation, Circle, Fuel, Route, Timer, Zap, ArrowLeft
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
@@ -34,6 +36,7 @@ const consumoPorTipo: Record<string, number> = {
 };
 
 export default function TvDashboardVeiculos() {
+  const navigate = useNavigate();
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
   const [paradasMarcadas, setParadasMarcadas] = useState<ParadaMarcada[]>([]);
   const [loading, setLoading] = useState(true);
@@ -302,6 +305,14 @@ export default function TvDashboardVeiculos() {
       <div className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-background via-background/95 to-transparent">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="h-10 w-10 rounded-xl"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
             <div className="p-2 rounded-xl bg-primary/10">
               <Tv className="h-6 w-6 text-primary" />
             </div>
