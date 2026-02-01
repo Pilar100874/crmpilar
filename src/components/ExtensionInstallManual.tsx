@@ -75,10 +75,29 @@ export function ExtensionInstallManual() {
                 <p>Clique em <strong>"Selecionar pasta"</strong>.</p>
               </Step>
 
-              <Step number={6} title="Configurar a extensão">
-                <p>Clique no ícone da extensão (puzzle) na barra do Chrome.</p>
-                <p>Clique em <strong>"CRM Pilar - Monitor de Tela"</strong>.</p>
-                <p>Cole seu <strong>ID de usuário</strong> e clique em <strong>"Iniciar Monitoramento"</strong>.</p>
+              <Step number={6} title="Abrir o popup da extensão">
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 my-2">
+                  <p className="font-medium text-primary mb-2">🧩 Como abrir:</p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Procure o ícone de <strong>quebra-cabeça (puzzle)</strong> no canto superior direito do Chrome</li>
+                    <li>Clique nele para ver a lista de extensões</li>
+                    <li>Clique em <strong>"CRM Pilar - Monitor de Tela"</strong></li>
+                  </ol>
+                </div>
+                <p className="text-xs text-muted-foreground">💡 Dica: Clique no alfinete (📌) para fixar a extensão na barra e ter acesso rápido.</p>
+              </Step>
+
+              <Step number={7} title="Iniciar o monitoramento">
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 my-2">
+                  <p className="font-medium text-green-600 dark:text-green-400 mb-2">📋 No popup que abrir:</p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Você verá um campo <strong>"ID do Usuário"</strong></li>
+                    <li>Cole o ID que você copiou da página de Perfil</li>
+                    <li>Clique no botão <strong>"Iniciar Monitoramento"</strong></li>
+                    <li>Selecione a tela que deseja compartilhar</li>
+                  </ol>
+                </div>
+                <p className="text-xs text-muted-foreground">Após iniciar, o status mudará para <strong>"Ativo"</strong> (verde).</p>
               </Step>
             </div>
           </TabsContent>
@@ -128,10 +147,28 @@ export function ExtensionInstallManual() {
                 <p>Marque a caixa ao lado de <strong>Google Chrome</strong>.</p>
               </Step>
 
-              <Step number={7} title="Configurar a extensão">
-                <p>Clique no ícone da extensão (puzzle) na barra do Chrome.</p>
-                <p>Clique em <strong>"CRM Pilar - Monitor de Tela"</strong>.</p>
-                <p>Cole seu <strong>ID de usuário</strong> e clique em <strong>"Iniciar Monitoramento"</strong>.</p>
+              <Step number={7} title="Abrir o popup da extensão">
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 my-2">
+                  <p className="font-medium text-primary mb-2">🧩 Como abrir:</p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Procure o ícone de <strong>quebra-cabeça (puzzle)</strong> no canto superior direito do Chrome</li>
+                    <li>Clique nele para ver a lista de extensões</li>
+                    <li>Clique em <strong>"CRM Pilar - Monitor de Tela"</strong></li>
+                  </ol>
+                </div>
+              </Step>
+
+              <Step number={8} title="Iniciar o monitoramento">
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 my-2">
+                  <p className="font-medium text-green-600 dark:text-green-400 mb-2">📋 No popup que abrir:</p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Você verá um campo <strong>"ID do Usuário"</strong></li>
+                    <li>Cole o ID que você copiou da página de Perfil</li>
+                    <li>Clique no botão <strong>"Iniciar Monitoramento"</strong></li>
+                    <li>Selecione a tela que deseja compartilhar</li>
+                  </ol>
+                </div>
+                <p className="text-xs text-muted-foreground">Após iniciar, o status mudará para <strong>"Ativo"</strong> (verde).</p>
               </Step>
             </div>
 
@@ -202,10 +239,16 @@ export function ExtensionInstallManual() {
                 <p className="text-muted-foreground">Se não funcionar, tente selecionar o arquivo manifest.json dentro da pasta.</p>
               </Step>
 
-              <Step number={7} title="Configurar a extensão">
-                <p>Após instalar, toque no ícone da extensão.</p>
-                <p>Cole seu <strong>ID de usuário</strong>.</p>
-                <p>Toque em <strong>"Iniciar Monitoramento"</strong>.</p>
+              <Step number={7} title="Abrir e configurar a extensão">
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 my-2">
+                  <p className="font-medium text-green-600 dark:text-green-400 mb-2">📋 No popup da extensão:</p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Toque no ícone da extensão no menu</li>
+                    <li>Você verá um campo <strong>"ID do Usuário"</strong></li>
+                    <li>Cole o ID que você copiou da página de Perfil</li>
+                    <li>Toque em <strong>"Iniciar Monitoramento"</strong></li>
+                  </ol>
+                </div>
               </Step>
             </div>
 
