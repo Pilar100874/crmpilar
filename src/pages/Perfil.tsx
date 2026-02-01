@@ -294,21 +294,26 @@ export default function Perfil() {
             </div>
 
             {/* Botão de Download */}
-            <div className="pt-2">
+            <div className="pt-2 space-y-3">
               <Button 
-                variant="outline" 
+                variant="default" 
                 className="w-full gap-2"
-                onClick={() => {
-                  // Abre instruções ou baixa a extensão
-                  toast.info("Solicite ao administrador o arquivo da extensão ou acesse o repositório do projeto.");
-                }}
+                onClick={() => window.open('/browser-extension/', '_blank')}
               >
                 <Download className="h-4 w-4" />
-                Como Instalar a Extensão
+                Baixar Extensão para Chrome
               </Button>
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                A extensão deve ser instalada manualmente no Chrome via "Carregar sem compactação"
-              </p>
+              
+              <div className="text-xs text-muted-foreground space-y-1 p-3 bg-muted/50 rounded-lg">
+                <p className="font-medium mb-2">Como instalar:</p>
+                <p>1. Clique no botão acima para abrir a pasta da extensão</p>
+                <p>2. Baixe todos os arquivos (manifest.json, background.js, popup.html, popup.js e pasta icons)</p>
+                <p>3. Acesse <code className="bg-background px-1 py-0.5 rounded">chrome://extensions</code> no Chrome</p>
+                <p>4. Ative o "Modo do desenvolvedor" no canto superior direito</p>
+                <p>5. Clique em "Carregar sem compactação"</p>
+                <p>6. Selecione a pasta com os arquivos baixados</p>
+                <p>7. Cole seu ID de usuário na extensão e clique em "Iniciar"</p>
+              </div>
             </div>
           </CardContent>
         </Card>
