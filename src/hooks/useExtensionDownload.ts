@@ -306,66 +306,134 @@ const offscreenHtml = `<!DOCTYPE html>
 </body>
 </html>`;
 
-// Offscreen document JS - aqui temos acesso ao DOM e navigator.mediaDevices
+// Offscreen document JS - usando getDisplayMedia que funciona em offscreen documents
 const offscreenJs = `let mediaStream = null;
 let captureInterval = null;
 let userId = null;
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('Offscreen received message:', request.action);
+  
   if (request.action === 'startRecording') {
     userId = request.userId;
     startRecording(request.streamId);
+    sendResponse({ success: true });
   } else if (request.action === 'stopRecording') {
     stopRecording();
+    sendResponse({ success: true });
   }
+  return true;
 });
 
 async function startRecording(streamId) {
   try {
     console.log('Offscreen: Starting recording with streamId:', streamId);
     
-    mediaStream = await navigator.mediaDevices.getUserMedia({
+    // Usar getDisplayMedia - funciona em offscreen documents
+    // O streamId do desktopCapture pode ser usado para pré-selecionar a fonte
+    const constraints = {
       video: {
-        mandatory: {
-          chromeMediaSource: 'desktop',
-          chromeMediaSourceId: streamId
-        }
-      }
-    });
+        displaySurface: 'monitor',
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+        frameRate: { ideal: 1, max: 5 }
+      },
+      audio: false,
+      // Tentar usar o streamId se disponível
+      preferCurrentTab: false
+    };
+    
+    // No Chrome, podemos usar o streamId do desktopCapture
+    // Mas em alguns casos precisamos usar getDisplayMedia diretamente
+    try {
+      // Primeiro tentar com constraintts padrão
+      mediaStream = await navigator.mediaDevices.getDisplayMedia(constraints);
+    } catch (displayError) {
+      console.log('Offscreen: getDisplayMedia failed, trying alternative:', displayError);
+      // Fallback para constraints mais simples
+      mediaStream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: false
+      });
+    }
+    
+    if (!mediaStream) {
+      console.error('Offscreen: No media stream obtained');
+      return;
+    }
     
     const video = document.getElementById('video');
     video.srcObject = mediaStream;
-    await video.play();
     
-    console.log('Offscreen: Video playing, starting frame capture');
+    // Aguardar o vídeo carregar
+    video.onloadedmetadata = async () => {
+      try {
+        await video.play();
+        console.log('Offscreen: Video playing, starting frame capture');
+        
+        // Capturar primeiro frame imediatamente
+        captureFrame(video);
+        
+        // Capturar frames a cada 3 segundos
+        captureInterval = setInterval(() => captureFrame(video), 3000);
+      } catch (playError) {
+        console.error('Offscreen: Error playing video:', playError);
+      }
+    };
     
-    // Capturar frames a cada 3 segundos
-    captureInterval = setInterval(() => captureFrame(video), 3000);
+    // Detectar quando o stream é parado pelo usuário
+    mediaStream.getVideoTracks()[0].onended = () => {
+      console.log('Offscreen: Stream ended by user');
+      stopRecording();
+      chrome.runtime.sendMessage({ action: 'streamEnded' });
+    };
     
   } catch (error) {
-    console.error('Offscreen: Error starting recording:', error);
+    console.error('Offscreen: Error starting recording:', error.name, error.message);
+    // Notificar background sobre o erro
+    chrome.runtime.sendMessage({ 
+      action: 'recordingError', 
+      error: error.message 
+    });
   }
 }
 
 function captureFrame(video) {
   try {
+    if (!video || video.readyState < 2) {
+      console.log('Offscreen: Video not ready yet');
+      return;
+    }
+    
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     
-    // Redimensionar para 1280x720
-    canvas.width = 1280;
-    canvas.height = 720;
-    ctx.drawImage(video, 0, 0, 1280, 720);
+    // Usar dimensões reais do vídeo, redimensionando para max 1280x720
+    const videoWidth = video.videoWidth || 1920;
+    const videoHeight = video.videoHeight || 1080;
+    const aspectRatio = videoWidth / videoHeight;
     
-    const base64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+    let targetWidth = 1280;
+    let targetHeight = Math.round(targetWidth / aspectRatio);
+    
+    if (targetHeight > 720) {
+      targetHeight = 720;
+      targetWidth = Math.round(targetHeight * aspectRatio);
+    }
+    
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
+    
+    const base64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
     
     // Enviar frame para o background script
     chrome.runtime.sendMessage({
       action: 'frameFromOffscreen',
-      frame: base64
+      frame: 'data:image/jpeg;base64,' + base64
     });
     
-    console.log('Offscreen: Frame captured and sent');
+    console.log('Offscreen: Frame captured and sent (' + targetWidth + 'x' + targetHeight + ')');
   } catch (error) {
     console.error('Offscreen: Error capturing frame:', error);
   }
@@ -380,6 +448,11 @@ function stopRecording() {
   if (mediaStream) {
     mediaStream.getTracks().forEach(track => track.stop());
     mediaStream = null;
+  }
+  
+  const video = document.getElementById('video');
+  if (video) {
+    video.srcObject = null;
   }
   
   console.log('Offscreen: Recording stopped');
