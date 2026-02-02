@@ -320,49 +320,65 @@ export default function TvDashboardVeiculos() {
 
   return (
     <>
-      {/* Vehicle List - Right Side */}
+      {/* Vehicle List - Right Side - Optimized for 4K */}
       <div 
-        className="fixed top-3 right-3 bottom-3 w-64 bg-black/20 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden flex flex-col"
+        className="fixed top-4 right-4 bottom-4 w-[400px] bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-700/50 overflow-hidden flex flex-col shadow-2xl"
         style={{ zIndex: 999999 }}
       >
-        <div className="px-3 py-2 border-b border-white/10">
-          <h3 className="font-medium text-xs text-white/90 flex items-center gap-1.5">
-            <Car className="h-3 w-3" />
+        <div className="px-5 py-4 border-b border-slate-700/50 bg-slate-800/50">
+          <h3 className="font-semibold text-lg text-slate-100 flex items-center gap-2">
+            <Car className="h-5 w-5 text-blue-400" />
             Veículos ({veiculos.length})
           </h3>
         </div>
         
         <div className="flex-1 overflow-y-auto">
           {veiculos.length === 0 ? (
-            <div className="p-3 text-center text-white/60 text-xs">
-              Nenhum veículo
+            <div className="p-6 text-center text-slate-400 text-base">
+              Nenhum veículo cadastrado
             </div>
           ) : (
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-slate-700/30">
               {veiculos.map((veiculo) => {
                 const config = statusConfig[veiculo.status];
                 const km = kmRodadosHoje[veiculo.id] || 0;
+                const StatusIcon = config.icon;
                 
                 return (
                   <div 
                     key={veiculo.id}
-                    className="px-3 py-1.5 hover:bg-white/5 transition-colors flex items-center justify-between"
+                    className="px-5 py-3 hover:bg-slate-800/50 transition-colors"
                   >
-                    <div className="flex items-center gap-1.5">
-                      <div 
-                        className="w-3 h-3 rounded-full border-2 border-white/50" 
-                        style={{ backgroundColor: veiculo.cor }}
-                      />
-                      <span className="font-medium text-xs text-white/90">{veiculo.placa}</span>
-                      <span className={`text-[10px] ${config.textColor}`}>({config.label})</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] text-white/60">
-                      {veiculo.ultima_posicao && (
-                        <>
-                          <span>{Math.round(veiculo.ultima_posicao.velocidade)}km/h</span>
-                          <span>{km}km</span>
-                        </>
-                      )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-4 h-4 rounded-full ring-2 ring-slate-600" 
+                          style={{ backgroundColor: veiculo.cor }}
+                        />
+                        <span className="font-bold text-base text-slate-100">{veiculo.placa}</span>
+                        <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                          veiculo.status === 'movendo' ? 'bg-green-500/20 text-green-400' :
+                          veiculo.status === 'parado' ? 'bg-amber-500/20 text-amber-400' :
+                          'bg-slate-600/20 text-slate-400'
+                        }`}>
+                          <StatusIcon className="h-3 w-3" />
+                          {config.label}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm">
+                        {veiculo.ultima_posicao && (
+                          <>
+                            <div className="flex items-center gap-1.5">
+                              <Gauge className="h-4 w-4 text-cyan-400" />
+                              <span className="font-semibold text-cyan-300">{Math.round(veiculo.ultima_posicao.velocidade)} km/h</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Route className="h-4 w-4 text-emerald-400" />
+                              <span className="font-semibold text-emerald-300">{km} km</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -370,18 +386,36 @@ export default function TvDashboardVeiculos() {
             </div>
           )}
         </div>
+
+        {/* Stats Footer */}
+        <div className="px-5 py-3 border-t border-slate-700/50 bg-slate-800/50">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div>
+              <p className="text-xs text-slate-500 uppercase">Movendo</p>
+              <p className="text-lg font-bold text-green-400">{stats.movendo}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 uppercase">Parados</p>
+              <p className="text-lg font-bold text-amber-400">{stats.parado}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 uppercase">Offline</p>
+              <p className="text-lg font-bold text-slate-400">{stats.offline}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Main Container */}
-      <div className="fixed inset-0 bg-background overflow-hidden">
+      <div className="fixed inset-0 bg-slate-950 overflow-hidden">
         {/* Fullscreen Map */}
         <div className="absolute inset-0">
           {veiculosComPosicao.length === 0 ? (
-            <div className="h-full w-full flex items-center justify-center bg-muted/50">
+            <div className="h-full w-full flex items-center justify-center bg-slate-900">
               <div className="text-center">
-                <MapPin className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <p className="text-xl text-muted-foreground">Nenhum veículo com posição</p>
-                <p className="text-sm text-muted-foreground mt-2">Aguardando dados de GPS...</p>
+                <MapPin className="h-20 w-20 text-slate-600 mx-auto mb-6" />
+                <p className="text-2xl text-slate-400 font-medium">Nenhum veículo com posição</p>
+                <p className="text-base text-slate-500 mt-3">Aguardando dados de GPS...</p>
               </div>
             </div>
           ) : (
@@ -397,30 +431,53 @@ export default function TvDashboardVeiculos() {
         </div>
 
         {/* Top Left - Back Button & Clock */}
-        <div className="fixed top-3 left-3 flex items-center gap-2" style={{ zIndex: 999999 }}>
+        <div className="fixed top-4 left-4 flex items-center gap-3" style={{ zIndex: 999999 }}>
           <Button 
             variant="secondary" 
             size="icon"
             onClick={() => navigate(-1)}
-            className="h-10 w-10 rounded-xl bg-background/95 backdrop-blur-md shadow-xl"
+            className="h-12 w-12 rounded-xl bg-slate-900/95 backdrop-blur-md shadow-2xl border border-slate-700/50 hover:bg-slate-800"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-6 w-6 text-slate-100" />
           </Button>
-          <div className="px-4 py-2 bg-background/95 backdrop-blur-md rounded-xl shadow-xl">
-            <p className="text-sm font-medium">
+          <div className="px-5 py-3 bg-slate-900/95 backdrop-blur-md rounded-xl shadow-2xl border border-slate-700/50">
+            <p className="text-lg font-semibold text-slate-100">
               {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
             </p>
           </div>
         </div>
 
+        {/* Top Center - KPI Summary */}
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 flex items-center gap-4" style={{ zIndex: 999999 }}>
+          <div className="flex items-center gap-6 px-6 py-3 bg-slate-900/95 backdrop-blur-md rounded-xl shadow-2xl border border-slate-700/50">
+            <div className="flex items-center gap-2">
+              <Route className="h-5 w-5 text-emerald-400" />
+              <span className="text-base text-slate-400">Total:</span>
+              <span className="text-xl font-bold text-emerald-300">{consumoEstimado.totalKm} km</span>
+            </div>
+            <div className="w-px h-6 bg-slate-700" />
+            <div className="flex items-center gap-2">
+              <Fuel className="h-5 w-5 text-amber-400" />
+              <span className="text-base text-slate-400">Custo:</span>
+              <span className="text-xl font-bold text-amber-300">{formatCurrency(consumoEstimado.totalCusto)}</span>
+            </div>
+            <div className="w-px h-6 bg-slate-700" />
+            <div className="flex items-center gap-2">
+              <Gauge className="h-5 w-5 text-cyan-400" />
+              <span className="text-base text-slate-400">Vel. Média:</span>
+              <span className="text-xl font-bold text-cyan-300">{stats.velocidadeMedia} km/h</span>
+            </div>
+          </div>
+        </div>
+
         {/* Bottom Left - Alerts */}
-        <div className="fixed bottom-3 left-3 space-y-2 max-w-[50%]" style={{ zIndex: 999999 }}>
+        <div className="fixed bottom-4 left-4 space-y-3 max-w-[50%]" style={{ zIndex: 999999 }}>
           {/* Alerta de Velocidade */}
           {veiculos.some(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100) && (
-            <div className="flex items-center gap-3 px-4 py-3 bg-red-500/20 backdrop-blur-md rounded-xl shadow-xl border border-red-500/30">
-              <Zap className="h-5 w-5 text-red-500 animate-pulse flex-shrink-0" />
-              <span className="text-sm text-red-500 font-medium truncate">
-                Velocidade: {veiculos.filter(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100).map(v => 
+            <div className="flex items-center gap-4 px-5 py-4 bg-red-950/90 backdrop-blur-md rounded-xl shadow-2xl border border-red-500/40">
+              <Zap className="h-6 w-6 text-red-400 animate-pulse flex-shrink-0" />
+              <span className="text-base text-red-300 font-semibold truncate">
+                ⚠️ Alta Velocidade: {veiculos.filter(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100).map(v => 
                   `${v.placa} (${Math.round(v.ultima_posicao!.velocidade)}km/h)`
                 ).join(', ')}
               </span>
@@ -429,10 +486,10 @@ export default function TvDashboardVeiculos() {
 
           {/* Alerta de Veículos Parados */}
           {veiculosParadosAlerta.length > 0 && (
-            <div className="flex items-center gap-3 px-4 py-3 bg-amber-500/20 backdrop-blur-md rounded-xl shadow-xl border border-amber-500/30">
-              <Timer className="h-5 w-5 text-amber-500 flex-shrink-0" />
-              <span className="text-sm text-amber-600 font-medium truncate">
-                Parados: {veiculosParadosAlerta.map(v => {
+            <div className="flex items-center gap-4 px-5 py-4 bg-amber-950/90 backdrop-blur-md rounded-xl shadow-2xl border border-amber-500/40">
+              <Timer className="h-6 w-6 text-amber-400 flex-shrink-0" />
+              <span className="text-base text-amber-300 font-semibold truncate">
+                ⏱️ Parados: {veiculosParadosAlerta.map(v => {
                   const minutos = differenceInMinutes(new Date(), new Date(v.ultima_posicao!.data_hora));
                   return `${v.placa} (${minutos}min)`;
                 }).join(', ')}
