@@ -35,6 +35,7 @@ interface VendedorMetrics {
   pedidosPendentes: number;
   pedidosVendidos: number;
   valorTotal: number;
+  valorMes: number;
   chatsAtivos: number;
 }
 
@@ -253,12 +254,14 @@ export default function TvDashboardVendas() {
       hoje.setHours(0, 0, 0, 0);
       const amanha = new Date(hoje);
       amanha.setDate(amanha.getDate() + 1);
+      const inicioMes = startOfMonth(new Date());
 
-      const [{ data: usuarios }, { data: activities }, { data: atendentes }, { data: orcamentos }, { data: conversations }] = await Promise.all([
+      const [{ data: usuarios }, { data: activities }, { data: atendentes }, { data: orcamentosHoje }, { data: orcamentosMes }, { data: conversations }] = await Promise.all([
         supabase.from('usuarios').select('id, nome').eq('estabelecimento_id', estabId),
         supabase.from('user_activity_tracking').select('usuario_id, is_online').eq('estabelecimento_id', estabId),
         supabase.from('atendentes').select('id, usuario_id').eq('estabelecimento_id', estabId),
         supabase.from('orcamentos').select('id, vendedor_id, status, valor_total').eq('estabelecimento_id', estabId).gte('created_at', hoje.toISOString()).lt('created_at', amanha.toISOString()),
+        supabase.from('orcamentos').select('id, vendedor_id, status, valor_total').eq('estabelecimento_id', estabId).gte('created_at', inicioMes.toISOString()),
         supabase.from('conversations').select('id, atendente_atual_id').eq('estabelecimento_id', estabId).eq('chat_status', 'em_atendimento'),
       ]);
 
@@ -266,16 +269,20 @@ export default function TvDashboardVendas() {
 
       (usuarios || []).forEach(usuario => {
         const activity = (activities || []).find(a => a.usuario_id === usuario.id);
-        const userOrcamentos = (orcamentos || []).filter(o => o.vendedor_id === usuario.id);
+        const userOrcamentosHoje = (orcamentosHoje || []).filter(o => o.vendedor_id === usuario.id);
+        const userOrcamentosMes = (orcamentosMes || []).filter(o => o.vendedor_id === usuario.id);
         const atendenteRecord = (atendentes || []).find(a => a.usuario_id === usuario.id);
         
         const chatsAtivos = atendenteRecord 
           ? (conversations || []).filter((c: any) => c.atendente_atual_id === atendenteRecord.id).length 
           : 0;
 
-        const pedidosPendentes = userOrcamentos.filter(o => o.status === 'pendente' || o.status === 'rascunho').length;
-        const pedidosVendidos = userOrcamentos.filter(o => ['aprovado', 'finalizado', 'faturado'].includes(o.status || '')).length;
-        const valorTotal = userOrcamentos
+        const pedidosPendentes = userOrcamentosHoje.filter(o => o.status === 'pendente' || o.status === 'rascunho').length;
+        const pedidosVendidos = userOrcamentosHoje.filter(o => ['aprovado', 'finalizado', 'faturado'].includes(o.status || '')).length;
+        const valorTotal = userOrcamentosHoje
+          .filter(o => ['aprovado', 'finalizado', 'faturado'].includes(o.status || ''))
+          .reduce((acc, o) => acc + (Number(o.valor_total) || 0), 0);
+        const valorMes = userOrcamentosMes
           .filter(o => ['aprovado', 'finalizado', 'faturado'].includes(o.status || ''))
           .reduce((acc, o) => acc + (Number(o.valor_total) || 0), 0);
 
@@ -286,12 +293,13 @@ export default function TvDashboardVendas() {
           pedidosPendentes,
           pedidosVendidos,
           valorTotal,
+          valorMes,
           chatsAtivos,
         });
       });
 
       setVendedores(
-        Array.from(metricsMap.values()).sort((a, b) => b.valorTotal - a.valorTotal)
+        Array.from(metricsMap.values()).sort((a, b) => b.valorMes - a.valorMes)
       );
     } catch (error) {
       console.error('Erro ao carregar vendedores:', error);
@@ -609,120 +617,70 @@ export default function TvDashboardVendas() {
           </div>
         </div>
 
-        {/* Charts Row - Horizontal Layout */}
-        <div className="flex-1 grid grid-cols-12 gap-4 min-h-0">
-          {/* Main Charts Area */}
-          <div className="col-span-9 grid grid-rows-2 gap-4">
-            {/* Top Chart - Vendas 12 Meses (Full Width) */}
-            <Card className="bg-black/30 backdrop-blur-sm border-slate-800/50 flex flex-col">
-              <CardHeader className="py-3 px-4 border-b border-slate-800/50">
-                <CardTitle className="text-sm text-slate-400 flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-blue-400" />
-                  Faturamento Últimos 12 Meses
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 p-2 min-h-0">
-                <ReactECharts option={vendasMensaisChartOption} style={{ height: '100%' }} />
-              </CardContent>
-            </Card>
-
-            {/* Bottom Charts Row */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Vendas por Hora */}
-              <Card className="bg-black/30 backdrop-blur-sm border-slate-800/50 flex flex-col">
-                <CardHeader className="py-3 px-4 border-b border-slate-800/50">
-                  <CardTitle className="text-sm text-slate-400 flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-green-400" />
-                    Vendas por Hora (Hoje)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 p-2 min-h-0">
-                  <ReactECharts option={vendasPorHoraChartOption} style={{ height: '100%' }} />
-                </CardContent>
-              </Card>
-
-              {/* Ranking Vendedores */}
-              <Card className="bg-black/30 backdrop-blur-sm border-slate-800/50 flex flex-col">
-                <CardHeader className="py-3 px-4 border-b border-slate-800/50">
-                  <CardTitle className="text-sm text-slate-400 flex items-center gap-2">
-                    <Users className="h-4 w-4 text-purple-400" />
-                    Ranking Vendedores (Hoje)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 p-2 min-h-0">
-                  <ReactECharts option={vendasChartOption} style={{ height: '100%' }} />
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Right - Team List - Compact for 12 employees */}
-          <div className="col-span-3">
-            <Card className="h-full bg-black/30 backdrop-blur-sm border-slate-800/50 flex flex-col">
-              <CardHeader className="py-2 px-3 border-b border-slate-800/50">
-                <CardTitle className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 text-slate-400">
-                    <Users className="h-3.5 w-3.5 text-blue-400" />
-                    Equipe
-                  </div>
-                  <Badge className="bg-slate-800/80 text-slate-400 text-[10px] px-1.5 py-0.5">
-                    {onlineCount}/{vendedores.length}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1 p-0 overflow-hidden">
-                <div className="h-full overflow-y-auto">
-                  <div className="p-1.5 grid grid-cols-2 gap-1">
-                    {vendedores.map((vendedor, index) => (
-                      <div 
-                        key={vendedor.id}
-                        className={`px-2 py-1.5 rounded-lg transition-all ${
-                          vendedor.isOnline 
-                            ? 'bg-slate-800/50 border border-slate-700/40' 
-                            : 'bg-slate-900/30 border border-transparent opacity-50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-1">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${vendedor.isOnline ? 'bg-green-500' : 'bg-slate-600'}`} />
-                            <span className="font-medium text-[11px] text-slate-200 truncate">
-                              {vendedor.nome.split(' ')[0]}
-                            </span>
-                            {index < 3 && vendedor.valorTotal > 0 && (
-                              <span className={`text-[9px] px-1 rounded flex-shrink-0 ${
-                                index === 0 ? 'bg-amber-500/30 text-amber-400' :
-                                index === 1 ? 'bg-slate-400/30 text-slate-300' :
-                                'bg-orange-600/30 text-orange-400'
-                              }`}>
-                                #{index + 1}
-                              </span>
-                            )}
-                          </div>
-                          <span className="font-bold text-[10px] text-blue-400 flex-shrink-0">
-                            {formatCurrencyCompact(vendedor.valorTotal)}
-                          </span>
+        {/* Team List - Full Width Vertical Layout */}
+        <div className="flex-1 min-h-0">
+          <Card className="h-full bg-black/30 backdrop-blur-sm border-slate-800/50 flex flex-col">
+            <CardHeader className="py-3 px-6 border-b border-slate-800/50">
+              <CardTitle className="flex items-center justify-between text-base">
+                <div className="flex items-center gap-2 text-slate-300">
+                  <Users className="h-5 w-5 text-blue-400" />
+                  Ranking de Vendas da Equipe
+                </div>
+                <Badge className="bg-slate-800/80 text-slate-400 text-sm px-3 py-1">
+                  {onlineCount} online / {vendedores.length} total
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 p-0 overflow-hidden">
+              <div className="h-full overflow-y-auto">
+                <div className="p-4 space-y-2">
+                  {vendedores.map((vendedor, index) => (
+                    <div 
+                      key={vendedor.id}
+                      className={`px-5 py-3 rounded-xl transition-all flex items-center justify-between ${
+                        vendedor.isOnline 
+                          ? 'bg-slate-800/50 border border-slate-700/40' 
+                          : 'bg-slate-900/30 border border-transparent opacity-60'
+                      }`}
+                    >
+                      {/* Left - Ranking & Name */}
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${
+                          index === 0 ? 'bg-amber-500/30 text-amber-400' :
+                          index === 1 ? 'bg-slate-400/30 text-slate-300' :
+                          index === 2 ? 'bg-orange-600/30 text-orange-400' :
+                          'bg-slate-800/50 text-slate-500'
+                        }`}>
+                          {index + 1}
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5 text-[9px] text-slate-500">
-                          <span className="flex items-center gap-0.5">
-                            <MessageSquare className="h-2.5 w-2.5" />
-                            {vendedor.chatsAtivos}
-                          </span>
-                          <span className="flex items-center gap-0.5 text-amber-500">
-                            <Clock className="h-2.5 w-2.5" />
-                            {vendedor.pedidosPendentes}
-                          </span>
-                          <span className="flex items-center gap-0.5 text-green-500">
-                            <ShoppingCart className="h-2.5 w-2.5" />
-                            {vendedor.pedidosVendidos}
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${vendedor.isOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`} />
+                          <span className="font-medium text-lg text-slate-200">
+                            {vendedor.nome}
                           </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
+
+                      {/* Right - Sales Values */}
+                      <div className="flex items-center gap-8">
+                        {/* Daily Sales */}
+                        <div className="text-right">
+                          <p className="text-xs text-slate-500 uppercase tracking-wider">Hoje</p>
+                          <p className="text-2xl font-bold text-green-400">{formatCurrencyCompact(vendedor.valorTotal)}</p>
+                        </div>
+                        
+                        {/* Monthly Sales */}
+                        <div className="text-right min-w-[140px]">
+                          <p className="text-xs text-slate-500 uppercase tracking-wider">Mês</p>
+                          <p className="text-2xl font-bold text-blue-400">{formatCurrencyCompact(vendedor.valorMes)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
