@@ -487,131 +487,131 @@ export default function TvDashboardVendas() {
       </div>
 
       {/* Main Grid - Optimized for 4K */}
-      <div className="h-full flex flex-col gap-4">
-        {/* KPI Row */}
-        <div className="grid grid-cols-9 gap-3">
+      <div className="h-full flex flex-col gap-5">
+        {/* KPI Row - 2 rows of cards for better readability */}
+        <div className="grid grid-cols-5 gap-4">
           {/* Vendas Hoje */}
-          <Card className="bg-black/30 backdrop-blur-sm border-slate-800/50 hover:border-green-500/30 transition-colors">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-green-500/20">
-                <ShoppingCart className="h-6 w-6 text-green-400" />
-              </div>
+          <div className="bg-gradient-to-br from-green-500/20 to-green-600/5 rounded-2xl border border-green-500/30 p-5">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Vendas Hoje</p>
-                <p className="text-3xl font-bold text-green-400">{totalVendasHoje}</p>
+                <p className="text-sm text-green-300/70 font-medium mb-1">Vendas Hoje</p>
+                <p className="text-5xl font-bold text-green-400">{totalVendasHoje}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-4 rounded-2xl bg-green-500/20">
+                <ShoppingCart className="h-8 w-8 text-green-400" />
+              </div>
+            </div>
+          </div>
 
           {/* Faturamento Hoje */}
-          <Card className="bg-black/30 backdrop-blur-sm border-slate-800/50 hover:border-blue-500/30 transition-colors">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-blue-500/20">
-                <DollarSign className="h-6 w-6 text-blue-400" />
-              </div>
+          <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/5 rounded-2xl border border-blue-500/30 p-5">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Fat. Hoje</p>
-                <p className="text-2xl font-bold text-blue-400">{formatCurrencyCompact(totalValorHoje)}</p>
+                <p className="text-sm text-blue-300/70 font-medium mb-1">Faturamento Hoje</p>
+                <p className="text-4xl font-bold text-blue-400">{formatCurrencyCompact(totalValorHoje)}</p>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Vendas Mês */}
-          <Card className="bg-black/30 backdrop-blur-sm border-slate-800/50 hover:border-cyan-500/30 transition-colors">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-cyan-500/20">
-                <CalendarDays className="h-6 w-6 text-cyan-400" />
+              <div className="p-4 rounded-2xl bg-blue-500/20">
+                <DollarSign className="h-8 w-8 text-blue-400" />
               </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Vendas Mês</p>
-                <p className="text-3xl font-bold text-cyan-400">{totalVendasMes}</p>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Faturamento Mês */}
-          <Card className="bg-black/30 backdrop-blur-sm border-slate-800/50 hover:border-indigo-500/30 transition-colors">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-indigo-500/20">
-                <BarChart3 className="h-6 w-6 text-indigo-400" />
-              </div>
+          <div className="bg-gradient-to-br from-cyan-500/20 to-cyan-600/5 rounded-2xl border border-cyan-500/30 p-5">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Fat. Mês</p>
-                <p className="text-2xl font-bold text-indigo-400">{formatCurrencyCompact(totalValorMes)}</p>
+                <p className="text-sm text-cyan-300/70 font-medium mb-1">Faturamento Mês</p>
+                <p className="text-4xl font-bold text-cyan-400">{formatCurrencyCompact(totalValorMes)}</p>
+                <p className="text-xs text-cyan-400/60 mt-1">{totalVendasMes} vendas</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-4 rounded-2xl bg-cyan-500/20">
+                <CalendarDays className="h-8 w-8 text-cyan-400" />
+              </div>
+            </div>
+          </div>
 
-          {/* 12 Meses */}
-          <Card className="bg-black/30 backdrop-blur-sm border-slate-800/50 hover:border-purple-500/30 transition-colors">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-purple-500/20">
-                <TrendingUp className="h-6 w-6 text-purple-400" />
-              </div>
+          {/* Faturamento 12 Meses */}
+          <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/5 rounded-2xl border border-purple-500/30 p-5">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">12 Meses</p>
-                <p className="text-2xl font-bold text-purple-400">{formatCurrencyCompact(totalValor12Meses)}</p>
+                <p className="text-sm text-purple-300/70 font-medium mb-1">Últimos 12 Meses</p>
+                <p className="text-4xl font-bold text-purple-400">{formatCurrencyCompact(totalValor12Meses)}</p>
+                <p className="text-xs text-purple-400/60 mt-1">{totalVendas12Meses} vendas</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-4 rounded-2xl bg-purple-500/20">
+                <TrendingUp className="h-8 w-8 text-purple-400" />
+              </div>
+            </div>
+          </div>
 
+          {/* Meta Diária com Progress */}
+          <div className="bg-gradient-to-br from-amber-500/20 to-orange-600/5 rounded-2xl border border-amber-500/30 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-sm text-amber-300/70 font-medium mb-1">Meta Diária</p>
+                <p className="text-4xl font-bold text-amber-400">{progressoMeta.toFixed(0)}%</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-amber-500/20">
+                <Target className="h-8 w-8 text-amber-400" />
+              </div>
+            </div>
+            <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-amber-500 to-orange-400 transition-all duration-1000"
+                style={{ width: `${progressoMeta}%` }}
+              />
+            </div>
+            <p className="text-xs text-amber-400/60 mt-2">{formatCurrency(totalValorHoje)} / {formatCurrency(metaDiaria)}</p>
+          </div>
+        </div>
+
+        {/* Secondary KPIs Row */}
+        <div className="grid grid-cols-4 gap-4">
           {/* Ticket Médio */}
-          <Card className="bg-black/30 backdrop-blur-sm border-slate-800/50 hover:border-orange-500/30 transition-colors">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-orange-500/20">
-                <Target className="h-6 w-6 text-orange-400" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Ticket Médio</p>
-                <p className="text-2xl font-bold text-orange-400">
-                  {totalVendasHoje > 0 ? formatCurrencyCompact(totalValorHoje / totalVendasHoje) : 'R$ 0'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-slate-700/50 px-5 py-3 flex items-center gap-4">
+            <div className="p-2.5 rounded-xl bg-orange-500/20">
+              <BarChart3 className="h-5 w-5 text-orange-400" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Ticket Médio</p>
+              <p className="text-xl font-bold text-orange-400">
+                {totalVendasHoje > 0 ? formatCurrencyCompact(totalValorHoje / totalVendasHoje) : 'R$ 0'}
+              </p>
+            </div>
+          </div>
 
           {/* Taxa Conversão */}
-          <Card className="bg-black/30 backdrop-blur-sm border-slate-800/50 hover:border-amber-500/30 transition-colors">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-amber-500/20">
-                <Percent className="h-6 w-6 text-amber-400" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Conversão</p>
-                <p className="text-3xl font-bold text-amber-400">{taxaConversao}%</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-slate-700/50 px-5 py-3 flex items-center gap-4">
+            <div className="p-2.5 rounded-xl bg-emerald-500/20">
+              <Percent className="h-5 w-5 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Taxa Conversão</p>
+              <p className="text-xl font-bold text-emerald-400">{taxaConversao}%</p>
+            </div>
+          </div>
 
           {/* Tempo Resposta */}
-          <Card className="bg-black/30 backdrop-blur-sm border-slate-800/50 hover:border-pink-500/30 transition-colors">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-pink-500/20">
-                <Timer className="h-6 w-6 text-pink-400" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Resposta</p>
-                <p className="text-3xl font-bold text-pink-400">{tempoMedioResposta}m</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-slate-700/50 px-5 py-3 flex items-center gap-4">
+            <div className="p-2.5 rounded-xl bg-pink-500/20">
+              <Timer className="h-5 w-5 text-pink-400" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Tempo Resposta</p>
+              <p className="text-xl font-bold text-pink-400">{tempoMedioResposta} min</p>
+            </div>
+          </div>
 
-          {/* Meta Diária */}
-          <Card className="bg-black/30 backdrop-blur-sm border-slate-800/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-slate-500 uppercase tracking-wider">Meta Diária</p>
-                <span className="text-lg font-bold text-white">{progressoMeta.toFixed(0)}%</span>
-              </div>
-              <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-blue-500 via-cyan-400 to-green-400 transition-all duration-1000"
-                  style={{ width: `${progressoMeta}%` }}
-                />
-              </div>
-              <p className="text-xs text-slate-500 mt-1.5">{formatCurrency(totalValorHoje)} / {formatCurrency(metaDiaria)}</p>
-            </CardContent>
-          </Card>
+          {/* Online */}
+          <div className="bg-black/30 backdrop-blur-sm rounded-xl border border-slate-700/50 px-5 py-3 flex items-center gap-4">
+            <div className="p-2.5 rounded-xl bg-green-500/20">
+              <Users className="h-5 w-5 text-green-400" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Equipe Online</p>
+              <p className="text-xl font-bold text-green-400">{onlineCount} <span className="text-slate-500 font-normal text-sm">/ {vendedores.length}</span></p>
+            </div>
+          </div>
         </div>
 
         {/* Charts Row - Horizontal Layout */}
