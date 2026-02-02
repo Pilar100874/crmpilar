@@ -27,6 +27,7 @@ import {
 import { format, startOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ReactECharts from "echarts-for-react";
+import { useFullscreen } from "@/hooks/useFullscreen";
 
 interface VendedorMetrics {
   id: string;
@@ -58,6 +59,7 @@ interface VendasMensais {
 
 export default function TvDashboardVendas() {
   const navigate = useNavigate();
+  useFullscreen(true);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   const [vendedores, setVendedores] = useState<VendedorMetrics[]>([]);
   const [totalVendasHoje, setTotalVendasHoje] = useState(0);
