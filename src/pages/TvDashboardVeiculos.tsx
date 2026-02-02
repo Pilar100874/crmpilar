@@ -296,45 +296,9 @@ export default function TvDashboardVeiculos() {
 
   return (
     <>
-      {/* Legend - Top Right */}
-      <div 
-        className="fixed top-3 right-3 flex items-center gap-3 px-4 py-2.5 bg-background/95 backdrop-blur-md rounded-xl shadow-xl border border-border"
-        style={{ zIndex: 999999 }}
-      >
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-green-500 shadow-sm" />
-          <span className="text-sm text-muted-foreground">Movendo</span>
-          <span className="text-lg font-bold text-green-600">{stats.movendo}</span>
-        </div>
-        
-        <div className="w-px h-5 bg-border" />
-        
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-amber-500 shadow-sm" />
-          <span className="text-sm text-muted-foreground">Parado</span>
-          <span className="text-lg font-bold text-amber-600">{stats.parado}</span>
-        </div>
-        
-        <div className="w-px h-5 bg-border" />
-        
-        <div className="flex items-center gap-2">
-          <div className="w-3.5 h-3.5 rounded-full bg-gray-400 shadow-sm" />
-          <span className="text-sm text-muted-foreground">Offline</span>
-          <span className="text-lg font-bold text-gray-500">{stats.offline}</span>
-        </div>
-        
-        <div className="w-px h-5 bg-border" />
-        
-        <div className="flex items-center gap-2">
-          <Car className="h-4 w-4 text-primary" />
-          <span className="text-sm text-muted-foreground">Total</span>
-          <span className="text-lg font-bold">{stats.total}</span>
-        </div>
-      </div>
-
       {/* Vehicle List - Right Side */}
       <div 
-        className="fixed top-16 right-3 bottom-3 w-64 bg-black/40 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden flex flex-col"
+        className="fixed top-3 right-3 bottom-3 w-64 bg-black/20 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden flex flex-col"
         style={{ zIndex: 999999 }}
       >
         <div className="px-3 py-2 border-b border-white/10">
@@ -364,6 +328,7 @@ export default function TvDashboardVeiculos() {
                       <div className="flex items-center gap-1.5">
                         <div className={`w-2 h-2 rounded-full ${config.color}`} />
                         <span className="font-medium text-xs text-white/90">{veiculo.placa}</span>
+                        <span className={`text-[10px] ${config.textColor}`}>({config.label})</span>
                       </div>
                       <div className="flex items-center gap-2 text-[10px] text-white/60">
                         {veiculo.ultima_posicao && (
