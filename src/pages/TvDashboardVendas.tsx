@@ -469,13 +469,8 @@ export default function TvDashboardVendas() {
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden p-6">
-      {/* Header Minimal */}
-      <div className="absolute top-4 right-6 flex items-center gap-4 z-10">
-        <Badge className="bg-black/40 backdrop-blur text-slate-300 border-slate-700/50 px-3 py-1.5 text-sm">
-          <Circle className={`h-2 w-2 mr-2 ${onlineCount > 0 ? 'fill-green-500 text-green-500 animate-pulse' : 'fill-slate-500 text-slate-500'}`} />
-          {onlineCount} online
-        </Badge>
-        <span className="text-slate-500 text-sm">{format(lastUpdate, 'HH:mm', { locale: ptBR })}</span>
+      {/* Header Minimal - apenas botão voltar */}
+      <div className="absolute top-4 right-6 z-10">
         <Button 
           variant="ghost" 
           size="icon"
