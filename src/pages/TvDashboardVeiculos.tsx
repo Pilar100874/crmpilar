@@ -295,109 +295,112 @@ export default function TvDashboardVeiculos() {
   }
 
   return (
-    <div className="fixed inset-0 bg-background overflow-hidden">
-      {/* Fullscreen Map */}
-      <div className="absolute inset-0 z-0">
-        {veiculosComPosicao.length === 0 ? (
-          <div className="h-full w-full flex items-center justify-center bg-muted/50">
-            <div className="text-center">
-              <MapPin className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <p className="text-xl text-muted-foreground">Nenhum veículo com posição</p>
-              <p className="text-sm text-muted-foreground mt-2">Aguardando dados de GPS...</p>
-            </div>
-          </div>
-        ) : (
-          <LazyLogisticaMap
-            veiculos={veiculosComPosicao}
-            paradasMarcadas={paradasMarcadas}
-            className="absolute inset-0"
-            fitBounds
-            compactIcons
-            disableInteraction
-          />
-        )}
-      </div>
-
-      {/* Top Left - Back Button & Clock */}
-      <div className="absolute top-3 left-3 z-[1000] flex items-center gap-2">
-        <Button 
-          variant="secondary" 
-          size="icon"
-          onClick={() => navigate(-1)}
-          className="h-9 w-9 rounded-lg bg-background/90 backdrop-blur-sm shadow-lg"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="px-3 py-1.5 bg-background/90 backdrop-blur-sm rounded-lg shadow-lg">
-          <p className="text-xs text-muted-foreground">
-            {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
-          </p>
-        </div>
-      </div>
-
-      {/* Top Right - Legend */}
+    <>
+      {/* Legend - Rendered at body level with portal-like approach */}
       <div 
-        className="flex items-center gap-2 px-3 py-2 bg-background rounded-lg shadow-lg border border-border"
-        style={{ position: 'fixed', top: 12, right: 12, zIndex: 99999 }}
+        className="fixed top-3 right-3 flex items-center gap-3 px-4 py-2.5 bg-background/95 backdrop-blur-md rounded-xl shadow-xl border border-border"
+        style={{ zIndex: 999999 }}
       >
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-green-500 border border-white" />
-          <span className="text-xs text-muted-foreground">Movendo</span>
-          <span className="text-sm font-bold text-green-600">{stats.movendo}</span>
+        <div className="flex items-center gap-2">
+          <div className="w-3.5 h-3.5 rounded-full bg-green-500 shadow-sm" />
+          <span className="text-sm text-muted-foreground">Movendo</span>
+          <span className="text-lg font-bold text-green-600">{stats.movendo}</span>
         </div>
         
-        <div className="w-px h-4 bg-border" />
+        <div className="w-px h-5 bg-border" />
         
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-amber-500 border border-white" />
-          <span className="text-xs text-muted-foreground">Parado</span>
-          <span className="text-sm font-bold text-amber-600">{stats.parado}</span>
+        <div className="flex items-center gap-2">
+          <div className="w-3.5 h-3.5 rounded-full bg-amber-500 shadow-sm" />
+          <span className="text-sm text-muted-foreground">Parado</span>
+          <span className="text-lg font-bold text-amber-600">{stats.parado}</span>
         </div>
         
-        <div className="w-px h-4 bg-border" />
+        <div className="w-px h-5 bg-border" />
         
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-gray-400 border border-white" />
-          <span className="text-xs text-muted-foreground">Offline</span>
-          <span className="text-sm font-bold text-gray-500">{stats.offline}</span>
+        <div className="flex items-center gap-2">
+          <div className="w-3.5 h-3.5 rounded-full bg-gray-400 shadow-sm" />
+          <span className="text-sm text-muted-foreground">Offline</span>
+          <span className="text-lg font-bold text-gray-500">{stats.offline}</span>
         </div>
         
-        <div className="w-px h-4 bg-border" />
+        <div className="w-px h-5 bg-border" />
         
-        <div className="flex items-center gap-1.5">
-          <Car className="h-3 w-3 text-primary" />
-          <span className="text-xs text-muted-foreground">Total</span>
-          <span className="text-sm font-bold">{stats.total}</span>
+        <div className="flex items-center gap-2">
+          <Car className="h-4 w-4 text-primary" />
+          <span className="text-sm text-muted-foreground">Total</span>
+          <span className="text-lg font-bold">{stats.total}</span>
         </div>
       </div>
 
-      {/* Bottom Left - Alerts */}
-      <div className="absolute bottom-3 left-3 z-[1000] space-y-1.5 max-w-[60%]">
-        {/* Alerta de Velocidade */}
-        {veiculos.some(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100) && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-red-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-red-500/30">
-            <Zap className="h-4 w-4 text-red-500 animate-pulse flex-shrink-0" />
-            <span className="text-xs text-red-500 font-medium truncate">
-              Velocidade: {veiculos.filter(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100).map(v => 
-                `${v.placa} (${Math.round(v.ultima_posicao!.velocidade)}km/h)`
-              ).join(', ')}
-            </span>
-          </div>
-        )}
+      {/* Main Container */}
+      <div className="fixed inset-0 bg-background overflow-hidden">
+        {/* Fullscreen Map */}
+        <div className="absolute inset-0">
+          {veiculosComPosicao.length === 0 ? (
+            <div className="h-full w-full flex items-center justify-center bg-muted/50">
+              <div className="text-center">
+                <MapPin className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-xl text-muted-foreground">Nenhum veículo com posição</p>
+                <p className="text-sm text-muted-foreground mt-2">Aguardando dados de GPS...</p>
+              </div>
+            </div>
+          ) : (
+            <LazyLogisticaMap
+              veiculos={veiculosComPosicao}
+              paradasMarcadas={paradasMarcadas}
+              className="absolute inset-0"
+              fitBounds
+              compactIcons
+              disableInteraction
+            />
+          )}
+        </div>
 
-        {/* Alerta de Veículos Parados */}
-        {veiculosParadosAlerta.length > 0 && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/20 backdrop-blur-sm rounded-lg shadow-lg border border-amber-500/30">
-            <Timer className="h-4 w-4 text-amber-500 flex-shrink-0" />
-            <span className="text-xs text-amber-600 font-medium truncate">
-              Parados: {veiculosParadosAlerta.map(v => {
-                const minutos = differenceInMinutes(new Date(), new Date(v.ultima_posicao!.data_hora));
-                return `${v.placa} (${minutos}min)`;
-              }).join(', ')}
-            </span>
+        {/* Top Left - Back Button & Clock */}
+        <div className="fixed top-3 left-3 flex items-center gap-2" style={{ zIndex: 999999 }}>
+          <Button 
+            variant="secondary" 
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="h-10 w-10 rounded-xl bg-background/95 backdrop-blur-md shadow-xl"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="px-4 py-2 bg-background/95 backdrop-blur-md rounded-xl shadow-xl">
+            <p className="text-sm font-medium">
+              {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
+            </p>
           </div>
-        )}
+        </div>
+
+        {/* Bottom Left - Alerts */}
+        <div className="fixed bottom-3 left-3 space-y-2 max-w-[70%]" style={{ zIndex: 999999 }}>
+          {/* Alerta de Velocidade */}
+          {veiculos.some(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100) && (
+            <div className="flex items-center gap-3 px-4 py-3 bg-red-500/20 backdrop-blur-md rounded-xl shadow-xl border border-red-500/30">
+              <Zap className="h-5 w-5 text-red-500 animate-pulse flex-shrink-0" />
+              <span className="text-sm text-red-500 font-medium truncate">
+                Velocidade: {veiculos.filter(v => v.ultima_posicao && v.ultima_posicao.velocidade > 100).map(v => 
+                  `${v.placa} (${Math.round(v.ultima_posicao!.velocidade)}km/h)`
+                ).join(', ')}
+              </span>
+            </div>
+          )}
+
+          {/* Alerta de Veículos Parados */}
+          {veiculosParadosAlerta.length > 0 && (
+            <div className="flex items-center gap-3 px-4 py-3 bg-amber-500/20 backdrop-blur-md rounded-xl shadow-xl border border-amber-500/30">
+              <Timer className="h-5 w-5 text-amber-500 flex-shrink-0" />
+              <span className="text-sm text-amber-600 font-medium truncate">
+                Parados: {veiculosParadosAlerta.map(v => {
+                  const minutos = differenceInMinutes(new Date(), new Date(v.ultima_posicao!.data_hora));
+                  return `${v.placa} (${minutos}min)`;
+                }).join(', ')}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
