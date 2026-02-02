@@ -688,19 +688,19 @@ export default function TvDashboardVendas() {
             </CardHeader>
             <CardContent className="flex-1 p-0 overflow-hidden">
               <div className="h-full overflow-y-auto">
-                <div className="p-2 space-y-1">
+                <div className="p-1 space-y-0.5">
                   {vendedores.map((vendedor, index) => (
                     <div 
                       key={vendedor.id}
-                      className={`px-4 py-2 rounded-lg transition-all flex items-center justify-between ${
+                      className={`px-3 py-1 rounded transition-all flex items-center justify-between ${
                         vendedor.isOnline 
                           ? 'bg-slate-800/50 border border-slate-700/40' 
                           : 'bg-slate-900/30 border border-transparent opacity-60'
                       }`}
                     >
                       {/* Left - Ranking & Name */}
-                      <div className="flex items-center gap-3 min-w-[200px]">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                      <div className="flex items-center gap-2 min-w-[160px]">
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                           index === 0 ? 'bg-amber-500/30 text-amber-400' :
                           index === 1 ? 'bg-slate-400/30 text-slate-300' :
                           index === 2 ? 'bg-orange-600/30 text-orange-400' :
@@ -708,35 +708,35 @@ export default function TvDashboardVendas() {
                         }`}>
                           {index + 1}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${vendedor.isOnline ? 'bg-green-500' : 'bg-slate-600'}`} />
-                          <span className="font-medium text-sm text-slate-200 truncate max-w-[140px]">
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-1.5 h-1.5 rounded-full ${vendedor.isOnline ? 'bg-green-500' : 'bg-slate-600'}`} />
+                          <span className="font-medium text-[11px] text-slate-200 truncate max-w-[120px]">
                             {vendedor.nome}
                           </span>
                         </div>
                       </div>
 
                       {/* Right - Metrics */}
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
                         {/* Agenda */}
-                        <div className="w-12 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <Calendar className="h-3 w-3 text-purple-400" />
-                            <span className="text-sm font-medium text-purple-400">{vendedor.agendaHoje}</span>
+                        <div className="w-10 text-center">
+                          <div className="flex items-center justify-center gap-0.5">
+                            <Calendar className="h-2.5 w-2.5 text-purple-400" />
+                            <span className="text-[10px] font-medium text-purple-400">{vendedor.agendaHoje}</span>
                           </div>
                         </div>
 
                         {/* Chats */}
-                        <div className="w-12 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <MessageSquare className="h-3 w-3 text-cyan-400" />
-                            <span className="text-sm font-medium text-cyan-400">{vendedor.chatsFinalizados}</span>
+                        <div className="w-10 text-center">
+                          <div className="flex items-center justify-center gap-0.5">
+                            <MessageSquare className="h-2.5 w-2.5 text-cyan-400" />
+                            <span className="text-[10px] font-medium text-cyan-400">{vendedor.chatsFinalizados}</span>
                           </div>
                         </div>
 
                         {/* Emails */}
-                        <div className="w-16 text-center">
-                          <div className="flex items-center justify-center gap-1 text-xs">
+                        <div className="w-14 text-center">
+                          <div className="flex items-center justify-center gap-0.5 text-[9px]">
                             <span className="text-green-400">↑{vendedor.emailsEnviados}</span>
                             <span className="text-slate-500">/</span>
                             <span className="text-blue-400">↓{vendedor.emailsRecebidos}</span>
@@ -744,21 +744,21 @@ export default function TvDashboardVendas() {
                         </div>
 
                         {/* Orçamentos */}
-                        <div className="w-32 flex items-center justify-center gap-1">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-700/50 text-slate-400">{vendedor.orcamentosTotal}</span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-400">{vendedor.orcamentosPendentes}P</span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-green-500/20 text-green-400">{vendedor.orcamentosAprovados}A</span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400">{vendedor.orcamentosFaturados}F</span>
+                        <div className="w-28 flex items-center justify-center gap-0.5">
+                          <span className="px-1 py-0.5 rounded text-[8px] bg-slate-700/50 text-slate-400">{vendedor.orcamentosTotal}</span>
+                          <span className="px-1 py-0.5 rounded text-[8px] bg-amber-500/20 text-amber-400">{vendedor.orcamentosPendentes}P</span>
+                          <span className="px-1 py-0.5 rounded text-[8px] bg-green-500/20 text-green-400">{vendedor.orcamentosAprovados}A</span>
+                          <span className="px-1 py-0.5 rounded text-[8px] bg-blue-500/20 text-blue-400">{vendedor.orcamentosFaturados}F</span>
                         </div>
 
                         {/* Daily Sales */}
-                        <div className="w-24 text-right">
-                          <p className="text-lg font-bold text-green-400">{formatCurrencyCompact(vendedor.valorTotal)}</p>
+                        <div className="w-20 text-right">
+                          <p className="text-sm font-bold text-green-400">{formatCurrencyCompact(vendedor.valorTotal)}</p>
                         </div>
                         
                         {/* Monthly Sales */}
-                        <div className="w-24 text-right">
-                          <p className="text-lg font-bold text-blue-400">{formatCurrencyCompact(vendedor.valorMes)}</p>
+                        <div className="w-20 text-right">
+                          <p className="text-sm font-bold text-blue-400">{formatCurrencyCompact(vendedor.valorMes)}</p>
                         </div>
                       </div>
                     </div>
