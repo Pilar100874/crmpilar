@@ -65,6 +65,7 @@ export type VeiculoStatus = 'movendo' | 'parado' | 'offline';
 export interface VeiculoComStatus extends Veiculo {
   status: VeiculoStatus;
   ultima_atualizacao?: string;
+  cor?: string; // Cor única para identificação no mapa
 }
 
 export interface HistoricoEstatisticas {

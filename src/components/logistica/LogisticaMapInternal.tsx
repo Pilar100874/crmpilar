@@ -12,8 +12,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-const createVeiculoIcon = (status: string, compact = false) => {
-  const color = status === 'movendo' ? '#22c55e' : status === 'parado' ? '#eab308' : '#6b7280';
+const createVeiculoIcon = (status: string, compact = false, customColor?: string) => {
+  // Se tiver cor customizada, usa ela; senão usa cor do status
+  const color = customColor || (status === 'movendo' ? '#22c55e' : status === 'parado' ? '#eab308' : '#6b7280');
   const size = compact ? 14 : 24;
   const borderWidth = compact ? 2 : 3;
   return L.divIcon({
@@ -214,9 +215,9 @@ const LogisticaMapInternal: React.FC<LogisticaMapInternalProps> = ({
 
       if (existingMarker) {
         existingMarker.setLatLng(pos);
-        existingMarker.setIcon(createVeiculoIcon(veiculo.status, compactIcons));
+        existingMarker.setIcon(createVeiculoIcon(veiculo.status, compactIcons, veiculo.cor));
       } else {
-        const marker = L.marker(pos, { icon: createVeiculoIcon(veiculo.status, compactIcons) })
+        const marker = L.marker(pos, { icon: createVeiculoIcon(veiculo.status, compactIcons, veiculo.cor) })
           .addTo(map)
           .bindPopup(`
             <div class="text-sm">
