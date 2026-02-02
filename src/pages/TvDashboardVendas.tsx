@@ -13,42 +13,29 @@ import {
   Clock, 
   TrendingUp,
   MessageSquare,
-  Mail,
   Calendar,
-  Activity,
   Target,
-  ArrowUp,
-  ArrowDown,
   RefreshCw,
   Tv,
   Circle,
   Percent,
   Timer,
-  Zap,
-  ArrowLeft
+  ArrowLeft,
+  CalendarDays,
+  BarChart3
 } from "lucide-react";
-import { format, startOfHour, subHours } from "date-fns";
+import { format, startOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ReactECharts from "echarts-for-react";
 
 interface VendedorMetrics {
   id: string;
   nome: string;
-  email: string;
   isOnline: boolean;
   pedidosPendentes: number;
-  pedidosAprovados: number;
-  pedidosFaturados: number;
+  pedidosVendidos: number;
   valorTotal: number;
   chatsAtivos: number;
-  emailsAtivos: number;
-  agendaHoje: number;
-}
-
-interface OrcamentoStatus {
-  status: string;
-  count: number;
-  valor: number;
 }
 
 interface VendasPorHora {
@@ -57,20 +44,29 @@ interface VendasPorHora {
   quantidade: number;
 }
 
+interface VendasMensais {
+  mes: string;
+  valor: number;
+  quantidade: number;
+}
+
 export default function TvDashboardVendas() {
   const navigate = useNavigate();
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   const [vendedores, setVendedores] = useState<VendedorMetrics[]>([]);
-  const [statusResumo, setStatusResumo] = useState<OrcamentoStatus[]>([]);
   const [totalVendasHoje, setTotalVendasHoje] = useState(0);
   const [totalValorHoje, setTotalValorHoje] = useState(0);
+  const [totalValorMes, setTotalValorMes] = useState(0);
+  const [totalVendasMes, setTotalVendasMes] = useState(0);
+  const [totalValor12Meses, setTotalValor12Meses] = useState(0);
+  const [totalVendas12Meses, setTotalVendas12Meses] = useState(0);
   const [metaDiaria, setMetaDiaria] = useState(50000);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [loading, setLoading] = useState(true);
   const [vendasPorHora, setVendasPorHora] = useState<VendasPorHora[]>([]);
+  const [vendasMensais, setVendasMensais] = useState<VendasMensais[]>([]);
   const [taxaConversao, setTaxaConversao] = useState(0);
   const [tempoMedioResposta, setTempoMedioResposta] = useState(0);
-  const [totalOrcamentos, setTotalOrcamentos] = useState(0);
 
   useEffect(() => {
     init();
@@ -78,7 +74,6 @@ export default function TvDashboardVendas() {
 
   useEffect(() => {
     if (!estabelecimentoId) return;
-
     const interval = setInterval(loadAllData, 30000);
     return () => clearInterval(interval);
   }, [estabelecimentoId]);
@@ -99,9 +94,11 @@ export default function TvDashboardVendas() {
 
     await Promise.all([
       loadVendedores(id),
-      loadStatusResumo(id),
       loadTotaisHoje(id),
+      loadTotaisMes(id),
+      loadTotais12Meses(id),
       loadVendasPorHora(id),
+      loadVendasMensais(id),
       loadTaxaConversao(id),
       loadTempoMedioResposta(id),
     ]);
@@ -113,10 +110,6 @@ export default function TvDashboardVendas() {
       .channel('tv-dashboard-vendas')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'orcamentos', filter: `estabelecimento_id=eq.${estabId}` },
-        () => loadAllData()
-      )
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'conversations', filter: `estabelecimento_id=eq.${estabId}` },
         () => loadAllData()
       )
       .on('postgres_changes',
@@ -135,41 +128,71 @@ export default function TvDashboardVendas() {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('orcamentos')
-        .select('created_at, valor_total, status')
+        .select('created_at, valor_total')
         .eq('estabelecimento_id', estabId)
         .in('status', ['aprovado', 'finalizado', 'faturado'])
         .gte('created_at', hoje.toISOString());
 
-      if (error) throw error;
-
-      // Agrupar por hora
       const horasMap: Record<string, { valor: number; quantidade: number }> = {};
-      
-      // Inicializar todas as horas do dia até agora
       const horaAtual = new Date().getHours();
       for (let h = 8; h <= horaAtual; h++) {
-        const horaStr = `${h.toString().padStart(2, '0')}:00`;
+        const horaStr = `${h.toString().padStart(2, '0')}h`;
         horasMap[horaStr] = { valor: 0, quantidade: 0 };
       }
 
       (data || []).forEach((orc: any) => {
         const hora = new Date(orc.created_at).getHours();
-        const horaStr = `${hora.toString().padStart(2, '0')}:00`;
+        const horaStr = `${hora.toString().padStart(2, '0')}h`;
         if (horasMap[horaStr]) {
           horasMap[horaStr].valor += Number(orc.valor_total) || 0;
           horasMap[horaStr].quantidade++;
         }
       });
 
-      const vendasHora = Object.entries(horasMap)
-        .map(([hora, data]) => ({ hora, ...data }))
-        .sort((a, b) => a.hora.localeCompare(b.hora));
-
-      setVendasPorHora(vendasHora);
+      setVendasPorHora(
+        Object.entries(horasMap)
+          .map(([hora, data]) => ({ hora, ...data }))
+          .sort((a, b) => a.hora.localeCompare(b.hora))
+      );
     } catch (error) {
       console.error('Erro ao carregar vendas por hora:', error);
+    }
+  };
+
+  const loadVendasMensais = async (estabId: string) => {
+    try {
+      const data12MesesAtras = subMonths(new Date(), 12);
+
+      const { data } = await supabase
+        .from('orcamentos')
+        .select('created_at, valor_total')
+        .eq('estabelecimento_id', estabId)
+        .in('status', ['aprovado', 'finalizado', 'faturado'])
+        .gte('created_at', data12MesesAtras.toISOString());
+
+      const mesesMap: Record<string, { valor: number; quantidade: number }> = {};
+      
+      for (let i = 11; i >= 0; i--) {
+        const mes = subMonths(new Date(), i);
+        const mesStr = format(mes, 'MMM/yy', { locale: ptBR });
+        mesesMap[mesStr] = { valor: 0, quantidade: 0 };
+      }
+
+      (data || []).forEach((orc: any) => {
+        const mesStr = format(new Date(orc.created_at), 'MMM/yy', { locale: ptBR });
+        if (mesesMap[mesStr]) {
+          mesesMap[mesStr].valor += Number(orc.valor_total) || 0;
+          mesesMap[mesStr].quantidade++;
+        }
+      });
+
+      setVendasMensais(
+        Object.entries(mesesMap).map(([mes, data]) => ({ mes, ...data }))
+      );
+    } catch (error) {
+      console.error('Erro ao carregar vendas mensais:', error);
     }
   };
 
@@ -178,14 +201,12 @@ export default function TvDashboardVendas() {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
-      // Total de orçamentos criados hoje
       const { count: totalCriados } = await supabase
         .from('orcamentos')
         .select('*', { count: 'exact', head: true })
         .eq('estabelecimento_id', estabId)
         .gte('created_at', hoje.toISOString());
 
-      // Orçamentos convertidos (aprovados, finalizados, faturados)
       const { count: convertidos } = await supabase
         .from('orcamentos')
         .select('*', { count: 'exact', head: true })
@@ -193,7 +214,6 @@ export default function TvDashboardVendas() {
         .in('status', ['aprovado', 'finalizado', 'faturado'])
         .gte('created_at', hoje.toISOString());
 
-      setTotalOrcamentos(totalCriados || 0);
       const taxa = totalCriados && totalCriados > 0 
         ? ((convertidos || 0) / totalCriados) * 100 
         : 0;
@@ -208,22 +228,19 @@ export default function TvDashboardVendas() {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
-      // Buscar conversas com tempo de primeira resposta
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('conversations')
         .select('sla_tempo_primeira_resposta')
         .eq('estabelecimento_id', estabId)
         .gte('created_at', hoje.toISOString())
         .not('sla_tempo_primeira_resposta', 'is', null);
 
-      if (error) throw error;
-
       if (data && data.length > 0) {
         const tempos = data.map((c: any) => c.sla_tempo_primeira_resposta || 0).filter((t: number) => t > 0);
         const media = tempos.length > 0 
           ? tempos.reduce((a: number, b: number) => a + b, 0) / tempos.length 
           : 0;
-        setTempoMedioResposta(Math.round(media / 60)); // Converter para minutos
+        setTempoMedioResposta(Math.round(media / 60));
       }
     } catch (error) {
       console.error('Erro ao carregar tempo médio de resposta:', error);
@@ -237,41 +254,13 @@ export default function TvDashboardVendas() {
       const amanha = new Date(hoje);
       amanha.setDate(amanha.getDate() + 1);
 
-      const { data: usuarios, error: usuariosError } = await supabase
-        .from('usuarios')
-        .select('id, nome, email')
-        .eq('estabelecimento_id', estabId);
-
-      if (usuariosError) throw usuariosError;
-
-      const { data: activities } = await supabase
-        .from('user_activity_tracking')
-        .select('usuario_id, is_online')
-        .eq('estabelecimento_id', estabId);
-
-      const { data: atendentes } = await supabase
-        .from('atendentes')
-        .select('id, usuario_id')
-        .eq('estabelecimento_id', estabId);
-
-      const { data: orcamentos } = await supabase
-        .from('orcamentos')
-        .select('id, vendedor_id, status, valor_total')
-        .eq('estabelecimento_id', estabId)
-        .gte('created_at', hoje.toISOString())
-        .lt('created_at', amanha.toISOString());
-
-      const { data: conversations } = await supabase
-        .from('conversations')
-        .select('id, atendente_atual_id, canal, chat_status')
-        .eq('estabelecimento_id', estabId)
-        .eq('chat_status', 'em_atendimento');
-
-      const { data: tarefas } = await supabase
-        .from('calendario_tarefas')
-        .select('id, user_id')
-        .eq('estabelecimento_id', estabId)
-        .eq('date', hoje.toISOString().split('T')[0]);
+      const [{ data: usuarios }, { data: activities }, { data: atendentes }, { data: orcamentos }, { data: conversations }] = await Promise.all([
+        supabase.from('usuarios').select('id, nome').eq('estabelecimento_id', estabId),
+        supabase.from('user_activity_tracking').select('usuario_id, is_online').eq('estabelecimento_id', estabId),
+        supabase.from('atendentes').select('id, usuario_id').eq('estabelecimento_id', estabId),
+        supabase.from('orcamentos').select('id, vendedor_id, status, valor_total').eq('estabelecimento_id', estabId).gte('created_at', hoje.toISOString()).lt('created_at', amanha.toISOString()),
+        supabase.from('conversations').select('id, atendente_atual_id').eq('estabelecimento_id', estabId).eq('chat_status', 'em_atendimento'),
+      ]);
 
       const metricsMap = new Map<string, VendedorMetrics>();
 
@@ -280,19 +269,12 @@ export default function TvDashboardVendas() {
         const userOrcamentos = (orcamentos || []).filter(o => o.vendedor_id === usuario.id);
         const atendenteRecord = (atendentes || []).find(a => a.usuario_id === usuario.id);
         
-        let chatsAtivos = 0;
-        let emailsAtivos = 0;
-        if (atendenteRecord) {
-          const userConvs = (conversations || []).filter((c: any) => c.atendente_atual_id === atendenteRecord.id);
-          chatsAtivos = userConvs.filter((c: any) => c.canal !== 'email').length;
-          emailsAtivos = userConvs.filter((c: any) => c.canal === 'email').length;
-        }
-
-        const agendaHoje = (tarefas || []).filter((t: any) => t.user_id === usuario.id).length;
+        const chatsAtivos = atendenteRecord 
+          ? (conversations || []).filter((c: any) => c.atendente_atual_id === atendenteRecord.id).length 
+          : 0;
 
         const pedidosPendentes = userOrcamentos.filter(o => o.status === 'pendente' || o.status === 'rascunho').length;
-        const pedidosAprovados = userOrcamentos.filter(o => o.status === 'aprovado' || o.status === 'finalizado').length;
-        const pedidosFaturados = userOrcamentos.filter(o => o.status === 'faturado').length;
+        const pedidosVendidos = userOrcamentos.filter(o => ['aprovado', 'finalizado', 'faturado'].includes(o.status || '')).length;
         const valorTotal = userOrcamentos
           .filter(o => ['aprovado', 'finalizado', 'faturado'].includes(o.status || ''))
           .reduce((acc, o) => acc + (Number(o.valor_total) || 0), 0);
@@ -300,57 +282,19 @@ export default function TvDashboardVendas() {
         metricsMap.set(usuario.id, {
           id: usuario.id,
           nome: usuario.nome,
-          email: usuario.email,
           isOnline: activity?.is_online || false,
           pedidosPendentes,
-          pedidosAprovados,
-          pedidosFaturados,
+          pedidosVendidos,
           valorTotal,
           chatsAtivos,
-          emailsAtivos,
-          agendaHoje,
         });
       });
 
-      const sortedVendedores = Array.from(metricsMap.values())
-        .sort((a, b) => b.valorTotal - a.valorTotal);
-
-      setVendedores(sortedVendedores);
+      setVendedores(
+        Array.from(metricsMap.values()).sort((a, b) => b.valorTotal - a.valorTotal)
+      );
     } catch (error) {
       console.error('Erro ao carregar vendedores:', error);
-    }
-  };
-
-  const loadStatusResumo = async (estabId: string) => {
-    try {
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-
-      const { data, error } = await supabase
-        .from('orcamentos')
-        .select('status, valor_total')
-        .eq('estabelecimento_id', estabId)
-        .gte('created_at', hoje.toISOString());
-
-      if (error) throw error;
-
-      const statusMap: Record<string, { count: number; valor: number }> = {};
-      (data || []).forEach((orc: any) => {
-        const s = orc.status || 'pendente';
-        if (!statusMap[s]) statusMap[s] = { count: 0, valor: 0 };
-        statusMap[s].count++;
-        statusMap[s].valor += Number(orc.valor_total) || 0;
-      });
-
-      const resumo = Object.entries(statusMap).map(([status, data]) => ({
-        status,
-        count: data.count,
-        valor: data.valor,
-      }));
-
-      setStatusResumo(resumo);
-    } catch (error) {
-      console.error('Erro ao carregar resumo:', error);
     }
   };
 
@@ -359,14 +303,12 @@ export default function TvDashboardVendas() {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('orcamentos')
-        .select('id, valor_total, status')
+        .select('id, valor_total')
         .eq('estabelecimento_id', estabId)
         .in('status', ['aprovado', 'finalizado', 'faturado'])
         .gte('created_at', hoje.toISOString());
-
-      if (error) throw error;
 
       setTotalVendasHoje((data || []).length);
       setTotalValorHoje((data || []).reduce((acc, o) => acc + (Number(o.valor_total) || 0), 0));
@@ -375,29 +317,53 @@ export default function TvDashboardVendas() {
     }
   };
 
+  const loadTotaisMes = async (estabId: string) => {
+    try {
+      const inicioMes = startOfMonth(new Date());
+
+      const { data } = await supabase
+        .from('orcamentos')
+        .select('id, valor_total')
+        .eq('estabelecimento_id', estabId)
+        .in('status', ['aprovado', 'finalizado', 'faturado'])
+        .gte('created_at', inicioMes.toISOString());
+
+      setTotalVendasMes((data || []).length);
+      setTotalValorMes((data || []).reduce((acc, o) => acc + (Number(o.valor_total) || 0), 0));
+    } catch (error) {
+      console.error('Erro ao carregar totais do mês:', error);
+    }
+  };
+
+  const loadTotais12Meses = async (estabId: string) => {
+    try {
+      const data12MesesAtras = subMonths(new Date(), 12);
+
+      const { data } = await supabase
+        .from('orcamentos')
+        .select('id, valor_total')
+        .eq('estabelecimento_id', estabId)
+        .in('status', ['aprovado', 'finalizado', 'faturado'])
+        .gte('created_at', data12MesesAtras.toISOString());
+
+      setTotalVendas12Meses((data || []).length);
+      setTotalValor12Meses((data || []).reduce((acc, o) => acc + (Number(o.valor_total) || 0), 0));
+    } catch (error) {
+      console.error('Erro ao carregar totais 12 meses:', error);
+    }
+  };
+
   const onlineCount = vendedores.filter(v => v.isOnline).length;
   const progressoMeta = Math.min((totalValorHoje / metaDiaria) * 100, 100);
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(value);
   };
 
-  const statusColors: Record<string, string> = {
-    pendente: '#f59e0b',
-    rascunho: '#6b7280',
-    aprovado: '#22c55e',
-    finalizado: '#3b82f6',
-    faturado: '#8b5cf6',
-    cancelado: '#ef4444',
-  };
-
-  const statusLabels: Record<string, string> = {
-    pendente: 'Pendente',
-    rascunho: 'Rascunho',
-    aprovado: 'Aprovado',
-    finalizado: 'Finalizado',
-    faturado: 'Faturado',
-    cancelado: 'Cancelado',
+  const formatCurrencyCompact = (value: number) => {
+    if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}k`;
+    return formatCurrency(value);
   };
 
   // Chart: Vendas por hora
@@ -406,395 +372,356 @@ export default function TvDashboardVendas() {
       trigger: 'axis',
       formatter: (params: any) => {
         const data = params[0];
-        return `${data.name}<br/>Vendas: ${formatCurrency(data.value)}<br/>Qtd: ${vendasPorHora.find(v => v.hora === data.name)?.quantidade || 0}`;
+        return `${data.name}<br/>${formatCurrency(data.value)}`;
       },
     },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      top: '15%',
-      containLabel: true,
-    },
+    grid: { left: '5%', right: '5%', bottom: '10%', top: '10%', containLabel: true },
     xAxis: {
       type: 'category',
       data: vendasPorHora.map(v => v.hora),
-      axisLabel: {
-        color: 'hsl(var(--muted-foreground))',
-        fontSize: 10,
-      },
-      axisLine: { lineStyle: { color: 'hsl(var(--border))' } },
+      axisLabel: { color: '#94a3b8', fontSize: 9 },
+      axisLine: { lineStyle: { color: '#334155' } },
     },
     yAxis: {
       type: 'value',
-      axisLabel: {
-        color: 'hsl(var(--muted-foreground))',
-        formatter: (val: number) => `R$ ${(val / 1000).toFixed(0)}k`,
+      axisLabel: { color: '#94a3b8', formatter: (val: number) => `${(val / 1000).toFixed(0)}k` },
+      splitLine: { lineStyle: { color: '#1e293b' } },
+    },
+    series: [{
+      type: 'bar',
+      data: vendasPorHora.map(v => v.valor),
+      itemStyle: {
+        borderRadius: [4, 4, 0, 0],
+        color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#22c55e' }, { offset: 1, color: '#16a34a' }] },
       },
-      splitLine: { lineStyle: { color: 'hsl(var(--border))', type: 'dashed' } },
+    }],
+  }), [vendasPorHora]);
+
+  // Chart: Vendas mensais (12 meses)
+  const vendasMensaisChartOption = useMemo(() => ({
+    tooltip: {
+      trigger: 'axis',
+      formatter: (params: any) => {
+        const data = params[0];
+        return `${data.name}<br/>${formatCurrency(data.value)}`;
+      },
+    },
+    grid: { left: '5%', right: '5%', bottom: '15%', top: '10%', containLabel: true },
+    xAxis: {
+      type: 'category',
+      data: vendasMensais.map(v => v.mes),
+      axisLabel: { color: '#94a3b8', fontSize: 8, rotate: 45 },
+      axisLine: { lineStyle: { color: '#334155' } },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { color: '#94a3b8', formatter: (val: number) => val >= 1000000 ? `${(val / 1000000).toFixed(0)}M` : `${(val / 1000).toFixed(0)}k` },
+      splitLine: { lineStyle: { color: '#1e293b' } },
     },
     series: [{
       type: 'line',
       smooth: true,
-      data: vendasPorHora.map(v => v.valor),
+      data: vendasMensais.map(v => v.valor),
       areaStyle: {
-        color: {
-          type: 'linear',
-          x: 0, y: 0, x2: 0, y2: 1,
-          colorStops: [
-            { offset: 0, color: 'rgba(34, 197, 94, 0.4)' },
-            { offset: 1, color: 'rgba(34, 197, 94, 0.05)' },
-          ],
-        },
+        color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(59, 130, 246, 0.4)' }, { offset: 1, color: 'rgba(59, 130, 246, 0.05)' }] },
       },
-      lineStyle: { color: '#22c55e', width: 2 },
-      itemStyle: { color: '#22c55e' },
+      lineStyle: { color: '#3b82f6', width: 2 },
+      itemStyle: { color: '#3b82f6' },
     }],
-  }), [vendasPorHora]);
+  }), [vendasMensais]);
 
   // Chart: Vendas por vendedor
   const vendasChartOption = useMemo(() => ({
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
-      formatter: (params: any) => {
-        const data = params[0];
-        return `${data.name}<br/>Vendas: ${formatCurrency(data.value)}`;
-      },
+      formatter: (params: any) => `${params[0].name}<br/>${formatCurrency(params[0].value)}`,
     },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      top: '10%',
-      containLabel: true,
-    },
+    grid: { left: '5%', right: '5%', bottom: '15%', top: '10%', containLabel: true },
     xAxis: {
       type: 'category',
-      data: vendedores.slice(0, 8).map(v => v.nome.split(' ')[0]),
-      axisLabel: {
-        color: 'hsl(var(--muted-foreground))',
-        fontSize: 10,
-      },
-      axisLine: { lineStyle: { color: 'hsl(var(--border))' } },
+      data: vendedores.slice(0, 6).map(v => v.nome.split(' ')[0]),
+      axisLabel: { color: '#94a3b8', fontSize: 9 },
+      axisLine: { lineStyle: { color: '#334155' } },
     },
     yAxis: {
       type: 'value',
-      axisLabel: {
-        color: 'hsl(var(--muted-foreground))',
-        formatter: (val: number) => `R$ ${(val / 1000).toFixed(0)}k`,
-      },
-      splitLine: { lineStyle: { color: 'hsl(var(--border))', type: 'dashed' } },
+      axisLabel: { color: '#94a3b8', formatter: (val: number) => `${(val / 1000).toFixed(0)}k` },
+      splitLine: { lineStyle: { color: '#1e293b' } },
     },
     series: [{
       type: 'bar',
-      data: vendedores.slice(0, 8).map(v => v.valorTotal),
+      data: vendedores.slice(0, 6).map(v => v.valorTotal),
       itemStyle: {
         borderRadius: [4, 4, 0, 0],
-        color: {
-          type: 'linear',
-          x: 0, y: 0, x2: 0, y2: 1,
-          colorStops: [
-            { offset: 0, color: '#3b82f6' },
-            { offset: 1, color: '#1d4ed8' },
-          ],
-        },
+        color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: '#8b5cf6' }, { offset: 1, color: '#6d28d9' }] },
       },
     }],
   }), [vendedores]);
 
-  // Chart: Status distribution
-  const statusChartOption = useMemo(() => ({
-    tooltip: {
-      trigger: 'item',
-      formatter: '{b}: {c} ({d}%)',
-    },
-    legend: {
-      orient: 'vertical',
-      right: '5%',
-      top: 'center',
-      textStyle: { color: 'hsl(var(--foreground))', fontSize: 10 },
-    },
-    series: [{
-      type: 'pie',
-      radius: ['45%', '70%'],
-      center: ['35%', '50%'],
-      avoidLabelOverlap: false,
-      itemStyle: {
-        borderRadius: 6,
-        borderColor: 'hsl(var(--background))',
-        borderWidth: 2,
-      },
-      label: { show: false },
-      labelLine: { show: false },
-      data: statusResumo.map(s => ({
-        name: statusLabels[s.status] || s.status,
-        value: s.count,
-        itemStyle: { color: statusColors[s.status] || '#6b7280' },
-      })),
-    }],
-  }), [statusResumo]);
-
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-background flex items-center justify-center">
-        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+      <div className="fixed inset-0 bg-slate-950 flex items-center justify-center">
+        <RefreshCw className="h-8 w-8 animate-spin text-blue-500" />
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-background via-background to-muted/20 overflow-hidden p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
+    <div className="fixed inset-0 bg-slate-950 overflow-hidden p-3">
+      {/* Header Compacto */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => navigate(-1)}
-            className="h-10 w-10 rounded-xl"
+            className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="p-2 rounded-xl bg-primary/10">
-            <Tv className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Dashboard de Vendas</h1>
-            <p className="text-sm text-muted-foreground">
-              Atualizado às {format(lastUpdate, 'HH:mm:ss', { locale: ptBR })}
-            </p>
-          </div>
+          <Tv className="h-5 w-5 text-blue-500" />
+          <h1 className="text-lg font-bold text-white">Dashboard de Vendas</h1>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge variant="secondary" className="text-base px-3 py-1">
-            <Circle className={`h-2 w-2 mr-2 ${onlineCount > 0 ? 'fill-green-500 text-green-500' : 'fill-gray-400 text-gray-400'}`} />
+        <div className="flex items-center gap-2 text-xs">
+          <Badge className="bg-slate-800 text-slate-300 border-slate-700">
+            <Circle className={`h-1.5 w-1.5 mr-1.5 ${onlineCount > 0 ? 'fill-green-500 text-green-500' : 'fill-slate-500 text-slate-500'}`} />
             {onlineCount} online
           </Badge>
-          <Badge variant="outline" className="text-base px-3 py-1">
-            {format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}
-          </Badge>
+          <span className="text-slate-500">{format(lastUpdate, 'HH:mm', { locale: ptBR })}</span>
         </div>
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-12 gap-3 h-[calc(100vh-100px)]">
-        {/* Left Column - KPIs & Charts */}
-        <div className="col-span-9 flex flex-col gap-3">
-          {/* KPI Cards - Row 1 */}
-          <div className="grid grid-cols-6 gap-2">
-            <Card className="bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/30">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Vendas Hoje</p>
-                    <p className="text-2xl font-bold text-green-600">{totalVendasHoje}</p>
+      <div className="grid grid-cols-12 gap-2 h-[calc(100vh-60px)]">
+        {/* Left - KPIs & Charts */}
+        <div className="col-span-9 flex flex-col gap-2">
+          {/* KPI Row */}
+          <div className="grid grid-cols-7 gap-2">
+            {/* Vendas Hoje */}
+            <Card className="bg-slate-900/80 border-slate-800">
+              <CardContent className="p-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-green-500/20">
+                    <ShoppingCart className="h-4 w-4 text-green-400" />
                   </div>
-                  <div className="p-2 rounded-lg bg-green-500/20">
-                    <ShoppingCart className="h-5 w-5 text-green-500" />
+                  <div>
+                    <p className="text-[10px] text-slate-500">Vendas Hoje</p>
+                    <p className="text-lg font-bold text-green-400">{totalVendasHoje}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/30">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Faturamento</p>
-                    <p className="text-xl font-bold text-blue-600">{formatCurrency(totalValorHoje)}</p>
+            {/* Faturamento Hoje */}
+            <Card className="bg-slate-900/80 border-slate-800">
+              <CardContent className="p-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-blue-500/20">
+                    <DollarSign className="h-4 w-4 text-blue-400" />
                   </div>
-                  <div className="p-2 rounded-lg bg-blue-500/20">
-                    <DollarSign className="h-5 w-5 text-blue-500" />
+                  <div>
+                    <p className="text-[10px] text-slate-500">Fat. Hoje</p>
+                    <p className="text-sm font-bold text-blue-400">{formatCurrencyCompact(totalValorHoje)}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-500/30">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
+            {/* Vendas Mês */}
+            <Card className="bg-slate-900/80 border-slate-800">
+              <CardContent className="p-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-cyan-500/20">
+                    <CalendarDays className="h-4 w-4 text-cyan-400" />
+                  </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Meta Diária</p>
-                    <p className="text-2xl font-bold text-purple-600">{progressoMeta.toFixed(0)}%</p>
-                  </div>
-                  <div className="p-2 rounded-lg bg-purple-500/20">
-                    <Target className="h-5 w-5 text-purple-500" />
-                  </div>
-                </div>
-                <div className="mt-1 h-1.5 bg-purple-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-purple-500 to-purple-600 transition-all duration-500"
-                    style={{ width: `${progressoMeta}%` }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-500/30">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Ticket Médio</p>
-                    <p className="text-lg font-bold text-orange-600">
-                      {totalVendasHoje > 0 ? formatCurrency(totalValorHoje / totalVendasHoje) : 'R$ 0'}
-                    </p>
-                  </div>
-                  <div className="p-2 rounded-lg bg-orange-500/20">
-                    <TrendingUp className="h-5 w-5 text-orange-500" />
+                    <p className="text-[10px] text-slate-500">Vendas Mês</p>
+                    <p className="text-lg font-bold text-cyan-400">{totalVendasMes}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Taxa de Conversão */}
-            <Card className="bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border-cyan-500/30">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Taxa Conversão</p>
-                    <p className="text-2xl font-bold text-cyan-600">{taxaConversao}%</p>
-                    <p className="text-xs text-muted-foreground">{totalOrcamentos} orçamentos</p>
+            {/* Faturamento Mês */}
+            <Card className="bg-slate-900/80 border-slate-800">
+              <CardContent className="p-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-indigo-500/20">
+                    <BarChart3 className="h-4 w-4 text-indigo-400" />
                   </div>
-                  <div className="p-2 rounded-lg bg-cyan-500/20">
-                    <Percent className="h-5 w-5 text-cyan-500" />
+                  <div>
+                    <p className="text-[10px] text-slate-500">Fat. Mês</p>
+                    <p className="text-sm font-bold text-indigo-400">{formatCurrencyCompact(totalValorMes)}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Tempo Médio de Resposta */}
-            <Card className="bg-gradient-to-br from-pink-500/10 to-pink-600/5 border-pink-500/30">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Tempo Resposta</p>
-                    <p className="text-2xl font-bold text-pink-600">{tempoMedioResposta}min</p>
-                    <p className="text-xs text-muted-foreground">média chats</p>
+            {/* 12 Meses */}
+            <Card className="bg-slate-900/80 border-slate-800">
+              <CardContent className="p-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-purple-500/20">
+                    <TrendingUp className="h-4 w-4 text-purple-400" />
                   </div>
-                  <div className="p-2 rounded-lg bg-pink-500/20">
-                    <Timer className="h-5 w-5 text-pink-500" />
+                  <div>
+                    <p className="text-[10px] text-slate-500">12 Meses</p>
+                    <p className="text-sm font-bold text-purple-400">{formatCurrencyCompact(totalValor12Meses)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Taxa Conversão */}
+            <Card className="bg-slate-900/80 border-slate-800">
+              <CardContent className="p-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-amber-500/20">
+                    <Percent className="h-4 w-4 text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-500">Conversão</p>
+                    <p className="text-lg font-bold text-amber-400">{taxaConversao}%</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tempo Resposta */}
+            <Card className="bg-slate-900/80 border-slate-800">
+              <CardContent className="p-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-pink-500/20">
+                    <Timer className="h-4 w-4 text-pink-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-500">Resposta</p>
+                    <p className="text-lg font-bold text-pink-400">{tempoMedioResposta}m</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
+          {/* Meta Diária */}
+          <Card className="bg-slate-900/80 border-slate-800">
+            <CardContent className="py-2 px-3">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-slate-400 flex items-center gap-1">
+                  <Target className="h-3 w-3" /> Meta Diária
+                </span>
+                <span className="text-white font-medium">
+                  {formatCurrency(totalValorHoje)} / {formatCurrency(metaDiaria)} ({progressoMeta.toFixed(0)}%)
+                </span>
+              </div>
+              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500"
+                  style={{ width: `${progressoMeta}%` }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Charts Row */}
-          <div className="grid grid-cols-3 gap-3 flex-1">
+          <div className="grid grid-cols-3 gap-2 flex-1 min-h-0">
             {/* Vendas por Hora */}
-            <Card className="border-primary/20">
-              <CardHeader className="pb-1 pt-2 px-3">
-                <CardTitle className="text-xs flex items-center gap-2">
-                  <Clock className="h-3 w-3 text-primary" />
-                  Vendas por Hora
+            <Card className="bg-slate-900/80 border-slate-800 flex flex-col">
+              <CardHeader className="py-1.5 px-2">
+                <CardTitle className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                  <Clock className="h-3 w-3 text-green-400" />
+                  Vendas por Hora (Hoje)
                 </CardTitle>
               </CardHeader>
-              <CardContent className="h-[calc(100%-40px)] p-2">
+              <CardContent className="flex-1 p-1 min-h-0">
                 <ReactECharts option={vendasPorHoraChartOption} style={{ height: '100%' }} />
               </CardContent>
             </Card>
 
-            {/* Vendas por Vendedor */}
-            <Card className="border-primary/20">
-              <CardHeader className="pb-1 pt-2 px-3">
-                <CardTitle className="text-xs flex items-center gap-2">
-                  <DollarSign className="h-3 w-3 text-primary" />
-                  Vendas por Vendedor
+            {/* Vendas 12 Meses */}
+            <Card className="bg-slate-900/80 border-slate-800 flex flex-col">
+              <CardHeader className="py-1.5 px-2">
+                <CardTitle className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                  <CalendarDays className="h-3 w-3 text-blue-400" />
+                  Faturamento 12 Meses
                 </CardTitle>
               </CardHeader>
-              <CardContent className="h-[calc(100%-40px)] p-2">
+              <CardContent className="flex-1 p-1 min-h-0">
+                <ReactECharts option={vendasMensaisChartOption} style={{ height: '100%' }} />
+              </CardContent>
+            </Card>
+
+            {/* Vendas por Vendedor */}
+            <Card className="bg-slate-900/80 border-slate-800 flex flex-col">
+              <CardHeader className="py-1.5 px-2">
+                <CardTitle className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                  <Users className="h-3 w-3 text-purple-400" />
+                  Ranking Vendedores
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 p-1 min-h-0">
                 <ReactECharts option={vendasChartOption} style={{ height: '100%' }} />
               </CardContent>
             </Card>
-
-            {/* Status dos Pedidos */}
-            <Card className="border-primary/20">
-              <CardHeader className="pb-1 pt-2 px-3">
-                <CardTitle className="text-xs flex items-center gap-2">
-                  <Activity className="h-3 w-3 text-primary" />
-                  Status dos Pedidos
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="h-[calc(100%-40px)] p-2">
-                <ReactECharts option={statusChartOption} style={{ height: '100%' }} />
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Status Summary */}
-          <div className="grid grid-cols-6 gap-2">
-            {statusResumo.map((s) => (
-              <Card key={s.status} className="p-2" style={{ borderLeftColor: statusColors[s.status], borderLeftWidth: 3 }}>
-                <div className="text-xs text-muted-foreground">{statusLabels[s.status] || s.status}</div>
-                <div className="text-lg font-bold">{s.count}</div>
-                <div className="text-xs text-muted-foreground">{formatCurrency(s.valor)}</div>
-              </Card>
-            ))}
           </div>
         </div>
 
-        {/* Right Column - Team List */}
+        {/* Right - Team List */}
         <div className="col-span-3">
-          <Card className="h-full border-primary/20">
-            <CardHeader className="pb-2 pt-3 px-3">
-              <CardTitle className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" />
-                  Equipe ({vendedores.length})
+          <Card className="h-full bg-slate-900/80 border-slate-800 flex flex-col">
+            <CardHeader className="py-2 px-3 border-b border-slate-800">
+              <CardTitle className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5 text-slate-300">
+                  <Users className="h-3.5 w-3.5 text-blue-400" />
+                  Equipe
                 </div>
-                <Badge variant="outline" className="font-normal text-xs">
-                  {onlineCount} ativos
+                <Badge className="bg-slate-800 text-slate-400 text-[10px]">
+                  {onlineCount}/{vendedores.length}
                 </Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <ScrollArea className="h-[calc(100vh-180px)]">
-                <div className="space-y-1 p-2">
+            <CardContent className="flex-1 p-0 overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className="p-1.5 space-y-1">
                   {vendedores.map((vendedor, index) => (
                     <div 
                       key={vendedor.id}
-                      className={`p-2 rounded-lg border transition-all ${
+                      className={`p-2 rounded-lg transition-all ${
                         vendedor.isOnline 
-                          ? 'bg-green-500/5 border-green-500/20' 
-                          : 'bg-muted/30 border-transparent'
+                          ? 'bg-slate-800/50 border border-slate-700/50' 
+                          : 'bg-slate-900/50 border border-slate-800/50 opacity-60'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${vendedor.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                          <span className="font-medium text-xs truncate max-w-[100px]">{vendedor.nome}</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-1.5 h-1.5 rounded-full ${vendedor.isOnline ? 'bg-green-500' : 'bg-slate-600'}`} />
+                          <span className="font-medium text-xs text-slate-200 truncate max-w-[80px]">
+                            {vendedor.nome.split(' ')[0]}
+                          </span>
                           {index < 3 && vendedor.valorTotal > 0 && (
-                            <Badge variant="secondary" className="text-[10px] px-1">
+                            <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/20 text-amber-400">
                               #{index + 1}
-                            </Badge>
+                            </span>
                           )}
                         </div>
-                        <span className="font-bold text-xs text-primary">
-                          {formatCurrency(vendedor.valorTotal)}
+                        <span className="font-bold text-xs text-blue-400">
+                          {formatCurrencyCompact(vendedor.valorTotal)}
                         </span>
                       </div>
-                      <div className="grid grid-cols-5 gap-1 text-[10px]">
-                        <div className="flex items-center gap-0.5 text-muted-foreground" title="Agenda">
-                          <Calendar className="h-2.5 w-2.5" />
-                          <span>{vendedor.agendaHoje}</span>
-                        </div>
-                        <div className="flex items-center gap-0.5 text-muted-foreground" title="Chats">
+                      <div className="flex items-center gap-2 mt-1 text-[9px] text-slate-500">
+                        <span className="flex items-center gap-0.5">
                           <MessageSquare className="h-2.5 w-2.5" />
-                          <span>{vendedor.chatsAtivos}</span>
-                        </div>
-                        <div className="flex items-center gap-0.5 text-muted-foreground" title="Emails">
-                          <Mail className="h-2.5 w-2.5" />
-                          <span>{vendedor.emailsAtivos}</span>
-                        </div>
-                        <div className="flex items-center gap-0.5 text-amber-500" title="Pendentes">
+                          {vendedor.chatsAtivos}
+                        </span>
+                        <span className="flex items-center gap-0.5 text-amber-500">
                           <Clock className="h-2.5 w-2.5" />
-                          <span>{vendedor.pedidosPendentes}</span>
-                        </div>
-                        <div className="flex items-center gap-0.5 text-green-500" title="Vendas">
+                          {vendedor.pedidosPendentes}
+                        </span>
+                        <span className="flex items-center gap-0.5 text-green-500">
                           <ShoppingCart className="h-2.5 w-2.5" />
-                          <span>{vendedor.pedidosAprovados + vendedor.pedidosFaturados}</span>
-                        </div>
+                          {vendedor.pedidosVendidos}
+                        </span>
                       </div>
                     </div>
                   ))}
