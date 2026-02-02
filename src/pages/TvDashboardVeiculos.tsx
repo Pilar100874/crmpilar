@@ -334,75 +334,46 @@ export default function TvDashboardVeiculos() {
 
       {/* Vehicle List - Right Side */}
       <div 
-        className="fixed top-16 right-3 bottom-3 w-80 bg-background/95 backdrop-blur-md rounded-xl shadow-xl border border-border overflow-hidden flex flex-col"
+        className="fixed top-16 right-3 bottom-3 w-64 bg-black/40 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden flex flex-col"
         style={{ zIndex: 999999 }}
       >
-        <div className="px-4 py-3 border-b border-border bg-muted/30">
-          <h3 className="font-semibold flex items-center gap-2">
-            <Car className="h-4 w-4 text-primary" />
+        <div className="px-3 py-2 border-b border-white/10">
+          <h3 className="font-medium text-xs text-white/90 flex items-center gap-1.5">
+            <Car className="h-3 w-3" />
             Veículos ({veiculos.length})
           </h3>
         </div>
         
         <div className="flex-1 overflow-y-auto">
           {veiculos.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground text-sm">
-              Nenhum veículo cadastrado
+            <div className="p-3 text-center text-white/60 text-xs">
+              Nenhum veículo
             </div>
           ) : (
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-white/5">
               {veiculos.map((veiculo) => {
                 const config = statusConfig[veiculo.status];
-                const StatusIcon = config.icon;
                 const km = kmRodadosHoje[veiculo.id] || 0;
                 
                 return (
                   <div 
                     key={veiculo.id}
-                    className="px-4 py-3 hover:bg-muted/50 transition-colors"
+                    className="px-3 py-1.5 hover:bg-white/5 transition-colors"
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2.5 h-2.5 rounded-full ${config.color}`} />
-                        <span className="font-medium text-sm">{veiculo.placa}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-2 h-2 rounded-full ${config.color}`} />
+                        <span className="font-medium text-xs text-white/90">{veiculo.placa}</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <StatusIcon className={`h-3.5 w-3.5 ${config.textColor}`} />
-                        <span className={`text-xs ${config.textColor}`}>{config.label}</span>
+                      <div className="flex items-center gap-2 text-[10px] text-white/60">
+                        {veiculo.ultima_posicao && (
+                          <>
+                            <span>{Math.round(veiculo.ultima_posicao.velocidade)}km/h</span>
+                            <span>{km}km</span>
+                          </>
+                        )}
                       </div>
                     </div>
-                    
-                    {veiculo.descricao && (
-                      <p className="text-xs text-muted-foreground truncate mb-1">
-                        {veiculo.descricao}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      {veiculo.ultima_posicao && (
-                        <>
-                          <span className="flex items-center gap-1">
-                            <Gauge className="h-3 w-3" />
-                            {Math.round(veiculo.ultima_posicao.velocidade)} km/h
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Route className="h-3 w-3" />
-                            {km} km hoje
-                          </span>
-                        </>
-                      )}
-                      {veiculo.motorista && (
-                        <span className="truncate">
-                          {veiculo.motorista}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {veiculo.ultima_atualizacao && (
-                      <p className="text-[10px] text-muted-foreground/70 mt-1">
-                        Atualizado: {format(new Date(veiculo.ultima_atualizacao), 'HH:mm:ss', { locale: ptBR })}
-                      </p>
-                    )}
                   </div>
                 );
               })}
