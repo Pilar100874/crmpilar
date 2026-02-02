@@ -14,6 +14,7 @@ import { LazyLogisticaMap } from '@/components/logistica/LazyLogisticaMap';
 import { VeiculoComStatus, VeiculoPosicao, VeiculoStatus } from '@/types/logistica';
 import { ParadaMarcada } from '@/types/automacaoLogistica';
 import { getEstabelecimentoId } from '@/lib/estabelecimentoUtils';
+import { useFullscreen } from '@/hooks/useFullscreen';
 
 const statusConfig = {
   movendo: { label: 'Em movimento', color: 'bg-green-500', textColor: 'text-green-600', icon: Activity },
@@ -53,6 +54,7 @@ const veiculoCores = [
 
 export default function TvDashboardVeiculos() {
   const navigate = useNavigate();
+  useFullscreen(true);
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
   const [paradasMarcadas, setParadasMarcadas] = useState<ParadaMarcada[]>([]);
   const [loading, setLoading] = useState(true);
