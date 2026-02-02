@@ -656,40 +656,40 @@ export default function TvDashboardVendas() {
             </div>
           </div>
 
-          {/* Right - Team List */}
+          {/* Right - Team List - Compact for 12 employees */}
           <div className="col-span-3">
             <Card className="h-full bg-black/30 backdrop-blur-sm border-slate-800/50 flex flex-col">
-              <CardHeader className="py-3 px-4 border-b border-slate-800/50">
-                <CardTitle className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <Users className="h-4 w-4 text-blue-400" />
-                    Equipe em Tempo Real
+              <CardHeader className="py-2 px-3 border-b border-slate-800/50">
+                <CardTitle className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 text-slate-400">
+                    <Users className="h-3.5 w-3.5 text-blue-400" />
+                    Equipe
                   </div>
-                  <Badge className="bg-slate-800/80 text-slate-400 text-xs">
+                  <Badge className="bg-slate-800/80 text-slate-400 text-[10px] px-1.5 py-0.5">
                     {onlineCount}/{vendedores.length}
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 p-0 overflow-hidden">
-                <ScrollArea className="h-full">
-                  <div className="p-3 space-y-2">
+                <div className="h-full overflow-y-auto">
+                  <div className="p-1.5 grid grid-cols-2 gap-1">
                     {vendedores.map((vendedor, index) => (
                       <div 
                         key={vendedor.id}
-                        className={`p-3 rounded-xl transition-all ${
+                        className={`px-2 py-1.5 rounded-lg transition-all ${
                           vendedor.isOnline 
-                            ? 'bg-slate-800/40 border border-slate-700/50' 
-                            : 'bg-slate-900/30 border border-slate-800/30 opacity-50'
+                            ? 'bg-slate-800/50 border border-slate-700/40' 
+                            : 'bg-slate-900/30 border border-transparent opacity-50'
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-2.5 h-2.5 rounded-full ${vendedor.isOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`} />
-                            <span className="font-medium text-sm text-slate-200">
+                        <div className="flex items-center justify-between gap-1">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${vendedor.isOnline ? 'bg-green-500' : 'bg-slate-600'}`} />
+                            <span className="font-medium text-[11px] text-slate-200 truncate">
                               {vendedor.nome.split(' ')[0]}
                             </span>
                             {index < 3 && vendedor.valorTotal > 0 && (
-                              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                              <span className={`text-[9px] px-1 rounded flex-shrink-0 ${
                                 index === 0 ? 'bg-amber-500/30 text-amber-400' :
                                 index === 1 ? 'bg-slate-400/30 text-slate-300' :
                                 'bg-orange-600/30 text-orange-400'
@@ -698,28 +698,28 @@ export default function TvDashboardVendas() {
                               </span>
                             )}
                           </div>
-                          <span className="font-bold text-sm text-blue-400">
+                          <span className="font-bold text-[10px] text-blue-400 flex-shrink-0">
                             {formatCurrencyCompact(vendedor.valorTotal)}
                           </span>
                         </div>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                          <span className="flex items-center gap-1">
-                            <MessageSquare className="h-3 w-3" />
-                            {vendedor.chatsAtivos} chats
+                        <div className="flex items-center gap-2 mt-0.5 text-[9px] text-slate-500">
+                          <span className="flex items-center gap-0.5">
+                            <MessageSquare className="h-2.5 w-2.5" />
+                            {vendedor.chatsAtivos}
                           </span>
-                          <span className="flex items-center gap-1 text-amber-500">
-                            <Clock className="h-3 w-3" />
-                            {vendedor.pedidosPendentes} pend.
+                          <span className="flex items-center gap-0.5 text-amber-500">
+                            <Clock className="h-2.5 w-2.5" />
+                            {vendedor.pedidosPendentes}
                           </span>
-                          <span className="flex items-center gap-1 text-green-500">
-                            <ShoppingCart className="h-3 w-3" />
-                            {vendedor.pedidosVendidos} vendas
+                          <span className="flex items-center gap-0.5 text-green-500">
+                            <ShoppingCart className="h-2.5 w-2.5" />
+                            {vendedor.pedidosVendidos}
                           </span>
                         </div>
                       </div>
                     ))}
                   </div>
-                </ScrollArea>
+                </div>
               </CardContent>
             </Card>
           </div>
