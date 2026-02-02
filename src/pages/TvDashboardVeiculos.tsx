@@ -31,6 +31,26 @@ const consumoPorTipo: Record<string, number> = {
   'default': 12,
 };
 
+// Paleta de cores vibrantes para identificar veículos no mapa
+const veiculoCores = [
+  '#3B82F6', // blue
+  '#EF4444', // red
+  '#10B981', // emerald
+  '#F59E0B', // amber
+  '#8B5CF6', // violet
+  '#EC4899', // pink
+  '#06B6D4', // cyan
+  '#F97316', // orange
+  '#6366F1', // indigo
+  '#14B8A6', // teal
+  '#A855F7', // purple
+  '#84CC16', // lime
+  '#E11D48', // rose
+  '#0EA5E9', // sky
+  '#22C55E', // green
+  '#FACC15', // yellow
+];
+
 export default function TvDashboardVeiculos() {
   const navigate = useNavigate();
   const [veiculos, setVeiculos] = useState<VeiculoComStatus[]>([]);
@@ -155,7 +175,7 @@ export default function TvDashboardVeiculos() {
       if (veiculosError) throw veiculosError;
 
       const veiculosComStatus: VeiculoComStatus[] = await Promise.all(
-        (veiculosData || []).map(async (veiculo) => {
+        (veiculosData || []).map(async (veiculo, index) => {
           const { data: posicaoData } = await supabase
             .from('veiculo_posicoes')
             .select('*')
@@ -173,11 +193,15 @@ export default function TvDashboardVeiculos() {
             }
           }
 
+          // Atribui uma cor única baseada no índice
+          const cor = veiculoCores[index % veiculoCores.length];
+
           return {
             ...veiculo,
             status,
             ultima_posicao: ultimaPosicao,
-            ultima_atualizacao: ultimaPosicao?.data_hora
+            ultima_atualizacao: ultimaPosicao?.data_hora,
+            cor
           } as VeiculoComStatus;
         })
       );
@@ -322,22 +346,23 @@ export default function TvDashboardVeiculos() {
                 return (
                   <div 
                     key={veiculo.id}
-                    className="px-3 py-1.5 hover:bg-white/5 transition-colors"
+                    className="px-3 py-1.5 hover:bg-white/5 transition-colors flex items-center justify-between"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <div className={`w-2 h-2 rounded-full ${config.color}`} />
-                        <span className="font-medium text-xs text-white/90">{veiculo.placa}</span>
-                        <span className={`text-[10px] ${config.textColor}`}>({config.label})</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[10px] text-white/60">
-                        {veiculo.ultima_posicao && (
-                          <>
-                            <span>{Math.round(veiculo.ultima_posicao.velocidade)}km/h</span>
-                            <span>{km}km</span>
-                          </>
-                        )}
-                      </div>
+                    <div className="flex items-center gap-1.5">
+                      <div 
+                        className="w-3 h-3 rounded-full border-2 border-white/50" 
+                        style={{ backgroundColor: veiculo.cor }}
+                      />
+                      <span className="font-medium text-xs text-white/90">{veiculo.placa}</span>
+                      <span className={`text-[10px] ${config.textColor}`}>({config.label})</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] text-white/60">
+                      {veiculo.ultima_posicao && (
+                        <>
+                          <span>{Math.round(veiculo.ultima_posicao.velocidade)}km/h</span>
+                          <span>{km}km</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
