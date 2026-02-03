@@ -175,23 +175,24 @@ function SortableContentItem({ item, index, onRemove }: SortableContentItemProps
           )}
           {item.type === 'catalog' && (
             <div className="flex gap-3">
-              <div className="w-12 h-12 rounded overflow-hidden bg-muted shrink-0 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-lg overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 shrink-0 flex items-center justify-center border border-primary/20 shadow-sm">
                 {item.mediaUrl ? (
                   <img
                     src={item.mediaUrl}
-                    alt={item.content}
+                    alt={item.catalogName || 'Catálogo'}
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <BookOpen className="h-5 w-5 text-primary" />
+                  <BookOpen className="h-6 w-6 text-primary" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <Badge variant="outline" className="mb-1 bg-primary/10 text-primary border-primary/30">
-                  📦 Catálogo PDF
+                <Badge className="mb-1 bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800">
+                  <FileText className="h-3 w-3 mr-1" />
+                  PDF
                 </Badge>
-                <p className="text-sm text-muted-foreground truncate">
-                  {item.catalogName || item.content}
+                <p className="text-sm font-medium truncate">
+                  {item.catalogName || 'Catálogo'}
                 </p>
               </div>
             </div>
