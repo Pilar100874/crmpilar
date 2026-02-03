@@ -1538,6 +1538,48 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
           .eq('customer_id', customerId);
       }
       
+      // Deletar respostas de tickets do portal
+      await supabase
+        .from('portal_ticket_respostas')
+        .delete()
+        .eq('customer_id', customerId);
+      
+      // Deletar tickets do portal
+      await supabase
+        .from('portal_tickets')
+        .delete()
+        .eq('customer_id', customerId);
+      
+      // Deletar deals do funil
+      await supabase
+        .from('funil_deals')
+        .delete()
+        .eq('cliente_id', customerId);
+      
+      // Deletar orçamentos
+      await supabase
+        .from('orcamentos')
+        .delete()
+        .eq('cliente_id', customerId);
+      
+      // Deletar feedback da base de conhecimento
+      await supabase
+        .from('kb_feedback')
+        .delete()
+        .eq('customer_id', customerId);
+      
+      // Deletar respostas de pesquisas
+      await supabase
+        .from('pesquisas_respostas')
+        .delete()
+        .eq('customer_id', customerId);
+      
+      // Deletar contatos de envio em massa
+      await supabase
+        .from('envio_massa_contatos')
+        .delete()
+        .eq('customer_id', customerId);
+      
       // Deletar carteiras de atendente
       await supabase
         .from('atendente_carteiras')
