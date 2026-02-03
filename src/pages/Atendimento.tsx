@@ -6333,7 +6333,10 @@ function MobileListContent({
                       Fluxo
                     </button>
                     <button 
-                      onClick={() => setShowEnvioMassaWizard(true)}
+                      onClick={() => {
+                        setAgendaViewMode('default');
+                        setShowEnvioMassaWizard(true);
+                      }}
                       className={cn(
                         "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all",
                         "text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-background"
