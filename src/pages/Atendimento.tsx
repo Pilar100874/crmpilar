@@ -4769,11 +4769,11 @@ ${recentMessages}
                          ? "bg-orange-100 border border-orange-200 shadow-sm" 
                          : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
                      }`}
-                     onClick={() => {
-                       const taskIndex = filteredTasks.findIndex(t => t.id === task.id);
-                       setFluxoInitialIndex(taskIndex >= 0 ? taskIndex : 0);
-                       setAgendaViewMode('fluxo');
-                     }}
+                      onClick={() => {
+                        setSelectedTaskId(task.id);
+                        setSelectedTaskData(task);
+                        setShowClientDetailsAgenda(true);
+                      }}
                    >
                       {/* Tarja lateral indicando vínculo */}
                       {(isLinkedToUser || isSameSegment) && (
