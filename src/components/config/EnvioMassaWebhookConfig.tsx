@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Webhook, Save, ExternalLink, AlertTriangle, Check, RefreshCw } from "lucide-react";
+import { Webhook, Save, AlertTriangle, Check, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 
@@ -60,12 +60,12 @@ export function EnvioMassaWebhookConfig({ estabelecimentoId }: EnvioMassaWebhook
 
       setWebhooks(filteredWebhooks);
 
-      // Carrega configuração atual
-      const { data: configData, error: configError } = await supabase
-        .from('envio_massa_config')
+      // Carrega configuração atual - usando tipagem any para nova tabela
+      const { data: configData, error: configError } = await (supabase
+        .from('envio_massa_config' as any)
         .select('webhook_id')
         .eq('estabelecimento_id', estabelecimentoId)
-        .maybeSingle();
+        .maybeSingle() as any);
 
       if (configError && configError.code !== 'PGRST116') throw configError;
 
@@ -91,27 +91,27 @@ export function EnvioMassaWebhookConfig({ estabelecimentoId }: EnvioMassaWebhook
     try {
       setSaving(true);
 
-      // Verificar se já existe configuração
-      const { data: existing } = await supabase
-        .from('envio_massa_config')
+      // Verificar se já existe configuração - usando tipagem any para nova tabela
+      const { data: existing } = await (supabase
+        .from('envio_massa_config' as any)
         .select('id')
         .eq('estabelecimento_id', estabelecimentoId)
-        .maybeSingle();
+        .maybeSingle() as any);
 
       if (existing) {
-        const { error } = await supabase
-          .from('envio_massa_config')
+        const { error } = await (supabase
+          .from('envio_massa_config' as any)
           .update({ webhook_id: selectedWebhookId, updated_at: new Date().toISOString() })
-          .eq('estabelecimento_id', estabelecimentoId);
+          .eq('estabelecimento_id', estabelecimentoId) as any);
 
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('envio_massa_config')
+        const { error } = await (supabase
+          .from('envio_massa_config' as any)
           .insert({
             estabelecimento_id: estabelecimentoId,
             webhook_id: selectedWebhookId
-          });
+          }) as any);
 
         if (error) throw error;
       }
