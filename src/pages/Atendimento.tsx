@@ -453,11 +453,33 @@ export default function Atendimento() {
           schema: 'public',
           table: 'customers'
         },
-        (payload) => {
-          console.log('[Realtime] Customer atualizado:', payload.new.id);
+        async (payload) => {
+          const updatedCustomerId = payload.new?.id;
+          console.log('[Realtime] Customer atualizado:', updatedCustomerId);
+          
           // Recarregar dados conforme a aba/item selecionado
           if (selectedConversation) {
             loadCustomerCompanies(selectedConversation);
+            
+            // Atualizar também o customer na conversa selecionada se for o mesmo
+            const selectedConv = conversations.find(c => c.id === selectedConversation);
+            if (selectedConv?.customer?.id === updatedCustomerId) {
+              // Buscar dados atualizados do customer
+              const { data: updatedCustomer } = await supabase
+                .from('customers')
+                .select('id, nome, email, telefone, tel')
+                .eq('id', updatedCustomerId)
+                .single();
+              
+              if (updatedCustomer) {
+                // Atualizar a conversa na lista com os novos dados do customer
+                setConversations(prev => prev.map(c => 
+                  c.id === selectedConversation 
+                    ? { ...c, customer: { ...c.customer, ...updatedCustomer } }
+                    : c
+                ));
+              }
+            }
           }
           if (selectedTaskId) {
             loadSelectedTask(selectedTaskId);
@@ -475,7 +497,7 @@ export default function Atendimento() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedConversation, selectedTaskId, selectedEmailId, selectedOrcamentoId]);
+  }, [selectedConversation, selectedTaskId, selectedEmailId, selectedOrcamentoId, conversations]);
   
   // Note: Counter updates moved after useMemos to avoid using variables before declaration
 
