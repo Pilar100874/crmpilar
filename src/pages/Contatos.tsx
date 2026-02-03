@@ -1250,24 +1250,46 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         return;
       }
 
-      // Checagem final de duplicidade antes de salvar
+      // Checagem de duplicidade no banco de dados antes de salvar
       const emailLower = (formData.email || '').toLowerCase().trim();
       const phoneClean = (formData.phone || '').replace(/\D/g, '');
-      const dupByEmail = contacts.find(c => (c.email || '').toLowerCase().trim() === emailLower && c.id !== editingContact?.id);
-      const dupByPhone = contacts.find(c => ((c.phone || '').replace(/\D/g, '') === phoneClean) && c.id !== editingContact?.id);
-      if (dupByEmail) {
-        setDuplicateContact(dupByEmail as any);
-        setDuplicateField('email');
-        setDuplicateDialogOpen(true);
-        toast.error('E-mail já cadastrado');
-        return;
+      
+      // Verificar duplicidade de e-mail no banco
+      if (emailLower) {
+        const { data: existingByEmail } = await supabase
+          .from('customers')
+          .select('id, nome, email')
+          .eq('estabelecimento_id', estabId)
+          .ilike('email', emailLower)
+          .neq('id', editingContact?.id || '00000000-0000-0000-0000-000000000000')
+          .limit(1);
+        
+        if (existingByEmail && existingByEmail.length > 0) {
+          setDuplicateContact(existingByEmail[0] as any);
+          setDuplicateField('email');
+          setDuplicateDialogOpen(true);
+          toast.error('E-mail já cadastrado em outro contato');
+          return;
+        }
       }
-      if (dupByPhone) {
-        setDuplicateContact(dupByPhone as any);
-        setDuplicateField('phone');
-        setDuplicateDialogOpen(true);
-        toast.error('WhatsApp já cadastrado');
-        return;
+
+      // Verificar duplicidade de WhatsApp no banco
+      if (phoneClean) {
+        const { data: existingByPhone } = await supabase
+          .from('customers')
+          .select('id, nome, telefone')
+          .eq('estabelecimento_id', estabId)
+          .or(`telefone.ilike.%${phoneClean}%,tel.ilike.%${phoneClean}%`)
+          .neq('id', editingContact?.id || '00000000-0000-0000-0000-000000000000')
+          .limit(1);
+        
+        if (existingByPhone && existingByPhone.length > 0) {
+          setDuplicateContact(existingByPhone[0] as any);
+          setDuplicateField('phone');
+          setDuplicateDialogOpen(true);
+          toast.error('WhatsApp já cadastrado em outro contato');
+          return;
+        }
       }
 
       let novaEmpresaId: string | null = null;
