@@ -1502,133 +1502,15 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     if (!contactToDelete) return;
     
     try {
-      const customerId = contactToDelete.id;
-      
-      // Deletar mensagens das conversas
-      const { data: conversations } = await supabase
-        .from('conversations')
-        .select('id')
-        .eq('customer_id', customerId);
-      
-      if (conversations && conversations.length > 0) {
-        const conversationIds = conversations.map(c => c.id);
-        
-        // Deletar mensagens
-        await supabase
-          .from('messages')
-          .delete()
-          .in('conversation_id', conversationIds);
-        
-        // Deletar tags aplicadas nos chats
-        await supabase
-          .from('chat_tags_aplicadas')
-          .delete()
-          .in('chat_id', conversationIds);
-        
-        // Deletar transferências
-        await supabase
-          .from('chat_transferencias')
-          .delete()
-          .in('chat_id', conversationIds);
-        
-        // Deletar conversas
-        await supabase
-          .from('conversations')
-          .delete()
-          .eq('customer_id', customerId);
-      }
-      
-      // Deletar respostas de tickets do portal
-      await supabase
-        .from('portal_ticket_respostas')
-        .delete()
-        .eq('customer_id', customerId);
-      
-      // Deletar tickets do portal
-      await supabase
-        .from('portal_tickets')
-        .delete()
-        .eq('customer_id', customerId);
-      
-      // Deletar deals do funil
-      await supabase
-        .from('funil_deals')
-        .delete()
-        .eq('cliente_id', customerId);
-      
-      // Deletar orçamentos
-      await supabase
-        .from('orcamentos')
-        .delete()
-        .eq('cliente_id', customerId);
-      
-      // Deletar feedback da base de conhecimento
-      await supabase
-        .from('kb_feedback')
-        .delete()
-        .eq('customer_id', customerId);
-      
-      // Deletar respostas de pesquisas
-      await supabase
-        .from('pesquisas_respostas')
-        .delete()
-        .eq('customer_id', customerId);
-      
-      // Deletar contatos de envio em massa
-      await supabase
-        .from('envio_massa_contatos')
-        .delete()
-        .eq('customer_id', customerId);
-      
-      // Deletar carteiras de atendente
-      await supabase
-        .from('atendente_carteiras')
-        .delete()
-        .eq('customer_id', customerId);
-      
-      // Deletar preferências de canal
-      await supabase
-        .from('customer_canal_preferences')
-        .delete()
-        .eq('customer_id', customerId);
-      
-      // Deletar segmentos
-      await supabase
-        .from('customer_segmentos')
-        .delete()
-        .eq('customer_id', customerId);
-      
-      // Deletar transições de canal
-      await supabase
-        .from('canal_transitions')
-        .delete()
-        .eq('customer_id', customerId);
-      
-      // Deletar sessões omnichannel
-      await supabase
-        .from('omnichannel_sessions')
-        .delete()
-        .eq('customer_id', customerId);
-      
-      // Deletar vínculos com empresas
-      await supabase
-        .from('customer_empresas')
-        .delete()
-        .eq('customer_id', customerId);
-      
-      // Deletar vínculos gerais
-      await supabase
-        .from('customer_vinculos')
-        .delete()
-        .eq('customer_id', customerId);
-
-      // Deletar contato
-      const { error } = await supabase
-        .from('customers')
-        .delete()
-        .eq('id', customerId);
+      // Usar função SECURITY DEFINER para deletar em cascata
+      const { data, error } = await supabase
+        .rpc('delete_customer_cascade', { p_customer_id: contactToDelete.id });
 
       if (error) throw error;
+      
+      if (data === false) {
+        throw new Error('Não foi possível excluir o contato. Verifique se há dependências.');
+      }
 
       await loadContacts();
       toast.success("Contato excluído com sucesso");
