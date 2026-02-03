@@ -37,77 +37,79 @@ export function StepSchedule({
   };
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      <Card className="p-6">
-        <h3 className="font-medium text-lg mb-4">Agendar Próximo Contato</h3>
-        <p className="text-sm text-muted-foreground mb-6">
-          Defina a data para reagendar o próximo contato com todos os destinatários selecionados.
-          Uma nova tarefa será criada no calendário para cada contato.
-        </p>
+    <div className="flex flex-col h-full">
+      {/* Content */}
+      <div className="flex-1 max-w-2xl mx-auto w-full">
+        <Card className="p-6">
+          <h3 className="font-medium text-lg mb-4">Agendar Próximo Contato</h3>
+          <p className="text-sm text-muted-foreground mb-6">
+            Defina a data para reagendar o próximo contato com todos os destinatários selecionados.
+          </p>
 
-        <div className="space-y-4">
-          <Label>Atalhos Rápidos</Label>
-          <div className="flex flex-wrap gap-2">
-            {QUICK_DATES.map(qd => (
-              <Button
-                key={qd.days}
-                variant={
-                  format(addDays(new Date(), qd.days), 'yyyy-MM-dd') === 
-                  format(proximaDataContato, 'yyyy-MM-dd') ? 'default' : 'outline'
-                }
-                size="sm"
-                onClick={() => handleQuickDate(qd.days)}
-              >
-                {qd.label}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-6 space-y-2">
-          <Label>Ou escolha uma data específica</Label>
-          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <CalendarIcon className="h-4 w-4" />
-                {format(proximaDataContato, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={proximaDataContato}
-                onSelect={(date) => {
-                  if (date) {
-                    onDateChange(date);
-                    setIsCalendarOpen(false);
+          <div className="space-y-4">
+            <Label>Atalhos Rápidos</Label>
+            <div className="flex flex-wrap gap-2">
+              {QUICK_DATES.map(qd => (
+                <Button
+                  key={qd.days}
+                  variant={
+                    format(addDays(new Date(), qd.days), 'yyyy-MM-dd') === 
+                    format(proximaDataContato, 'yyyy-MM-dd') ? 'default' : 'outline'
                   }
-                }}
-                disabled={(date) => date < new Date()}
-                locale={ptBR}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+                  size="sm"
+                  onClick={() => handleQuickDate(qd.days)}
+                >
+                  {qd.label}
+                </Button>
+              ))}
+            </div>
+          </div>
 
-        <div className="mt-6 p-4 rounded-lg bg-primary/5 border border-primary/20">
-          <p className="text-sm">
-            <strong>Data selecionada:</strong>{' '}
-            {format(proximaDataContato, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Faltam {Math.ceil((proximaDataContato.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} dias
-          </p>
-        </div>
-      </Card>
+          <div className="mt-6 space-y-2">
+            <Label>Ou escolha uma data específica</Label>
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full justify-start gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  {format(proximaDataContato, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={proximaDataContato}
+                  onSelect={(date) => {
+                    if (date) {
+                      onDateChange(date);
+                      setIsCalendarOpen(false);
+                    }
+                  }}
+                  disabled={(date) => date < new Date()}
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t">
+          <div className="mt-6 p-4 rounded-lg bg-primary/5 border border-primary/20">
+            <p className="text-sm">
+              <strong>Data selecionada:</strong>{' '}
+              {format(proximaDataContato, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Faltam {Math.ceil((proximaDataContato.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} dias
+            </p>
+          </div>
+        </Card>
+      </div>
+
+      {/* Footer - Always at bottom */}
+      <div className="flex items-center justify-between pt-4 border-t mt-4 shrink-0">
         <Button variant="outline" onClick={onBack}>
           Voltar
         </Button>
         <Button onClick={onNext}>
-          Revisar e Confirmar
+          Continuar
           <ArrowRight className="h-4 w-4 ml-2" />
         </Button>
       </div>
