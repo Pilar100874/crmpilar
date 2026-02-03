@@ -2979,6 +2979,29 @@ ${recentMessages}
     });
   }, [conversations, searchTerm, globalFilter]);
 
+  // Separar conversas: contatos da agenda do dia vs outras conversas abertas
+  const { agendaConversations, otherConversations } = useMemo((): { agendaConversations: Conversation[]; otherConversations: Conversation[] } => {
+    // Obter contact_ids da agenda do dia
+    const todayContactIds = new Set(
+      todayTasks
+        .filter(task => task.contact_id)
+        .map(task => task.contact_id)
+    );
+
+    const agenda: Conversation[] = [];
+    const other: Conversation[] = [];
+
+    filteredConversations.forEach(conv => {
+      if (todayContactIds.has(conv.customer_id)) {
+        agenda.push(conv);
+      } else {
+        other.push(conv);
+      }
+    });
+
+    return { agendaConversations: agenda, otherConversations: other };
+  }, [filteredConversations, todayTasks]);
+
   // Filtered tasks based on global filter and contact filters
   const filteredTasks = useMemo(() => {
     const today = new Date();
@@ -3961,6 +3984,8 @@ ${recentMessages}
                 globalFilter={globalFilter}
                 setGlobalFilter={setGlobalFilter}
                 filteredConversations={filteredConversations}
+                agendaConversations={agendaConversations}
+                otherConversations={otherConversations}
                 selectedConversation={selectedConversation}
                 setSelectedConversation={(id) => {
                   setSelectedConversation(id);
@@ -6412,6 +6437,8 @@ interface MobileListContentProps {
   globalFilter: any;
   setGlobalFilter: (filter: any) => void;
   filteredConversations: any[];
+  agendaConversations: any[];
+  otherConversations: any[];
   selectedConversation: string | null;
   setSelectedConversation: (id: string | null) => void;
   filteredTasks: any[];
@@ -6466,6 +6493,8 @@ function MobileListContent({
   globalFilter,
   setGlobalFilter,
   filteredConversations,
+  agendaConversations,
+  otherConversations,
   selectedConversation,
   setSelectedConversation,
   filteredTasks,
@@ -6774,34 +6803,99 @@ function MobileListContent({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5">
-        {activeTab === "chat" && filteredConversations.map((conv) => (
-          <div
-            key={conv.id}
-            onClick={() => setSelectedConversation(conv.id)}
-            className={`px-3 py-3 rounded-xl cursor-pointer transition-all ${
-              selectedConversation === conv.id 
-                ? "bg-primary/10 border border-primary/30" 
-                : "bg-white/60 hover:bg-white border border-transparent"
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                selectedConversation === conv.id ? "bg-primary text-primary-foreground" : "bg-gradient-to-br from-slate-100 to-slate-200"
-              }`}>
-                <User className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-0.5">
-                  <span className="font-semibold text-sm truncate">{conv.customer?.nome || "Cliente"}</span>
-                  <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
-                    {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
-                  </span>
+        {activeTab === "chat" && (
+          <>
+            {/* Grupo: Agenda do Dia */}
+            {agendaConversations.length > 0 && (
+              <>
+                <div className="flex items-center gap-2 px-2 py-1.5">
+                  <CalendarIcon className="w-3.5 h-3.5 text-orange-500" />
+                  <span className="text-xs font-medium text-orange-600">Agenda do Dia</span>
+                  <Badge className="text-[10px] bg-orange-100 text-orange-700 border-0 px-1.5">
+                    {agendaConversations.length}
+                  </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{conv.lastMessage?.text || "Sem mensagens"}</p>
+                {agendaConversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    onClick={() => setSelectedConversation(conv.id)}
+                    className={`px-3 py-3 rounded-xl cursor-pointer transition-all border-l-4 border-l-orange-400 ${
+                      selectedConversation === conv.id 
+                        ? "bg-primary/10 border-t border-r border-b border-primary/30" 
+                        : "bg-white/60 hover:bg-white border-t border-r border-b border-transparent"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        selectedConversation === conv.id ? "bg-primary text-primary-foreground" : "bg-gradient-to-br from-orange-100 to-orange-200"
+                      }`}>
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="font-semibold text-sm truncate">{conv.customer?.nome || "Cliente"}</span>
+                          <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                            {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">{conv.lastMessage?.text || "Sem mensagens"}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* Grupo: Outras Conversas */}
+            {otherConversations.length > 0 && (
+              <>
+                <div className="flex items-center gap-2 px-2 py-1.5 mt-2">
+                  <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground">Outras Conversas</span>
+                  <Badge className="text-[10px] bg-slate-100 text-slate-600 border-0 px-1.5">
+                    {otherConversations.length}
+                  </Badge>
+                </div>
+                {otherConversations.map((conv) => (
+                  <div
+                    key={conv.id}
+                    onClick={() => setSelectedConversation(conv.id)}
+                    className={`px-3 py-3 rounded-xl cursor-pointer transition-all ${
+                      selectedConversation === conv.id 
+                        ? "bg-primary/10 border border-primary/30" 
+                        : "bg-white/60 hover:bg-white border border-transparent"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        selectedConversation === conv.id ? "bg-primary text-primary-foreground" : "bg-gradient-to-br from-slate-100 to-slate-200"
+                      }`}>
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="font-semibold text-sm truncate">{conv.customer?.nome || "Cliente"}</span>
+                          <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                            {conv.lastMessage?.created_at ? getTimeAgo(conv.lastMessage.created_at) : getTimeAgo(conv.updated_at)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">{conv.lastMessage?.text || "Sem mensagens"}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* Mensagem quando não há conversas */}
+            {agendaConversations.length === 0 && otherConversations.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Nenhuma conversa encontrada</p>
               </div>
-            </div>
-          </div>
-        ))}
+            )}
+          </>
+        )}
 
         {activeTab === "agenda" && filteredTasks.map((task) => {
           const isLinkedToUser = task.contact_id && customerVinculos.linkedToUser.has(task.contact_id);
