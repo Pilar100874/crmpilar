@@ -27,6 +27,7 @@ import { FieldMaskConfig, type FieldMask } from "@/components/config/FieldMaskCo
 import { SortableFieldItem } from "@/components/config/SortableFieldItem";
 import { TableColumnsConfig, type TableColumn } from "@/components/config/TableColumnsConfig";
 import { APIImportDialog } from "@/components/config/APIImportDialog";
+import { ImportContatosWizard } from "@/components/contatos/ImportContatosWizard";
 import { SegmentosCRUD } from "@/components/config/SegmentosCRUD";
 import { ContatoFieldsCRUD } from "@/components/config/ContatoFieldsCRUD";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -2873,161 +2874,12 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </TabsList>
 
               <TabsContent value="arquivo">
-                <Card className="p-6">
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Importar Contatos por Arquivo</h3>
-                      <p className="text-sm text-muted-foreground mb-6">
-                        Faça upload de um arquivo CSV ou Excel para importar múltiplos contatos de uma vez.
-                      </p>
-                    </div>
-
-                <div className="border-2 border-dashed border-border rounded-lg p-8">
-                  <div className="flex flex-col items-center justify-center space-y-4">
-                    <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                      <Upload className="w-8 h-8 text-primary" />
-                    </div>
-                    
-                    <div className="text-center space-y-2">
-                      <h4 className="font-medium">Arraste e solte seu arquivo aqui</h4>
-                      <p className="text-sm text-muted-foreground">ou clique para selecionar</p>
-                      <p className="text-xs text-muted-foreground">Formatos aceitos: CSV, XLS, XLSX (máx. 10MB)</p>
-                    </div>
-
-                    <Button className="mt-4">
-                      <Upload className="w-4 h-4 mr-2" />
-                      Selecionar Arquivo
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold">Campos Obrigatórios</h4>
-                  <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-2">CONTATO</p>
-                        <ul className="text-sm space-y-1">
-                          <li>• Nome de contato</li>
-                          <li>• WhatsApp</li>
-                          <li>• E-mail</li>
-                          <li>• Posição</li>
-                        </ul>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-2">EMPRESA</p>
-                        <ul className="text-sm space-y-1">
-                          <li>• Tipo (Pessoa Física ou Pessoa Jurídica)</li>
-                          <li>• CPF/CNPJ</li>
-                          <li>• Nome</li>
-                          <li>• Nome Fantasia</li>
-                          <li>• CEP</li>
-                          <li>• Endereço</li>
-                          <li>• Cidade</li>
-                          <li>• Bairro</li>
-                          <li>• UF</li>
-                          <li>• Inscrição</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold">Instruções de Importação</h4>
-                  <div className="bg-muted/50 rounded-lg p-4 space-y-3 text-sm">
-                    <div className="flex gap-2">
-                      <span className="font-medium min-w-6">1.</span>
-                      <p>Baixe o modelo de importação clicando no botão abaixo</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className="font-medium min-w-6">2.</span>
-                      <p>Preencha todas as colunas obrigatórias (não deixe células vazias)</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className="font-medium min-w-6">3.</span>
-                      <p>Tipo deve ser exatamente: "Pessoa Física" ou "Pessoa Jurídica"</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className="font-medium min-w-6">4.</span>
-                      <p>Telefones no formato: +55 (00) 00000-0000</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className="font-medium min-w-6">5.</span>
-                      <p>CPF/CNPJ no formato: 000.000.000-00 ou 00.000.000/0000-00</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className="font-medium min-w-6">6.</span>
-                      <p>CEP no formato: 00000-000</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className="font-medium min-w-6">7.</span>
-                      <p>Inscrição: número da IE ou "ISENTO" para pessoa física</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className="font-medium min-w-6">8.</span>
-                      <p>Contatos duplicados (mesmo telefone ou e-mail) serão ignorados</p>
-                    </div>
-                  </div>
-
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => {
-                      const wb = XLSX.utils.book_new();
-                      
-                      const headers = [
-                        "Nome de contato",
-                        "WhatsApp",
-                        "E-mail",
-                        "Posição",
-                        "Tipo",
-                        "CPF/CNPJ",
-                        "Nome",
-                        "Nome Fantasia",
-                        "CEP",
-                        "Endereço",
-                        "Cidade",
-                        "Bairro",
-                        "UF",
-                        "Inscrição"
-                      ];
-                      
-                      const exampleRow = [
-                        "João Silva",
-                        "+55 (11) 99999-9999",
-                        "joao@exemplo.com",
-                        "Gerente",
-                        "Pessoa Jurídica",
-                        "12.345.678/0001-90",
-                        "Empresa Exemplo LTDA",
-                        "Empresa Exemplo",
-                        "01310-100",
-                        "Avenida Paulista, 1000",
-                        "São Paulo",
-                        "Bela Vista",
-                        "SP",
-                        "123456789"
-                      ];
-                      
-                      const wsData = [headers, exampleRow];
-                      const ws = XLSX.utils.aoa_to_sheet(wsData);
-                      
-                      const colWidths = headers.map(() => ({ wch: 20 }));
-                      ws['!cols'] = colWidths;
-                      
-                      XLSX.utils.book_append_sheet(wb, ws, "Contatos");
-                      XLSX.writeFile(wb, "modelo_importacao_contatos.xlsx");
-                      
-                      toast.success("Modelo Excel baixado com sucesso!");
-                    }}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Baixar Modelo de Importação (Excel)
-                  </Button>
-                </div>
-              </div>
-            </Card>
+                <ImportContatosWizard 
+                  onClose={() => setShowImportPanel(false)}
+                  onImportComplete={async () => {
+                    await loadContacts();
+                  }}
+                />
               </TabsContent>
 
               <TabsContent value="api">
