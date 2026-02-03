@@ -1,4 +1,4 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase, Edit3 } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase, Edit3, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -37,6 +37,9 @@ interface UnifiedDetailsPanelProps {
   // Edição inline
   onEditContato?: (customerId: string) => void;
   onEditEmpresa?: (empresaId: string, customerEmpresaId?: string) => void;
+  // Criação inline
+  onCreateContato?: () => void;
+  onCreateEmpresa?: (customerId?: string) => void;
 }
 
 export function UnifiedDetailsPanel({ 
@@ -58,7 +61,9 @@ export function UnifiedDetailsPanel({
   onCompaniesUpdated,
   onSetGlobalFilter,
   onEditContato,
-  onEditEmpresa
+  onEditEmpresa,
+  onCreateContato,
+  onCreateEmpresa
 }: UnifiedDetailsPanelProps) {
   const [showSoftphone, setShowSoftphone] = useState(false);
   const [dialNumber, setDialNumber] = useState("");
@@ -156,17 +161,30 @@ export function UnifiedDetailsPanel({
               <Card className="p-4 text-center rounded-2xl border-dashed">
                 <Building2 className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
                 <p className="text-xs text-muted-foreground">Nenhuma empresa vinculada</p>
-                {(customerId || email || whatsapp || telefone) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="mt-2 text-xs text-primary"
-                    onClick={() => setShowVincularDialog(true)}
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Vincular empresa
-                  </Button>
-                )}
+                <div className="flex flex-col gap-1 mt-2">
+                  {(customerId || email || whatsapp || telefone) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-primary"
+                      onClick={() => setShowVincularDialog(true)}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Vincular empresa existente
+                    </Button>
+                  )}
+                  {onCreateEmpresa && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                      onClick={() => onCreateEmpresa(customerId)}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Criar nova empresa
+                    </Button>
+                  )}
+                </div>
               </Card>
             ) : (
               <div className="space-y-2">
@@ -235,17 +253,30 @@ export function UnifiedDetailsPanel({
                     </Card>
                   );
                 })}
-                {(customerId || email || whatsapp || telefone) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-xs text-primary"
-                    onClick={() => setShowVincularDialog(true)}
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Vincular outra empresa
-                  </Button>
-                )}
+                <div className="flex flex-col gap-1">
+                  {(customerId || email || whatsapp || telefone) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs text-primary"
+                      onClick={() => setShowVincularDialog(true)}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Vincular outra empresa
+                    </Button>
+                  )}
+                  {onCreateEmpresa && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                      onClick={() => onCreateEmpresa(customerId)}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Criar nova empresa
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
           </CollapsibleContent>
@@ -271,9 +302,9 @@ export function UnifiedDetailsPanel({
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
             <Card className="p-3 rounded-2xl space-y-3">
-              {/* Botão Editar Contato */}
-              {customerId && (
-                <div className="flex justify-end -mt-1 -mr-1 mb-1">
+              {/* Botões Editar/Criar Contato */}
+              <div className="flex justify-end -mt-1 -mr-1 mb-1 gap-1">
+                {customerId ? (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -283,8 +314,18 @@ export function UnifiedDetailsPanel({
                     <Edit3 className="w-3 h-3 mr-1" />
                     Editar
                   </Button>
-                </div>
-              )}
+                ) : onCreateContato && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-green-600 hover:bg-green-50"
+                    onClick={onCreateContato}
+                  >
+                    <UserPlus className="w-3 h-3 mr-1" />
+                    Criar Contato
+                  </Button>
+                )}
+              </div>
 
               {/* Nome */}
               <div className="flex items-center justify-between">
