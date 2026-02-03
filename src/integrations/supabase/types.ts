@@ -3092,6 +3092,123 @@ export type Database = {
           },
         ]
       }
+      envio_massa: {
+        Row: {
+          agendado_para: string | null
+          contatos_enviados: number | null
+          contatos_erro: number | null
+          conteudo: Json
+          created_at: string | null
+          estabelecimento_id: string
+          filtros_aplicados: Json | null
+          finalizado_em: string | null
+          id: string
+          iniciado_em: string | null
+          nome: string
+          proxima_data_contato: string | null
+          status: string | null
+          total_contatos: number | null
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          agendado_para?: string | null
+          contatos_enviados?: number | null
+          contatos_erro?: number | null
+          conteudo: Json
+          created_at?: string | null
+          estabelecimento_id: string
+          filtros_aplicados?: Json | null
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string | null
+          nome: string
+          proxima_data_contato?: string | null
+          status?: string | null
+          total_contatos?: number | null
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          agendado_para?: string | null
+          contatos_enviados?: number | null
+          contatos_erro?: number | null
+          conteudo?: Json
+          created_at?: string | null
+          estabelecimento_id?: string
+          filtros_aplicados?: Json | null
+          finalizado_em?: string | null
+          id?: string
+          iniciado_em?: string | null
+          nome?: string
+          proxima_data_contato?: string | null
+          status?: string | null
+          total_contatos?: number | null
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "envio_massa_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "envio_massa_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      envio_massa_contatos: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          enviado_em: string | null
+          envio_id: string
+          erro_mensagem: string | null
+          id: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          enviado_em?: string | null
+          envio_id: string
+          erro_mensagem?: string | null
+          id?: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          enviado_em?: string | null
+          envio_id?: string
+          erro_mensagem?: string | null
+          id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "envio_massa_contatos_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "envio_massa_contatos_envio_id_fkey"
+            columns: ["envio_id"]
+            isOneToOne: false
+            referencedRelation: "envio_massa"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estabelecimentos: {
         Row: {
           automacao_vendas_config: Json | null
@@ -5222,6 +5339,65 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      media_gallery: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          duracao_segundos: number | null
+          estabelecimento_id: string
+          id: string
+          mime_type: string | null
+          nome: string
+          origem: string | null
+          public_url: string
+          storage_path: string
+          tamanho_bytes: number | null
+          thumbnail_url: string | null
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          duracao_segundos?: number | null
+          estabelecimento_id: string
+          id?: string
+          mime_type?: string | null
+          nome: string
+          origem?: string | null
+          public_url: string
+          storage_path: string
+          tamanho_bytes?: number | null
+          thumbnail_url?: string | null
+          tipo: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          duracao_segundos?: number | null
+          estabelecimento_id?: string
+          id?: string
+          mime_type?: string | null
+          nome?: string
+          origem?: string | null
+          public_url?: string
+          storage_path?: string
+          tamanho_bytes?: number | null
+          thumbnail_url?: string | null
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_gallery_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -8176,6 +8352,7 @@ export type Database = {
       }
       quick_replies: {
         Row: {
+          categoria: string | null
           content: string
           created_at: string | null
           estabelecimento_id: string | null
@@ -8188,6 +8365,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          categoria?: string | null
           content: string
           created_at?: string | null
           estabelecimento_id?: string | null
@@ -8200,6 +8378,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          categoria?: string | null
           content?: string
           created_at?: string | null
           estabelecimento_id?: string | null
@@ -8224,6 +8403,38 @@ export type Database = {
             columns: ["grupo_acesso_id"]
             isOneToOne: false
             referencedRelation: "grupos_acesso"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quick_reply_categories: {
+        Row: {
+          created_at: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          ordem: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          ordem?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          ordem?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quick_reply_categories_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
             referencedColumns: ["id"]
           },
         ]
