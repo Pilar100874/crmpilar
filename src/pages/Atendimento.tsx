@@ -2980,13 +2980,37 @@ ${recentMessages}
   }, [conversations, searchTerm, globalFilter]);
 
   // Separar conversas: contatos da agenda do dia vs outras conversas abertas
-  const { agendaConversations, otherConversations } = useMemo((): { agendaConversations: Conversation[]; otherConversations: Conversation[] } => {
-    // Obter contact_ids da agenda do dia
-    const todayContactIds = new Set(
-      todayTasks
-        .filter(task => task.contact_id)
-        .map(task => task.contact_id)
-    );
+  // Também incluir contatos da agenda que NÃO têm conversa ativa para permitir iniciar chat
+  const { agendaConversations, otherConversations, agendaContactsWithoutConversation } = useMemo((): { 
+    agendaConversations: Conversation[]; 
+    otherConversations: Conversation[];
+    agendaContactsWithoutConversation: Array<{
+      contactId: string;
+      nome: string;
+      telefone: string;
+      email: string;
+      taskTitle?: string;
+    }>;
+  } => {
+    // Obter contact_ids da agenda do dia com dados do contato
+    const todayContactsMap = new Map<string, { nome: string; telefone: string; email: string; taskTitle: string }>();
+    todayTasks
+      .filter(task => task.contact_id && task.customers)
+      .forEach(task => {
+        if (!todayContactsMap.has(task.contact_id)) {
+          todayContactsMap.set(task.contact_id, {
+            nome: task.customers?.nome || task.contact_name || 'Sem nome',
+            telefone: task.customers?.telefone || '',
+            email: task.customers?.email || '',
+            taskTitle: task.title || ''
+          });
+        }
+      });
+
+    const todayContactIds = new Set(todayContactsMap.keys());
+    
+    // IDs de customers que já têm conversa
+    const customersWithConversation = new Set(filteredConversations.map(c => c.customer_id));
 
     const agenda: Conversation[] = [];
     const other: Conversation[] = [];
@@ -2999,7 +3023,32 @@ ${recentMessages}
       }
     });
 
-    return { agendaConversations: agenda, otherConversations: other };
+    // Contatos da agenda que NÃO têm conversa ativa
+    const contactsWithoutConv: Array<{
+      contactId: string;
+      nome: string;
+      telefone: string;
+      email: string;
+      taskTitle?: string;
+    }> = [];
+
+    todayContactsMap.forEach((data, contactId) => {
+      if (!customersWithConversation.has(contactId)) {
+        contactsWithoutConv.push({
+          contactId,
+          nome: data.nome,
+          telefone: data.telefone,
+          email: data.email,
+          taskTitle: data.taskTitle
+        });
+      }
+    });
+
+    return { 
+      agendaConversations: agenda, 
+      otherConversations: other,
+      agendaContactsWithoutConversation: contactsWithoutConv
+    };
   }, [filteredConversations, todayTasks]);
 
   // Filtered tasks based on global filter and contact filters
@@ -3986,6 +4035,12 @@ ${recentMessages}
                 filteredConversations={filteredConversations}
                 agendaConversations={agendaConversations}
                 otherConversations={otherConversations}
+                agendaContactsWithoutConversation={agendaContactsWithoutConversation}
+                onStartConversation={async (contactId, nome, telefone) => {
+                  // Criar conversa para o contato da agenda
+                  await handleCreateConversationFromContact('customer', { id: contactId, nome, telefone });
+                  setMobileView("main");
+                }}
                 selectedConversation={selectedConversation}
                 setSelectedConversation={(id) => {
                   setSelectedConversation(id);
@@ -6439,6 +6494,14 @@ interface MobileListContentProps {
   filteredConversations: any[];
   agendaConversations: any[];
   otherConversations: any[];
+  agendaContactsWithoutConversation: Array<{
+    contactId: string;
+    nome: string;
+    telefone: string;
+    email: string;
+    taskTitle?: string;
+  }>;
+  onStartConversation: (contactId: string, nome: string, telefone: string) => void;
   selectedConversation: string | null;
   setSelectedConversation: (id: string | null) => void;
   filteredTasks: any[];
@@ -6495,6 +6558,8 @@ function MobileListContent({
   filteredConversations,
   agendaConversations,
   otherConversations,
+  agendaContactsWithoutConversation,
+  onStartConversation,
   selectedConversation,
   setSelectedConversation,
   filteredTasks,
@@ -6805,16 +6870,18 @@ function MobileListContent({
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1.5">
         {activeTab === "chat" && (
           <>
-            {/* Grupo: Agenda do Dia */}
-            {agendaConversations.length > 0 && (
+            {/* Grupo: Agenda do Dia - Conversas ativas + Contatos sem conversa */}
+            {(agendaConversations.length > 0 || agendaContactsWithoutConversation.length > 0) && (
               <>
                 <div className="flex items-center gap-2 px-2 py-1.5">
                   <CalendarIcon className="w-3.5 h-3.5 text-orange-500" />
                   <span className="text-xs font-medium text-orange-600">Agenda do Dia</span>
                   <Badge className="text-[10px] bg-orange-100 text-orange-700 border-0 px-1.5">
-                    {agendaConversations.length}
+                    {agendaConversations.length + agendaContactsWithoutConversation.length}
                   </Badge>
                 </div>
+                
+                {/* Conversas ativas da agenda */}
                 {agendaConversations.map((conv) => (
                   <div
                     key={conv.id}
@@ -6839,6 +6906,33 @@ function MobileListContent({
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground truncate">{conv.lastMessage?.text || "Sem mensagens"}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Contatos da agenda SEM conversa ativa - clicando inicia a conversa */}
+                {agendaContactsWithoutConversation.map((contact) => (
+                  <div
+                    key={`contact-${contact.contactId}`}
+                    onClick={() => onStartConversation(contact.contactId, contact.nome, contact.telefone)}
+                    className="px-3 py-3 rounded-xl cursor-pointer transition-all border-l-4 border-l-orange-300 border-dashed bg-orange-50/50 hover:bg-orange-100/50 border-t border-r border-b border-transparent"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-orange-50 to-orange-100">
+                        <User className="w-5 h-5 text-orange-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="font-semibold text-sm truncate text-orange-700">{contact.nome}</span>
+                          <Badge className="text-[9px] bg-orange-100 text-orange-600 border-0 px-1.5">
+                            Iniciar chat
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-orange-500 truncate flex items-center gap-1">
+                          <CalendarIcon className="w-3 h-3" />
+                          {contact.taskTitle || "Tarefa agendada"}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -6887,8 +6981,8 @@ function MobileListContent({
               </>
             )}
 
-            {/* Mensagem quando não há conversas */}
-            {agendaConversations.length === 0 && otherConversations.length === 0 && (
+            {/* Mensagem quando não há conversas nem contatos da agenda */}
+            {agendaConversations.length === 0 && otherConversations.length === 0 && agendaContactsWithoutConversation.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">Nenhuma conversa encontrada</p>
