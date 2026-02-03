@@ -14,7 +14,8 @@ import {
   Link2,
   Server,
   GitBranch,
-  BookOpen
+  BookOpen,
+  Send
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -35,6 +36,7 @@ import ResourceN8nGenerator from '@/components/marketing/ResourceN8nGenerator';
 import RailwayVariables from '@/components/marketing/RailwayVariables';
 import { N8nWorkflowEditor } from '@/components/marketing/n8n-editor';
 import { MarketingCatalogo } from '@/components/marketing/catalogo';
+import { EnvioMassaMarketing } from '@/components/marketing/EnvioMassaMarketing';
 
 interface TabItem {
   id: string;
@@ -44,6 +46,7 @@ interface TabItem {
 }
 
 const tabItems: TabItem[] = [
+  { id: 'envio-massa', label: 'Envio em Massa', icon: Send, description: 'Dispare mensagens para múltiplos contatos' },
   { id: 'recursos', label: 'Recursos IA', icon: Wand2, description: 'Crie conteúdo com IA e n8n' },
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
   { id: 'catalogo', label: 'Catálogo', icon: BookOpen, description: 'Gere catálogos de produtos em PDF' },
@@ -58,7 +61,7 @@ const tabItems: TabItem[] = [
 ];
 
 const MarketingHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('recursos');
+  const [activeTab, setActiveTab] = useState('envio-massa');
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
   const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
@@ -66,6 +69,8 @@ const MarketingHub: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'envio-massa':
+        return <EnvioMassaMarketing />;
       case 'recursos':
         return <MarketingRecursos />;
       case 'galeria':

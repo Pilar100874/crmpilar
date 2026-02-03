@@ -1,13 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
 import { ContactForBulkSend, EnvioMassaFilters, CanalEnvio } from '../types';
 
 /**
- * Hook for Atendimento bulk send - filters contacts by TODAY's calendar tasks only
+ * Hook for Marketing bulk send - fetches ALL contacts without calendar filter
  */
-export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio | null = null) {
+export function useContactsFilterMarketing(estabelecimentoId: string, canal: CanalEnvio | null = null) {
   const [contacts, setContacts] = useState<ContactForBulkSend[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<ContactForBulkSend[]>([]);
   const [segmentos, setSegmentos] = useState<{ id: string; nome: string }[]>([]);
@@ -29,30 +28,7 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
     if (!estabelecimentoId) return;
     
     try {
-      // Get today's date
-      const today = format(new Date(), 'yyyy-MM-dd');
-      
-      // First, get contact IDs from today's calendar tasks
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('calendario_tarefas')
-        .select('contact_id')
-        .eq('estabelecimento_id', estabelecimentoId)
-        .eq('date', today)
-        .not('contact_id', 'is', null);
-
-      if (tasksError) throw tasksError;
-
-      // Extract unique contact IDs from today's tasks
-      const contactIds = [...new Set((tasksData || []).map(t => t.contact_id).filter(Boolean))];
-
-      if (contactIds.length === 0) {
-        setContacts([]);
-        setFilteredContacts([]);
-        setLoading(false);
-        return;
-      }
-
-      // Fetch only contacts that are in today's agenda
+      // Fetch ALL contacts with empresa info (no calendar filter)
       const { data, error } = await supabase
         .from('customers')
         .select(`
@@ -74,7 +50,6 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
           )
         `)
         .eq('estabelecimento_id', estabelecimentoId)
-        .in('id', contactIds)
         .order('nome');
 
       if (error) throw error;
@@ -95,7 +70,7 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
       setFilteredContacts(formattedContacts);
     } catch (error: any) {
       console.error('Error fetching contacts:', error);
-      toast.error('Erro ao carregar contatos da agenda');
+      toast.error('Erro ao carregar contatos');
     } finally {
       setLoading(false);
     }
