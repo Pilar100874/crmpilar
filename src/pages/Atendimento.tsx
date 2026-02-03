@@ -4414,11 +4414,9 @@ ${recentMessages}
           </TabsContent>
 
           {/* Agenda Tab */}
-          <TabsContent value="agenda" className="flex-1 flex flex-row min-h-0 m-0">
+          <TabsContent value="agenda" className="flex-1 flex flex-col min-h-0 m-0">
             {/* Main Content */}
-            <div className={`flex flex-col transition-all duration-300 ${
-              showClientDetailsAgenda && selectedTaskData ? 'w-[calc(100%-320px)]' : 'w-full'
-            }`}>
+            <div className="flex flex-col flex-1 overflow-hidden">
             {/* Agenda Controls - Modern Card Design */}
             <div className="flex-shrink-0 p-4 bg-gradient-to-r from-amber-50/80 via-orange-50/50 to-transparent dark:from-amber-950/20 dark:via-orange-950/10 dark:to-transparent border-b border-orange-100/50 dark:border-orange-900/30">
               <div className="flex flex-wrap items-center gap-3">
@@ -4931,26 +4929,6 @@ ${recentMessages}
               )}
             </div>
             </div>
-
-            {/* Client Details Panel - Agenda */}
-            {showClientDetailsAgenda && selectedTaskData && (
-              <UnifiedDetailsPanel
-                type="agenda"
-                nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
-                telefone={selectedTaskData.customers?.telefone}
-                whatsapp={selectedTaskData.customers?.telefone}
-                email={selectedTaskData.customers?.email}
-                customerId={selectedTaskData.customers?.id || selectedTaskData.contact_id}
-                protocolo={selectedTaskData.id?.slice(0, 8).toUpperCase()}
-                status={selectedTaskData.status}
-                titulo={selectedTaskData.title}
-                descricao={selectedTaskData.description}
-                dataHora={selectedTaskData.date ? format(new Date(selectedTaskData.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) : undefined}
-                companies={selectedTaskData.customers?.customer_empresas || []}
-                onCompaniesUpdated={() => loadSelectedTask(selectedTaskId || '')}
-                onSetGlobalFilter={setGlobalFilter}
-              />
-            )}
           </TabsContent>
 
           {/* Email Tab - Empty, content shown in main area */}
