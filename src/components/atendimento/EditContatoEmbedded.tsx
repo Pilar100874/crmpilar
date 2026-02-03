@@ -10,6 +10,7 @@ import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { maskPhone, maskWhatsApp } from "@/lib/masks";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
+import { EditEmpresaDialog } from "./EditEmpresaDialog";
 
 interface EditContatoEmbeddedProps {
   customerId: string;
@@ -43,6 +44,7 @@ export function EditContatoEmbedded({ customerId, onClose, onSuccess, onEditEmpr
   });
   const [linkedEmpresas, setLinkedEmpresas] = useState<LinkedEmpresa[]>([]);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
+  const [editingEmpresaId, setEditingEmpresaId] = useState<string | null>(null);
 
   useEffect(() => {
     loadContactData();
@@ -338,17 +340,15 @@ export function EditContatoEmbedded({ customerId, onClose, onSuccess, onEditEmpr
                         )}
                       </div>
                       <div className="flex items-center gap-1">
-                        {onEditEmpresa && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            title="Editar empresa"
-                            onClick={() => onEditEmpresa(link.empresa_id, link.id)}
-                          >
-                            <Building2 className="w-4 h-4" />
-                          </Button>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          title="Editar empresa"
+                          onClick={() => setEditingEmpresaId(link.empresa_id)}
+                        >
+                          <Building2 className="w-4 h-4" />
+                        </Button>
                         {!link.is_primary && (
                           <Button
                             variant="ghost"
@@ -430,6 +430,15 @@ export function EditContatoEmbedded({ customerId, onClose, onSuccess, onEditEmpr
         customerId={customerId}
         onSuccess={loadLinkedEmpresas}
       />
+
+      {editingEmpresaId && (
+        <EditEmpresaDialog
+          open={!!editingEmpresaId}
+          onOpenChange={(open) => !open && setEditingEmpresaId(null)}
+          empresaId={editingEmpresaId}
+          onSuccess={loadLinkedEmpresas}
+        />
+      )}
     </div>
   );
 }
