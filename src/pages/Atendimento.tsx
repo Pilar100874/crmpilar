@@ -299,6 +299,7 @@ export default function Atendimento() {
 
   // Estados para criação inline de contato/empresa
   const [creatingContato, setCreatingContato] = useState(false);
+  const [creatingContatoInitialData, setCreatingContatoInitialData] = useState<{ nome?: string; email?: string; telefone?: string } | null>(null);
   const [creatingEmpresa, setCreatingEmpresa] = useState(false);
   const [creatingEmpresaForCustomerId, setCreatingEmpresaForCustomerId] = useState<string | null>(null);
 
@@ -4181,7 +4182,7 @@ ${recentMessages}
               {activeTab === "email" && selectedEmailData && (
                 <UnifiedDetailsPanel
                   type="email"
-                  nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || selectedEmailData.from_email}
+                  nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || "Contato Desconhecido"}
                   telefone={selectedEmailData.customer?.tel || selectedEmailData.empresa?.telefone}
                   whatsapp={selectedEmailData.customer?.telefone || selectedEmailData.empresa?.telefone}
                   email={selectedEmailData.from_email}
@@ -4204,7 +4205,10 @@ ${recentMessages}
                     setEditingEmpresaId(empresaId);
                     setEditingCustomerEmpresaId(customerEmpresaId || null);
                   }}
-                  onCreateContato={() => setCreatingContato(true)}
+                  onCreateContato={() => {
+                    setCreatingContatoInitialData({ email: selectedEmailData.from_email });
+                    setCreatingContato(true);
+                  }}
                   onCreateEmpresa={(customerId) => {
                     setCreatingEmpresa(true);
                     setCreatingEmpresaForCustomerId(customerId || null);
@@ -5864,14 +5868,23 @@ ${recentMessages}
         ) : creatingContato ? (
           /* Criação de Contato Inline */
           <CreateContatoEmbedded
-            onClose={() => setCreatingContato(false)}
+            onClose={() => {
+              setCreatingContato(false);
+              setCreatingContatoInitialData(null);
+            }}
             onSuccess={() => {
               setCreatingContato(false);
+              setCreatingContatoInitialData(null);
               // Recarregar dados conforme a aba ativa
               if (activeTab === "agenda") {
                 loadTodayTasks();
+              } else if (activeTab === "email" && selectedEmailId) {
+                loadSelectedEmail(selectedEmailId);
+              } else if (activeTab === "chat" && selectedConversation) {
+                loadCustomerCompanies(selectedConversation);
               }
             }}
+            initialData={creatingContatoInitialData || undefined}
           />
         ) : creatingEmpresa ? (
           /* Criação de Empresa Inline */
@@ -6174,7 +6187,7 @@ ${recentMessages}
         <div className={`${isSmallTablet ? 'w-56' : 'w-80 md:w-64 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="email"
-            nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || selectedEmailData.from_email}
+            nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || "Contato Desconhecido"}
             telefone={selectedEmailData.customer?.tel || selectedEmailData.empresa?.telefone}
             whatsapp={selectedEmailData.customer?.telefone || selectedEmailData.empresa?.telefone}
             email={selectedEmailData.from_email}
@@ -6197,7 +6210,10 @@ ${recentMessages}
               setEditingEmpresaId(empresaId);
               setEditingCustomerEmpresaId(customerEmpresaId || null);
             }}
-            onCreateContato={() => setCreatingContato(true)}
+            onCreateContato={() => {
+              setCreatingContatoInitialData({ email: selectedEmailData.from_email });
+              setCreatingContato(true);
+            }}
             onCreateEmpresa={(customerId) => {
               setCreatingEmpresa(true);
               setCreatingEmpresaForCustomerId(customerId || null);

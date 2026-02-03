@@ -70,10 +70,10 @@ export function CreateContatoEmbedded({ onClose, onSuccess, initialData }: Creat
   return (
     <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
       {/* Header */}
-      <div className="px-4 py-3 border-b bg-gradient-to-r from-green-50 to-transparent dark:from-green-950/30 flex items-center justify-between">
+      <div className="px-4 py-3 border-b bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/30 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
-            <UserPlus className="w-5 h-5 text-green-600 dark:text-green-400" />
+          <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+            <UserPlus className="w-5 h-5 text-orange-600 dark:text-orange-400" />
           </div>
           <div>
             <h3 className="font-semibold text-lg">Novo Contato</h3>
