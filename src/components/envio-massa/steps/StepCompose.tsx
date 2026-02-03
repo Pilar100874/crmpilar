@@ -482,7 +482,9 @@ export function StepCompose({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full">
+      {/* Content */}
+      <div className="flex-1 min-h-0 overflow-hidden">
       {/* Tabs de seleção - Full width, stack on mobile */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
         <TabsList className="w-full grid grid-cols-5 h-auto">
@@ -888,8 +890,10 @@ export function StepCompose({
         </div>
       </Tabs>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t">
+      </div>
+
+      {/* Footer - Always at bottom */}
+      <div className="flex items-center justify-between pt-4 border-t mt-4 shrink-0">
         <Button variant="outline" onClick={onBack}>
           Voltar
         </Button>

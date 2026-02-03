@@ -72,9 +72,11 @@ export function StepFilter({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Filtros */}
-      <Accordion type="single" collapsible value={accordionValue} onValueChange={setAccordionValue} className="border rounded-lg">
+    <div className="flex flex-col h-full">
+      {/* Content */}
+      <div className="flex-1 space-y-4 min-h-0 overflow-hidden flex flex-col">
+        {/* Filtros */}
+        <Accordion type="single" collapsible value={accordionValue} onValueChange={setAccordionValue} className="border rounded-lg shrink-0">
         <AccordionItem value="filters" className="border-0">
           <AccordionTrigger className="px-4 py-3 hover:no-underline">
             <div className="flex items-center gap-2">
@@ -263,18 +265,20 @@ export function StepFilter({
         </ScrollArea>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-4 border-t">
+      </div>
+
+      {/* Footer - Always at bottom */}
+      <div className="flex items-center justify-between pt-4 border-t mt-4 shrink-0">
         <div className="flex items-center gap-4">
           <Button variant="outline" onClick={onBack}>
             Voltar
           </Button>
           <div className="text-sm text-muted-foreground">
             <Badge variant="outline" className="mr-2">{selectedContacts.length}</Badge>
-            contatos selecionados
+            selecionados
             {canal && (
-              <span className="ml-2 text-xs">
-                ({canal === 'whatsapp' ? 'com telefone' : 'com e-mail'})
+              <span className="hidden sm:inline ml-1 text-xs">
+                ({canal === 'whatsapp' ? 'telefone' : 'e-mail'})
               </span>
             )}
           </div>

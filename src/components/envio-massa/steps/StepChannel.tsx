@@ -37,60 +37,64 @@ export function StepChannel({
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold mb-2">Selecione o Canal de Envio</h3>
-        <p className="text-sm text-muted-foreground">
-          Escolha por qual canal deseja realizar o envio em massa
-        </p>
-      </div>
+    <div className="flex flex-col h-full">
+      {/* Content */}
+      <div className="flex-1 space-y-6">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold mb-2">Selecione o Canal de Envio</h3>
+          <p className="text-sm text-muted-foreground">
+            Escolha por qual canal deseja realizar o envio em massa
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {channels.map((channel) => {
-          const Icon = channel.icon;
-          const isSelected = selectedCanal === channel.id;
-          
-          return (
-            <Card
-              key={channel.id}
-              className={cn(
-                "p-6 cursor-pointer transition-all hover:shadow-md relative",
-                isSelected 
-                  ? `${channel.borderColor} border-2 ${channel.bgColor}` 
-                  : "hover:border-muted-foreground/30"
-              )}
-              onClick={() => onSelectCanal(channel.id)}
-            >
-              {isSelected && (
-                <div className={cn(
-                  "absolute top-3 right-3 rounded-full p-1",
-                  channel.bgColor
-                )}>
-                  <Check className={cn("h-4 w-4", channel.color)} />
-                </div>
-              )}
-              
-              <div className="flex flex-col items-center text-center gap-4">
-                <div className={cn(
-                  "p-4 rounded-full",
-                  channel.bgColor
-                )}>
-                  <Icon className={cn("h-8 w-8", channel.color)} />
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {channels.map((channel) => {
+            const Icon = channel.icon;
+            const isSelected = selectedCanal === channel.id;
+            
+            return (
+              <Card
+                key={channel.id}
+                className={cn(
+                  "p-6 cursor-pointer transition-all hover:shadow-md relative",
+                  isSelected 
+                    ? `${channel.borderColor} border-2 ${channel.bgColor}` 
+                    : "hover:border-muted-foreground/30"
+                )}
+                onClick={() => onSelectCanal(channel.id)}
+              >
+                {isSelected && (
+                  <div className={cn(
+                    "absolute top-3 right-3 rounded-full p-1",
+                    channel.bgColor
+                  )}>
+                    <Check className={cn("h-4 w-4", channel.color)} />
+                  </div>
+                )}
                 
-                <div>
-                  <h4 className="font-semibold text-lg mb-2">{channel.label}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {channel.description}
-                  </p>
+                <div className="flex flex-col items-center text-center gap-4">
+                  <div className={cn(
+                    "p-4 rounded-full",
+                    channel.bgColor
+                  )}>
+                    <Icon className={cn("h-8 w-8", channel.color)} />
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold text-lg mb-2">{channel.label}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {channel.description}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          );
-        })}
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="flex justify-end pt-4 border-t">
+      {/* Footer - Always at bottom */}
+      <div className="flex justify-end pt-4 border-t mt-4 shrink-0">
         <Button onClick={onNext} disabled={!selectedCanal}>
           Continuar
         </Button>
