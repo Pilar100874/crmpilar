@@ -1,12 +1,10 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
-import { EditContatoDialog } from "./EditContatoDialog";
-import { EditEmpresaDialog } from "./EditEmpresaDialog";
 import { useState } from "react";
 import { GlobalFilter } from "./GlobalClientFilter";
 import { toast } from "@/lib/toast-config";
@@ -62,10 +60,6 @@ export function UnifiedDetailsPanel({
   const [empresasOpen, setEmpresasOpen] = useState(true);
   const [contatoOpen, setContatoOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
-  const [showEditContatoDialog, setShowEditContatoDialog] = useState(false);
-  const [showEditEmpresaDialog, setShowEditEmpresaDialog] = useState(false);
-  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | undefined>(undefined);
-  const [selectedCustomerEmpresaId, setSelectedCustomerEmpresaId] = useState<string | undefined>(undefined);
 
   // Obtém o cargo da primeira empresa vinculada
   const primaryCompany = companies.find(c => c.is_primary) || companies[0];
@@ -93,11 +87,17 @@ export function UnifiedDetailsPanel({
     }
   };
 
-  const handleEditEmpresa = (empresa: any, customerEmpresaRelationId?: string) => {
+  const handleEditEmpresa = (empresa: any) => {
     const empresaData = empresa.empresas || empresa;
-    setSelectedEmpresaId(empresaData?.id);
-    setSelectedCustomerEmpresaId(customerEmpresaRelationId || empresa?.id);
-    setShowEditEmpresaDialog(true);
+    if (empresaData?.id) {
+      window.open(`/listas?tab=empresas&id=${empresaData.id}`, '_blank');
+    }
+  };
+
+  const handleEditContato = () => {
+    if (customerId) {
+      window.open(`/listas?tab=contatos&id=${customerId}`, '_blank');
+    }
   };
 
   if (!nome && !protocolo && !titulo) {
@@ -192,7 +192,7 @@ export function UnifiedDetailsPanel({
                             size="sm"
                             className="h-7 w-7 p-0 hover:bg-primary/10 hover:text-primary"
                             title="Editar empresa"
-                            onClick={() => handleEditEmpresa(company, company.id)}
+                            onClick={() => handleEditEmpresa(company)}
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </Button>
@@ -273,9 +273,9 @@ export function UnifiedDetailsPanel({
                     variant="ghost"
                     size="sm"
                     className="h-7 px-2 text-xs text-primary hover:bg-primary/10"
-                    onClick={() => setShowEditContatoDialog(true)}
+                    onClick={handleEditContato}
                   >
-                    <Pencil className="w-3 h-3 mr-1" />
+                    <ExternalLink className="w-3 h-3 mr-1" />
                     Editar
                   </Button>
                 </div>
@@ -385,27 +385,6 @@ export function UnifiedDetailsPanel({
         customerId={customerId}
         emailVinculo={type === 'email' ? email : undefined}
         whatsappVinculo={type === 'chat' ? (whatsapp || telefone) : undefined}
-        onSuccess={onCompaniesUpdated}
-      />
-
-      <EditContatoDialog
-        open={showEditContatoDialog}
-        onOpenChange={setShowEditContatoDialog}
-        customerId={customerId}
-        nome={nome}
-        email={email}
-        telefone={whatsapp || telefone}
-        cargo={currentCargo}
-        customerEmpresaId={customerEmpresaId}
-        onSuccess={onCompaniesUpdated}
-      />
-
-      <EditEmpresaDialog
-        open={showEditEmpresaDialog}
-        onOpenChange={setShowEditEmpresaDialog}
-        empresaId={selectedEmpresaId}
-        customerId={customerId}
-        customerEmpresaId={selectedCustomerEmpresaId}
         onSuccess={onCompaniesUpdated}
       />
     </div>

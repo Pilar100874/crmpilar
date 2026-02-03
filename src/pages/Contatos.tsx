@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import * as React from "react";
 import * as XLSX from 'xlsx';
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,6 +101,7 @@ interface ContatosProps {
 
 export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(false);
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -451,18 +452,21 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
     fetchEstabelecimentoAndSegmentos();
   }, []);
 
-  // Detectar se há um ID de contato para editar vindo da navegação
+  // Detectar se há um ID de contato para editar vindo da navegação (via state ou URL params)
   useEffect(() => {
     const state = location.state as { editContactId?: string };
-    if (state?.editContactId && contacts.length > 0) {
-      const contactToEdit = contacts.find(c => c.id === state.editContactId);
+    const idFromUrl = searchParams.get('id');
+    const contactIdToEdit = state?.editContactId || idFromUrl;
+    
+    if (contactIdToEdit && contacts.length > 0) {
+      const contactToEdit = contacts.find(c => c.id === contactIdToEdit);
       if (contactToEdit) {
         handleEditContact(contactToEdit);
         // Limpar o state após usar
         window.history.replaceState({}, document.title);
       }
     }
-  }, [location.state, contacts]);
+  }, [location.state, searchParams, contacts]);
 
   // Carregar contatos do backend
   const loadContacts = async () => {

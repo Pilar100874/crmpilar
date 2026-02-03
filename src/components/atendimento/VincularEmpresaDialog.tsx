@@ -99,8 +99,22 @@ export function VincularEmpresaDialog({
     try {
       const estabId = await getEstabelecimentoId();
       
-      // Se temos customerId, vincular via customer_empresas
+      // Se temos customerId, verificar se existe antes de vincular
       if (customerId) {
+        // Primeiro verificar se o customer existe
+        const { data: customerExists, error: checkError } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('id', customerId)
+          .maybeSingle();
+
+        if (checkError || !customerExists) {
+          console.error("Customer não encontrado:", customerId);
+          toast.error("Contato não encontrado. Tente criar um novo vínculo.");
+          setVinculando(false);
+          return;
+        }
+
         const { error } = await supabase
           .from('customer_empresas')
           .insert({

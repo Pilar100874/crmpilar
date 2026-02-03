@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   FileText, 
   User, 
@@ -45,8 +46,26 @@ const tabItems: TabItem[] = [
 ];
 
 const ListasHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('contatos');
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const idParam = searchParams.get('id');
+  
+  const [activeTab, setActiveTab] = useState(() => {
+    // Inicializa com a aba passada por URL ou 'contatos'
+    const validTabs = tabItems.map(t => t.id);
+    return tabParam && validTabs.includes(tabParam) ? tabParam : 'contatos';
+  });
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+
+  // Atualiza a aba ativa quando o parâmetro de URL muda
+  useEffect(() => {
+    if (tabParam) {
+      const validTabs = tabItems.map(t => t.id);
+      if (validTabs.includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
+    }
+  }, [tabParam]);
 
   const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
   const CurrentIcon = currentTabItem.icon;
