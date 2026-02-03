@@ -286,48 +286,50 @@ export function UnifiedDetailsPanel({
 
         {/* PARTE 3 - Contato - Colapsável */}
         <Collapsible open={contatoOpen} onOpenChange={setContatoOpen}>
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              className="w-full justify-between p-0 h-auto hover:bg-transparent"
-            >
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-primary" />
-                <span className="font-semibold text-sm">Contato</span>
-              </div>
-              {contatoOpen ? (
-                <ChevronUp className="w-4 h-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center justify-between">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex-1 justify-between p-0 h-auto hover:bg-transparent"
+              >
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-primary" />
+                  <span className="font-semibold text-sm">Contato</span>
+                </div>
+                {contatoOpen ? (
+                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            {/* Botão Editar/Criar ao lado do título */}
+            <div className="flex items-center gap-1 ml-2">
+              {customerId ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-primary hover:bg-primary/10"
+                  onClick={handleEditContatoClick}
+                  title="Editar contato"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </Button>
+              ) : onCreateContato && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-green-600 hover:bg-green-50"
+                  onClick={onCreateContato}
+                  title="Criar contato"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                </Button>
               )}
-            </Button>
-          </CollapsibleTrigger>
+            </div>
+          </div>
           <CollapsibleContent className="mt-3">
             <Card className="p-3 rounded-2xl space-y-3">
-              {/* Botões Editar/Criar Contato */}
-              <div className="flex justify-end -mt-1 -mr-1 mb-1 gap-1">
-                {customerId ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 text-xs text-primary hover:bg-primary/10"
-                    onClick={handleEditContatoClick}
-                  >
-                    <Edit3 className="w-3 h-3 mr-1" />
-                    Editar
-                  </Button>
-                ) : onCreateContato && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 text-xs text-green-600 hover:bg-green-50"
-                    onClick={onCreateContato}
-                  >
-                    <UserPlus className="w-3 h-3 mr-1" />
-                    Criar Contato
-                  </Button>
-                )}
-              </div>
 
               {/* Nome */}
               <div className="flex items-center justify-between">
