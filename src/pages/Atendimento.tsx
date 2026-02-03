@@ -51,7 +51,7 @@ import { EnvioMassaDialog } from "@/components/atendimento/agenda/EnvioMassaDial
 import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAtendimentoPanel";
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
-import { EnvioMassaWizardContent } from "@/components/envio-massa";
+import { EnvioMassaWizardContent, EnvioMassaWizardPanel } from "@/components/envio-massa";
 
 interface Conversation {
   id: string;
@@ -5843,8 +5843,9 @@ ${recentMessages}
                   </div>
                 </>
               )}
+              {/* Desktop: inline wizard */}
               {activeTab === "agenda" && showEnvioMassaWizard && (
-                <div className="w-full h-full absolute inset-0">
+                <div className="hidden lg:block w-full h-full absolute inset-0">
                   <EnvioMassaWizardContent
                     onClose={() => setShowEnvioMassaWizard(false)}
                     onComplete={loadTodayTasks}
@@ -6106,6 +6107,15 @@ ${recentMessages}
       usuarioId={usuarioId}
       onComplete={loadTodayTasks}
     />
+    {/* Mobile/Tablet: Full screen wizard */}
+    {showEnvioMassaWizard && (
+      <div className="lg:hidden">
+        <EnvioMassaWizardPanel
+          onClose={() => setShowEnvioMassaWizard(false)}
+          onComplete={loadTodayTasks}
+        />
+      </div>
+    )}
     </>
   );
 }
