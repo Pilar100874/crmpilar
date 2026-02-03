@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/lib/toast-config";
-import { Pencil, Trash2, Plus, X } from "lucide-react";
+import { Pencil, Trash2, Plus, X, FolderPlus, Tag } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -16,6 +17,18 @@ import {
 } from "@/components/ui/select";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface QuickReply {
   id: string;
@@ -24,11 +37,18 @@ interface QuickReply {
   grupo_acesso_id: string | null;
   is_global: boolean;
   shortcut?: string | null;
+  categoria?: string | null;
 }
 
 interface GrupoAcesso {
   id: string;
   nome: string;
+}
+
+interface Category {
+  id: string;
+  nome: string;
+  ordem: number;
 }
 
 interface QuickRepliesCRUDProps {
@@ -38,20 +58,25 @@ interface QuickRepliesCRUDProps {
 export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUDProps = {}) {
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>([]);
   const [grupos, setGrupos] = useState<GrupoAcesso[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     grupo_acesso_id: "",
     shortcut: "",
+    categoria: "",
   });
 
   useEffect(() => {
     loadQuickReplies();
     loadGrupos();
+    loadCategories();
   }, [estabelecimentoId]);
 
   const loadQuickReplies = async () => {
@@ -93,6 +118,66 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
     setGrupos(data || []);
   };
 
+  const loadCategories = async () => {
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    if (!estabId) return;
+
+    const { data, error } = await supabase
+      .from("quick_reply_categories")
+      .select("id, nome, ordem")
+      .eq("estabelecimento_id", estabId)
+      .order("ordem");
+
+    if (error) {
+      console.error("Erro ao carregar categorias:", error);
+      return;
+    }
+    setCategories(data || []);
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return;
+
+    const estabId = await getEstabelecimentoId(estabelecimentoId);
+    if (!estabId) {
+      toast.error("Estabelecimento não identificado");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("quick_reply_categories")
+      .insert({
+        estabelecimento_id: estabId,
+        nome: newCategoryName.trim(),
+        ordem: categories.length
+      });
+
+    if (error) {
+      toast.error("Erro ao criar categoria");
+      return;
+    }
+
+    toast.success("Categoria criada!");
+    setNewCategoryName("");
+    setShowCategoryDialog(false);
+    loadCategories();
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    const { error } = await supabase
+      .from("quick_reply_categories")
+      .delete()
+      .eq("id", categoryId);
+
+    if (error) {
+      toast.error("Erro ao remover categoria");
+      return;
+    }
+
+    toast.success("Categoria removida!");
+    loadCategories();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -120,6 +205,7 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
       is_global: true,
       user_id: user.id,
       shortcut: formData.shortcut?.trim() || null,
+      categoria: formData.categoria || null,
       estabelecimento_id: estabId,
     };
 
@@ -159,6 +245,7 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
       content: reply.content,
       grupo_acesso_id: reply.grupo_acesso_id || "",
       shortcut: reply.shortcut || "",
+      categoria: reply.categoria || "",
     });
   };
 
@@ -187,25 +274,99 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
   };
 
   const resetForm = () => {
-    setFormData({ title: "", content: "", grupo_acesso_id: "", shortcut: "" });
+    setFormData({ title: "", content: "", grupo_acesso_id: "", shortcut: "", categoria: "" });
     setIsEditing(false);
     setCurrentId(null);
   };
 
+  // Group replies by category
+  const groupedReplies = quickReplies.reduce((acc, reply) => {
+    const cat = reply.categoria || 'Sem categoria';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(reply);
+    return acc;
+  }, {} as Record<string, QuickReply[]>);
+
   return (
     <div className="space-y-4">
+      {/* Categories Management */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm text-muted-foreground">Categorias:</span>
+        {categories.map(cat => (
+          <Badge key={cat.id} variant="secondary" className="gap-1">
+            {cat.nome}
+            <button
+              onClick={() => handleDeleteCategory(cat.id)}
+              className="ml-1 hover:text-destructive"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
+        <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1">
+              <FolderPlus className="h-4 w-4" />
+              Nova Categoria
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nova Categoria</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Nome da Categoria</Label>
+                <Input
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="Ex: Boas-vindas, Promoções..."
+                />
+              </div>
+              <Button onClick={handleAddCategory} disabled={!newCategoryName.trim()}>
+                Criar Categoria
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
       <Card className="p-4">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="title">Título *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              placeholder="Ex: Saudação inicial"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="title">Título *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
+                placeholder="Ex: Saudação inicial"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="categoria">Categoria</Label>
+              <Select
+                value={formData.categoria || "sem_categoria"}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, categoria: value === "sem_categoria" ? "" : value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sem_categoria">Sem categoria</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.nome}>
+                      {cat.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div>
@@ -216,46 +377,48 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
               onChange={(e) =>
                 setFormData({ ...formData, content: e.target.value })
               }
-              placeholder="Digite o texto pronto..."
+              placeholder="Digite o texto pronto... Use {{contato}}, {{empresa}}, {{whatsapp}} para variáveis"
               rows={4}
             />
-          </div>
-
-          <div>
-            <Label htmlFor="shortcut">Atalho (opcional)</Label>
-            <Input
-              id="shortcut"
-              value={formData.shortcut}
-              onChange={(e) =>
-                setFormData({ ...formData, shortcut: e.target.value })
-              }
-              placeholder="Ex: /oi, /ajuda, ctrl+a"
-            />
             <p className="text-xs text-muted-foreground mt-1">
-              Digite este atalho no campo de mensagem para inserir o texto automaticamente
+              Variáveis disponíveis: {"{{contato}}"}, {"{{empresa}}"}, {"{{whatsapp}}"}, {"{{email}}"}
             </p>
           </div>
 
-          <div>
-            <Label htmlFor="grupo">Grupo de Acesso</Label>
-            <Select
-              value={formData.grupo_acesso_id || "todos"}
-              onValueChange={(value) =>
-                setFormData({ ...formData, grupo_acesso_id: value === "todos" ? "" : value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os grupos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os grupos</SelectItem>
-                {grupos.map((grupo) => (
-                  <SelectItem key={grupo.id} value={grupo.id}>
-                    {grupo.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="shortcut">Atalho (opcional)</Label>
+              <Input
+                id="shortcut"
+                value={formData.shortcut}
+                onChange={(e) =>
+                  setFormData({ ...formData, shortcut: e.target.value })
+                }
+                placeholder="Ex: /oi, /ajuda, ctrl+a"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="grupo">Grupo de Acesso</Label>
+              <Select
+                value={formData.grupo_acesso_id || "todos"}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, grupo_acesso_id: value === "todos" ? "" : value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os grupos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os grupos</SelectItem>
+                  {grupos.map((grupo) => (
+                    <SelectItem key={grupo.id} value={grupo.id}>
+                      {grupo.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="flex gap-2">
@@ -272,45 +435,59 @@ export default function QuickRepliesCRUD({ estabelecimentoId }: QuickRepliesCRUD
         </form>
       </Card>
 
-      <div className="space-y-2">
-        {quickReplies.map((reply) => (
-          <Card key={reply.id} className="p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium">{reply.title}</h4>
-                {reply.shortcut && (
-                  <p className="text-xs text-primary font-mono bg-primary/10 px-2 py-1 rounded inline-block mb-1">
-                    {reply.shortcut}
-                  </p>
-                )}
-                <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">
-                  {reply.content}
-                </p>
-                {reply.grupo_acesso_id && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Grupo:{" "}
-                    {grupos.find((g) => g.id === reply.grupo_acesso_id)?.nome}
-                  </p>
-                )}
+      {/* Grouped Replies */}
+      <div className="space-y-4">
+        {Object.entries(groupedReplies).map(([category, replies]) => (
+          <Collapsible key={category} defaultOpen>
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg bg-muted/50 hover:bg-muted">
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-primary" />
+                <span className="font-medium">{category}</span>
+                <Badge variant="secondary">{replies.length}</Badge>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleEdit(reply)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDelete(reply.id)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          </Card>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2 space-y-2">
+              {replies.map((reply) => (
+                <Card key={reply.id} className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium">{reply.title}</h4>
+                      {reply.shortcut && (
+                        <p className="text-xs text-primary font-mono bg-primary/10 px-2 py-1 rounded inline-block mb-1">
+                          {reply.shortcut}
+                        </p>
+                      )}
+                      <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">
+                        {reply.content}
+                      </p>
+                      {reply.grupo_acesso_id && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Grupo:{" "}
+                          {grupos.find((g) => g.id === reply.grupo_acesso_id)?.nome}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(reply)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(reply.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
         ))}
         {quickReplies.length === 0 && (
           <p className="text-center text-muted-foreground py-8">

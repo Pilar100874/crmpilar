@@ -1,0 +1,398 @@
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  MessageSquare, Image, Video, Plus, Trash2, 
+  GripVertical, Upload, Type, ChevronDown, Play
+} from "lucide-react";
+import { ContentItem, QuickReply, MediaGalleryItem } from "../types";
+import { cn } from "@/lib/utils";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+
+interface StepComposeProps {
+  contentItems: ContentItem[];
+  quickReplies: QuickReply[];
+  groupedReplies: Record<string, QuickReply[]>;
+  media: MediaGalleryItem[];
+  onContentChange: (items: ContentItem[]) => void;
+  onUploadMedia: (file: File) => Promise<MediaGalleryItem | null>;
+  onBack: () => void;
+  onNext: () => void;
+}
+
+const VARIABLES = [
+  { key: '{{contato}}', label: 'Nome do Contato' },
+  { key: '{{empresa}}', label: 'Empresa' },
+  { key: '{{whatsapp}}', label: 'WhatsApp' },
+  { key: '{{email}}', label: 'E-mail' },
+];
+
+export function StepCompose({
+  contentItems,
+  quickReplies,
+  groupedReplies,
+  media,
+  onContentChange,
+  onUploadMedia,
+  onBack,
+  onNext
+}: StepComposeProps) {
+  const [activeTab, setActiveTab] = useState<'text' | 'quick' | 'media'>('text');
+  const [textInput, setTextInput] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const addTextItem = () => {
+    if (!textInput.trim()) return;
+    
+    const newItem: ContentItem = {
+      id: `text-${Date.now()}`,
+      type: 'text',
+      content: textInput
+    };
+    onContentChange([...contentItems, newItem]);
+    setTextInput('');
+  };
+
+  const addQuickReply = (reply: QuickReply) => {
+    const newItem: ContentItem = {
+      id: `qr-${Date.now()}`,
+      type: 'quick_reply',
+      content: reply.content,
+      quickReplyId: reply.id,
+      quickReplyTitle: reply.title
+    };
+    onContentChange([...contentItems, newItem]);
+  };
+
+  const addMedia = (item: MediaGalleryItem) => {
+    const newItem: ContentItem = {
+      id: `media-${Date.now()}`,
+      type: item.tipo === 'video' ? 'video' : 'image',
+      content: item.nome,
+      mediaUrl: item.public_url,
+      mediaThumbnail: item.thumbnail_url,
+      mediaDuration: item.duracao_segundos
+    };
+    onContentChange([...contentItems, newItem]);
+  };
+
+  const removeItem = (id: string) => {
+    onContentChange(contentItems.filter(item => item.id !== id));
+  };
+
+  const moveItem = (index: number, direction: 'up' | 'down') => {
+    const newItems = [...contentItems];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newItems.length) return;
+    
+    [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
+    onContentChange(newItems);
+  };
+
+  const insertVariable = (variable: string) => {
+    setTextInput(prev => prev + variable);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const uploaded = await onUploadMedia(file);
+    if (uploaded) {
+      addMedia(uploaded);
+    }
+    setUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Painel de Seleção */}
+        <div className="border rounded-lg">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+            <TabsList className="w-full rounded-none border-b">
+              <TabsTrigger value="text" className="flex-1 gap-2">
+                <Type className="h-4 w-4" />
+                Texto
+              </TabsTrigger>
+              <TabsTrigger value="quick" className="flex-1 gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Prontos
+              </TabsTrigger>
+              <TabsTrigger value="media" className="flex-1 gap-2">
+                <Image className="h-4 w-4" />
+                Mídia
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="text" className="p-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Digite sua mensagem</Label>
+                <Textarea
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  placeholder="Digite o texto da mensagem..."
+                  rows={4}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Variáveis disponíveis</Label>
+                <div className="flex flex-wrap gap-2">
+                  {VARIABLES.map(v => (
+                    <Badge
+                      key={v.key}
+                      variant="outline"
+                      className="cursor-pointer hover:bg-primary/10"
+                      onClick={() => insertVariable(v.key)}
+                    >
+                      {v.label}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <Button onClick={addTextItem} disabled={!textInput.trim()} className="w-full">
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Texto
+              </Button>
+            </TabsContent>
+
+            <TabsContent value="quick" className="p-0">
+              <ScrollArea className="h-[350px]">
+                <div className="p-4 space-y-2">
+                  {Object.entries(groupedReplies).map(([category, replies]) => (
+                    replies.length > 0 && (
+                      <Collapsible key={category} defaultOpen={category === 'Sem categoria'}>
+                        <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-muted/50">
+                          <span className="font-medium text-sm">{category}</span>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">{replies.length}</Badge>
+                            <ChevronDown className="h-4 w-4" />
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="space-y-1 mt-1">
+                          {replies.map(reply => (
+                            <Card
+                              key={reply.id}
+                              className="p-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                              onClick={() => addQuickReply(reply)}
+                            >
+                              <div className="flex items-start gap-2">
+                                <MessageSquare className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-medium text-sm truncate">{reply.title}</p>
+                                  <p className="text-xs text-muted-foreground line-clamp-2">
+                                    {reply.content}
+                                  </p>
+                                </div>
+                              </div>
+                            </Card>
+                          ))}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )
+                  ))}
+                  {quickReplies.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                      <p>Nenhum texto pronto cadastrado</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="media" className="p-0">
+              <div className="p-4 border-b">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploading ? 'Enviando...' : 'Enviar nova mídia'}
+                </Button>
+              </div>
+              <ScrollArea className="h-[300px]">
+                <div className="p-4 grid grid-cols-3 gap-2">
+                  {media.map(item => (
+                    <Card
+                      key={item.id}
+                      className="aspect-square cursor-pointer overflow-hidden hover:ring-2 ring-primary transition-all"
+                      onClick={() => addMedia(item)}
+                    >
+                      {item.tipo === 'video' ? (
+                        <div className="relative w-full h-full bg-muted flex items-center justify-center">
+                          {item.thumbnail_url ? (
+                            <img
+                              src={item.thumbnail_url}
+                              alt={item.nome}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Video className="h-8 w-8 text-muted-foreground" />
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <Play className="h-8 w-8 text-white" />
+                          </div>
+                        </div>
+                      ) : (
+                        <img
+                          src={item.public_url}
+                          alt={item.nome}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </Card>
+                  ))}
+                  {media.length === 0 && (
+                    <div className="col-span-3 text-center py-8 text-muted-foreground">
+                      <Image className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                      <p>Nenhuma mídia disponível</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Preview da Sequência */}
+        <div className="border rounded-lg">
+          <div className="px-4 py-3 border-b bg-muted/30">
+            <h3 className="font-medium flex items-center gap-2">
+              Sequência de Envio
+              <Badge variant="outline">{contentItems.length} itens</Badge>
+            </h3>
+          </div>
+          <ScrollArea className="h-[400px]">
+            <div className="p-4 space-y-2">
+              {contentItems.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Plus className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                  <p>Adicione itens à sequência</p>
+                  <p className="text-sm">Textos, frases prontas ou mídias</p>
+                </div>
+              ) : (
+                contentItems.map((item, index) => (
+                  <Card key={item.id} className="p-3">
+                    <div className="flex items-start gap-2">
+                      <div className="flex flex-col gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => moveItem(index, 'up')}
+                          disabled={index === 0}
+                        >
+                          <GripVertical className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Badge variant="secondary" className="shrink-0">
+                        {index + 1}
+                      </Badge>
+                      <div className="flex-1 min-w-0">
+                        {item.type === 'text' && (
+                          <div>
+                            <Badge variant="outline" className="mb-1">Texto</Badge>
+                            <p className="text-sm whitespace-pre-wrap">{item.content}</p>
+                          </div>
+                        )}
+                        {item.type === 'quick_reply' && (
+                          <div>
+                            <Badge variant="outline" className="mb-1 bg-primary/10">
+                              {item.quickReplyTitle}
+                            </Badge>
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-3">
+                              {item.content}
+                            </p>
+                          </div>
+                        )}
+                        {(item.type === 'image' || item.type === 'video') && (
+                          <div className="flex gap-3">
+                            <div className="w-16 h-16 rounded overflow-hidden bg-muted shrink-0">
+                              {item.type === 'video' ? (
+                                <div className="relative w-full h-full flex items-center justify-center">
+                                  {item.mediaThumbnail ? (
+                                    <img
+                                      src={item.mediaThumbnail}
+                                      alt={item.content}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <Video className="h-6 w-6 text-muted-foreground" />
+                                  )}
+                                  <Play className="absolute h-4 w-4 text-white" />
+                                </div>
+                              ) : (
+                                <img
+                                  src={item.mediaUrl}
+                                  alt={item.content}
+                                  className="w-full h-full object-cover"
+                                />
+                              )}
+                            </div>
+                            <div>
+                              <Badge variant="outline" className="mb-1">
+                                {item.type === 'video' ? 'Vídeo' : 'Imagem'}
+                              </Badge>
+                              <p className="text-sm text-muted-foreground truncate">
+                                {item.content}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
+                        onClick={() => removeItem(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-4 border-t">
+        <Button variant="outline" onClick={onBack}>
+          Voltar
+        </Button>
+        <Button onClick={onNext} disabled={contentItems.length === 0}>
+          Continuar
+        </Button>
+      </div>
+    </div>
+  );
+}

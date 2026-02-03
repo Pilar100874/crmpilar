@@ -51,6 +51,7 @@ import { EnvioMassaDialog } from "@/components/atendimento/agenda/EnvioMassaDial
 import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAtendimentoPanel";
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
+import { EnvioMassaWizardDialog } from "@/components/envio-massa";
 
 interface Conversation {
   id: string;
