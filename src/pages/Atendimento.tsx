@@ -1155,14 +1155,18 @@ export default function Atendimento() {
       const { data: companiesData } = await supabase
         .from('customer_empresas')
         .select(`
+          id,
           empresa_id,
           is_primary,
           cargo,
+          departamento,
           empresas (
             id,
             nome,
             nome_fantasia,
-            cnpj
+            cnpj,
+            telefone,
+            email
           )
         `)
         .eq('customer_id', customerId);
