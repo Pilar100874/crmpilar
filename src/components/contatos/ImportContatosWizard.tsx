@@ -35,20 +35,20 @@ const formatWhatsAppNumber = (value: string): string => {
   return maskWhatsApp(cleanValue);
 };
 
-// Função para formatar telefone no padrão do sistema: (XX) XXXXX-XXXX
+// Função para formatar telefone no padrão do sistema: +55 (XX) XXXXX-XXXX
 const formatPhoneNumber = (value: string): string => {
   if (!value) return '';
   // Remove tudo que não é número
   let cleanValue = value.replace(/\D/g, '');
   if (cleanValue.length === 0) return '';
   
-  // Remove código do país se existir
-  if (cleanValue.startsWith('55') && cleanValue.length > 11) {
-    cleanValue = cleanValue.substring(2);
+  // Se não começa com 55, adiciona
+  if (!cleanValue.startsWith('55') && cleanValue.length <= 11) {
+    cleanValue = '55' + cleanValue;
   }
   
   // Usa a máscara do sistema
-  return maskPhone(cleanValue);
+  return maskWhatsApp(cleanValue);
 };
 
 interface ImportRow {
