@@ -51,7 +51,7 @@ import { EnvioMassaDialog } from "@/components/atendimento/agenda/EnvioMassaDial
 import { FluxoAtendimentoPanel } from "@/components/atendimento/agenda/FluxoAtendimentoPanel";
 import { EnvioMassaPanel } from "@/components/atendimento/agenda/EnvioMassaPanel";
 import { ListasPanel } from "@/components/atendimento/ListasPanel";
-import { EnvioMassaWizardPanel } from "@/components/envio-massa";
+import { EnvioMassaWizardContent } from "@/components/envio-massa";
 
 interface Conversation {
   id: string;
@@ -5807,7 +5807,7 @@ ${recentMessages}
             }
           />
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20">
+          <div className="flex-1 flex items-center justify-center text-muted-foreground bg-muted/20 relative">
             <div className="text-center">
               {activeTab === "chat" && (
                 <>
@@ -5816,7 +5816,7 @@ ${recentMessages}
                   <p className="text-sm">Escolha uma conversa da lista para começar o atendimento</p>
                 </>
               )}
-              {activeTab === "agenda" && (
+              {activeTab === "agenda" && !showEnvioMassaWizard && (
                 <>
                   <CalendarIcon className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
                   <p className="text-lg font-medium mb-2">Selecione uma tarefa</p>
@@ -5842,6 +5842,14 @@ ${recentMessages}
                     </Button>
                   </div>
                 </>
+              )}
+              {activeTab === "agenda" && showEnvioMassaWizard && (
+                <div className="w-full h-full absolute inset-0">
+                  <EnvioMassaWizardContent
+                    onClose={() => setShowEnvioMassaWizard(false)}
+                    onComplete={loadTodayTasks}
+                  />
+                </div>
               )}
               {activeTab === "orcamento" && (
                 <>
@@ -6098,12 +6106,6 @@ ${recentMessages}
       usuarioId={usuarioId}
       onComplete={loadTodayTasks}
     />
-    {showEnvioMassaWizard && (
-      <EnvioMassaWizardPanel
-        onClose={() => setShowEnvioMassaWizard(false)}
-        onComplete={loadTodayTasks}
-      />
-    )}
     </>
   );
 }
