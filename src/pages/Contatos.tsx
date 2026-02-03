@@ -13,7 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download } from "lucide-react";
+import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, Eye } from "lucide-react";
+import { ContatoDetailsPanel } from "@/components/contatos/ContatoDetailsPanel";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/lib/toast-config";
 import { validateCPF, validateCNPJ, validateEmail, validatePhone, validateCEP, validateInscricaoEstadual, validateWhatsApp } from "@/lib/validators";
@@ -107,6 +108,7 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null); // Contato selecionado para visualização no painel lateral
   const [editingCell, setEditingCell] = useState<{ contactId: string; field: string } | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -1983,8 +1985,9 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
   if (!showForm) {
     return (
-      <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background to-muted/20">
-        <div className="border-b bg-card/80 backdrop-blur-sm px-3 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
+      <div className="flex-1 flex h-full bg-gradient-to-br from-background to-muted/20">
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="border-b bg-card/80 backdrop-blur-sm px-3 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
             <div>
               <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-foreground">Contatos</h1>
@@ -2163,6 +2166,22 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
                           return (
                             <td key="actions" className="p-3 sticky left-0 bg-gradient-to-l from-background via-background to-background/95 border-r border-border/30 shadow-[4px_0_6px_-2px_rgba(0,0,0,0.15)] transition-all duration-200">
                               <div className="flex items-center justify-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className={`h-8 px-2 rounded-full transition-all duration-200 ${
+                                    selectedContact?.id === contact.id 
+                                      ? 'bg-primary text-primary-foreground border-primary' 
+                                      : 'hover:bg-primary/10 border-primary/20'
+                                  }`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedContact(selectedContact?.id === contact.id ? null : contact);
+                                  }}
+                                  title="Ver detalhes"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
                                 <Button
                                   size="sm"
                                   variant="outline"
@@ -2387,6 +2406,63 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
+
+        {/* Painel lateral de detalhes do contato */}
+        {selectedContact && (
+          <ContatoDetailsPanel
+            contato={selectedContact}
+            onClose={() => setSelectedContact(null)}
+            onEditContato={async (contatoId) => {
+              const contact = contacts.find(c => c.id === contatoId);
+              if (contact) {
+                setEditingContact(contact);
+                setFormData({
+                  name: contact.name,
+                  phone: contact.phone,
+                  tel: contact.tel,
+                  email: contact.email,
+                  position: contact.position,
+                  ...contact.customFields
+                });
+                
+                // Carregar empresas vinculadas
+                const { data: vinculos } = await supabase
+                  .from('customer_empresas')
+                  .select(`
+                    id,
+                    is_primary,
+                    empresas:empresa_id (
+                      id,
+                      nome_fantasia,
+                      nome,
+                      cnpj,
+                      custom_fields
+                    )
+                  `)
+                  .eq('customer_id', contact.id);
+                
+                if (vinculos) {
+                  const empresasFormatadas = vinculos.map(v => ({
+                    id: v.empresas.id,
+                    nome_fantasia: v.empresas.nome_fantasia,
+                    nome: v.empresas.nome,
+                    cnpj: v.empresas.cnpj,
+                    custom_fields: v.empresas.custom_fields,
+                    is_primary: v.is_primary,
+                    vinculo_id: v.id
+                  }));
+                  setEmpresasVinculadas(empresasFormatadas);
+                }
+                
+                setShouldCheckDuplicate(true);
+                setIsClosingForm(false);
+                setShowForm(true);
+              }
+            }}
+            onCompaniesUpdated={() => loadContacts()}
+          />
+        )}
       </div>
     );
   }
