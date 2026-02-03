@@ -81,19 +81,22 @@ export function UnifiedDetailsPanel({
     nome: '',
     whatsapp: '',
     telefone: '',
-    email: ''
+    email: '',
+    cargo: ''
   });
   const [isSaving, setIsSaving] = useState(false);
 
   // Sincronizar dados do formulário quando props mudam
   useEffect(() => {
+    const primaryCompanyData = companies.find(c => c.is_primary) || companies[0];
     setEditFormData({
       nome: nome || '',
       whatsapp: whatsapp || '',
       telefone: telefone || '',
-      email: email || ''
+      email: email || '',
+      cargo: primaryCompanyData?.cargo || ''
     });
-  }, [nome, whatsapp, telefone, email]);
+  }, [nome, whatsapp, telefone, email, companies]);
 
   // Aplicar máscara de telefone
   const formatPhone = (value: string) => {
@@ -114,6 +117,7 @@ export function UnifiedDetailsPanel({
     
     setIsSaving(true);
     try {
+      // Atualizar dados do customer
       const { error } = await supabase
         .from('customers')
         .update({
@@ -125,6 +129,19 @@ export function UnifiedDetailsPanel({
         .eq('id', customerId);
 
       if (error) throw error;
+
+      // Atualizar cargo na empresa vinculada principal (se houver)
+      const primaryCompanyData = companies.find(c => c.is_primary) || companies[0];
+      if (primaryCompanyData?.id && editFormData.cargo !== (primaryCompanyData.cargo || '')) {
+        const { error: cargoError } = await supabase
+          .from('customer_empresas')
+          .update({ cargo: editFormData.cargo || null })
+          .eq('id', primaryCompanyData.id);
+
+        if (cargoError) {
+          console.error('Erro ao atualizar cargo:', cargoError);
+        }
+      }
 
       toast.success('Contato atualizado com sucesso!');
       setIsEditingContato(false);
@@ -138,11 +155,13 @@ export function UnifiedDetailsPanel({
   };
 
   const handleCancelEdit = () => {
+    const primaryCompanyData = companies.find(c => c.is_primary) || companies[0];
     setEditFormData({
       nome: nome || '',
       whatsapp: whatsapp || '',
       telefone: telefone || '',
-      email: email || ''
+      email: email || '',
+      cargo: primaryCompanyData?.cargo || ''
     });
     setIsEditingContato(false);
   };
@@ -532,12 +551,21 @@ export function UnifiedDetailsPanel({
               </div>
 
               {/* Cargo */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
                   <Briefcase className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground">Cargo</span>
                 </div>
-                <span className="text-xs truncate max-w-[140px]">{currentCargo || '-'}</span>
+                {isEditingContato ? (
+                  <Input
+                    value={editFormData.cargo}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, cargo: e.target.value }))}
+                    className="h-7 text-xs flex-1 max-w-[140px]"
+                    placeholder="Cargo"
+                  />
+                ) : (
+                  <span className="text-xs truncate max-w-[140px]">{currentCargo || '-'}</span>
+                )}
               </div>
             </Card>
           </CollapsibleContent>
