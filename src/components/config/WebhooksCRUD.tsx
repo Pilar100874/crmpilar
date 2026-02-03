@@ -801,18 +801,30 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
   });
 
   return (
-    <div className="space-y-4">
-      {/* UI rendering */}
-
-      <div className="flex gap-2 items-start">
-        <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleOpenForm} className="flex-1">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Webhook
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header com gradiente */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/20 flex items-center justify-center">
+              <Webhook className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold">Webhooks de Saída</h2>
+              <p className="text-sm text-muted-foreground hidden sm:block">
+                Configure endpoints para integrar com sistemas externos
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={handleOpenForm} size="lg" className="w-full sm:w-auto">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Novo Webhook
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="w-[95vw] max-w-5xl max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle className="text-2xl">
                 {editingWebhook ? "Editar" : "Criar"} Webhook
@@ -820,34 +832,44 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
             </DialogHeader>
             
             <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
-              <Tabs defaultValue="basic" className="flex-1 flex flex-col">
-                <TabsList className="grid w-full grid-cols-3 mb-4">
-                  <TabsTrigger value="basic">Informações Básicas</TabsTrigger>
-                  <TabsTrigger value="output">Variáveis de Saída</TabsTrigger>
-                  <TabsTrigger value="input">Variáveis de Entrada</TabsTrigger>
+              <Tabs defaultValue="basic" className="flex-1 flex flex-col overflow-hidden">
+                <TabsList className="grid w-full grid-cols-3 mb-4 h-auto">
+                  <TabsTrigger value="basic" className="text-xs sm:text-sm py-2 px-1 sm:px-3">
+                    <span className="hidden sm:inline">Informações Básicas</span>
+                    <span className="sm:hidden">Básico</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="output" className="text-xs sm:text-sm py-2 px-1 sm:px-3">
+                    <span className="hidden sm:inline">Variáveis de Saída</span>
+                    <span className="sm:hidden">Saída</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="input" className="text-xs sm:text-sm py-2 px-1 sm:px-3">
+                    <span className="hidden sm:inline">Variáveis de Entrada</span>
+                    <span className="sm:hidden">Entrada</span>
+                  </TabsTrigger>
                 </TabsList>
 
-                <ScrollArea className="flex-1 pr-4">
+                <div className="flex-1 overflow-y-auto pr-2 sm:pr-4">
                   {/* Informações Básicas */}
-                  <TabsContent value="basic" className="space-y-6 mt-0">
+                  <TabsContent value="basic" className="space-y-4 sm:space-y-6 mt-0">
                     <div className="space-y-4">
                       <div>
-                        <h3 className="text-lg font-semibold mb-3">Configurações Gerais</h3>
-                        <div className="grid grid-cols-2 gap-4">
+                        <h3 className="text-base sm:text-lg font-semibold mb-3">Configurações Gerais</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <div>
-                            <Label htmlFor="name">Nome *</Label>
+                            <Label htmlFor="name" className="text-sm">Nome *</Label>
                             <Input
                               id="name"
                               value={formData.name}
                               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                               placeholder="Ex: Notificar N8N"
+                              className="mt-1"
                             />
                           </div>
 
                           <div>
-                            <Label htmlFor="type">Tipo *</Label>
+                            <Label htmlFor="type" className="text-sm">Tipo *</Label>
                             <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                              <SelectTrigger>
+                              <SelectTrigger className="mt-1">
                                 <SelectValue placeholder="Selecione o tipo" />
                               </SelectTrigger>
                               <SelectContent>
@@ -865,22 +887,23 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                       <Separator />
 
                       <div>
-                        <h3 className="text-lg font-semibold mb-3">Endpoint</h3>
-                        <div className="grid grid-cols-4 gap-4">
-                          <div className="col-span-3">
-                            <Label htmlFor="url">URL *</Label>
+                        <h3 className="text-base sm:text-lg font-semibold mb-3">Endpoint</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">
+                          <div className="sm:col-span-3">
+                            <Label htmlFor="url" className="text-sm">URL *</Label>
                             <Input
                               id="url"
                               value={formData.url}
                               onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                               placeholder="https://exemplo.com/webhook"
+                              className="mt-1 font-mono text-sm"
                             />
                           </div>
 
                           <div>
-                            <Label htmlFor="method">Método *</Label>
+                            <Label htmlFor="method" className="text-sm">Método *</Label>
                             <Select value={formData.method} onValueChange={(value) => setFormData({ ...formData, method: value })}>
-                              <SelectTrigger>
+                              <SelectTrigger className="mt-1">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -894,14 +917,15 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                           </div>
                         </div>
 
-                        <div className="mt-4">
-                          <Label htmlFor="description">Descrição *</Label>
+                        <div className="mt-3 sm:mt-4">
+                          <Label htmlFor="description" className="text-sm">Descrição *</Label>
                           <Textarea
                             id="description"
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                             placeholder="Descreva o propósito deste webhook"
                             rows={3}
+                            className="mt-1"
                           />
                         </div>
                       </div>
@@ -909,11 +933,24 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                       <Separator />
 
                       <div>
-                        <h3 className="text-lg font-semibold mb-3">Locais de Uso *</h3>
-                        <div className="grid grid-cols-2 gap-3">
+                        <h3 className="text-base sm:text-lg font-semibold mb-3">Locais de Uso *</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                           {usageLocations.map((location) => (
-                            <Card key={location.id} className="p-3 hover:bg-accent/50 transition-colors">
-                              <div className="flex items-center space-x-3">
+                            <Card key={location.id} className="p-2.5 sm:p-3 hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => {
+                              const isChecked = formData.usageLocations.includes(location.id);
+                              if (isChecked) {
+                                setFormData({
+                                  ...formData,
+                                  usageLocations: formData.usageLocations.filter((id) => id !== location.id),
+                                });
+                              } else {
+                                setFormData({
+                                  ...formData,
+                                  usageLocations: [...formData.usageLocations, location.id],
+                                });
+                              }
+                            }}>
+                              <div className="flex items-center space-x-2 sm:space-x-3">
                                 <Checkbox
                                   id={`location-${location.id}`}
                                   checked={formData.usageLocations.includes(location.id)}
@@ -931,7 +968,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                                     }
                                   }}
                                 />
-                                <Label htmlFor={`location-${location.id}`} className="cursor-pointer font-medium">
+                                <Label htmlFor={`location-${location.id}`} className="cursor-pointer font-medium text-xs sm:text-sm">
                                   {location.name}
                                 </Label>
                               </div>
@@ -1369,7 +1406,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                       </div>
                     )}
                   </TabsContent>
-                </ScrollArea>
+                </div>
               </Tabs>
 
               <div className="flex gap-3 pt-4 border-t mt-4">
@@ -1450,14 +1487,16 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
             </div>
           </DialogContent>
         </Dialog>
-
+          </div>
+        </div>
       </div>
 
-      <div className="flex gap-4">
-        <div className="flex-1">
-          <Label>Filtrar por Tipo</Label>
+      {/* Filtros responsivos */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <div>
+          <Label className="text-sm mb-1.5 block">Filtrar por Tipo</Label>
           <Select value={selectedTypeFilter} onValueChange={setSelectedTypeFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="h-10">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -1471,10 +1510,10 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
           </Select>
         </div>
 
-        <div className="flex-1">
-          <Label>Filtrar por Local</Label>
+        <div>
+          <Label className="text-sm mb-1.5 block">Filtrar por Local</Label>
           <Select value={selectedLocationFilter} onValueChange={setSelectedLocationFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="h-10">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -1489,108 +1528,159 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
         </div>
       </div>
 
-      <Card className="p-6">
-        <ScrollArea className="h-[calc(100vh-250px)]">
-          <div className="space-y-3">
-            {filteredWebhooks.map((webhook) => (
-              <Card key={webhook.id} className="p-4 hover:bg-secondary/50 transition-colors">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-semibold text-base">{webhook.name}</h4>
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded font-medium">
+      {/* Lista de webhooks */}
+      <div className="space-y-3 sm:space-y-4">
+        {filteredWebhooks.map((webhook) => (
+          <Card key={webhook.id} className="overflow-hidden hover:shadow-md transition-all duration-200 border-l-4 border-l-primary/50">
+            <div className="p-3 sm:p-4 lg:p-5">
+              {/* Header do card - responsivo */}
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div className="flex-1 min-w-0 space-y-2 sm:space-y-3">
+                  {/* Nome e badges */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-semibold text-sm sm:text-base truncate max-w-[200px] sm:max-w-none">
+                      {webhook.name}
+                    </h4>
+                    <div className="flex gap-1.5 flex-wrap">
+                      <span className="text-[10px] sm:text-xs bg-primary/10 text-primary px-1.5 sm:px-2 py-0.5 sm:py-1 rounded font-medium">
                         {webhookTypes.find((t) => t.id === webhook.type)?.name}
                       </span>
-                      <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded font-mono font-medium">
+                      <span className="text-[10px] sm:text-xs bg-secondary text-secondary-foreground px-1.5 sm:px-2 py-0.5 sm:py-1 rounded font-mono font-medium">
                         {webhook.method || "POST"}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground break-all font-mono bg-secondary/30 px-2 py-1 rounded">
+                  </div>
+
+                  {/* URL - truncada em mobile */}
+                  <div className="bg-muted/50 rounded-md px-2 sm:px-3 py-1.5 sm:py-2">
+                    <p className="text-xs sm:text-sm text-muted-foreground font-mono truncate sm:break-all sm:whitespace-normal">
                       {webhook.url}
                     </p>
-                    {webhook.description && (
-                      <p className="text-sm text-muted-foreground">{webhook.description}</p>
-                    )}
-                    {webhook.usageLocations && webhook.usageLocations.length > 0 && (
+                  </div>
+
+                  {/* Descrição */}
+                  {webhook.description && (
+                    <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{webhook.description}</p>
+                  )}
+
+                  {/* Locais de uso */}
+                  {webhook.usageLocations && webhook.usageLocations.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {webhook.usageLocations.slice(0, 4).map((locId) => {
+                        const location = usageLocations.find((l) => l.id === locId);
+                        return location ? (
+                          <span key={locId} className="text-[10px] sm:text-xs bg-accent/50 text-accent-foreground px-1.5 sm:px-2 py-0.5 rounded">
+                            {location.name}
+                          </span>
+                        ) : null;
+                      })}
+                      {webhook.usageLocations.length > 4 && (
+                        <span className="text-[10px] sm:text-xs text-muted-foreground">
+                          +{webhook.usageLocations.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Variáveis */}
+                  {webhook.hasVariables && webhook.variables && webhook.variables.length > 0 && (
+                    <div className="pt-2 border-t">
+                      <div className="text-[10px] sm:text-xs font-semibold mb-1.5 text-muted-foreground">
+                        Variáveis ({webhook.variables.length}):
+                      </div>
                       <div className="flex flex-wrap gap-1">
-                        {webhook.usageLocations.map((locId) => {
-                          const location = usageLocations.find((l) => l.id === locId);
-                          return location ? (
-                            <span key={locId} className="text-xs bg-accent/50 text-accent-foreground px-2 py-0.5 rounded">
-                              {location.name}
-                            </span>
-                          ) : null;
-                        })}
+                        {webhook.variables.slice(0, 5).map((variable) => (
+                          <span 
+                            key={variable.id} 
+                            className="text-[10px] sm:text-xs bg-primary/5 border border-primary/20 text-foreground px-1.5 sm:px-2 py-0.5 sm:py-1 rounded"
+                            title={`${variable.description || ''} (${variable.type.toUpperCase()})`}
+                          >
+                            {variable.name}
+                            {variable.required && <span className="text-destructive ml-0.5">*</span>}
+                          </span>
+                        ))}
+                        {webhook.variables.length > 5 && (
+                          <span className="text-[10px] sm:text-xs text-muted-foreground px-1">
+                            +{webhook.variables.length - 5}
+                          </span>
+                        )}
                       </div>
-                    )}
-                    {webhook.hasVariables && webhook.variables && webhook.variables.length > 0 && (
-                      <div className="pt-2 border-t">
-                        <div className="text-xs font-semibold mb-1 text-muted-foreground">Variáveis configuradas:</div>
-                        <div className="flex flex-wrap gap-1">
-                          {webhook.variables.map((variable) => (
-                            <span 
-                              key={variable.id} 
-                              className="text-xs bg-primary/5 border border-primary/20 text-foreground px-2 py-1 rounded"
-                              title={`${variable.description || ''} (${variable.type.toUpperCase()})`}
-                            >
-                              {variable.name}
-                              {variable.required && <span className="text-destructive ml-1">*</span>}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <p className="text-xs text-muted-foreground pt-1">
-                      Criado em {new Date(webhook.createdAt).toLocaleDateString('pt-BR')}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(webhook)} className="h-8 w-8 p-0">
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleDelete(webhook.id)} className="h-8 w-8 p-0">
-                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                    </Button>
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Data de criação - hidden em mobile */}
+                  <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">
+                    Criado em {new Date(webhook.createdAt).toLocaleDateString('pt-BR')}
+                  </p>
                 </div>
-              </Card>
-            ))}
-            {filteredWebhooks.length === 0 && webhooks.length > 0 && (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary/50 mb-3">
-                  <Webhook className="h-6 w-6 text-muted-foreground" />
+
+                {/* Botões de ação - responsivos */}
+                <div className="flex sm:flex-col gap-2 justify-end sm:justify-start">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleEdit(webhook)} 
+                    className="h-8 px-3 sm:h-9 sm:w-9 sm:p-0 flex items-center gap-2"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    <span className="sm:hidden text-xs">Editar</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDelete(webhook.id)} 
+                    className="h-8 px-3 sm:h-9 sm:w-9 sm:p-0 flex items-center gap-2 hover:bg-destructive/10 hover:border-destructive/50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    <span className="sm:hidden text-xs text-destructive">Excluir</span>
+                  </Button>
                 </div>
-                <p className="text-muted-foreground font-medium">Nenhum webhook encontrado</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Não há webhooks para os filtros selecionados
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => {
-                    setSelectedLocationFilter("all");
-                    setSelectedTypeFilter("all");
-                  }}
-                  className="mt-4"
-                >
-                  Limpar filtros
-                </Button>
               </div>
-            )}
-            {webhooks.length === 0 && (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-secondary/50 mb-3">
-                  <Webhook className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <p className="text-muted-foreground font-medium">Nenhum webhook cadastrado</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Clique em "Novo Webhook" para começar
-                </p>
+            </div>
+          </Card>
+        ))}
+
+        {/* Estado vazio com filtros */}
+        {filteredWebhooks.length === 0 && webhooks.length > 0 && (
+          <Card className="p-8 sm:p-12">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-muted mb-4">
+                <Webhook className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground" />
               </div>
-            )}
-          </div>
-        </ScrollArea>
-      </Card>
+              <p className="text-muted-foreground font-medium text-sm sm:text-base">Nenhum webhook encontrado</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                Não há webhooks para os filtros selecionados
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  setSelectedLocationFilter("all");
+                  setSelectedTypeFilter("all");
+                }}
+                className="mt-4"
+              >
+                Limpar filtros
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Estado vazio sem webhooks */}
+        {webhooks.length === 0 && (
+          <Card className="p-8 sm:p-12">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-muted mb-4">
+                <Webhook className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground font-medium text-sm sm:text-base">Nenhum webhook cadastrado</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                Clique em "Novo Webhook" para começar
+              </p>
+            </div>
+          </Card>
+        )}
+      </div>
 
       <AlertDialog open={showAffectedBotsDialog} onOpenChange={setShowAffectedBotsDialog}>
         <AlertDialogContent>
