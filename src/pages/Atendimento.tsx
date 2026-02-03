@@ -5686,6 +5686,14 @@ ${recentMessages}
             onComplete={loadTodayTasks}
             onClose={() => setAgendaViewMode('default')}
           />
+        ) : activeTab === "agenda" && showEnvioMassaWizard ? (
+          /* Envio em Massa Wizard */
+          <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
+            <EnvioMassaWizardContent
+              onClose={() => setShowEnvioMassaWizard(false)}
+              onComplete={loadTodayTasks}
+            />
+          </div>
         ) : activeTab === "agenda" && selectedTaskId && selectedTaskData ? (
           /* Agenda Task Content */
           <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
