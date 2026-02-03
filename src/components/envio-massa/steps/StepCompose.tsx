@@ -138,7 +138,7 @@ export function StepCompose({
         {/* Painel de Seleção */}
         <div className="border rounded-lg">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-            <TabsList className="w-full rounded-none border-b grid grid-cols-4">
+            <TabsList className="w-full rounded-none border-b grid grid-cols-3">
               <TabsTrigger value="templates" className="gap-1 text-xs">
                 <FileText className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Templates</span>
@@ -146,10 +146,6 @@ export function StepCompose({
               <TabsTrigger value="text" className="gap-1 text-xs">
                 <Type className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Texto</span>
-              </TabsTrigger>
-              <TabsTrigger value="quick" className="gap-1 text-xs">
-                <MessageSquare className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Prontos</span>
               </TabsTrigger>
               <TabsTrigger value="media" className="gap-1 text-xs">
                 <Image className="h-3.5 w-3.5" />
@@ -230,52 +226,6 @@ export function StepCompose({
                 <Plus className="h-4 w-4 mr-2" />
                 Adicionar Texto
               </Button>
-            </TabsContent>
-
-            {/* Quick Replies Tab */}
-            <TabsContent value="quick" className="p-0">
-              <ScrollArea className="h-[350px]">
-                <div className="p-4 space-y-2">
-                  {Object.entries(groupedReplies).map(([category, replies]) => (
-                    replies.length > 0 && (
-                      <Collapsible key={category} defaultOpen={category === 'Sem categoria'}>
-                        <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded-lg hover:bg-muted/50">
-                          <span className="font-medium text-sm">{category}</span>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary">{replies.length}</Badge>
-                            <ChevronDown className="h-4 w-4" />
-                          </div>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="space-y-1 mt-1">
-                          {replies.map(reply => (
-                            <Card
-                              key={reply.id}
-                              className="p-2 cursor-pointer hover:bg-muted/50 transition-colors"
-                              onClick={() => addQuickReply(reply)}
-                            >
-                              <div className="flex items-start gap-2">
-                                <MessageSquare className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                                <div className="min-w-0 flex-1">
-                                  <p className="font-medium text-sm truncate">{reply.title}</p>
-                                  <p className="text-xs text-muted-foreground line-clamp-2">
-                                    {reply.content}
-                                  </p>
-                                </div>
-                              </div>
-                            </Card>
-                          ))}
-                        </CollapsibleContent>
-                      </Collapsible>
-                    )
-                  ))}
-                  {quickReplies.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                      <p>Nenhum texto pronto cadastrado</p>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
             </TabsContent>
 
             {/* Media Tab */}
