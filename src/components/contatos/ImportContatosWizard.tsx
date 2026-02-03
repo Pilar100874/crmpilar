@@ -18,6 +18,30 @@ import { validateEmail, validateWhatsApp, validatePhone } from "@/lib/validators
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
+// Função para formatar telefone/WhatsApp no padrão do sistema (sem +55)
+const formatPhoneNumber = (value: string): string => {
+  // Remove tudo que não é número
+  let cleanValue = value.replace(/\D/g, '');
+  
+  // Remove o código do país 55 se existir no início
+  if (cleanValue.startsWith('55') && cleanValue.length > 11) {
+    cleanValue = cleanValue.substring(2);
+  }
+  
+  // Limita a 11 dígitos (DDD + 9 dígitos)
+  cleanValue = cleanValue.substring(0, 11);
+  
+  // Aplica a máscara: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+  if (cleanValue.length === 0) return '';
+  if (cleanValue.length <= 2) return `(${cleanValue}`;
+  if (cleanValue.length <= 6) return `(${cleanValue.substring(0, 2)}) ${cleanValue.substring(2)}`;
+  if (cleanValue.length <= 10) {
+    return `(${cleanValue.substring(0, 2)}) ${cleanValue.substring(2, 6)}-${cleanValue.substring(6)}`;
+  }
+  // 11 dígitos - celular com 9
+  return `(${cleanValue.substring(0, 2)}) ${cleanValue.substring(2, 7)}-${cleanValue.substring(7)}`;
+};
+
 interface ImportRow {
   rowIndex: number;
   nome: string;
@@ -168,10 +192,14 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
 
     const rows: ImportRow[] = rawData.map((row, index) => {
       const nome = columnMapping.nome ? String(row[parseInt(columnMapping.nome)] || "").trim() : "";
-      const whatsapp = columnMapping.whatsapp ? String(row[parseInt(columnMapping.whatsapp)] || "").trim() : "";
-      const telefone = columnMapping.telefone ? String(row[parseInt(columnMapping.telefone)] || "").trim() : "";
+      const rawWhatsapp = columnMapping.whatsapp ? String(row[parseInt(columnMapping.whatsapp)] || "").trim() : "";
+      const rawTelefone = columnMapping.telefone ? String(row[parseInt(columnMapping.telefone)] || "").trim() : "";
       const email = columnMapping.email ? String(row[parseInt(columnMapping.email)] || "").trim() : "";
       const position = columnMapping.position ? String(row[parseInt(columnMapping.position)] || "").trim() : "";
+
+      // Formatar telefone e WhatsApp no padrão do sistema
+      const whatsapp = rawWhatsapp ? formatPhoneNumber(rawWhatsapp) : "";
+      const telefone = rawTelefone ? formatPhoneNumber(rawTelefone) : "";
 
       const errors: string[] = [];
 
@@ -191,18 +219,25 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
         errors.push("E-mail inválido");
       }
 
-      // Validate WhatsApp format
-      if (whatsapp) {
-        const cleanWhatsApp = whatsapp.replace(/\D/g, "");
-        if (cleanWhatsApp.length < 10 || cleanWhatsApp.length > 13) {
-          errors.push("WhatsApp inválido (10-13 dígitos)");
+      // Validate WhatsApp format - agora usa o número já formatado
+      if (rawWhatsapp) {
+        const cleanWhatsApp = rawWhatsapp.replace(/\D/g, "");
+        // Remove 55 se existir para validação
+        const phoneDigits = cleanWhatsApp.startsWith('55') && cleanWhatsApp.length > 11 
+          ? cleanWhatsApp.substring(2) 
+          : cleanWhatsApp;
+        if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+          errors.push("WhatsApp inválido (10-11 dígitos)");
         }
       }
 
       // Validate phone format
-      if (telefone) {
-        const cleanPhone = telefone.replace(/\D/g, "");
-        if (cleanPhone.length < 8 || cleanPhone.length > 13) {
+      if (rawTelefone) {
+        const cleanPhone = rawTelefone.replace(/\D/g, "");
+        const phoneDigits = cleanPhone.startsWith('55') && cleanPhone.length > 11 
+          ? cleanPhone.substring(2) 
+          : cleanPhone;
+        if (phoneDigits.length < 8 || phoneDigits.length > 11) {
           errors.push("Telefone inválido");
         }
       }
