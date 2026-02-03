@@ -700,6 +700,15 @@ export default function Calendario() {
       const estabelecimentoId = await getEstabelecimentoId();
       if (!estabelecimentoId) return;
 
+      // Buscar o ID do usuário na tabela usuarios (a FK user_id referencia usuarios, não auth.users)
+      const { data: currentUsuario } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+      
+      const currentUsuarioId = currentUsuario?.id;
+
       let query = (supabase as any)
         .from('calendario_tarefas')
         .select('*')
@@ -719,8 +728,11 @@ export default function Calendario() {
           // Não adiciona filtro de user_id, mostra todas do estabelecimento
         }
       } else {
-        console.log("Usuário comum: Buscando tarefas apenas para usuário atual:", user.id);
-        query = query.eq('user_id', user.id);
+        // Usar o ID da tabela usuarios, não o auth.uid()
+        console.log("Usuário comum: Buscando tarefas apenas para usuário atual:", currentUsuarioId);
+        if (currentUsuarioId) {
+          query = query.eq('user_id', currentUsuarioId);
+        }
       }
 
       const { data: tarefas, error } = await query.order('date', { ascending: true });
@@ -732,15 +744,15 @@ export default function Calendario() {
       }
 
       if (tarefas) {
-        // Buscar nomes dos usuários pela nova coluna auth_user_id
-        const authUserIds = [...new Set(tarefas.map((t: any) => t.user_id))];
+        // Buscar nomes dos usuários - user_id referencia a tabela usuarios.id
+        const usuarioIds = [...new Set(tarefas.map((t: any) => t.user_id))];
         const { data: usuariosData } = await (supabase as any)
           .from('usuarios')
-          .select('auth_user_id, nome')
-          .in('auth_user_id', authUserIds);
+          .select('id, nome')
+          .in('id', usuarioIds);
         
         const usuariosMap = new Map(
-          usuariosData?.map((u: any) => [u.auth_user_id, u.nome]) || []
+          usuariosData?.map((u: any) => [u.id, u.nome]) || []
         );
         
         // Buscar nomes de campanhas se houver campaign_ids
