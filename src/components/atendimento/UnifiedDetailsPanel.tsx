@@ -1,15 +1,15 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Check, X, Briefcase } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
+import { EditContatoDialog } from "./EditContatoDialog";
+import { EditEmpresaDialog } from "./EditEmpresaDialog";
 import { useState } from "react";
 import { GlobalFilter } from "./GlobalClientFilter";
 import { toast } from "@/lib/toast-config";
-import { supabase } from "@/integrations/supabase/client";
 
 export type PanelType = "chat" | "agenda" | "email" | "orcamento";
 
@@ -21,7 +21,7 @@ interface UnifiedDetailsPanelProps {
   whatsapp?: string;
   email?: string;
   customerId?: string;
-  empresaId?: string; // Para vincular diretamente quando não há customer
+  empresaId?: string;
   // Dados específicos por tipo
   protocolo?: string;
   status?: string;
@@ -62,17 +62,10 @@ export function UnifiedDetailsPanel({
   const [empresasOpen, setEmpresasOpen] = useState(true);
   const [contatoOpen, setContatoOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
-  
-  // Estados para edição inline
-  const [editingNome, setEditingNome] = useState(false);
-  const [editingEmail, setEditingEmail] = useState(false);
-  const [editingCargo, setEditingCargo] = useState(false);
-  const [editingWhatsapp, setEditingWhatsapp] = useState(false);
-  const [tempNome, setTempNome] = useState("");
-  const [tempEmail, setTempEmail] = useState("");
-  const [tempCargo, setTempCargo] = useState("");
-  const [tempWhatsapp, setTempWhatsapp] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [showEditContatoDialog, setShowEditContatoDialog] = useState(false);
+  const [showEditEmpresaDialog, setShowEditEmpresaDialog] = useState(false);
+  const [selectedEmpresaId, setSelectedEmpresaId] = useState<string | undefined>(undefined);
+  const [selectedCustomerEmpresaId, setSelectedCustomerEmpresaId] = useState<string | undefined>(undefined);
 
   // Obtém o cargo da primeira empresa vinculada
   const primaryCompany = companies.find(c => c.is_primary) || companies[0];
@@ -100,88 +93,11 @@ export function UnifiedDetailsPanel({
     }
   };
 
-  const handleSaveNome = async () => {
-    if (!customerId || !tempNome.trim()) return;
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('customers')
-        .update({ nome: tempNome.trim() })
-        .eq('id', customerId);
-      
-      if (error) throw error;
-      toast.success("Nome atualizado!");
-      setEditingNome(false);
-      onCompaniesUpdated?.();
-    } catch (error) {
-      console.error('Erro ao atualizar nome:', error);
-      toast.error("Erro ao atualizar nome");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSaveEmail = async () => {
-    if (!customerId) return;
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('customers')
-        .update({ email: tempEmail.trim() || '' })
-        .eq('id', customerId);
-      
-      if (error) throw error;
-      toast.success("Email atualizado!");
-      setEditingEmail(false);
-      onCompaniesUpdated?.();
-    } catch (error) {
-      console.error('Erro ao atualizar email:', error);
-      toast.error("Erro ao atualizar email");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSaveCargo = async () => {
-    if (!customerEmpresaId) return;
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('customer_empresas')
-        .update({ cargo: tempCargo.trim() || null })
-        .eq('id', customerEmpresaId);
-      
-      if (error) throw error;
-      toast.success("Cargo atualizado!");
-      setEditingCargo(false);
-      onCompaniesUpdated?.();
-    } catch (error) {
-      console.error('Erro ao atualizar cargo:', error);
-      toast.error("Erro ao atualizar cargo");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSaveWhatsapp = async () => {
-    if (!customerId) return;
-    setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('customers')
-        .update({ telefone: tempWhatsapp.trim() || '' })
-        .eq('id', customerId);
-      
-      if (error) throw error;
-      toast.success("WhatsApp atualizado!");
-      setEditingWhatsapp(false);
-      onCompaniesUpdated?.();
-    } catch (error) {
-      console.error('Erro ao atualizar WhatsApp:', error);
-      toast.error("Erro ao atualizar WhatsApp");
-    } finally {
-      setSaving(false);
-    }
+  const handleEditEmpresa = (empresa: any, customerEmpresaRelationId?: string) => {
+    const empresaData = empresa.empresas || empresa;
+    setSelectedEmpresaId(empresaData?.id);
+    setSelectedCustomerEmpresaId(customerEmpresaRelationId || empresa?.id);
+    setShowEditEmpresaDialog(true);
   };
 
   if (!nome && !protocolo && !titulo) {
@@ -270,6 +186,16 @@ export function UnifiedDetailsPanel({
                               Principal
                             </Badge>
                           )}
+                          {/* Botão Editar Empresa */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 hover:bg-primary/10 hover:text-primary"
+                            title="Editar empresa"
+                            onClick={() => handleEditEmpresa(company, company.id)}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
                           {onSetGlobalFilter && empresa?.id && (
                             <Button
                               variant="ghost"
@@ -340,57 +266,28 @@ export function UnifiedDetailsPanel({
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
             <Card className="p-3 rounded-2xl space-y-3">
+              {/* Botão Editar Contato */}
+              {customerId && (
+                <div className="flex justify-end -mt-1 -mr-1 mb-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-primary hover:bg-primary/10"
+                    onClick={() => setShowEditContatoDialog(true)}
+                  >
+                    <Pencil className="w-3 h-3 mr-1" />
+                    Editar
+                  </Button>
+                </div>
+              )}
+
               {/* Nome */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 min-w-0">
                   <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground">Nome</span>
                 </div>
-                {editingNome && customerId ? (
-                  <div className="flex items-center gap-1">
-                    <Input
-                      value={tempNome}
-                      onChange={(e) => setTempNome(e.target.value)}
-                      className="h-7 text-xs w-32"
-                      placeholder="Nome..."
-                      autoFocus
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
-                      onClick={handleSaveNome}
-                      disabled={saving}
-                    >
-                      <Check className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-muted-foreground"
-                      onClick={() => setEditingNome(false)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs truncate max-w-[120px]">{nome || '-'}</span>
-                    {customerId && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
-                        onClick={() => {
-                          setTempNome(nome || '');
-                          setEditingNome(true);
-                        }}
-                      >
-                        <Pencil className="w-3 h-3" />
-                      </Button>
-                    )}
-                  </div>
-                )}
+                <span className="text-xs truncate max-w-[140px]">{nome || '-'}</span>
               </div>
 
               {/* WhatsApp/Telefone */}
@@ -399,81 +296,39 @@ export function UnifiedDetailsPanel({
                   <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground">Telefone</span>
                 </div>
-                {editingWhatsapp && customerId ? (
-                  <div className="flex items-center gap-1">
-                    <Input
-                      value={tempWhatsapp}
-                      onChange={(e) => setTempWhatsapp(e.target.value)}
-                      className="h-7 text-xs w-32"
-                      placeholder="(00) 00000-0000"
-                      autoFocus
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
-                      onClick={handleSaveWhatsapp}
-                      disabled={saving}
-                    >
-                      <Check className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-muted-foreground"
-                      onClick={() => setEditingWhatsapp(false)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    {whatsapp || telefone ? (
-                      <>
-                        <span className="text-xs truncate max-w-[100px]">{whatsapp || telefone}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-green-600 hover:text-green-700 flex-shrink-0"
-                          onClick={() => {
-                            const number = (whatsapp || telefone || "").replace(/\D/g, '');
-                            window.open(`https://wa.me/55${number}`, '_blank');
-                          }}
-                          title="WhatsApp"
-                        >
-                          <MessageSquare className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
-                          onClick={() => {
-                            setDialNumber(whatsapp || telefone || '');
-                            setShowSoftphone(true);
-                          }}
-                          title="Ligar"
-                        >
-                          <Phone className="w-3 h-3" />
-                        </Button>
-                      </>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">-</span>
-                    )}
-                    {customerId && (
+                <div className="flex items-center gap-1">
+                  {whatsapp || telefone ? (
+                    <>
+                      <span className="text-xs truncate max-w-[100px]">{whatsapp || telefone}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-green-600 hover:text-green-700 flex-shrink-0"
+                        onClick={() => {
+                          const number = (whatsapp || telefone || "").replace(/\D/g, '');
+                          window.open(`https://wa.me/55${number}`, '_blank');
+                        }}
+                        title="WhatsApp"
+                      >
+                        <MessageSquare className="w-3 h-3" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
                         onClick={() => {
-                          setTempWhatsapp(whatsapp || telefone || '');
-                          setEditingWhatsapp(true);
+                          setDialNumber(whatsapp || telefone || '');
+                          setShowSoftphone(true);
                         }}
+                        title="Ligar"
                       >
-                        <Pencil className="w-3 h-3" />
+                        <Phone className="w-3 h-3" />
                       </Button>
-                    )}
-                  </div>
-                )}
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">-</span>
+                  )}
+                </div>
               </div>
 
               {/* Email */}
@@ -482,67 +337,24 @@ export function UnifiedDetailsPanel({
                   <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground">Email</span>
                 </div>
-                {editingEmail && customerId ? (
-                  <div className="flex items-center gap-1">
-                    <Input
-                      type="email"
-                      value={tempEmail}
-                      onChange={(e) => setTempEmail(e.target.value)}
-                      className="h-7 text-xs w-36"
-                      placeholder="email@exemplo.com"
-                      autoFocus
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
-                      onClick={handleSaveEmail}
-                      disabled={saving}
-                    >
-                      <Check className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-muted-foreground"
-                      onClick={() => setEditingEmail(false)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    {email ? (
-                      <>
-                        <span className="text-xs truncate max-w-[100px]">{email}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
-                          onClick={() => window.open(`mailto:${email}`, '_blank')}
-                          title="Enviar email"
-                        >
-                          <Mail className="w-3 h-3" />
-                        </Button>
-                      </>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">-</span>
-                    )}
-                    {customerId && (
+                <div className="flex items-center gap-1">
+                  {email ? (
+                    <>
+                      <span className="text-xs truncate max-w-[120px]">{email}</span>
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
-                        onClick={() => {
-                          setTempEmail(email || '');
-                          setEditingEmail(true);
-                        }}
+                        onClick={() => window.open(`mailto:${email}`, '_blank')}
+                        title="Enviar email"
                       >
-                        <Pencil className="w-3 h-3" />
+                        <Mail className="w-3 h-3" />
                       </Button>
-                    )}
-                  </div>
-                )}
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">-</span>
+                  )}
+                </div>
               </div>
 
               {/* Cargo - só mostra se houver empresa vinculada */}
@@ -552,49 +364,7 @@ export function UnifiedDetailsPanel({
                     <Briefcase className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <span className="text-xs text-muted-foreground">Cargo</span>
                   </div>
-                  {editingCargo ? (
-                    <div className="flex items-center gap-1">
-                      <Input
-                        value={tempCargo}
-                        onChange={(e) => setTempCargo(e.target.value)}
-                        className="h-7 text-xs w-32"
-                        placeholder="Cargo..."
-                        autoFocus
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-green-600 hover:text-green-700"
-                        onClick={handleSaveCargo}
-                        disabled={saving}
-                      >
-                        <Check className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-muted-foreground"
-                        onClick={() => setEditingCargo(false)}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      <span className="text-xs truncate max-w-[120px]">{currentCargo || '-'}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
-                        onClick={() => {
-                          setTempCargo(currentCargo);
-                          setEditingCargo(true);
-                        }}
-                      >
-                        <Pencil className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  )}
+                  <span className="text-xs truncate max-w-[140px]">{currentCargo || '-'}</span>
                 </div>
               )}
             </Card>
@@ -602,7 +372,7 @@ export function UnifiedDetailsPanel({
         </Collapsible>
       </div>
 
-
+      {/* Dialogs */}
       <SoftphoneDialog 
         open={showSoftphone}
         onOpenChange={setShowSoftphone}
@@ -615,6 +385,27 @@ export function UnifiedDetailsPanel({
         customerId={customerId}
         emailVinculo={type === 'email' ? email : undefined}
         whatsappVinculo={type === 'chat' ? (whatsapp || telefone) : undefined}
+        onSuccess={onCompaniesUpdated}
+      />
+
+      <EditContatoDialog
+        open={showEditContatoDialog}
+        onOpenChange={setShowEditContatoDialog}
+        customerId={customerId}
+        nome={nome}
+        email={email}
+        telefone={whatsapp || telefone}
+        cargo={currentCargo}
+        customerEmpresaId={customerEmpresaId}
+        onSuccess={onCompaniesUpdated}
+      />
+
+      <EditEmpresaDialog
+        open={showEditEmpresaDialog}
+        onOpenChange={setShowEditEmpresaDialog}
+        empresaId={selectedEmpresaId}
+        customerId={customerId}
+        customerEmpresaId={selectedCustomerEmpresaId}
         onSuccess={onCompaniesUpdated}
       />
     </div>
