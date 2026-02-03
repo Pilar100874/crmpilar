@@ -3164,6 +3164,45 @@ export type Database = {
           },
         ]
       }
+      envio_massa_config: {
+        Row: {
+          created_at: string
+          estabelecimento_id: string
+          id: string
+          updated_at: string
+          webhook_id: string
+        }
+        Insert: {
+          created_at?: string
+          estabelecimento_id: string
+          id?: string
+          updated_at?: string
+          webhook_id: string
+        }
+        Update: {
+          created_at?: string
+          estabelecimento_id?: string
+          id?: string
+          updated_at?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "envio_massa_config_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: true
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "envio_massa_config_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       envio_massa_contatos: {
         Row: {
           created_at: string | null

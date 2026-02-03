@@ -23,7 +23,8 @@ import {
   TestTube2,
   Phone,
   Video,
-  Wrench
+  Wrench,
+  Send
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,6 +56,7 @@ import KnowledgeBaseCRUD from '@/components/config/KnowledgeBaseCRUD';
 import IAConfigCRUD from '@/components/config/IAConfigCRUD';
 import SLAConfigCRUD from '@/components/config/SLAConfigCRUD';
 import FerramentasAtendimentoCRUD from '@/components/config/FerramentasAtendimentoCRUD';
+import { EnvioMassaWebhookConfig } from '@/components/config/EnvioMassaWebhookConfig';
 
 // Import Bot components
 import BotCreate from './BotCreate';
@@ -85,6 +87,7 @@ const tabItems: TabItem[] = [
   { id: 'base-conhecimento', label: 'Base de Conhecimento', icon: BookOpen },
   { id: 'ia-config', label: 'Configurações de IA', icon: Brain },
   { id: 'sla', label: 'SLA de Atendimento', icon: Clock },
+  { id: 'envio-massa', label: 'Envio em Massa', icon: Send },
   { id: 'bot-criar', label: 'Criar / Editar Bot', icon: Plus },
   { id: 'bot-testar', label: 'Testar Bot', icon: TestTube2 },
   { id: 'softphone', label: 'Softphone', icon: Phone },
@@ -600,6 +603,16 @@ export default function AtendimentoConfig() {
                   <CardDescription className="text-xs sm:text-sm">Configure regras de SLA para atendimento</CardDescription>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">{estabelecimentoId && <SLAConfigCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="envio-massa" className="mt-0 h-full">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Send className="h-4 w-4 sm:h-5 sm:w-5" />Envio em Massa</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Configure o webhook para disparo de mensagens em massa</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">{estabelecimentoId && <EnvioMassaWebhookConfig estabelecimentoId={estabelecimentoId} />}</CardContent>
               </Card>
             </TabsContent>
 
