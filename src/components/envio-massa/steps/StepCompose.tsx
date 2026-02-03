@@ -20,6 +20,23 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export interface CatalogoItem {
   id: string;
@@ -58,6 +75,114 @@ const VARIABLES = [
   { key: '{{whatsapp}}', label: 'WhatsApp' },
   { key: '{{email}}', label: 'E-mail' },
 ];
+
+// Componente para item arrastável
+interface SortableContentItemProps {
+  item: ContentItem;
+  index: number;
+  onRemove: (id: string) => void;
+}
+
+function SortableContentItem({ item, index, onRemove }: SortableContentItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <Card ref={setNodeRef} style={style} className="p-3 mb-2">
+      <div className="flex items-start gap-2">
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </div>
+        <Badge variant="secondary" className="shrink-0">
+          {index + 1}
+        </Badge>
+        <div className="flex-1 min-w-0">
+          {item.type === 'text' && (
+            <div>
+              <Badge variant="outline" className="mb-1">
+                {item.quickReplyTitle ? 'Template' : 'Texto'}
+              </Badge>
+              {item.quickReplyTitle && (
+                <p className="text-xs font-medium text-primary mb-1">
+                  {item.quickReplyTitle}
+                </p>
+              )}
+              <p className="text-sm whitespace-pre-wrap">{item.content}</p>
+            </div>
+          )}
+          {item.type === 'quick_reply' && (
+            <div>
+              <Badge variant="outline" className="mb-1 bg-primary/10">
+                {item.quickReplyTitle}
+              </Badge>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-3">
+                {item.content}
+              </p>
+            </div>
+          )}
+          {(item.type === 'image' || item.type === 'video') && (
+            <div className="flex gap-3">
+              <div className="w-16 h-16 rounded overflow-hidden bg-muted shrink-0">
+                {item.type === 'video' ? (
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    {item.mediaThumbnail ? (
+                      <img
+                        src={item.mediaThumbnail}
+                        alt={item.content}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Video className="h-6 w-6 text-muted-foreground" />
+                    )}
+                    <Play className="absolute h-4 w-4 text-white" />
+                  </div>
+                ) : (
+                  <img
+                    src={item.mediaUrl}
+                    alt={item.content}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              <div>
+                <Badge variant="outline" className="mb-1">
+                  {item.type === 'video' ? 'Vídeo' : 'Imagem'}
+                </Badge>
+                <p className="text-sm text-muted-foreground truncate">
+                  {item.content}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
+          onClick={() => onRemove(item.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </Card>
+  );
+}
 
 export function StepCompose({
   contentItems,
@@ -151,13 +276,21 @@ export function StepCompose({
     onContentChange(contentItems.filter(item => item.id !== id));
   };
 
-  const moveItem = (index: number, direction: 'up' | 'down') => {
-    const newItems = [...contentItems];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= newItems.length) return;
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
     
-    [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
-    onContentChange(newItems);
+    if (over && active.id !== over.id) {
+      const oldIndex = contentItems.findIndex((item) => item.id === active.id);
+      const newIndex = contentItems.findIndex((item) => item.id === over.id);
+      onContentChange(arrayMove(contentItems, oldIndex, newIndex));
+    }
   };
 
   const insertVariable = (variable: string) => {
@@ -491,93 +624,25 @@ export function StepCompose({
                   <p className="text-sm">Templates, textos, frases prontas ou mídias</p>
                 </div>
               ) : (
-                contentItems.map((item, index) => (
-                  <Card key={item.id} className="p-3">
-                    <div className="flex items-start gap-2">
-                      <div className="flex flex-col gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => moveItem(index, 'up')}
-                          disabled={index === 0}
-                        >
-                          <GripVertical className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <Badge variant="secondary" className="shrink-0">
-                        {index + 1}
-                      </Badge>
-                      <div className="flex-1 min-w-0">
-                        {item.type === 'text' && (
-                          <div>
-                            <Badge variant="outline" className="mb-1">
-                              {item.quickReplyTitle ? 'Template' : 'Texto'}
-                            </Badge>
-                            {item.quickReplyTitle && (
-                              <p className="text-xs font-medium text-primary mb-1">
-                                {item.quickReplyTitle}
-                              </p>
-                            )}
-                            <p className="text-sm whitespace-pre-wrap">{item.content}</p>
-                          </div>
-                        )}
-                        {item.type === 'quick_reply' && (
-                          <div>
-                            <Badge variant="outline" className="mb-1 bg-primary/10">
-                              {item.quickReplyTitle}
-                            </Badge>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-3">
-                              {item.content}
-                            </p>
-                          </div>
-                        )}
-                        {(item.type === 'image' || item.type === 'video') && (
-                          <div className="flex gap-3">
-                            <div className="w-16 h-16 rounded overflow-hidden bg-muted shrink-0">
-                              {item.type === 'video' ? (
-                                <div className="relative w-full h-full flex items-center justify-center">
-                                  {item.mediaThumbnail ? (
-                                    <img
-                                      src={item.mediaThumbnail}
-                                      alt={item.content}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <Video className="h-6 w-6 text-muted-foreground" />
-                                  )}
-                                  <Play className="absolute h-4 w-4 text-white" />
-                                </div>
-                              ) : (
-                                <img
-                                  src={item.mediaUrl}
-                                  alt={item.content}
-                                  className="w-full h-full object-cover"
-                                />
-                              )}
-                            </div>
-                            <div>
-                              <Badge variant="outline" className="mb-1">
-                                {item.type === 'video' ? 'Vídeo' : 'Imagem'}
-                              </Badge>
-                              <p className="text-sm text-muted-foreground truncate">
-                                {item.content}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
-                        onClick={() => removeItem(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </Card>
-                ))
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={contentItems.map(item => item.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {contentItems.map((item, index) => (
+                      <SortableContentItem
+                        key={item.id}
+                        item={item}
+                        index={index}
+                        onRemove={removeItem}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               )}
             </div>
           </ScrollArea>
