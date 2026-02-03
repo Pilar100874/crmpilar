@@ -173,6 +173,48 @@ function SortableContentItem({ item, index, onRemove }: SortableContentItemProps
               </div>
             </div>
           )}
+          {item.type === 'catalog' && (
+            <div className="flex gap-3">
+              <div className="w-12 h-12 rounded overflow-hidden bg-muted shrink-0 flex items-center justify-center">
+                {item.mediaUrl ? (
+                  <img
+                    src={item.mediaUrl}
+                    alt={item.content}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <BookOpen className="h-5 w-5 text-primary" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <Badge variant="outline" className="mb-1 bg-primary/10 text-primary border-primary/30">
+                  📦 Catálogo PDF
+                </Badge>
+                <p className="text-sm text-muted-foreground truncate">
+                  {item.catalogName || item.content}
+                </p>
+              </div>
+            </div>
+          )}
+          {item.type === 'file' && (
+            <div className="flex gap-3">
+              <div className="w-12 h-12 rounded overflow-hidden bg-muted shrink-0 flex items-center justify-center">
+                {item.fileType === 'pdf' && <FileText className="h-5 w-5 text-red-500" />}
+                {item.fileType === 'excel' && <FileSpreadsheet className="h-5 w-5 text-green-500" />}
+                {item.fileType === 'word' && <File className="h-5 w-5 text-blue-500" />}
+                {item.fileType === 'link' && <LinkIcon className="h-5 w-5 text-blue-500" />}
+                {(!item.fileType || item.fileType === 'other') && <Paperclip className="h-5 w-5 text-muted-foreground" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <Badge variant="outline" className="mb-1">
+                  {item.quickReplyTitle || 'Anexo'}
+                </Badge>
+                <p className="text-sm text-muted-foreground truncate">
+                  {item.content}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
         <Button
           variant="ghost"
@@ -341,9 +383,11 @@ export function StepCompose({
     const productCount = catalog.products_page?.products?.length || 0;
     const newItem: ContentItem = {
       id: `catalogo-${Date.now()}`,
-      type: 'image',
+      type: 'catalog',
       content: `📦 Catálogo: ${catalog.nome} (${productCount} produtos)`,
       mediaUrl: catalog.thumbnail || undefined,
+      catalogId: catalog.id,
+      catalogName: catalog.nome,
       quickReplyTitle: 'Catálogo'
     };
     onContentChange([...contentItems, newItem]);
@@ -351,15 +395,32 @@ export function StepCompose({
   };
 
   const addAttachment = (attachment: QuickAttachment) => {
+    // Determine the correct type based on file type
+    let itemType: ContentItem['type'] = 'file';
+    let fileType: ContentItem['fileType'] = 'other';
+    
+    if (attachment.file_type === 'image') {
+      itemType = 'image';
+    } else if (attachment.type === 'link') {
+      itemType = 'file';
+      fileType = 'link';
+    } else {
+      switch (attachment.file_type) {
+        case 'pdf': fileType = 'pdf'; break;
+        case 'excel': fileType = 'excel'; break;
+        case 'word': fileType = 'word'; break;
+        default: fileType = 'other';
+      }
+    }
+
     const newItem: ContentItem = {
       id: `anexo-${Date.now()}`,
-      type: attachment.file_type === 'image' ? 'image' : 'text',
-      content: attachment.file_type === 'image' 
-        ? attachment.title 
-        : `📎 ${attachment.title}`,
+      type: itemType,
+      content: itemType === 'image' ? attachment.title : `📎 ${attachment.title}`,
       mediaUrl: attachment.url,
       mediaThumbnail: attachment.thumbnail_url || undefined,
-      quickReplyTitle: attachment.type === 'link' ? 'Link' : 'Anexo'
+      quickReplyTitle: attachment.type === 'link' ? 'Link' : 'Anexo',
+      fileType: fileType
     };
     onContentChange([...contentItems, newItem]);
     toast.success(`"${attachment.title}" adicionado`);

@@ -11,13 +11,16 @@ export interface EnvioMassaFilters {
 
 export interface ContentItem {
   id: string;
-  type: 'text' | 'quick_reply' | 'image' | 'video';
+  type: 'text' | 'quick_reply' | 'image' | 'video' | 'catalog' | 'file';
   content: string;
   mediaUrl?: string;
   mediaThumbnail?: string;
   mediaDuration?: number;
   quickReplyId?: string;
   quickReplyTitle?: string;
+  catalogId?: string;
+  catalogName?: string;
+  fileType?: 'pdf' | 'excel' | 'word' | 'link' | 'other';
 }
 
 export interface ContactForBulkSend {

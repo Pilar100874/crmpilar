@@ -4,7 +4,8 @@ import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   MessageSquare, Image, Video, Type, User, 
-  Building2, Phone, ArrowRight
+  Building2, Phone, ArrowRight, BookOpen, FileText,
+  FileSpreadsheet, File, LinkIcon, Paperclip, ExternalLink
 } from "lucide-react";
 import { ContentItem, ContactForBulkSend } from "../types";
 
@@ -35,6 +36,16 @@ export function StepPreview({
       .replace(/\{\{empresa\}\}/gi, previewContact.empresa || 'N/A')
       .replace(/\{\{whatsapp\}\}/gi, previewContact.telefone || 'N/A')
       .replace(/\{\{email\}\}/gi, previewContact.email || 'N/A');
+  };
+
+  const getFileIcon = (fileType?: string) => {
+    switch (fileType) {
+      case 'pdf': return <FileText className="h-8 w-8 text-red-500" />;
+      case 'excel': return <FileSpreadsheet className="h-8 w-8 text-green-500" />;
+      case 'word': return <File className="h-8 w-8 text-blue-500" />;
+      case 'link': return <LinkIcon className="h-8 w-8 text-blue-500" />;
+      default: return <Paperclip className="h-8 w-8 text-muted-foreground" />;
+    }
   };
 
   return (
@@ -74,11 +85,17 @@ export function StepPreview({
                     )}
                     {item.type === 'image' && (
                       <div className="rounded overflow-hidden">
-                        <img
-                          src={item.mediaUrl}
-                          alt={item.content}
-                          className="max-w-full h-auto"
-                        />
+                        {item.mediaUrl ? (
+                          <img
+                            src={item.mediaUrl}
+                            alt={item.content}
+                            className="max-w-full h-auto rounded"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center bg-muted p-4 rounded">
+                            <Image className="h-12 w-12 text-muted-foreground" />
+                          </div>
+                        )}
                       </div>
                     )}
                     {item.type === 'video' && (
@@ -88,6 +105,54 @@ export function StepPreview({
                           controls
                           className="max-w-full h-auto"
                         />
+                      </div>
+                    )}
+                    {item.type === 'catalog' && (
+                      <div className="rounded overflow-hidden">
+                        <div className="flex items-center gap-3 p-3 bg-background/50 rounded border">
+                          {item.mediaUrl ? (
+                            <img
+                              src={item.mediaUrl}
+                              alt={item.catalogName || 'Catálogo'}
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 flex items-center justify-center bg-primary/10 rounded">
+                              <BookOpen className="h-8 w-8 text-primary" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <Badge className="mb-1 bg-red-100 text-red-700 border-red-200">
+                              <FileText className="h-3 w-3 mr-1" />
+                              PDF
+                            </Badge>
+                            <p className="text-sm font-medium truncate">
+                              {item.catalogName || 'Catálogo'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Clique para abrir o catálogo
+                            </p>
+                          </div>
+                          <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+                        </div>
+                      </div>
+                    )}
+                    {item.type === 'file' && (
+                      <div className="rounded overflow-hidden">
+                        <div className="flex items-center gap-3 p-3 bg-background/50 rounded border">
+                          <div className="w-12 h-12 flex items-center justify-center bg-muted rounded">
+                            {getFileIcon(item.fileType)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <Badge variant="outline" className="mb-1">
+                              {item.fileType === 'link' ? 'Link' : 'Anexo'}
+                            </Badge>
+                            <p className="text-sm font-medium truncate">
+                              {item.content.replace('📎 ', '')}
+                            </p>
+                          </div>
+                          <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+                        </div>
                       </div>
                     )}
                     <p className="text-[10px] text-muted-foreground mt-1 text-right">
@@ -141,6 +206,18 @@ export function StepPreview({
                     <Badge variant="outline" className="gap-1">
                       <Video className="h-3 w-3" />
                       {contentItems.filter(i => i.type === 'video').length} vídeos
+                    </Badge>
+                  )}
+                  {contentItems.filter(i => i.type === 'catalog').length > 0 && (
+                    <Badge variant="outline" className="gap-1 bg-primary/10 text-primary border-primary/30">
+                      <BookOpen className="h-3 w-3" />
+                      {contentItems.filter(i => i.type === 'catalog').length} catálogos
+                    </Badge>
+                  )}
+                  {contentItems.filter(i => i.type === 'file').length > 0 && (
+                    <Badge variant="outline" className="gap-1">
+                      <Paperclip className="h-3 w-3" />
+                      {contentItems.filter(i => i.type === 'file').length} anexos
                     </Badge>
                   )}
                 </div>
