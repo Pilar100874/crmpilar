@@ -147,6 +147,52 @@ export function EnvioMassaWizardPanel({
       .replace(/\{\{email\}\}/gi, contact.email || 'N/A');
   };
 
+  // Get webhook config
+  const getWebhookConfig = async () => {
+    // Get envio_massa_config to find the webhook_id
+    const { data: configData } = await supabase
+      .from('envio_massa_config' as any)
+      .select('webhook_id')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .maybeSingle() as any;
+
+    if (!configData?.webhook_id) return null;
+
+    // Get webhook details
+    const { data: webhookData } = await supabase
+      .from('webhooks')
+      .select('id, name, url, method')
+      .eq('id', configData.webhook_id)
+      .eq('active', true)
+      .maybeSingle();
+
+    return webhookData;
+  };
+
+  // Call webhook via n8n-proxy
+  const callWebhook = async (webhookUrl: string, webhookMethod: string, payload: any) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('n8n-proxy', {
+        body: {
+          webhookUrl,
+          payload,
+          expectResponse: false,
+          httpMethod: webhookMethod || 'POST'
+        }
+      });
+
+      if (error) {
+        console.error('Error calling webhook:', error);
+        return false;
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Error calling webhook:', err);
+      return false;
+    }
+  };
+
   // Send
   const handleConfirm = async () => {
     if (!usuarioId || !estabelecimentoId) {
@@ -158,8 +204,12 @@ export function EnvioMassaWizardPanel({
     setSendProgress(0);
 
     try {
+      // Get webhook configuration
+      const webhook = await getWebhookConfig();
+      
       const total = state.selectedContacts.length;
       let completed = 0;
+      let webhookSuccess = 0;
 
       for (const contact of state.selectedContacts) {
         // Build description from content items
@@ -192,11 +242,111 @@ export function EnvioMassaWizardPanel({
           console.error('Error creating task:', error);
         }
 
+        // Call webhook with full data payload for n8n
+        if (webhook?.url) {
+          // Build content items with processed data for n8n
+          const processedContentItems = state.contentItems.map(item => ({
+            id: item.id,
+            type: item.type,
+            content: replaceVariables(item.content, contact),
+            originalContent: item.content,
+            mediaUrl: item.mediaUrl || null,
+            mediaThumbnail: item.mediaThumbnail || null,
+            mediaDuration: item.mediaDuration || null,
+            quickReplyId: item.quickReplyId || null,
+            quickReplyTitle: item.quickReplyTitle || null,
+            catalogId: item.catalogId || null,
+            catalogName: item.catalogName || null,
+            fileType: item.fileType || null
+          }));
+
+          // Full payload for n8n with all bulk send data
+          const webhookPayload = {
+            // Contact info
+            contato: {
+              id: contact.id,
+              nome: contact.nome,
+              telefone: contact.telefone,
+              email: contact.email,
+              empresa: contact.empresa || null,
+              tags: contact.tags || []
+            },
+            
+            // Channel and campaign info
+            canal: state.canal,
+            estabelecimentoId: estabelecimentoId,
+            usuarioId: usuarioId,
+            
+            // Content items (messages, media, catalogs, files)
+            contentItems: processedContentItems,
+            
+            // Legacy format for backward compatibility
+            mensagem: description,
+            telefone: contact.telefone,
+            email: contact.email,
+            empresa: contact.empresa || null,
+            
+            // First text message for simple integrations
+            mensagemPrincipal: state.contentItems.find(i => i.type === 'text' || i.type === 'quick_reply')
+              ? replaceVariables(state.contentItems.find(i => i.type === 'text' || i.type === 'quick_reply')!.content, contact)
+              : null,
+            
+            // Media info
+            midia: state.contentItems
+              .filter(i => i.type === 'image' || i.type === 'video')
+              .map(i => ({
+                type: i.type,
+                url: i.mediaUrl,
+                thumbnail: i.mediaThumbnail,
+                duration: i.mediaDuration,
+                caption: i.content
+              })),
+            
+            // Catalog info
+            catalogo: state.contentItems
+              .filter(i => i.type === 'catalog')
+              .map(i => ({
+                id: i.catalogId,
+                name: i.catalogName,
+                url: i.mediaUrl
+              })),
+            
+            // Files info
+            arquivos: state.contentItems
+              .filter(i => i.type === 'file')
+              .map(i => ({
+                type: i.fileType,
+                url: i.mediaUrl,
+                content: i.content
+              })),
+            
+            // Scheduling info
+            proximaDataContato: format(state.proximaDataContato, 'yyyy-MM-dd'),
+            proximaDataContatoISO: state.proximaDataContato.toISOString(),
+            
+            // Metadata
+            timestamp: new Date().toISOString(),
+            totalContatos: total,
+            contatoAtual: completed + 1,
+            
+            // Filters applied (for reference)
+            filtrosAplicados: state.filters
+          };
+
+          const success = await callWebhook(webhook.url, webhook.method, webhookPayload);
+          if (success) webhookSuccess++;
+        }
+
         completed++;
         setSendProgress((completed / total) * 100);
       }
 
-      toast.success(`${completed} tarefas criadas com sucesso!`);
+      if (webhook?.url) {
+        toast.success(`${completed} tarefas criadas e ${webhookSuccess} webhooks disparados!`);
+      } else {
+        toast.success(`${completed} tarefas criadas com sucesso!`);
+      }
+      
       onComplete?.();
       onClose();
     } catch (error: any) {
