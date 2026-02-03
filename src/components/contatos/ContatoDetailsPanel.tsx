@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Phone, Mail, Building2, ChevronDown, ChevronUp, Pencil, Plus, X } from "lucide-react";
+import { User, Building2, ChevronDown, ChevronUp, Pencil, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { EditEmpresaDialog } from "@/components/atendimento/EditEmpresaDialog";
 import { VincularEmpresaDialog } from "@/components/atendimento/VincularEmpresaDialog";
-import { maskWhatsApp, maskPhone } from "@/lib/masks";
+import { CreateEmpresaDialog } from "@/components/atendimento/CreateEmpresaDialog";
 
 interface ContatoDetailsPanelProps {
   contato: {
@@ -184,7 +184,6 @@ export function ContatoDetailsPanel({
                   {/* WhatsApp */}
                   {contato.phone && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Phone className="w-3.5 h-3.5 text-green-500" />
                       <span className="text-muted-foreground">WhatsApp:</span>
                       <span className="font-medium">{contato.phone}</span>
                     </div>
@@ -193,7 +192,6 @@ export function ContatoDetailsPanel({
                   {/* Telefone */}
                   {contato.tel && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Phone className="w-3.5 h-3.5 text-muted-foreground" />
                       <span className="text-muted-foreground">Telefone:</span>
                       <span className="font-medium">{contato.tel}</span>
                     </div>
@@ -202,7 +200,6 @@ export function ContatoDetailsPanel({
                   {/* Email */}
                   {contato.email && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Mail className="w-3.5 h-3.5 text-blue-500" />
                       <span className="text-muted-foreground">Email:</span>
                       <span className="font-medium truncate">{contato.email}</span>
                     </div>
@@ -211,7 +208,6 @@ export function ContatoDetailsPanel({
                   {/* Cargo */}
                   {contato.position && (
                     <div className="flex items-center gap-2 text-sm">
-                      <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
                       <span className="text-muted-foreground">Cargo:</span>
                       <span className="font-medium">{contato.position}</span>
                     </div>

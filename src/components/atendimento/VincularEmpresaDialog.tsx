@@ -4,18 +4,18 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Building2, Search, Plus, Loader2, ArrowLeft } from "lucide-react";
+import { Building2, Search, Plus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { geocodeAndSaveEmpresa } from "@/hooks/useGeocodingService";
+import { CreateEmpresaDialog } from "./CreateEmpresaDialog";
 
 interface VincularEmpresaDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   customerId?: string;
-  emailVinculo?: string; // Para vincular email diretamente à empresa
-  whatsappVinculo?: string; // Para vincular whatsapp diretamente à empresa
+  emailVinculo?: string;
+  whatsappVinculo?: string;
   onSuccess?: () => void;
 }
 
@@ -43,22 +43,13 @@ export function VincularEmpresaDialog({
   const [loading, setLoading] = useState(false);
   const [vinculando, setVinculando] = useState(false);
   
-  // Estado para cadastro de nova empresa
-  const [modoCadastro, setModoCadastro] = useState(false);
-  const [novaEmpresa, setNovaEmpresa] = useState({
-    nome_fantasia: "",
-    nome: "",
-    cnpj: "",
-    email: "",
-    telefone: ""
-  });
-  const [salvando, setSalvando] = useState(false);
+  // Estado para abrir o CreateEmpresaDialog
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   useEffect(() => {
     if (open) {
       loadEmpresas();
-      setModoCadastro(false);
-      setNovaEmpresa({ nome_fantasia: "", nome: "", cnpj: "", email: "", telefone: "" });
+      setShowCreateDialog(false);
     }
   }, [open]);
 
@@ -99,9 +90,7 @@ export function VincularEmpresaDialog({
     try {
       const estabId = await getEstabelecimentoId();
       
-      // Se temos customerId, verificar se existe antes de vincular
       if (customerId) {
-        // Primeiro verificar se o customer existe
         const { data: customerExists, error: checkError } = await supabase
           .from('customers')
           .select('id')
@@ -130,7 +119,6 @@ export function VincularEmpresaDialog({
             throw error;
           }
         } else {
-          // Vincular email e whatsapp automaticamente à empresa
           const empresa = empresas.find(e => e.id === empresaId);
           const updates: any = {};
           
@@ -155,7 +143,6 @@ export function VincularEmpresaDialog({
           setEmpresasFiltradas([]);
         }
       } 
-      // Se temos emailVinculo mas não customerId, criar contato e vincular
       else if (emailVinculo) {
         const empresa = empresas.find(e => e.id === empresaId);
         const emailsAtuais = empresa?.emails_vinculados || [];
@@ -166,14 +153,13 @@ export function VincularEmpresaDialog({
           return;
         }
 
-        // Criar contato sem email temporário - deixar em branco
         const { data: novoContato, error: contatoErr } = await supabase
           .from('customers')
           .insert([{
             estabelecimento_id: estabId,
-            nome: emailVinculo.split('@')[0], // Usar parte do email como nome inicial
+            nome: emailVinculo.split('@')[0],
             telefone: '',
-            email: '', // Deixar email em branco para edição posterior
+            email: '',
             tipo_operador: true
           }])
           .select('id')
@@ -181,7 +167,6 @@ export function VincularEmpresaDialog({
 
         if (contatoErr) throw contatoErr;
 
-        // Vincular contato à empresa
         await supabase
           .from('customer_empresas')
           .insert([{
@@ -190,7 +175,6 @@ export function VincularEmpresaDialog({
             is_primary: false
           }]);
 
-        // Adicionar email aos emails_vinculados da empresa
         await supabase
           .from('empresas')
           .update({
@@ -204,7 +188,6 @@ export function VincularEmpresaDialog({
         setBusca("");
         setEmpresasFiltradas([]);
       }
-      // Se temos whatsappVinculo mas não customerId, criar contato e vincular
       else if (whatsappVinculo) {
         const empresa = empresas.find(e => e.id === empresaId);
         const whatsappsAtuais = empresa?.whatsapps_vinculados || [];
@@ -215,14 +198,13 @@ export function VincularEmpresaDialog({
           return;
         }
 
-        // Criar contato sem email temporário - deixar em branco
         const { data: novoContato, error: contatoErr } = await supabase
           .from('customers')
           .insert([{
             estabelecimento_id: estabId,
-            nome: whatsappVinculo, // Usar número como nome inicial
+            nome: whatsappVinculo,
             telefone: whatsappVinculo,
-            email: '', // Deixar email em branco para edição posterior
+            email: '',
             tipo_operador: true
           }])
           .select('id')
@@ -230,7 +212,6 @@ export function VincularEmpresaDialog({
 
         if (contatoErr) throw contatoErr;
 
-        // Vincular contato à empresa
         await supabase
           .from('customer_empresas')
           .insert([{
@@ -239,7 +220,6 @@ export function VincularEmpresaDialog({
             is_primary: false
           }]);
 
-        // Adicionar whatsapp aos whatsapps_vinculados da empresa
         await supabase
           .from('empresas')
           .update({
@@ -264,157 +244,24 @@ export function VincularEmpresaDialog({
     }
   };
 
-  const handleCadastrarEVincular = async () => {
-    if (!novaEmpresa.nome_fantasia.trim()) {
-      toast.error("Nome fantasia é obrigatório");
-      return;
-    }
-
-    setSalvando(true);
-    try {
-      const estabId = await getEstabelecimentoId();
-      
-      // Criar a nova empresa
-      const { data: empresaCriada, error: empresaErr } = await supabase
-        .from('empresas')
-        .insert({
-          estabelecimento_id: estabId,
-          nome_fantasia: novaEmpresa.nome_fantasia.trim(),
-          nome: novaEmpresa.nome.trim() || novaEmpresa.nome_fantasia.trim(),
-          cnpj: novaEmpresa.cnpj.trim() || null,
-          email: novaEmpresa.email.trim() || null,
-          telefone: novaEmpresa.telefone.trim() || null,
-          emails_vinculados: emailVinculo ? [emailVinculo] : [],
-          whatsapps_vinculados: whatsappVinculo ? [whatsappVinculo] : []
-        })
-        .select('id')
-        .single();
-
-      if (empresaErr) throw empresaErr;
-
-      // Se temos customerId, vincular diretamente
-      if (customerId) {
-        await supabase
-          .from('customer_empresas')
-          .insert({
-            customer_id: customerId,
-            empresa_id: empresaCriada.id,
-            is_primary: false
-          });
-      }
-
-      toast.success("Empresa cadastrada e vinculada com sucesso!");
-      onSuccess?.();
-      onOpenChange(false);
-      setBusca("");
-      setEmpresasFiltradas([]);
-      setModoCadastro(false);
-      setNovaEmpresa({ nome_fantasia: "", nome: "", cnpj: "", email: "", telefone: "" });
-    } catch (error: any) {
-      console.error('Erro ao cadastrar empresa:', error);
-      toast.error(error?.message || "Erro ao cadastrar empresa");
-    } finally {
-      setSalvando(false);
-    }
-  };
-
-  const iniciarCadastro = () => {
-    setModoCadastro(true);
-    // Preencher nome fantasia com o termo buscado
-    setNovaEmpresa(prev => ({ ...prev, nome_fantasia: busca }));
+  const handleEmpresaCriada = (empresaId: string) => {
+    // Empresa criada com sucesso, fechar dialogs e notificar
+    setShowCreateDialog(false);
+    onSuccess?.();
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {modoCadastro && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 mr-1"
-                onClick={() => setModoCadastro(false)}
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-            )}
-            <Building2 className="w-5 h-5 text-primary" />
-            {modoCadastro ? "Cadastrar Nova Empresa" : "Vincular Empresa"}
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-primary" />
+              Vincular Empresa
+            </DialogTitle>
+          </DialogHeader>
 
-        {modoCadastro ? (
-          // Formulário de cadastro de nova empresa
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label className="text-sm">Nome Fantasia *</Label>
-              <Input
-                placeholder="Nome fantasia da empresa"
-                value={novaEmpresa.nome_fantasia}
-                onChange={(e) => setNovaEmpresa(prev => ({ ...prev, nome_fantasia: e.target.value }))}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-sm">Razão Social</Label>
-              <Input
-                placeholder="Razão social (opcional)"
-                value={novaEmpresa.nome}
-                onChange={(e) => setNovaEmpresa(prev => ({ ...prev, nome: e.target.value }))}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-sm">CNPJ</Label>
-              <Input
-                placeholder="00.000.000/0000-00"
-                value={novaEmpresa.cnpj}
-                onChange={(e) => setNovaEmpresa(prev => ({ ...prev, cnpj: e.target.value }))}
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label className="text-sm">Email</Label>
-                <Input
-                  type="email"
-                  placeholder="email@empresa.com"
-                  value={novaEmpresa.email}
-                  onChange={(e) => setNovaEmpresa(prev => ({ ...prev, email: e.target.value }))}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm">Telefone</Label>
-                <Input
-                  placeholder="(00) 0000-0000"
-                  value={novaEmpresa.telefone}
-                  onChange={(e) => setNovaEmpresa(prev => ({ ...prev, telefone: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <Button
-              className="w-full"
-              onClick={handleCadastrarEVincular}
-              disabled={salvando || !novaEmpresa.nome_fantasia.trim()}
-            >
-              {salvando ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Cadastrar e Vincular
-                </>
-              )}
-            </Button>
-          </div>
-        ) : (
-          // Modo de busca normal
           <div className="space-y-4 py-4">
             {/* Campo de busca */}
             <div className="space-y-2">
@@ -476,7 +323,7 @@ export function VincularEmpresaDialog({
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={iniciarCadastro}
+                  onClick={() => setShowCreateDialog(true)}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Cadastrar "{busca}"
@@ -494,7 +341,7 @@ export function VincularEmpresaDialog({
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => setModoCadastro(true)}
+                  onClick={() => setShowCreateDialog(true)}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Cadastrar Nova Empresa
@@ -502,8 +349,16 @@ export function VincularEmpresaDialog({
               </div>
             )}
           </div>
-        )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de criação de empresa */}
+      <CreateEmpresaDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        customerId={customerId}
+        onSuccess={handleEmpresaCriada}
+      />
+    </>
   );
 }
