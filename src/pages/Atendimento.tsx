@@ -32,10 +32,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
-import { EditContatoEmbedded } from "@/components/atendimento/EditContatoEmbedded";
-import { EditEmpresaEmbedded } from "@/components/atendimento/EditEmpresaEmbedded";
-import { CreateContatoEmbedded } from "@/components/atendimento/CreateContatoEmbedded";
-import { CreateEmpresaEmbedded } from "@/components/atendimento/CreateEmpresaEmbedded";
+import { ContatoFormEmbedded } from "@/components/atendimento/ContatoFormEmbedded";
+import { EmpresaFormEmbedded } from "@/components/atendimento/EmpresaFormEmbedded";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OmnichannelManager } from "@/components/atendimento/OmnichannelManager";
@@ -3023,7 +3021,7 @@ ${recentMessages}
       }
     });
 
-    // Contatos da agenda que NÃO têm conversa ativa
+    // Contatos da agenda que NÃO têm conversa ativa E têm WhatsApp cadastrado
     const contactsWithoutConv: Array<{
       contactId: string;
       nome: string;
@@ -3033,7 +3031,8 @@ ${recentMessages}
     }> = [];
 
     todayContactsMap.forEach((data, contactId) => {
-      if (!customersWithConversation.has(contactId)) {
+      // Só incluir contatos que têm WhatsApp (campo telefone) E não têm conversa ativa
+      if (!customersWithConversation.has(contactId) && data.telefone && data.telefone.trim() !== '') {
         contactsWithoutConv.push({
           contactId,
           nome: data.nome,
@@ -5902,7 +5901,8 @@ ${recentMessages}
           </div>
         ) : editingContatoId ? (
           /* Edição de Contato Inline */
-          <EditContatoEmbedded
+          <ContatoFormEmbedded
+            mode="edit"
             customerId={editingContatoId}
             onClose={() => setEditingContatoId(null)}
             onSuccess={() => {
@@ -5924,7 +5924,8 @@ ${recentMessages}
           />
         ) : editingEmpresaId ? (
           /* Edição de Empresa Inline */
-          <EditEmpresaEmbedded
+          <EmpresaFormEmbedded
+            mode="edit"
             empresaId={editingEmpresaId}
             customerEmpresaId={editingCustomerEmpresaId || undefined}
             onClose={() => {
@@ -5952,7 +5953,8 @@ ${recentMessages}
           />
         ) : creatingContato ? (
           /* Criação de Contato Inline */
-          <CreateContatoEmbedded
+          <ContatoFormEmbedded
+            mode="create"
             onClose={() => {
               setCreatingContato(false);
               setCreatingContatoInitialData(null);
@@ -5973,7 +5975,8 @@ ${recentMessages}
           />
         ) : creatingEmpresa ? (
           /* Criação de Empresa Inline */
-          <CreateEmpresaEmbedded
+          <EmpresaFormEmbedded
+            mode="create"
             customerId={creatingEmpresaForCustomerId || undefined}
             onClose={() => {
               setCreatingEmpresa(false);
