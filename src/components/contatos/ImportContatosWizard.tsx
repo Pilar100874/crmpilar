@@ -762,15 +762,46 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
                 </div>
 
                 {importResults.failed > 0 && (
-                  <div className="w-full max-w-lg">
+                  <div className="w-full max-w-4xl">
                     <div className="bg-muted/50 rounded-lg p-4 mb-4">
                       <div className="flex items-center gap-2 mb-2">
                         <FileWarning className="w-5 h-5 text-destructive" />
-                        <h4 className="font-medium">Contatos não importados</h4>
+                        <h4 className="font-medium">Contatos não importados ({importResults.failed})</h4>
                       </div>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Baixe a planilha abaixo, corrija os erros e importe novamente.
+                        Revise os erros abaixo ou baixe a planilha para corrigir e importar novamente.
                       </p>
+                      
+                      {/* Tabela de erros */}
+                      <ScrollArea className="h-[250px] rounded-lg border bg-background mb-4">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-muted/50">
+                              <TableHead className="w-16">Linha</TableHead>
+                              <TableHead>Nome</TableHead>
+                              <TableHead>WhatsApp</TableHead>
+                              <TableHead>E-mail</TableHead>
+                              <TableHead>Erro</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {importResults.failedRows.map((row, idx) => (
+                              <TableRow key={idx}>
+                                <TableCell className="font-mono text-xs">{row.rowIndex}</TableCell>
+                                <TableCell className="max-w-[150px] truncate">{row.nome || "-"}</TableCell>
+                                <TableCell className="text-xs">{row.whatsapp || "-"}</TableCell>
+                                <TableCell className="text-xs max-w-[150px] truncate">{row.email || "-"}</TableCell>
+                                <TableCell>
+                                  <Badge variant="destructive" className="text-xs whitespace-normal">
+                                    {row.errors.join("; ")}
+                                  </Badge>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </ScrollArea>
+
                       <Button onClick={exportFailedRows} className="w-full">
                         <Download className="w-4 h-4 mr-2" />
                         Baixar Planilha de Erros ({importResults.failed} contatos)
