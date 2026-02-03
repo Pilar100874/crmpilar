@@ -329,9 +329,14 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
         successCount++;
       } catch (error: any) {
         console.error("Erro ao importar contato:", error);
+        // Traduzir mensagens de erro do banco de dados
+        let errorMessage = error.message || "Erro ao salvar";
+        if (errorMessage.includes("duplicate key") || errorMessage.includes("unique constraint")) {
+          errorMessage = "Cadastro duplicado";
+        }
         failedRows.push({
           ...row,
-          errors: [error.message || "Erro ao salvar"],
+          errors: [errorMessage],
         });
       }
 
