@@ -2028,11 +2028,26 @@ export default function Atendimento() {
   // Carregar dados da tarefa selecionada
   const loadSelectedTask = async (taskId: string) => {
     try {
-      const { data, error } = await supabase
+      // Primeiro buscar a tarefa
+      const { data: taskData, error: taskError } = await supabase
         .from("calendario_tarefas")
-        .select(`
-          *,
-          customers:contact_id (
+        .select("*")
+        .eq("id", taskId)
+        .maybeSingle();
+
+      if (taskError) throw taskError;
+      
+      if (!taskData) {
+        setSelectedTaskData(null);
+        return;
+      }
+
+      // Se tiver contact_id, buscar dados do cliente separadamente
+      let customerData = null;
+      if (taskData.contact_id) {
+        const { data: customer, error: customerError } = await supabase
+          .from("customers")
+          .select(`
             id,
             nome,
             telefone,
@@ -2052,13 +2067,20 @@ export default function Atendimento() {
                 email
               )
             )
-          )
-        `)
-        .eq("id", taskId)
-        .maybeSingle();
+          `)
+          .eq("id", taskData.contact_id)
+          .maybeSingle();
 
-      if (error) throw error;
-      setSelectedTaskData(data);
+        if (!customerError && customer) {
+          customerData = customer;
+        }
+      }
+
+      // Combinar os dados
+      setSelectedTaskData({
+        ...taskData,
+        customers: customerData
+      });
     } catch (error: any) {
       console.error("Erro ao carregar tarefa:", error);
     }
