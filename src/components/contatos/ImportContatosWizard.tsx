@@ -476,14 +476,14 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
                   Nome <span className="text-destructive">*</span>
                 </label>
                 <Select
-                  value={columnMapping.nome}
-                  onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, nome: v }))}
+                  value={columnMapping.nome || "__none__"}
+                  onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, nome: v === "__none__" ? "" : v }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a coluna" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">-- Não mapear --</SelectItem>
+                    <SelectItem value="__none__">-- Não mapear --</SelectItem>
                     {headers.map((h, i) => (
                       <SelectItem key={i} value={String(i)}>
                         {h || `Coluna ${i + 1}`}
@@ -499,14 +499,14 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
                   WhatsApp
                 </label>
                 <Select
-                  value={columnMapping.whatsapp}
-                  onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, whatsapp: v }))}
+                  value={columnMapping.whatsapp || "__none__"}
+                  onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, whatsapp: v === "__none__" ? "" : v }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a coluna" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">-- Não mapear --</SelectItem>
+                    <SelectItem value="__none__">-- Não mapear --</SelectItem>
                     {headers.map((h, i) => (
                       <SelectItem key={i} value={String(i)}>
                         {h || `Coluna ${i + 1}`}
@@ -522,14 +522,14 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
                   Telefone Fixo
                 </label>
                 <Select
-                  value={columnMapping.telefone}
-                  onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, telefone: v }))}
+                  value={columnMapping.telefone || "__none__"}
+                  onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, telefone: v === "__none__" ? "" : v }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a coluna" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">-- Não mapear --</SelectItem>
+                    <SelectItem value="__none__">-- Não mapear --</SelectItem>
                     {headers.map((h, i) => (
                       <SelectItem key={i} value={String(i)}>
                         {h || `Coluna ${i + 1}`}
@@ -545,14 +545,14 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
                   E-mail
                 </label>
                 <Select
-                  value={columnMapping.email}
-                  onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, email: v }))}
+                  value={columnMapping.email || "__none__"}
+                  onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, email: v === "__none__" ? "" : v }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a coluna" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">-- Não mapear --</SelectItem>
+                    <SelectItem value="__none__">-- Não mapear --</SelectItem>
                     {headers.map((h, i) => (
                       <SelectItem key={i} value={String(i)}>
                         {h || `Coluna ${i + 1}`}
@@ -565,14 +565,14 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
               <div className="space-y-2">
                 <label className="text-sm font-medium">Cargo/Função</label>
                 <Select
-                  value={columnMapping.position}
-                  onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, position: v }))}
+                  value={columnMapping.position || "__none__"}
+                  onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, position: v === "__none__" ? "" : v }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a coluna" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">-- Não mapear --</SelectItem>
+                    <SelectItem value="__none__">-- Não mapear --</SelectItem>
                     {headers.map((h, i) => (
                       <SelectItem key={i} value={String(i)}>
                         {h || `Coluna ${i + 1}`}
