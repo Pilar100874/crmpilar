@@ -531,16 +531,14 @@ export function UnifiedDetailsPanel({
                 )}
               </div>
 
-              {/* Cargo - só mostra se houver empresa vinculada */}
-              {companies.length > 0 && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Briefcase className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground">Cargo</span>
-                  </div>
-                  <span className="text-xs truncate max-w-[140px]">{currentCargo || '-'}</span>
+              {/* Cargo */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Briefcase className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">Cargo</span>
                 </div>
-              )}
+                <span className="text-xs truncate max-w-[140px]">{currentCargo || '-'}</span>
+              </div>
             </Card>
           </CollapsibleContent>
         </Collapsible>
