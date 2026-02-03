@@ -1084,62 +1084,68 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                         {formData.variables.length > 0 && (
                           <div className="space-y-3">
                             <h4 className="font-semibold text-sm">Variáveis Configuradas ({formData.variables.length})</h4>
-                            {formData.variables.map((variable) => (
-                              <Card key={variable.id} className="p-4">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="flex-1 space-y-2">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="font-mono text-sm font-semibold">{variable.name}</span>
-                                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md">
-                                        {variable.type === "json" ? "JSON" :
-                                        variable.type === "query" ? "Query" :
-                                        variable.type === "header" ? "Header" :
-                                        variable.type === "path" ? "Path" :
-                                        "Form Data"}
-                                      </span>
-                                      {variable.required && (
-                                        <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded-md">
-                                          Obrigatório
-                                        </span>
-                                      )}
-                                      {variable.format && (
-                                        <span className="text-xs bg-secondary px-2 py-1 rounded-md">
-                                          {variable.format}
-                                        </span>
-                                      )}
+                            <ScrollArea className="max-h-[300px] pr-3">
+                              <div className="space-y-2">
+                                {formData.variables.map((variable) => (
+                                  <Card key={variable.id} className="p-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex-1 space-y-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="font-mono text-sm font-semibold truncate">{variable.name}</span>
+                                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-md shrink-0">
+                                            {variable.type === "json" ? "JSON" :
+                                            variable.type === "query" ? "Query" :
+                                            variable.type === "header" ? "Header" :
+                                            variable.type === "path" ? "Path" :
+                                            "Form Data"}
+                                          </span>
+                                          {variable.required && (
+                                            <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-md shrink-0">
+                                              Obrigatório
+                                            </span>
+                                          )}
+                                          {variable.format && (
+                                            <span className="text-xs bg-secondary px-2 py-0.5 rounded-md shrink-0">
+                                              {variable.format}
+                                            </span>
+                                          )}
+                                        </div>
+                                        {variable.description && (
+                                          <p className="text-xs text-muted-foreground truncate">{variable.description}</p>
+                                        )}
+                                        {variable.defaultValue && (
+                                          <p className="text-xs text-muted-foreground">
+                                            Padrão: <span className="font-mono text-xs">{variable.defaultValue}</span>
+                                          </p>
+                                        )}
+                                      </div>
+                                      <div className="flex gap-1 shrink-0">
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => handleEditVariable(variable)}
+                                          disabled={editingVariableId !== null && editingVariableId !== variable.id}
+                                        >
+                                          <Pencil className="h-3.5 w-3.5" />
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => handleDeleteVariable(variable.id)}
+                                          disabled={editingVariableId !== null}
+                                        >
+                                          <X className="h-3.5 w-3.5 text-destructive" />
+                                        </Button>
+                                      </div>
                                     </div>
-                                    {variable.description && (
-                                      <p className="text-sm text-muted-foreground">{variable.description}</p>
-                                    )}
-                                    {variable.defaultValue && (
-                                      <p className="text-sm text-muted-foreground">
-                                        Padrão: <span className="font-mono text-xs">{variable.defaultValue}</span>
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div className="flex gap-1">
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleEditVariable(variable)}
-                                      disabled={editingVariableId !== null && editingVariableId !== variable.id}
-                                    >
-                                      <Pencil className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleDeleteVariable(variable.id)}
-                                      disabled={editingVariableId !== null}
-                                    >
-                                      <X className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </Card>
-                            ))}
+                                  </Card>
+                                ))}
+                              </div>
+                            </ScrollArea>
                           </div>
                         )}
                       </div>
@@ -1292,62 +1298,68 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                         {formData.inputVariables.length > 0 && (
                           <div className="space-y-3">
                             <h4 className="font-semibold text-sm">Variáveis Configuradas ({formData.inputVariables.length})</h4>
-                            {formData.inputVariables.map((variable) => (
-                              <Card key={variable.id} className="p-4">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="flex-1 space-y-2">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="font-mono text-sm font-semibold">{variable.name}</span>
-                                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-md">
-                                        {variable.type === "json" ? "JSON" :
-                                        variable.type === "query" ? "Query" :
-                                        variable.type === "header" ? "Header" :
-                                        variable.type === "path" ? "Path" :
-                                        "Form Data"}
-                                      </span>
-                                      {variable.required && (
-                                        <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded-md">
-                                          Obrigatório
-                                        </span>
-                                      )}
-                                      {variable.format && (
-                                        <span className="text-xs bg-secondary px-2 py-1 rounded-md">
-                                          {variable.format}
-                                        </span>
-                                      )}
+                            <ScrollArea className="max-h-[300px] pr-3">
+                              <div className="space-y-2">
+                                {formData.inputVariables.map((variable) => (
+                                  <Card key={variable.id} className="p-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex-1 space-y-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="font-mono text-sm font-semibold truncate">{variable.name}</span>
+                                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-md shrink-0">
+                                            {variable.type === "json" ? "JSON" :
+                                            variable.type === "query" ? "Query" :
+                                            variable.type === "header" ? "Header" :
+                                            variable.type === "path" ? "Path" :
+                                            "Form Data"}
+                                          </span>
+                                          {variable.required && (
+                                            <span className="text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-md shrink-0">
+                                              Obrigatório
+                                            </span>
+                                          )}
+                                          {variable.format && (
+                                            <span className="text-xs bg-secondary px-2 py-0.5 rounded-md shrink-0">
+                                              {variable.format}
+                                            </span>
+                                          )}
+                                        </div>
+                                        {variable.description && (
+                                          <p className="text-xs text-muted-foreground truncate">{variable.description}</p>
+                                        )}
+                                        {variable.defaultValue && (
+                                          <p className="text-xs text-muted-foreground">
+                                            Padrão: <span className="font-mono text-xs">{variable.defaultValue}</span>
+                                          </p>
+                                        )}
+                                      </div>
+                                      <div className="flex gap-1 shrink-0">
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => handleEditInputVariable(variable)}
+                                          disabled={editingInputVariableId !== null && editingInputVariableId !== variable.id}
+                                        >
+                                          <Pencil className="h-3.5 w-3.5" />
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-7 w-7"
+                                          onClick={() => handleDeleteInputVariable(variable.id)}
+                                          disabled={editingInputVariableId !== null}
+                                        >
+                                          <X className="h-3.5 w-3.5 text-destructive" />
+                                        </Button>
+                                      </div>
                                     </div>
-                                    {variable.description && (
-                                      <p className="text-sm text-muted-foreground">{variable.description}</p>
-                                    )}
-                                    {variable.defaultValue && (
-                                      <p className="text-sm text-muted-foreground">
-                                        Padrão: <span className="font-mono text-xs">{variable.defaultValue}</span>
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div className="flex gap-1">
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleEditInputVariable(variable)}
-                                      disabled={editingInputVariableId !== null && editingInputVariableId !== variable.id}
-                                    >
-                                      <Pencil className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => handleDeleteInputVariable(variable.id)}
-                                      disabled={editingInputVariableId !== null}
-                                    >
-                                      <X className="h-4 w-4 text-destructive" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </Card>
-                            ))}
+                                  </Card>
+                                ))}
+                              </div>
+                            </ScrollArea>
                           </div>
                         )}
                       </div>
