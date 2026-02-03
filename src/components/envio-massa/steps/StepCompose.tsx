@@ -1,25 +1,25 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  MessageSquare, Image, Video, Plus, Trash2, 
-  GripVertical, Upload, Type, ChevronDown, Play, FileText,
-  BookOpen, Paperclip, File
+  Image, Video, Plus, Trash2, 
+  GripVertical, Upload, Type, Play, FileText,
+  BookOpen, Paperclip, File, Search, LinkIcon, FileUp,
+  ImageIcon, FileSpreadsheet, Calendar, Package, Loader2, AlertCircle
 } from "lucide-react";
 import { ContentItem, QuickReply, MediaGalleryItem } from "../types";
 import { EnvioMassaTemplate } from "../hooks/useEnvioMassaTemplates";
-import { cn } from "@/lib/utils";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { supabase } from "@/integrations/supabase/client";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   DndContext,
   closestCenter,
@@ -38,20 +38,27 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-export interface CatalogoItem {
+// Interfaces for Catalog
+interface SavedCatalog {
   id: string;
   nome: string;
-  descricao?: string;
-  imagem_url?: string;
-  preco?: number;
+  thumbnail: string | null;
+  updated_at: string;
+  ativo: boolean;
+  data_validade: string | null;
+  data_indeterminada: boolean;
+  products_page: any;
 }
 
-export interface AnexoItem {
+// Interfaces for Quick Attachments
+interface QuickAttachment {
   id: string;
-  nome: string;
-  tipo: string;
+  title: string;
+  type: "link" | "file";
   url: string;
-  tamanho?: number;
+  is_global: boolean;
+  file_type?: string | null;
+  thumbnail_url?: string | null;
 }
 
 interface StepComposeProps {
@@ -60,11 +67,8 @@ interface StepComposeProps {
   groupedReplies: Record<string, QuickReply[]>;
   templates: EnvioMassaTemplate[];
   media: MediaGalleryItem[];
-  catalogos?: CatalogoItem[];
-  anexos?: AnexoItem[];
   onContentChange: (items: ContentItem[]) => void;
   onUploadMedia: (file: File) => Promise<MediaGalleryItem | null>;
-  onUploadAnexo?: (file: File) => Promise<AnexoItem | null>;
   onBack: () => void;
   onNext: () => void;
 }
@@ -116,14 +120,9 @@ function SortableContentItem({ item, index, onRemove }: SortableContentItemProps
           {item.type === 'text' && (
             <div>
               <Badge variant="outline" className="mb-1">
-                {item.quickReplyTitle ? 'Template' : 'Texto'}
+                {item.quickReplyTitle ? item.quickReplyTitle : 'Texto'}
               </Badge>
-              {item.quickReplyTitle && (
-                <p className="text-xs font-medium text-primary mb-1">
-                  {item.quickReplyTitle}
-                </p>
-              )}
-              <p className="text-sm whitespace-pre-wrap">{item.content}</p>
+              <p className="text-sm whitespace-pre-wrap line-clamp-3">{item.content}</p>
             </div>
           )}
           {item.type === 'quick_reply' && (
@@ -138,7 +137,7 @@ function SortableContentItem({ item, index, onRemove }: SortableContentItemProps
           )}
           {(item.type === 'image' || item.type === 'video') && (
             <div className="flex gap-3">
-              <div className="w-16 h-16 rounded overflow-hidden bg-muted shrink-0">
+              <div className="w-12 h-12 rounded overflow-hidden bg-muted shrink-0">
                 {item.type === 'video' ? (
                   <div className="relative w-full h-full flex items-center justify-center">
                     {item.mediaThumbnail ? (
@@ -148,19 +147,23 @@ function SortableContentItem({ item, index, onRemove }: SortableContentItemProps
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <Video className="h-6 w-6 text-muted-foreground" />
+                      <Video className="h-5 w-5 text-muted-foreground" />
                     )}
-                    <Play className="absolute h-4 w-4 text-white" />
+                    <Play className="absolute h-3 w-3 text-white" />
                   </div>
-                ) : (
+                ) : item.mediaUrl ? (
                   <img
                     src={item.mediaUrl}
                     alt={item.content}
                     className="w-full h-full object-cover"
                   />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Image className="h-5 w-5 text-muted-foreground" />
+                  </div>
                 )}
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <Badge variant="outline" className="mb-1">
                   {item.type === 'video' ? 'Vídeo' : 'Imagem'}
                 </Badge>
@@ -190,20 +193,114 @@ export function StepCompose({
   groupedReplies,
   templates,
   media,
-  catalogos = [],
-  anexos = [],
   onContentChange,
   onUploadMedia,
-  onUploadAnexo,
   onBack,
   onNext
 }: StepComposeProps) {
   const [activeTab, setActiveTab] = useState<'templates' | 'text' | 'media' | 'catalogo' | 'anexos'>('templates');
   const [textInput, setTextInput] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [uploadingAnexo, setUploadingAnexo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const anexoInputRef = useRef<HTMLInputElement>(null);
+  
+  // Catalog state
+  const [catalogs, setCatalogs] = useState<SavedCatalog[]>([]);
+  const [loadingCatalogs, setLoadingCatalogs] = useState(false);
+  const [catalogSearch, setCatalogSearch] = useState('');
+  
+  // Attachments state
+  const [attachments, setAttachments] = useState<QuickAttachment[]>([]);
+  const [loadingAttachments, setLoadingAttachments] = useState(false);
+  const [attachmentSearch, setAttachmentSearch] = useState('');
+
+  // Load catalogs when tab is active
+  useEffect(() => {
+    if (activeTab === 'catalogo') {
+      loadCatalogs();
+    }
+  }, [activeTab]);
+
+  // Load attachments when tab is active
+  useEffect(() => {
+    if (activeTab === 'anexos') {
+      loadAttachments();
+    }
+  }, [activeTab]);
+
+  const loadCatalogs = async () => {
+    setLoadingCatalogs(true);
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+
+      const { data, error } = await supabase
+        .from("catalogos_salvos")
+        .select("id, nome, thumbnail, updated_at, ativo, data_validade, data_indeterminada, products_page")
+        .eq("estabelecimento_id", estabId)
+        .eq("ativo", true)
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+      
+      // Filter expired catalogs
+      const now = new Date();
+      const validCatalogs = (data || []).filter((catalog: SavedCatalog) => {
+        if (!catalog.data_indeterminada && catalog.data_validade) {
+          return new Date(catalog.data_validade) > now;
+        }
+        return true;
+      });
+      
+      setCatalogs(validCatalogs);
+    } catch (error: any) {
+      console.error("Erro ao carregar catálogos:", error);
+      toast.error("Erro ao carregar catálogos");
+    } finally {
+      setLoadingCatalogs(false);
+    }
+  };
+
+  const loadAttachments = async () => {
+    setLoadingAttachments(true);
+    try {
+      const estabId = await getEstabelecimentoId();
+      if (!estabId) return;
+
+      const { data, error } = await supabase
+        .from("quick_attachments")
+        .select("*")
+        .eq("estabelecimento_id", estabId)
+        .order("is_global", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setAttachments((data || []) as QuickAttachment[]);
+    } catch (error: any) {
+      console.error("Erro ao carregar anexos:", error);
+      toast.error("Erro ao carregar anexos rápidos");
+    } finally {
+      setLoadingAttachments(false);
+    }
+  };
+
+  // Filtered catalogs
+  const filteredCatalogs = useMemo(() => {
+    return catalogs.filter(c => 
+      c.nome.toLowerCase().includes(catalogSearch.toLowerCase())
+    );
+  }, [catalogs, catalogSearch]);
+
+  // Filtered attachments
+  const filteredAttachments = useMemo(() => {
+    return attachments.filter(a => 
+      a.title.toLowerCase().includes(attachmentSearch.toLowerCase())
+    );
+  }, [attachments, attachmentSearch]);
+
+  // Separate attachments by type
+  const attachmentLinks = filteredAttachments.filter(a => a.type === "link");
+  const attachmentFiles = filteredAttachments.filter(a => a.type === "file");
+  const attachmentImages = attachmentFiles.filter(f => f.file_type === "image");
 
   const addTextItem = () => {
     if (!textInput.trim()) return;
@@ -225,17 +322,7 @@ export function StepCompose({
       quickReplyTitle: template.nome
     };
     onContentChange([...contentItems, newItem]);
-  };
-
-  const addQuickReply = (reply: QuickReply) => {
-    const newItem: ContentItem = {
-      id: `qr-${Date.now()}`,
-      type: 'quick_reply',
-      content: reply.content,
-      quickReplyId: reply.id,
-      quickReplyTitle: reply.title
-    };
-    onContentChange([...contentItems, newItem]);
+    toast.success(`Template "${template.nome}" adicionado`);
   };
 
   const addMedia = (item: MediaGalleryItem) => {
@@ -250,26 +337,32 @@ export function StepCompose({
     onContentChange([...contentItems, newItem]);
   };
 
-  const addCatalogo = (item: CatalogoItem) => {
+  const addCatalog = (catalog: SavedCatalog) => {
+    const productCount = catalog.products_page?.products?.length || 0;
     const newItem: ContentItem = {
       id: `catalogo-${Date.now()}`,
       type: 'image',
-      content: `📦 ${item.nome}${item.preco ? ` - R$ ${item.preco.toFixed(2)}` : ''}`,
-      mediaUrl: item.imagem_url,
+      content: `📦 Catálogo: ${catalog.nome} (${productCount} produtos)`,
+      mediaUrl: catalog.thumbnail || undefined,
       quickReplyTitle: 'Catálogo'
     };
     onContentChange([...contentItems, newItem]);
+    toast.success(`Catálogo "${catalog.nome}" adicionado`);
   };
 
-  const addAnexo = (item: AnexoItem) => {
+  const addAttachment = (attachment: QuickAttachment) => {
     const newItem: ContentItem = {
       id: `anexo-${Date.now()}`,
-      type: 'text',
-      content: `📎 Anexo: ${item.nome}`,
-      mediaUrl: item.url,
-      quickReplyTitle: 'Anexo'
+      type: attachment.file_type === 'image' ? 'image' : 'text',
+      content: attachment.file_type === 'image' 
+        ? attachment.title 
+        : `📎 ${attachment.title}`,
+      mediaUrl: attachment.url,
+      mediaThumbnail: attachment.thumbnail_url || undefined,
+      quickReplyTitle: attachment.type === 'link' ? 'Link' : 'Anexo'
     };
     onContentChange([...contentItems, newItem]);
+    toast.success(`"${attachment.title}" adicionado`);
   };
 
   const removeItem = (id: string) => {
@@ -312,53 +405,53 @@ export function StepCompose({
     }
   };
 
-  const handleAnexoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !onUploadAnexo) return;
+  const getProductCount = (catalog: SavedCatalog) => {
+    return catalog.products_page?.products?.length || 0;
+  };
 
-    setUploadingAnexo(true);
-    const uploaded = await onUploadAnexo(file);
-    if (uploaded) {
-      addAnexo(uploaded);
-    }
-    setUploadingAnexo(false);
-    if (anexoInputRef.current) {
-      anexoInputRef.current.value = '';
+  const getFileIcon = (fileType?: string | null) => {
+    switch (fileType) {
+      case 'image': return <ImageIcon className="h-5 w-5 text-purple-500" />;
+      case 'pdf': return <FileText className="h-5 w-5 text-red-500" />;
+      case 'excel': return <FileSpreadsheet className="h-5 w-5 text-green-500" />;
+      case 'word': return <File className="h-5 w-5 text-blue-500" />;
+      default: return <FileUp className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Painel de Seleção */}
-        <div className="border rounded-lg">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-            <TabsList className="w-full rounded-none border-b grid grid-cols-5">
-              <TabsTrigger value="templates" className="gap-1 text-xs px-1">
-                <FileText className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Templates</span>
-              </TabsTrigger>
-              <TabsTrigger value="text" className="gap-1 text-xs px-1">
-                <Type className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Texto</span>
-              </TabsTrigger>
-              <TabsTrigger value="media" className="gap-1 text-xs px-1">
-                <Image className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Mídia</span>
-              </TabsTrigger>
-              <TabsTrigger value="catalogo" className="gap-1 text-xs px-1">
-                <BookOpen className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Catálogo</span>
-              </TabsTrigger>
-              <TabsTrigger value="anexos" className="gap-1 text-xs px-1">
-                <Paperclip className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Anexos</span>
-              </TabsTrigger>
-            </TabsList>
+      {/* Tabs de seleção - Full width, stack on mobile */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+        <TabsList className="w-full grid grid-cols-5 h-auto">
+          <TabsTrigger value="templates" className="flex flex-col sm:flex-row gap-1 py-2 px-1 text-xs">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">Templates</span>
+          </TabsTrigger>
+          <TabsTrigger value="text" className="flex flex-col sm:flex-row gap-1 py-2 px-1 text-xs">
+            <Type className="h-4 w-4" />
+            <span className="hidden sm:inline">Texto</span>
+          </TabsTrigger>
+          <TabsTrigger value="media" className="flex flex-col sm:flex-row gap-1 py-2 px-1 text-xs">
+            <Image className="h-4 w-4" />
+            <span className="hidden sm:inline">Mídia</span>
+          </TabsTrigger>
+          <TabsTrigger value="catalogo" className="flex flex-col sm:flex-row gap-1 py-2 px-1 text-xs">
+            <BookOpen className="h-4 w-4" />
+            <span className="hidden sm:inline">Catálogo</span>
+          </TabsTrigger>
+          <TabsTrigger value="anexos" className="flex flex-col sm:flex-row gap-1 py-2 px-1 text-xs">
+            <Paperclip className="h-4 w-4" />
+            <span className="hidden sm:inline">Anexos</span>
+          </TabsTrigger>
+        </TabsList>
 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+          {/* Left Panel - Content Selection */}
+          <div className="border rounded-lg min-h-[400px]">
             {/* Templates Tab */}
-            <TabsContent value="templates" className="p-0">
-              <ScrollArea className="h-[350px]">
+            <TabsContent value="templates" className="m-0 p-0">
+              <ScrollArea className="h-[380px]">
                 <div className="p-4 space-y-2">
                   {templates.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
@@ -398,14 +491,14 @@ export function StepCompose({
             </TabsContent>
 
             {/* Text Tab */}
-            <TabsContent value="text" className="p-4 space-y-4">
+            <TabsContent value="text" className="m-0 p-4 space-y-4">
               <div className="space-y-2">
                 <Label>Digite sua mensagem</Label>
                 <Textarea
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
                   placeholder="Digite o texto da mensagem..."
-                  rows={4}
+                  rows={6}
                 />
               </div>
               
@@ -432,7 +525,7 @@ export function StepCompose({
             </TabsContent>
 
             {/* Media Tab */}
-            <TabsContent value="media" className="p-0">
+            <TabsContent value="media" className="m-0 p-0">
               <div className="p-4 border-b">
                 <input
                   ref={fileInputRef}
@@ -451,8 +544,8 @@ export function StepCompose({
                   {uploading ? 'Enviando...' : 'Enviar nova mídia'}
                 </Button>
               </div>
-              <ScrollArea className="h-[300px]">
-                <div className="p-4 grid grid-cols-3 gap-2">
+              <ScrollArea className="h-[320px]">
+                <div className="p-4 grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {media.map(item => (
                     <Card
                       key={item.id}
@@ -471,7 +564,7 @@ export function StepCompose({
                             <Video className="h-8 w-8 text-muted-foreground" />
                           )}
                           <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                            <Play className="h-8 w-8 text-white" />
+                            <Play className="h-6 w-6 text-white" />
                           </div>
                         </div>
                       ) : (
@@ -484,7 +577,7 @@ export function StepCompose({
                     </Card>
                   ))}
                   {media.length === 0 && (
-                    <div className="col-span-3 text-center py-8 text-muted-foreground">
+                    <div className="col-span-full text-center py-8 text-muted-foreground">
                       <Image className="h-12 w-12 mx-auto mb-3 opacity-20" />
                       <p>Nenhuma mídia disponível</p>
                     </div>
@@ -494,48 +587,72 @@ export function StepCompose({
             </TabsContent>
 
             {/* Catálogo Tab */}
-            <TabsContent value="catalogo" className="p-0">
-              <ScrollArea className="h-[350px]">
+            <TabsContent value="catalogo" className="m-0 p-0">
+              <div className="p-4 border-b">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar catálogo..."
+                    value={catalogSearch}
+                    onChange={(e) => setCatalogSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              <ScrollArea className="h-[320px]">
                 <div className="p-4 space-y-2">
-                  {catalogos.length === 0 ? (
+                  {loadingCatalogs ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : filteredCatalogs.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                      <p>Nenhum item de catálogo disponível</p>
-                      <p className="text-sm mt-1">
-                        Configure seus produtos em Catálogos
-                      </p>
+                      <p>{catalogSearch ? "Nenhum catálogo encontrado" : "Nenhum catálogo ativo"}</p>
                     </div>
                   ) : (
-                    catalogos.map(item => (
+                    filteredCatalogs.map(catalog => (
                       <Card
-                        key={item.id}
+                        key={catalog.id}
                         className="p-3 cursor-pointer hover:bg-muted/50 transition-colors hover:shadow-sm"
-                        onClick={() => addCatalogo(item)}
+                        onClick={() => addCatalog(catalog)}
                       >
                         <div className="flex items-start gap-3">
-                          {item.imagem_url ? (
-                            <img
-                              src={item.imagem_url}
-                              alt={item.nome}
-                              className="w-12 h-12 rounded object-cover"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
-                              <BookOpen className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-sm">{item.nome}</p>
-                            {item.descricao && (
-                              <p className="text-xs text-muted-foreground line-clamp-1">
-                                {item.descricao}
-                              </p>
+                          <div className="w-12 h-12 rounded-lg bg-muted shrink-0 overflow-hidden">
+                            {catalog.thumbnail ? (
+                              <img
+                                src={catalog.thumbnail}
+                                alt={catalog.nome}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <BookOpen className="h-5 w-5 text-muted-foreground/50" />
+                              </div>
                             )}
-                            {item.preco && (
-                              <Badge variant="secondary" className="mt-1">
-                                R$ {item.preco.toFixed(2)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-medium text-sm truncate">
+                                {catalog.nome}
+                              </span>
+                              <Badge variant="secondary" className="text-xs shrink-0">
+                                <Package className="h-3 w-3 mr-1" />
+                                {getProductCount(catalog)}
                               </Badge>
-                            )}
+                            </div>
+                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {format(new Date(catalog.updated_at), "dd/MM/yy", { locale: ptBR })}
+                              </span>
+                              {!catalog.data_indeterminada && catalog.data_validade && (
+                                <span className="flex items-center gap-1 text-amber-600">
+                                  <AlertCircle className="h-3 w-3" />
+                                  Até {format(new Date(catalog.data_validade), "dd/MM/yy")}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
                         </div>
@@ -547,107 +664,167 @@ export function StepCompose({
             </TabsContent>
 
             {/* Anexos Tab */}
-            <TabsContent value="anexos" className="p-0">
+            <TabsContent value="anexos" className="m-0 p-0">
               <div className="p-4 border-b">
-                <input
-                  ref={anexoInputRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
-                  onChange={handleAnexoUpload}
-                  className="hidden"
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => anexoInputRef.current?.click()}
-                  disabled={uploadingAnexo || !onUploadAnexo}
-                  className="w-full"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  {uploadingAnexo ? 'Enviando...' : 'Enviar novo anexo'}
-                </Button>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar anexo..."
+                    value={attachmentSearch}
+                    onChange={(e) => setAttachmentSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
               </div>
-              <ScrollArea className="h-[300px]">
-                <div className="p-4 space-y-2">
-                  {anexos.map(item => (
-                    <Card
-                      key={item.id}
-                      className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => addAnexo(item)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-                          <File className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-sm truncate">{item.nome}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.tipo.toUpperCase()}
-                            {item.tamanho && ` • ${(item.tamanho / 1024).toFixed(1)} KB`}
-                          </p>
-                        </div>
-                        <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
-                      </div>
-                    </Card>
-                  ))}
-                  {anexos.length === 0 && (
+              <ScrollArea className="h-[320px]">
+                <div className="p-4 space-y-4">
+                  {loadingAttachments ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : filteredAttachments.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Paperclip className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                      <p>Nenhum anexo disponível</p>
+                      <p>{attachmentSearch ? "Nenhum anexo encontrado" : "Nenhum anexo cadastrado"}</p>
                       <p className="text-sm mt-1">
-                        Envie arquivos clicando no botão acima
+                        Configure anexos em Configurações → Anexos Rápidos
                       </p>
                     </div>
+                  ) : (
+                    <>
+                      {/* Links */}
+                      {attachmentLinks.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                            <LinkIcon className="h-3 w-3" />
+                            LINKS ({attachmentLinks.length})
+                          </h5>
+                          <div className="space-y-2">
+                            {attachmentLinks.map(attachment => (
+                              <Card
+                                key={attachment.id}
+                                className="p-3 cursor-pointer hover:bg-muted/50 transition-colors border-l-4 border-l-primary/20 hover:border-l-primary"
+                                onClick={() => addAttachment(attachment)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                    <LinkIcon className="h-4 w-4 text-primary" />
+                                  </div>
+                                  <span className="font-medium text-sm truncate flex-1">{attachment.title}</span>
+                                  {attachment.is_global && (
+                                    <Badge variant="secondary" className="text-xs">Global</Badge>
+                                  )}
+                                  <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Images */}
+                      {attachmentImages.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                            <ImageIcon className="h-3 w-3" />
+                            IMAGENS ({attachmentImages.length})
+                          </h5>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            {attachmentImages.map(attachment => (
+                              <Card
+                                key={attachment.id}
+                                className="aspect-square cursor-pointer overflow-hidden hover:ring-2 ring-primary transition-all"
+                                onClick={() => addAttachment(attachment)}
+                              >
+                                <img
+                                  src={attachment.thumbnail_url || attachment.url}
+                                  alt={attachment.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Other Files */}
+                      {attachmentFiles.filter(f => f.file_type !== 'image').length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                            <FileUp className="h-3 w-3" />
+                            ARQUIVOS ({attachmentFiles.filter(f => f.file_type !== 'image').length})
+                          </h5>
+                          <div className="space-y-2">
+                            {attachmentFiles.filter(f => f.file_type !== 'image').map(attachment => (
+                              <Card
+                                key={attachment.id}
+                                className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                                onClick={() => addAttachment(attachment)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                    {getFileIcon(attachment.file_type)}
+                                  </div>
+                                  <span className="font-medium text-sm truncate flex-1">{attachment.title}</span>
+                                  <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </ScrollArea>
             </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Preview da Sequência */}
-        <div className="border rounded-lg">
-          <div className="px-4 py-3 border-b bg-muted/30">
-            <h3 className="font-medium flex items-center gap-2">
-              Sequência de Envio
-              <Badge variant="outline">{contentItems.length} itens</Badge>
-            </h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Arraste para reordenar a sequência de mensagens
-            </p>
           </div>
-          <ScrollArea className="h-[400px]">
-            <div className="p-4 space-y-2">
-              {contentItems.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Plus className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                  <p>Adicione itens à sequência</p>
-                  <p className="text-sm">Templates, textos, frases prontas ou mídias</p>
-                </div>
-              ) : (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={contentItems.map(item => item.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {contentItems.map((item, index) => (
-                      <SortableContentItem
-                        key={item.id}
-                        item={item}
-                        index={index}
-                        onRemove={removeItem}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              )}
+
+          {/* Right Panel - Sequence Preview */}
+          <div className="border rounded-lg">
+            <div className="px-4 py-3 border-b bg-muted/30">
+              <h3 className="font-medium flex items-center gap-2">
+                Sequência de Envio
+                <Badge variant="outline">{contentItems.length} itens</Badge>
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Arraste para reordenar
+              </p>
             </div>
-          </ScrollArea>
+            <ScrollArea className="h-[360px]">
+              <div className="p-4">
+                {contentItems.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Plus className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p>Adicione itens à sequência</p>
+                    <p className="text-sm">Templates, textos ou mídias</p>
+                  </div>
+                ) : (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={contentItems.map(item => item.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {contentItems.map((item, index) => (
+                        <SortableContentItem
+                          key={item.id}
+                          item={item}
+                          index={index}
+                          onRemove={removeItem}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
         </div>
-      </div>
+      </Tabs>
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-4 border-t">
