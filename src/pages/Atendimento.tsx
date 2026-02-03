@@ -3830,7 +3830,7 @@ ${recentMessages}
                         telefone={fluxoCurrentTask.customers?.telefone}
                         whatsapp={fluxoCurrentTask.customers?.telefone}
                         email={fluxoCurrentTask.customers?.email}
-                        customerId={fluxoCurrentTask.customers?.id || fluxoCurrentTask.contact_id}
+                        customerId={fluxoCurrentTask.customers?.id}
                         protocolo={fluxoCurrentTask.id?.slice(0, 8).toUpperCase()}
                         status={fluxoCurrentTask.status === "concluido" ? "Concluído" : "Pendente"}
                         titulo={fluxoCurrentTask.title}
@@ -4086,6 +4086,11 @@ ${recentMessages}
                     setEditingEmpresaId(empresaId);
                     setEditingCustomerEmpresaId(customerEmpresaId || null);
                   }}
+                  onCreateContato={() => setCreatingContato(true)}
+                  onCreateEmpresa={(customerId) => {
+                    setCreatingEmpresa(true);
+                    setCreatingEmpresaForCustomerId(customerId || null);
+                  }}
                 />
               )}
               {activeTab === "agenda" && selectedTaskData && (
@@ -4095,7 +4100,7 @@ ${recentMessages}
                   telefone={selectedTaskData.customers?.telefone}
                   whatsapp={selectedTaskData.customers?.telefone}
                   email={selectedTaskData.customers?.email}
-                  customerId={selectedTaskData.customers?.id || selectedTaskData.contact_id}
+                  customerId={selectedTaskData.customers?.id}
                   protocolo={selectedTaskData.id?.slice(0, 8).toUpperCase()}
                   status={selectedTaskData.status}
                   titulo={selectedTaskData.title}
@@ -4107,6 +4112,11 @@ ${recentMessages}
                   onEditEmpresa={(empresaId, customerEmpresaId) => {
                     setEditingEmpresaId(empresaId);
                     setEditingCustomerEmpresaId(customerEmpresaId || null);
+                  }}
+                  onCreateContato={() => setCreatingContato(true)}
+                  onCreateEmpresa={(customerId) => {
+                    setCreatingEmpresa(true);
+                    setCreatingEmpresaForCustomerId(customerId || null);
                   }}
                 />
               )}
@@ -4136,6 +4146,11 @@ ${recentMessages}
                     setEditingEmpresaId(empresaId);
                     setEditingCustomerEmpresaId(customerEmpresaId || null);
                   }}
+                  onCreateContato={() => setCreatingContato(true)}
+                  onCreateEmpresa={(customerId) => {
+                    setCreatingEmpresa(true);
+                    setCreatingEmpresaForCustomerId(customerId || null);
+                  }}
                 />
               )}
               {activeTab === "orcamento" && selectedOrcamentoData && (
@@ -4159,6 +4174,11 @@ ${recentMessages}
                   onEditEmpresa={(empresaId, customerEmpresaId) => {
                     setEditingEmpresaId(empresaId);
                     setEditingCustomerEmpresaId(customerEmpresaId || null);
+                  }}
+                  onCreateContato={() => setCreatingContato(true)}
+                  onCreateEmpresa={(customerId) => {
+                    setCreatingEmpresa(true);
+                    setCreatingEmpresaForCustomerId(customerId || null);
                   }}
                 />
               )}
@@ -6039,7 +6059,7 @@ ${recentMessages}
             telefone={selectedTaskData.customers?.telefone}
             whatsapp={selectedTaskData.customers?.telefone}
             email={selectedTaskData.customers?.email}
-            customerId={selectedTaskData.customers?.id || selectedTaskData.contact_id}
+            customerId={selectedTaskData.customers?.id}
             protocolo={selectedTaskData.id?.slice(0, 8).toUpperCase()}
             status={selectedTaskData.status === "concluido" ? "Concluído" : "Pendente"}
             titulo={selectedTaskData.title}
@@ -6070,7 +6090,7 @@ ${recentMessages}
             telefone={fluxoCurrentTask.customers?.telefone}
             whatsapp={fluxoCurrentTask.customers?.telefone}
             email={fluxoCurrentTask.customers?.email}
-            customerId={fluxoCurrentTask.customers?.id || fluxoCurrentTask.contact_id}
+            customerId={fluxoCurrentTask.customers?.id}
             protocolo={fluxoCurrentTask.id?.slice(0, 8).toUpperCase()}
             status={fluxoCurrentTask.status === "concluido" ? "Concluído" : "Pendente"}
             titulo={fluxoCurrentTask.title}
