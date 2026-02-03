@@ -17,29 +17,38 @@ import { toast } from "@/lib/toast-config";
 import { validateEmail, validateWhatsApp, validatePhone } from "@/lib/validators";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { maskWhatsApp, maskPhone } from "@/lib/masks";
 
-// Função para formatar telefone/WhatsApp no padrão do sistema (sem +55)
-const formatPhoneNumber = (value: string): string => {
+// Função para formatar WhatsApp no padrão do sistema: +55 (XX) XXXXX-XXXX
+const formatWhatsAppNumber = (value: string): string => {
+  if (!value) return '';
   // Remove tudo que não é número
   let cleanValue = value.replace(/\D/g, '');
+  if (cleanValue.length === 0) return '';
   
-  // Remove o código do país 55 se existir no início
+  // Se não começa com 55, adiciona
+  if (!cleanValue.startsWith('55') && cleanValue.length <= 11) {
+    cleanValue = '55' + cleanValue;
+  }
+  
+  // Usa a máscara do sistema
+  return maskWhatsApp(cleanValue);
+};
+
+// Função para formatar telefone no padrão do sistema: (XX) XXXXX-XXXX
+const formatPhoneNumber = (value: string): string => {
+  if (!value) return '';
+  // Remove tudo que não é número
+  let cleanValue = value.replace(/\D/g, '');
+  if (cleanValue.length === 0) return '';
+  
+  // Remove código do país se existir
   if (cleanValue.startsWith('55') && cleanValue.length > 11) {
     cleanValue = cleanValue.substring(2);
   }
   
-  // Limita a 11 dígitos (DDD + 9 dígitos)
-  cleanValue = cleanValue.substring(0, 11);
-  
-  // Aplica a máscara: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
-  if (cleanValue.length === 0) return '';
-  if (cleanValue.length <= 2) return `(${cleanValue}`;
-  if (cleanValue.length <= 6) return `(${cleanValue.substring(0, 2)}) ${cleanValue.substring(2)}`;
-  if (cleanValue.length <= 10) {
-    return `(${cleanValue.substring(0, 2)}) ${cleanValue.substring(2, 6)}-${cleanValue.substring(6)}`;
-  }
-  // 11 dígitos - celular com 9
-  return `(${cleanValue.substring(0, 2)}) ${cleanValue.substring(2, 7)}-${cleanValue.substring(7)}`;
+  // Usa a máscara do sistema
+  return maskPhone(cleanValue);
 };
 
 interface ImportRow {
@@ -198,7 +207,7 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
       const position = columnMapping.position ? String(row[parseInt(columnMapping.position)] || "").trim() : "";
 
       // Formatar telefone e WhatsApp no padrão do sistema
-      const whatsapp = rawWhatsapp ? formatPhoneNumber(rawWhatsapp) : "";
+      const whatsapp = rawWhatsapp ? formatWhatsAppNumber(rawWhatsapp) : "";
       const telefone = rawTelefone ? formatPhoneNumber(rawTelefone) : "";
 
       const errors: string[] = [];
