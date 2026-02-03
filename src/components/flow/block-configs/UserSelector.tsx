@@ -52,7 +52,7 @@ export const UserSelector = ({ value, onChange, label = "Usuário", placeholder 
           <SelectValue placeholder={loading ? "Carregando..." : placeholder} />
         </SelectTrigger>
         <SelectContent>
-          {usuarios.map((usuario) => (
+          {usuarios.filter(u => u.id && u.id.trim() !== '').map((usuario) => (
             <SelectItem key={usuario.id} value={usuario.id}>
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4" />
