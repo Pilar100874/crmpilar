@@ -11,7 +11,7 @@ import {
   Search, Filter, Users, CheckSquare, Square, 
   Building2, Phone, Mail, Tag, Calendar
 } from "lucide-react";
-import { ContactForBulkSend, EnvioMassaFilters } from "../types";
+import { ContactForBulkSend, EnvioMassaFilters, CanalEnvio } from "../types";
 import { cn } from "@/lib/utils";
 
 interface StepFilterProps {
@@ -21,7 +21,9 @@ interface StepFilterProps {
   filters: EnvioMassaFilters;
   onFilterChange: (filters: EnvioMassaFilters) => void;
   onSelectContacts: (contacts: ContactForBulkSend[]) => void;
+  onBack: () => void;
   onNext: () => void;
+  canal: CanalEnvio | null;
 }
 
 export function StepFilter({
@@ -31,7 +33,9 @@ export function StepFilter({
   filters,
   onFilterChange,
   onSelectContacts,
-  onNext
+  onBack,
+  onNext,
+  canal
 }: StepFilterProps) {
   const [localFilters, setLocalFilters] = useState<EnvioMassaFilters>(filters);
   const [accordionValue, setAccordionValue] = useState<string>("filters");
@@ -252,9 +256,19 @@ export function StepFilter({
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-4 border-t">
-        <div className="text-sm text-muted-foreground">
-          <Badge variant="outline" className="mr-2">{selectedContacts.length}</Badge>
-          contatos selecionados
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={onBack}>
+            Voltar
+          </Button>
+          <div className="text-sm text-muted-foreground">
+            <Badge variant="outline" className="mr-2">{selectedContacts.length}</Badge>
+            contatos selecionados
+            {canal && (
+              <span className="ml-2 text-xs">
+                ({canal === 'whatsapp' ? 'com telefone' : 'com e-mail'})
+              </span>
+            )}
+          </div>
         </div>
         <Button onClick={onNext} disabled={selectedContacts.length === 0}>
           Continuar

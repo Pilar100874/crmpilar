@@ -6,11 +6,11 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Users, MessageSquare, Calendar, Loader2, 
-  CheckCircle2, AlertCircle, Send
+  CheckCircle2, AlertCircle, Send, Mail
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ContentItem, ContactForBulkSend } from "../types";
+import { ContentItem, ContactForBulkSend, CanalEnvio } from "../types";
 
 interface StepConfirmProps {
   contentItems: ContentItem[];
@@ -20,6 +20,7 @@ interface StepConfirmProps {
   progress: number;
   onBack: () => void;
   onConfirm: () => void;
+  canal: CanalEnvio | null;
 }
 
 export function StepConfirm({
@@ -29,7 +30,8 @@ export function StepConfirm({
   isSending,
   progress,
   onBack,
-  onConfirm
+  onConfirm,
+  canal
 }: StepConfirmProps) {
   if (isSending) {
     return (
@@ -59,7 +61,14 @@ export function StepConfirm({
             <CheckCircle2 className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h3 className="font-medium text-lg">Confirmar Envio em Massa</h3>
+            <h3 className="font-medium text-lg flex items-center gap-2">
+              Confirmar Envio em Massa
+              {canal && (
+                <Badge variant={canal === 'whatsapp' ? 'default' : 'secondary'} className={canal === 'whatsapp' ? 'bg-green-500' : 'bg-blue-500'}>
+                  {canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'}
+                </Badge>
+              )}
+            </h3>
             <p className="text-sm text-muted-foreground">
               Revise os dados antes de confirmar
             </p>
@@ -141,7 +150,9 @@ export function StepConfirm({
                     {contact.nome.charAt(0).toUpperCase()}
                   </div>
                   <span className="text-sm truncate flex-1">{contact.nome}</span>
-                  <span className="text-xs text-muted-foreground">{contact.telefone}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {canal === 'email' ? contact.email : contact.telefone}
+                  </span>
                 </div>
               ))}
               {selectedContacts.length > 20 && (
