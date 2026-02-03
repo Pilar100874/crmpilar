@@ -90,13 +90,13 @@ export const BotTriggerSelector = ({ flowId, currentBotId, onUpdate }: BotTrigge
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Bot de Origem</Label>
-              <Select value={selectedBotId} onValueChange={setSelectedBotId}>
+              <Select value={selectedBotId || "none"} onValueChange={(val) => setSelectedBotId(val === "none" ? undefined : val)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um bot" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum (desativar trigger)</SelectItem>
-                  {bots.map((bot) => (
+                  <SelectItem value="none">Nenhum (desativar trigger)</SelectItem>
+                  {bots.filter(bot => bot.id && bot.id.trim() !== '').map((bot) => (
                     <SelectItem key={bot.id} value={bot.id}>
                       {bot.name}
                     </SelectItem>
