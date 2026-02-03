@@ -4219,7 +4219,7 @@ ${recentMessages}
               {activeTab === "orcamento" && selectedOrcamentoData && (
                 <UnifiedDetailsPanel
                   type="orcamento"
-                  nome={selectedOrcamentoData.customers?.nome || (selectedOrcamentoData.empresas ? selectedOrcamentoData.empresas.nome_fantasia || selectedOrcamentoData.empresas.nome : "Cliente")}
+                  nome={selectedOrcamentoData.customers?.nome || "Contato Desconhecido"}
                   telefone={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.tel : undefined}
                   whatsapp={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.telefone : undefined}
                   email={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.email : undefined}
@@ -6261,7 +6261,7 @@ ${recentMessages}
         <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="orcamento"
-            nome={selectedOrcamentoData.customers?.nome || (selectedOrcamentoData.empresas ? selectedOrcamentoData.empresas.nome_fantasia || selectedOrcamentoData.empresas.nome : "Cliente")}
+            nome={selectedOrcamentoData.customers?.nome || "Contato Desconhecido"}
             telefone={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.tel : undefined}
             whatsapp={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.telefone : undefined}
             email={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.email : undefined}
