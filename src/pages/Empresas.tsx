@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { geocodeAndSaveEmpresa } from "@/hooks/useGeocodingService";
 import * as React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,6 +72,7 @@ interface EmpresasProps {
 
 export default function Empresas({ hideAdminButtons = false }: EmpresasProps) {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(false);
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
@@ -368,18 +369,21 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
     fetchEstabelecimento();
   }, []);
 
-  // Detectar se há um ID de empresa para editar vindo da navegação
+  // Detectar se há um ID de empresa para editar vindo da navegação (via state ou URL params)
   useEffect(() => {
     const state = location.state as { editEmpresaId?: string };
-    if (state?.editEmpresaId && empresas.length > 0) {
-      const empresaToEdit = empresas.find(e => e.id === state.editEmpresaId);
+    const idFromUrl = searchParams.get('id');
+    const empresaIdToEdit = state?.editEmpresaId || idFromUrl;
+    
+    if (empresaIdToEdit && empresas.length > 0) {
+      const empresaToEdit = empresas.find(e => e.id === empresaIdToEdit);
       if (empresaToEdit) {
         handleEditEmpresa(empresaToEdit);
         // Limpar o state após usar
         window.history.replaceState({}, document.title);
       }
     }
-  }, [location.state, empresas]);
+  }, [location.state, searchParams, empresas]);
 
   const fetchEmpresas = async (estabId: string) => {
     const { data, error } = await supabase
