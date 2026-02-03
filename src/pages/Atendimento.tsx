@@ -4484,7 +4484,10 @@ ${recentMessages}
                   <Button 
                     variant="ghost"
                     size="sm" 
-                    onClick={() => setShowEnvioMassaWizard(true)}
+                    onClick={() => {
+                      setAgendaViewMode('default');
+                      setShowEnvioMassaWizard(true);
+                    }}
                     className={cn(
                       "h-7 px-2 rounded text-xs font-medium transition-all",
                       "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
