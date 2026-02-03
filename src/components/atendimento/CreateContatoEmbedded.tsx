@@ -1,80 +1,32 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Save, X, User, Phone, Mail, Briefcase } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, Save, X, User, Phone, Mail, UserPlus } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { maskPhone, maskWhatsApp } from "@/lib/masks";
+import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
-interface EditContatoEmbeddedProps {
-  customerId: string;
+interface CreateContatoEmbeddedProps {
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (customerId: string) => void;
+  initialData?: {
+    nome?: string;
+    email?: string;
+    telefone?: string;
+  };
 }
 
-export function EditContatoEmbedded({ customerId, onClose, onSuccess }: EditContatoEmbeddedProps) {
-  const [loading, setLoading] = useState(true);
+export function CreateContatoEmbedded({ onClose, onSuccess, initialData }: CreateContatoEmbeddedProps) {
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    nome: "",
-    email: "",
-    telefone: "",
+    nome: initialData?.nome || "",
+    email: initialData?.email || "",
+    telefone: initialData?.telefone || "",
     tel: "",
   });
-  const [cargo, setCargo] = useState("");
-  const [customerEmpresaId, setCustomerEmpresaId] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadContactData();
-  }, [customerId]);
-
-  const loadContactData = async () => {
-    setLoading(true);
-    try {
-      // Load contact data
-      const { data: contactData, error: contactError } = await supabase
-        .from("customers")
-        .select("*")
-        .eq("id", customerId)
-        .maybeSingle();
-
-      if (contactError) throw contactError;
-
-      if (!contactData) {
-        toast.error("Contato não encontrado");
-        onClose();
-        return;
-      }
-
-      setFormData({
-        nome: contactData.nome || "",
-        email: contactData.email || "",
-        telefone: contactData.telefone || "",
-        tel: contactData.tel || "",
-      });
-
-      // Load primary company link for cargo
-      const { data: empresaLink } = await supabase
-        .from("customer_empresas")
-        .select("id, cargo")
-        .eq("customer_id", customerId)
-        .order("is_primary", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (empresaLink) {
-        setCargo(empresaLink.cargo || "");
-        setCustomerEmpresaId(empresaLink.id);
-      }
-    } catch (error: any) {
-      console.error("Error loading contact:", error);
-      toast.error("Erro ao carregar contato");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSave = async () => {
     if (!formData.nome.trim()) {
@@ -84,57 +36,48 @@ export function EditContatoEmbedded({ customerId, onClose, onSuccess }: EditCont
 
     setSaving(true);
     try {
-      // Update contact
-      const { error: updateError } = await supabase
-        .from("customers")
-        .update({
-          nome: formData.nome.trim(),
-          email: formData.email.trim(),
-          telefone: formData.telefone.trim(),
-          tel: formData.tel.trim(),
-        })
-        .eq("id", customerId);
-
-      if (updateError) throw updateError;
-
-      // Update cargo if there's a company link
-      if (customerEmpresaId && cargo !== undefined) {
-        await supabase
-          .from("customer_empresas")
-          .update({ cargo: cargo.trim() })
-          .eq("id", customerEmpresaId);
+      const estabelecimentoId = await getEstabelecimentoId();
+      if (!estabelecimentoId) {
+        toast.error("Estabelecimento não encontrado");
+        return;
       }
 
-      toast.success("Contato atualizado com sucesso");
-      onSuccess?.();
+      const { data, error } = await supabase
+        .from("customers")
+        .insert({
+          nome: formData.nome.trim(),
+          email: formData.email.trim() || null,
+          telefone: formData.telefone.trim() || null,
+          tel: formData.tel.trim() || null,
+          estabelecimento_id: estabelecimentoId,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success("Contato criado com sucesso");
+      onSuccess?.(data.id);
       onClose();
     } catch (error: any) {
-      console.error("Error updating contact:", error);
-      toast.error("Erro ao atualizar contato");
+      console.error("Error creating contact:", error);
+      toast.error("Erro ao criar contato");
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-8">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
       {/* Header */}
-      <div className="px-4 py-3 border-b bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-950/30 flex items-center justify-between">
+      <div className="px-4 py-3 border-b bg-gradient-to-r from-green-50 to-transparent dark:from-green-950/30 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-            <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+            <UserPlus className="w-5 h-5 text-green-600 dark:text-green-400" />
           </div>
           <div>
-            <h3 className="font-semibold text-lg">Editar Contato</h3>
-            <p className="text-xs text-muted-foreground">Atualize as informações do contato</p>
+            <h3 className="font-semibold text-lg">Novo Contato</h3>
+            <p className="text-xs text-muted-foreground">Cadastre um novo contato</p>
           </div>
         </div>
         <Button variant="ghost" size="sm" onClick={onClose}>
@@ -157,6 +100,7 @@ export function EditContatoEmbedded({ customerId, onClose, onSuccess }: EditCont
                 value={formData.nome}
                 onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                 placeholder="Nome do contato"
+                autoFocus
               />
             </div>
 
@@ -185,7 +129,7 @@ export function EditContatoEmbedded({ customerId, onClose, onSuccess }: EditCont
                 id="telefone"
                 value={formData.telefone}
                 onChange={(e) => setFormData({ ...formData, telefone: maskWhatsApp(e.target.value) })}
-                placeholder="(00) 00000-0000"
+                placeholder="+55 (00) 00000-0000"
               />
             </div>
 
@@ -202,22 +146,6 @@ export function EditContatoEmbedded({ customerId, onClose, onSuccess }: EditCont
                 placeholder="(00) 0000-0000"
               />
             </div>
-
-            {/* Cargo */}
-            {customerEmpresaId && (
-              <div className="space-y-2">
-                <Label htmlFor="cargo" className="flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-muted-foreground" />
-                  Cargo
-                </Label>
-                <Input
-                  id="cargo"
-                  value={cargo}
-                  onChange={(e) => setCargo(e.target.value)}
-                  placeholder="Cargo na empresa"
-                />
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>

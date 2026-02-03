@@ -34,6 +34,8 @@ import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel"
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
 import { EditContatoEmbedded } from "@/components/atendimento/EditContatoEmbedded";
 import { EditEmpresaEmbedded } from "@/components/atendimento/EditEmpresaEmbedded";
+import { CreateContatoEmbedded } from "@/components/atendimento/CreateContatoEmbedded";
+import { CreateEmpresaEmbedded } from "@/components/atendimento/CreateEmpresaEmbedded";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OmnichannelManager } from "@/components/atendimento/OmnichannelManager";
@@ -293,6 +295,11 @@ export default function Atendimento() {
   const [editingContatoId, setEditingContatoId] = useState<string | null>(null);
   const [editingEmpresaId, setEditingEmpresaId] = useState<string | null>(null);
   const [editingCustomerEmpresaId, setEditingCustomerEmpresaId] = useState<string | null>(null);
+
+  // Estados para criação inline de contato/empresa
+  const [creatingContato, setCreatingContato] = useState(false);
+  const [creatingEmpresa, setCreatingEmpresa] = useState(false);
+  const [creatingEmpresaForCustomerId, setCreatingEmpresaForCustomerId] = useState<string | null>(null);
 
   // Ferramentas dinâmicas por aba
   const { getRadialMenuItems, getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId || null);
@@ -5766,6 +5773,40 @@ ${recentMessages}
               setEditingCustomerEmpresaId(null);
             }}
           />
+        ) : creatingContato ? (
+          /* Criação de Contato Inline */
+          <CreateContatoEmbedded
+            onClose={() => setCreatingContato(false)}
+            onSuccess={() => {
+              setCreatingContato(false);
+              // Recarregar dados conforme a aba ativa
+              if (activeTab === "agenda") {
+                loadTodayTasks();
+              }
+            }}
+          />
+        ) : creatingEmpresa ? (
+          /* Criação de Empresa Inline */
+          <CreateEmpresaEmbedded
+            customerId={creatingEmpresaForCustomerId || undefined}
+            onClose={() => {
+              setCreatingEmpresa(false);
+              setCreatingEmpresaForCustomerId(null);
+            }}
+            onSuccess={() => {
+              setCreatingEmpresa(false);
+              setCreatingEmpresaForCustomerId(null);
+              // Recarregar dados conforme a aba ativa
+              if (activeTab === "chat" && selectedConversation) {
+                loadCustomerCompanies(selectedConversation);
+              } else if (activeTab === "agenda" && selectedTaskId) {
+                loadSelectedTask(selectedTaskId);
+                loadTodayTasks();
+              } else if (activeTab === "email" && selectedEmailId) {
+                loadSelectedEmail(selectedEmailId);
+              }
+            }}
+          />
         ) : activeTab === "agenda" && selectedTaskId && selectedTaskData ? (
           /* Agenda Task Content */
           <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
@@ -5970,6 +6011,11 @@ ${recentMessages}
               setEditingEmpresaId(empresaId);
               setEditingCustomerEmpresaId(customerEmpresaId || null);
             }}
+            onCreateContato={() => setCreatingContato(true)}
+            onCreateEmpresa={(customerId) => {
+              setCreatingEmpresa(true);
+              setCreatingEmpresaForCustomerId(customerId || null);
+            }}
           />
         </div>
       )}
@@ -5996,6 +6042,11 @@ ${recentMessages}
               setEditingEmpresaId(empresaId);
               setEditingCustomerEmpresaId(customerEmpresaId || null);
             }}
+            onCreateContato={() => setCreatingContato(true)}
+            onCreateEmpresa={(customerId) => {
+              setCreatingEmpresa(true);
+              setCreatingEmpresaForCustomerId(customerId || null);
+            }}
           />
         </div>
       )}
@@ -6020,6 +6071,11 @@ ${recentMessages}
             onEditEmpresa={(empresaId, customerEmpresaId) => {
               setEditingEmpresaId(empresaId);
               setEditingCustomerEmpresaId(customerEmpresaId || null);
+            }}
+            onCreateContato={() => setCreatingContato(true)}
+            onCreateEmpresa={(customerId) => {
+              setCreatingEmpresa(true);
+              setCreatingEmpresaForCustomerId(customerId || null);
             }}
           />
         </div>
@@ -6052,6 +6108,11 @@ ${recentMessages}
             onEditEmpresa={(empresaId, customerEmpresaId) => {
               setEditingEmpresaId(empresaId);
               setEditingCustomerEmpresaId(customerEmpresaId || null);
+            }}
+            onCreateContato={() => setCreatingContato(true)}
+            onCreateEmpresa={(customerId) => {
+              setCreatingEmpresa(true);
+              setCreatingEmpresaForCustomerId(customerId || null);
             }}
           />
         </div>
@@ -6113,6 +6174,11 @@ ${recentMessages}
             onEditEmpresa={(empresaId, customerEmpresaId) => {
               setEditingEmpresaId(empresaId);
               setEditingCustomerEmpresaId(customerEmpresaId || null);
+            }}
+            onCreateContato={() => setCreatingContato(true)}
+            onCreateEmpresa={(customerId) => {
+              setCreatingEmpresa(true);
+              setCreatingEmpresaForCustomerId(customerId || null);
             }}
           />
         </div>
