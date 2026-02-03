@@ -2045,6 +2045,7 @@ export default function Atendimento() {
             id,
             nome,
             telefone,
+            tel,
             email
           ),
           empresas:empresa_id (
@@ -4218,10 +4219,10 @@ ${recentMessages}
               {activeTab === "orcamento" && selectedOrcamentoData && (
                 <UnifiedDetailsPanel
                   type="orcamento"
-                  nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || "Cliente"}
-                  telefone={selectedOrcamentoData.customers?.tel || selectedOrcamentoData.empresas?.telefone}
-                  whatsapp={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
-                  email={selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email}
+                  nome={selectedOrcamentoData.customers?.nome || (selectedOrcamentoData.empresas ? selectedOrcamentoData.empresas.nome_fantasia || selectedOrcamentoData.empresas.nome : "Cliente")}
+                  telefone={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.tel : undefined}
+                  whatsapp={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.telefone : undefined}
+                  email={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.email : undefined}
                   customerId={selectedOrcamentoData.customers?.id}
                   protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
                   status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
@@ -6260,10 +6261,10 @@ ${recentMessages}
         <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="orcamento"
-            nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente"}
-            telefone={selectedOrcamentoData.customers?.tel || selectedOrcamentoData.empresas?.telefone}
-            whatsapp={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
-            email={selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email}
+            nome={selectedOrcamentoData.customers?.nome || (selectedOrcamentoData.empresas ? selectedOrcamentoData.empresas.nome_fantasia || selectedOrcamentoData.empresas.nome : "Cliente")}
+            telefone={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.tel : undefined}
+            whatsapp={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.telefone : undefined}
+            email={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.email : undefined}
             customerId={selectedOrcamentoData.customers?.id}
             protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
             status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
@@ -6271,7 +6272,7 @@ ${recentMessages}
             companies={
               selectedOrcamentoData.empresas 
                 ? [{ empresas: selectedOrcamentoData.empresas, is_primary: true }]
-                : customerCompanies
+                : (selectedOrcamentoData.customers?.id ? customerCompanies : [])
             }
             onSetGlobalFilter={setGlobalFilter}
             onEditContato={(id) => setEditingContatoId(id)}
