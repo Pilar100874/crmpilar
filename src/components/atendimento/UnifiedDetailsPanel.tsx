@@ -1,4 +1,4 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase, ExternalLink } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -34,6 +34,9 @@ interface UnifiedDetailsPanelProps {
   onCompaniesUpdated?: () => void;
   // Filtro global
   onSetGlobalFilter?: (filter: GlobalFilter) => void;
+  // Edição inline
+  onEditContato?: (customerId: string) => void;
+  onEditEmpresa?: (empresaId: string, customerEmpresaId?: string) => void;
 }
 
 export function UnifiedDetailsPanel({ 
@@ -53,7 +56,9 @@ export function UnifiedDetailsPanel({
   descricao,
   companies = [],
   onCompaniesUpdated,
-  onSetGlobalFilter
+  onSetGlobalFilter,
+  onEditContato,
+  onEditEmpresa
 }: UnifiedDetailsPanelProps) {
   const [showSoftphone, setShowSoftphone] = useState(false);
   const [dialNumber, setDialNumber] = useState("");
@@ -87,16 +92,16 @@ export function UnifiedDetailsPanel({
     }
   };
 
-  const handleEditEmpresa = (empresa: any) => {
+  const handleEditEmpresaClick = (empresa: any) => {
     const empresaData = empresa.empresas || empresa;
-    if (empresaData?.id) {
-      window.open(`/listas?tab=empresas&id=${empresaData.id}`, '_blank');
+    if (empresaData?.id && onEditEmpresa) {
+      onEditEmpresa(empresaData.id, empresa.id);
     }
   };
 
-  const handleEditContato = () => {
-    if (customerId) {
-      window.open(`/listas?tab=contatos&id=${customerId}`, '_blank');
+  const handleEditContatoClick = () => {
+    if (customerId && onEditContato) {
+      onEditContato(customerId);
     }
   };
 
@@ -192,7 +197,7 @@ export function UnifiedDetailsPanel({
                             size="sm"
                             className="h-7 w-7 p-0 hover:bg-primary/10 hover:text-primary"
                             title="Editar empresa"
-                            onClick={() => handleEditEmpresa(company)}
+                            onClick={() => handleEditEmpresaClick(company)}
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </Button>
@@ -273,9 +278,9 @@ export function UnifiedDetailsPanel({
                     variant="ghost"
                     size="sm"
                     className="h-7 px-2 text-xs text-primary hover:bg-primary/10"
-                    onClick={handleEditContato}
+                    onClick={handleEditContatoClick}
                   >
-                    <ExternalLink className="w-3 h-3 mr-1" />
+                    <Edit3 className="w-3 h-3 mr-1" />
                     Editar
                   </Button>
                 </div>

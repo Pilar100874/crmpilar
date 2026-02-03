@@ -32,6 +32,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
+import { EditContatoEmbedded } from "@/components/atendimento/EditContatoEmbedded";
+import { EditEmpresaEmbedded } from "@/components/atendimento/EditEmpresaEmbedded";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OmnichannelManager } from "@/components/atendimento/OmnichannelManager";
@@ -286,6 +288,11 @@ export default function Atendimento() {
   const [showCustomerSearchForChat, setShowCustomerSearchForChat] = useState(false);
   const [showCustomerSearchForEmail, setShowCustomerSearchForEmail] = useState(false);
   const [showCustomerSearchForOrcamento, setShowCustomerSearchForOrcamento] = useState(false);
+
+  // Estados para edição inline de contato/empresa
+  const [editingContatoId, setEditingContatoId] = useState<string | null>(null);
+  const [editingEmpresaId, setEditingEmpresaId] = useState<string | null>(null);
+  const [editingCustomerEmpresaId, setEditingCustomerEmpresaId] = useState<string | null>(null);
 
   // Ferramentas dinâmicas por aba
   const { getRadialMenuItems, getToolbarFerramentas, loading: loadingFerramentas } = useFerramentasAtendimento(estabelecimentoId || null);
@@ -3823,6 +3830,11 @@ ${recentMessages}
                         dataHora={format(new Date(fluxoCurrentTask.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) + (fluxoCurrentTask.time ? ` às ${fluxoCurrentTask.time}` : "")}
                         companies={fluxoCurrentTask.customers?.customer_empresas || []}
                         onSetGlobalFilter={setGlobalFilter}
+                        onEditContato={(id) => setEditingContatoId(id)}
+                        onEditEmpresa={(empresaId, customerEmpresaId) => {
+                          setEditingEmpresaId(empresaId);
+                          setEditingCustomerEmpresaId(customerEmpresaId || null);
+                        }}
                       />
                     )}
                   </div>
@@ -4062,6 +4074,11 @@ ${recentMessages}
                   companies={customerCompanies}
                   onCompaniesUpdated={() => loadCustomerCompanies(selectedConversation || '')}
                   onSetGlobalFilter={setGlobalFilter}
+                  onEditContato={(id) => setEditingContatoId(id)}
+                  onEditEmpresa={(empresaId, customerEmpresaId) => {
+                    setEditingEmpresaId(empresaId);
+                    setEditingCustomerEmpresaId(customerEmpresaId || null);
+                  }}
                 />
               )}
               {activeTab === "agenda" && selectedTaskData && (
@@ -4079,6 +4096,11 @@ ${recentMessages}
                   companies={selectedTaskData.customers?.customer_empresas || []}
                   onCompaniesUpdated={() => loadSelectedTask(selectedTaskId || '')}
                   onSetGlobalFilter={setGlobalFilter}
+                  onEditContato={(id) => setEditingContatoId(id)}
+                  onEditEmpresa={(empresaId, customerEmpresaId) => {
+                    setEditingEmpresaId(empresaId);
+                    setEditingCustomerEmpresaId(customerEmpresaId || null);
+                  }}
                 />
               )}
               {activeTab === "email" && selectedEmailData && (
@@ -4102,6 +4124,11 @@ ${recentMessages}
                   ]}
                   onCompaniesUpdated={() => loadSelectedEmail(selectedEmailId || '')}
                   onSetGlobalFilter={setGlobalFilter}
+                  onEditContato={(id) => setEditingContatoId(id)}
+                  onEditEmpresa={(empresaId, customerEmpresaId) => {
+                    setEditingEmpresaId(empresaId);
+                    setEditingCustomerEmpresaId(customerEmpresaId || null);
+                  }}
                 />
               )}
               {activeTab === "orcamento" && selectedOrcamentoData && (
@@ -4121,6 +4148,11 @@ ${recentMessages}
                       : []
                   }
                   onSetGlobalFilter={setGlobalFilter}
+                  onEditContato={(id) => setEditingContatoId(id)}
+                  onEditEmpresa={(empresaId, customerEmpresaId) => {
+                    setEditingEmpresaId(empresaId);
+                    setEditingCustomerEmpresaId(customerEmpresaId || null);
+                  }}
                 />
               )}
             </div>
@@ -5694,6 +5726,46 @@ ${recentMessages}
               onComplete={loadTodayTasks}
             />
           </div>
+        ) : editingContatoId ? (
+          /* Edição de Contato Inline */
+          <EditContatoEmbedded
+            customerId={editingContatoId}
+            onClose={() => setEditingContatoId(null)}
+            onSuccess={() => {
+              // Recarregar dados conforme a aba ativa
+              if (activeTab === "chat" && selectedConversation) {
+                loadCustomerCompanies(selectedConversation);
+              } else if (activeTab === "agenda" && selectedTaskId) {
+                loadSelectedTask(selectedTaskId);
+                loadTodayTasks();
+              } else if (activeTab === "email" && selectedEmailId) {
+                loadSelectedEmail(selectedEmailId);
+              }
+            }}
+          />
+        ) : editingEmpresaId ? (
+          /* Edição de Empresa Inline */
+          <EditEmpresaEmbedded
+            empresaId={editingEmpresaId}
+            customerEmpresaId={editingCustomerEmpresaId || undefined}
+            onClose={() => {
+              setEditingEmpresaId(null);
+              setEditingCustomerEmpresaId(null);
+            }}
+            onSuccess={() => {
+              // Recarregar dados conforme a aba ativa
+              if (activeTab === "chat" && selectedConversation) {
+                loadCustomerCompanies(selectedConversation);
+              } else if (activeTab === "agenda" && selectedTaskId) {
+                loadSelectedTask(selectedTaskId);
+                loadTodayTasks();
+              } else if (activeTab === "email" && selectedEmailId) {
+                loadSelectedEmail(selectedEmailId);
+              }
+              setEditingEmpresaId(null);
+              setEditingCustomerEmpresaId(null);
+            }}
+          />
         ) : activeTab === "agenda" && selectedTaskId && selectedTaskData ? (
           /* Agenda Task Content */
           <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
@@ -5893,6 +5965,11 @@ ${recentMessages}
             companies={customerCompanies}
             onCompaniesUpdated={() => loadCustomerCompanies(selectedConversation || '')}
             onSetGlobalFilter={setGlobalFilter}
+            onEditContato={(id) => setEditingContatoId(id)}
+            onEditEmpresa={(empresaId, customerEmpresaId) => {
+              setEditingEmpresaId(empresaId);
+              setEditingCustomerEmpresaId(customerEmpresaId || null);
+            }}
           />
         </div>
       )}
@@ -5914,6 +5991,11 @@ ${recentMessages}
             companies={selectedTaskData.customers?.customer_empresas || []}
             onCompaniesUpdated={() => loadSelectedTask(selectedTaskId || '')}
             onSetGlobalFilter={setGlobalFilter}
+            onEditContato={(id) => setEditingContatoId(id)}
+            onEditEmpresa={(empresaId, customerEmpresaId) => {
+              setEditingEmpresaId(empresaId);
+              setEditingCustomerEmpresaId(customerEmpresaId || null);
+            }}
           />
         </div>
       )}
@@ -5934,6 +6016,11 @@ ${recentMessages}
             dataHora={format(new Date(fluxoCurrentTask.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR }) + (fluxoCurrentTask.time ? ` às ${fluxoCurrentTask.time}` : "")}
             companies={fluxoCurrentTask.customers?.customer_empresas || []}
             onSetGlobalFilter={setGlobalFilter}
+            onEditContato={(id) => setEditingContatoId(id)}
+            onEditEmpresa={(empresaId, customerEmpresaId) => {
+              setEditingEmpresaId(empresaId);
+              setEditingCustomerEmpresaId(customerEmpresaId || null);
+            }}
           />
         </div>
       )}
@@ -5961,6 +6048,11 @@ ${recentMessages}
             ]}
             onCompaniesUpdated={() => loadSelectedEmail(selectedEmailId || '')}
             onSetGlobalFilter={setGlobalFilter}
+            onEditContato={(id) => setEditingContatoId(id)}
+            onEditEmpresa={(empresaId, customerEmpresaId) => {
+              setEditingEmpresaId(empresaId);
+              setEditingCustomerEmpresaId(customerEmpresaId || null);
+            }}
           />
         </div>
       )}
@@ -6017,6 +6109,11 @@ ${recentMessages}
                 : customerCompanies
             }
             onSetGlobalFilter={setGlobalFilter}
+            onEditContato={(id) => setEditingContatoId(id)}
+            onEditEmpresa={(empresaId, customerEmpresaId) => {
+              setEditingEmpresaId(empresaId);
+              setEditingCustomerEmpresaId(customerEmpresaId || null);
+            }}
           />
         </div>
       )}
