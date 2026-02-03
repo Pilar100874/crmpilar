@@ -441,6 +441,41 @@ export default function Atendimento() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Realtime: ouvir mudanças na tabela customers para sincronizar edições inline/tela central
+  useEffect(() => {
+    const channel = supabase
+      .channel('customers-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'customers'
+        },
+        (payload) => {
+          console.log('[Realtime] Customer atualizado:', payload.new.id);
+          // Recarregar dados conforme a aba/item selecionado
+          if (selectedConversation) {
+            loadCustomerCompanies(selectedConversation);
+          }
+          if (selectedTaskId) {
+            loadSelectedTask(selectedTaskId);
+          }
+          if (selectedEmailId) {
+            loadSelectedEmail(selectedEmailId);
+          }
+          if (selectedOrcamentoId) {
+            loadSelectedOrcamento(selectedOrcamentoId);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedConversation, selectedTaskId, selectedEmailId, selectedOrcamentoId]);
   
   // Note: Counter updates moved after useMemos to avoid using variables before declaration
 
