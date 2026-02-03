@@ -1,4 +1,4 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase, Edit3, UserPlus, Check, X } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -377,8 +377,8 @@ export function UnifiedDetailsPanel({
                 )}
               </Button>
             </CollapsibleTrigger>
-            {/* Botão Editar/Criar ao lado do título */}
-            <div className="flex items-center gap-1 ml-2">
+            {/* Botões Editar/Criar ao lado do título */}
+            <div className="flex items-center gap-0.5 ml-2">
               {isEditingContato ? (
                 <>
                   <Button
@@ -403,15 +403,30 @@ export function UnifiedDetailsPanel({
                   </Button>
                 </>
               ) : customerId ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0 text-primary hover:bg-primary/10"
-                  onClick={() => setIsEditingContato(true)}
-                  title="Editar contato inline"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                </Button>
+                <>
+                  {/* Botão edição inline */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-primary hover:bg-primary/10"
+                    onClick={() => setIsEditingContato(true)}
+                    title="Editar aqui (inline)"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </Button>
+                  {/* Botão abrir edição completa na tela central */}
+                  {onEditContato && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-orange-600 hover:bg-orange-50"
+                      onClick={handleEditContatoClick}
+                      title="Editar na tela central"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                </>
               ) : onCreateContato && (
                 <Button
                   variant="ghost"
