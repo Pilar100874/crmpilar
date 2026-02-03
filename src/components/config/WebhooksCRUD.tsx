@@ -1084,7 +1084,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                         {formData.variables.length > 0 && (
                           <div className="space-y-3">
                             <h4 className="font-semibold text-sm">Variáveis Configuradas ({formData.variables.length})</h4>
-                            <ScrollArea className="max-h-[300px] pr-3">
+                            <div className="max-h-[300px] overflow-y-auto pr-2 border rounded-md p-2 bg-muted/30">
                               <div className="space-y-2">
                                 {formData.variables.map((variable) => (
                                   <Card key={variable.id} className="p-3">
@@ -1145,7 +1145,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                                   </Card>
                                 ))}
                               </div>
-                            </ScrollArea>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1298,7 +1298,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                         {formData.inputVariables.length > 0 && (
                           <div className="space-y-3">
                             <h4 className="font-semibold text-sm">Variáveis Configuradas ({formData.inputVariables.length})</h4>
-                            <ScrollArea className="max-h-[300px] pr-3">
+                            <div className="max-h-[300px] overflow-y-auto pr-2 border rounded-md p-2 bg-muted/30">
                               <div className="space-y-2">
                                 {formData.inputVariables.map((variable) => (
                                   <Card key={variable.id} className="p-3">
@@ -1359,7 +1359,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
                                   </Card>
                                 ))}
                               </div>
-                            </ScrollArea>
+                            </div>
                           </div>
                         )}
                       </div>
