@@ -238,22 +238,71 @@ export function EnvioMassaWebhookConfig({ estabelecimentoId }: EnvioMassaWebhook
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Como funciona</CardTitle>
+          <CardTitle className="text-base">Payload do Webhook</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <p>
             Quando você disparar um envio em massa, o sistema enviará uma requisição para o webhook configurado
-            para cada contato da lista. O payload incluirá:
+            para cada contato da lista. O payload JSON incluirá:
           </p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
-            <li><code className="bg-muted px-1 rounded">contato</code> - Nome do contato</li>
-            <li><code className="bg-muted px-1 rounded">telefone</code> - Número do WhatsApp</li>
-            <li><code className="bg-muted px-1 rounded">empresa</code> - Empresa do contato (se houver)</li>
-            <li><code className="bg-muted px-1 rounded">mensagem</code> - Texto da mensagem (com variáveis substituídas)</li>
-            <li><code className="bg-muted px-1 rounded">midia</code> - URL da mídia (se houver imagem/vídeo)</li>
-          </ul>
-          <p className="pt-2">
-            Configure seu webhook (N8N, Make, etc.) para receber esses dados e realizar o envio via API do WhatsApp.
+          
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium text-foreground mb-1">Dados do Contato:</h4>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li><code className="bg-muted px-1 rounded">contato.id</code> - ID único do contato</li>
+                <li><code className="bg-muted px-1 rounded">contato.nome</code> - Nome do contato</li>
+                <li><code className="bg-muted px-1 rounded">contato.telefone</code> - Telefone/WhatsApp</li>
+                <li><code className="bg-muted px-1 rounded">contato.email</code> - E-mail do contato</li>
+                <li><code className="bg-muted px-1 rounded">contato.empresa</code> - Empresa (se houver)</li>
+                <li><code className="bg-muted px-1 rounded">contato.tags</code> - Tags do contato (array)</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-foreground mb-1">Canal e Contexto:</h4>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li><code className="bg-muted px-1 rounded">canal</code> - "whatsapp" ou "email"</li>
+                <li><code className="bg-muted px-1 rounded">estabelecimentoId</code> - ID do estabelecimento</li>
+                <li><code className="bg-muted px-1 rounded">usuarioId</code> - ID do usuário que enviou</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-foreground mb-1">Conteúdo (array de itens):</h4>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li><code className="bg-muted px-1 rounded">contentItems[]</code> - Array com todos os itens da mensagem</li>
+                <li><code className="bg-muted px-1 rounded">contentItems[].type</code> - "text", "image", "video", "catalog", "file", "quick_reply"</li>
+                <li><code className="bg-muted px-1 rounded">contentItems[].content</code> - Conteúdo com variáveis substituídas</li>
+                <li><code className="bg-muted px-1 rounded">contentItems[].mediaUrl</code> - URL da mídia (se houver)</li>
+                <li><code className="bg-muted px-1 rounded">contentItems[].catalogId</code> - ID do catálogo (se for catálogo)</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-foreground mb-1">Campos de Conveniência:</h4>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li><code className="bg-muted px-1 rounded">mensagemPrincipal</code> - Primeiro texto da mensagem</li>
+                <li><code className="bg-muted px-1 rounded">midia[]</code> - Array de mídias (imagens/vídeos)</li>
+                <li><code className="bg-muted px-1 rounded">catalogo[]</code> - Array de catálogos</li>
+                <li><code className="bg-muted px-1 rounded">arquivos[]</code> - Array de arquivos anexos</li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-foreground mb-1">Agendamento e Meta:</h4>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                <li><code className="bg-muted px-1 rounded">proximaDataContato</code> - Data do próximo contato (YYYY-MM-DD)</li>
+                <li><code className="bg-muted px-1 rounded">timestamp</code> - Data/hora do envio (ISO)</li>
+                <li><code className="bg-muted px-1 rounded">totalContatos</code> - Total de contatos no lote</li>
+                <li><code className="bg-muted px-1 rounded">contatoAtual</code> - Número do contato atual</li>
+                <li><code className="bg-muted px-1 rounded">filtrosAplicados</code> - Filtros usados na seleção</li>
+              </ul>
+            </div>
+          </div>
+
+          <p className="pt-2 border-t mt-4">
+            Configure seu webhook (N8N, Make, Zapier, etc.) para receber esses dados e realizar o envio via API do WhatsApp ou e-mail.
           </p>
         </CardContent>
       </Card>
