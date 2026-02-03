@@ -9,7 +9,8 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   MessageSquare, Image, Video, Plus, Trash2, 
-  GripVertical, Upload, Type, ChevronDown, Play, FileText
+  GripVertical, Upload, Type, ChevronDown, Play, FileText,
+  BookOpen, Paperclip, File
 } from "lucide-react";
 import { ContentItem, QuickReply, MediaGalleryItem } from "../types";
 import { EnvioMassaTemplate } from "../hooks/useEnvioMassaTemplates";
@@ -20,14 +21,33 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
+export interface CatalogoItem {
+  id: string;
+  nome: string;
+  descricao?: string;
+  imagem_url?: string;
+  preco?: number;
+}
+
+export interface AnexoItem {
+  id: string;
+  nome: string;
+  tipo: string;
+  url: string;
+  tamanho?: number;
+}
+
 interface StepComposeProps {
   contentItems: ContentItem[];
   quickReplies: QuickReply[];
   groupedReplies: Record<string, QuickReply[]>;
   templates: EnvioMassaTemplate[];
   media: MediaGalleryItem[];
+  catalogos?: CatalogoItem[];
+  anexos?: AnexoItem[];
   onContentChange: (items: ContentItem[]) => void;
   onUploadMedia: (file: File) => Promise<MediaGalleryItem | null>;
+  onUploadAnexo?: (file: File) => Promise<AnexoItem | null>;
   onBack: () => void;
   onNext: () => void;
 }
@@ -45,15 +65,20 @@ export function StepCompose({
   groupedReplies,
   templates,
   media,
+  catalogos = [],
+  anexos = [],
   onContentChange,
   onUploadMedia,
+  onUploadAnexo,
   onBack,
   onNext
 }: StepComposeProps) {
-  const [activeTab, setActiveTab] = useState<'templates' | 'text' | 'quick' | 'media'>('templates');
+  const [activeTab, setActiveTab] = useState<'templates' | 'text' | 'media' | 'catalogo' | 'anexos'>('templates');
   const [textInput, setTextInput] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadingAnexo, setUploadingAnexo] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const anexoInputRef = useRef<HTMLInputElement>(null);
 
   const addTextItem = () => {
     if (!textInput.trim()) return;
@@ -100,6 +125,28 @@ export function StepCompose({
     onContentChange([...contentItems, newItem]);
   };
 
+  const addCatalogo = (item: CatalogoItem) => {
+    const newItem: ContentItem = {
+      id: `catalogo-${Date.now()}`,
+      type: 'image',
+      content: `📦 ${item.nome}${item.preco ? ` - R$ ${item.preco.toFixed(2)}` : ''}`,
+      mediaUrl: item.imagem_url,
+      quickReplyTitle: 'Catálogo'
+    };
+    onContentChange([...contentItems, newItem]);
+  };
+
+  const addAnexo = (item: AnexoItem) => {
+    const newItem: ContentItem = {
+      id: `anexo-${Date.now()}`,
+      type: 'text',
+      content: `📎 Anexo: ${item.nome}`,
+      mediaUrl: item.url,
+      quickReplyTitle: 'Anexo'
+    };
+    onContentChange([...contentItems, newItem]);
+  };
+
   const removeItem = (id: string) => {
     onContentChange(contentItems.filter(item => item.id !== id));
   };
@@ -132,24 +179,47 @@ export function StepCompose({
     }
   };
 
+  const handleAnexoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !onUploadAnexo) return;
+
+    setUploadingAnexo(true);
+    const uploaded = await onUploadAnexo(file);
+    if (uploaded) {
+      addAnexo(uploaded);
+    }
+    setUploadingAnexo(false);
+    if (anexoInputRef.current) {
+      anexoInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Painel de Seleção */}
         <div className="border rounded-lg">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-            <TabsList className="w-full rounded-none border-b grid grid-cols-3">
-              <TabsTrigger value="templates" className="gap-1 text-xs">
+            <TabsList className="w-full rounded-none border-b grid grid-cols-5">
+              <TabsTrigger value="templates" className="gap-1 text-xs px-1">
                 <FileText className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Templates</span>
               </TabsTrigger>
-              <TabsTrigger value="text" className="gap-1 text-xs">
+              <TabsTrigger value="text" className="gap-1 text-xs px-1">
                 <Type className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Texto</span>
               </TabsTrigger>
-              <TabsTrigger value="media" className="gap-1 text-xs">
+              <TabsTrigger value="media" className="gap-1 text-xs px-1">
                 <Image className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Mídia</span>
+              </TabsTrigger>
+              <TabsTrigger value="catalogo" className="gap-1 text-xs px-1">
+                <BookOpen className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Catálogo</span>
+              </TabsTrigger>
+              <TabsTrigger value="anexos" className="gap-1 text-xs px-1">
+                <Paperclip className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Anexos</span>
               </TabsTrigger>
             </TabsList>
 
@@ -284,6 +354,115 @@ export function StepCompose({
                     <div className="col-span-3 text-center py-8 text-muted-foreground">
                       <Image className="h-12 w-12 mx-auto mb-3 opacity-20" />
                       <p>Nenhuma mídia disponível</p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            {/* Catálogo Tab */}
+            <TabsContent value="catalogo" className="p-0">
+              <ScrollArea className="h-[350px]">
+                <div className="p-4 space-y-2">
+                  {catalogos.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                      <p>Nenhum item de catálogo disponível</p>
+                      <p className="text-sm mt-1">
+                        Configure seus produtos em Catálogos
+                      </p>
+                    </div>
+                  ) : (
+                    catalogos.map(item => (
+                      <Card
+                        key={item.id}
+                        className="p-3 cursor-pointer hover:bg-muted/50 transition-colors hover:shadow-sm"
+                        onClick={() => addCatalogo(item)}
+                      >
+                        <div className="flex items-start gap-3">
+                          {item.imagem_url ? (
+                            <img
+                              src={item.imagem_url}
+                              alt={item.nome}
+                              className="w-12 h-12 rounded object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded bg-muted flex items-center justify-center">
+                              <BookOpen className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm">{item.nome}</p>
+                            {item.descricao && (
+                              <p className="text-xs text-muted-foreground line-clamp-1">
+                                {item.descricao}
+                              </p>
+                            )}
+                            {item.preco && (
+                              <Badge variant="secondary" className="mt-1">
+                                R$ {item.preco.toFixed(2)}
+                              </Badge>
+                            )}
+                          </div>
+                          <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            {/* Anexos Tab */}
+            <TabsContent value="anexos" className="p-0">
+              <div className="p-4 border-b">
+                <input
+                  ref={anexoInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+                  onChange={handleAnexoUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => anexoInputRef.current?.click()}
+                  disabled={uploadingAnexo || !onUploadAnexo}
+                  className="w-full"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {uploadingAnexo ? 'Enviando...' : 'Enviar novo anexo'}
+                </Button>
+              </div>
+              <ScrollArea className="h-[300px]">
+                <div className="p-4 space-y-2">
+                  {anexos.map(item => (
+                    <Card
+                      key={item.id}
+                      className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => addAnexo(item)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                          <File className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm truncate">{item.nome}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.tipo.toUpperCase()}
+                            {item.tamanho && ` • ${(item.tamanho / 1024).toFixed(1)} KB`}
+                          </p>
+                        </div>
+                        <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </div>
+                    </Card>
+                  ))}
+                  {anexos.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Paperclip className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                      <p>Nenhum anexo disponível</p>
+                      <p className="text-sm mt-1">
+                        Envie arquivos clicando no botão acima
+                      </p>
                     </div>
                   )}
                 </div>
