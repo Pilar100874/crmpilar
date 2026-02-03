@@ -1337,10 +1337,10 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       // Preparar dados do contato
       const contatoPayload: any = {
         estabelecimento_id: estabId,
-        nome: formData.name,
-        telefone: formData.phone,
+        nome: formData.name || '',
+        telefone: formData.phone || '',
         tel: formData.tel || null,
-        email: formData.email,
+        email: formData.email || '',
         empresa_id: null, // Mantém null pois usamos tabela de junção
         tipo_operador: empresasVinculadas.length > 0 ? true : false, // true = cliente, false = prospect
         custom_fields: {
