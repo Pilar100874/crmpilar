@@ -1291,13 +1291,25 @@ export default function Atendimento() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Buscar o ID do usuário na tabela usuarios (a FK user_id referencia usuarios, não auth.users)
+      const { data: usuarioData } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+      
+      if (!usuarioData) {
+        console.error("Usuário não encontrado na tabela usuarios");
+        return;
+      }
+
       const dateStr = format(date, 'yyyy-MM-dd');
 
-      // Fetch tasks first
+      // Fetch tasks first - usar o ID da tabela usuarios
       const { data: tasksData, error } = await supabase
         .from('calendario_tarefas')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', usuarioData.id)
         .eq('date', dateStr);
 
       if (error) {
