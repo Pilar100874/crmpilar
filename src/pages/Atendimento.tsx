@@ -5749,6 +5749,11 @@ ${recentMessages}
                 loadSelectedEmail(selectedEmailId);
               }
             }}
+            onEditEmpresa={(empresaId, customerEmpresaId) => {
+              setEditingContatoId(null);
+              setEditingEmpresaId(empresaId);
+              setEditingCustomerEmpresaId(customerEmpresaId || null);
+            }}
           />
         ) : editingEmpresaId ? (
           /* Edição de Empresa Inline */
@@ -5771,6 +5776,11 @@ ${recentMessages}
               }
               setEditingEmpresaId(null);
               setEditingCustomerEmpresaId(null);
+            }}
+            onEditContato={(customerId) => {
+              setEditingEmpresaId(null);
+              setEditingCustomerEmpresaId(null);
+              setEditingContatoId(customerId);
             }}
           />
         ) : creatingContato ? (
