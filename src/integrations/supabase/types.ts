@@ -11123,6 +11123,10 @@ export type Database = {
       admins_present: { Args: never; Returns: boolean }
       check_catalog_expiration: { Args: never; Returns: undefined }
       current_user_is_host: { Args: { host_user_id: string }; Returns: boolean }
+      delete_customer_cascade: {
+        Args: { p_customer_id: string }
+        Returns: boolean
+      }
       desativar_automacoes_vencidas: { Args: never; Returns: undefined }
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       generate_orcamento_token: { Args: never; Returns: string }
