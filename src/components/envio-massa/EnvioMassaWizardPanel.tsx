@@ -250,7 +250,7 @@ export function EnvioMassaWizardPanel({
             </div>
             <span 
               className={`
-                hidden md:block ml-2 text-sm whitespace-nowrap
+                hidden sm:block ml-2 text-sm whitespace-nowrap
                 ${index <= currentStepIndex ? 'text-foreground' : 'text-muted-foreground'}
               `}
             >
@@ -259,7 +259,7 @@ export function EnvioMassaWizardPanel({
             {index < STEPS.length - 1 && (
               <div 
                 className={`
-                  w-4 sm:w-8 h-0.5 mx-1 sm:mx-2 shrink-0
+                  w-4 sm:w-6 md:w-8 h-0.5 mx-1 sm:mx-2 shrink-0
                   ${index < currentStepIndex ? 'bg-primary' : 'bg-muted'}
                 `}
               />
