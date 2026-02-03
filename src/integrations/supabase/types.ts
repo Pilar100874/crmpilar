@@ -11127,6 +11127,10 @@ export type Database = {
         Args: { p_customer_id: string }
         Returns: boolean
       }
+      delete_empresa_cascade: {
+        Args: { p_empresa_id: string }
+        Returns: boolean
+      }
       desativar_automacoes_vencidas: { Args: never; Returns: undefined }
       execute_sql: { Args: { sql_query: string }; Returns: Json }
       generate_orcamento_token: { Args: never; Returns: string }
