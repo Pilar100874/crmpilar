@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
+import { EditEmpresaDialog } from "./EditEmpresaDialog";
 import { useState } from "react";
 import { GlobalFilter } from "./GlobalClientFilter";
 import { toast } from "@/lib/toast-config";
@@ -70,6 +71,7 @@ export function UnifiedDetailsPanel({
   const [empresasOpen, setEmpresasOpen] = useState(true);
   const [contatoOpen, setContatoOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
+  const [editingEmpresaId, setEditingEmpresaId] = useState<string | null>(null);
 
   // Obtém o cargo da primeira empresa vinculada
   const primaryCompany = companies.find(c => c.is_primary) || companies[0];
@@ -99,8 +101,8 @@ export function UnifiedDetailsPanel({
 
   const handleEditEmpresaClick = (empresa: any) => {
     const empresaData = empresa.empresas || empresa;
-    if (empresaData?.id && onEditEmpresa) {
-      onEditEmpresa(empresaData.id, empresa.id);
+    if (empresaData?.id) {
+      setEditingEmpresaId(empresaData.id);
     }
   };
 
@@ -433,6 +435,15 @@ export function UnifiedDetailsPanel({
         whatsappVinculo={type === 'chat' ? (whatsapp || telefone) : undefined}
         onSuccess={onCompaniesUpdated}
       />
+
+      {editingEmpresaId && (
+        <EditEmpresaDialog
+          open={!!editingEmpresaId}
+          onOpenChange={(open) => !open && setEditingEmpresaId(null)}
+          empresaId={editingEmpresaId}
+          onSuccess={onCompaniesUpdated}
+        />
+      )}
     </div>
   );
 }
