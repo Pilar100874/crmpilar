@@ -15,6 +15,7 @@ import { StepConfirm } from "./steps/StepConfirm";
 import { useContactsFilter } from "./hooks/useContactsFilter";
 import { useQuickReplies } from "./hooks/useQuickReplies";
 import { useMediaGallery } from "./hooks/useMediaGallery";
+import { useEnvioMassaTemplates } from "./hooks/useEnvioMassaTemplates";
 import { 
   WizardStep, ContentItem, ContactForBulkSend, 
   EnvioMassaFilters, EnvioMassaState, CanalEnvio 
@@ -100,6 +101,11 @@ export function EnvioMassaWizardDialog({
     getGroupedReplies,
     loading: loadingReplies 
   } = useQuickReplies(estabelecimentoId);
+
+  const { 
+    templates: envioMassaTemplates,
+    loading: loadingTemplates
+  } = useEnvioMassaTemplates(estabelecimentoId);
 
   const { 
     media, 
@@ -289,6 +295,7 @@ export function EnvioMassaWizardDialog({
             contentItems={state.contentItems}
             quickReplies={quickReplies}
             groupedReplies={getGroupedReplies()}
+            templates={envioMassaTemplates}
             media={media}
             onContentChange={handleContentChange}
             onUploadMedia={uploadMedia}

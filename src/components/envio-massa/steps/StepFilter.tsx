@@ -218,11 +218,20 @@ export function StepFilter({
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{contact.nome}</p>
                       <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        {contact.telefone && (
-                          <span className="flex items-center gap-1">
-                            <Phone className="h-3 w-3" />
-                            {contact.telefone}
-                          </span>
+                        {canal === 'email' ? (
+                          contact.email && (
+                            <span className="flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {contact.email}
+                            </span>
+                          )
+                        ) : (
+                          contact.telefone && (
+                            <span className="flex items-center gap-1">
+                              <Phone className="h-3 w-3" />
+                              {contact.telefone}
+                            </span>
+                          )
                         )}
                         {contact.empresa && (
                           <span className="flex items-center gap-1">

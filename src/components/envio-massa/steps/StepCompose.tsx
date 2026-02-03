@@ -9,9 +9,10 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   MessageSquare, Image, Video, Plus, Trash2, 
-  GripVertical, Upload, Type, ChevronDown, Play
+  GripVertical, Upload, Type, ChevronDown, Play, FileText
 } from "lucide-react";
 import { ContentItem, QuickReply, MediaGalleryItem } from "../types";
+import { EnvioMassaTemplate } from "../hooks/useEnvioMassaTemplates";
 import { cn } from "@/lib/utils";
 import {
   Collapsible,
@@ -23,6 +24,7 @@ interface StepComposeProps {
   contentItems: ContentItem[];
   quickReplies: QuickReply[];
   groupedReplies: Record<string, QuickReply[]>;
+  templates: EnvioMassaTemplate[];
   media: MediaGalleryItem[];
   onContentChange: (items: ContentItem[]) => void;
   onUploadMedia: (file: File) => Promise<MediaGalleryItem | null>;
@@ -41,13 +43,14 @@ export function StepCompose({
   contentItems,
   quickReplies,
   groupedReplies,
+  templates,
   media,
   onContentChange,
   onUploadMedia,
   onBack,
   onNext
 }: StepComposeProps) {
-  const [activeTab, setActiveTab] = useState<'text' | 'quick' | 'media'>('text');
+  const [activeTab, setActiveTab] = useState<'templates' | 'text' | 'quick' | 'media'>('templates');
   const [textInput, setTextInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,6 +65,16 @@ export function StepCompose({
     };
     onContentChange([...contentItems, newItem]);
     setTextInput('');
+  };
+
+  const addTemplate = (template: EnvioMassaTemplate) => {
+    const newItem: ContentItem = {
+      id: `template-${Date.now()}`,
+      type: 'text',
+      content: template.conteudo,
+      quickReplyTitle: template.nome
+    };
+    onContentChange([...contentItems, newItem]);
   };
 
   const addQuickReply = (reply: QuickReply) => {
@@ -125,21 +138,67 @@ export function StepCompose({
         {/* Painel de Seleção */}
         <div className="border rounded-lg">
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-            <TabsList className="w-full rounded-none border-b">
-              <TabsTrigger value="text" className="flex-1 gap-2">
-                <Type className="h-4 w-4" />
-                Texto
+            <TabsList className="w-full rounded-none border-b grid grid-cols-4">
+              <TabsTrigger value="templates" className="gap-1 text-xs">
+                <FileText className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Templates</span>
               </TabsTrigger>
-              <TabsTrigger value="quick" className="flex-1 gap-2">
-                <MessageSquare className="h-4 w-4" />
-                Prontos
+              <TabsTrigger value="text" className="gap-1 text-xs">
+                <Type className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Texto</span>
               </TabsTrigger>
-              <TabsTrigger value="media" className="flex-1 gap-2">
-                <Image className="h-4 w-4" />
-                Mídia
+              <TabsTrigger value="quick" className="gap-1 text-xs">
+                <MessageSquare className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Prontos</span>
+              </TabsTrigger>
+              <TabsTrigger value="media" className="gap-1 text-xs">
+                <Image className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Mídia</span>
               </TabsTrigger>
             </TabsList>
 
+            {/* Templates Tab */}
+            <TabsContent value="templates" className="p-0">
+              <ScrollArea className="h-[350px]">
+                <div className="p-4 space-y-2">
+                  {templates.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                      <p>Nenhum template cadastrado</p>
+                      <p className="text-sm mt-1">
+                        Configure templates em Configurações → Envio em Massa
+                      </p>
+                    </div>
+                  ) : (
+                    templates.map(template => (
+                      <Card
+                        key={template.id}
+                        className="p-3 cursor-pointer hover:bg-muted/50 transition-colors hover:shadow-sm"
+                        onClick={() => addTemplate(template)}
+                      >
+                        <div className="flex items-start gap-2">
+                          <FileText className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm">{template.nome}</p>
+                            {template.descricao && (
+                              <p className="text-xs text-muted-foreground mb-1">
+                                {template.descricao}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-1 bg-muted/50 p-2 rounded">
+                              {template.conteudo}
+                            </p>
+                          </div>
+                          <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                        </div>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            {/* Text Tab */}
             <TabsContent value="text" className="p-4 space-y-4">
               <div className="space-y-2">
                 <Label>Digite sua mensagem</Label>
@@ -173,6 +232,7 @@ export function StepCompose({
               </Button>
             </TabsContent>
 
+            {/* Quick Replies Tab */}
             <TabsContent value="quick" className="p-0">
               <ScrollArea className="h-[350px]">
                 <div className="p-4 space-y-2">
@@ -218,6 +278,7 @@ export function StepCompose({
               </ScrollArea>
             </TabsContent>
 
+            {/* Media Tab */}
             <TabsContent value="media" className="p-0">
               <div className="p-4 border-b">
                 <input
@@ -288,6 +349,9 @@ export function StepCompose({
               Sequência de Envio
               <Badge variant="outline">{contentItems.length} itens</Badge>
             </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Arraste para reordenar a sequência de mensagens
+            </p>
           </div>
           <ScrollArea className="h-[400px]">
             <div className="p-4 space-y-2">
@@ -295,7 +359,7 @@ export function StepCompose({
                 <div className="text-center py-12 text-muted-foreground">
                   <Plus className="h-12 w-12 mx-auto mb-3 opacity-20" />
                   <p>Adicione itens à sequência</p>
-                  <p className="text-sm">Textos, frases prontas ou mídias</p>
+                  <p className="text-sm">Templates, textos, frases prontas ou mídias</p>
                 </div>
               ) : (
                 contentItems.map((item, index) => (
@@ -318,7 +382,14 @@ export function StepCompose({
                       <div className="flex-1 min-w-0">
                         {item.type === 'text' && (
                           <div>
-                            <Badge variant="outline" className="mb-1">Texto</Badge>
+                            <Badge variant="outline" className="mb-1">
+                              {item.quickReplyTitle ? 'Template' : 'Texto'}
+                            </Badge>
+                            {item.quickReplyTitle && (
+                              <p className="text-xs font-medium text-primary mb-1">
+                                {item.quickReplyTitle}
+                              </p>
+                            )}
                             <p className="text-sm whitespace-pre-wrap">{item.content}</p>
                           </div>
                         )}
