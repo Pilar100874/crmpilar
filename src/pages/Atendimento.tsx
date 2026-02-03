@@ -71,6 +71,7 @@ interface Conversation {
     nome: string;
     email: string;
     telefone: string;
+    tel?: string;
   };
   lastMessage?: {
     text: string;
@@ -3827,7 +3828,7 @@ ${recentMessages}
                       <UnifiedDetailsPanel
                         type="agenda"
                         nome={fluxoCurrentTask.contact_name}
-                        telefone={fluxoCurrentTask.customers?.telefone}
+                        telefone={fluxoCurrentTask.customers?.tel}
                         whatsapp={fluxoCurrentTask.customers?.telefone}
                         email={fluxoCurrentTask.customers?.email}
                         customerId={fluxoCurrentTask.customers?.id}
@@ -4070,7 +4071,7 @@ ${recentMessages}
                 <UnifiedDetailsPanel
                   type="chat"
                   nome={selectedConv.customer?.nome || "Cliente"}
-                  telefone={selectedConv.customer?.telefone}
+                  telefone={selectedConv.customer?.tel}
                   whatsapp={selectedConv.customer?.telefone}
                   email={selectedConv.customer?.email}
                   customerId={selectedConv.customer?.id}
@@ -4097,7 +4098,7 @@ ${recentMessages}
                 <UnifiedDetailsPanel
                   type="agenda"
                   nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
-                  telefone={selectedTaskData.customers?.telefone}
+                  telefone={selectedTaskData.customers?.tel}
                   whatsapp={selectedTaskData.customers?.telefone}
                   email={selectedTaskData.customers?.email}
                   customerId={selectedTaskData.customers?.id}
@@ -4124,7 +4125,7 @@ ${recentMessages}
                 <UnifiedDetailsPanel
                   type="email"
                   nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || selectedEmailData.from_email}
-                  telefone={selectedEmailData.customer?.telefone || selectedEmailData.empresa?.telefone}
+                  telefone={selectedEmailData.customer?.tel || selectedEmailData.empresa?.telefone}
                   whatsapp={selectedEmailData.customer?.telefone || selectedEmailData.empresa?.telefone}
                   email={selectedEmailData.from_email}
                   customerId={selectedEmailData.customer?.id}
@@ -4157,7 +4158,7 @@ ${recentMessages}
                 <UnifiedDetailsPanel
                   type="orcamento"
                   nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || "Cliente"}
-                  telefone={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
+                  telefone={selectedOrcamentoData.customers?.tel || selectedOrcamentoData.empresas?.telefone}
                   whatsapp={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
                   email={selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email}
                   customerId={selectedOrcamentoData.customers?.id}
@@ -6025,7 +6026,7 @@ ${recentMessages}
           <UnifiedDetailsPanel
             type="chat"
             nome={selectedConv.customer?.nome || "Cliente"}
-            telefone={selectedConv.customer?.telefone}
+            telefone={selectedConv.customer?.tel}
             whatsapp={selectedConv.customer?.telefone}
             email={selectedConv.customer?.email}
             customerId={selectedConv.customer?.id}
@@ -6056,7 +6057,7 @@ ${recentMessages}
           <UnifiedDetailsPanel
             type="agenda"
             nome={selectedTaskData.customers?.nome || selectedTaskData.contact_name}
-            telefone={selectedTaskData.customers?.telefone}
+            telefone={selectedTaskData.customers?.tel}
             whatsapp={selectedTaskData.customers?.telefone}
             email={selectedTaskData.customers?.email}
             customerId={selectedTaskData.customers?.id}
@@ -6087,7 +6088,7 @@ ${recentMessages}
           <UnifiedDetailsPanel
             type="agenda"
             nome={fluxoCurrentTask.contact_name}
-            telefone={fluxoCurrentTask.customers?.telefone}
+            telefone={fluxoCurrentTask.customers?.tel}
             whatsapp={fluxoCurrentTask.customers?.telefone}
             email={fluxoCurrentTask.customers?.email}
             customerId={fluxoCurrentTask.customers?.id}
@@ -6117,7 +6118,7 @@ ${recentMessages}
           <UnifiedDetailsPanel
             type="email"
             nome={selectedEmailData.customer?.nome || selectedEmailData.empresa?.nome_fantasia || selectedEmailData.empresa?.nome || selectedEmailData.from_email}
-            telefone={selectedEmailData.customer?.telefone || selectedEmailData.empresa?.telefone}
+            telefone={selectedEmailData.customer?.tel || selectedEmailData.empresa?.telefone}
             whatsapp={selectedEmailData.customer?.telefone || selectedEmailData.empresa?.telefone}
             email={selectedEmailData.from_email}
             customerId={selectedEmailData.customer?.id}
@@ -6187,7 +6188,7 @@ ${recentMessages}
           <UnifiedDetailsPanel
             type="orcamento"
             nome={selectedOrcamentoData.customers?.nome || selectedOrcamentoData.empresas?.nome_fantasia || selectedOrcamentoData.empresas?.nome || "Cliente"}
-            telefone={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
+            telefone={selectedOrcamentoData.customers?.tel || selectedOrcamentoData.empresas?.telefone}
             whatsapp={selectedOrcamentoData.customers?.telefone || selectedOrcamentoData.empresas?.telefone}
             email={selectedOrcamentoData.customers?.email || selectedOrcamentoData.empresas?.email}
             customerId={selectedOrcamentoData.customers?.id}
