@@ -3248,6 +3248,50 @@ export type Database = {
           },
         ]
       }
+      envio_massa_templates: {
+        Row: {
+          ativo: boolean
+          conteudo: string
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          nome: string
+          ordem: number | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          conteudo: string
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          nome: string
+          ordem?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          conteudo?: string
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          nome?: string
+          ordem?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "envio_massa_templates_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       estabelecimentos: {
         Row: {
           automacao_vendas_config: Json | null

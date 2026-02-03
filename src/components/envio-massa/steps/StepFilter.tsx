@@ -34,6 +34,7 @@ export function StepFilter({
   onNext
 }: StepFilterProps) {
   const [localFilters, setLocalFilters] = useState<EnvioMassaFilters>(filters);
+  const [accordionValue, setAccordionValue] = useState<string>("filters");
 
   const handleFilterChange = (key: keyof EnvioMassaFilters, value: any) => {
     const newFilters = { ...localFilters, [key]: value };
@@ -69,7 +70,7 @@ export function StepFilter({
   return (
     <div className="space-y-4">
       {/* Filtros */}
-      <Accordion type="single" collapsible defaultValue="filters" className="border rounded-lg">
+      <Accordion type="single" collapsible value={accordionValue} onValueChange={setAccordionValue} className="border rounded-lg">
         <AccordionItem value="filters" className="border-0">
           <AccordionTrigger className="px-4 py-3 hover:no-underline">
             <div className="flex items-center gap-2">
