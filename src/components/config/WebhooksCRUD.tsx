@@ -70,6 +70,7 @@ export function WebhooksCRUD({ estabelecimentoId }: WebhooksCRUDProps = {}) {
     { id: "ia-atendimento", name: "IA TELA ATENDIMENTO" },
     { id: "automacoes", name: "AUTOMAÇÕES" },
     { id: "resposta-automatica-chat", name: "RESPOSTA AUTOMATICA NO CHAT" },
+    { id: "envio-massa", name: "ENVIO EM MASSA" },
   ];
   const [editingWebhook, setEditingWebhook] = useState<string | null>(null);
   const [formData, setFormData] = useState({
