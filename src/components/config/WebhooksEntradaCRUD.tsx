@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -309,313 +309,357 @@ export function WebhooksEntradaCRUD() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">Webhooks de Entrada</h3>
-          <p className="text-sm text-muted-foreground">
-            Configure webhooks para disparar automações ou ações customizadas
-          </p>
-        </div>
-        <Dialog open={isFormDialogOpen} onOpenChange={(open) => {
-          setIsFormDialogOpen(open);
-          if (!open) resetForm();
-        }}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Novo Webhook
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingWebhook ? "Editar" : "Novo"} Webhook de Entrada
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="nome">Nome *</Label>
-                <Input
-                  id="nome"
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  placeholder="Ex: Webhook Cadastro Lead"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="descricao">Descrição</Label>
-                <Textarea
-                  id="descricao"
-                  value={formData.descricao}
-                  onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  placeholder="Descreva para que serve este webhook"
-                  rows={3}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header com gradiente */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/20 flex items-center justify-center">
+              <Webhook className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold">Webhooks de Entrada</h2>
+              <p className="text-sm text-muted-foreground hidden sm:block">
+                Configure webhooks para disparar automações ou ações customizadas
+              </p>
+            </div>
+          </div>
+          <Dialog open={isFormDialogOpen} onOpenChange={(open) => {
+            setIsFormDialogOpen(open);
+            if (!open) resetForm();
+          }}>
+            <DialogTrigger asChild>
+              <Button size="lg" className="w-full sm:w-auto gap-2">
+                <Plus className="w-4 h-4" />
+                Novo Webhook
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
+              <DialogHeader>
+                <DialogTitle className="text-lg sm:text-xl">
+                  {editingWebhook ? "Editar" : "Novo"} Webhook de Entrada
+                </DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 pr-1">
                 <div className="space-y-2">
-                  <Label htmlFor="metodo">Método HTTP</Label>
+                  <Label htmlFor="nome" className="text-sm">Nome *</Label>
+                  <Input
+                    id="nome"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                    placeholder="Ex: Webhook Cadastro Lead"
+                    required
+                    className="h-10"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="descricao" className="text-sm">Descrição</Label>
+                  <Textarea
+                    id="descricao"
+                    value={formData.descricao}
+                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                    placeholder="Descreva para que serve este webhook"
+                    rows={2}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="metodo" className="text-sm">Método HTTP</Label>
+                    <Select
+                      value={formData.metodo}
+                      onValueChange={(value) => setFormData({ ...formData, metodo: value })}
+                    >
+                      <SelectTrigger id="metodo" className="h-10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="POST">POST</SelectItem>
+                        <SelectItem value="GET">GET</SelectItem>
+                        <SelectItem value="PUT">PUT</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center space-x-2 sm:pt-7">
+                    <Switch
+                      id="ativo"
+                      checked={formData.ativo}
+                      onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
+                    />
+                    <Label htmlFor="ativo" className="text-sm">Webhook Ativo</Label>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6 p-3 sm:p-4 bg-muted rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="aceita_json"
+                      checked={formData.aceita_json}
+                      onCheckedChange={(checked) => setFormData({ ...formData, aceita_json: checked })}
+                    />
+                    <Label htmlFor="aceita_json" className="text-sm">Aceita JSON</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="aceita_form_data"
+                      checked={formData.aceita_form_data}
+                      onCheckedChange={(checked) => setFormData({ ...formData, aceita_form_data: checked })}
+                    />
+                    <Label htmlFor="aceita_form_data" className="text-sm">Aceita Form Data</Label>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="acao_tipo" className="text-sm">Tipo de Ação</Label>
                   <Select
-                    value={formData.metodo}
-                    onValueChange={(value) => setFormData({ ...formData, metodo: value })}
+                    value={formData.acao_tipo}
+                    onValueChange={(value) => setFormData({ ...formData, acao_tipo: value })}
                   >
-                    <SelectTrigger id="metodo">
+                    <SelectTrigger id="acao_tipo" className="h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="POST">POST</SelectItem>
-                      <SelectItem value="GET">GET</SelectItem>
-                      <SelectItem value="PUT">PUT</SelectItem>
+                      <SelectItem value="automacao_marketing">Automação de Marketing</SelectItem>
+                      <SelectItem value="rodar_bot">Rodar Bot</SelectItem>
+                      <SelectItem value="url_customizada">URL Customizada</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="flex items-center space-x-2 pt-8">
-                  <Switch
-                    id="ativo"
-                    checked={formData.ativo}
-                    onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
-                  />
-                  <Label htmlFor="ativo">Webhook Ativo</Label>
-                </div>
-              </div>
+                {formData.acao_tipo === "automacao_marketing" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="automacao_id" className="text-sm">Automação de Marketing *</Label>
+                    <Select
+                      value={formData.automacao_id}
+                      onValueChange={(value) => setFormData({ ...formData, automacao_id: value })}
+                    >
+                      <SelectTrigger id="automacao_id" className="h-10">
+                        <SelectValue placeholder="Selecione uma automação" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {automacoes.map((auto) => (
+                          <SelectItem key={auto.id} value={auto.id}>
+                            {auto.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {automacoes.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Nenhuma automação ativa encontrada
+                      </p>
+                    )}
+                  </div>
+                )}
 
-              <div className="flex items-center justify-between space-x-6 p-4 bg-muted rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="aceita_json"
-                    checked={formData.aceita_json}
-                    onCheckedChange={(checked) => setFormData({ ...formData, aceita_json: checked })}
-                  />
-                  <Label htmlFor="aceita_json">Aceita JSON</Label>
-                </div>
+                {formData.acao_tipo === "rodar_bot" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="bot_id" className="text-sm">Bot *</Label>
+                    <Select
+                      value={formData.bot_id}
+                      onValueChange={(value) => setFormData({ ...formData, bot_id: value })}
+                    >
+                      <SelectTrigger id="bot_id" className="h-10">
+                        <SelectValue placeholder="Selecione um bot" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bots.map((bot) => (
+                          <SelectItem key={bot.id} value={bot.id}>
+                            {bot.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {bots.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Nenhum bot ativo encontrado
+                      </p>
+                    )}
+                  </div>
+                )}
 
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="aceita_form_data"
-                    checked={formData.aceita_form_data}
-                    onCheckedChange={(checked) => setFormData({ ...formData, aceita_form_data: checked })}
-                  />
-                  <Label htmlFor="aceita_form_data">Aceita Form Data</Label>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="acao_tipo">Tipo de Ação</Label>
-                <Select
-                  value={formData.acao_tipo}
-                  onValueChange={(value) => setFormData({ ...formData, acao_tipo: value })}
-                >
-                  <SelectTrigger id="acao_tipo">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="automacao_marketing">Automação de Marketing</SelectItem>
-                    <SelectItem value="rodar_bot">Rodar Bot</SelectItem>
-                    <SelectItem value="url_customizada">URL Customizada</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {formData.acao_tipo === "automacao_marketing" && (
-                <div className="space-y-2">
-                  <Label htmlFor="automacao_id">Automação de Marketing *</Label>
-                  <Select
-                    value={formData.automacao_id}
-                    onValueChange={(value) => setFormData({ ...formData, automacao_id: value })}
-                  >
-                    <SelectTrigger id="automacao_id">
-                      <SelectValue placeholder="Selecione uma automação" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {automacoes.map((auto) => (
-                        <SelectItem key={auto.id} value={auto.id}>
-                          {auto.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {automacoes.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      Nenhuma automação ativa encontrada
+                {formData.acao_tipo === "url_customizada" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="url_customizada" className="text-sm">URL Customizada *</Label>
+                    <Input
+                      id="url_customizada"
+                      value={formData.url_customizada}
+                      onChange={(e) => setFormData({ ...formData, url_customizada: e.target.value })}
+                      placeholder="https://sua-api.com/endpoint"
+                      type="url"
+                      required
+                      className="h-10 font-mono text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Esta URL será chamada quando o webhook for acionado
                     </p>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
 
-              {formData.acao_tipo === "rodar_bot" && (
-                <div className="space-y-2">
-                  <Label htmlFor="bot_id">Bot *</Label>
-                  <Select
-                    value={formData.bot_id}
-                    onValueChange={(value) => setFormData({ ...formData, bot_id: value })}
-                  >
-                    <SelectTrigger id="bot_id">
-                      <SelectValue placeholder="Selecione um bot" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {bots.map((bot) => (
-                        <SelectItem key={bot.id} value={bot.id}>
-                          {bot.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {bots.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      Nenhum bot ativo encontrado
-                    </p>
-                  )}
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button type="submit" className="flex-1">
+                    {editingWebhook ? "Atualizar" : "Criar"} Webhook
+                  </Button>
+                  <Button type="button" variant="outline" onClick={resetForm}>
+                    Cancelar
+                  </Button>
                 </div>
-              )}
-
-              {formData.acao_tipo === "url_customizada" && (
-                <div className="space-y-2">
-                  <Label htmlFor="url_customizada">URL Customizada *</Label>
-                  <Input
-                    id="url_customizada"
-                    value={formData.url_customizada}
-                    onChange={(e) => setFormData({ ...formData, url_customizada: e.target.value })}
-                    placeholder="https://sua-api.com/endpoint"
-                    type="url"
-                    required
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Esta URL será chamada quando o webhook for acionado
-                  </p>
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-4">
-                <Button type="submit" className="flex-1">
-                  {editingWebhook ? "Atualizar" : "Criar"} Webhook
-                </Button>
-                <Button type="button" variant="outline" onClick={resetForm}>
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      <div className="grid gap-4">
+      {/* Lista de webhooks */}
+      <div className="space-y-3 sm:space-y-4">
         {webhooks.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Webhook className="w-12 h-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground text-center">
-                Nenhum webhook de entrada configurado ainda
+          <Card className="p-8 sm:p-12">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-muted mb-4">
+                <Webhook className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground font-medium text-sm sm:text-base">
+                Nenhum webhook de entrada configurado
               </p>
-              <p className="text-sm text-muted-foreground text-center mt-2">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                 Clique em "Novo Webhook" para criar seu primeiro webhook
               </p>
-            </CardContent>
+            </div>
           </Card>
         ) : (
           webhooks.map((webhook) => (
-            <Card key={webhook.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CardTitle className="text-lg">{webhook.nome}</CardTitle>
-                      <Badge variant={webhook.ativo ? "default" : "secondary"}>
-                        {webhook.ativo ? "Ativo" : "Inativo"}
-                      </Badge>
-                      <Badge variant="outline">{webhook.metodo}</Badge>
+            <Card key={webhook.id} className="overflow-hidden hover:shadow-md transition-all duration-200 border-l-4 border-l-primary/50">
+              <div className="p-3 sm:p-4 lg:p-5">
+                {/* Header do card */}
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3 sm:mb-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h4 className="font-semibold text-sm sm:text-base truncate max-w-[200px] sm:max-w-none">
+                        {webhook.nome}
+                      </h4>
+                      <div className="flex gap-1.5 flex-wrap">
+                        <Badge 
+                          variant={webhook.ativo ? "default" : "secondary"}
+                          className="text-[10px] sm:text-xs"
+                        >
+                          {webhook.ativo ? "Ativo" : "Inativo"}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] sm:text-xs font-mono">
+                          {webhook.metodo}
+                        </Badge>
+                      </div>
                     </div>
                     {webhook.descricao && (
-                      <CardDescription>{webhook.descricao}</CardDescription>
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                        {webhook.descricao}
+                      </p>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  
+                  {/* Botões de ação */}
+                  <div className="flex gap-2 justify-end">
                     <Button
                       variant="outline"
-                      size="icon"
+                      size="sm"
                       onClick={() => handleTest(webhook)}
                       disabled={testingWebhook === webhook.id}
                       title="Testar webhook"
+                      className="h-8 px-3 sm:h-9 sm:w-9 sm:p-0 flex items-center gap-2"
                     >
                       {testingWebhook === webhook.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
-                        <Play className="w-4 h-4" />
+                        <Play className="w-3.5 h-3.5" />
                       )}
+                      <span className="sm:hidden text-xs">Testar</span>
                     </Button>
                     <Button
                       variant="outline"
-                      size="icon"
+                      size="sm"
                       onClick={() => handleEdit(webhook)}
                       title="Editar"
+                      className="h-8 px-3 sm:h-9 sm:w-9 sm:p-0 flex items-center gap-2"
                     >
-                      <Pencil className="w-4 h-4" />
+                      <Pencil className="w-3.5 h-3.5" />
+                      <span className="sm:hidden text-xs">Editar</span>
                     </Button>
                     <Button
                       variant="outline"
-                      size="icon"
+                      size="sm"
                       onClick={() => handleDelete(webhook.id)}
                       title="Excluir"
+                      className="h-8 px-3 sm:h-9 sm:w-9 sm:p-0 flex items-center gap-2 hover:bg-destructive/10 hover:border-destructive/50"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">URL do Webhook</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={getFullWebhookUrl(webhook.url_gerada)}
-                      readOnly
-                      className="font-mono text-sm"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => copyToClipboard(getFullWebhookUrl(webhook.url_gerada))}
-                      title="Copiar URL"
-                    >
-                      <Copy className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                      <span className="sm:hidden text-xs text-destructive">Excluir</span>
                     </Button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Tipo de Ação:</span>
-                    <p className="font-medium">
+                {/* URL do Webhook */}
+                <div className="space-y-2 mb-3 sm:mb-4">
+                  <Label className="text-xs sm:text-sm font-medium text-muted-foreground">URL do Webhook</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 bg-muted/50 rounded-md px-2 sm:px-3 py-1.5 sm:py-2 overflow-hidden">
+                      <p className="font-mono text-[10px] sm:text-xs text-muted-foreground truncate">
+                        {getFullWebhookUrl(webhook.url_gerada)}
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(getFullWebhookUrl(webhook.url_gerada))}
+                      title="Copiar URL"
+                      className="h-8 w-8 sm:h-9 sm:w-9 p-0 shrink-0"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Info Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 text-xs sm:text-sm">
+                  <div className="bg-muted/30 rounded-md p-2 sm:p-3">
+                    <span className="text-muted-foreground text-[10px] sm:text-xs block mb-0.5">Tipo de Ação</span>
+                    <p className="font-medium text-xs sm:text-sm truncate">
                       {webhook.acao_tipo === "automacao_marketing" 
-                        ? "Automação de Marketing" 
+                        ? "Automação Marketing" 
                         : webhook.acao_tipo === "rodar_bot"
                         ? "Rodar Bot"
                         : "URL Customizada"}
                     </p>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground">Total de Triggers:</span>
-                    <p className="font-medium">{webhook.total_triggers}</p>
+                  <div className="bg-muted/30 rounded-md p-2 sm:p-3">
+                    <span className="text-muted-foreground text-[10px] sm:text-xs block mb-0.5">Total Triggers</span>
+                    <p className="font-medium text-xs sm:text-sm">{webhook.total_triggers}</p>
                   </div>
                   {webhook.ultimo_trigger && (
-                    <div className="col-span-2">
-                      <span className="text-muted-foreground">Último Trigger:</span>
-                      <p className="font-medium">
+                    <div className="col-span-2 sm:col-span-1 bg-muted/30 rounded-md p-2 sm:p-3">
+                      <span className="text-muted-foreground text-[10px] sm:text-xs block mb-0.5">Último Trigger</span>
+                      <p className="font-medium text-xs sm:text-sm truncate">
                         {new Date(webhook.ultimo_trigger).toLocaleString("pt-BR")}
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="flex gap-2 text-xs text-muted-foreground">
-                  {webhook.aceita_json && <Badge variant="outline">JSON</Badge>}
-                  {webhook.aceita_form_data && <Badge variant="outline">Form Data</Badge>}
+                {/* Badges de formatos */}
+                <div className="flex gap-1.5 mt-3 pt-3 border-t">
+                  {webhook.aceita_json && (
+                    <Badge variant="outline" className="text-[10px] sm:text-xs bg-primary/5">
+                      JSON
+                    </Badge>
+                  )}
+                  {webhook.aceita_form_data && (
+                    <Badge variant="outline" className="text-[10px] sm:text-xs bg-primary/5">
+                      Form Data
+                    </Badge>
+                  )}
                 </div>
-              </CardContent>
+              </div>
             </Card>
           ))
         )}
