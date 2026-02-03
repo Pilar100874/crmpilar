@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, MoreVertical, Trash2, GripVertical, Search, Calendar, X, Pencil, Check, Loader2, Edit, Settings2, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download } from "lucide-react";
@@ -2859,14 +2859,16 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       </div>
 
       {/* Panel de Importação */}
-      <Sheet open={showImportPanel} onOpenChange={setShowImportPanel}>
-        <SheetContent side="right" className="w-full sm:max-w-[900px] overflow-auto" aria-describedby="import-description">
-          <SheetHeader>
-            <SheetTitle>Importar Empresas e Contatos</SheetTitle>
-            <p id="import-description" className="sr-only">Importe múltiplos contatos através de arquivo Excel/CSV ou integração com API</p>
-          </SheetHeader>
+      <Dialog open={showImportPanel} onOpenChange={setShowImportPanel}>
+        <DialogContent className="max-w-[95vw] sm:max-w-[900px] max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Importar Empresas e Contatos</DialogTitle>
+            <DialogDescription>
+              Importe múltiplos contatos através de arquivo Excel/CSV ou integração com API
+            </DialogDescription>
+          </DialogHeader>
           
-          <div className="mt-6">
+          <div className="mt-4">
             <Tabs defaultValue="arquivo" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="arquivo">Por Arquivo</TabsTrigger>
@@ -2887,8 +2889,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               </TabsContent>
             </Tabs>
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );
