@@ -256,6 +256,7 @@ export default function Atendimento() {
   const [showFluxoAtendimento, setShowFluxoAtendimento] = useState(false);
   const [showConfigDatas, setShowConfigDatas] = useState(false);
   const [showEnvioMassa, setShowEnvioMassa] = useState(false);
+  const [showEnvioMassaWizard, setShowEnvioMassaWizard] = useState(false);
   const [agendaViewMode, setAgendaViewMode] = useState<'default' | 'fluxo' | 'massa'>('default');
   const [fluxoCurrentTask, setFluxoCurrentTask] = useState<any | null>(null);
   const [fluxoInitialIndex, setFluxoInitialIndex] = useState(0);
@@ -3930,6 +3931,7 @@ ${recentMessages}
                 setAgendaViewMode={setAgendaViewMode}
                 setFluxoInitialIndex={setFluxoInitialIndex}
                 setShowConfigDatas={setShowConfigDatas}
+                setShowEnvioMassaWizard={setShowEnvioMassaWizard}
                 onRefreshEmails={() => loadUserEmails()}
                 onShowCustomerSearch={() => {
                   if (activeTab === "agenda") setShowCustomerSearchForTask(true);
@@ -4480,15 +4482,12 @@ ${recentMessages}
                     Fluxo
                   </Button>
                   <Button 
-                    variant={agendaViewMode === 'massa' ? "default" : "ghost"}
+                    variant="ghost"
                     size="sm" 
-                    onClick={() => setAgendaViewMode('massa')}
-                    disabled={filteredTasks.length === 0}
+                    onClick={() => setShowEnvioMassaWizard(true)}
                     className={cn(
                       "h-7 px-2 rounded text-xs font-medium transition-all",
-                      agendaViewMode === 'massa'
-                        ? "bg-orange-500 hover:bg-orange-600 text-white shadow-sm"
-                        : "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
+                      "hover:bg-orange-50 dark:hover:bg-orange-950/30 text-orange-600 dark:text-orange-400"
                     )}
                   >
                     <Users className="w-3 h-3 mr-1" />
@@ -5835,7 +5834,7 @@ ${recentMessages}
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => setAgendaViewMode('massa')}
+                      onClick={() => setShowEnvioMassaWizard(true)}
                       className="gap-2"
                     >
                       <Users className="h-4 w-4" />
@@ -6099,6 +6098,11 @@ ${recentMessages}
       usuarioId={usuarioId}
       onComplete={loadTodayTasks}
     />
+    <EnvioMassaWizardDialog
+      open={showEnvioMassaWizard}
+      onOpenChange={setShowEnvioMassaWizard}
+      onComplete={loadTodayTasks}
+    />
     </>
   );
 }
@@ -6154,6 +6158,7 @@ interface MobileListContentProps {
   setAgendaViewMode: (mode: 'default' | 'fluxo' | 'massa') => void;
   setFluxoInitialIndex: (index: number) => void;
   setShowConfigDatas: (show: boolean) => void;
+  setShowEnvioMassaWizard: (show: boolean) => void;
   onRefreshEmails: () => void;
   onShowCustomerSearch: () => void;
 }
@@ -6203,6 +6208,7 @@ function MobileListContent({
   setAgendaViewMode,
   setFluxoInitialIndex,
   setShowConfigDatas,
+  setShowEnvioMassaWizard,
   onRefreshEmails,
   onShowCustomerSearch,
 }: MobileListContentProps) {
@@ -6311,13 +6317,10 @@ function MobileListContent({
                       Fluxo
                     </button>
                     <button 
-                      onClick={() => setAgendaViewMode('massa')}
-                      disabled={filteredTasks.length === 0}
+                      onClick={() => setShowEnvioMassaWizard(true)}
                       className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all disabled:opacity-50",
-                        agendaViewMode === 'massa' 
-                          ? "bg-primary text-primary-foreground shadow-sm" 
-                          : "text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-background"
+                        "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all",
+                        "text-muted-foreground hover:text-foreground hover:bg-white dark:hover:bg-background"
                       )}
                     >
                       <Users className="w-3.5 h-3.5" />
