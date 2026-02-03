@@ -1,14 +1,16 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase, Edit3, UserPlus } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase, Edit3, UserPlus, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 import { EditEmpresaDialog } from "./EditEmpresaDialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { GlobalFilter } from "./GlobalClientFilter";
 import { toast } from "@/lib/toast-config";
+import { supabase } from "@/integrations/supabase/client";
 
 export type PanelType = "chat" | "agenda" | "email" | "orcamento";
 
@@ -72,6 +74,78 @@ export function UnifiedDetailsPanel({
   const [contatoOpen, setContatoOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
   const [editingEmpresaId, setEditingEmpresaId] = useState<string | null>(null);
+  
+  // Estado para edição inline do contato
+  const [isEditingContato, setIsEditingContato] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    nome: '',
+    whatsapp: '',
+    telefone: '',
+    email: ''
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Sincronizar dados do formulário quando props mudam
+  useEffect(() => {
+    setEditFormData({
+      nome: nome || '',
+      whatsapp: whatsapp || '',
+      telefone: telefone || '',
+      email: email || ''
+    });
+  }, [nome, whatsapp, telefone, email]);
+
+  // Aplicar máscara de telefone
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 4) return `+${numbers.slice(0, 2)} (${numbers.slice(2)}`;
+    if (numbers.length <= 6) return `+${numbers.slice(0, 2)} (${numbers.slice(2, 4)}) ${numbers.slice(4)}`;
+    if (numbers.length <= 11) return `+${numbers.slice(0, 2)} (${numbers.slice(2, 4)}) ${numbers.slice(4, 9)}-${numbers.slice(9)}`;
+    return `+${numbers.slice(0, 2)} (${numbers.slice(2, 4)}) ${numbers.slice(4, 9)}-${numbers.slice(9, 13)}`;
+  };
+
+  const handlePhoneChange = (field: 'whatsapp' | 'telefone', value: string) => {
+    setEditFormData(prev => ({ ...prev, [field]: formatPhone(value) }));
+  };
+
+  const handleSaveContato = async () => {
+    if (!customerId) return;
+    
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('customers')
+        .update({
+          nome: editFormData.nome,
+          telefone: editFormData.whatsapp, // telefone é o campo WhatsApp no banco
+          tel: editFormData.telefone,       // tel é o campo Telefone no banco
+          email: editFormData.email
+        })
+        .eq('id', customerId);
+
+      if (error) throw error;
+
+      toast.success('Contato atualizado com sucesso!');
+      setIsEditingContato(false);
+      onCompaniesUpdated?.(); // Recarregar dados
+    } catch (error) {
+      console.error('Erro ao salvar contato:', error);
+      toast.error('Erro ao salvar contato');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditFormData({
+      nome: nome || '',
+      whatsapp: whatsapp || '',
+      telefone: telefone || '',
+      email: email || ''
+    });
+    setIsEditingContato(false);
+  };
 
   // Obtém o cargo da primeira empresa vinculada
   const primaryCompany = companies.find(c => c.is_primary) || companies[0];
@@ -305,13 +379,36 @@ export function UnifiedDetailsPanel({
             </CollapsibleTrigger>
             {/* Botão Editar/Criar ao lado do título */}
             <div className="flex items-center gap-1 ml-2">
-              {customerId ? (
+              {isEditingContato ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-green-600 hover:bg-green-50"
+                    onClick={handleSaveContato}
+                    disabled={isSaving}
+                    title="Salvar"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-red-600 hover:bg-red-50"
+                    onClick={handleCancelEdit}
+                    disabled={isSaving}
+                    title="Cancelar"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                </>
+              ) : customerId ? (
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-7 w-7 p-0 text-primary hover:bg-primary/10"
-                  onClick={handleEditContatoClick}
-                  title="Editar contato"
+                  onClick={() => setIsEditingContato(true)}
+                  title="Editar contato inline"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </Button>
@@ -332,54 +429,91 @@ export function UnifiedDetailsPanel({
             <Card className="p-3 rounded-2xl space-y-3">
 
               {/* Nome */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
                   <User className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground">Nome</span>
                 </div>
-                <span className="text-xs truncate max-w-[140px]">{nome || '-'}</span>
+                {isEditingContato ? (
+                  <Input
+                    value={editFormData.nome}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, nome: e.target.value }))}
+                    className="h-7 text-xs flex-1 max-w-[140px]"
+                    placeholder="Nome"
+                  />
+                ) : (
+                  <span className="text-xs truncate max-w-[140px]">{nome || '-'}</span>
+                )}
               </div>
 
               {/* WhatsApp */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
                   <span className="text-xs text-muted-foreground">WhatsApp</span>
                 </div>
-                <span className="text-xs truncate max-w-[140px]">{whatsapp || '-'}</span>
+                {isEditingContato ? (
+                  <Input
+                    value={editFormData.whatsapp}
+                    onChange={(e) => handlePhoneChange('whatsapp', e.target.value)}
+                    className="h-7 text-xs flex-1 max-w-[140px]"
+                    placeholder="+55 (00) 00000-0000"
+                  />
+                ) : (
+                  <span className="text-xs truncate max-w-[140px]">{whatsapp || '-'}</span>
+                )}
               </div>
 
               {/* Telefone */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
                   <span className="text-xs text-muted-foreground">Telefone</span>
                 </div>
-                <span className="text-xs truncate max-w-[140px]">{telefone || '-'}</span>
+                {isEditingContato ? (
+                  <Input
+                    value={editFormData.telefone}
+                    onChange={(e) => handlePhoneChange('telefone', e.target.value)}
+                    className="h-7 text-xs flex-1 max-w-[140px]"
+                    placeholder="+55 (00) 00000-0000"
+                  />
+                ) : (
+                  <span className="text-xs truncate max-w-[140px]">{telefone || '-'}</span>
+                )}
               </div>
 
               {/* Email */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
                   <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-xs text-muted-foreground">Email</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  {email ? (
-                    <>
-                      <span className="text-xs truncate max-w-[120px]">{email}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
-                        onClick={() => window.open(`mailto:${email}`, '_blank')}
-                        title="Enviar email"
-                      >
-                        <Mail className="w-3 h-3" />
-                      </Button>
-                    </>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">-</span>
-                  )}
-                </div>
+                {isEditingContato ? (
+                  <Input
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
+                    className="h-7 text-xs flex-1 max-w-[140px]"
+                    placeholder="email@exemplo.com"
+                    type="email"
+                  />
+                ) : (
+                  <div className="flex items-center gap-1">
+                    {email ? (
+                      <>
+                        <span className="text-xs truncate max-w-[120px]">{email}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
+                          onClick={() => window.open(`mailto:${email}`, '_blank')}
+                          title="Enviar email"
+                        >
+                          <Mail className="w-3 h-3" />
+                        </Button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">-</span>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Cargo - só mostra se houver empresa vinculada */}
