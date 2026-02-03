@@ -2324,6 +2324,40 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Panel de Importação - dentro do bloco !showForm */}
+        <Dialog open={showImportPanel} onOpenChange={setShowImportPanel}>
+          <DialogContent className="max-w-[95vw] sm:max-w-[900px] max-h-[90vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle>Importar Empresas e Contatos</DialogTitle>
+              <DialogDescription>
+                Importe múltiplos contatos através de arquivo Excel/CSV ou integração com API
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="mt-4">
+              <Tabs defaultValue="arquivo" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="arquivo">Por Arquivo</TabsTrigger>
+                  <TabsTrigger value="api">Por API</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="arquivo">
+                  <ImportContatosWizard 
+                    onClose={() => setShowImportPanel(false)}
+                    onImportComplete={async () => {
+                      await loadContacts();
+                    }}
+                  />
+                </TabsContent>
+
+                <TabsContent value="api">
+                  <APIImportDialog />
+                </TabsContent>
+              </Tabs>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
