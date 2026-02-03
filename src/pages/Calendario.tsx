@@ -884,17 +884,30 @@ export default function Calendario() {
         return false;
       }
 
+      // Buscar o ID do usuário na tabela usuarios (a FK referencia usuarios, não auth.users)
+      const { data: usuarioData, error: usuarioError } = await supabase
+        .from('usuarios')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+      
+      if (usuarioError || !usuarioData) {
+        console.error("Erro ao buscar ID do usuário na tabela usuarios:", usuarioError);
+        toast.error("Usuário não encontrado na base de dados");
+        return false;
+      }
+
       const { error } = await (supabase as any)
         .from('calendario_tarefas')
         .insert({
-          user_id: user.id,
+          user_id: usuarioData.id,
           estabelecimento_id: estabelecimentoId,
           contact_id: task.contactId,
           contact_name: task.contactName,
           title: task.title,
           description: task.description,
           date: format(task.date, 'yyyy-MM-dd'),
-          time: task.time || null, // Converter string vazia em null
+          time: task.time || null,
           origem: task.origem,
           campaign_id: task.campaignId,
           status: task.status,
@@ -1325,28 +1338,30 @@ export default function Calendario() {
 
       console.log("Estabelecimento ID obtido:", estabelecimentoId);
 
-      // Buscar o auth_user_id se taskData.userId for fornecido (é o ID da tabela usuarios)
-      let targetUserId = user.id;
-      if (taskData.userId) {
+      // O user_id na tabela calendario_tarefas referencia a tabela usuarios, não auth.users
+      // Se taskData.userId já foi fornecido, ele já é o ID correto da tabela usuarios
+      // Caso contrário, precisamos buscar o ID da tabela usuarios baseado no auth.uid()
+      let targetUserId = taskData.userId;
+      
+      if (!targetUserId) {
         const { data: usuarioData, error: usuarioError } = await supabase
           .from('usuarios')
-          .select('auth_user_id')
-          .eq('id', taskData.userId)
+          .select('id')
+          .eq('auth_user_id', user.id)
           .maybeSingle();
         
         if (usuarioError || !usuarioData) {
-          console.error("Erro ao buscar auth_user_id do usuário:", usuarioError);
-          toast.error("Usuário não encontrado");
+          console.error("Erro ao buscar ID do usuário na tabela usuarios:", usuarioError);
+          toast.error("Usuário não encontrado na base de dados");
           return;
         }
-        // @ts-ignore - auth_user_id existe mas pode não estar nos tipos gerados
-        targetUserId = usuarioData.auth_user_id;
+        targetUserId = usuarioData.id;
       }
       
       console.log("=== TARGET USER DEBUG ===");
       console.log("taskData.userId (usuarios.id):", taskData.userId);
       console.log("user.id (current auth):", user.id);
-      console.log("targetUserId (final auth_user_id):", targetUserId);
+      console.log("targetUserId (usuarios.id final):", targetUserId);
       console.log("========================");
 
       // Se for dia todo, atualizar a tarefa se estiver editando; caso contrário, criar baseado na jornada
