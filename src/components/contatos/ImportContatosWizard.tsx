@@ -258,6 +258,15 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
     let successCount = 0;
     const failedRows: ImportRow[] = [];
 
+    // Adicionar linhas com erro de validação que não foram selecionadas
+    const validationErrorRows = parsedRows.filter((r) => !r.isValid);
+    validationErrorRows.forEach((row) => {
+      failedRows.push({
+        ...row,
+        errors: row.errors.length > 0 ? row.errors : ["Erro de validação"],
+      });
+    });
+
     for (let i = 0; i < selectedRows.length; i++) {
       const row = selectedRows[i];
       
@@ -328,6 +337,9 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
 
       setImportProgress(Math.round(((i + 1) / selectedRows.length) * 100));
     }
+
+    // Ordenar por número da linha
+    failedRows.sort((a, b) => a.rowIndex - b.rowIndex);
 
     setImportResults({
       success: successCount,
