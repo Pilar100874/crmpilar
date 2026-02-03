@@ -1256,16 +1256,17 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       
       // Verificar duplicidade de e-mail no banco
       if (emailLower) {
-        const { data: existingByEmail } = await supabase
+        const { data: existingByEmail, error: emailError } = await supabase
           .from('customers')
           .select('id, nome, email')
           .eq('estabelecimento_id', estabId)
-          .ilike('email', emailLower)
-          .neq('id', editingContact?.id || '00000000-0000-0000-0000-000000000000')
-          .limit(1);
+          .ilike('email', emailLower);
         
-        if (existingByEmail && existingByEmail.length > 0) {
-          setDuplicateContact(existingByEmail[0] as any);
+        // Filtrar para excluir o contato atual (se estiver editando)
+        const duplicateEmail = existingByEmail?.find(c => c.id !== editingContact?.id);
+        
+        if (duplicateEmail) {
+          setDuplicateContact(duplicateEmail as any);
           setDuplicateField('email');
           setDuplicateDialogOpen(true);
           toast.error('E-mail já cadastrado em outro contato');
@@ -1274,17 +1275,23 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
       }
 
       // Verificar duplicidade de WhatsApp no banco
-      if (phoneClean) {
-        const { data: existingByPhone } = await supabase
+      if (phoneClean && phoneClean.length >= 8) {
+        // Buscar todos os contatos e verificar manualmente para maior precisão
+        const { data: allContacts, error: phoneError } = await supabase
           .from('customers')
-          .select('id, nome, telefone')
-          .eq('estabelecimento_id', estabId)
-          .or(`telefone.ilike.%${phoneClean}%,tel.ilike.%${phoneClean}%`)
-          .neq('id', editingContact?.id || '00000000-0000-0000-0000-000000000000')
-          .limit(1);
+          .select('id, nome, telefone, tel')
+          .eq('estabelecimento_id', estabId);
         
-        if (existingByPhone && existingByPhone.length > 0) {
-          setDuplicateContact(existingByPhone[0] as any);
+        // Verificar se algum contato tem o mesmo telefone (limpando os caracteres)
+        const duplicatePhone = allContacts?.find(c => {
+          if (c.id === editingContact?.id) return false;
+          const existingPhone = (c.telefone || '').replace(/\D/g, '');
+          const existingTel = (c.tel || '').replace(/\D/g, '');
+          return existingPhone === phoneClean || existingTel === phoneClean;
+        });
+        
+        if (duplicatePhone) {
+          setDuplicateContact(duplicatePhone as any);
           setDuplicateField('phone');
           setDuplicateDialogOpen(true);
           toast.error('WhatsApp já cadastrado em outro contato');
