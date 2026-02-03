@@ -1,14 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ContactForBulkSend, EnvioMassaFilters } from '../types';
+import { ContactForBulkSend, EnvioMassaFilters, CanalEnvio } from '../types';
 
-export function useContactsFilter(estabelecimentoId: string) {
+export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio | null = null) {
   const [contacts, setContacts] = useState<ContactForBulkSend[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<ContactForBulkSend[]>([]);
   const [segmentos, setSegmentos] = useState<{ id: string; nome: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<EnvioMassaFilters>({});
+
+  // Filter contacts by channel
+  const contactsByChannel = useMemo(() => {
+    if (!canal) return contacts;
+    
+    return contacts.filter(c => {
+      if (canal === 'whatsapp') return !!c.telefone;
+      if (canal === 'email') return !!c.email;
+      return true;
+    });
+  }, [contacts, canal]);
 
   const fetchContacts = async () => {
     if (!estabelecimentoId) return;
@@ -87,7 +98,8 @@ export function useContactsFilter(estabelecimentoId: string) {
   const applyFilters = (newFilters: EnvioMassaFilters) => {
     setFilters(newFilters);
 
-    let result = [...contacts];
+    // Start with contacts filtered by channel
+    let result = [...contactsByChannel];
 
     // Filter by name
     if (newFilters.nome) {
@@ -149,12 +161,20 @@ export function useContactsFilter(estabelecimentoId: string) {
 
   const clearFilters = () => {
     setFilters({});
-    setFilteredContacts(contacts);
+    setFilteredContacts(contactsByChannel);
   };
+
+  // Re-apply filters when canal changes
+  useEffect(() => {
+    if (canal) {
+      applyFilters(filters);
+    }
+  }, [canal, contactsByChannel]);
 
   return {
     contacts: filteredContacts,
     allContacts: contacts,
+    contactsByChannel,
     segmentos,
     loading,
     filters,

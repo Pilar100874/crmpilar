@@ -54,10 +54,13 @@ export interface MediaGalleryItem {
   duracao_segundos?: number;
 }
 
-export type WizardStep = 'filter' | 'compose' | 'preview' | 'schedule' | 'confirm';
+export type CanalEnvio = 'whatsapp' | 'email';
+
+export type WizardStep = 'channel' | 'filter' | 'compose' | 'preview' | 'schedule' | 'confirm';
 
 export interface EnvioMassaState {
   step: WizardStep;
+  canal: CanalEnvio | null;
   filters: EnvioMassaFilters;
   selectedContacts: ContactForBulkSend[];
   contentItems: ContentItem[];

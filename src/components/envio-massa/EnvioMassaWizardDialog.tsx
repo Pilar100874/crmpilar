@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { format, addDays } from "date-fns";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 
+import { StepChannel } from "./steps/StepChannel";
 import { StepFilter } from "./steps/StepFilter";
 import { StepCompose } from "./steps/StepCompose";
 import { StepPreview } from "./steps/StepPreview";
@@ -16,7 +17,7 @@ import { useQuickReplies } from "./hooks/useQuickReplies";
 import { useMediaGallery } from "./hooks/useMediaGallery";
 import { 
   WizardStep, ContentItem, ContactForBulkSend, 
-  EnvioMassaFilters, EnvioMassaState 
+  EnvioMassaFilters, EnvioMassaState, CanalEnvio 
 } from "./types";
 
 interface EnvioMassaWizardDialogProps {
@@ -26,12 +27,22 @@ interface EnvioMassaWizardDialogProps {
 }
 
 const STEPS: { key: WizardStep; label: string; number: number }[] = [
-  { key: 'filter', label: 'Filtrar Contatos', number: 1 },
-  { key: 'compose', label: 'Montar Mensagem', number: 2 },
-  { key: 'preview', label: 'Preview', number: 3 },
-  { key: 'schedule', label: 'Agendar', number: 4 },
-  { key: 'confirm', label: 'Confirmar', number: 5 },
+  { key: 'channel', label: 'Canal', number: 1 },
+  { key: 'filter', label: 'Filtrar Contatos', number: 2 },
+  { key: 'compose', label: 'Montar Mensagem', number: 3 },
+  { key: 'preview', label: 'Preview', number: 4 },
+  { key: 'schedule', label: 'Agendar', number: 5 },
+  { key: 'confirm', label: 'Confirmar', number: 6 },
 ];
+
+const getInitialState = (): EnvioMassaState => ({
+  step: 'channel',
+  canal: null,
+  filters: {},
+  selectedContacts: [],
+  contentItems: [],
+  proximaDataContato: addDays(new Date(), 3)
+});
 
 export function EnvioMassaWizardDialog({ 
   open, 
@@ -40,13 +51,7 @@ export function EnvioMassaWizardDialog({
 }: EnvioMassaWizardDialogProps) {
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>('');
   const [usuarioId, setUsuarioId] = useState<string>('');
-  const [state, setState] = useState<EnvioMassaState>({
-    step: 'filter',
-    filters: {},
-    selectedContacts: [],
-    contentItems: [],
-    proximaDataContato: addDays(new Date(), 3)
-  });
+  const [state, setState] = useState<EnvioMassaState>(getInitialState());
   const [isSending, setIsSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
 
@@ -55,13 +60,7 @@ export function EnvioMassaWizardDialog({
     if (open) {
       loadUserData();
       // Reset state when opening
-      setState({
-        step: 'filter',
-        filters: {},
-        selectedContacts: [],
-        contentItems: [],
-        proximaDataContato: addDays(new Date(), 3)
-      });
+      setState(getInitialState());
     }
   }, [open]);
 
@@ -86,14 +85,15 @@ export function EnvioMassaWizardDialog({
     }
   };
 
-  // Hooks for data
+  // Hooks for data - pass canal to filter contacts
   const { 
-    contacts, 
+    contacts,
+    contactsByChannel,
     segmentos, 
     loading: loadingContacts,
     filters,
     applyFilters 
-  } = useContactsFilter(estabelecimentoId);
+  } = useContactsFilter(estabelecimentoId, state.canal);
 
   const { 
     replies: quickReplies, 
@@ -110,6 +110,14 @@ export function EnvioMassaWizardDialog({
   // Navigation
   const goToStep = (step: WizardStep) => {
     setState(prev => ({ ...prev, step }));
+  };
+
+  const handleCanalChange = (canal: CanalEnvio) => {
+    setState(prev => ({ 
+      ...prev, 
+      canal,
+      selectedContacts: [] // Reset selected contacts when changing channel
+    }));
   };
 
   const handleFilterChange = (newFilters: EnvioMassaFilters) => {
@@ -171,10 +179,11 @@ export function EnvioMassaWizardDialog({
             estabelecimento_id: estabelecimentoId,
             contact_id: contact.id,
             contact_name: contact.nome,
-            title: `Retorno: Envio em massa`,
+            title: `Retorno: Envio em massa (${state.canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'})`,
             description: description.substring(0, 1000), // Limit description
             date: format(state.proximaDataContato, 'yyyy-MM-dd'),
             origem: 'envio_massa',
+            origem_sub_item: state.canal,
             status: 'pendente'
           });
 
@@ -205,19 +214,26 @@ export function EnvioMassaWizardDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Envio em Massa</span>
-            <Badge variant="outline">
-              Etapa {currentStepIndex + 1} de {STEPS.length}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {state.canal && (
+                <Badge variant="secondary">
+                  {state.canal === 'whatsapp' ? 'WhatsApp' : 'E-mail'}
+                </Badge>
+              )}
+              <Badge variant="outline">
+                Etapa {currentStepIndex + 1} de {STEPS.length}
+              </Badge>
+            </div>
           </DialogTitle>
         </DialogHeader>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-6">
+        <div className="flex items-center justify-center mb-6 overflow-x-auto">
           {STEPS.map((step, index) => (
             <div key={step.key} className="flex items-center">
               <div 
                 className={`
-                  flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium
+                  flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium shrink-0
                   ${index <= currentStepIndex 
                     ? 'bg-primary text-primary-foreground' 
                     : 'bg-muted text-muted-foreground'}
@@ -227,7 +243,7 @@ export function EnvioMassaWizardDialog({
               </div>
               <span 
                 className={`
-                  hidden sm:block ml-2 text-sm
+                  hidden lg:block ml-2 text-sm whitespace-nowrap
                   ${index <= currentStepIndex ? 'text-foreground' : 'text-muted-foreground'}
                 `}
               >
@@ -236,7 +252,7 @@ export function EnvioMassaWizardDialog({
               {index < STEPS.length - 1 && (
                 <div 
                   className={`
-                    w-8 sm:w-12 h-0.5 mx-2
+                    w-4 sm:w-8 h-0.5 mx-1 sm:mx-2 shrink-0
                     ${index < currentStepIndex ? 'bg-primary' : 'bg-muted'}
                   `}
                 />
@@ -246,6 +262,14 @@ export function EnvioMassaWizardDialog({
         </div>
 
         {/* Step Content */}
+        {state.step === 'channel' && (
+          <StepChannel
+            selectedCanal={state.canal}
+            onSelectCanal={handleCanalChange}
+            onNext={() => goToStep('filter')}
+          />
+        )}
+
         {state.step === 'filter' && (
           <StepFilter
             contacts={contacts}
@@ -254,7 +278,9 @@ export function EnvioMassaWizardDialog({
             filters={state.filters}
             onFilterChange={handleFilterChange}
             onSelectContacts={handleSelectContacts}
+            onBack={() => goToStep('channel')}
             onNext={() => goToStep('compose')}
+            canal={state.canal}
           />
         )}
 
@@ -298,6 +324,7 @@ export function EnvioMassaWizardDialog({
             progress={sendProgress}
             onBack={() => goToStep('schedule')}
             onConfirm={handleConfirm}
+            canal={state.canal}
           />
         )}
       </DialogContent>
