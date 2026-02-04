@@ -12,6 +12,8 @@ import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { maskCNPJ, maskCPF, maskCEP, maskPhone, maskWhatsApp } from "@/lib/masks";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { useCNPJLookup } from "@/hooks/useCNPJLookup";
+import { useAddressLookup } from "@/hooks/useAddressLookup";
 
 interface CustomField {
   id: string;
@@ -35,6 +37,10 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
   const [saving, setSaving] = useState(false);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("empresa");
+  
+  // Hooks para busca automática
+  const { lookupCNPJ, loading: cnpjLoading } = useCNPJLookup();
+  const { lookupCEP, loading: cepLoading } = useAddressLookup();
   
   // Form data
   const [formData, setFormData] = useState<Record<string, any>>({
@@ -160,15 +166,43 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
     setContatos(data || []);
   };
   
-  const handleCepBlur = async () => {
-    const cepClean = formData.cep?.replace(/\D/g, "");
-    if (cepClean?.length !== 8) return;
+  // Buscar CNPJ automaticamente na Receita Federal
+  const handleCNPJChange = async (value: string) => {
+    const clean = value.replace(/\D/g, "");
+    const maskedValue = clean.length <= 11 ? maskCPF(value) : maskCNPJ(value);
+    setFormData(prev => ({ ...prev, cpf_cnpj: maskedValue }));
 
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cepClean}/json/`);
-      const data = await response.json();
-      
-      if (!data.erro) {
+    // Se for CNPJ completo (14 dígitos), buscar dados
+    if (clean.length === 14) {
+      const data = await lookupCNPJ(clean);
+      if (data) {
+        setFormData(prev => ({
+          ...prev,
+          nome: data.nome || prev.nome,
+          nome_fantasia: data.fantasia || prev.nome_fantasia,
+          cep: data.cep ? maskCEP(data.cep) : prev.cep,
+          endereco: data.logradouro + (data.numero ? ', ' + data.numero : '') || prev.endereco,
+          numero: data.numero || prev.numero,
+          bairro: data.bairro || prev.bairro,
+          cidade: data.municipio || prev.cidade,
+          estado: data.uf || prev.estado,
+          telefone: data.telefone ? maskPhone(data.telefone) : prev.telefone,
+          email: data.email || prev.email,
+        }));
+        toast.success("Dados preenchidos automaticamente via CNPJ");
+      }
+    }
+  };
+
+  // Buscar CEP automaticamente
+  const handleCEPChange = async (value: string) => {
+    const maskedValue = maskCEP(value);
+    setFormData(prev => ({ ...prev, cep: maskedValue }));
+
+    const cleanCEP = value.replace(/\D/g, '');
+    if (cleanCEP.length === 8) {
+      const data = await lookupCEP(cleanCEP);
+      if (data) {
         setFormData(prev => ({
           ...prev,
           endereco: data.logradouro || prev.endereco,
@@ -176,9 +210,8 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
           cidade: data.localidade || prev.cidade,
           estado: data.uf || prev.estado,
         }));
+        toast.success("Endereço preenchido automaticamente");
       }
-    } catch (error) {
-      console.error("Error looking up CEP:", error);
     }
   };
 
@@ -291,12 +324,12 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-2xl overflow-hidden flex flex-col p-0">
-        {/* Header */}
-        <SheetHeader className="px-6 py-4 border-b bg-gradient-to-r from-emerald-50 to-transparent">
+        {/* Header - tema laranja do Atendimento */}
+        <SheetHeader className="px-6 py-4 border-b bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-emerald-600" />
+              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
                 <SheetTitle className="text-lg">Nova Empresa</SheetTitle>
@@ -335,17 +368,22 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
                 </Select>
               </div>
 
-              {/* CPF/CNPJ */}
+              {/* CPF/CNPJ com busca automática */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-muted-foreground" />
                   {formData.company_type === "Pessoa Física" ? "CPF" : "CNPJ"}
+                  {cnpjLoading && <Loader2 className="w-3 h-3 animate-spin text-orange-500" />}
                 </Label>
                 <Input
                   value={formData.cpf_cnpj}
-                  onChange={(e) => setFormData({ ...formData, cpf_cnpj: formatCnpjCpf(e.target.value) })}
+                  onChange={(e) => handleCNPJChange(e.target.value)}
                   placeholder={formData.company_type === "Pessoa Física" ? "000.000.000-00" : "00.000.000/0000-00"}
+                  className="focus-visible:ring-orange-500"
                 />
+                {formData.company_type === "Pessoa Jurídica" && (
+                  <p className="text-xs text-muted-foreground">Digite o CNPJ completo para preencher automaticamente</p>
+                )}
               </div>
 
               {/* Nome Fantasia */}
@@ -408,17 +446,18 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
                 />
               </div>
 
-              {/* CEP */}
+              {/* CEP com busca automática */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-muted-foreground" />
                   CEP
+                  {cepLoading && <Loader2 className="w-3 h-3 animate-spin text-orange-500" />}
                 </Label>
                 <Input
                   value={formData.cep}
-                  onChange={(e) => setFormData({ ...formData, cep: maskCEP(e.target.value) })}
-                  onBlur={handleCepBlur}
+                  onChange={(e) => handleCEPChange(e.target.value)}
                   placeholder="00000-000"
+                  className="focus-visible:ring-orange-500"
                 />
               </div>
 
