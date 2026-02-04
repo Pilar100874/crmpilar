@@ -74,7 +74,7 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
         const result = await supabase
           .from("usuarios")
           .select("id")
-          .eq("auth_id", authUser.id)
+          .eq("auth_user_id", authUser.id)
           .maybeSingle();
         
         if (result.data?.id) {
