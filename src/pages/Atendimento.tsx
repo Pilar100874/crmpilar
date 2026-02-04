@@ -1796,7 +1796,14 @@ export default function Atendimento() {
           customers:cliente_id (
             nome,
             telefone,
-            email
+            email,
+            customer_vinculos (
+              usuario_id,
+              usuarios:usuario_id (
+                id,
+                nome
+              )
+            )
           ),
           empresas:empresa_id (
             nome_fantasia,
@@ -4684,16 +4691,24 @@ ${recentMessages}
                       <div
                         key={conv.id}
                         onClick={() => setSelectedConversation(conv.id)}
-                        className={`px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 border-l-4 border-l-orange-400 ${
+                        className={`relative rounded-xl cursor-pointer transition-all duration-200 overflow-hidden ${
                           selectedConversation === conv.id 
-                            ? "bg-primary/10 border-t border-r border-b border-primary/30 shadow-sm" 
-                            : "bg-white/60 hover:bg-white hover:shadow-sm border-t border-r border-b border-transparent"
+                            ? "bg-orange-100 border border-orange-200 shadow-sm" 
+                            : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
                         }`}
                       >
-                        <div className="flex items-start gap-3">
+                        {/* Tarja lateral com nome do usuário vinculado */}
+                        {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 && (
+                          <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-violet-500">
+                            <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[60px] truncate">
+                              {conv.customerLinkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
+                            </span>
+                          </div>
+                        )}
+                        <div className={`flex items-start gap-3 p-3 ${conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 ? 'pl-8' : 'pl-3'}`}>
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                             selectedConversation === conv.id 
-                              ? "bg-primary text-primary-foreground" 
+                              ? "bg-orange-500 text-white" 
                               : "bg-gradient-to-br from-orange-100 to-orange-200"
                           }`}>
                             <User className="w-5 h-5" />
@@ -4713,21 +4728,11 @@ ${recentMessages}
                               {conv.lastMessage?.text || "Sem mensagens"}
                             </p>
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              {/* Usuários vinculados */}
-                              {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 && (
-                                <>
-                                  {conv.customerLinkedUsers.slice(0, 1).map((rel: any, idx: number) => (
-                                    <Badge key={idx} className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-violet-100 text-violet-700 border-0">
-                                      <User className="w-2.5 h-2.5" />
-                                      {rel.usuarios?.nome?.split(' ')[0] || "Usuário"}
-                                    </Badge>
-                                  ))}
-                                  {conv.customerLinkedUsers.length > 1 && (
-                                    <Badge className="text-[10px] px-1.5 py-0 bg-violet-50 text-violet-600 border-0">
-                                      +{conv.customerLinkedUsers.length - 1}
-                                    </Badge>
-                                  )}
-                                </>
+                              {/* Badge de usuários vinculados extra */}
+                              {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 1 && (
+                                <Badge className="text-[10px] px-1.5 py-0 bg-violet-100 text-violet-700 border-0">
+                                  +{conv.customerLinkedUsers.length - 1} usuário{conv.customerLinkedUsers.length > 2 ? 's' : ''}
+                                </Badge>
                               )}
                               {conv.bot_active !== false && (
                                 <Badge className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
@@ -4851,13 +4856,21 @@ ${recentMessages}
                       <div
                         key={conv.id}
                         onClick={() => setSelectedConversation(conv.id)}
-                        className={`px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                        className={`relative rounded-xl cursor-pointer transition-all duration-200 overflow-hidden ${
                           selectedConversation === conv.id 
                             ? "bg-primary/10 border border-primary/30 shadow-sm" 
                             : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
                         }`}
                       >
-                        <div className="flex items-start gap-3">
+                        {/* Tarja lateral com nome do usuário vinculado */}
+                        {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 && (
+                          <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-violet-500">
+                            <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[60px] truncate">
+                              {conv.customerLinkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
+                            </span>
+                          </div>
+                        )}
+                        <div className={`flex items-start gap-3 p-3 ${conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 ? 'pl-8' : 'pl-3'}`}>
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                             selectedConversation === conv.id 
                               ? "bg-primary text-primary-foreground" 
@@ -4880,21 +4893,11 @@ ${recentMessages}
                               {conv.lastMessage?.text || "Sem mensagens"}
                             </p>
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              {/* Usuários vinculados */}
-                              {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 && (
-                                <>
-                                  {conv.customerLinkedUsers.slice(0, 1).map((rel: any, idx: number) => (
-                                    <Badge key={idx} className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-violet-100 text-violet-700 border-0">
-                                      <User className="w-2.5 h-2.5" />
-                                      {rel.usuarios?.nome?.split(' ')[0] || "Usuário"}
-                                    </Badge>
-                                  ))}
-                                  {conv.customerLinkedUsers.length > 1 && (
-                                    <Badge className="text-[10px] px-1.5 py-0 bg-violet-50 text-violet-600 border-0">
-                                      +{conv.customerLinkedUsers.length - 1}
-                                    </Badge>
-                                  )}
-                                </>
+                              {/* Badge de usuários vinculados extra */}
+                              {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 1 && (
+                                <Badge className="text-[10px] px-1.5 py-0 bg-violet-100 text-violet-700 border-0">
+                                  +{conv.customerLinkedUsers.length - 1} usuário{conv.customerLinkedUsers.length > 2 ? 's' : ''}
+                                </Badge>
                               )}
                               {conv.bot_active !== false && (
                                 <Badge className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
@@ -5602,10 +5605,14 @@ ${recentMessages}
                   const toDate = orcamentosDateRange.to ? endOfDay(orcamentosDateRange.to) : endOfDay(orcamentosDateRange.from);
                   return orcDate >= fromDate && orcDate <= toDate;
                 })
-                .map((orc) => (
+                .map((orc) => {
+                  // Buscar usuários vinculados do cliente ou empresa do orçamento
+                  const orcLinkedUsers = orc.customers?.customer_vinculos || [];
+                  
+                  return (
                   <div 
                     key={orc.id} 
-                    className={`p-3 rounded-xl cursor-pointer transition-all duration-200 group ${
+                    className={`relative rounded-xl cursor-pointer transition-all duration-200 group overflow-hidden ${
                       selectedOrcamentoId === orc.id
                         ? "bg-orange-100 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 shadow-sm"
                         : "bg-white/60 dark:bg-background/60 hover:bg-white dark:hover:bg-background hover:shadow-sm border border-transparent"
@@ -5615,7 +5622,15 @@ ${recentMessages}
                       setOrcamentoSheetOpen(true);
                     }}
                   >
-                    <div className="flex items-start gap-3">
+                    {/* Tarja lateral com nome do usuário vinculado */}
+                    {orcLinkedUsers.length > 0 && (
+                      <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-violet-500">
+                        <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[60px] truncate">
+                          {orcLinkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
+                        </span>
+                      </div>
+                    )}
+                    <div className={`flex items-start gap-3 p-3 ${orcLinkedUsers.length > 0 ? 'pl-8' : 'pl-3'}`}>
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                         selectedOrcamentoId === orc.id
                           ? "bg-orange-500 text-white"
@@ -5670,11 +5685,17 @@ ${recentMessages}
                           <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 border-0">
                             {orc.etapa || orc.status}
                           </Badge>
+                          {/* Badge de usuários vinculados extra */}
+                          {orcLinkedUsers.length > 1 && (
+                            <Badge className="text-[10px] px-1.5 py-0 bg-violet-100 text-violet-700 border-0">
+                              +{orcLinkedUsers.length - 1} usuário{orcLinkedUsers.length > 2 ? 's' : ''}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
-                ))
+                )})
             )}
             </div>
           </TabsContent>
