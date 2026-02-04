@@ -1,14 +1,22 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Building2, Search, Plus, Loader2 } from "lucide-react";
+import { Building2, Search, Loader2, ArrowRight, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast-config";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
-import { CreateEmpresaDialog } from "./CreateEmpresaDialog";
+import { useCNPJLookup, CNPJData } from "@/hooks/useCNPJLookup";
+import { maskCPF, maskCNPJ } from "@/lib/masks";
+import { EmpresaFormSheet } from "./EmpresaFormSheet";
 
 interface VincularEmpresaDialogProps {
   open: boolean;
@@ -17,6 +25,9 @@ interface VincularEmpresaDialogProps {
   emailVinculo?: string;
   whatsappVinculo?: string;
   onSuccess?: () => void;
+  // Novo modo: usado nos formulários de contato para vincular empresa diretamente
+  modoFormulario?: boolean;
+  onEmpresaVinculada?: (empresa: { id: string; nome: string; nome_fantasia: string; cnpj: string }) => void;
 }
 
 interface Empresa {
@@ -24,9 +35,6 @@ interface Empresa {
   nome: string | null;
   nome_fantasia: string | null;
   cnpj: string | null;
-  custom_fields?: any;
-  emails_vinculados?: string[];
-  whatsapps_vinculados?: string[];
 }
 
 export function VincularEmpresaDialog({
@@ -35,329 +43,347 @@ export function VincularEmpresaDialog({
   customerId,
   emailVinculo,
   whatsappVinculo,
-  onSuccess
+  onSuccess,
+  modoFormulario = false,
+  onEmpresaVinculada,
 }: VincularEmpresaDialogProps) {
-  const [busca, setBusca] = useState("");
-  const [empresas, setEmpresas] = useState<Empresa[]>([]);
-  const [empresasFiltradas, setEmpresasFiltradas] = useState<Empresa[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [documento, setDocumento] = useState("");
+  const [etapa, setEtapa] = useState<"input" | "encontrada">("input");
+  const [buscando, setBuscando] = useState(false);
   const [vinculando, setVinculando] = useState(false);
+  const [empresaEncontrada, setEmpresaEncontrada] = useState<Empresa | null>(null);
+  const [estabelecimentoId, setEstabelecimentoId] = useState<string | null>(null);
   
-  // Estado para abrir o CreateEmpresaDialog
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  // Dialog de cadastro de empresa
+  const [showCadastro, setShowCadastro] = useState(false);
+  const [dadosCNPJ, setDadosCNPJ] = useState<CNPJData | null>(null);
+  const [documentoParaCadastro, setDocumentoParaCadastro] = useState("");
+  
+  const { lookupCNPJ, loading: loadingCNPJ } = useCNPJLookup();
 
   useEffect(() => {
     if (open) {
-      loadEmpresas();
-      setShowCreateDialog(false);
+      loadEstabelecimento();
+      resetState();
     }
   }, [open]);
 
-  const loadEmpresas = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('empresas')
-        .select('id, nome, nome_fantasia, cnpj, custom_fields, emails_vinculados, whatsapps_vinculados')
-        .order('nome_fantasia', { ascending: true });
-
-      if (error) throw error;
-      setEmpresas(data || []);
-    } catch (error) {
-      console.error('Erro ao carregar empresas:', error);
-    } finally {
-      setLoading(false);
-    }
+  const loadEstabelecimento = async () => {
+    const estabId = await getEstabelecimentoId();
+    setEstabelecimentoId(estabId);
   };
 
-  const handleSearch = (valor: string) => {
-    setBusca(valor);
-    if (valor.trim()) {
-      const termo = valor.toLowerCase();
-      const filtradas = empresas.filter(emp =>
-        emp.nome_fantasia?.toLowerCase().includes(termo) ||
-        emp.nome?.toLowerCase().includes(termo) ||
-        emp.cnpj?.includes(termo.replace(/\D/g, ''))
-      );
-      setEmpresasFiltradas(filtradas);
+  const resetState = () => {
+    setDocumento("");
+    setEtapa("input");
+    setEmpresaEncontrada(null);
+    setBuscando(false);
+    setShowCadastro(false);
+    setDadosCNPJ(null);
+    setDocumentoParaCadastro("");
+  };
+
+  const handleDocumentoChange = (value: string) => {
+    const clean = value.replace(/\D/g, "");
+    if (clean.length <= 11) {
+      setDocumento(maskCPF(value));
     } else {
-      setEmpresasFiltradas([]);
+      setDocumento(maskCNPJ(value));
     }
   };
 
-  const handleVincular = async (empresaId: string) => {
-    setVinculando(true);
+  const handleContinuar = async () => {
+    const cleanDoc = documento.replace(/\D/g, "");
+    
+    if (cleanDoc.length !== 11 && cleanDoc.length !== 14) {
+      toast.error("Digite um CPF (11 dígitos) ou CNPJ (14 dígitos) válido");
+      return;
+    }
+
+    if (!estabelecimentoId) {
+      toast.error("Estabelecimento não encontrado");
+      return;
+    }
+
+    setBuscando(true);
+
     try {
-      const estabId = await getEstabelecimentoId();
-      
+      // Buscar empresa existente no banco
+      const { data: empresas } = await supabase
+        .from("empresas")
+        .select("id, nome, nome_fantasia, cnpj")
+        .eq("estabelecimento_id", estabelecimentoId)
+        .not("cnpj", "is", null);
+
+      const empresaExistente = empresas?.find(
+        (e) => e.cnpj?.replace(/\D/g, "") === cleanDoc
+      );
+
+      if (empresaExistente) {
+        // Empresa já existe - mostrar para vincular
+        setEmpresaEncontrada(empresaExistente);
+        setEtapa("encontrada");
+      } else {
+        // Empresa não existe - buscar dados e abrir cadastro
+        setDocumentoParaCadastro(cleanDoc);
+        
+        if (cleanDoc.length === 14) {
+          // É CNPJ - buscar dados automaticamente
+          const cnpjData = await lookupCNPJ(cleanDoc);
+          setDadosCNPJ(cnpjData);
+        }
+        
+        // Abrir formulário de cadastro
+        setShowCadastro(true);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar empresa:", error);
+      toast.error("Erro ao buscar empresa");
+    } finally {
+      setBuscando(false);
+    }
+  };
+
+  const handleVincular = async () => {
+    if (!empresaEncontrada) return;
+
+    if (modoFormulario) {
+      // Modo formulário: apenas retornar a empresa para o formulário pai
+      onEmpresaVinculada?.(empresaEncontrada as any);
+      handleClose();
+      return;
+    }
+
+    // Modo legado: vincular diretamente no banco
+    if (!customerId && !emailVinculo && !whatsappVinculo) {
+      toast.error("Nenhum contato para vincular");
+      return;
+    }
+
+    setVinculando(true);
+
+    try {
       if (customerId) {
-        const { data: customerExists, error: checkError } = await supabase
-          .from('customers')
-          .select('id')
-          .eq('id', customerId)
+        // Verificar se já está vinculada
+        const { data: vinculoExistente } = await supabase
+          .from("customer_empresas")
+          .select("id")
+          .eq("customer_id", customerId)
+          .eq("empresa_id", empresaEncontrada.id)
           .maybeSingle();
 
-        if (checkError || !customerExists) {
-          console.error("Customer não encontrado:", customerId);
-          toast.error("Contato não encontrado. Tente criar um novo vínculo.");
+        if (vinculoExistente) {
+          toast.error("Empresa já está vinculada a este contato");
           setVinculando(false);
           return;
         }
 
         const { error } = await supabase
-          .from('customer_empresas')
+          .from("customer_empresas")
           .insert({
             customer_id: customerId,
-            empresa_id: empresaId,
-            is_primary: false
+            empresa_id: empresaEncontrada.id,
+            is_primary: false,
           });
 
-        if (error) {
-          if (error.code === '23505') {
-            toast.error("Empresa já está vinculada a este cliente");
-          } else {
-            throw error;
-          }
-        } else {
-          const empresa = empresas.find(e => e.id === empresaId);
-          const updates: any = {};
-          
-          if (emailVinculo && !empresa?.emails_vinculados?.includes(emailVinculo)) {
-            updates.emails_vinculados = [...(empresa?.emails_vinculados || []), emailVinculo];
-          }
-          if (whatsappVinculo && !empresa?.whatsapps_vinculados?.includes(whatsappVinculo)) {
-            updates.whatsapps_vinculados = [...(empresa?.whatsapps_vinculados || []), whatsappVinculo];
-          }
-          
-          if (Object.keys(updates).length > 0) {
-            await supabase
-              .from('empresas')
-              .update(updates)
-              .eq('id', empresaId);
-          }
-          
-          toast.success("Empresa vinculada com sucesso!");
-          onSuccess?.();
-          onOpenChange(false);
-          setBusca("");
-          setEmpresasFiltradas([]);
-        }
-      } 
-      else if (emailVinculo) {
-        const empresa = empresas.find(e => e.id === empresaId);
-        const emailsAtuais = empresa?.emails_vinculados || [];
-        
-        if (emailsAtuais.includes(emailVinculo)) {
-          toast.error("Este email já está vinculado a esta empresa");
-          setVinculando(false);
-          return;
-        }
+        if (error) throw error;
 
-        const { data: novoContato, error: contatoErr } = await supabase
-          .from('customers')
-          .insert([{
-            estabelecimento_id: estabId,
-            nome: emailVinculo.split('@')[0],
-            telefone: '',
-            email: '',
-            tipo_operador: true
-          }])
-          .select('id')
-          .maybeSingle();
-
-        if (contatoErr) throw contatoErr;
-
-        await supabase
-          .from('customer_empresas')
-          .insert([{
-            customer_id: novoContato!.id,
-            empresa_id: empresaId,
-            is_primary: false
-          }]);
-
-        await supabase
-          .from('empresas')
-          .update({
-            emails_vinculados: [...emailsAtuais, emailVinculo]
-          })
-          .eq('id', empresaId);
-        
-        toast.success("Email vinculado à empresa com sucesso!");
+        toast.success("Empresa vinculada com sucesso!");
         onSuccess?.();
-        onOpenChange(false);
-        setBusca("");
-        setEmpresasFiltradas([]);
-      }
-      else if (whatsappVinculo) {
-        const empresa = empresas.find(e => e.id === empresaId);
-        const whatsappsAtuais = empresa?.whatsapps_vinculados || [];
-        
-        if (whatsappsAtuais.includes(whatsappVinculo)) {
-          toast.error("Este WhatsApp já está vinculado a esta empresa");
-          setVinculando(false);
-          return;
-        }
-
-        const { data: novoContato, error: contatoErr } = await supabase
-          .from('customers')
-          .insert([{
-            estabelecimento_id: estabId,
-            nome: whatsappVinculo,
-            telefone: whatsappVinculo,
-            email: '',
-            tipo_operador: true
-          }])
-          .select('id')
-          .maybeSingle();
-
-        if (contatoErr) throw contatoErr;
-
-        await supabase
-          .from('customer_empresas')
-          .insert([{
-            customer_id: novoContato!.id,
-            empresa_id: empresaId,
-            is_primary: false
-          }]);
-
-        await supabase
-          .from('empresas')
-          .update({
-            whatsapps_vinculados: [...whatsappsAtuais, whatsappVinculo]
-          })
-          .eq('id', empresaId);
-        
-        toast.success("WhatsApp vinculado à empresa com sucesso!");
-        onSuccess?.();
-        onOpenChange(false);
-        setBusca("");
-        setEmpresasFiltradas([]);
-      }
-      else {
-        toast.error("Nenhum cliente ou contato para vincular");
+        handleClose();
       }
     } catch (error: any) {
-      console.error('Erro ao vincular:', error);
-      toast.error(error?.message || "Erro ao vincular");
+      console.error("Erro ao vincular:", error);
+      toast.error(error?.message || "Erro ao vincular empresa");
     } finally {
       setVinculando(false);
     }
   };
 
   const handleEmpresaCriada = (empresaId: string) => {
-    // Empresa criada com sucesso, fechar dialogs e notificar
-    setShowCreateDialog(false);
-    onSuccess?.();
+    // Empresa foi criada - fechar cadastro e buscar dados
+    setShowCadastro(false);
+    
+    // Buscar dados da empresa criada e vincular
+    supabase
+      .from("empresas")
+      .select("id, nome, nome_fantasia, cnpj")
+      .eq("id", empresaId)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          if (modoFormulario) {
+            onEmpresaVinculada?.(data);
+            handleClose();
+          } else if (customerId) {
+            // Vincular automaticamente
+            supabase
+              .from("customer_empresas")
+              .insert({
+                customer_id: customerId,
+                empresa_id: empresaId,
+                is_primary: false,
+              })
+              .then(() => {
+                toast.success("Empresa criada e vinculada com sucesso!");
+                onSuccess?.();
+                handleClose();
+              });
+          } else {
+            onSuccess?.();
+            handleClose();
+          }
+        }
+      });
+  };
+
+  const handleClose = () => {
+    resetState();
     onOpenChange(false);
   };
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open && !showCadastro} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-primary" />
-              Vincular Empresa
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            {/* Campo de busca */}
-            <div className="space-y-2">
-              <Label className="text-sm">Buscar Empresa</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Digite nome, CNPJ..."
-                  value={busca}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-9"
-                />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <DialogTitle>Vincular Empresa</DialogTitle>
+                <DialogDescription>
+                  {etapa === "input"
+                    ? "Digite o CPF ou CNPJ da empresa"
+                    : "Empresa encontrada"}
+                </DialogDescription>
               </div>
             </div>
+          </DialogHeader>
 
-            {/* Loading */}
-            {loading && (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
-            )}
-
-            {/* Lista de empresas filtradas */}
-            {!loading && empresasFiltradas.length > 0 && (
-              <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                {empresasFiltradas.map((empresa) => (
-                  <Card
-                    key={empresa.id}
-                    className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => handleVincular(empresa.id)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {empresa.nome_fantasia || empresa.nome}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {empresa.cnpj || 'Sem CNPJ'}
-                        </p>
-                      </div>
-                      {vinculando ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Plus className="w-4 h-4 text-primary" />
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-
-            {/* Mensagem quando não encontra + botão de cadastrar */}
-            {!loading && busca && empresasFiltradas.length === 0 && (
-              <div className="text-center py-6 space-y-4">
-                <div className="text-muted-foreground">
-                  <Building2 className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">Nenhuma empresa encontrada</p>
+          {etapa === "input" && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>CPF ou CNPJ</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    value={documento}
+                    onChange={(e) => handleDocumentoChange(e.target.value)}
+                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                    className="pl-9"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleContinuar();
+                      }
+                    }}
+                  />
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowCreateDialog(true)}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Cadastrar "{busca}"
-                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Se a empresa existir será vinculada. Caso contrário, o cadastro será aberto automaticamente.
+                </p>
               </div>
+            </div>
+          )}
+
+          {etapa === "encontrada" && empresaEncontrada && (
+            <div className="space-y-4 py-4">
+              <div className="p-4 bg-muted rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Check className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">
+                      {empresaEncontrada.nome_fantasia || empresaEncontrada.nome}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {empresaEncontrada.cnpj}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Esta empresa já está cadastrada. Deseja vinculá-la ao contato?
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClose}>
+              Cancelar
+            </Button>
+
+            {etapa === "input" && (
+              <Button
+                onClick={handleContinuar}
+                disabled={buscando || loadingCNPJ || documento.replace(/\D/g, "").length < 11}
+              >
+                {buscando || loadingCNPJ ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Buscando...
+                  </>
+                ) : (
+                  <>
+                    Continuar
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
             )}
 
-            {/* Estado inicial */}
-            {!loading && !busca && (
-              <div className="text-center py-6 space-y-4">
-                <div className="text-muted-foreground">
-                  <Search className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">Digite para buscar uma empresa</p>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setShowCreateDialog(true)}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Cadastrar Nova Empresa
-                </Button>
-              </div>
+            {etapa === "encontrada" && (
+              <Button onClick={handleVincular} disabled={vinculando}>
+                {vinculando ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Vinculando...
+                  </>
+                ) : (
+                  <>
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Vincular Empresa
+                  </>
+                )}
+              </Button>
             )}
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de criação de empresa */}
-      <CreateEmpresaDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        customerId={customerId}
+      {/* Formulário de cadastro de empresa */}
+      <EmpresaFormSheet
+        open={showCadastro}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowCadastro(false);
+            // Se fechar sem salvar, voltar ao dialog principal
+          }
+        }}
         onSuccess={handleEmpresaCriada}
+        initialData={
+          dadosCNPJ
+            ? {
+                cpf_cnpj: dadosCNPJ.cnpj,
+                nome: dadosCNPJ.nome,
+                nome_fantasia: dadosCNPJ.fantasia,
+                endereco: dadosCNPJ.logradouro,
+                numero: dadosCNPJ.numero,
+                complemento: dadosCNPJ.complemento,
+                bairro: dadosCNPJ.bairro,
+                cidade: dadosCNPJ.municipio,
+                estado: dadosCNPJ.uf,
+                cep: dadosCNPJ.cep,
+                telefone: dadosCNPJ.telefone,
+                email: dadosCNPJ.email,
+              }
+            : documentoParaCadastro
+            ? { cpf_cnpj: documentoParaCadastro.length === 11 ? maskCPF(documentoParaCadastro) : maskCNPJ(documentoParaCadastro) }
+            : undefined
+        }
       />
     </>
   );

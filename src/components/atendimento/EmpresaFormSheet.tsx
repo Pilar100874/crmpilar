@@ -30,6 +30,17 @@ interface EmpresaFormSheetProps {
   initialData?: {
     nome?: string;
     cnpj?: string;
+    cpf_cnpj?: string;
+    nome_fantasia?: string;
+    endereco?: string;
+    numero?: string;
+    complemento?: string;
+    bairro?: string;
+    cidade?: string;
+    estado?: string;
+    cep?: string;
+    telefone?: string;
+    email?: string;
   };
 }
 
@@ -94,20 +105,24 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
   // Reset form when opening
   useEffect(() => {
     if (open) {
+      const docValue = initialData?.cpf_cnpj || initialData?.cnpj || "";
+      const cleanDoc = docValue.replace(/\D/g, "");
+      const companyType = cleanDoc.length === 11 ? "Pessoa Física" : "Pessoa Jurídica";
+      
       setFormData({
-        company_type: "Pessoa Jurídica",
-        cpf_cnpj: initialData?.cnpj || "",
-        nome: "",
-        nome_fantasia: initialData?.nome || "",
-        cep: "",
-        endereco: "",
-        numero: "",
-        bairro: "",
-        cidade: "",
-        estado: "",
+        company_type: companyType,
+        cpf_cnpj: docValue,
+        nome: initialData?.nome || "",
+        nome_fantasia: initialData?.nome_fantasia || initialData?.nome || "",
+        cep: initialData?.cep || "",
+        endereco: initialData?.endereco || "",
+        numero: initialData?.numero || "",
+        bairro: initialData?.bairro || "",
+        cidade: initialData?.cidade || "",
+        estado: initialData?.estado || "",
         inscricao: "",
-        telefone: "",
-        email: "",
+        telefone: initialData?.telefone || "",
+        email: initialData?.email || "",
       });
       setContatosVinculados([]);
       setCriarNovoContato(false);
