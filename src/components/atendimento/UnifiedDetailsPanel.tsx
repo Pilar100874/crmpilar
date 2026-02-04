@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
+import { VincularContatoDialog } from "./VincularContatoDialog";
 import { EditEmpresaDialog } from "./EditEmpresaDialog";
 import { useState, useEffect } from "react";
 import { GlobalFilter } from "./GlobalClientFilter";
@@ -75,6 +76,7 @@ export function UnifiedDetailsPanel({
   const [empresasOpen, setEmpresasOpen] = useState(true);
   const [contatoOpen, setContatoOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
+  const [showVincularContatoDialog, setShowVincularContatoDialog] = useState(false);
   const [editingEmpresaId, setEditingEmpresaId] = useState<string | null>(null);
   const [desvincularEmpresa, setDesvincularEmpresa] = useState<{ id: string; nome: string } | null>(null);
   const [isDesvinculating, setIsDesvinculating] = useState(false);
@@ -394,6 +396,18 @@ export function UnifiedDetailsPanel({
                     Vincular Empresa
                   </Button>
                 )}
+                {/* Botão Vincular Contato - quando há empresas vinculadas */}
+                {companies.length > 0 && companies[0]?.empresas?.id && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs text-primary"
+                    onClick={() => setShowVincularContatoDialog(true)}
+                  >
+                    <UserPlus className="w-3 h-3 mr-1" />
+                    Vincular Contato
+                  </Button>
+                )}
               </div>
             )}
           </CollapsibleContent>
@@ -648,6 +662,16 @@ export function UnifiedDetailsPanel({
         description={`Tem certeza que deseja desvincular "${nome}" de todas as empresas vinculadas?`}
         isLoading={isDesvinculatingContato}
       />
+
+      {/* Dialog para vincular contato a empresa */}
+      {companies.length > 0 && companies[0]?.empresas?.id && (
+        <VincularContatoDialog
+          open={showVincularContatoDialog}
+          onOpenChange={setShowVincularContatoDialog}
+          empresaId={companies[0].empresas.id}
+          onSuccess={onCompaniesUpdated}
+        />
+      )}
     </div>
   );
 }
