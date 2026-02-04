@@ -162,8 +162,8 @@ export function ContatoFormSheetEdit({ open, onOpenChange, customerId, onSuccess
       setFormData({
         name: customer.nome || "",
         email: customer.email || "",
-        phone: customer.telefone || "",
-        tel: customer.tel || "",
+        phone: customer.telefone ? maskWhatsApp(customer.telefone) : "",
+        tel: customer.tel ? maskPhone(customer.tel) : "",
         position: customFields.position || "",
         ...customFields,
       });
