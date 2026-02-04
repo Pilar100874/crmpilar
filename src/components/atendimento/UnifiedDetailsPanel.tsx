@@ -396,18 +396,6 @@ export function UnifiedDetailsPanel({
                     Vincular Empresa
                   </Button>
                 )}
-                {/* Botão Vincular Contato - quando há empresas vinculadas */}
-                {companies.length > 0 && companies[0]?.empresas?.id && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-xs text-primary"
-                    onClick={() => setShowVincularContatoDialog(true)}
-                  >
-                    <UserPlus className="w-3 h-3 mr-1" />
-                    Vincular Contato
-                  </Button>
-                )}
               </div>
             )}
           </CollapsibleContent>
@@ -616,6 +604,19 @@ export function UnifiedDetailsPanel({
                 )}
               </div>
             </Card>
+            
+            {/* Botão Vincular Contato - abaixo do card de contato */}
+            {companies.length > 0 && companies[0]?.empresas?.id && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs text-primary mt-2"
+                onClick={() => setShowVincularContatoDialog(true)}
+              >
+                <UserPlus className="w-3 h-3 mr-1" />
+                Vincular Contato
+              </Button>
+            )}
           </CollapsibleContent>
         </Collapsible>
       </div>
