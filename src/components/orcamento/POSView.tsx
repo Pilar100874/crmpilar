@@ -112,9 +112,12 @@ export default function POSView({
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [grupos, setGrupos] = useState<any[]>([]);
   const [empresas, setEmpresas] = useState<any[]>([]);
+  const [clientes, setClientes] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmpresa, setSelectedEmpresa] = useState<string>(initialEmpresaId || "");
+  const [selectedCliente, setSelectedCliente] = useState<string>("");
   const [openEmpresaCombobox, setOpenEmpresaCombobox] = useState(false);
+  const [openClienteCombobox, setOpenClienteCombobox] = useState(false);
   const [cartItems, setCartItems] = useState<Map<string, { produto: Produto; quantity: number; preco: number }>>(new Map());
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("cart");
@@ -167,6 +170,7 @@ export default function POSView({
   });
   
   const primeiroInputRef = useRef<HTMLInputElement>(null);
+  const isLoadingOrcamentoRef = useRef(false);
   const [showCartDialog, setShowCartDialog] = useState(false);
   const [cartSearchQuery, setCartSearchQuery] = useState("");
   const [cartSortBy, setCartSortBy] = useState<"nome" | "quantidade" | "preco" | "subtotal">("nome");
@@ -279,9 +283,57 @@ export default function POSView({
   // Hook para cálculo de pedágio (manual - só quando clicar no botão)
   const pedagioResult = usePedagioCalculation(estabelecimentoId, selectedEmpresa);
 
-  // Reset pedágio quando trocar empresa
+  // Reset pedágio e contato quando trocar empresa (exceto quando carregando orçamento)
   useEffect(() => {
+    if (isLoadingOrcamentoRef.current) return;
     pedagioResult.reset();
+    setSelectedCliente("");
+    setClientes([]);
+  }, [selectedEmpresa]);
+
+  // Carregar contatos da empresa selecionada (exceto quando carregando orçamento)
+  useEffect(() => {
+    if (isLoadingOrcamentoRef.current) return;
+    
+    const loadClientesPorEmpresa = async () => {
+      if (!selectedEmpresa) {
+        setClientes([]);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('customer_empresas')
+          .select(`
+            customer_id,
+            customers:customer_id (
+              id,
+              nome,
+              email,
+              telefone
+            )
+          `)
+          .eq('empresa_id', selectedEmpresa);
+
+        if (error) throw error;
+        
+        const clientesFormatados = (data || [])
+          .map(item => item.customers)
+          .filter(Boolean);
+        
+        setClientes(clientesFormatados);
+        
+        // Se só tiver um contato, selecionar automaticamente
+        if (clientesFormatados.length === 1) {
+          setSelectedCliente(clientesFormatados[0].id);
+        }
+      } catch (error: any) {
+        console.error('Erro ao carregar contatos da empresa:', error);
+        setClientes([]);
+      }
+    };
+    
+    loadClientesPorEmpresa();
   }, [selectedEmpresa]);
 
   // Carregar configuração de veículo para cálculo de frete
@@ -549,6 +601,7 @@ export default function POSView({
   const loadOrcamento = async (id: string) => {
     try {
       setLoading(true);
+      isLoadingOrcamentoRef.current = true;
       const { data, error } = await supabase
         .from('orcamentos')
         .select(`
@@ -566,6 +619,37 @@ export default function POSView({
       if (data) {
         // Preencher empresa
         setSelectedEmpresa(data.empresa_id);
+        
+        // Carregar contatos da empresa antes de definir o cliente
+        if (data.empresa_id) {
+          try {
+            const { data: clientesData } = await supabase
+              .from('customer_empresas')
+              .select(`
+                customer_id,
+                customers:customer_id (
+                  id,
+                  nome,
+                  email,
+                  telefone
+                )
+              `)
+              .eq('empresa_id', data.empresa_id);
+            
+            const clientesFormatados = (clientesData || [])
+              .map(item => item.customers)
+              .filter(Boolean);
+            
+            setClientes(clientesFormatados);
+            
+            // Preencher cliente se existir
+            if (data.cliente_id) {
+              setSelectedCliente(data.cliente_id);
+            }
+          } catch (err) {
+            console.error('Erro ao carregar contatos:', err);
+          }
+        }
         
         // Preencher carrinho com itens
         const newCart = new Map<string, { produto: Produto; quantity: number; preco: number }>();
@@ -593,6 +677,7 @@ export default function POSView({
       toast.error('Erro ao carregar orçamento');
     } finally {
       setLoading(false);
+      isLoadingOrcamentoRef.current = false;
     }
   };
 
@@ -811,6 +896,7 @@ export default function POSView({
         .insert({
           estabelecimento_id: estabelecimentoId,
           empresa_id: selectedEmpresa,
+          cliente_id: selectedCliente || null,
           etapa: 'orcamento',
           status: 'em_aberto',
           valor_total: valorFinal,
@@ -863,6 +949,7 @@ export default function POSView({
       // Limpar carrinho
       setCartItems(new Map());
       setSelectedEmpresa("");
+      setSelectedCliente("");
       setActiveTab("share");
     } catch (error: any) {
       console.error('Erro ao finalizar orçamento:', error);
@@ -957,6 +1044,9 @@ export default function POSView({
           setSearchQuery={setSearchQuery}
           selectedEmpresa={selectedEmpresa}
           setSelectedEmpresa={setSelectedEmpresa}
+          clientes={clientes}
+          selectedCliente={selectedCliente}
+          setSelectedCliente={setSelectedCliente}
           selectedGrupo={selectedGrupo}
           setSelectedGrupo={setSelectedGrupo}
           viewMode={viewMode}
@@ -2175,6 +2265,69 @@ export default function POSView({
               </PopoverContent>
             </Popover>
           </div>
+
+          {/* Seletor de Contato */}
+          {selectedEmpresa && clientes.length > 0 && (
+            <div className="px-2 py-1.5">
+              <label className="text-[10px] font-medium text-muted-foreground mb-1 block">
+                Contato
+              </label>
+              <Popover open={openClienteCombobox} onOpenChange={setOpenClienteCombobox}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openClienteCombobox}
+                    className="w-full justify-between bg-background border-border hover:bg-muted h-8 text-xs"
+                  >
+                    {selectedCliente
+                      ? clientes.find((cliente) => cliente.id === selectedCliente)?.nome
+                      : "Selecionar contato..."}
+                    <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0 bg-card border-border z-50">
+                  <Command className="bg-card">
+                    <CommandInput 
+                      placeholder="Buscar contato..." 
+                      className="bg-card border-border text-xs h-8"
+                    />
+                    <CommandList>
+                      <CommandEmpty className="text-muted-foreground py-4 text-center text-xs">
+                        Nenhum contato encontrado.
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {clientes.map((cliente) => (
+                          <CommandItem
+                            key={cliente.id}
+                            value={`${cliente.nome} ${cliente.email || ''}`}
+                            onSelect={() => {
+                              setSelectedCliente(cliente.id);
+                              setOpenClienteCombobox(false);
+                            }}
+                            className="hover:bg-muted cursor-pointer"
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedCliente === cliente.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-col">
+                              <span>{cliente.nome}</span>
+                              {cliente.telefone && (
+                                <span className="text-xs text-muted-foreground">{cliente.telefone}</span>
+                              )}
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
 
           {/* Botões de Ação */}
           <div className="p-2 grid grid-cols-4 gap-1">
