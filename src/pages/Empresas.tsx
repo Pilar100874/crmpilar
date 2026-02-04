@@ -1635,10 +1635,6 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               {editingEmpresa ? "Atualize as informações da empresa" : "Preencha os dados da nova empresa"}
             </p>
           </div>
-          <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
-            <Plus className="w-4 h-4" />
-            Tags
-          </Button>
         </div>
       </div>
 

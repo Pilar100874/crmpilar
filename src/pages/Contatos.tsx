@@ -2500,10 +2500,6 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
               {editingContact ? "Atualize as informações do contato" : "Preencha os dados do novo contato"}
             </p>
           </div>
-          <Button variant="ghost" size="sm" className="gap-1 sm:gap-2 text-muted-foreground hover:text-foreground text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3">
-            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-            Tags
-          </Button>
         </div>
       </div>
 
