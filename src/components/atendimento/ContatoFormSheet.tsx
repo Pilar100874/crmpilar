@@ -8,11 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Save, X, User, Phone, Mail, Building2, Plus, Trash2, Search } from "lucide-react";
+import { Loader2, Save, X, User, Phone, Mail, Building2, Plus, Trash2 } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { maskPhone, maskWhatsApp } from "@/lib/masks";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
+import { VincularEmpresaDialog } from "./VincularEmpresaDialog";
 
 interface CustomField {
   id: string;
@@ -51,10 +52,8 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
   const [contactFields, setContactFields] = useState<CustomField[]>([]);
   
   // Empresas
-  const [empresas, setEmpresas] = useState<any[]>([]);
   const [empresasVinculadas, setEmpresasVinculadas] = useState<any[]>([]);
-  const [buscaEmpresa, setBuscaEmpresa] = useState("");
-  const [empresasFiltradas, setEmpresasFiltradas] = useState<any[]>([]);
+  const [showVincularEmpresa, setShowVincularEmpresa] = useState(false);
   
   // Segmentos
   const [segmentos, setSegmentos] = useState<any[]>([]);
@@ -70,7 +69,6 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
       setEstabelecimentoId(estabId);
       if (estabId) {
         loadCustomFields(estabId);
-        loadEmpresas(estabId);
         loadSegmentos(estabId);
         loadUsuarios(estabId);
       }
@@ -97,20 +95,6 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
     }
   }, [open, initialData]);
   
-  // Filter empresas
-  useEffect(() => {
-    if (buscaEmpresa.trim()) {
-      const termo = buscaEmpresa.toLowerCase();
-      const filtradas = empresas.filter(e => 
-        e.nome_fantasia?.toLowerCase().includes(termo) ||
-        e.nome?.toLowerCase().includes(termo) ||
-        e.cnpj?.includes(termo)
-      );
-      setEmpresasFiltradas(filtradas.slice(0, 10));
-    } else {
-      setEmpresasFiltradas([]);
-    }
-  }, [buscaEmpresa, empresas]);
 
   const loadCustomFields = async (estabId: string) => {
     const { data } = await supabase
@@ -130,15 +114,6 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
       }));
       setContactFields(mapped);
     }
-  };
-  
-  const loadEmpresas = async (estabId: string) => {
-    const { data } = await supabase
-      .from("empresas")
-      .select("id, nome, nome_fantasia, cnpj")
-      .eq("estabelecimento_id", estabId)
-      .order("nome_fantasia");
-    setEmpresas(data || []);
   };
   
   const loadSegmentos = async (estabId: string) => {
@@ -162,7 +137,6 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
   const handleAddEmpresa = (empresa: any) => {
     if (!empresasVinculadas.some(e => e.id === empresa.id)) {
       setEmpresasVinculadas([...empresasVinculadas, { ...empresa, is_primary: empresasVinculadas.length === 0 }]);
-      setBuscaEmpresa("");
     }
   };
   
@@ -433,32 +407,14 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
             <TabsContent value="empresa" className="space-y-4">
               <Card className="p-4">
                 <Label className="text-xs mb-2 block">Vincular Empresa</Label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      value={buscaEmpresa}
-                      onChange={(e) => setBuscaEmpresa(e.target.value)}
-                      placeholder="Buscar empresa..."
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
-                
-                {empresasFiltradas.length > 0 && (
-                  <div className="mt-2 border rounded-md max-h-40 overflow-y-auto">
-                    {empresasFiltradas.map((empresa) => (
-                      <div
-                        key={empresa.id}
-                        className="px-3 py-2 hover:bg-muted cursor-pointer flex items-center justify-between"
-                        onClick={() => handleAddEmpresa(empresa)}
-                      >
-                        <span className="text-sm">{empresa.nome_fantasia || empresa.nome}</span>
-                        <Plus className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowVincularEmpresa(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Vincular Empresa por CPF/CNPJ
+                </Button>
               </Card>
 
               {/* Empresas vinculadas */}
@@ -565,6 +521,14 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
           </Button>
         </div>
       </SheetContent>
+      
+      {/* Dialog de vincular empresa */}
+      <VincularEmpresaDialog
+        open={showVincularEmpresa}
+        onOpenChange={setShowVincularEmpresa}
+        modoFormulario={true}
+        onEmpresaVinculada={handleAddEmpresa}
+      />
     </Sheet>
   );
 }
