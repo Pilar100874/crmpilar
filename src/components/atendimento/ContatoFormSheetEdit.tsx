@@ -479,7 +479,7 @@ export function ContatoFormSheetEdit({ open, onOpenChange, customerId, onSuccess
                       onClick={() => setShowVincularEmpresa(true)}
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Vincular Empresa por CPF/CNPJ
+                      Vincular Empresa
                     </Button>
                   </Card>
 
