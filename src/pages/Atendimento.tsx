@@ -4599,7 +4599,7 @@ ${recentMessages}
 
             {/* Chat Tab */}
           <TabsContent value="chat" className="flex-1 overflow-y-auto min-h-0 overscroll-contain m-0 px-2 py-2 bg-gradient-to-b from-slate-50/30 to-white">
-            {filteredConversations.length === 0 ? (
+            {agendaConversations.length === 0 && otherConversations.length === 0 && agendaContactsWithoutConversation.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
                   <MessageSquare className="w-8 h-8 text-primary/40" />
@@ -4609,65 +4609,208 @@ ${recentMessages}
               </div>
             ) : (
               <div className="space-y-1.5">
-                {filteredConversations.map((conv) => (
-                  <div
-                    key={conv.id}
-                    onClick={() => setSelectedConversation(conv.id)}
-                    className={`px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
-                      selectedConversation === conv.id 
-                        ? "bg-primary/10 border border-primary/30 shadow-sm" 
-                        : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        selectedConversation === conv.id 
-                          ? "bg-primary text-primary-foreground" 
-                          : "bg-gradient-to-br from-slate-100 to-slate-200"
-                      }`}>
-                        <User className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="font-semibold text-sm truncate">
-                            {conv.customer?.nome || "Cliente"}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
-                            {conv.lastMessage?.created_at
-                              ? getTimeAgo(conv.lastMessage.created_at)
-                              : getTimeAgo(conv.updated_at)}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground truncate mb-1.5">
-                          {conv.lastMessage?.text || "Sem mensagens"}
-                        </p>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {conv.bot_active !== false && (
-                            <Badge className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
-                              <Bot className="w-2.5 h-2.5 mr-0.5" />
-                              BOT
-                            </Badge>
-                          )}
-                          {conv.customerCompanies && conv.customerCompanies.length > 0 && (
-                            <>
-                              {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
-                                <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-white/50">
-                                  <Building2 className="w-2.5 h-2.5" />
-                                  {rel.empresas?.nome_fantasia || rel.empresas?.nome || "Empresa"}
-                                </Badge>
-                              ))}
-                              {conv.customerCompanies.length > 1 && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                  +{conv.customerCompanies.length - 1}
+                {/* Grupo: Agenda do Dia - Conversas ativas + Contatos sem conversa */}
+                {(agendaConversations.length > 0 || agendaContactsWithoutConversation.length > 0) && (
+                  <>
+                    <div className="flex items-center gap-2 px-2 py-1.5">
+                      <CalendarIcon className="w-3.5 h-3.5 text-orange-500" />
+                      <span className="text-xs font-medium text-orange-600">Agenda do Dia</span>
+                      <Badge className="text-[10px] bg-orange-100 text-orange-700 border-0 px-1.5">
+                        {agendaConversations.length + agendaContactsWithoutConversation.length}
+                      </Badge>
+                    </div>
+                    
+                    {/* Conversas ativas da agenda */}
+                    {agendaConversations.map((conv) => (
+                      <div
+                        key={conv.id}
+                        onClick={() => setSelectedConversation(conv.id)}
+                        className={`px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 border-l-4 border-l-orange-400 ${
+                          selectedConversation === conv.id 
+                            ? "bg-primary/10 border-t border-r border-b border-primary/30 shadow-sm" 
+                            : "bg-white/60 hover:bg-white hover:shadow-sm border-t border-r border-b border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            selectedConversation === conv.id 
+                              ? "bg-primary text-primary-foreground" 
+                              : "bg-gradient-to-br from-orange-100 to-orange-200"
+                          }`}>
+                            <User className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <span className="font-semibold text-sm truncate">
+                                {conv.customer?.nome || "Cliente"}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                                {conv.lastMessage?.created_at
+                                  ? getTimeAgo(conv.lastMessage.created_at)
+                                  : getTimeAgo(conv.updated_at)}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate mb-1.5">
+                              {conv.lastMessage?.text || "Sem mensagens"}
+                            </p>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {conv.bot_active !== false && (
+                                <Badge className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
+                                  <Bot className="w-2.5 h-2.5 mr-0.5" />
+                                  BOT
                                 </Badge>
                               )}
-                            </>
-                          )}
+                              {conv.customerCompanies && conv.customerCompanies.length > 0 && (
+                                <>
+                                  {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
+                                    <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-white/50">
+                                      <Building2 className="w-2.5 h-2.5" />
+                                      {rel.empresas?.nome_fantasia || rel.empresas?.nome || "Empresa"}
+                                    </Badge>
+                                  ))}
+                                  {conv.customerCompanies.length > 1 && (
+                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                      +{conv.customerCompanies.length - 1}
+                                    </Badge>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
+                    ))}
+
+                    {/* Contatos da agenda SEM conversa ativa - clicando inicia a conversa */}
+                    {agendaContactsWithoutConversation.map((contact) => (
+                      <div
+                        key={`contact-${contact.contactId}`}
+                        onClick={async () => {
+                          // Criar conversa para o contato da agenda
+                          try {
+                            const estabId = await getEstabelecimentoId();
+                            if (!estabId) return;
+
+                            const { data: newConv, error } = await supabase
+                              .from('conversations')
+                              .insert({
+                                customer_id: contact.contactId,
+                                estabelecimento_id: estabId,
+                                canal: 'whatsapp',
+                                status: 'open',
+                                chat_status: 'em_atendimento',
+                                bot_active: false
+                              })
+                              .select()
+                              .single();
+
+                            if (error) throw error;
+
+                            toast.success(`Conversa iniciada com ${contact.nome}`);
+                            loadConversations();
+                            if (newConv) {
+                              setSelectedConversation(newConv.id);
+                            }
+                          } catch (error) {
+                            console.error('Erro ao criar conversa:', error);
+                            toast.error('Erro ao iniciar conversa');
+                          }
+                        }}
+                        className="px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 border-l-4 border-l-orange-300 border-dashed bg-orange-50/50 hover:bg-orange-100/50 border-t border-r border-b border-transparent"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-orange-50 to-orange-100">
+                            <User className="w-5 h-5 text-orange-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <span className="font-semibold text-sm truncate text-orange-700">{contact.nome}</span>
+                              <Badge className="text-[9px] bg-orange-100 text-orange-600 border-0 px-1.5">
+                                Iniciar chat
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-orange-500 truncate flex items-center gap-1">
+                              <CalendarIcon className="w-3 h-3" />
+                              {contact.taskTitle || "Tarefa agendada"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* Grupo: Outras Conversas */}
+                {otherConversations.length > 0 && (
+                  <>
+                    <div className="flex items-center gap-2 px-2 py-1.5 mt-2">
+                      <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground">Outras Conversas</span>
+                      <Badge className="text-[10px] bg-slate-100 text-slate-600 border-0 px-1.5">
+                        {otherConversations.length}
+                      </Badge>
                     </div>
-                  </div>
-                ))}
+                    {otherConversations.map((conv) => (
+                      <div
+                        key={conv.id}
+                        onClick={() => setSelectedConversation(conv.id)}
+                        className={`px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                          selectedConversation === conv.id 
+                            ? "bg-primary/10 border border-primary/30 shadow-sm" 
+                            : "bg-white/60 hover:bg-white hover:shadow-sm border border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            selectedConversation === conv.id 
+                              ? "bg-primary text-primary-foreground" 
+                              : "bg-gradient-to-br from-slate-100 to-slate-200"
+                          }`}>
+                            <User className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <span className="font-semibold text-sm truncate">
+                                {conv.customer?.nome || "Cliente"}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground ml-2 bg-slate-100 px-1.5 py-0.5 rounded-full">
+                                {conv.lastMessage?.created_at
+                                  ? getTimeAgo(conv.lastMessage.created_at)
+                                  : getTimeAgo(conv.updated_at)}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate mb-1.5">
+                              {conv.lastMessage?.text || "Sem mensagens"}
+                            </p>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {conv.bot_active !== false && (
+                                <Badge className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
+                                  <Bot className="w-2.5 h-2.5 mr-0.5" />
+                                  BOT
+                                </Badge>
+                              )}
+                              {conv.customerCompanies && conv.customerCompanies.length > 0 && (
+                                <>
+                                  {conv.customerCompanies.slice(0, 1).map((rel: any, idx: number) => (
+                                    <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-white/50">
+                                      <Building2 className="w-2.5 h-2.5" />
+                                      {rel.empresas?.nome_fantasia || rel.empresas?.nome || "Empresa"}
+                                    </Badge>
+                                  ))}
+                                  {conv.customerCompanies.length > 1 && (
+                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                      +{conv.customerCompanies.length - 1}
+                                    </Badge>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
             )}
           </TabsContent>
