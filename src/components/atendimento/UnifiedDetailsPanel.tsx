@@ -1,4 +1,4 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 import { GlobalFilter } from "./GlobalClientFilter";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 export type PanelType = "chat" | "agenda" | "email" | "orcamento";
 
@@ -74,6 +75,8 @@ export function UnifiedDetailsPanel({
   const [contatoOpen, setContatoOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
   const [editingEmpresaId, setEditingEmpresaId] = useState<string | null>(null);
+  const [desvincularEmpresa, setDesvincularEmpresa] = useState<{ id: string; nome: string } | null>(null);
+  const [isDesvinculating, setIsDesvinculating] = useState(false);
   
   // Estado para edição inline do contato
   const [isEditingContato, setIsEditingContato] = useState(false);
@@ -205,6 +208,29 @@ export function UnifiedDetailsPanel({
     }
   };
 
+  const handleDesvincularEmpresa = async () => {
+    if (!desvincularEmpresa) return;
+    
+    setIsDesvinculating(true);
+    try {
+      const { error } = await supabase
+        .from('customer_empresas')
+        .delete()
+        .eq('id', desvincularEmpresa.id);
+
+      if (error) throw error;
+
+      toast.success('Empresa desvinculada com sucesso!');
+      setDesvincularEmpresa(null);
+      onCompaniesUpdated?.();
+    } catch (error) {
+      console.error('Erro ao desvincular empresa:', error);
+      toast.error('Erro ao desvincular empresa');
+    } finally {
+      setIsDesvinculating(false);
+    }
+  };
+
   if (!nome && !protocolo && !titulo) {
     return (
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card">
@@ -301,6 +327,19 @@ export function UnifiedDetailsPanel({
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </Button>
+                          {/* Botão Desvincular Empresa */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
+                            title="Desvincular empresa"
+                            onClick={() => setDesvincularEmpresa({
+                              id: company.id,
+                              nome: empresa?.nome_fantasia || empresa?.nome || 'esta empresa'
+                            })}
+                          >
+                            <Unlink className="w-3.5 h-3.5" />
+                          </Button>
                           {onSetGlobalFilter && empresa?.id && (
                             <Button
                               variant="ghost"
@@ -335,30 +374,17 @@ export function UnifiedDetailsPanel({
                     </Card>
                   );
                 })}
-                <div className="flex flex-col gap-1">
-                  {(customerId || email || whatsapp || telefone) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full text-xs text-primary"
-                      onClick={() => setShowVincularDialog(true)}
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Vincular outra empresa
-                    </Button>
-                  )}
-                  {onCreateEmpresa && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                      onClick={() => onCreateEmpresa(customerId)}
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Criar nova empresa
-                    </Button>
-                  )}
-                </div>
+                {(customerId || email || whatsapp || telefone) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs text-primary"
+                    onClick={() => setShowVincularDialog(true)}
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Vincular Empresa
+                  </Button>
+                )}
               </div>
             )}
           </CollapsibleContent>
@@ -583,6 +609,15 @@ export function UnifiedDetailsPanel({
           onSuccess={onCompaniesUpdated}
         />
       )}
+
+      <DeleteConfirmDialog
+        open={!!desvincularEmpresa}
+        onOpenChange={(open) => !open && setDesvincularEmpresa(null)}
+        onConfirm={handleDesvincularEmpresa}
+        title="Desvincular empresa"
+        description={`Tem certeza que deseja desvincular "${desvincularEmpresa?.nome}" deste contato?`}
+        isLoading={isDesvinculating}
+      />
     </div>
   );
 }
