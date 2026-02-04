@@ -87,12 +87,35 @@ export function ContatoFormEmbedded({
         
         if (mode === "edit" && customerId) {
           await loadContactData(customerId);
+        } else if (mode === "create") {
+          // Vincular automaticamente ao usuário logado
+          await linkCurrentUser();
         }
       }
       setLoading(false);
     };
     init();
   }, [mode, customerId]);
+  
+  const linkCurrentUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      // Busca o ID do usuário na tabela usuarios
+      const { data: userData } = await supabase
+        .from("usuarios")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      
+      if (userData?.id) {
+        setUsuariosVinculados([userData.id]);
+      }
+    } catch (error) {
+      console.error("Erro ao vincular usuário logado:", error);
+    }
+  };
   
   // Filter empresas
   useEffect(() => {
