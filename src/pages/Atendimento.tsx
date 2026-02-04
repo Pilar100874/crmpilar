@@ -32,8 +32,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import POSView from "@/components/orcamento/POSView";
 import { ClientDetailsPanel } from "@/components/atendimento/ClientDetailsPanel";
 import { UnifiedDetailsPanel } from "@/components/atendimento/UnifiedDetailsPanel";
-import { ContatoFormEmbedded } from "@/components/atendimento/ContatoFormEmbedded";
-import { EmpresaFormEmbedded } from "@/components/atendimento/EmpresaFormEmbedded";
+import { ContatoFormSheet } from "@/components/atendimento/ContatoFormSheet";
+import { ContatoFormSheetEdit } from "@/components/atendimento/ContatoFormSheetEdit";
+import { EmpresaFormSheet } from "@/components/atendimento/EmpresaFormSheet";
+import { EmpresaFormSheetEdit } from "@/components/atendimento/EmpresaFormSheetEdit";
 import { SoftphoneDialog } from "@/components/softphone/SoftphoneDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { OmnichannelManager } from "@/components/atendimento/OmnichannelManager";
@@ -5899,103 +5901,6 @@ ${recentMessages}
               onComplete={loadTodayTasks}
             />
           </div>
-        ) : editingContatoId ? (
-          /* Edição de Contato Inline */
-          <ContatoFormEmbedded
-            mode="edit"
-            customerId={editingContatoId}
-            onClose={() => setEditingContatoId(null)}
-            onSuccess={() => {
-              // Recarregar dados conforme a aba ativa
-              if (activeTab === "chat" && selectedConversation) {
-                loadCustomerCompanies(selectedConversation);
-              } else if (activeTab === "agenda" && selectedTaskId) {
-                loadSelectedTask(selectedTaskId);
-                loadTodayTasks();
-              } else if (activeTab === "email" && selectedEmailId) {
-                loadSelectedEmail(selectedEmailId);
-              }
-            }}
-            onEditEmpresa={(empresaId, customerEmpresaId) => {
-              setEditingContatoId(null);
-              setEditingEmpresaId(empresaId);
-              setEditingCustomerEmpresaId(customerEmpresaId || null);
-            }}
-          />
-        ) : editingEmpresaId ? (
-          /* Edição de Empresa Inline */
-          <EmpresaFormEmbedded
-            mode="edit"
-            empresaId={editingEmpresaId}
-            customerEmpresaId={editingCustomerEmpresaId || undefined}
-            onClose={() => {
-              setEditingEmpresaId(null);
-              setEditingCustomerEmpresaId(null);
-            }}
-            onSuccess={() => {
-              // Recarregar dados conforme a aba ativa
-              if (activeTab === "chat" && selectedConversation) {
-                loadCustomerCompanies(selectedConversation);
-              } else if (activeTab === "agenda" && selectedTaskId) {
-                loadSelectedTask(selectedTaskId);
-                loadTodayTasks();
-              } else if (activeTab === "email" && selectedEmailId) {
-                loadSelectedEmail(selectedEmailId);
-              }
-              setEditingEmpresaId(null);
-              setEditingCustomerEmpresaId(null);
-            }}
-            onEditContato={(customerId) => {
-              setEditingEmpresaId(null);
-              setEditingCustomerEmpresaId(null);
-              setEditingContatoId(customerId);
-            }}
-          />
-        ) : creatingContato ? (
-          /* Criação de Contato Inline */
-          <ContatoFormEmbedded
-            mode="create"
-            onClose={() => {
-              setCreatingContato(false);
-              setCreatingContatoInitialData(null);
-            }}
-            onSuccess={() => {
-              setCreatingContato(false);
-              setCreatingContatoInitialData(null);
-              // Recarregar dados conforme a aba ativa
-              if (activeTab === "agenda") {
-                loadTodayTasks();
-              } else if (activeTab === "email" && selectedEmailId) {
-                loadSelectedEmail(selectedEmailId);
-              } else if (activeTab === "chat" && selectedConversation) {
-                loadCustomerCompanies(selectedConversation);
-              }
-            }}
-            initialData={creatingContatoInitialData || undefined}
-          />
-        ) : creatingEmpresa ? (
-          /* Criação de Empresa Inline */
-          <EmpresaFormEmbedded
-            mode="create"
-            customerId={creatingEmpresaForCustomerId || undefined}
-            onClose={() => {
-              setCreatingEmpresa(false);
-              setCreatingEmpresaForCustomerId(null);
-            }}
-            onSuccess={() => {
-              setCreatingEmpresa(false);
-              setCreatingEmpresaForCustomerId(null);
-              // Recarregar dados conforme a aba ativa
-              if (activeTab === "chat" && selectedConversation) {
-                loadCustomerCompanies(selectedConversation);
-              } else if (activeTab === "agenda" && selectedTaskId) {
-                loadSelectedTask(selectedTaskId);
-                loadTodayTasks();
-              } else if (activeTab === "email" && selectedEmailId) {
-                loadSelectedEmail(selectedEmailId);
-              }
-            }}
-          />
         ) : activeTab === "agenda" && selectedTaskId && selectedTaskData ? (
           /* Agenda Task Content */
           <div className="flex-1 flex flex-col h-full min-h-0 bg-card">
@@ -6314,6 +6219,72 @@ ${recentMessages}
       <NovoContatoDialog 
         open={showNovoContatoDialog}
         onOpenChange={setShowNovoContatoDialog}
+      />
+
+      {/* Sheets para criar/editar contatos e empresas - idênticos às telas de listas */}
+      <ContatoFormSheet
+        open={creatingContato}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCreatingContato(false);
+            setCreatingContatoInitialData(null);
+          }
+        }}
+        onSuccess={() => {
+          setCreatingContato(false);
+          setCreatingContatoInitialData(null);
+          if (activeTab === "agenda") loadTodayTasks();
+          else if (activeTab === "email" && selectedEmailId) loadSelectedEmail(selectedEmailId);
+          else if (activeTab === "chat" && selectedConversation) loadCustomerCompanies(selectedConversation);
+        }}
+        initialData={creatingContatoInitialData || undefined}
+      />
+
+      <ContatoFormSheetEdit
+        open={!!editingContatoId}
+        onOpenChange={(open) => !open && setEditingContatoId(null)}
+        customerId={editingContatoId || ""}
+        onSuccess={() => {
+          setEditingContatoId(null);
+          if (activeTab === "chat" && selectedConversation) loadCustomerCompanies(selectedConversation);
+          else if (activeTab === "agenda" && selectedTaskId) { loadSelectedTask(selectedTaskId); loadTodayTasks(); }
+          else if (activeTab === "email" && selectedEmailId) loadSelectedEmail(selectedEmailId);
+        }}
+      />
+
+      <EmpresaFormSheet
+        open={creatingEmpresa}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCreatingEmpresa(false);
+            setCreatingEmpresaForCustomerId(null);
+          }
+        }}
+        onSuccess={() => {
+          setCreatingEmpresa(false);
+          setCreatingEmpresaForCustomerId(null);
+          if (activeTab === "chat" && selectedConversation) loadCustomerCompanies(selectedConversation);
+          else if (activeTab === "agenda" && selectedTaskId) { loadSelectedTask(selectedTaskId); loadTodayTasks(); }
+          else if (activeTab === "email" && selectedEmailId) loadSelectedEmail(selectedEmailId);
+        }}
+      />
+
+      <EmpresaFormSheetEdit
+        open={!!editingEmpresaId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingEmpresaId(null);
+            setEditingCustomerEmpresaId(null);
+          }
+        }}
+        empresaId={editingEmpresaId || ""}
+        onSuccess={() => {
+          setEditingEmpresaId(null);
+          setEditingCustomerEmpresaId(null);
+          if (activeTab === "chat" && selectedConversation) loadCustomerCompanies(selectedConversation);
+          else if (activeTab === "agenda" && selectedTaskId) { loadSelectedTask(selectedTaskId); loadTodayTasks(); }
+          else if (activeTab === "email" && selectedEmailId) loadSelectedEmail(selectedEmailId);
+        }}
       />
 
       {/* Orçamento Panel Lateral - Ao lado do painel */}
