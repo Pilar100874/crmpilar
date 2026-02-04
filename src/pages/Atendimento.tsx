@@ -4330,20 +4330,23 @@ ${recentMessages}
               {activeTab === "orcamento" && selectedOrcamentoData && (
                 <UnifiedDetailsPanel
                   type="orcamento"
-                  nome={selectedOrcamentoData.customers?.nome || "Contato Desconhecido"}
-                  telefone={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.tel : undefined}
-                  whatsapp={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.telefone : undefined}
-                  email={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.email : undefined}
-                  customerId={selectedOrcamentoData.customers?.id}
+                  nome={selectedOrcamentoData.customers?.nome || empresaContacts[0]?.customers?.nome || "Contato Desconhecido"}
+                  telefone={selectedOrcamentoData.customers?.tel || empresaContacts[0]?.customers?.tel}
+                  whatsapp={selectedOrcamentoData.customers?.telefone || empresaContacts[0]?.customers?.telefone}
+                  email={selectedOrcamentoData.customers?.email || empresaContacts[0]?.customers?.email}
+                  customerId={selectedOrcamentoData.customers?.id || empresaContacts[0]?.customers?.id}
                   protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
                   status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
                   valorTotal={selectedOrcamentoData.valor_total || 0}
                   companies={
                     selectedOrcamentoData.empresas 
-                      ? [{ empresas: selectedOrcamentoData.empresas, is_primary: true }]
+                      ? [{ 
+                          empresas: selectedOrcamentoData.empresas, 
+                          is_primary: true,
+                          cargo: empresaContacts[0]?.cargo
+                        }]
                       : []
                   }
-                  empresaContacts={empresaContacts}
                   onSetGlobalFilter={setGlobalFilter}
                   onEditContato={(id) => setEditingContatoId(id)}
                   onEditEmpresa={(empresaId, customerEmpresaId) => {
@@ -6346,20 +6349,23 @@ ${recentMessages}
         <div className={`${isSmallTablet ? 'w-36' : isTablet ? 'w-44' : 'w-72 lg:w-80'} bg-card flex flex-col h-full min-h-0 overflow-hidden border-l border-border`}>
           <UnifiedDetailsPanel
             type="orcamento"
-            nome={selectedOrcamentoData.customers?.nome || "Contato Desconhecido"}
-            telefone={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.tel : undefined}
-            whatsapp={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.telefone : undefined}
-            email={selectedOrcamentoData.customers?.id ? selectedOrcamentoData.customers?.email : undefined}
-            customerId={selectedOrcamentoData.customers?.id}
+            nome={selectedOrcamentoData.customers?.nome || empresaContacts[0]?.customers?.nome || "Contato Desconhecido"}
+            telefone={selectedOrcamentoData.customers?.tel || empresaContacts[0]?.customers?.tel}
+            whatsapp={selectedOrcamentoData.customers?.telefone || empresaContacts[0]?.customers?.telefone}
+            email={selectedOrcamentoData.customers?.email || empresaContacts[0]?.customers?.email}
+            customerId={selectedOrcamentoData.customers?.id || empresaContacts[0]?.customers?.id}
             protocolo={selectedOrcamentoData.id?.slice(0, 8).toUpperCase()}
             status={selectedOrcamentoData.etapa || selectedOrcamentoData.status}
             valorTotal={selectedOrcamentoData.valor_total || 0}
             companies={
               selectedOrcamentoData.empresas 
-                ? [{ empresas: selectedOrcamentoData.empresas, is_primary: true }]
+                ? [{ 
+                    empresas: selectedOrcamentoData.empresas, 
+                    is_primary: true,
+                    cargo: empresaContacts[0]?.cargo
+                  }]
                 : (selectedOrcamentoData.customers?.id ? customerCompanies : [])
             }
-            empresaContacts={empresaContacts}
             onSetGlobalFilter={setGlobalFilter}
             onEditContato={(id) => setEditingContatoId(id)}
             onEditEmpresa={(empresaId, customerEmpresaId) => {
