@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight } from "lucide-react";
 
 interface Contato {
   id: string;
@@ -9,7 +8,6 @@ interface Contato {
   telefone: string;
   email: string;
   usuarios_vinculados: Array<{ id: string; nome: string }>;
-  segmentos_vinculados: Array<{ id: string; nome: string }>;
 }
 
 interface Usuario {
@@ -18,32 +16,20 @@ interface Usuario {
   email: string;
 }
 
-interface Segmento {
-  id: string;
-  nome: string;
-}
-
 interface Props {
   contatosSelecionados: Contato[];
   usuarios: Usuario[];
-  segmentos: Segmento[];
   alterarUsuario: boolean;
-  alterarSegmento: boolean;
   novosUsuariosIds: string[];
-  novosSegmentosIds: string[];
 }
 
 export function VinculosWizardStep3Contatos({
   contatosSelecionados,
   usuarios,
-  segmentos,
   alterarUsuario,
-  alterarSegmento,
   novosUsuariosIds,
-  novosSegmentosIds,
 }: Props) {
   const novosUsuarios = usuarios.filter((u) => novosUsuariosIds.includes(u.id));
-  const novosSegmentos = segmentos.filter((s) => novosSegmentosIds.includes(s.id));
 
   return (
     <div className="space-y-6">
@@ -80,27 +66,6 @@ export function VinculosWizardStep3Contatos({
                 </CardContent>
               </Card>
             )}
-
-            {alterarSegmento && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Alteração de Segmentos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {novosSegmentos.length > 0 ? (
-                      novosSegmentos.map((segmento) => (
-                        <Badge key={segmento.id} variant="default">
-                          {segmento.nome}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-muted-foreground text-sm">Nenhum segmento</span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Tabela de Preview */}
@@ -111,7 +76,6 @@ export function VinculosWizardStep3Contatos({
                   <TableHead>Nome</TableHead>
                   <TableHead>Telefone</TableHead>
                   {alterarUsuario && <TableHead>Usuários</TableHead>}
-                  {alterarSegmento && <TableHead>Segmentos</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -127,22 +91,6 @@ export function VinculosWizardStep3Contatos({
                             novosUsuarios.map((usuario) => (
                               <Badge key={usuario.id} variant="default">
                                 {usuario.nome}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-muted-foreground text-xs">Nenhum</span>
-                          )}
-                        </div>
-                      </TableCell>
-                    )}
-                    
-                    {alterarSegmento && (
-                      <TableCell>
-                        <div className="flex flex-col gap-2">
-                          {novosSegmentos.length > 0 ? (
-                            novosSegmentos.map((segmento) => (
-                              <Badge key={segmento.id} variant="default">
-                                {segmento.nome}
                               </Badge>
                             ))
                           ) : (

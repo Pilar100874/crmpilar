@@ -15,7 +15,6 @@ interface Contato {
   telefone: string;
   email: string;
   usuarios_vinculados: Array<{ id: string; nome: string }>;
-  segmentos_vinculados: Array<{ id: string; nome: string }>;
 }
 
 interface Usuario {
@@ -24,15 +23,9 @@ interface Usuario {
   email: string;
 }
 
-interface Segmento {
-  id: string;
-  nome: string;
-}
-
 interface Props {
   contatos: Contato[];
   usuarios: Usuario[];
-  segmentos: Segmento[];
   selectedContatos: string[];
   onSelectContatos: (ids: string[]) => void;
 }
@@ -40,19 +33,17 @@ interface Props {
 export function VinculosWizardStep1Contatos({
   contatos,
   usuarios,
-  segmentos,
   selectedContatos,
   onSelectContatos,
 }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterField, setFilterField] = useState("all");
   const [filterUsuario, setFilterUsuario] = useState("all");
-  const [filterSegmento, setFilterSegmento] = useState("all");
   const [filteredContatos, setFilteredContatos] = useState(contatos);
 
   useEffect(() => {
     applyFilters();
-  }, [searchTerm, filterField, filterUsuario, filterSegmento, contatos]);
+  }, [searchTerm, filterField, filterUsuario, contatos]);
 
   const applyFilters = () => {
     let result = [...contatos];
@@ -86,17 +77,6 @@ export function VinculosWizardStep1Contatos({
       }
     }
 
-    // Filtro por segmento vinculado
-    if (filterSegmento !== "all") {
-      if (filterSegmento === "none") {
-        result = result.filter((c) => c.segmentos_vinculados.length === 0);
-      } else {
-        result = result.filter((c) => 
-          c.segmentos_vinculados.some(s => s.id === filterSegmento)
-        );
-      }
-    }
-
     setFilteredContatos(result);
   };
 
@@ -120,7 +100,6 @@ export function VinculosWizardStep1Contatos({
     setSearchTerm("");
     setFilterField("all");
     setFilterUsuario("all");
-    setFilterSegmento("all");
   };
 
   return (
@@ -131,7 +110,7 @@ export function VinculosWizardStep1Contatos({
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Filtros */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Campo de Pesquisa</Label>
               <Select value={filterField} onValueChange={setFilterField}>
@@ -177,24 +156,6 @@ export function VinculosWizardStep1Contatos({
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label>Filtrar por Segmento</Label>
-              <Select value={filterSegmento} onValueChange={setFilterSegmento}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="none">Sem segmento</SelectItem>
-                  {segmentos.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <div className="flex items-center justify-between">
@@ -221,13 +182,12 @@ export function VinculosWizardStep1Contatos({
                   <TableHead>Telefone</TableHead>
                   <TableHead>E-mail</TableHead>
                   <TableHead>Usuário Vinculado</TableHead>
-                  <TableHead>Segmento Vinculado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredContatos.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                       Nenhum contato encontrado com os filtros aplicados
                     </TableCell>
                   </TableRow>
@@ -249,17 +209,6 @@ export function VinculosWizardStep1Contatos({
                             <div className="flex flex-wrap gap-1">
                               {contato.usuarios_vinculados.map((u) => (
                                 <Badge key={u.id} variant="outline">{u.nome}</Badge>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">Sem vínculo</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {contato.segmentos_vinculados.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {contato.segmentos_vinculados.map((s) => (
-                                <Badge key={s.id} variant="outline">{s.nome}</Badge>
                               ))}
                             </div>
                           ) : (
