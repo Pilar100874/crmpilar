@@ -36,6 +36,8 @@ interface UnifiedDetailsPanelProps {
   descricao?: string;
   // Empresas vinculadas
   companies?: any[];
+  // Contatos vinculados à empresa (para orçamento)
+  empresaContacts?: any[];
   onCompaniesUpdated?: () => void;
   // Filtro global
   onSetGlobalFilter?: (filter: GlobalFilter) => void;
@@ -63,6 +65,7 @@ export function UnifiedDetailsPanel({
   titulo,
   descricao,
   companies = [],
+  empresaContacts = [],
   onCompaniesUpdated,
   onSetGlobalFilter,
   onEditContato,
@@ -74,6 +77,7 @@ export function UnifiedDetailsPanel({
   const [dialNumber, setDialNumber] = useState("");
   const [empresasOpen, setEmpresasOpen] = useState(true);
   const [contatoOpen, setContatoOpen] = useState(true);
+  const [empresaContatosOpen, setEmpresaContatosOpen] = useState(true);
   const [showVincularDialog, setShowVincularDialog] = useState(false);
   const [editingEmpresaId, setEditingEmpresaId] = useState<string | null>(null);
   const [desvincularEmpresa, setDesvincularEmpresa] = useState<{ id: string; nome: string } | null>(null);
@@ -398,6 +402,79 @@ export function UnifiedDetailsPanel({
             )}
           </CollapsibleContent>
         </Collapsible>
+
+        {/* PARTE 2.5 - Contatos Vinculados à Empresa (apenas para orçamento) */}
+        {type === "orcamento" && empresaContacts.length > 0 && (
+          <Collapsible open={empresaContatosOpen} onOpenChange={setEmpresaContatosOpen}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-between p-0 h-auto hover:bg-transparent"
+              >
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-primary" />
+                  <span className="font-semibold text-sm">Contatos da Empresa</span>
+                  <Badge variant="secondary" className="text-[10px]">
+                    {empresaContacts.length}
+                  </Badge>
+                </div>
+                {empresaContatosOpen ? (
+                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-3">
+              <div className="space-y-2">
+                {empresaContacts.map((contact, idx) => {
+                  const customer = contact.customers || contact;
+                  return (
+                    <Card key={idx} className="p-3 rounded-2xl hover:bg-muted/50 transition-colors">
+                      <div className="flex items-start justify-between mb-1">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">
+                            {customer?.nome || 'Contato'}
+                          </p>
+                          {contact.cargo && (
+                            <p className="text-xs text-muted-foreground">
+                              {contact.cargo}
+                            </p>
+                          )}
+                        </div>
+                        {onEditContato && customer?.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-primary hover:bg-primary/10"
+                            title="Ver contato"
+                            onClick={() => onEditContato(customer.id)}
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                      <div className="space-y-1 text-xs text-muted-foreground">
+                        {customer?.telefone && (
+                          <div className="flex items-center gap-1.5">
+                            <Phone className="w-3 h-3" />
+                            <span>{customer.telefone}</span>
+                          </div>
+                        )}
+                        {customer?.email && (
+                          <div className="flex items-center gap-1.5">
+                            <Mail className="w-3 h-3" />
+                            <span className="truncate">{customer.email}</span>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
         {/* PARTE 3 - Contato - Colapsável */}
         <Collapsible open={contatoOpen} onOpenChange={setContatoOpen}>
