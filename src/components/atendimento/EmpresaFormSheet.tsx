@@ -271,7 +271,8 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
     }
 
     if (!formData.segmento_id?.trim()) {
-      toast.error("Segmento é obrigatório");
+      toast.error("Segmento é obrigatório. Selecione um segmento para continuar.");
+      setActiveTab("empresa");
       return;
     }
 
