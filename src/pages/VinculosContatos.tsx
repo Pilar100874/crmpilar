@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { VinculosWizardStep1Contatos } from "@/components/vinculos/VinculosWizardStep1Contatos";
-import { VinculosWizardStep2 } from "@/components/vinculos/VinculosWizardStep2";
+import { VinculosWizardStep2Contatos } from "@/components/vinculos/VinculosWizardStep2Contatos";
 import { VinculosWizardStep3Contatos } from "@/components/vinculos/VinculosWizardStep3Contatos";
 import { VinculosWizardStep4 } from "@/components/vinculos/VinculosWizardStep4";
 
@@ -22,31 +22,21 @@ interface Usuario {
   email: string;
 }
 
-interface Segmento {
-  id: string;
-  nome: string;
-}
-
 interface ContatoComVinculo extends Contato {
   usuarios_vinculados: Array<{ id: string; nome: string }>;
-  segmentos_vinculados: Array<{ id: string; nome: string }>;
 }
 
 export default function VinculosContatos() {
   const [currentStep, setCurrentStep] = useState(1);
   const [contatos, setContatos] = useState<ContatoComVinculo[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [segmentos, setSegmentos] = useState<Segmento[]>([]);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
 
   // Step 1 - Seleção de contatos
   const [selectedContatos, setSelectedContatos] = useState<string[]>([]);
 
-  // Step 2 - Definição de alterações
-  const [alterarUsuario, setAlterarUsuario] = useState(false);
-  const [alterarSegmento, setAlterarSegmento] = useState(false);
+  // Step 2 - Seleção de usuários
   const [novosUsuariosIds, setNovosUsuariosIds] = useState<string[]>([]);
-  const [novosSegmentosIds, setNovosSegmentosIds] = useState<string[]>([]);
 
   // Step 4 - Processamento
   const [isProcessing, setIsProcessing] = useState(false);
@@ -80,7 +70,7 @@ export default function VinculosContatos() {
 
       const { data: vinculosData, error: vinculosError } = await supabase
         .from("customer_vinculos")
-        .select("id, customer_id, usuario_id, segmento_id")
+        .select("id, customer_id, usuario_id")
         .eq("estabelecimento_id", estabelecimentoId);
 
       if (vinculosError) throw vinculosError;
@@ -88,11 +78,6 @@ export default function VinculosContatos() {
       const { data: usuariosDataCompleta } = await supabase
         .from("usuarios")
         .select("id, nome, email")
-        .eq("estabelecimento_id", estabelecimentoId);
-
-      const { data: segmentosDataCompleta } = await supabase
-        .from("segmentos")
-        .select("id, nome")
         .eq("estabelecimento_id", estabelecimentoId);
 
       const contatosComVinculos: ContatoComVinculo[] = (contatosData || []).map((contato) => {
@@ -106,24 +91,14 @@ export default function VinculosContatos() {
           })
           .filter(Boolean) as Array<{ id: string; nome: string }>;
 
-        const segmentosVinculados = vinculosContato
-          .filter(v => v.segmento_id)
-          .map(v => {
-            const seg = segmentosDataCompleta?.find(s => s.id === v.segmento_id);
-            return seg ? { id: seg.id, nome: seg.nome } : null;
-          })
-          .filter(Boolean) as Array<{ id: string; nome: string }>;
-
         return {
           ...contato,
           usuarios_vinculados: usuariosVinculados,
-          segmentos_vinculados: segmentosVinculados,
         };
       });
 
       setContatos(contatosComVinculos);
       setUsuarios(usuariosDataCompleta || []);
-      setSegmentos(segmentosDataCompleta || []);
     } catch (error: any) {
       toast.error("Erro ao carregar dados", {
         description: error.message,
@@ -133,7 +108,7 @@ export default function VinculosContatos() {
 
   const canGoNext = () => {
     if (currentStep === 1) return selectedContatos.length > 0;
-    if (currentStep === 2) return alterarUsuario || alterarSegmento;
+    if (currentStep === 2) return novosUsuariosIds.length > 0;
     if (currentStep === 3) return true;
     return false;
   };
@@ -163,37 +138,23 @@ export default function VinculosContatos() {
       const contato = contatosParaProcessar[i];
       
       try {
-        // Remover vínculos existentes do contato
+        // Remover vínculos de usuários existentes do contato
         await supabase
           .from("customer_vinculos")
           .delete()
-          .eq("customer_id", contato.id);
+          .eq("customer_id", contato.id)
+          .not("usuario_id", "is", null);
 
-        // Criar novos vínculos independentes (usuário e segmento são separados)
+        // Criar novos vínculos de usuário
         const vinculos = [];
         
-        // Adicionar vínculos de usuário (independentes)
-        if (alterarUsuario && novosUsuariosIds.length > 0) {
-          for (const usuarioId of novosUsuariosIds) {
-            vinculos.push({
-              customer_id: contato.id,
-              usuario_id: usuarioId,
-              segmento_id: null,
-              estabelecimento_id: estabelecimentoId,
-            });
-          }
-        }
-        
-        // Adicionar vínculos de segmento (independentes)
-        if (alterarSegmento && novosSegmentosIds.length > 0) {
-          for (const segmentoId of novosSegmentosIds) {
-            vinculos.push({
-              customer_id: contato.id,
-              usuario_id: null,
-              segmento_id: segmentoId,
-              estabelecimento_id: estabelecimentoId,
-            });
-          }
+        for (const usuarioId of novosUsuariosIds) {
+          vinculos.push({
+            customer_id: contato.id,
+            usuario_id: usuarioId,
+            segmento_id: null,
+            estabelecimento_id: estabelecimentoId,
+          });
         }
 
         // Inserir novos vínculos
@@ -232,10 +193,7 @@ export default function VinculosContatos() {
   const handleReset = () => {
     setCurrentStep(1);
     setSelectedContatos([]);
-    setAlterarUsuario(false);
-    setAlterarSegmento(false);
     setNovosUsuariosIds([]);
-    setNovosSegmentosIds([]);
     setProcessedCount(0);
     setErrors([]);
     setCompleted(false);
@@ -246,9 +204,9 @@ export default function VinculosContatos() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Vínculo Contatos X Usuário / Segmento</h1>
+        <h1 className="text-3xl font-bold text-foreground">Vínculo Contatos X Usuário</h1>
         <p className="text-muted-foreground mt-2">
-          Assistente para vincular contatos a usuários e segmentos
+          Assistente para vincular contatos a usuários responsáveis
         </p>
       </div>
 
@@ -284,23 +242,15 @@ export default function VinculosContatos() {
           <VinculosWizardStep1Contatos
             contatos={contatos}
             usuarios={usuarios}
-            segmentos={segmentos}
             selectedContatos={selectedContatos}
             onSelectContatos={setSelectedContatos}
           />
         )}
         {currentStep === 2 && (
-          <VinculosWizardStep2
+          <VinculosWizardStep2Contatos
             usuarios={usuarios}
-            segmentos={segmentos}
-            alterarUsuario={alterarUsuario}
-            alterarSegmento={alterarSegmento}
             novosUsuariosIds={novosUsuariosIds}
-            novosSegmentosIds={novosSegmentosIds}
-            onAlterarUsuarioChange={setAlterarUsuario}
-            onAlterarSegmentoChange={setAlterarSegmento}
             onNovosUsuariosChange={setNovosUsuariosIds}
-            onNovosSegmentosChange={setNovosSegmentosIds}
             selectedCount={selectedContatos.length}
           />
         )}
@@ -308,11 +258,8 @@ export default function VinculosContatos() {
           <VinculosWizardStep3Contatos
             contatosSelecionados={contatosSelecionados}
             usuarios={usuarios}
-            segmentos={segmentos}
-            alterarUsuario={alterarUsuario}
-            alterarSegmento={alterarSegmento}
+            alterarUsuario={true}
             novosUsuariosIds={novosUsuariosIds}
-            novosSegmentosIds={novosSegmentosIds}
           />
         )}
         {currentStep === 4 && (
