@@ -1,4 +1,4 @@
-import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Filter, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink, Unlink } from "lucide-react";
+import { User, Phone, Building2, Plus, ChevronDown, ChevronUp, MessageSquare, Calendar, Inbox, Receipt, Mail, Pencil, Briefcase, Edit3, UserPlus, Check, X, ExternalLink, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { GlobalFilter } from "./GlobalClientFilter";
 import { toast } from "@/lib/toast-config";
 import { supabase } from "@/integrations/supabase/client";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
+
 
 export type PanelType = "chat" | "agenda" | "email" | "orcamento";
 
@@ -77,6 +78,8 @@ export function UnifiedDetailsPanel({
   const [editingEmpresaId, setEditingEmpresaId] = useState<string | null>(null);
   const [desvincularEmpresa, setDesvincularEmpresa] = useState<{ id: string; nome: string } | null>(null);
   const [isDesvinculating, setIsDesvinculating] = useState(false);
+  const [desvincularContato, setDesvincularContato] = useState(false);
+  const [isDesvinculatingContato, setIsDesvinculatingContato] = useState(false);
   
   // Estado para edição inline do contato
   const [isEditingContato, setIsEditingContato] = useState(false);
@@ -231,6 +234,29 @@ export function UnifiedDetailsPanel({
     }
   };
 
+  const handleDesvincularContato = async () => {
+    if (!customerId || companies.length === 0) return;
+    
+    setIsDesvinculatingContato(true);
+    try {
+      // Desvincular todas as empresas do contato
+      const { error } = await supabase
+        .from('customer_empresas')
+        .delete()
+        .eq('customer_id', customerId);
+
+      if (error) throw error;
+
+      toast.success('Contato desvinculado de todas as empresas!');
+      setDesvincularContato(false);
+      onCompaniesUpdated?.();
+    } catch (error) {
+      console.error('Erro ao desvincular contato:', error);
+      toast.error('Erro ao desvincular contato');
+    } finally {
+      setIsDesvinculatingContato(false);
+    }
+  };
   if (!nome && !protocolo && !titulo) {
     return (
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-card">
@@ -340,25 +366,6 @@ export function UnifiedDetailsPanel({
                           >
                             <Unlink className="w-3.5 h-3.5" />
                           </Button>
-                          {onSetGlobalFilter && empresa?.id && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0 hover:bg-emerald-100 hover:text-emerald-600"
-                              title="Filtrar por esta empresa"
-                              onClick={() => {
-                                const empresaNome = empresa.nome_fantasia || empresa.nome || 'Empresa';
-                                onSetGlobalFilter({
-                                  type: 'empresa',
-                                  id: empresa.id,
-                                  nome: empresaNome
-                                });
-                                toast.info(`Filtro aplicado: ${empresaNome}`);
-                              }}
-                            >
-                              <Filter className="w-3.5 h-3.5" />
-                            </Button>
-                          )}
                         </div>
                       </div>
                       {(company.cargo || company.departamento) && (
@@ -456,6 +463,18 @@ export function UnifiedDetailsPanel({
                       title="Editar na tela central"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                  {/* Botão desvincular contato de todas as empresas */}
+                  {companies.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 hover:bg-destructive/10 hover:text-destructive"
+                      onClick={() => setDesvincularContato(true)}
+                      title="Desvincular de todas as empresas"
+                    >
+                      <Unlink className="w-3.5 h-3.5" />
                     </Button>
                   )}
                 </>
@@ -617,6 +636,15 @@ export function UnifiedDetailsPanel({
         title="Desvincular empresa"
         description={`Tem certeza que deseja desvincular "${desvincularEmpresa?.nome}" deste contato?`}
         isLoading={isDesvinculating}
+      />
+
+      <DeleteConfirmDialog
+        open={desvincularContato}
+        onOpenChange={setDesvincularContato}
+        onConfirm={handleDesvincularContato}
+        title="Desvincular contato"
+        description={`Tem certeza que deseja desvincular "${nome}" de todas as empresas vinculadas?`}
+        isLoading={isDesvinculatingContato}
       />
     </div>
   );
