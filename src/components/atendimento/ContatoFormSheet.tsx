@@ -183,6 +183,42 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
         return;
       }
 
+      // Validar duplicidade de email
+      if (formData.email?.trim()) {
+        const { data: existingEmail } = await supabase
+          .from("customers")
+          .select("id")
+          .eq("estabelecimento_id", estabelecimentoId)
+          .eq("email", formData.email.trim())
+          .maybeSingle();
+        
+        if (existingEmail) {
+          toast.error("E-mail já cadastrado em outro contato");
+          setSaving(false);
+          return;
+        }
+      }
+
+      // Validar duplicidade de WhatsApp
+      if (formData.phone?.trim()) {
+        const cleanPhone = formData.phone.replace(/\D/g, '');
+        const { data: existingPhone } = await supabase
+          .from("customers")
+          .select("id, telefone")
+          .eq("estabelecimento_id", estabelecimentoId)
+          .not("telefone", "is", null);
+        
+        const duplicate = existingPhone?.find(c => 
+          c.telefone?.replace(/\D/g, '') === cleanPhone
+        );
+        
+        if (duplicate) {
+          toast.error("WhatsApp já cadastrado em outro contato");
+          setSaving(false);
+          return;
+        }
+      }
+
       // Preparar custom_fields
       const customFieldsData: Record<string, any> = {};
       contactFields.forEach(field => {
