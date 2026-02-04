@@ -731,6 +731,37 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
       if (error) throw error;
 
+      // Sincronizar segmentos com as empresas vinculadas ao contato
+      if (novosSegmentosVinculo.length > 0) {
+        const { data: empresasVinculadas } = await supabase
+          .from("customer_empresas")
+          .select("empresa_id")
+          .eq("customer_id", editingContact.id);
+
+        if (empresasVinculadas && empresasVinculadas.length > 0) {
+          for (const empresaLink of empresasVinculadas) {
+            for (const segmentoId of novosSegmentosVinculo) {
+              // Verificar se já existe vínculo empresa-segmento
+              const { data: existing } = await supabase
+                .from("empresa_vinculos")
+                .select("id")
+                .eq("empresa_id", empresaLink.empresa_id)
+                .eq("segmento_id", segmentoId)
+                .maybeSingle();
+              
+              if (!existing) {
+                await supabase.from("empresa_vinculos").insert({
+                  empresa_id: empresaLink.empresa_id,
+                  segmento_id: segmentoId,
+                  usuario_id: null,
+                  estabelecimento_id: estabelecimentoId,
+                });
+              }
+            }
+          }
+        }
+      }
+
       toast.success("Vínculos adicionados!");
       setNovosUsuariosVinculo([]);
       setNovosSegmentosVinculo([]);

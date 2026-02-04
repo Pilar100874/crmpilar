@@ -979,23 +979,13 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
   };
 
   const handleAdicionarVinculo = async () => {
-    if (!estabelecimentoId || !editingEmpresa || (novosUsuariosVinculo.length === 0 && novosSegmentosVinculo.length === 0)) {
-      toast.error("Selecione pelo menos um usuário ou segmento");
+    if (!estabelecimentoId || !editingEmpresa || novosSegmentosVinculo.length === 0) {
+      toast.error("Selecione pelo menos um segmento");
       return;
     }
 
     try {
       const vinculos = [];
-      
-      // Criar vínculos independentes para usuários
-      for (const usuarioId of novosUsuariosVinculo) {
-        vinculos.push({
-          empresa_id: editingEmpresa.id,
-          usuario_id: usuarioId,
-          segmento_id: null,
-          estabelecimento_id: estabelecimentoId,
-        });
-      }
       
       // Criar vínculos independentes para segmentos
       for (const segmentoId of novosSegmentosVinculo) {
@@ -1013,8 +1003,37 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
       if (error) throw error;
 
-      toast.success("Vínculos adicionados!");
-      setNovosUsuariosVinculo([]);
+      // Sincronizar segmentos com os contatos vinculados à empresa
+      const { data: contatosEmpresa } = await supabase
+        .from("customer_empresas")
+        .select("customer_id")
+        .eq("empresa_id", editingEmpresa.id);
+
+      if (contatosEmpresa && contatosEmpresa.length > 0) {
+        const customerIds = contatosEmpresa.map(c => c.customer_id);
+        
+        // Adicionar segmentos aos contatos que ainda não os têm
+        for (const customerId of customerIds) {
+          for (const segmentoId of novosSegmentosVinculo) {
+            // Verificar se já existe
+            const { data: existing } = await supabase
+              .from("customer_segmentos")
+              .select("id")
+              .eq("customer_id", customerId)
+              .eq("segmento_id", segmentoId)
+              .maybeSingle();
+            
+            if (!existing) {
+              await supabase.from("customer_segmentos").insert({
+                customer_id: customerId,
+                segmento_id: segmentoId,
+              });
+            }
+          }
+        }
+      }
+
+      toast.success("Segmentos adicionados!");
       setNovosSegmentosVinculo([]);
       await fetchEmpresas(estabelecimentoId);
     } catch (error: any) {
@@ -1658,7 +1677,7 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
               value="vinculos"
               className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
             >
-              Vínculos
+              Segmentos
             </TabsTrigger>
           </TabsList>
 
@@ -1904,190 +1923,101 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
             <Card className="p-6">
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Vínculos da Empresa</h3>
+                  <h3 className="text-lg font-semibold mb-2">Segmentos da Empresa</h3>
                   <p className="text-sm text-muted-foreground mb-6">
-                    Gerencie os vínculos desta empresa com usuários e segmentos.
+                    Gerencie os segmentos desta empresa. Os segmentos adicionados aqui serão automaticamente aplicados aos contatos vinculados.
                   </p>
                 </div>
 
                 {editingEmpresa ? (() => {
                   const vinculosDaEmpresa = vinculos.filter(v => v.empresa_id === editingEmpresa.id);
-                  const vinculosUsuarios = vinculosDaEmpresa.filter(v => v.usuario_id !== null);
                   const vinculosSegmentos = vinculosDaEmpresa.filter(v => v.segmento_id !== null);
 
                   return (
-                    <Tabs defaultValue="usuarios" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="usuarios">Usuários</TabsTrigger>
-                        <TabsTrigger value="segmentos">Segmentos</TabsTrigger>
-                      </TabsList>
+                    <div className="space-y-4">
+                      {/* Adicionar novos segmentos */}
+                      <Card className="border-primary/20 bg-primary/5">
+                        <CardContent className="p-4 space-y-4">
+                          <h4 className="text-sm font-semibold">Adicionar Segmentos</h4>
+                          
+                          <div className="space-y-2">
+                            <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
+                              {segmentos.map((segmento) => (
+                                <div key={segmento.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
+                                  <Checkbox
+                                    id={`new-seg-${segmento.id}`}
+                                    checked={novosSegmentosVinculo.includes(segmento.id)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setNovosSegmentosVinculo([...novosSegmentosVinculo, segmento.id]);
+                                      } else {
+                                        setNovosSegmentosVinculo(novosSegmentosVinculo.filter(id => id !== segmento.id));
+                                      }
+                                    }}
+                                  />
+                                  <label htmlFor={`new-seg-${segmento.id}`} className="text-sm cursor-pointer flex-1">
+                                    {segmento.nome}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
 
-                      <TabsContent value="usuarios" className="space-y-4 mt-4">
-                        {/* Adicionar novos usuários */}
-                        <Card className="border-primary/20 bg-primary/5">
-                          <CardContent className="p-4 space-y-4">
-                            <h4 className="text-sm font-semibold">Adicionar Usuários</h4>
-                            
-                            <div className="space-y-2">
-                              <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
-                                {usuarios.map((usuario) => (
-                                  <div key={usuario.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                                    <Checkbox
-                                      id={`new-user-${usuario.id}`}
-                                      checked={novosUsuariosVinculo.includes(usuario.id)}
-                                      onCheckedChange={(checked) => {
-                                        if (checked) {
-                                          setNovosUsuariosVinculo([...novosUsuariosVinculo, usuario.id]);
-                                        } else {
-                                          setNovosUsuariosVinculo(novosUsuariosVinculo.filter(id => id !== usuario.id));
-                                        }
-                                      }}
-                                    />
-                                    <label htmlFor={`new-user-${usuario.id}`} className="text-sm cursor-pointer flex-1">
-                                      {usuario.nome}
-                                    </label>
+                          <Button 
+                            onClick={async () => {
+                              if (novosSegmentosVinculo.length === 0) {
+                                toast.error("Selecione pelo menos um segmento");
+                                return;
+                              }
+                              await handleAdicionarVinculo();
+                            }} 
+                            className="w-full" 
+                            size="sm"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Adicionar Segmentos Selecionados
+                          </Button>
+                        </CardContent>
+                      </Card>
+
+                      {/* Lista de segmentos vinculados */}
+                      <div>
+                        <h4 className="text-sm font-semibold mb-3">Segmentos Vinculados</h4>
+                        {vinculosSegmentos.length > 0 ? (
+                          <div className="space-y-2">
+                            {vinculosSegmentos.map((vinculo) => {
+                              const segmento = segmentos.find(s => s.id === vinculo.segmento_id);
+
+                              return (
+                                <div key={vinculo.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium">
+                                      {segmento?.nome || <span className="text-muted-foreground">Segmento não encontrado</span>}
+                                    </p>
                                   </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            <Button 
-                              onClick={async () => {
-                                if (novosUsuariosVinculo.length === 0) {
-                                  toast.error("Selecione pelo menos um usuário");
-                                  return;
-                                }
-                                await handleAdicionarVinculo();
-                              }} 
-                              className="w-full" 
-                              size="sm"
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              Adicionar Usuários Selecionados
-                            </Button>
-                          </CardContent>
-                        </Card>
-
-                        {/* Lista de usuários vinculados */}
-                        <div>
-                          <h4 className="text-sm font-semibold mb-3">Usuários Vinculados</h4>
-                          {vinculosUsuarios.length > 0 ? (
-                            <div className="space-y-2">
-                              {vinculosUsuarios.map((vinculo) => {
-                                const usuario = usuarios.find(u => u.id === vinculo.usuario_id);
-
-                                return (
-                                  <div key={vinculo.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
-                                    <div className="flex-1">
-                                      <p className="text-sm font-medium">
-                                        {usuario?.nome || <span className="text-muted-foreground">Usuário não encontrado</span>}
-                                      </p>
-                                    </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                      onClick={() => handleRemoverVinculo(vinculo.id)}
-                                    >
-                                      <Trash2 className="w-4 h-4 text-destructive" />
-                                    </Button>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <div className="p-4 border rounded-lg bg-muted/30 text-center">
-                              <p className="text-sm text-muted-foreground">Nenhum usuário vinculado</p>
-                            </div>
-                          )}
-                        </div>
-                      </TabsContent>
-
-                      <TabsContent value="segmentos" className="space-y-4 mt-4">
-                        {/* Adicionar novos segmentos */}
-                        <Card className="border-primary/20 bg-primary/5">
-                          <CardContent className="p-4 space-y-4">
-                            <h4 className="text-sm font-semibold">Adicionar Segmentos</h4>
-                            
-                            <div className="space-y-2">
-                              <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2 bg-background">
-                                {segmentos.map((segmento) => (
-                                  <div key={segmento.id} className="flex items-center space-x-2 p-1.5 hover:bg-accent/50 rounded">
-                                    <Checkbox
-                                      id={`new-seg-${segmento.id}`}
-                                      checked={novosSegmentosVinculo.includes(segmento.id)}
-                                      onCheckedChange={(checked) => {
-                                        if (checked) {
-                                          setNovosSegmentosVinculo([...novosSegmentosVinculo, segmento.id]);
-                                        } else {
-                                          setNovosSegmentosVinculo(novosSegmentosVinculo.filter(id => id !== segmento.id));
-                                        }
-                                      }}
-                                    />
-                                    <label htmlFor={`new-seg-${segmento.id}`} className="text-sm cursor-pointer flex-1">
-                                      {segmento.nome}
-                                    </label>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-
-                            <Button 
-                              onClick={async () => {
-                                if (novosSegmentosVinculo.length === 0) {
-                                  toast.error("Selecione pelo menos um segmento");
-                                  return;
-                                }
-                                await handleAdicionarVinculo();
-                              }} 
-                              className="w-full" 
-                              size="sm"
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              Adicionar Segmentos Selecionados
-                            </Button>
-                          </CardContent>
-                        </Card>
-
-                        {/* Lista de segmentos vinculados */}
-                        <div>
-                          <h4 className="text-sm font-semibold mb-3">Segmentos Vinculados</h4>
-                          {vinculosSegmentos.length > 0 ? (
-                            <div className="space-y-2">
-                              {vinculosSegmentos.map((vinculo) => {
-                                const segmento = segmentos.find(s => s.id === vinculo.segmento_id);
-
-                                return (
-                                  <div key={vinculo.id} className="p-3 border rounded-lg bg-muted/30 flex items-center justify-between group hover:border-primary/30 transition-colors">
-                                    <div className="flex-1">
-                                      <p className="text-sm font-medium">
-                                        {segmento?.nome || <span className="text-muted-foreground">Segmento não encontrado</span>}
-                                      </p>
-                                    </div>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                      onClick={() => handleRemoverVinculo(vinculo.id)}
-                                    >
-                                      <Trash2 className="w-4 h-4 text-destructive" />
-                                    </Button>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <div className="p-4 border rounded-lg bg-muted/30 text-center">
-                              <p className="text-sm text-muted-foreground">Nenhum segmento vinculado</p>
-                            </div>
-                          )}
-                        </div>
-                      </TabsContent>
-                    </Tabs>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => handleRemoverVinculo(vinculo.id)}
+                                  >
+                                    <Trash2 className="w-4 h-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="p-4 border rounded-lg bg-muted/30 text-center">
+                            <p className="text-sm text-muted-foreground">Nenhum segmento vinculado</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   );
                 })() : (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    Salve a empresa primeiro para gerenciar os vínculos.
+                    Salve a empresa primeiro para gerenciar os segmentos.
                   </p>
                 )}
               </div>
