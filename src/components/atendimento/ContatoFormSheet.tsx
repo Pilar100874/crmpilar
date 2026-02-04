@@ -102,7 +102,7 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
     }
   }, [open]);
   
-  // Reset form when opening
+  // Reset form when opening e auto-vincular usuário logado
   useEffect(() => {
     if (open) {
       setFormData({
@@ -114,17 +114,15 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
       });
       setEmpresasVinculadas([]);
       setSegmentosSelecionados([]);
-      setUsuariosVinculados([]);
+      // Auto-vincular usuário logado se disponível
+      if (currentUserId) {
+        setUsuariosVinculados([currentUserId]);
+      } else {
+        setUsuariosVinculados([]);
+      }
       setActiveTab("contato");
     }
-  }, [open, initialData]);
-
-  // Auto-vincular usuário logado quando disponível
-  useEffect(() => {
-    if (open && currentUserId && !usuariosVinculados.includes(currentUserId)) {
-      setUsuariosVinculados([currentUserId]);
-    }
-  }, [open, currentUserId]);
+  }, [open, initialData, currentUserId]);
   
 
   const loadCustomFields = async (estabId: string) => {
