@@ -731,32 +731,49 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
       if (error) throw error;
 
-      // Sincronizar segmentos com as empresas vinculadas ao contato
-      if (novosSegmentosVinculo.length > 0) {
-        const { data: empresasVinculadas } = await supabase
-          .from("customer_empresas")
-          .select("empresa_id")
-          .eq("customer_id", editingContact.id);
+      // Sincronizar com as empresas vinculadas ao contato
+      const { data: empresasVinculadas } = await supabase
+        .from("customer_empresas")
+        .select("empresa_id")
+        .eq("customer_id", editingContact.id);
 
-        if (empresasVinculadas && empresasVinculadas.length > 0) {
-          for (const empresaLink of empresasVinculadas) {
-            for (const segmentoId of novosSegmentosVinculo) {
-              // Verificar se já existe vínculo empresa-segmento
-              const { data: existing } = await supabase
-                .from("empresa_vinculos")
-                .select("id")
-                .eq("empresa_id", empresaLink.empresa_id)
-                .eq("segmento_id", segmentoId)
-                .maybeSingle();
-              
-              if (!existing) {
-                await supabase.from("empresa_vinculos").insert({
-                  empresa_id: empresaLink.empresa_id,
-                  segmento_id: segmentoId,
-                  usuario_id: null,
-                  estabelecimento_id: estabelecimentoId,
-                });
-              }
+      if (empresasVinculadas && empresasVinculadas.length > 0) {
+        for (const empresaLink of empresasVinculadas) {
+          // Sincronizar usuários
+          for (const usuarioId of novosUsuariosVinculo) {
+            const { data: existing } = await supabase
+              .from("empresa_vinculos")
+              .select("id")
+              .eq("empresa_id", empresaLink.empresa_id)
+              .eq("usuario_id", usuarioId)
+              .maybeSingle();
+            
+            if (!existing) {
+              await supabase.from("empresa_vinculos").insert({
+                empresa_id: empresaLink.empresa_id,
+                usuario_id: usuarioId,
+                segmento_id: null,
+                estabelecimento_id: estabelecimentoId,
+              });
+            }
+          }
+          
+          // Sincronizar segmentos
+          for (const segmentoId of novosSegmentosVinculo) {
+            const { data: existing } = await supabase
+              .from("empresa_vinculos")
+              .select("id")
+              .eq("empresa_id", empresaLink.empresa_id)
+              .eq("segmento_id", segmentoId)
+              .maybeSingle();
+            
+            if (!existing) {
+              await supabase.from("empresa_vinculos").insert({
+                empresa_id: empresaLink.empresa_id,
+                segmento_id: segmentoId,
+                usuario_id: null,
+                estabelecimento_id: estabelecimentoId,
+              });
             }
           }
         }
@@ -777,14 +794,15 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
   const handleRemoverVinculo = async (vinculoId: string) => {
     try {
-      // Primeiro buscar os dados do vínculo para saber o segmento_id
+      // Primeiro buscar os dados do vínculo para saber o segmento_id e usuario_id
       const { data: vinculoData } = await supabase
         .from("customer_vinculos")
-        .select("segmento_id")
+        .select("segmento_id, usuario_id")
         .eq("id", vinculoId)
         .maybeSingle();
 
       const segmentoId = vinculoData?.segmento_id;
+      const usuarioId = vinculoData?.usuario_id;
 
       // Remover o vínculo do contato
       const { error } = await supabase
@@ -794,8 +812,8 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
       if (error) throw error;
 
-      // Se for um segmento, remover também das empresas vinculadas ao contato
-      if (segmentoId && editingContact) {
+      // Se for um segmento ou usuário, remover também das empresas vinculadas ao contato
+      if (editingContact && (segmentoId || usuarioId)) {
         const { data: empresasVinculadas } = await supabase
           .from("customer_empresas")
           .select("empresa_id")
@@ -804,12 +822,23 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
         if (empresasVinculadas && empresasVinculadas.length > 0) {
           const empresaIds = empresasVinculadas.map(e => e.empresa_id);
           
-          // Remover o segmento das empresas vinculadas
-          await supabase
-            .from("empresa_vinculos")
-            .delete()
-            .in("empresa_id", empresaIds)
-            .eq("segmento_id", segmentoId);
+          if (segmentoId) {
+            // Remover o segmento das empresas vinculadas
+            await supabase
+              .from("empresa_vinculos")
+              .delete()
+              .in("empresa_id", empresaIds)
+              .eq("segmento_id", segmentoId);
+          }
+          
+          if (usuarioId) {
+            // Remover o usuário das empresas vinculadas
+            await supabase
+              .from("empresa_vinculos")
+              .delete()
+              .in("empresa_id", empresaIds)
+              .eq("usuario_id", usuarioId);
+          }
         }
       }
 
