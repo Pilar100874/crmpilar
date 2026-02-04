@@ -281,19 +281,14 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
       <SheetContent side="right" className="w-full sm:max-w-2xl overflow-hidden flex flex-col p-0">
         {/* Header - tema laranja do Atendimento */}
         <SheetHeader className="px-6 py-4 border-b bg-gradient-to-r from-orange-50 to-transparent dark:from-orange-950/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div>
-                <SheetTitle className="text-lg">Editar Empresa</SheetTitle>
-                <p className="text-xs text-muted-foreground">Cadastro completo</p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             </div>
-            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-              <X className="w-4 h-4" />
-            </Button>
+            <div>
+              <SheetTitle className="text-lg">Editar Empresa</SheetTitle>
+              <p className="text-xs text-muted-foreground">Cadastro completo</p>
+            </div>
           </div>
         </SheetHeader>
 
