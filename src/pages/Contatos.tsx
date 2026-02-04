@@ -777,12 +777,41 @@ export default function Contatos({ hideAdminButtons = false }: ContatosProps) {
 
   const handleRemoverVinculo = async (vinculoId: string) => {
     try {
+      // Primeiro buscar os dados do vínculo para saber o segmento_id
+      const { data: vinculoData } = await supabase
+        .from("customer_vinculos")
+        .select("segmento_id")
+        .eq("id", vinculoId)
+        .maybeSingle();
+
+      const segmentoId = vinculoData?.segmento_id;
+
+      // Remover o vínculo do contato
       const { error } = await supabase
         .from("customer_vinculos")
         .delete()
         .eq("id", vinculoId);
 
       if (error) throw error;
+
+      // Se for um segmento, remover também das empresas vinculadas ao contato
+      if (segmentoId && editingContact) {
+        const { data: empresasVinculadas } = await supabase
+          .from("customer_empresas")
+          .select("empresa_id")
+          .eq("customer_id", editingContact.id);
+
+        if (empresasVinculadas && empresasVinculadas.length > 0) {
+          const empresaIds = empresasVinculadas.map(e => e.empresa_id);
+          
+          // Remover o segmento das empresas vinculadas
+          await supabase
+            .from("empresa_vinculos")
+            .delete()
+            .in("empresa_id", empresaIds)
+            .eq("segmento_id", segmentoId);
+        }
+      }
 
       toast.success("Vínculo removido!");
       await loadContacts();
