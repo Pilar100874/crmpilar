@@ -233,6 +233,7 @@ export default function Atendimento() {
   const [orcamentoSheetOpen, setOrcamentoSheetOpen] = useState(false);
   const [showNovoOrcamentoConfirm, setShowNovoOrcamentoConfirm] = useState(false);
   const [initialEmpresaForOrcamento, setInitialEmpresaForOrcamento] = useState<string | null>(null);
+  const [empresaContacts, setEmpresaContacts] = useState<any[]>([]);
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   
   // Agenda states
@@ -2091,6 +2092,31 @@ export default function Atendimento() {
         }
       } else {
         setCustomerCompanies([]);
+      }
+
+      // Se o orçamento tem empresa_id, carregar contatos vinculados a essa empresa
+      if (orcamentoData?.empresas?.id) {
+        const { data: contactsData } = await supabase
+          .from('customer_empresas')
+          .select(`
+            *,
+            customers:customer_id (
+              id,
+              nome,
+              telefone,
+              tel,
+              email
+            )
+          `)
+          .eq('empresa_id', orcamentoData.empresas.id);
+
+        if (contactsData) {
+          setEmpresaContacts(contactsData);
+        } else {
+          setEmpresaContacts([]);
+        }
+      } else {
+        setEmpresaContacts([]);
       }
     } catch (error) {
       console.error("Erro ao carregar orçamento:", error);
@@ -4317,6 +4343,7 @@ ${recentMessages}
                       ? [{ empresas: selectedOrcamentoData.empresas, is_primary: true }]
                       : []
                   }
+                  empresaContacts={empresaContacts}
                   onSetGlobalFilter={setGlobalFilter}
                   onEditContato={(id) => setEditingContatoId(id)}
                   onEditEmpresa={(empresaId, customerEmpresaId) => {
@@ -6332,6 +6359,7 @@ ${recentMessages}
                 ? [{ empresas: selectedOrcamentoData.empresas, is_primary: true }]
                 : (selectedOrcamentoData.customers?.id ? customerCompanies : [])
             }
+            empresaContacts={empresaContacts}
             onSetGlobalFilter={setGlobalFilter}
             onEditContato={(id) => setEditingContatoId(id)}
             onEditEmpresa={(empresaId, customerEmpresaId) => {
