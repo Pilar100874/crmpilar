@@ -265,7 +265,7 @@ export function ContatoFormSheetEdit({ open, onOpenChange, customerId, onSuccess
         .from("customers")
         .update({
           nome: formData.name.trim(),
-          email: formData.email?.trim() || null,
+          email: formData.email?.trim() || '',
           telefone: formData.phone?.trim() || null,
           tel: formData.tel?.trim() || null,
           custom_fields: Object.keys(customFieldsData).length > 0 ? customFieldsData : null,
