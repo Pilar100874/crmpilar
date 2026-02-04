@@ -62,6 +62,29 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
   // Usuarios (vínculos)
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [usuariosVinculados, setUsuariosVinculados] = useState<string[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Função auxiliar para buscar usuário logado
+  const loadCurrentUser = async () => {
+    try {
+      const authResponse = await supabase.auth.getUser();
+      const authUser = authResponse.data?.user;
+      if (authUser) {
+        // @ts-ignore - Supabase types depth issue
+        const result = await supabase
+          .from("usuarios")
+          .select("id")
+          .eq("auth_id", authUser.id)
+          .maybeSingle();
+        
+        if (result.data?.id) {
+          setCurrentUserId(result.data.id);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao buscar usuário logado:", error);
+    }
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -71,6 +94,7 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
         loadCustomFields(estabId);
         loadSegmentos(estabId);
         loadUsuarios(estabId);
+        loadCurrentUser();
       }
     };
     if (open) {
@@ -94,6 +118,13 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
       setActiveTab("contato");
     }
   }, [open, initialData]);
+
+  // Auto-vincular usuário logado quando disponível
+  useEffect(() => {
+    if (open && currentUserId && !usuariosVinculados.includes(currentUserId)) {
+      setUsuariosVinculados([currentUserId]);
+    }
+  }, [open, currentUserId]);
   
 
   const loadCustomFields = async (estabId: string) => {
