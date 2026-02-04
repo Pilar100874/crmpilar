@@ -150,6 +150,12 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
       return;
     }
 
+    if (segmentosSelecionados.length === 0) {
+      toast.error("Selecione pelo menos 1 segmento");
+      setActiveTab("vinculos");
+      return;
+    }
+
     setSaving(true);
     try {
       if (!estabelecimentoId) {
