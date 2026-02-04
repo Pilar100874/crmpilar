@@ -58,6 +58,11 @@ export default function OrcamentoCard({ orcamento, onClick, onDelete, onEtapaCha
             <h4 className="font-semibold text-sm line-clamp-1">
               {orcamento.empresa?.nome_fantasia || orcamento.cliente?.nome || 'Cliente não informado'}
             </h4>
+            {orcamento.empresa && orcamento.cliente?.nome && (
+              <p className="text-xs text-muted-foreground line-clamp-1">
+                {orcamento.cliente.nome}
+              </p>
+            )}
             <p className="text-xs text-muted-foreground">
               #{orcamento.id.slice(0, 8)}
             </p>
