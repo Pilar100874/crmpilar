@@ -247,6 +247,26 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
         return;
       }
 
+      // Validar duplicidade de CNPJ/CPF
+      if (formData.cpf_cnpj?.trim()) {
+        const cleanDoc = formData.cpf_cnpj.replace(/\D/g, '');
+        const { data: existingDoc } = await supabase
+          .from("empresas")
+          .select("id, cnpj")
+          .eq("estabelecimento_id", estabelecimentoId)
+          .not("cnpj", "is", null);
+        
+        const duplicate = existingDoc?.find(e => 
+          e.cnpj?.replace(/\D/g, '') === cleanDoc
+        );
+        
+        if (duplicate) {
+          toast.error("CNPJ/CPF já cadastrado em outra empresa");
+          setSaving(false);
+          return;
+        }
+      }
+
       // Preparar custom_fields
       const customFieldsData: Record<string, any> = {};
       if (formData.numero) customFieldsData.numero = formData.numero;
