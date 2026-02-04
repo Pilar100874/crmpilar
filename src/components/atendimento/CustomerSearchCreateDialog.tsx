@@ -356,18 +356,8 @@ export function CustomerSearchCreateDialog({
         return;
       }
 
-      // Vincular a empresa ao usuário que criou
-      const { error: vinculoError } = await supabase
-        .from('empresa_vinculos')
-        .insert({
-          empresa_id: data.id,
-          estabelecimento_id: estabId,
-          usuario_id: user.id
-        });
-
-      if (vinculoError) {
-        console.error("Erro ao vincular empresa ao usuário:", vinculoError);
-      }
+      // Nota: empresa_vinculos agora só armazena segmentos, não usuários
+      // O vínculo do usuário é feito no customer_vinculos do contato
 
       toast.success("Empresa criada e vinculada com sucesso!");
       onSelect('empresa', data);
