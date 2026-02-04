@@ -68,6 +68,7 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
     inscricao: "",
     telefone: "",
     email: "",
+    segmento_id: "",
   });
   
   // Custom fields
@@ -78,6 +79,9 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
   const [contatosVinculados, setContatosVinculados] = useState<any[]>([]);
   const [buscaContato, setBuscaContato] = useState("");
   const [contatosFiltrados, setContatosFiltrados] = useState<any[]>([]);
+  
+  // Segmentos
+  const [segmentos, setSegmentos] = useState<any[]>([]);
   
   // Criar novo contato inline
   const [criarNovoContato, setCriarNovoContato] = useState(false);
@@ -95,6 +99,7 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
       if (estabId) {
         loadCustomFields(estabId);
         loadContatos(estabId);
+        loadSegmentos(estabId);
       }
     };
     if (open) {
@@ -123,6 +128,7 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
         inscricao: "",
         telefone: initialData?.telefone || "",
         email: initialData?.email || "",
+        segmento_id: "",
       });
       setContatosVinculados([]);
       setCriarNovoContato(false);
@@ -179,6 +185,15 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
       .eq("estabelecimento_id", estabId)
       .order("nome");
     setContatos(data || []);
+  };
+
+  const loadSegmentos = async (estabId: string) => {
+    const { data } = await supabase
+      .from("segmentos")
+      .select("id, nome")
+      .eq("estabelecimento_id", estabId)
+      .order("nome");
+    setSegmentos(data || []);
   };
   
   // Buscar CNPJ automaticamente na Receita Federal
@@ -255,6 +270,11 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
       return;
     }
 
+    if (!formData.segmento_id?.trim()) {
+      toast.error("Segmento é obrigatório");
+      return;
+    }
+
     setSaving(true);
     try {
       if (!estabelecimentoId) {
@@ -303,6 +323,7 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
           cidade: formData.cidade?.trim() || null,
           estado: formData.estado?.trim() || null,
           estabelecimento_id: estabelecimentoId,
+          segmento_id: formData.segmento_id || null,
           custom_fields: Object.keys(customFieldsData).length > 0 ? customFieldsData : null,
         })
         .select()
@@ -439,15 +460,38 @@ export function EmpresaFormSheet({ open, onOpenChange, onSuccess, initialData }:
                 />
               </div>
 
-              {/* Inscrição */}
-              <div className="space-y-2">
-                <Label>Inscrição Estadual</Label>
-                <Input
-                  value={formData.inscricao}
-                  onChange={(e) => setFormData({ ...formData, inscricao: e.target.value })}
-                  placeholder="Inscrição estadual"
-                />
-              </div>
+               {/* Inscrição */}
+               <div className="space-y-2">
+                 <Label>Inscrição Estadual</Label>
+                 <Input
+                   value={formData.inscricao}
+                   onChange={(e) => setFormData({ ...formData, inscricao: e.target.value })}
+                   placeholder="Inscrição estadual"
+                 />
+               </div>
+
+               {/* Segmento - Obrigatório */}
+               <div className="space-y-2">
+                 <Label className="flex items-center gap-2">
+                   <FileText className="w-4 h-4 text-muted-foreground" />
+                   Segmento *
+                 </Label>
+                 <Select 
+                   value={formData.segmento_id} 
+                   onValueChange={(v) => setFormData({ ...formData, segmento_id: v })}
+                 >
+                   <SelectTrigger>
+                     <SelectValue placeholder="Selecione o segmento" />
+                   </SelectTrigger>
+                   <SelectContent>
+                     {segmentos.map((seg) => (
+                       <SelectItem key={seg.id} value={seg.id}>
+                         {seg.nome}
+                       </SelectItem>
+                     ))}
+                   </SelectContent>
+                 </Select>
+               </div>
 
               {/* Email */}
               <div className="space-y-2">
