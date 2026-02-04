@@ -2920,6 +2920,7 @@ export type Database = {
           longitude: number | null
           nome: string | null
           nome_fantasia: string | null
+          segmento_id: string | null
           telefone: string | null
           updated_at: string | null
           whatsapps_vinculados: string[] | null
@@ -2944,6 +2945,7 @@ export type Database = {
           longitude?: number | null
           nome?: string | null
           nome_fantasia?: string | null
+          segmento_id?: string | null
           telefone?: string | null
           updated_at?: string | null
           whatsapps_vinculados?: string[] | null
@@ -2968,6 +2970,7 @@ export type Database = {
           longitude?: number | null
           nome?: string | null
           nome_fantasia?: string | null
+          segmento_id?: string | null
           telefone?: string | null
           updated_at?: string | null
           whatsapps_vinculados?: string[] | null
@@ -2978,6 +2981,13 @@ export type Database = {
             columns: ["estabelecimento_id"]
             isOneToOne: false
             referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresas_segmento_id_fkey"
+            columns: ["segmento_id"]
+            isOneToOne: false
+            referencedRelation: "segmentos"
             referencedColumns: ["id"]
           },
         ]
