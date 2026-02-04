@@ -360,18 +360,18 @@ export function ContatoFormSheet({ open, onOpenChange, onSuccess, initialData }:
                 />
               </div>
 
-              {/* Telefone */}
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  Telefone
-                </Label>
-                <Input
-                  value={formData.tel}
-                  onChange={(e) => setFormData({ ...formData, tel: maskPhone(e.target.value) })}
-                  placeholder="(00) 0000-0000"
-                />
-              </div>
+               {/* Telefone */}
+               <div className="space-y-2">
+                 <Label className="flex items-center gap-2">
+                   <Phone className="w-4 h-4 text-muted-foreground" />
+                   Telefone
+                 </Label>
+                 <Input
+                   value={formData.tel}
+                   onChange={(e) => setFormData({ ...formData, tel: maskWhatsApp(e.target.value) })}
+                   placeholder="+55 (00) 00000-0000"
+                 />
+               </div>
 
               {/* Cargo */}
               <div className="space-y-2">
