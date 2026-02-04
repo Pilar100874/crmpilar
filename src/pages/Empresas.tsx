@@ -1047,12 +1047,41 @@ const [fieldConfigsFromDB, setFieldConfigsFromDB] = useState<any[]>([]);
 
   const handleRemoverVinculo = async (vinculoId: string) => {
     try {
+      // Primeiro buscar os dados do vínculo para saber o segmento_id
+      const { data: vinculoData } = await supabase
+        .from("empresa_vinculos")
+        .select("segmento_id")
+        .eq("id", vinculoId)
+        .maybeSingle();
+
+      const segmentoId = vinculoData?.segmento_id;
+
+      // Remover o vínculo da empresa
       const { error } = await supabase
         .from("empresa_vinculos")
         .delete()
         .eq("id", vinculoId);
 
       if (error) throw error;
+
+      // Se for um segmento, remover também dos contatos vinculados à empresa
+      if (segmentoId && editingEmpresa) {
+        const { data: contatosEmpresa } = await supabase
+          .from("customer_empresas")
+          .select("customer_id")
+          .eq("empresa_id", editingEmpresa.id);
+
+        if (contatosEmpresa && contatosEmpresa.length > 0) {
+          const customerIds = contatosEmpresa.map(c => c.customer_id);
+          
+          // Remover o segmento dos contatos vinculados
+          await supabase
+            .from("customer_vinculos")
+            .delete()
+            .in("customer_id", customerIds)
+            .eq("segmento_id", segmentoId);
+        }
+      }
 
       toast.success("Vínculo removido!");
       await fetchEmpresas(estabelecimentoId);
