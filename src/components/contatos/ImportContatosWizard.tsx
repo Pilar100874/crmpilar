@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Upload, Download, FileSpreadsheet, CheckCircle, XCircle, 
   AlertTriangle, ArrowLeft, ArrowRight, Loader2, FileWarning,
-  User, Phone, Mail
+  User, Phone, Mail, Tag, Users
 } from "lucide-react";
 import { toast } from "@/lib/toast-config";
 import { validateEmail, validateWhatsApp, validatePhone } from "@/lib/validators";
@@ -58,6 +58,8 @@ interface ImportRow {
   telefone: string;
   email: string;
   position: string;
+  segmento_id: string;
+  usuario_id: string;
   isValid: boolean;
   errors: string[];
   selected: boolean;
@@ -69,6 +71,8 @@ interface ColumnMapping {
   telefone: string;
   email: string;
   position: string;
+  segmento: string;
+  usuario: string;
 }
 
 interface ImportContatosWizardProps {
@@ -94,6 +98,8 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
     telefone: "",
     email: "",
     position: "",
+    segmento: "",
+    usuario: "",
   });
   const [parsedRows, setParsedRows] = useState<ImportRow[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -103,6 +109,39 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
     failed: number;
     failedRows: ImportRow[];
   } | null>(null);
+  
+  // Dados para seleção
+  const [segmentos, setSegmentos] = useState<any[]>([]);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
+  const [selectedSegmentoId, setSelectedSegmentoId] = useState<string>("");
+  const [selectedUsuarioId, setSelectedUsuarioId] = useState<string>("");
+
+  // Carregar segmentos e usuários ao montar
+  const loadSelectData = useCallback(async () => {
+    const estabId = await getEstabelecimentoId();
+    if (!estabId) return;
+
+    const [segmentosRes, usuariosRes] = await Promise.all([
+      supabase
+        .from("segmentos")
+        .select("id, nome")
+        .eq("estabelecimento_id", estabId)
+        .order("nome"),
+      supabase
+        .from("usuarios")
+        .select("id, nome")
+        .eq("estabelecimento_id", estabId)
+        .order("nome"),
+    ]);
+
+    if (segmentosRes.data) setSegmentos(segmentosRes.data);
+    if (usuariosRes.data) setUsuarios(usuariosRes.data);
+  }, []);
+
+  // Carregar dados ao montar
+  useEffect(() => {
+    loadSelectData();
+  }, [loadSelectData]);
 
   // Step 1: Upload file
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,6 +193,8 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
           telefone: "",
           email: "",
           position: "",
+          segmento: "",
+          usuario: "",
         };
 
         headerRow.forEach((header, index) => {
@@ -258,6 +299,8 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
         telefone,
         email,
         position,
+        segmento_id: "",
+        usuario_id: "",
         isValid: errors.length === 0,
         errors,
         selected: errors.length === 0,
@@ -282,6 +325,13 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
 
   // Step 4: Import contacts
   const importContacts = async () => {
+    // Validar segmento obrigatório
+    if (!selectedSegmentoId) {
+      toast.error("Selecione um segmento antes de importar");
+      setStep(2); // Voltar para a tela de mapeamento
+      return;
+    }
+
     const selectedRows = parsedRows.filter((r) => r.selected);
     if (selectedRows.length === 0) {
       toast.error("Selecione pelo menos um contato para importar");
@@ -356,7 +406,7 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
         }
 
         // Insert contact
-        const { error } = await supabase.from("customers").insert({
+        const { data: newCustomer, error } = await supabase.from("customers").insert({
           estabelecimento_id: estabId,
           nome: row.nome,
           telefone: row.whatsapp || row.telefone || "",
@@ -367,9 +417,27 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
           },
           tags: [],
           tipo_operador: false, // prospect
-        });
+        }).select().single();
 
         if (error) throw error;
+        
+        // Vincular ao segmento (obrigatório)
+        if (newCustomer && selectedSegmentoId) {
+          await supabase.from("customer_segmentos").insert({
+            customer_id: newCustomer.id,
+            segmento_id: selectedSegmentoId,
+          });
+        }
+
+        // Vincular ao usuário se selecionado
+        if (newCustomer && selectedUsuarioId) {
+          await supabase.from("customer_vinculos").insert({
+            customer_id: newCustomer.id,
+            usuario_id: selectedUsuarioId,
+            estabelecimento_id: estabId,
+          });
+        }
+
         successCount++;
       } catch (error: any) {
         console.error("Erro ao importar contato:", error);
@@ -651,6 +719,60 @@ export function ImportContatosWizard({ onClose, onImportComplete }: ImportContat
               </div>
             </div>
 
+            {/* Campos de seleção fixa (não da planilha) */}
+            <div className="border-t pt-4 mt-4">
+              <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <Tag className="w-4 h-4" />
+                Atribuir a todos os contatos importados:
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Tag className="w-4 h-4" />
+                    Segmento <span className="text-destructive">*</span>
+                  </label>
+                  <Select
+                    value={selectedSegmentoId || "__none__"}
+                    onValueChange={(v) => setSelectedSegmentoId(v === "__none__" ? "" : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o segmento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">-- Selecione --</SelectItem>
+                      {segmentos.map((seg) => (
+                        <SelectItem key={seg.id} value={seg.id}>
+                          {seg.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Usuário Responsável
+                  </label>
+                  <Select
+                    value={selectedUsuarioId || "__none__"}
+                    onValueChange={(v) => setSelectedUsuarioId(v === "__none__" ? "" : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o usuário (opcional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">-- Nenhum --</SelectItem>
+                      {usuarios.map((usr) => (
+                        <SelectItem key={usr.id} value={usr.id}>
+                          {usr.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
             <div className="bg-muted/50 rounded-lg p-4">
               <h4 className="text-sm font-medium mb-2">Prévia das primeiras 3 linhas:</h4>
               <div className="overflow-x-auto">
