@@ -343,16 +343,18 @@ export function UnifiedDetailsPanel({
                               Principal
                             </Badge>
                           )}
-                          {/* Botão Editar Empresa */}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0 hover:bg-primary/10 hover:text-primary"
-                            title="Editar empresa"
-                            onClick={() => handleEditEmpresaClick(company)}
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </Button>
+                          {/* Botão Editar Empresa na tela central */}
+                          {onEditEmpresa && empresa?.id && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-orange-600 hover:bg-orange-50"
+                              title="Editar empresa"
+                              onClick={() => onEditEmpresa(empresa.id, company.id)}
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
                           {/* Botão Desvincular Empresa */}
                           <Button
                             variant="ghost"
