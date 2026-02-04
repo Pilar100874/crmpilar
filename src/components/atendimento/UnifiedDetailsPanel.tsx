@@ -256,30 +256,17 @@ export function UnifiedDetailsPanel({
               <Card className="p-4 text-center rounded-2xl border-dashed">
                 <Building2 className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
                 <p className="text-xs text-muted-foreground">Nenhuma empresa vinculada</p>
-                <div className="flex flex-col gap-1 mt-2">
-                  {(customerId || email || whatsapp || telefone) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs text-primary"
-                      onClick={() => setShowVincularDialog(true)}
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Vincular empresa existente
-                    </Button>
-                  )}
-                  {onCreateEmpresa && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-                      onClick={() => onCreateEmpresa(customerId)}
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Criar nova empresa
-                    </Button>
-                  )}
-                </div>
+                {(customerId || email || whatsapp || telefone) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-primary mt-2"
+                    onClick={() => setShowVincularDialog(true)}
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Vincular Empresa
+                  </Button>
+                )}
               </Card>
             ) : (
               <div className="space-y-2">
