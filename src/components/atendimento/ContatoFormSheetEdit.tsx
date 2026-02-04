@@ -470,8 +470,8 @@ export function ContatoFormSheetEdit({ open, onOpenChange, customerId, onSuccess
                     </Label>
                     <Input
                       value={formData.tel}
-                      onChange={(e) => setFormData({ ...formData, tel: maskPhone(e.target.value) })}
-                      placeholder="(00) 0000-0000"
+                      onChange={(e) => setFormData({ ...formData, tel: maskWhatsApp(e.target.value) })}
+                      placeholder="+55 (00) 00000-0000"
                     />
                   </div>
 
