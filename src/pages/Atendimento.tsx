@@ -78,6 +78,14 @@ interface Conversation {
     created_at: string;
   };
   customerCompanies?: any[];
+  customerLinkedUsers?: Array<{
+    customer_id: string;
+    usuario_id: string;
+    usuarios: {
+      id: string;
+      nome: string;
+    };
+  }>;
 }
 
 interface Message {
@@ -1406,6 +1414,7 @@ export default function Atendimento() {
 
       // Fetch customers separately if there are any contact_ids
       let customersMap: Record<string, any> = {};
+      let vinculosMap: Record<string, any[]> = {};
       if (contactIds.length > 0) {
         const { data: customersData } = await supabase
           .from('customers')
@@ -1430,12 +1439,35 @@ export default function Atendimento() {
             return acc;
           }, {} as Record<string, any>);
         }
+
+        // Fetch linked users for these customers
+        const { data: vinculosData } = await supabase
+          .from('customer_vinculos')
+          .select(`
+            customer_id,
+            usuario_id,
+            usuarios:usuario_id (
+              id,
+              nome
+            )
+          `)
+          .in('customer_id', contactIds);
+
+        if (vinculosData) {
+          vinculosData.forEach(v => {
+            if (!vinculosMap[v.customer_id]) {
+              vinculosMap[v.customer_id] = [];
+            }
+            vinculosMap[v.customer_id].push(v);
+          });
+        }
       }
 
-      // Merge customers into tasks
+      // Merge customers and vinculos into tasks
       const tasksWithCustomers = (tasksData || []).map(task => ({
         ...task,
-        customers: task.contact_id ? customersMap[task.contact_id] || null : null
+        customers: task.contact_id ? customersMap[task.contact_id] || null : null,
+        linkedUsers: task.contact_id ? vinculosMap[task.contact_id] || [] : []
       }));
 
       // Apply custom sorting
@@ -2690,7 +2722,29 @@ ${recentMessages}
           companiesMap.get(rel.customer_id).push(rel);
         });
 
-        // Attach last messages, contacts by phone, and companies to conversations
+        // Get all linked users for these customers
+        const { data: vinculosData } = await supabase
+          .from('customer_vinculos')
+          .select(`
+            customer_id,
+            usuario_id,
+            usuarios:usuario_id (
+              id,
+              nome
+            )
+          `)
+          .in('customer_id', Array.from(customerIds));
+
+        // Create a map of linked users by customer_id
+        const vinculosMap = new Map();
+        vinculosData?.forEach(rel => {
+          if (!vinculosMap.has(rel.customer_id)) {
+            vinculosMap.set(rel.customer_id, []);
+          }
+          vinculosMap.get(rel.customer_id).push(rel);
+        });
+
+        // Attach last messages, contacts by phone, companies and linked users to conversations
         const conversationsWithMessages = data.map(conv => {
           const phone = phonesMap.get(conv.id);
           const contactByPhone = phone ? contactsMap.get(phone) : null;
@@ -2705,6 +2759,7 @@ ${recentMessages}
             customer_id: finalCustomerId,
             lastMessage: lastMessageMap.get(conv.id) || null,
             customerCompanies: companiesMap.get(finalCustomerId) || [],
+            customerLinkedUsers: vinculosMap.get(finalCustomerId) || [],
           };
         });
 
@@ -3016,10 +3071,11 @@ ${recentMessages}
       telefone: string;
       email: string;
       taskTitle?: string;
+      linkedUsers?: Array<{ usuarios: { id: string; nome: string } }>;
     }>;
   } => {
     // Obter contact_ids da agenda do dia com dados do contato
-    const todayContactsMap = new Map<string, { nome: string; telefone: string; email: string; taskTitle: string }>();
+    const todayContactsMap = new Map<string, { nome: string; telefone: string; email: string; taskTitle: string; linkedUsers: any[] }>();
     todayTasks
       .filter(task => task.contact_id && task.customers)
       .forEach(task => {
@@ -3028,7 +3084,8 @@ ${recentMessages}
             nome: task.customers?.nome || task.contact_name || 'Sem nome',
             telefone: task.customers?.telefone || '',
             email: task.customers?.email || '',
-            taskTitle: task.title || ''
+            taskTitle: task.title || '',
+            linkedUsers: task.linkedUsers || []
           });
         }
       });
@@ -3056,6 +3113,7 @@ ${recentMessages}
       telefone: string;
       email: string;
       taskTitle?: string;
+      linkedUsers?: Array<{ usuarios: { id: string; nome: string } }>;
     }> = [];
 
     todayContactsMap.forEach((data, contactId) => {
@@ -3066,7 +3124,8 @@ ${recentMessages}
           nome: data.nome,
           telefone: data.telefone,
           email: data.email,
-          taskTitle: data.taskTitle
+          taskTitle: data.taskTitle,
+          linkedUsers: data.linkedUsers
         });
       }
     });
@@ -4654,6 +4713,22 @@ ${recentMessages}
                               {conv.lastMessage?.text || "Sem mensagens"}
                             </p>
                             <div className="flex items-center gap-1.5 flex-wrap">
+                              {/* Usuários vinculados */}
+                              {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 && (
+                                <>
+                                  {conv.customerLinkedUsers.slice(0, 1).map((rel: any, idx: number) => (
+                                    <Badge key={idx} className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-violet-100 text-violet-700 border-0">
+                                      <User className="w-2.5 h-2.5" />
+                                      {rel.usuarios?.nome?.split(' ')[0] || "Usuário"}
+                                    </Badge>
+                                  ))}
+                                  {conv.customerLinkedUsers.length > 1 && (
+                                    <Badge className="text-[10px] px-1.5 py-0 bg-violet-50 text-violet-600 border-0">
+                                      +{conv.customerLinkedUsers.length - 1}
+                                    </Badge>
+                                  )}
+                                </>
+                              )}
                               {conv.bot_active !== false && (
                                 <Badge className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
                                   <Bot className="w-2.5 h-2.5 mr-0.5" />
@@ -4716,10 +4791,18 @@ ${recentMessages}
                             toast.error('Erro ao iniciar conversa');
                           }
                         }}
-                        className="px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 border-l-4 border-l-orange-300 border-dashed bg-orange-50/50 hover:bg-orange-100/50 border-t border-r border-b border-transparent"
+                        className="relative px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 border-l-4 border-l-orange-300 border-dashed bg-orange-50/50 hover:bg-orange-100/50 border-t border-r border-b border-transparent overflow-hidden"
                       >
                         <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-orange-50 to-orange-100">
+                          {/* Tarja lateral com nome do usuário vinculado */}
+                          {contact.linkedUsers && contact.linkedUsers.length > 0 && (
+                            <div className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-violet-500">
+                              <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[50px] truncate">
+                                {contact.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
+                              </span>
+                            </div>
+                          )}
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-orange-50 to-orange-100 ${contact.linkedUsers && contact.linkedUsers.length > 0 ? 'ml-4' : ''}`}>
                             <User className="w-5 h-5 text-orange-400" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -4733,6 +4816,20 @@ ${recentMessages}
                               <CalendarIcon className="w-3 h-3" />
                               {contact.taskTitle || "Tarefa agendada"}
                             </p>
+                            {/* Badge de usuários vinculados */}
+                            {contact.linkedUsers && contact.linkedUsers.length > 0 && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <Badge className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-violet-100 text-violet-700 border-0">
+                                  <User className="w-2.5 h-2.5" />
+                                  {contact.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || "Usuário"}
+                                </Badge>
+                                {contact.linkedUsers.length > 1 && (
+                                  <Badge className="text-[10px] px-1.5 py-0 bg-violet-50 text-violet-600 border-0">
+                                    +{contact.linkedUsers.length - 1}
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -4783,6 +4880,22 @@ ${recentMessages}
                               {conv.lastMessage?.text || "Sem mensagens"}
                             </p>
                             <div className="flex items-center gap-1.5 flex-wrap">
+                              {/* Usuários vinculados */}
+                              {conv.customerLinkedUsers && conv.customerLinkedUsers.length > 0 && (
+                                <>
+                                  {conv.customerLinkedUsers.slice(0, 1).map((rel: any, idx: number) => (
+                                    <Badge key={idx} className="text-[10px] px-1.5 py-0 flex items-center gap-1 bg-violet-100 text-violet-700 border-0">
+                                      <User className="w-2.5 h-2.5" />
+                                      {rel.usuarios?.nome?.split(' ')[0] || "Usuário"}
+                                    </Badge>
+                                  ))}
+                                  {conv.customerLinkedUsers.length > 1 && (
+                                    <Badge className="text-[10px] px-1.5 py-0 bg-violet-50 text-violet-600 border-0">
+                                      +{conv.customerLinkedUsers.length - 1}
+                                    </Badge>
+                                  )}
+                                </>
+                              )}
                               {conv.bot_active !== false && (
                                 <Badge className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
                                   <Bot className="w-2.5 h-2.5 mr-0.5" />
@@ -5175,8 +5288,16 @@ ${recentMessages}
                         setShowClientDetailsAgenda(true);
                       }}
                    >
-                      {/* Tarja lateral indicando vínculo */}
-                      {(isLinkedToUser || isSameSegment) && (
+                      {/* Tarja lateral indicando vínculo com nome do usuário */}
+                      {task.linkedUsers && task.linkedUsers.length > 0 ? (
+                        <div 
+                          className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-violet-500"
+                        >
+                          <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[60px] truncate">
+                            {task.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
+                          </span>
+                        </div>
+                      ) : (isLinkedToUser || isSameSegment) && (
                         <div 
                           className={`absolute left-0 top-0 bottom-0 w-5 flex items-center justify-center rounded-l-xl ${
                             isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
@@ -5188,7 +5309,7 @@ ${recentMessages}
                         </div>
                       )}
                       
-                      <div className={`flex items-start gap-3 p-3 ${(isLinkedToUser || isSameSegment) ? 'pl-7' : 'pl-4'}`}>
+                      <div className={`flex items-start gap-3 p-3 ${(task.linkedUsers && task.linkedUsers.length > 0) || isLinkedToUser || isSameSegment ? 'pl-8' : 'pl-4'}`}>
                        <div className="flex-1 min-w-0">
                          <p className="font-semibold text-sm truncate">{task.title}</p>
                          <p className="text-xs text-muted-foreground truncate">{task.contact_name}</p>
@@ -5202,6 +5323,12 @@ ${recentMessages}
                            {task.origem && (
                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-white/50">
                                {task.origem}
+                             </Badge>
+                           )}
+                           {/* Badge de usuários vinculados adicional */}
+                           {task.linkedUsers && task.linkedUsers.length > 1 && (
+                             <Badge className="text-[10px] px-1.5 py-0 bg-violet-100 text-violet-700 border-0">
+                               +{task.linkedUsers.length - 1} usuário{task.linkedUsers.length > 2 ? 's' : ''}
                              </Badge>
                            )}
                             {/* Stacked indicators in top-right corner */}
@@ -7161,8 +7288,16 @@ function MobileListContent({
                 : "bg-white/60 hover:bg-white border border-transparent"
             }`}
           >
-            {/* Tarja lateral indicando vínculo */}
-            {(isLinkedToUser || isSameSegment) && (
+            {/* Tarja lateral indicando vínculo com nome do usuário */}
+            {task.linkedUsers && task.linkedUsers.length > 0 ? (
+              <div 
+                className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center rounded-l-xl bg-violet-500"
+              >
+                <span className="text-[7px] font-semibold text-white whitespace-nowrap transform -rotate-90 max-w-[60px] truncate">
+                  {task.linkedUsers[0]?.usuarios?.nome?.split(' ')[0] || 'Usuário'}
+                </span>
+              </div>
+            ) : (isLinkedToUser || isSameSegment) && (
               <div 
                 className={`absolute left-0 top-0 bottom-0 w-5 flex items-center justify-center rounded-l-xl ${
                   isLinkedToUser ? 'bg-primary' : 'bg-blue-500'
@@ -7174,7 +7309,7 @@ function MobileListContent({
               </div>
             )}
             
-            <div className={`flex items-start gap-3 p-3 ${(isLinkedToUser || isSameSegment) ? 'pl-7' : 'pl-4'}`}>
+            <div className={`flex items-start gap-3 p-3 ${(task.linkedUsers && task.linkedUsers.length > 0) || isLinkedToUser || isSameSegment ? 'pl-8' : 'pl-4'}`}>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate">{task.contact_name}</p>
                 <p className="text-xs text-muted-foreground truncate">{task.title}</p>
@@ -7183,6 +7318,12 @@ function MobileListContent({
                     <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-700 border-0">
                       <Clock className="w-2.5 h-2.5 mr-0.5" />
                       {task.time}
+                    </Badge>
+                  )}
+                  {/* Badge de usuários vinculados adicional */}
+                  {task.linkedUsers && task.linkedUsers.length > 1 && (
+                    <Badge className="text-[10px] px-1.5 py-0 bg-violet-100 text-violet-700 border-0">
+                      +{task.linkedUsers.length - 1} usuário{task.linkedUsers.length > 2 ? 's' : ''}
                     </Badge>
                   )}
                   {/* Stacked indicators in top-right corner */}
