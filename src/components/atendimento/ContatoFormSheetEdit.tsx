@@ -52,10 +52,6 @@ export function ContatoFormSheetEdit({ open, onOpenChange, customerId, onSuccess
   const [empresasVinculadas, setEmpresasVinculadas] = useState<any[]>([]);
   const [showVincularEmpresa, setShowVincularEmpresa] = useState(false);
   
-  // Segmentos
-  const [segmentos, setSegmentos] = useState<any[]>([]);
-  const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
-  
   // Usuarios (vínculos)
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [usuariosVinculados, setUsuariosVinculados] = useState<string[]>([]);
@@ -68,7 +64,6 @@ export function ContatoFormSheetEdit({ open, onOpenChange, customerId, onSuccess
       if (estabId) {
         await Promise.all([
           loadCustomFields(estabId),
-          loadSegmentos(estabId),
           loadUsuarios(estabId),
         ]);
         if (customerId) {
@@ -103,14 +98,6 @@ export function ContatoFormSheetEdit({ open, onOpenChange, customerId, onSuccess
     }
   };
   
-  const loadSegmentos = async (estabId: string) => {
-    const { data } = await supabase
-      .from("segmentos")
-      .select("id, nome")
-      .eq("estabelecimento_id", estabId)
-      .order("nome");
-    setSegmentos(data || []);
-  };
   
   const loadUsuarios = async (estabId: string) => {
     const { data } = await supabase
@@ -160,15 +147,6 @@ export function ContatoFormSheetEdit({ open, onOpenChange, customerId, onSuccess
         })));
       }
 
-      // Carregar segmentos
-      const { data: segmentosData } = await supabase
-        .from("customer_segmentos")
-        .select("segmento_id")
-        .eq("customer_id", id);
-
-      if (segmentosData) {
-        setSegmentosSelecionados(segmentosData.map(s => s.segmento_id));
-      }
 
       // Carregar vínculos de usuários
       const { data: vinculosUsuarios } = await supabase
@@ -286,15 +264,6 @@ export function ContatoFormSheetEdit({ open, onOpenChange, customerId, onSuccess
         await supabase.from("customer_empresas").insert(vinculos);
       }
 
-      // Atualizar segmentos
-      await supabase.from("customer_segmentos").delete().eq("customer_id", customerId);
-      if (segmentosSelecionados.length > 0) {
-        const segVinculos = segmentosSelecionados.map(segId => ({
-          customer_id: customerId,
-          segmento_id: segId,
-        }));
-        await supabase.from("customer_segmentos").insert(segVinculos);
-      }
 
       // Atualizar usuários vinculados
       await supabase.from("customer_vinculos").delete().eq("customer_id", customerId);
@@ -512,31 +481,6 @@ export function ContatoFormSheetEdit({ open, onOpenChange, customerId, onSuccess
                 </TabsContent>
 
                 <TabsContent value="vinculos" className="space-y-4">
-                  {/* Segmentos */}
-                  <Card className="p-4">
-                    <Label className="text-xs mb-2 block">Segmentos</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {segmentos.map((seg) => (
-                        <Badge
-                          key={seg.id}
-                          variant={segmentosSelecionados.includes(seg.id) ? "default" : "outline"}
-                          className="cursor-pointer"
-                          onClick={() => {
-                            if (segmentosSelecionados.includes(seg.id)) {
-                              setSegmentosSelecionados(segmentosSelecionados.filter(s => s !== seg.id));
-                            } else {
-                              setSegmentosSelecionados([...segmentosSelecionados, seg.id]);
-                            }
-                          }}
-                        >
-                          {seg.nome}
-                        </Badge>
-                      ))}
-                      {segmentos.length === 0 && (
-                        <p className="text-sm text-muted-foreground">Nenhum segmento cadastrado</p>
-                      )}
-                    </div>
-                  </Card>
 
                   {/* Usuários responsáveis */}
                   <Card className="p-4">
