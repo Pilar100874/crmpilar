@@ -54,6 +54,10 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
   const [contatosVinculados, setContatosVinculados] = useState<any[]>([]);
   const [buscaContato, setBuscaContato] = useState("");
   const [contatosFiltrados, setContatosFiltrados] = useState<any[]>([]);
+  
+  // Segmentos
+  const [segmentos, setSegmentos] = useState<any[]>([]);
+  const [segmentosSelecionados, setSegmentosSelecionados] = useState<string[]>([]);
 
   useEffect(() => {
     const init = async () => {
@@ -61,7 +65,10 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
       const estabId = await getEstabelecimentoId();
       setEstabelecimentoId(estabId);
       if (estabId) {
-        await loadContatos(estabId);
+        await Promise.all([
+          loadContatos(estabId),
+          loadSegmentos(estabId),
+        ]);
         if (empresaId) {
           await loadEmpresaData(empresaId);
         }
@@ -95,6 +102,15 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
       .eq("estabelecimento_id", estabId)
       .order("nome");
     setContatos(data || []);
+  };
+  
+  const loadSegmentos = async (estabId: string) => {
+    const { data } = await supabase
+      .from("segmentos")
+      .select("id, nome")
+      .eq("estabelecimento_id", estabId)
+      .order("nome");
+    setSegmentos(data || []);
   };
 
   const loadEmpresaData = async (id: string) => {
@@ -140,6 +156,16 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
           is_primary: v.is_primary,
           cargo: v.cargo,
         })));
+      }
+      
+      // Carregar segmentos vinculados à empresa
+      const { data: empresaVinculos } = await supabase
+        .from("empresa_vinculos")
+        .select("segmento_id")
+        .eq("empresa_id", id);
+      
+      if (empresaVinculos) {
+        setSegmentosSelecionados(empresaVinculos.filter(v => v.segmento_id).map(v => v.segmento_id!));
       }
     } catch (error) {
       console.error("Erro ao carregar empresa:", error);
@@ -218,6 +244,13 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
   const handleSave = async () => {
     if (!formData.nome_fantasia?.trim()) {
       toast.error("Nome Fantasia é obrigatório");
+      setActiveTab("empresa");
+      return;
+    }
+    
+    if (segmentosSelecionados.length === 0) {
+      toast.error("Selecione pelo menos um segmento");
+      setActiveTab("segmentos");
       return;
     }
 
@@ -285,6 +318,17 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
         }));
         await supabase.from("customer_empresas").insert(vinculos);
       }
+      
+      // Atualizar segmentos da empresa
+      await supabase.from("empresa_vinculos").delete().eq("empresa_id", empresaId);
+      if (segmentosSelecionados.length > 0) {
+        const segVinculos = segmentosSelecionados.map(segId => ({
+          empresa_id: empresaId,
+          segmento_id: segId,
+          estabelecimento_id: estabelecimentoId,
+        }));
+        await supabase.from("empresa_vinculos").insert(segVinculos);
+      }
 
       toast.success("Empresa atualizada com sucesso!");
       onSuccess?.();
@@ -322,8 +366,9 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-2 mb-4">
+                <TabsList className="grid grid-cols-3 mb-4">
                   <TabsTrigger value="empresa">Empresa</TabsTrigger>
+                  <TabsTrigger value="segmentos">Segmentos *</TabsTrigger>
                   <TabsTrigger value="contatos">Contatos</TabsTrigger>
                 </TabsList>
 
@@ -488,6 +533,39 @@ export function EmpresaFormSheetEdit({ open, onOpenChange, empresaId, onSuccess 
                       />
                     </div>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="segmentos" className="space-y-4">
+                  <Card className="p-4">
+                    <Label className="text-xs mb-2 block">Segmentos da Empresa *</Label>
+                    <p className="text-xs text-muted-foreground mb-3">Selecione pelo menos um segmento para categorizar esta empresa.</p>
+                    <div className="flex flex-wrap gap-2">
+                      {segmentos.map((seg) => (
+                        <Badge
+                          key={seg.id}
+                          variant={segmentosSelecionados.includes(seg.id) ? "default" : "outline"}
+                          className="cursor-pointer transition-colors"
+                          onClick={() => {
+                            if (segmentosSelecionados.includes(seg.id)) {
+                              setSegmentosSelecionados(segmentosSelecionados.filter(s => s !== seg.id));
+                            } else {
+                              setSegmentosSelecionados([...segmentosSelecionados, seg.id]);
+                            }
+                          }}
+                        >
+                          {seg.nome}
+                        </Badge>
+                      ))}
+                      {segmentos.length === 0 && (
+                        <p className="text-sm text-muted-foreground">Nenhum segmento cadastrado</p>
+                      )}
+                    </div>
+                    {segmentosSelecionados.length > 0 && (
+                      <div className="mt-3 pt-3 border-t">
+                        <Label className="text-xs block mb-2">Segmentos selecionados: {segmentosSelecionados.length}</Label>
+                      </div>
+                    )}
+                  </Card>
                 </TabsContent>
 
                 <TabsContent value="contatos" className="space-y-4">
