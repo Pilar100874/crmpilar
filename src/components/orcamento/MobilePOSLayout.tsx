@@ -96,6 +96,9 @@ interface MobilePOSLayoutProps {
   setSearchQuery: (query: string) => void;
   selectedEmpresa: string;
   setSelectedEmpresa: (id: string) => void;
+  clientes: any[];
+  selectedCliente: string;
+  setSelectedCliente: (id: string) => void;
   selectedGrupo: string;
   setSelectedGrupo: (id: string) => void;
   viewMode: 'grid' | 'list';
@@ -144,6 +147,9 @@ export default function MobilePOSLayout({
   setSearchQuery,
   selectedEmpresa,
   setSelectedEmpresa,
+  clientes,
+  selectedCliente,
+  setSelectedCliente,
   selectedGrupo,
   setSelectedGrupo,
   viewMode,
@@ -182,6 +188,7 @@ export default function MobilePOSLayout({
 }: MobilePOSLayoutProps) {
   const [activeView, setActiveView] = useState<MobileView>('produtos');
   const [openEmpresaCombobox, setOpenEmpresaCombobox] = useState(false);
+  const [openClienteCombobox, setOpenClienteCombobox] = useState(false);
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -410,6 +417,66 @@ export default function MobilePOSLayout({
               </Command>
             </PopoverContent>
           </Popover>
+
+          {/* Seletor de Contato */}
+          {selectedEmpresa && clientes.length > 0 && (
+            <Popover open={openClienteCombobox} onOpenChange={setOpenClienteCombobox}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openClienteCombobox}
+                  className="flex-1 justify-between bg-background h-10 min-w-[120px]"
+                >
+                  <span className="truncate">
+                    {selectedCliente
+                      ? clientes.find((cliente) => cliente.id === selectedCliente)?.nome
+                      : "Contato..."}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[calc(100vw-24px)] p-0 bg-card border-border z-[100]" sideOffset={5}>
+                <Command className="bg-card">
+                  <CommandInput 
+                    placeholder="Buscar contato..." 
+                    className="bg-card border-border"
+                  />
+                  <CommandList className="max-h-[300px]">
+                    <CommandEmpty className="text-muted-foreground py-4 text-center text-sm">
+                      Nenhum contato encontrado.
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {clientes.map((cliente) => (
+                        <CommandItem
+                          key={cliente.id}
+                          value={`${cliente.nome} ${cliente.email || ''}`}
+                          onSelect={() => {
+                            setSelectedCliente(cliente.id);
+                            setOpenClienteCombobox(false);
+                          }}
+                          className="hover:bg-muted cursor-pointer"
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              selectedCliente === cliente.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <div className="flex flex-col">
+                            <span>{cliente.nome}</span>
+                            {cliente.telefone && (
+                              <span className="text-xs text-muted-foreground">{cliente.telefone}</span>
+                            )}
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          )}
           
           {/* Botão Dados da Empresa - só ícone */}
           <Button
