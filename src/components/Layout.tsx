@@ -113,6 +113,7 @@ const menuItems: MenuItem[] = [
       { id: "Monitor de Filas", title: "Monitor de Filas", url: "/monitor-filas", icon: Activity },
       { id: "Monitor de Funcionários", title: "Monitor de Funcionários", url: "/monitor-funcionarios", icon: Monitor },
       { id: "Teste Roteamento", title: "Teste de Roteamento", url: "/test-roteamento", icon: TestTube2 },
+      { id: "Templates Mensagem", title: "Templates de Mensagem", url: "/templates-mensagem", icon: FileText },
       { id: "Config Atendimento", title: "Configurações", url: "/atendimento-config", icon: Settings },
     ]
   },
@@ -148,7 +149,6 @@ const menuItems: MenuItem[] = [
       { id: "TV Veículos", title: "Dashboard Veículos", url: "/tv/veiculos", icon: LucideIcons.Truck },
     ]
   },
-  { id: "Templates Mensagem", title: "Templates de Mensagem", url: "/templates-mensagem", icon: FileText },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
 
@@ -458,7 +458,7 @@ export default function Layout({ children }: LayoutProps) {
   const visibleMenus = menuItems
     .filter((item) => {
       // Menus que sempre devem aparecer para usuários autenticados
-      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV", "Templates Mensagem"];
+      const alwaysVisibleMenus = ["Configurações", "Avisos", "TV"];
       if (alwaysVisibleMenus.includes(item.id)) {
         return true;
       }
