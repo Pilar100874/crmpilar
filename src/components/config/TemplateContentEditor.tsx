@@ -693,7 +693,7 @@ export function TemplateContentEditor({
                 </div>
               </div>
               <ScrollArea className="h-[250px]">
-                <div className="p-4 space-y-2">
+                <div className="p-4 space-y-4">
                   {loadingAttachments ? (
                     <div className="flex items-center justify-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -704,30 +704,86 @@ export function TemplateContentEditor({
                       <p>{attachmentSearch ? "Nenhum anexo encontrado" : "Nenhum anexo cadastrado"}</p>
                     </div>
                   ) : (
-                    filteredAttachments.map(attachment => (
-                      <Card
-                        key={attachment.id}
-                        className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => addAttachment(attachment)}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-muted shrink-0 flex items-center justify-center">
-                            {attachment.type === 'link' ? (
-                              <LinkIcon className="h-4 w-4 text-blue-500" />
-                            ) : (
-                              getFileIcon(attachment.file_type)
-                            )}
+                    <>
+                      {/* Links */}
+                      {filteredAttachments.filter(a => a.type === 'link').length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                            <LinkIcon className="h-3 w-3" />
+                            LINKS ({filteredAttachments.filter(a => a.type === 'link').length})
+                          </h5>
+                          <div className="space-y-2">
+                            {filteredAttachments.filter(a => a.type === 'link').map(attachment => (
+                              <Card
+                                key={attachment.id}
+                                className="p-3 cursor-pointer hover:bg-muted/50 transition-colors border-l-4 border-l-primary/20 hover:border-l-primary"
+                                onClick={() => addAttachment(attachment)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                    <LinkIcon className="h-4 w-4 text-primary" />
+                                  </div>
+                                  <span className="font-medium text-sm truncate flex-1">{attachment.title}</span>
+                                  <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                                </div>
+                              </Card>
+                            ))}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <span className="font-medium text-sm truncate block">{attachment.title}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {attachment.type === 'link' ? 'Link' : 'Arquivo'}
-                            </span>
-                          </div>
-                          <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
                         </div>
-                      </Card>
-                    ))
+                      )}
+
+                      {/* Images with preview */}
+                      {filteredAttachments.filter(a => a.file_type === 'image').length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                            <Image className="h-3 w-3" />
+                            IMAGENS ({filteredAttachments.filter(a => a.file_type === 'image').length})
+                          </h5>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            {filteredAttachments.filter(a => a.file_type === 'image').map(attachment => (
+                              <Card
+                                key={attachment.id}
+                                className="aspect-square cursor-pointer overflow-hidden hover:ring-2 ring-primary transition-all"
+                                onClick={() => addAttachment(attachment)}
+                              >
+                                <img
+                                  src={attachment.thumbnail_url || attachment.url}
+                                  alt={attachment.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Other Files */}
+                      {filteredAttachments.filter(a => a.type === 'file' && a.file_type !== 'image').length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                            <File className="h-3 w-3" />
+                            ARQUIVOS ({filteredAttachments.filter(a => a.type === 'file' && a.file_type !== 'image').length})
+                          </h5>
+                          <div className="space-y-2">
+                            {filteredAttachments.filter(a => a.type === 'file' && a.file_type !== 'image').map(attachment => (
+                              <Card
+                                key={attachment.id}
+                                className="p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                                onClick={() => addAttachment(attachment)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                    {getFileIcon(attachment.file_type)}
+                                  </div>
+                                  <span className="font-medium text-sm truncate flex-1">{attachment.title}</span>
+                                  <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </ScrollArea>
