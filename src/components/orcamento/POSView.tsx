@@ -129,6 +129,7 @@ export default function POSView({
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [usuarioResponsavel, setUsuarioResponsavel] = useState<{ id: string; nome: string } | null>(null);
   const [isClienteDeOutroUsuario, setIsClienteDeOutroUsuario] = useState(false);
+  const [empresaSemVinculo, setEmpresaSemVinculo] = useState(false);
   const [detalhesRegras, setDetalhesRegras] = useState<string>("");
   const [expandedRegraIndex, setExpandedRegraIndex] = useState<number | null>(null);
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
@@ -294,17 +295,19 @@ export default function POSView({
     setClientes([]);
   }, [selectedEmpresa]);
 
-  // Carregar contatos da empresa selecionada (exceto quando carregando orçamento)
+  // Carregar contatos da empresa selecionada e verificar vínculos (exceto quando carregando orçamento)
   useEffect(() => {
     if (isLoadingOrcamentoRef.current) return;
     
     const loadClientesPorEmpresa = async () => {
       if (!selectedEmpresa) {
         setClientes([]);
+        setEmpresaSemVinculo(false);
         return;
       }
       
       try {
+        // Buscar contatos vinculados à empresa
         const { data, error } = await supabase
           .from('customer_empresas')
           .select(`
@@ -325,6 +328,29 @@ export default function POSView({
           .filter(Boolean);
         
         setClientes(clientesFormatados);
+        
+        // Verificar se a empresa tem contatos vinculados
+        if (clientesFormatados.length === 0) {
+          setEmpresaSemVinculo(true);
+          setSelectedCliente("");
+          return;
+        }
+        
+        // Verificar se algum contato tem usuário responsável vinculado
+        const { data: vinculosData } = await supabase
+          .from('customer_vinculos')
+          .select('customer_id, usuario_id')
+          .in('customer_id', clientesFormatados.map(c => c.id))
+          .not('usuario_id', 'is', null);
+        
+        const contatosComResponsavel = vinculosData?.filter(v => v.usuario_id) || [];
+        
+        if (contatosComResponsavel.length === 0) {
+          // Empresa tem contatos mas nenhum com usuário responsável
+          setEmpresaSemVinculo(true);
+        } else {
+          setEmpresaSemVinculo(false);
+        }
         
         // Se só tiver um contato, selecionar automaticamente
         if (clientesFormatados.length === 1) {
@@ -877,6 +903,16 @@ export default function POSView({
   const handleFinalize = async () => {
     if (!selectedEmpresa) {
       toast.error('Selecione uma empresa');
+      return;
+    }
+
+    if (empresaSemVinculo) {
+      toast.error('Esta empresa precisa ter um contato com usuário responsável vinculado. Cadastre primeiro na tela de Atendimento.');
+      return;
+    }
+
+    if (!selectedCliente) {
+      toast.error('Selecione um contato');
       return;
     }
 
@@ -2325,8 +2361,28 @@ export default function POSView({
             </Popover>
           </div>
 
+          {/* Aviso de empresa sem vínculo obrigatório */}
+          {selectedEmpresa && empresaSemVinculo && (
+            <div className="px-2 py-1.5">
+              <div className="p-2 bg-destructive/10 border border-destructive/30 rounded-md">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
+                  <div className="text-[10px] text-destructive">
+                    <p className="font-medium">Vínculo obrigatório</p>
+                    <p className="mt-0.5">
+                      Esta empresa precisa ter um contato com usuário responsável vinculado antes de criar orçamentos.
+                    </p>
+                    <p className="mt-1 font-medium">
+                      Cadastre primeiro na tela de Atendimento.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Seletor de Contato */}
-          {selectedEmpresa && clientes.length > 0 && (
+          {selectedEmpresa && clientes.length > 0 && !empresaSemVinculo && (
             <div className="px-2 py-1.5">
               <label className="text-[10px] font-medium text-muted-foreground mb-1 block">
                 Contato
