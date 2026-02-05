@@ -1831,17 +1831,13 @@ export default function Atendimento() {
       let vinculosMap: Record<string, any[]> = {};
       
       if (clienteIds.length > 0) {
-        const { data: vinculosData } = await supabase
+        const { data: vinculosData, error: vinculosError } = await supabase
           .from('customer_vinculos')
-          .select(`
-            customer_id,
-            usuario_id,
-            usuarios:usuario_id (
-              id,
-              nome
-            )
-          `)
-          .in('customer_id', clienteIds);
+          .select('customer_id, usuario_id')
+          .in('customer_id', clienteIds)
+          .not('usuario_id', 'is', null);
+        
+        console.log('Vínculos carregados:', vinculosData, 'Erro:', vinculosError);
         
         if (vinculosData) {
           vinculosData.forEach(v => {
@@ -3309,9 +3305,11 @@ ${recentMessages}
     
     // Filtrar por "Meus" orçamentos - verifica se o contato do orçamento tem vínculo com o usuário logado
     if (showOnlyMyOrcamentos && currentUsuarioTableId) {
+      console.log('Filtrando Meus - currentUsuarioTableId:', currentUsuarioTableId);
       result = result.filter(orc => {
         // Verificar se o contato vinculado ao orçamento tem o usuário logado como responsável
         const customerVinculos = orc.customers?.customer_vinculos || [];
+        console.log('Orçamento:', orc.id, 'Cliente:', orc.cliente_id, 'Vínculos:', customerVinculos);
         const hasUserVinculo = customerVinculos.some(
           (v: any) => v.usuario_id === currentUsuarioTableId
         );
@@ -5721,7 +5719,7 @@ ${recentMessages}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
                           <p className="font-semibold text-sm truncate">
-                            {orc.customers?.nome || orc.empresas?.nome_fantasia || orc.empresas?.nome || 'Cliente'}
+                            {orc.empresas?.nome_fantasia || orc.empresas?.nome || orc.customers?.nome || 'Sem empresa'}
                           </p>
                           <div className="flex items-center gap-1">
                             <span className="text-[10px] text-muted-foreground flex-shrink-0 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">
@@ -7613,7 +7611,7 @@ function MobileListContent({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate">
-                    {orc.customers?.nome || orc.empresas?.nome_fantasia || 'Cliente'}
+                    {orc.empresas?.nome_fantasia || orc.empresas?.nome || orc.customers?.nome || 'Sem empresa'}
                   </p>
                   <p className="text-sm font-bold text-orange-600 dark:text-orange-400">
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(orc.valor_total || 0)}
