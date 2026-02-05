@@ -4339,6 +4339,13 @@ ${recentMessages}
                   setSelectedOrcamentoId(null);
                   setMobileView("list");
                 }}
+                onOrcamentoDelete={() => {
+                  setOrcamentoSheetOpen(false);
+                  setSelectedOrcamentoId(null);
+                  setSelectedOrcamentoData(null);
+                  setMobileView("list");
+                  loadOrcamentos();
+                }}
                 onReply={(email) => {
                   const replySubject = email.subject?.startsWith('Re:') ? email.subject : `Re: ${email.subject || ''}`;
                   const replyBody = `\n\n---\nEm ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}, ${email.from_email} escreveu:\n${email.body || ''}`;
@@ -6697,6 +6704,12 @@ ${recentMessages}
               setSelectedOrcamentoId(null);
               setInitialEmpresaForOrcamento(null);
             }}
+            onDelete={() => {
+              setOrcamentoSheetOpen(false);
+              setSelectedOrcamentoId(null);
+              setSelectedOrcamentoData(null);
+              loadOrcamentos();
+            }}
             showClientDetails={showClientDetailsOrcamento}
             onToggleClientDetails={() => {
               const newState = !showClientDetailsOrcamento;
@@ -7686,6 +7699,7 @@ interface MobileMainContentProps {
   setOrcamentoSheetOpen: (open: boolean) => void;
   initialEmpresaForOrcamento?: string | null;
   onOrcamentoClose?: () => void;
+  onOrcamentoDelete?: () => void;
   onReply?: (email: any) => void;
   onForward?: (email: any) => void;
 }
@@ -7740,6 +7754,7 @@ function MobileMainContent({
   setOrcamentoSheetOpen,
   initialEmpresaForOrcamento,
   onOrcamentoClose,
+  onOrcamentoDelete,
   onReply,
   onForward,
 }: MobileMainContentProps) {
@@ -7949,6 +7964,7 @@ function MobileMainContent({
           estabelecimentoId={estabelecimentoId} 
           orcamentoId={selectedOrcamentoId || undefined}
           onClose={onOrcamentoClose}
+          onDelete={onOrcamentoDelete}
           showClientDetails={false}
           onToggleClientDetails={() => {}}
           showPanelToggle={false}
