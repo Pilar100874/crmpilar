@@ -94,7 +94,37 @@ export default function Orcamentos() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrcamentos((data as any) || []);
+      
+      // Buscar vínculos dos clientes para filtro "Meus"
+      const clienteIds = data?.map(o => o.cliente_id).filter(Boolean) || [];
+      let vinculosMap: Record<string, any[]> = {};
+      
+      if (clienteIds.length > 0) {
+        const { data: vinculosData } = await supabase
+          .from('customer_vinculos')
+          .select('customer_id, usuario_id')
+          .in('customer_id', clienteIds);
+        
+        if (vinculosData) {
+          vinculosData.forEach(v => {
+            if (!vinculosMap[v.customer_id]) {
+              vinculosMap[v.customer_id] = [];
+            }
+            vinculosMap[v.customer_id].push(v);
+          });
+        }
+      }
+      
+      // Adicionar vínculos aos orçamentos
+      const orcamentosComVinculos = (data || []).map(orc => ({
+        ...orc,
+        cliente: orc.cliente ? {
+          ...orc.cliente,
+          customer_vinculos: vinculosMap[orc.cliente_id] || []
+        } : null
+      }));
+      
+      setOrcamentos(orcamentosComVinculos as any);
     } catch (error: any) {
       console.error('Erro ao carregar orçamentos:', error);
       toast.error("Erro ao carregar orçamentos");
@@ -106,9 +136,12 @@ export default function Orcamentos() {
   const columns = useMemo(() => {
     let filtered = orcamentos;
 
-    // Filtrar apenas meus orçamentos
+    // Filtrar apenas meus orçamentos - verifica se o contato tem vínculo com o usuário logado
     if (showOnlyMine && currentUserId) {
-      filtered = filtered.filter(o => o.vendedor_id === currentUserId);
+      filtered = filtered.filter(o => {
+        const customerVinculos = o.cliente?.customer_vinculos || [];
+        return customerVinculos.some((v: any) => v.usuario_id === currentUserId);
+      });
     }
 
     if (searchQuery) {
