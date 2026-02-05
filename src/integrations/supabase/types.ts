@@ -1232,6 +1232,187 @@ export type Database = {
           },
         ]
       }
+      campaign_permissions: {
+        Row: {
+          allowed_tags: string[] | null
+          blocked_tags: string[] | null
+          created_at: string
+          delay_max_seconds: number
+          delay_min_seconds: number
+          estabelecimento_id: string
+          id: string
+          include_media: boolean
+          is_active: boolean
+          last_contact_days: number
+          max_per_day: number
+          max_per_hour: number
+          min_score: number
+          nome: string
+          only_replied: boolean
+          optin_required: boolean
+          randomize_text: boolean
+          risk_level: string | null
+          risk_score: number | null
+          stop_if_blocks: number | null
+          stop_if_low_response: number | null
+          updated_at: string
+        }
+        Insert: {
+          allowed_tags?: string[] | null
+          blocked_tags?: string[] | null
+          created_at?: string
+          delay_max_seconds?: number
+          delay_min_seconds?: number
+          estabelecimento_id: string
+          id?: string
+          include_media?: boolean
+          is_active?: boolean
+          last_contact_days?: number
+          max_per_day?: number
+          max_per_hour?: number
+          min_score?: number
+          nome?: string
+          only_replied?: boolean
+          optin_required?: boolean
+          randomize_text?: boolean
+          risk_level?: string | null
+          risk_score?: number | null
+          stop_if_blocks?: number | null
+          stop_if_low_response?: number | null
+          updated_at?: string
+        }
+        Update: {
+          allowed_tags?: string[] | null
+          blocked_tags?: string[] | null
+          created_at?: string
+          delay_max_seconds?: number
+          delay_min_seconds?: number
+          estabelecimento_id?: string
+          id?: string
+          include_media?: boolean
+          is_active?: boolean
+          last_contact_days?: number
+          max_per_day?: number
+          max_per_hour?: number
+          min_score?: number
+          nome?: string
+          only_replied?: boolean
+          optin_required?: boolean
+          randomize_text?: boolean
+          risk_level?: string | null
+          risk_score?: number | null
+          stop_if_blocks?: number | null
+          stop_if_low_response?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_permissions_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_send_logs: {
+        Row: {
+          campaign_id: string | null
+          created_at: string
+          customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          delivered_at: string | null
+          error_message: string | null
+          estabelecimento_id: string
+          has_response: boolean | null
+          id: string
+          message_content: string | null
+          metadata: Json | null
+          permission_id: string | null
+          response_at: string | null
+          scheduled_at: string | null
+          sent_at: string | null
+          skip_reason: string | null
+          status: string
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          estabelecimento_id: string
+          has_response?: boolean | null
+          id?: string
+          message_content?: string | null
+          metadata?: Json | null
+          permission_id?: string | null
+          response_at?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          skip_reason?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          estabelecimento_id?: string
+          has_response?: boolean | null
+          id?: string
+          message_content?: string | null
+          metadata?: Json | null
+          permission_id?: string | null
+          response_at?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          skip_reason?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_send_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_send_logs_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_send_logs_estabelecimento_id_fkey"
+            columns: ["estabelecimento_id"]
+            isOneToOne: false
+            referencedRelation: "estabelecimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_send_logs_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_permissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           created_at: string | null
