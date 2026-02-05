@@ -3261,6 +3261,7 @@ export type Database = {
       envio_massa_templates: {
         Row: {
           ativo: boolean
+          content_items: Json | null
           conteudo: string
           created_at: string
           descricao: string | null
@@ -3272,6 +3273,7 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          content_items?: Json | null
           conteudo: string
           created_at?: string
           descricao?: string | null
@@ -3283,6 +3285,7 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          content_items?: Json | null
           conteudo?: string
           created_at?: string
           descricao?: string | null

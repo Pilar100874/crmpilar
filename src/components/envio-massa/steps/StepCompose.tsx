@@ -358,13 +358,24 @@ export function StepCompose({
   };
 
   const addTemplate = (template: EnvioMassaTemplate) => {
-    const newItem: ContentItem = {
-      id: `template-${Date.now()}`,
-      type: 'text',
-      content: template.conteudo,
-      quickReplyTitle: template.nome
-    };
-    onContentChange([...contentItems, newItem]);
+    // If template has content_items, use them; otherwise fallback to conteudo text
+    if (template.content_items && template.content_items.length > 0) {
+      // Generate new unique IDs for each item to avoid duplicates
+      const newItems: ContentItem[] = template.content_items.map((item, index) => ({
+        ...item,
+        id: `template-${template.id}-${Date.now()}-${index}`
+      }));
+      onContentChange([...contentItems, ...newItems]);
+    } else {
+      // Fallback for old templates without content_items
+      const newItem: ContentItem = {
+        id: `template-${Date.now()}`,
+        type: 'text',
+        content: template.conteudo,
+        quickReplyTitle: template.nome
+      };
+      onContentChange([...contentItems, newItem]);
+    }
     toast.success(`Template "${template.nome}" adicionado`);
   };
 
@@ -526,29 +537,67 @@ export function StepCompose({
                       </p>
                     </div>
                   ) : (
-                    templates.map(template => (
-                      <Card
-                        key={template.id}
-                        className="p-3 cursor-pointer hover:bg-muted/50 transition-colors hover:shadow-sm"
-                        onClick={() => addTemplate(template)}
-                      >
-                        <div className="flex items-start gap-2">
-                          <FileText className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-sm">{template.nome}</p>
-                            {template.descricao && (
-                              <p className="text-xs text-muted-foreground mb-1">
-                                {template.descricao}
-                              </p>
-                            )}
-                            <p className="text-xs text-muted-foreground line-clamp-2 mt-1 bg-muted/50 p-2 rounded">
-                              {template.conteudo}
-                            </p>
+                    templates.map(template => {
+                      const hasContentItems = template.content_items && template.content_items.length > 0;
+                      const itemCount = hasContentItems ? template.content_items.length : 1;
+                      const textCount = hasContentItems ? template.content_items.filter(i => i.type === 'text').length : 1;
+                      const imageCount = hasContentItems ? template.content_items.filter(i => i.type === 'image').length : 0;
+                      const videoCount = hasContentItems ? template.content_items.filter(i => i.type === 'video').length : 0;
+                      const catalogCount = hasContentItems ? template.content_items.filter(i => i.type === 'catalog').length : 0;
+                      const fileCount = hasContentItems ? template.content_items.filter(i => i.type === 'file').length : 0;
+                      
+                      return (
+                        <Card
+                          key={template.id}
+                          className="p-3 cursor-pointer hover:bg-muted/50 transition-colors hover:shadow-sm"
+                          onClick={() => addTemplate(template)}
+                        >
+                          <div className="flex items-start gap-2">
+                            <FileText className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm">{template.nome}</p>
+                              {template.descricao && (
+                                <p className="text-xs text-muted-foreground mb-1">
+                                  {template.descricao}
+                                </p>
+                              )}
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {textCount > 0 && (
+                                  <Badge variant="outline" className="text-xs h-5">
+                                    {textCount} texto{textCount > 1 ? 's' : ''}
+                                  </Badge>
+                                )}
+                                {imageCount > 0 && (
+                                  <Badge variant="outline" className="text-xs h-5">
+                                    <Image className="h-3 w-3 mr-1" />
+                                    {imageCount}
+                                  </Badge>
+                                )}
+                                {videoCount > 0 && (
+                                  <Badge variant="outline" className="text-xs h-5">
+                                    <Video className="h-3 w-3 mr-1" />
+                                    {videoCount}
+                                  </Badge>
+                                )}
+                                {catalogCount > 0 && (
+                                  <Badge variant="outline" className="text-xs h-5">
+                                    <BookOpen className="h-3 w-3 mr-1" />
+                                    {catalogCount}
+                                  </Badge>
+                                )}
+                                {fileCount > 0 && (
+                                  <Badge variant="outline" className="text-xs h-5">
+                                    <Paperclip className="h-3 w-3 mr-1" />
+                                    {fileCount}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
                           </div>
-                          <Plus className="h-4 w-4 text-muted-foreground shrink-0" />
-                        </div>
-                      </Card>
-                    ))
+                        </Card>
+                      );
+                    })
                   )}
                 </div>
               </ScrollArea>

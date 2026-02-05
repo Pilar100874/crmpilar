@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ContentItem } from '../types';
 
 export interface EnvioMassaTemplate {
   id: string;
@@ -9,6 +10,7 @@ export interface EnvioMassaTemplate {
   descricao?: string | null;
   ativo: boolean;
   ordem: number;
+  content_items?: ContentItem[];
 }
 
 export function useEnvioMassaTemplates(estabelecimentoId: string) {
@@ -27,7 +29,18 @@ export function useEnvioMassaTemplates(estabelecimentoId: string) {
         .order('ordem');
 
       if (error) throw error;
-      setTemplates(data || []);
+      
+      // Parse content_items from JSON
+      const parsedData = (data || []).map(template => ({
+        ...template,
+        content_items: template.content_items ? 
+          (typeof template.content_items === 'string' 
+            ? JSON.parse(template.content_items) 
+            : template.content_items) 
+          : []
+      }));
+      
+      setTemplates(parsedData);
     } catch (error: any) {
       console.error('Error fetching templates:', error);
       toast.error('Erro ao carregar templates');

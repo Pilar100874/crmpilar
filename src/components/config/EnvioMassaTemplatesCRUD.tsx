@@ -3,10 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
   DialogDescription
@@ -16,12 +14,13 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { 
-  FileText, Plus, Edit2, Trash2, Save, X, RefreshCw, 
-  Variable, Copy, Check, GripVertical
+  FileText, Plus, Edit2, Trash2, Save, RefreshCw, 
+  Variable, Copy, Check, Image, Video, BookOpen, Paperclip
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { cn } from "@/lib/utils";
+import { TemplateContentEditor, ContentItem } from "./TemplateContentEditor";
 
 interface Template {
   id: string;
@@ -30,6 +29,7 @@ interface Template {
   descricao: string | null;
   ativo: boolean;
   ordem: number;
+  content_items: ContentItem[];
 }
 
 interface EnvioMassaTemplatesCRUDProps {
@@ -55,9 +55,9 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
   // Form state
   const [formData, setFormData] = useState({
     nome: '',
-    conteudo: '',
     descricao: '',
-    ativo: true
+    ativo: true,
+    content_items: [] as ContentItem[]
   });
 
   useEffect(() => {
@@ -74,7 +74,18 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
         .order('ordem', { ascending: true });
 
       if (error) throw error;
-      setTemplates(data || []);
+      
+      // Parse content_items from JSON
+      const parsedData = (data || []).map(template => ({
+        ...template,
+        content_items: template.content_items ? 
+          (typeof template.content_items === 'string' 
+            ? JSON.parse(template.content_items) 
+            : template.content_items) 
+          : []
+      }));
+      
+      setTemplates(parsedData);
     } catch (error) {
       console.error('Erro ao carregar templates:', error);
       toast.error('Erro ao carregar templates');
@@ -88,25 +99,41 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
       setSelectedTemplate(template);
       setFormData({
         nome: template.nome,
-        conteudo: template.conteudo,
         descricao: template.descricao || '',
-        ativo: template.ativo
+        ativo: template.ativo,
+        content_items: template.content_items || []
       });
     } else {
       setSelectedTemplate(null);
-      setFormData({ nome: '', conteudo: '', descricao: '', ativo: true });
+      setFormData({ nome: '', descricao: '', ativo: true, content_items: [] });
     }
     setDialogOpen(true);
   };
 
+  // Helper to generate conteudo from content_items for backwards compatibility
+  const generateConteudoFromItems = (items: ContentItem[]): string => {
+    return items
+      .filter(item => item.type === 'text')
+      .map(item => item.content)
+      .join('\n\n');
+  };
+
   const handleSave = async () => {
-    if (!formData.nome.trim() || !formData.conteudo.trim()) {
-      toast.error('Preencha nome e conteúdo');
+    if (!formData.nome.trim()) {
+      toast.error('Preencha o nome do template');
+      return;
+    }
+    
+    if (formData.content_items.length === 0) {
+      toast.error('Adicione pelo menos um item de conteúdo');
       return;
     }
 
     try {
       setSaving(true);
+      
+      // Generate conteudo for backwards compatibility
+      const conteudo = generateConteudoFromItems(formData.content_items);
 
       if (selectedTemplate) {
         // Update
@@ -114,10 +141,11 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
           .from('envio_massa_templates')
           .update({
             nome: formData.nome,
-            conteudo: formData.conteudo,
+            conteudo: conteudo,
             descricao: formData.descricao || null,
-            ativo: formData.ativo
-          })
+            ativo: formData.ativo,
+            content_items: formData.content_items
+          } as any)
           .eq('id', selectedTemplate.id);
 
         if (error) throw error;
@@ -129,11 +157,12 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
           .insert({
             estabelecimento_id: estabelecimentoId,
             nome: formData.nome,
-            conteudo: formData.conteudo,
+            conteudo: conteudo,
             descricao: formData.descricao || null,
             ativo: formData.ativo,
-            ordem: templates.length
-          });
+            ordem: templates.length,
+            content_items: formData.content_items
+          } as any);
 
         if (error) throw error;
         toast.success('Template criado!');
@@ -190,19 +219,16 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
     setTimeout(() => setCopiedVar(null), 2000);
   };
 
-  const insertVariable = (variable: string) => {
-    setFormData(prev => ({
-      ...prev,
-      conteudo: prev.conteudo + variable
-    }));
-  };
-
-  const renderPreview = (text: string) => {
-    return text
-      .replace(/\{\{contato\}\}/gi, 'João Silva')
-      .replace(/\{\{empresa\}\}/gi, 'Empresa ABC')
-      .replace(/\{\{whatsapp\}\}/gi, '(11) 99999-9999')
-      .replace(/\{\{email\}\}/gi, 'joao@empresa.com');
+  // Helper to get icon count for template preview
+  const getContentSummary = (items: ContentItem[]) => {
+    const counts = {
+      text: items.filter(i => i.type === 'text').length,
+      image: items.filter(i => i.type === 'image').length,
+      video: items.filter(i => i.type === 'video').length,
+      catalog: items.filter(i => i.type === 'catalog').length,
+      file: items.filter(i => i.type === 'file').length,
+    };
+    return counts;
   };
 
   if (loading) {
@@ -228,8 +254,7 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
               Templates de Mensagens
             </CardTitle>
             <CardDescription>
-              Crie templates com variáveis para usar no envio em massa. 
-              As variáveis serão substituídas pelos dados de cada contato.
+              Crie templates com textos, mídias, catálogos e anexos para usar no envio em massa. 
             </CardDescription>
           </div>
           <Button onClick={() => handleOpenDialog()}>
@@ -246,60 +271,95 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
             </div>
           ) : (
             <div className="space-y-3">
-              {templates.map((template) => (
-                <Card
-                  key={template.id}
-                  className={cn(
-                    "transition-all",
-                    !template.ativo && "opacity-60"
-                  )}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-medium truncate">{template.nome}</h4>
-                          {!template.ativo && (
-                            <Badge variant="secondary">Inativo</Badge>
+              {templates.map((template) => {
+                const summary = getContentSummary(template.content_items || []);
+                return (
+                  <Card
+                    key={template.id}
+                    className={cn(
+                      "transition-all",
+                      !template.ativo && "opacity-60"
+                    )}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-medium truncate">{template.nome}</h4>
+                            {!template.ativo && (
+                              <Badge variant="secondary">Inativo</Badge>
+                            )}
+                          </div>
+                          
+                          {/* Content summary badges */}
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {summary.text > 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                <FileText className="h-3 w-3 mr-1" />
+                                {summary.text} texto{summary.text > 1 ? 's' : ''}
+                              </Badge>
+                            )}
+                            {summary.image > 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                <Image className="h-3 w-3 mr-1" />
+                                {summary.image} imagem{summary.image > 1 ? 'ns' : ''}
+                              </Badge>
+                            )}
+                            {summary.video > 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                <Video className="h-3 w-3 mr-1" />
+                                {summary.video} vídeo{summary.video > 1 ? 's' : ''}
+                              </Badge>
+                            )}
+                            {summary.catalog > 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                <BookOpen className="h-3 w-3 mr-1" />
+                                {summary.catalog} catálogo{summary.catalog > 1 ? 's' : ''}
+                              </Badge>
+                            )}
+                            {summary.file > 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                <Paperclip className="h-3 w-3 mr-1" />
+                                {summary.file} anexo{summary.file > 1 ? 's' : ''}
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          {template.descricao && (
+                            <p className="text-xs text-muted-foreground italic">
+                              {template.descricao}
+                            </p>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2 whitespace-pre-wrap">
-                          {template.conteudo}
-                        </p>
-                        {template.descricao && (
-                          <p className="text-xs text-muted-foreground mt-2 italic">
-                            {template.descricao}
-                          </p>
-                        )}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Switch
+                            checked={template.ativo}
+                            onCheckedChange={() => handleToggleAtivo(template)}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenDialog(template)}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive"
+                            onClick={() => {
+                              setSelectedTemplate(template);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Switch
-                          checked={template.ativo}
-                          onCheckedChange={() => handleToggleAtivo(template)}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenDialog(template)}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive"
-                          onClick={() => {
-                            setSelectedTemplate(template);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -332,7 +392,7 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
                   onClick={() => handleCopyVariable(v.key)}
                 >
                   {copiedVar === v.key ? (
-                    <Check className="h-4 w-4 text-green-500" />
+                    <Check className="h-4 w-4 text-emerald-500" />
                   ) : (
                     <Copy className="h-4 w-4" />
                   )}
@@ -345,68 +405,45 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
 
       {/* Dialog de criação/edição */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedTemplate ? 'Editar Template' : 'Novo Template'}
             </DialogTitle>
             <DialogDescription>
-              Use as variáveis para personalizar a mensagem para cada contato.
+              Monte seu template com textos, mídias, catálogos e anexos. Use variáveis para personalizar.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nome do Template *</Label>
-              <Input
-                placeholder="Ex: Boas-vindas, Promoção de Verão..."
-                value={formData.nome}
-                onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Descrição (opcional)</Label>
-              <Input
-                placeholder="Descrição para identificação interna"
-                value={formData.descricao}
-                onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Conteúdo da Mensagem *</Label>
-                <div className="flex gap-1">
-                  {VARIAVEIS_DISPONIVEIS.map((v) => (
-                    <Button
-                      key={v.key}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs h-7"
-                      onClick={() => insertVariable(v.key)}
-                    >
-                      {v.key.replace(/\{\{|\}\}/g, '')}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <Textarea
-                placeholder="Digite sua mensagem aqui. Use {{contato}} para inserir o nome do contato, {{empresa}} para a empresa, etc."
-                value={formData.conteudo}
-                onChange={(e) => setFormData(prev => ({ ...prev, conteudo: e.target.value }))}
-                rows={6}
-              />
-            </div>
-
-            {formData.conteudo && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-muted-foreground">Preview</Label>
-                <div className="p-3 rounded-lg bg-muted/50 border text-sm whitespace-pre-wrap">
-                  {renderPreview(formData.conteudo)}
-                </div>
+                <Label>Nome do Template *</Label>
+                <Input
+                  placeholder="Ex: Boas-vindas, Promoção de Verão..."
+                  value={formData.nome}
+                  onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                />
               </div>
-            )}
+
+              <div className="space-y-2">
+                <Label>Descrição (opcional)</Label>
+                <Input
+                  placeholder="Descrição para identificação interna"
+                  value={formData.descricao}
+                  onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Conteúdo do Template</Label>
+              <TemplateContentEditor
+                contentItems={formData.content_items}
+                onContentChange={(items) => setFormData(prev => ({ ...prev, content_items: items }))}
+                estabelecimentoId={estabelecimentoId}
+              />
+            </div>
 
             <div className="flex items-center gap-2">
               <Switch
