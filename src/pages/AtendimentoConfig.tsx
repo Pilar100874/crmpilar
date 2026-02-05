@@ -25,7 +25,9 @@ import {
   Video,
   Wrench,
   Send,
-  FileText
+  FileText,
+  Shield,
+  Activity
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -59,6 +61,8 @@ import SLAConfigCRUD from '@/components/config/SLAConfigCRUD';
 import FerramentasAtendimentoCRUD from '@/components/config/FerramentasAtendimentoCRUD';
 import { EnvioMassaWebhookConfig } from '@/components/config/EnvioMassaWebhookConfig';
 import { EnvioMassaTemplatesCRUD } from '@/components/config/EnvioMassaTemplatesCRUD';
+import { CampaignPermissionsCRUD } from '@/components/config/CampaignPermissionsCRUD';
+import { CampaignSendMonitor } from '@/components/config/CampaignSendMonitor';
 
 // Import Bot components
 import BotCreate from './BotCreate';
@@ -91,6 +95,8 @@ const tabItems: TabItem[] = [
   { id: 'sla', label: 'SLA de Atendimento', icon: Clock },
   { id: 'templates-mensagem', label: 'Templates de Mensagem', icon: FileText },
   { id: 'envio-massa', label: 'Webhook de Disparo', icon: Send },
+  { id: 'permissao-envio', label: 'Permissão Anti-Bloqueio', icon: Shield },
+  { id: 'monitor-envio', label: 'Monitor de Envios', icon: Activity },
   { id: 'bot-criar', label: 'Criar / Editar Bot', icon: Plus },
   { id: 'bot-testar', label: 'Testar Bot', icon: TestTube2 },
   { id: 'softphone', label: 'Softphone', icon: Phone },
@@ -623,6 +629,30 @@ export default function AtendimentoConfig() {
                   <EnvioMassaWebhookConfig estabelecimentoId={estabelecimentoId} />
                 )}
               </div>
+            </TabsContent>
+
+            <TabsContent value="permissao-envio" className="mt-0 h-full overflow-y-auto">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Shield className="h-4 w-4 sm:h-5 sm:w-5" />Permissão Anti-Bloqueio WhatsApp</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Configure regras de segurança para envio em massa</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">
+                  <CampaignPermissionsCRUD />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="monitor-envio" className="mt-0 h-full overflow-y-auto">
+              <Card className="h-full">
+                <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg"><Activity className="h-4 w-4 sm:h-5 sm:w-5" />Monitor de Envios em Massa</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Acompanhe o status dos envios e motivos de bloqueio</CardDescription>
+                </CardHeader>
+                <CardContent className="px-3 sm:px-6">
+                  <CampaignSendMonitor />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="bot-criar" className="mt-0 h-full">
