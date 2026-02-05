@@ -91,6 +91,7 @@ interface POSViewProps {
   orcamentoId?: string | null;
   onClose?: () => void;
   onDelete?: () => void;
+  onSave?: () => void;
   showClientDetails?: boolean;
   onToggleClientDetails?: () => void;
   showPanelToggle?: boolean;
@@ -103,6 +104,7 @@ export default function POSView({
   orcamentoId, 
   onClose,
   onDelete,
+  onSave,
   showClientDetails = false,
   onToggleClientDetails,
   showPanelToggle = false,
@@ -1084,6 +1086,8 @@ export default function POSView({
       setSelectedEmpresa("");
       setSelectedCliente("");
       setActiveTab("share");
+      // Notificar que orçamento foi salvo
+      onSave?.();
     } catch (error: any) {
       console.error('Erro ao finalizar orçamento:', error);
       toast.error('Erro ao criar orçamento');
