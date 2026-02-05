@@ -88,7 +88,7 @@ const tabItems: TabItem[] = [
   { id: 'base-conhecimento', label: 'Base de Conhecimento', icon: BookOpen },
   { id: 'ia-config', label: 'Configurações de IA', icon: Brain },
   { id: 'sla', label: 'SLA de Atendimento', icon: Clock },
-  { id: 'envio-massa', label: 'Envio em Massa', icon: Send },
+  { id: 'envio-massa', label: 'Webhook de Disparo', icon: Send },
   { id: 'bot-criar', label: 'Criar / Editar Bot', icon: Plus },
   { id: 'bot-testar', label: 'Testar Bot', icon: TestTube2 },
   { id: 'softphone', label: 'Softphone', icon: Phone },
