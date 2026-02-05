@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   Search, Filter, Users, CheckSquare, Square, 
-  Building2, Phone, Mail, Tag, Calendar
+  Building2, Phone, Mail, Tag, Calendar, AlertTriangle, ShieldX, Shield
 } from "lucide-react";
 import { ContactForBulkSend, EnvioMassaFilters, CanalEnvio } from "../types";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,9 @@ export function StepFilter({
   const [localFilters, setLocalFilters] = useState<EnvioMassaFilters>(filters);
   const [accordionValue, setAccordionValue] = useState<string>("filters");
 
+  const eligibleContacts = contacts.filter(c => !c.isBlocked);
+  const blockedContacts = contacts.filter(c => c.isBlocked);
+
   const handleFilterChange = (key: keyof EnvioMassaFilters, value: any) => {
     const newFilters = { ...localFilters, [key]: value };
     setLocalFilters(newFilters);
@@ -47,6 +51,9 @@ export function StepFilter({
   };
 
   const toggleContact = (contact: ContactForBulkSend) => {
+    // Don't allow selecting blocked contacts
+    if (contact.isBlocked) return;
+    
     const isSelected = selectedContacts.some(c => c.id === contact.id);
     if (isSelected) {
       onSelectContacts(selectedContacts.filter(c => c.id !== contact.id));
@@ -56,7 +63,8 @@ export function StepFilter({
   };
 
   const selectAll = () => {
-    onSelectContacts([...contacts]);
+    // Only select eligible (non-blocked) contacts
+    onSelectContacts([...eligibleContacts]);
   };
 
   const deselectAll = () => {
@@ -75,6 +83,28 @@ export function StepFilter({
     <div className="flex flex-col h-full">
       {/* Content */}
       <div className="flex-1 space-y-4 min-h-0 overflow-hidden flex flex-col">
+        {/* Resumo Anti-Bloqueio */}
+        {blockedContacts.length > 0 && (
+          <Card className="p-3 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/50">
+                <Shield className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-amber-800 dark:text-amber-200">
+                  Sistema Anti-Bloqueio Ativo
+                </p>
+                <p className="text-sm text-amber-600 dark:text-amber-400">
+                  {blockedContacts.length} contato(s) bloqueado(s) pelas regras de permissão
+                </p>
+              </div>
+              <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-300">
+                {eligibleContacts.length} elegíveis
+              </Badge>
+            </div>
+          </Card>
+        )}
+
         {/* Filtros */}
         <Accordion type="single" collapsible value={accordionValue} onValueChange={setAccordionValue} className="border rounded-lg shrink-0">
         <AccordionItem value="filters" className="border-0">
@@ -174,11 +204,17 @@ export function StepFilter({
       </Accordion>
 
       {/* Lista de Contatos */}
-      <div className="border rounded-lg">
-        <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+      <div className="border rounded-lg flex-1 flex flex-col min-h-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30 shrink-0">
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{contacts.length} contatos encontrados</span>
+            <span className="font-medium">{contacts.length} contatos</span>
+            {blockedContacts.length > 0 && (
+              <Badge variant="outline" className="text-amber-600 border-amber-300">
+                <ShieldX className="h-3 w-3 mr-1" />
+                {blockedContacts.length} bloqueados
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={selectAll}>
@@ -192,7 +228,7 @@ export function StepFilter({
           </div>
         </div>
 
-        <ScrollArea className="h-[400px]">
+        <ScrollArea className="flex-1">
           <div className="p-2 space-y-1">
             {contacts.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
@@ -202,63 +238,101 @@ export function StepFilter({
               </div>
             ) : (
               contacts.map(contact => (
-                <Card
-                  key={contact.id}
-                  className={cn(
-                    "p-3 cursor-pointer transition-all hover:shadow-sm",
-                    selectedContacts.some(c => c.id === contact.id)
-                      ? "bg-primary/10 border-primary/30"
-                      : "hover:bg-muted/50"
-                  )}
-                  onClick={() => toggleContact(contact)}
-                >
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      checked={selectedContacts.some(c => c.id === contact.id)}
-                      onCheckedChange={() => toggleContact(contact)}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{contact.nome}</p>
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        {canal === 'email' ? (
-                          contact.email && (
-                            <span className="flex items-center gap-1">
-                              <Mail className="h-3 w-3" />
-                              {contact.email}
-                            </span>
-                          )
-                        ) : (
-                          contact.telefone && (
-                            <span className="flex items-center gap-1">
-                              <Phone className="h-3 w-3" />
-                              {contact.telefone}
-                            </span>
-                          )
+                <TooltipProvider key={contact.id}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Card
+                        className={cn(
+                          "p-3 transition-all",
+                          contact.isBlocked
+                            ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800 opacity-60 cursor-not-allowed"
+                            : selectedContacts.some(c => c.id === contact.id)
+                            ? "bg-primary/10 border-primary/30 cursor-pointer hover:shadow-sm"
+                            : "hover:bg-muted/50 cursor-pointer hover:shadow-sm"
                         )}
-                        {contact.empresa && (
-                          <span className="flex items-center gap-1">
-                            <Building2 className="h-3 w-3" />
-                            {contact.empresa}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {contact.tags && contact.tags.length > 0 && (
-                      <div className="flex gap-1">
-                        {contact.tags.slice(0, 2).map((tag, i) => (
-                          <Badge key={i} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                        {contact.tags.length > 2 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{contact.tags.length - 2}
-                          </Badge>
-                        )}
-                      </div>
+                        onClick={() => toggleContact(contact)}
+                      >
+                        <div className="flex items-center gap-3">
+                          {contact.isBlocked ? (
+                            <div className="p-1 rounded bg-red-100 dark:bg-red-900/50">
+                              <ShieldX className="h-4 w-4 text-red-500" />
+                            </div>
+                          ) : (
+                            <Checkbox
+                              checked={selectedContacts.some(c => c.id === contact.id)}
+                              onCheckedChange={() => toggleContact(contact)}
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className={cn(
+                                "font-medium truncate",
+                                contact.isBlocked && "text-red-700 dark:text-red-300"
+                              )}>
+                                {contact.nome}
+                              </p>
+                              {contact.isBlocked && (
+                                <Badge variant="outline" className="text-xs border-red-300 text-red-600 dark:text-red-400 shrink-0">
+                                  Bloqueado
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                              {canal === 'email' ? (
+                                contact.email && (
+                                  <span className="flex items-center gap-1">
+                                    <Mail className="h-3 w-3" />
+                                    {contact.email}
+                                  </span>
+                                )
+                              ) : (
+                                contact.telefone && (
+                                  <span className="flex items-center gap-1">
+                                    <Phone className="h-3 w-3" />
+                                    {contact.telefone}
+                                  </span>
+                                )
+                              )}
+                              {contact.empresa && (
+                                <span className="flex items-center gap-1">
+                                  <Building2 className="h-3 w-3" />
+                                  {contact.empresa}
+                                </span>
+                              )}
+                              {contact.lastContactDays !== null && contact.lastContactDays !== undefined && (
+                                <span className="text-xs text-muted-foreground">
+                                  Último contato: {contact.lastContactDays}d
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {contact.tags && contact.tags.length > 0 && !contact.isBlocked && (
+                            <div className="flex gap-1">
+                              {contact.tags.slice(0, 2).map((tag, i) => (
+                                <Badge key={i} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                              {contact.tags.length > 2 && (
+                                <Badge variant="secondary" className="text-xs">
+                                  +{contact.tags.length - 2}
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    </TooltipTrigger>
+                    {contact.isBlocked && contact.blockReason && (
+                      <TooltipContent side="top" className="max-w-xs">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+                          <span>{contact.blockReason}</span>
+                        </div>
+                      </TooltipContent>
                     )}
-                  </div>
-                </Card>
+                  </Tooltip>
+                </TooltipProvider>
               ))
             )}
           </div>
