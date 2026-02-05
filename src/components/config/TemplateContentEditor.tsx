@@ -268,17 +268,7 @@ export function TemplateContentEditor({
 
       if (aiError) console.warn('Error fetching AI images:', aiError);
 
-      // Fetch from quick_attachments (images only)
-      const { data: attachmentsData, error: attachmentsError } = await supabase
-        .from('quick_attachments')
-        .select('*')
-        .eq('estabelecimento_id', estabelecimentoId)
-        .eq('file_type', 'image')
-        .order('created_at', { ascending: false });
-
-      if (attachmentsError) console.warn('Error fetching attachments:', attachmentsError);
-
-      // Combine all sources
+      // Combine all sources (media_gallery + AI images)
       const combinedMedia: MediaGalleryItem[] = [
         ...(galleryData || []).map((item: any) => ({
           id: item.id,
@@ -297,14 +287,6 @@ export function TemplateContentEditor({
           public_url: item.public_url,
           nome: item.prompt || 'Imagem IA',
           descricao: item.prompt
-        })),
-        ...(attachmentsData || []).map((item: any) => ({
-          id: `attach-${item.id}`,
-          tipo: 'image' as const,
-          storage_path: '',
-          public_url: item.url,
-          nome: item.title,
-          thumbnail_url: item.thumbnail_url
         }))
       ];
 
