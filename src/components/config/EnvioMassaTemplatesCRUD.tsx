@@ -6,16 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-  DialogDescription
-} from "@/components/ui/dialog";
-import { 
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
 } from "@/components/ui/alert-dialog";
 import { 
   FileText, Plus, Edit2, Trash2, Save, RefreshCw, 
-  Variable, Copy, Check, Image, Video, BookOpen, Paperclip
+  Variable, Copy, Check, Image, Video, BookOpen, Paperclip, ArrowLeft
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
@@ -47,10 +43,13 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [copiedVar, setCopiedVar] = useState<string | null>(null);
+  
+  // View mode: 'list' or 'form'
+  const [viewMode, setViewMode] = useState<'list' | 'form'>('list');
+  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -94,20 +93,27 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
     }
   };
 
-  const handleOpenDialog = (template?: Template) => {
-    if (template) {
-      setSelectedTemplate(template);
-      setFormData({
-        nome: template.nome,
-        descricao: template.descricao || '',
-        ativo: template.ativo,
-        content_items: template.content_items || []
-      });
-    } else {
-      setSelectedTemplate(null);
-      setFormData({ nome: '', descricao: '', ativo: true, content_items: [] });
-    }
-    setDialogOpen(true);
+  const handleNewTemplate = () => {
+    setEditingTemplate(null);
+    setFormData({ nome: '', descricao: '', ativo: true, content_items: [] });
+    setViewMode('form');
+  };
+
+  const handleEditTemplate = (template: Template) => {
+    setEditingTemplate(template);
+    setFormData({
+      nome: template.nome,
+      descricao: template.descricao || '',
+      ativo: template.ativo,
+      content_items: template.content_items || []
+    });
+    setViewMode('form');
+  };
+
+  const handleBackToList = () => {
+    setViewMode('list');
+    setEditingTemplate(null);
+    setFormData({ nome: '', descricao: '', ativo: true, content_items: [] });
   };
 
   // Helper to generate conteudo from content_items for backwards compatibility
@@ -135,7 +141,7 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
       // Generate conteudo for backwards compatibility
       const conteudo = generateConteudoFromItems(formData.content_items);
 
-      if (selectedTemplate) {
+      if (editingTemplate) {
         // Update
         const { error } = await supabase
           .from('envio_massa_templates')
@@ -146,7 +152,7 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
             ativo: formData.ativo,
             content_items: formData.content_items
           } as any)
-          .eq('id', selectedTemplate.id);
+          .eq('id', editingTemplate.id);
 
         if (error) throw error;
         toast.success('Template atualizado!');
@@ -168,7 +174,7 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
         toast.success('Template criado!');
       }
 
-      setDialogOpen(false);
+      handleBackToList();
       loadTemplates();
     } catch (error) {
       console.error('Erro ao salvar template:', error);
@@ -244,6 +250,159 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
     );
   }
 
+  // Form view (inline)
+  if (viewMode === 'form') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={handleBackToList}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h2 className="text-xl font-semibold">
+              {editingTemplate ? 'Editar Template' : 'Novo Template'}
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Monte seu template com textos, mídias, catálogos e anexos.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main form */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Informações do Template</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Nome do Template *</Label>
+                    <Input
+                      placeholder="Ex: Boas-vindas, Promoção de Verão..."
+                      value={formData.nome}
+                      onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Descrição (opcional)</Label>
+                    <Input
+                      placeholder="Descrição para identificação interna"
+                      value={formData.descricao}
+                      onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="ativo"
+                    checked={formData.ativo}
+                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, ativo: checked }))}
+                  />
+                  <Label htmlFor="ativo">Template ativo</Label>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Conteúdo do Template</CardTitle>
+                <CardDescription>
+                  Adicione textos, imagens, vídeos, catálogos e anexos. Arraste para reordenar.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TemplateContentEditor
+                  contentItems={formData.content_items}
+                  onContentChange={(items) => setFormData(prev => ({ ...prev, content_items: items }))}
+                  estabelecimentoId={estabelecimentoId}
+                />
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={handleBackToList}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? (
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Salvar Template
+              </Button>
+            </div>
+          </div>
+
+          {/* Sidebar with variables */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Variable className="h-4 w-4" />
+                  Variáveis Disponíveis
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {VARIAVEIS_DISPONIVEIS.map((v) => (
+                    <div
+                      key={v.key}
+                      className="flex items-center justify-between p-2 rounded-lg bg-muted/50 border"
+                    >
+                      <div>
+                        <code className="text-xs font-mono bg-background px-2 py-0.5 rounded">
+                          {v.key}
+                        </code>
+                        <p className="text-xs text-muted-foreground mt-1">{v.desc}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => handleCopyVariable(v.key)}
+                      >
+                        {copiedVar === v.key ? (
+                          <Check className="h-3 w-3 text-emerald-500" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Delete confirmation dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remover Template</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja remover o template "{selectedTemplate?.nome}"?
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+                Remover
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    );
+  }
+
+  // List view
   return (
     <div className="space-y-6">
       <Card>
@@ -257,7 +416,7 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
               Crie templates com textos, mídias, catálogos e anexos para usar no envio em massa. 
             </CardDescription>
           </div>
-          <Button onClick={() => handleOpenDialog()}>
+          <Button onClick={handleNewTemplate}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Template
           </Button>
@@ -268,84 +427,89 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
               <FileText className="h-12 w-12 mx-auto mb-3 opacity-20" />
               <p>Nenhum template cadastrado</p>
               <p className="text-sm">Crie seu primeiro template para usar no envio em massa</p>
+              <Button onClick={handleNewTemplate} className="mt-4">
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Template
+              </Button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {templates.map((template) => {
                 const summary = getContentSummary(template.content_items || []);
                 return (
                   <Card
                     key={template.id}
                     className={cn(
-                      "transition-all",
+                      "transition-all hover:shadow-md cursor-pointer",
                       !template.ativo && "opacity-60"
                     )}
+                    onClick={() => handleEditTemplate(template)}
                   >
                     <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start justify-between gap-2 mb-3">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-medium truncate">{template.nome}</h4>
-                            {!template.ativo && (
-                              <Badge variant="secondary">Inativo</Badge>
-                            )}
-                          </div>
-                          
-                          {/* Content summary badges */}
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {summary.text > 0 && (
-                              <Badge variant="outline" className="text-xs">
-                                <FileText className="h-3 w-3 mr-1" />
-                                {summary.text} texto{summary.text > 1 ? 's' : ''}
-                              </Badge>
-                            )}
-                            {summary.image > 0 && (
-                              <Badge variant="outline" className="text-xs">
-                                <Image className="h-3 w-3 mr-1" />
-                                {summary.image} imagem{summary.image > 1 ? 'ns' : ''}
-                              </Badge>
-                            )}
-                            {summary.video > 0 && (
-                              <Badge variant="outline" className="text-xs">
-                                <Video className="h-3 w-3 mr-1" />
-                                {summary.video} vídeo{summary.video > 1 ? 's' : ''}
-                              </Badge>
-                            )}
-                            {summary.catalog > 0 && (
-                              <Badge variant="outline" className="text-xs">
-                                <BookOpen className="h-3 w-3 mr-1" />
-                                {summary.catalog} catálogo{summary.catalog > 1 ? 's' : ''}
-                              </Badge>
-                            )}
-                            {summary.file > 0 && (
-                              <Badge variant="outline" className="text-xs">
-                                <Paperclip className="h-3 w-3 mr-1" />
-                                {summary.file} anexo{summary.file > 1 ? 's' : ''}
-                              </Badge>
-                            )}
-                          </div>
-                          
+                          <h4 className="font-medium truncate">{template.nome}</h4>
                           {template.descricao && (
-                            <p className="text-xs text-muted-foreground italic">
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
                               {template.descricao}
                             </p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Switch
-                            checked={template.ativo}
-                            onCheckedChange={() => handleToggleAtivo(template)}
-                          />
+                        {!template.ativo && (
+                          <Badge variant="secondary" className="shrink-0">Inativo</Badge>
+                        )}
+                      </div>
+                      
+                      {/* Content summary badges */}
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {summary.text > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            <FileText className="h-3 w-3 mr-1" />
+                            {summary.text}
+                          </Badge>
+                        )}
+                        {summary.image > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            <Image className="h-3 w-3 mr-1" />
+                            {summary.image}
+                          </Badge>
+                        )}
+                        {summary.video > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            <Video className="h-3 w-3 mr-1" />
+                            {summary.video}
+                          </Badge>
+                        )}
+                        {summary.catalog > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            <BookOpen className="h-3 w-3 mr-1" />
+                            {summary.catalog}
+                          </Badge>
+                        )}
+                        {summary.file > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            <Paperclip className="h-3 w-3 mr-1" />
+                            {summary.file}
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between" onClick={e => e.stopPropagation()}>
+                        <Switch
+                          checked={template.ativo}
+                          onCheckedChange={() => handleToggleAtivo(template)}
+                        />
+                        <div className="flex items-center gap-1">
                           <Button
                             variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenDialog(template)}
+                            size="sm"
+                            onClick={() => handleEditTemplate(template)}
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
-                            size="icon"
+                            size="sm"
                             className="text-destructive"
                             onClick={() => {
                               setSelectedTemplate(template);
@@ -374,7 +538,7 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {VARIAVEIS_DISPONIVEIS.map((v) => (
               <div
                 key={v.key}
@@ -402,74 +566,6 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
           </div>
         </CardContent>
       </Card>
-
-      {/* Dialog de criação/edição */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedTemplate ? 'Editar Template' : 'Novo Template'}
-            </DialogTitle>
-            <DialogDescription>
-              Monte seu template com textos, mídias, catálogos e anexos. Use variáveis para personalizar.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Nome do Template *</Label>
-                <Input
-                  placeholder="Ex: Boas-vindas, Promoção de Verão..."
-                  value={formData.nome}
-                  onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Descrição (opcional)</Label>
-                <Input
-                  placeholder="Descrição para identificação interna"
-                  value={formData.descricao}
-                  onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Conteúdo do Template</Label>
-              <TemplateContentEditor
-                contentItems={formData.content_items}
-                onContentChange={(items) => setFormData(prev => ({ ...prev, content_items: items }))}
-                estabelecimentoId={estabelecimentoId}
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Switch
-                id="ativo"
-                checked={formData.ativo}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, ativo: checked }))}
-              />
-              <Label htmlFor="ativo">Template ativo</Label>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? (
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Salvar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Dialog de confirmação de exclusão */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
