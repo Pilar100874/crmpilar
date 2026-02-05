@@ -3307,9 +3307,16 @@ ${recentMessages}
   const filteredOrcamentos = useMemo(() => {
     let result = orcamentos;
     
-    // Filtrar por "Meus" orçamentos
+    // Filtrar por "Meus" orçamentos - verifica se o contato do orçamento tem vínculo com o usuário logado
     if (showOnlyMyOrcamentos && currentUsuarioTableId) {
-      result = result.filter(orc => orc.vendedor_id === currentUsuarioTableId);
+      result = result.filter(orc => {
+        // Verificar se o contato vinculado ao orçamento tem o usuário logado como responsável
+        const customerVinculos = orc.customers?.customer_vinculos || [];
+        const hasUserVinculo = customerVinculos.some(
+          (v: any) => v.usuario_id === currentUsuarioTableId
+        );
+        return hasUserVinculo;
+      });
     }
     
     // Filtrar por global filter
