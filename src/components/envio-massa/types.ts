@@ -30,6 +30,13 @@ export interface ContactForBulkSend {
   email: string | null;
   empresa?: string | null;
   tags?: string[];
+  // Anti-block permission fields
+  isBlocked?: boolean;
+  blockReason?: string;
+  lastContactDays?: number | null;
+  hasReplied?: boolean;
+  hasOptin?: boolean;
+  engagementScore?: number;
 }
 
 export interface QuickReplyCategory {
