@@ -61,10 +61,10 @@ export default function Orcamentos() {
         .from('orcamentos')
         .select(`
           *,
-          empresa:empresas(id, nome_fantasia, cnpj),
-          cliente:customers(id, nome, email, telefone),
-          vendedor:usuarios(id, nome),
-          condicao_pagamento:condicoes_pagamento(id, nome),
+          empresa:empresas!left(id, nome_fantasia, cnpj),
+          cliente:customers!left(id, nome, email, telefone),
+          vendedor:usuarios!left(id, nome),
+          condicao_pagamento:condicoes_pagamento!left(id, nome),
           itens:orcamento_itens(
             *,
             produto:produtos(id, nome, foto_url)
