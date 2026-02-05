@@ -236,6 +236,8 @@ export default function Atendimento() {
   const [orcamentosStatusFilter, setOrcamentosStatusFilter] = useState<string>("");
   const [orcamentosDateRange, setOrcamentosDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const [orcamentosEmpresaFilter, setOrcamentosEmpresaFilter] = useState<string>("");
+  const [showOnlyMyOrcamentos, setShowOnlyMyOrcamentos] = useState(false);
+  const [currentUsuarioTableId, setCurrentUsuarioTableId] = useState<string | null>(null);
   const [selectedOrcamentoId, setSelectedOrcamentoId] = useState<string | null>(null);
   const [selectedOrcamentoData, setSelectedOrcamentoData] = useState<any | null>(null);
   const [orcamentoSheetOpen, setOrcamentoSheetOpen] = useState(false);
@@ -406,6 +408,16 @@ export default function Atendimento() {
       if (user) {
         setUsuarioId(user.id);
         loadAtendente(user.id);
+        
+        // Buscar o ID da tabela usuarios para filtro de orçamentos
+        const { data: userData } = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .single();
+        if (userData) {
+          setCurrentUsuarioTableId(userData.id);
+        }
       }
     };
     initUser();
@@ -3261,20 +3273,30 @@ ${recentMessages}
     });
   }, [userEmails, globalFilter, emailFolder]);
 
-  // Filtered orcamentos based on global filter
+  // Filtered orcamentos based on global filter and "Meus" toggle
   const filteredOrcamentos = useMemo(() => {
-    if (!globalFilter) return orcamentos;
+    let result = orcamentos;
     
-    return orcamentos.filter((orc) => {
-      if (globalFilter.type === 'customer') {
-        return orc.cliente_id === globalFilter.id;
-      }
-      if (globalFilter.type === 'empresa') {
-        return orc.empresa_id === globalFilter.id;
-      }
-      return true;
-    });
-  }, [orcamentos, globalFilter]);
+    // Filtrar por "Meus" orçamentos
+    if (showOnlyMyOrcamentos && currentUsuarioTableId) {
+      result = result.filter(orc => orc.vendedor_id === currentUsuarioTableId);
+    }
+    
+    // Filtrar por global filter
+    if (globalFilter) {
+      result = result.filter((orc) => {
+        if (globalFilter.type === 'customer') {
+          return orc.cliente_id === globalFilter.id;
+        }
+        if (globalFilter.type === 'empresa') {
+          return orc.empresa_id === globalFilter.id;
+        }
+        return true;
+      });
+    }
+    
+    return result;
+  }, [orcamentos, globalFilter, showOnlyMyOrcamentos, currentUsuarioTableId]);
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
@@ -4166,6 +4188,8 @@ ${recentMessages}
                 filteredOrcamentos={filteredOrcamentos}
                 orcamentosStatusFilter={orcamentosStatusFilter}
                 setOrcamentosStatusFilter={setOrcamentosStatusFilter}
+                showOnlyMyOrcamentos={showOnlyMyOrcamentos}
+                setShowOnlyMyOrcamentos={setShowOnlyMyOrcamentos}
                 selectedOrcamentoId={selectedOrcamentoId}
                 setSelectedOrcamentoId={(id) => {
                   setSelectedOrcamentoId(id);
@@ -5527,6 +5551,25 @@ ${recentMessages}
                     </PopoverContent>
                   </Popover>
                 </div>
+                {/* Toggle Meus/Todos */}
+                <div className="flex gap-0.5 bg-white/50 dark:bg-background/50 rounded-lg border border-orange-100 dark:border-orange-900/50">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowOnlyMyOrcamentos(false)}
+                    className={`h-7 px-2 text-xs rounded-md ${!showOnlyMyOrcamentos ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300' : 'text-muted-foreground hover:bg-orange-50 dark:hover:bg-orange-900/20'}`}
+                  >
+                    Todos
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowOnlyMyOrcamentos(true)}
+                    className={`h-7 px-2 text-xs rounded-md ${showOnlyMyOrcamentos ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300' : 'text-muted-foreground hover:bg-orange-50 dark:hover:bg-orange-900/20'}`}
+                  >
+                    Meus
+                  </Button>
+                </div>
                 <div className="flex-1" />
                 {/* Botão Novo */}
                 <Button 
@@ -6816,6 +6859,8 @@ interface MobileListContentProps {
   filteredOrcamentos: any[];
   orcamentosStatusFilter: string;
   setOrcamentosStatusFilter: (filter: string) => void;
+  showOnlyMyOrcamentos: boolean;
+  setShowOnlyMyOrcamentos: (value: boolean) => void;
   selectedOrcamentoId: string | null;
   setSelectedOrcamentoId: (id: string | null) => void;
   setOrcamentoSheetOpen: (open: boolean) => void;
@@ -6874,6 +6919,8 @@ function MobileListContent({
   filteredOrcamentos,
   orcamentosStatusFilter,
   setOrcamentosStatusFilter,
+  showOnlyMyOrcamentos,
+  setShowOnlyMyOrcamentos,
   selectedOrcamentoId,
   setSelectedOrcamentoId,
   setOrcamentoSheetOpen,
@@ -7152,6 +7199,25 @@ function MobileListContent({
                 <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
               </SelectContent>
             </Select>
+            {/* Toggle Meus/Todos */}
+            <div className="flex gap-0.5 bg-white/50 dark:bg-background/50 rounded-lg border border-border/50">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowOnlyMyOrcamentos(false)}
+                className={`h-10 px-2 text-xs rounded-md ${!showOnlyMyOrcamentos ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}
+              >
+                Todos
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowOnlyMyOrcamentos(true)}
+                className={`h-10 px-2 text-xs rounded-md ${showOnlyMyOrcamentos ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}
+              >
+                Meus
+              </Button>
+            </div>
             <Button 
               size="sm" 
               onClick={() => onNovoOrcamentoClick?.()}
