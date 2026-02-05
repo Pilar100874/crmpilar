@@ -99,13 +99,14 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
       }
     }
 
-    // Check opt-in requirement
-    if (perms.optin_required && !contact.optin_whatsapp) {
-      return {
-        isBlocked: true,
-        blockReason: 'Opt-in WhatsApp não concedido'
-      };
-    }
+    // Check opt-in requirement (skip this check if optin_whatsapp column doesn't exist)
+    // This check is disabled until the column is added to customers table
+    // if (perms.optin_required && !contact.optin_whatsapp) {
+    //   return {
+    //     isBlocked: true,
+    //     blockReason: 'Opt-in WhatsApp não concedido'
+    //   };
+    // }
 
     // Check blocked tags
     if (perms.blocked_tags && perms.blocked_tags.length > 0 && contact.tags) {
@@ -189,7 +190,6 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
           email,
           tags,
           created_at,
-          optin_whatsapp,
           customer_empresas (
             empresa_id,
             empresas (
@@ -280,7 +280,7 @@ export function useContactsFilter(estabelecimentoId: string, canal: CanalEnvio |
           blockReason: blockInfo.blockReason,
           lastContactDays: daysSinceContact,
           hasReplied,
-          hasOptin: c.optin_whatsapp || false
+          hasOptin: false // Column doesn't exist yet
         };
       });
 
