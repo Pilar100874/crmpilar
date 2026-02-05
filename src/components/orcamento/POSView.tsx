@@ -794,8 +794,9 @@ export default function POSView({
         if (data.token_compartilhamento) {
           const link = `${window.location.origin}/orcamento/${data.token_compartilhamento}`;
           setShareLink(link);
-          setActiveTab("share");
         }
+        // Sempre abrir na aba carrinho
+        setActiveTab("cart");
       }
     } catch (error: any) {
       console.error('Erro ao carregar orçamento:', error);
