@@ -529,44 +529,6 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
         </CardContent>
       </Card>
 
-      {/* Variáveis disponíveis */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Variable className="h-4 w-4" />
-            Variáveis Disponíveis
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {VARIAVEIS_DISPONIVEIS.map((v) => (
-              <div
-                key={v.key}
-                className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border"
-              >
-                <div>
-                  <code className="text-sm font-mono bg-background px-2 py-0.5 rounded">
-                    {v.key}
-                  </code>
-                  <p className="text-xs text-muted-foreground mt-1">{v.desc}</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleCopyVariable(v.key)}
-                >
-                  {copiedVar === v.key ? (
-                    <Check className="h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Dialog de confirmação de exclusão */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
