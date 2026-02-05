@@ -249,16 +249,66 @@ export function TemplateContentEditor({
   const loadMedia = async () => {
     setLoadingMedia(true);
     try {
-      const { data, error } = await supabase
+      // Fetch from media_gallery
+      const { data: galleryData, error: galleryError } = await supabase
         .from('media_gallery')
         .select('*')
         .eq('estabelecimento_id', estabelecimentoId)
         .in('tipo', ['image', 'video'])
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setMedia((data || []) as MediaGalleryItem[]);
+      if (galleryError) console.warn('Error fetching media gallery:', galleryError);
+
+      // Fetch from catalog_ai_images
+      const { data: aiData, error: aiError } = await supabase
+        .from('catalog_ai_images')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .order('created_at', { ascending: false });
+
+      if (aiError) console.warn('Error fetching AI images:', aiError);
+
+      // Fetch from quick_attachments (images only)
+      const { data: attachmentsData, error: attachmentsError } = await supabase
+        .from('quick_attachments')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('file_type', 'image')
+        .order('created_at', { ascending: false });
+
+      if (attachmentsError) console.warn('Error fetching attachments:', attachmentsError);
+
+      // Combine all sources
+      const combinedMedia: MediaGalleryItem[] = [
+        ...(galleryData || []).map((item: any) => ({
+          id: item.id,
+          tipo: item.tipo as MediaGalleryItem['tipo'],
+          storage_path: item.storage_path,
+          public_url: item.public_url,
+          nome: item.nome,
+          descricao: item.descricao,
+          thumbnail_url: item.thumbnail_url,
+          duracao_segundos: item.duracao_segundos
+        })),
+        ...(aiData || []).map((item: any) => ({
+          id: `ai-${item.id}`,
+          tipo: 'image' as const,
+          storage_path: item.storage_path,
+          public_url: item.public_url,
+          nome: item.prompt || 'Imagem IA',
+          descricao: item.prompt
+        })),
+        ...(attachmentsData || []).map((item: any) => ({
+          id: `attach-${item.id}`,
+          tipo: 'image' as const,
+          storage_path: '',
+          public_url: item.url,
+          nome: item.title,
+          thumbnail_url: item.thumbnail_url
+        }))
+      ];
+
+      setMedia(combinedMedia);
     } catch (error: any) {
       console.error('Erro ao carregar mídia:', error);
     } finally {
