@@ -24,7 +24,8 @@ import {
   Phone,
   Video,
   Wrench,
-  Send
+  Send,
+  FileText
 } from 'lucide-react';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,7 +58,7 @@ import IAConfigCRUD from '@/components/config/IAConfigCRUD';
 import SLAConfigCRUD from '@/components/config/SLAConfigCRUD';
 import FerramentasAtendimentoCRUD from '@/components/config/FerramentasAtendimentoCRUD';
 import { EnvioMassaWebhookConfig } from '@/components/config/EnvioMassaWebhookConfig';
-
+import { EnvioMassaTemplatesCRUD } from '@/components/config/EnvioMassaTemplatesCRUD';
 
 // Import Bot components
 import BotCreate from './BotCreate';
@@ -88,6 +89,7 @@ const tabItems: TabItem[] = [
   { id: 'base-conhecimento', label: 'Base de Conhecimento', icon: BookOpen },
   { id: 'ia-config', label: 'Configurações de IA', icon: Brain },
   { id: 'sla', label: 'SLA de Atendimento', icon: Clock },
+  { id: 'templates-mensagem', label: 'Templates de Mensagem', icon: FileText },
   { id: 'envio-massa', label: 'Webhook de Disparo', icon: Send },
   { id: 'bot-criar', label: 'Criar / Editar Bot', icon: Plus },
   { id: 'bot-testar', label: 'Testar Bot', icon: TestTube2 },
@@ -605,6 +607,14 @@ export default function AtendimentoConfig() {
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6">{estabelecimentoId && <SLAConfigCRUD estabelecimentoId={estabelecimentoId} />}</CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="templates-mensagem" className="mt-0 h-full overflow-y-auto">
+              <div className="px-3 sm:px-6 py-3">
+                {estabelecimentoId && (
+                  <EnvioMassaTemplatesCRUD estabelecimentoId={estabelecimentoId} />
+                )}
+              </div>
             </TabsContent>
 
             <TabsContent value="envio-massa" className="mt-0 h-full overflow-y-auto">
