@@ -126,6 +126,9 @@ export default function POSView({
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [regrasAplicadas, setRegrasAplicadas] = useState<Array<{ nome: string; detalhes: string; desconto?: number; percentual?: number }>>([]);
   const [valorComRegras, setValorComRegras] = useState<number>(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [usuarioResponsavel, setUsuarioResponsavel] = useState<{ id: string; nome: string } | null>(null);
+  const [isClienteDeOutroUsuario, setIsClienteDeOutroUsuario] = useState(false);
   const [detalhesRegras, setDetalhesRegras] = useState<string>("");
   const [expandedRegraIndex, setExpandedRegraIndex] = useState<number | null>(null);
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
@@ -336,6 +339,44 @@ export default function POSView({
     loadClientesPorEmpresa();
   }, [selectedEmpresa]);
 
+  // Verificar se o contato selecionado pertence ao usuário logado
+  useEffect(() => {
+    const verificarResponsavel = async () => {
+      setIsClienteDeOutroUsuario(false);
+      setUsuarioResponsavel(null);
+      
+      if (!selectedCliente || !currentUserId) return;
+      
+      try {
+        // Buscar usuário responsável pelo contato
+        const { data: vinculoData, error } = await supabase
+          .from('customer_vinculos')
+          .select(`
+            usuario_id,
+            usuario:usuarios!customer_vinculos_usuario_id_fkey(id, nome)
+          `)
+          .eq('customer_id', selectedCliente)
+          .not('usuario_id', 'is', null)
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Erro ao verificar responsável:', error);
+          return;
+        }
+
+        if (vinculoData && vinculoData.usuario_id && vinculoData.usuario_id !== currentUserId) {
+          setIsClienteDeOutroUsuario(true);
+          setUsuarioResponsavel(vinculoData.usuario as any);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar responsável:', error);
+      }
+    };
+
+    verificarResponsavel();
+  }, [selectedCliente, currentUserId]);
+
   // Carregar configuração de veículo para cálculo de frete
   useEffect(() => {
     const loadVeiculoConfig = async () => {
@@ -418,6 +459,24 @@ export default function POSView({
     const result = calculateFreteCost(veiculoConfig, viagem);
     setFreteResult(result);
   }, [veiculoConfig, autoRouteInfo, freteIdaEVolta, numAjudantes, pedagioResult.total, pedagioResult.calculated]);
+
+  // Carregar ID do usuário logado
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: userData } = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .single();
+        if (userData) {
+          setCurrentUserId(userData.id);
+        }
+      }
+    };
+    loadCurrentUser();
+  }, []);
 
   useEffect(() => {
     loadProdutos();
@@ -2326,6 +2385,21 @@ export default function POSView({
                   </Command>
                 </PopoverContent>
               </Popover>
+              
+              {/* Aviso de cliente de outro usuário */}
+              {isClienteDeOutroUsuario && usuarioResponsavel && (
+                <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="text-[10px] text-amber-700 dark:text-amber-300">
+                      <p className="font-medium">Contato de outro usuário</p>
+                      <p className="mt-0.5">
+                        Ao salvar, o orçamento será atribuído a <span className="font-semibold">{usuarioResponsavel.nome}</span>, responsável por este contato.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
