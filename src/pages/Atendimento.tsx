@@ -1806,16 +1806,10 @@ export default function Atendimento() {
         .select(`
           *,
           customers:cliente_id (
+            id,
             nome,
             telefone,
-            email,
-            customer_vinculos (
-              usuario_id,
-              usuarios:usuario_id (
-                id,
-                nome
-              )
-            )
+            email
           ),
           empresas:empresa_id (
             nome_fantasia,
@@ -1829,8 +1823,44 @@ export default function Atendimento() {
           )
         `)
         .eq('estabelecimento_id', estabelecimentoId)
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: false })
         .limit(50);
+      
+      // Buscar vínculos separadamente se houver clientes
+      const clienteIds = orcamentosData?.map(o => o.cliente_id).filter(Boolean) || [];
+      let vinculosMap: Record<string, any[]> = {};
+      
+      if (clienteIds.length > 0) {
+        const { data: vinculosData } = await supabase
+          .from('customer_vinculos')
+          .select(`
+            customer_id,
+            usuario_id,
+            usuarios:usuario_id (
+              id,
+              nome
+            )
+          `)
+          .in('customer_id', clienteIds);
+        
+        if (vinculosData) {
+          vinculosData.forEach(v => {
+            if (!vinculosMap[v.customer_id]) {
+              vinculosMap[v.customer_id] = [];
+            }
+            vinculosMap[v.customer_id].push(v);
+          });
+        }
+      }
+      
+      // Adicionar vínculos aos orçamentos
+      const orcamentosComVinculos = (orcamentosData || []).map(orc => ({
+        ...orc,
+        customers: orc.customers ? {
+          ...orc.customers,
+          customer_vinculos: vinculosMap[orc.cliente_id] || []
+        } : null
+      }));
 
       if (error) {
         console.error("Erro ao carregar orçamentos:", error);
@@ -1838,7 +1868,7 @@ export default function Atendimento() {
       }
 
       // Calcular valor_total real a partir dos itens
-      const orcamentosComTotalReal = (orcamentosData || []).map(orc => {
+      const orcamentosComTotalReal = orcamentosComVinculos.map(orc => {
         const totalCalculado = orc.itens?.reduce((sum: number, item: any) => {
           return sum + (item.quantidade * item.preco_unitario);
         }, 0) || 0;
