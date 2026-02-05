@@ -4346,6 +4346,9 @@ ${recentMessages}
                   setMobileView("list");
                   loadOrcamentos();
                 }}
+                onOrcamentoSave={() => {
+                  loadOrcamentos();
+                }}
                 onReply={(email) => {
                   const replySubject = email.subject?.startsWith('Re:') ? email.subject : `Re: ${email.subject || ''}`;
                   const replyBody = `\n\n---\nEm ${format(new Date(email.date), "dd/MM/yyyy HH:mm", { locale: ptBR })}, ${email.from_email} escreveu:\n${email.body || ''}`;
@@ -6710,6 +6713,9 @@ ${recentMessages}
               setSelectedOrcamentoData(null);
               loadOrcamentos();
             }}
+            onSave={() => {
+              loadOrcamentos();
+            }}
             showClientDetails={showClientDetailsOrcamento}
             onToggleClientDetails={() => {
               const newState = !showClientDetailsOrcamento;
@@ -7700,6 +7706,7 @@ interface MobileMainContentProps {
   initialEmpresaForOrcamento?: string | null;
   onOrcamentoClose?: () => void;
   onOrcamentoDelete?: () => void;
+  onOrcamentoSave?: () => void;
   onReply?: (email: any) => void;
   onForward?: (email: any) => void;
 }
@@ -7755,6 +7762,7 @@ function MobileMainContent({
   initialEmpresaForOrcamento,
   onOrcamentoClose,
   onOrcamentoDelete,
+  onOrcamentoSave,
   onReply,
   onForward,
 }: MobileMainContentProps) {
@@ -7965,6 +7973,7 @@ function MobileMainContent({
           orcamentoId={selectedOrcamentoId || undefined}
           onClose={onOrcamentoClose}
           onDelete={onOrcamentoDelete}
+          onSave={onOrcamentoSave}
           showClientDetails={false}
           onToggleClientDetails={() => {}}
           showPanelToggle={false}
