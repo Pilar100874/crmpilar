@@ -84,11 +84,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Info } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface POSViewProps {
   estabelecimentoId: string;
   orcamentoId?: string | null;
   onClose?: () => void;
+  onDelete?: () => void;
   showClientDetails?: boolean;
   onToggleClientDetails?: () => void;
   showPanelToggle?: boolean;
@@ -100,6 +102,7 @@ export default function POSView({
   estabelecimentoId, 
   orcamentoId, 
   onClose,
+  onDelete,
   showClientDetails = false,
   onToggleClientDetails,
   showPanelToggle = false,
@@ -191,8 +194,43 @@ export default function POSView({
   const [numAjudantes, setNumAjudantes] = useState(0);
   const [veiculoConfig, setVeiculoConfig] = useState<VeiculoConfig | null>(null);
   const [showFreteDetailedInTab, setShowFreteDetailedInTab] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Load custom fields when group changes
+  // Função para excluir orçamento
+  const handleDeleteOrcamento = async () => {
+    if (!orcamentoId) return;
+    
+    setIsDeleting(true);
+    try {
+      // Primeiro excluir os itens do orçamento
+      const { error: itemsError } = await supabase
+        .from('orcamento_itens')
+        .delete()
+        .eq('orcamento_id', orcamentoId);
+
+      if (itemsError) throw itemsError;
+
+      // Depois excluir o orçamento
+      const { error } = await supabase
+        .from('orcamentos')
+        .delete()
+        .eq('id', orcamentoId);
+
+      if (error) throw error;
+
+      toast.success("Orçamento excluído com sucesso!");
+      setShowDeleteDialog(false);
+      onDelete?.();
+      onClose?.();
+    } catch (error: any) {
+      console.error('Erro ao excluir orçamento:', error);
+      toast.error("Erro ao excluir orçamento");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   useEffect(() => {
     if (selectedGrupo && selectedGrupo !== "" && selectedGrupo !== "all") {
       loadCamposCustomizados(selectedGrupo);
@@ -1245,6 +1283,17 @@ export default function POSView({
               >
                 <Package className="w-4 h-4" />
               </Button>
+              {orcamentoId && (
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className={`bg-background border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 ${isCompact ? 'h-10 w-10' : ''}`}
+                  onClick={() => setShowDeleteDialog(true)}
+                  title="Excluir orçamento"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
               {onClose && (
                 <Button 
                   variant="outline" 
@@ -2957,6 +3006,16 @@ export default function POSView({
         }}
         regrasAplicadas={regrasAplicadas}
         defaultTab={pedagioDialogDefaultTab}
+      />
+
+      {/* Dialog de confirmação de exclusão */}
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleDeleteOrcamento}
+        title="Excluir Orçamento"
+        description={`Tem certeza que deseja excluir este orçamento? Todos os itens serão removidos. Esta ação não pode ser desfeita.`}
+        isLoading={isDeleting}
       />
 
     </div>
