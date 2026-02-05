@@ -18,8 +18,7 @@ import {
   Package, 
   Copy,
   Share2,
-  CheckCircle,
-  XCircle
+  Trash2
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -28,21 +27,57 @@ import ImageItemExtractor from "./ImageItemExtractor";
 import AddItemForm from "./AddItemForm";
 import OrcamentoItemCard from "./OrcamentoItemCard";
 import { supabase } from "@/integrations/supabase/client";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 
 interface OrcamentoDetailsDialogProps {
   orcamento: Orcamento;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: () => void;
+  onDelete?: () => void;
 }
 
 export default function OrcamentoDetailsDialog({ 
   orcamento, 
   open, 
   onOpenChange,
-  onSave 
+  onSave,
+  onDelete 
 }: OrcamentoDetailsDialogProps) {
   const [activeTab, setActiveTab] = useState("detalhes");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      // Primeiro excluir os itens do orçamento
+      const { error: itemsError } = await supabase
+        .from('orcamento_itens')
+        .delete()
+        .eq('orcamento_id', orcamento.id);
+
+      if (itemsError) throw itemsError;
+
+      // Depois excluir o orçamento
+      const { error } = await supabase
+        .from('orcamentos')
+        .delete()
+        .eq('id', orcamento.id);
+
+      if (error) throw error;
+
+      toast.success("Orçamento excluído com sucesso!");
+      setShowDeleteDialog(false);
+      onOpenChange(false);
+      onDelete?.();
+    } catch (error: any) {
+      console.error('Erro ao excluir orçamento:', error);
+      toast.error("Erro ao excluir orçamento");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleCopyLink = () => {
     if (orcamento.token_compartilhamento) {
@@ -104,8 +139,26 @@ export default function OrcamentoDetailsDialog({
                 <Copy className="w-4 h-4 mr-2" />
                 Duplicar
               </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Excluir
+              </Button>
             </div>
           </div>
+          
+          <DeleteConfirmDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+            onConfirm={handleDelete}
+            title="Excluir Orçamento"
+            description={`Tem certeza que deseja excluir o orçamento #${orcamento.id.slice(0, 8)}? Todos os itens serão removidos. Esta ação não pode ser desfeita.`}
+            isLoading={isDeleting}
+          />
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
