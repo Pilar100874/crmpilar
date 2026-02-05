@@ -40,6 +40,26 @@ export default function Orcamentos() {
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [estabelecimentoId, setEstabelecimentoId] = useState<string>("");
   const [selectedOrcamento, setSelectedOrcamento] = useState<Orcamento | null>(null);
+  const [showOnlyMine, setShowOnlyMine] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Carregar ID do usuário logado
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: userData } = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .single();
+        if (userData) {
+          setCurrentUserId(userData.id);
+        }
+      }
+    };
+    loadCurrentUser();
+  }, []);
 
   useEffect(() => {
     loadOrcamentos();
@@ -86,6 +106,11 @@ export default function Orcamentos() {
   const columns = useMemo(() => {
     let filtered = orcamentos;
 
+    // Filtrar apenas meus orçamentos
+    if (showOnlyMine && currentUserId) {
+      filtered = filtered.filter(o => o.vendedor_id === currentUserId);
+    }
+
     if (searchQuery) {
       filtered = filtered.filter(o => 
         o.cliente?.nome?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -107,7 +132,7 @@ export default function Orcamentos() {
       color: etapa.color,
       orcamentos: filtered.filter(o => o.etapa === etapa.id),
     }));
-  }, [orcamentos, searchQuery, filterVendedor, filterEtapa]);
+  }, [orcamentos, searchQuery, filterVendedor, filterEtapa, showOnlyMine, currentUserId]);
 
   const flatOrcamentos = useMemo(() => {
     return columns.flatMap(col => col.orcamentos);
@@ -221,6 +246,28 @@ export default function Orcamentos() {
                 <SelectItem value="aprovacao_gerencia">Aprovação Gerência</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Toggle Meus/Todos */}
+            <div className="flex gap-1 border rounded-md">
+              <Button
+                variant={!showOnlyMine ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setShowOnlyMine(false)}
+                title="Ver todos os orçamentos"
+                className="px-3"
+              >
+                Todos
+              </Button>
+              <Button
+                variant={showOnlyMine ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setShowOnlyMine(true)}
+                title="Ver apenas meus orçamentos"
+                className="px-3"
+              >
+                Meus
+              </Button>
+            </div>
 
             <div className="flex gap-1 border rounded-md">
               <Button
