@@ -148,6 +148,7 @@ const menuItems: MenuItem[] = [
       { id: "TV Veículos", title: "Dashboard Veículos", url: "/tv/veiculos", icon: LucideIcons.Truck },
     ]
   },
+  { id: "Templates Mensagem", title: "Templates de Mensagem", url: "/templates-mensagem", icon: FileText },
   { id: "Configurações", title: "Configurações", url: "/config", icon: Settings },
 ];
 
