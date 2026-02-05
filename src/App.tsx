@@ -97,6 +97,7 @@ import Avisos from "./pages/Avisos";
 import EmailConfig from "./pages/EmailConfig";
 import OrcamentoReportConfig from "./pages/OrcamentoReportConfig";
 import Macros from "./pages/Macros";
+import TemplatesMensagem from "./pages/TemplatesMensagem";
 import WatchDashboard from "./pages/WatchDashboard";
 import WatchDashboardHome from "./pages/watch/WatchDashboardHome";
 import WatchAgenda from "./pages/watch/WatchAgenda";
@@ -214,6 +215,7 @@ const App = () => (
               <Route path="/robo-precos" element={<RoboPrecos />} />
               <Route path="/whatsapp-catalogo" element={<WhatsAppCatalogo />} />
               <Route path="/macros" element={<Macros />} />
+              <Route path="/templates-mensagem" element={<TemplatesMensagem />} />
               {/* Ads Routes */}
               <Route path="/ads" element={<AdsHub />} />
               <Route path="/ads/:platform" element={<AdsPlatformDashboard />} />

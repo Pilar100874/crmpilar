@@ -57,7 +57,7 @@ import IAConfigCRUD from '@/components/config/IAConfigCRUD';
 import SLAConfigCRUD from '@/components/config/SLAConfigCRUD';
 import FerramentasAtendimentoCRUD from '@/components/config/FerramentasAtendimentoCRUD';
 import { EnvioMassaWebhookConfig } from '@/components/config/EnvioMassaWebhookConfig';
-import { EnvioMassaTemplatesCRUD } from '@/components/config/EnvioMassaTemplatesCRUD';
+
 
 // Import Bot components
 import BotCreate from './BotCreate';
@@ -610,10 +610,7 @@ export default function AtendimentoConfig() {
             <TabsContent value="envio-massa" className="mt-0 h-full overflow-y-auto">
               <div className="space-y-6 px-3 sm:px-6 py-3">
                 {estabelecimentoId && (
-                  <>
-                    <EnvioMassaTemplatesCRUD estabelecimentoId={estabelecimentoId} />
-                    <EnvioMassaWebhookConfig estabelecimentoId={estabelecimentoId} />
-                  </>
+                  <EnvioMassaWebhookConfig estabelecimentoId={estabelecimentoId} />
                 )}
               </div>
             </TabsContent>

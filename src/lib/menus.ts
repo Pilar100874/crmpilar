@@ -48,6 +48,7 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "TV Vendas", label: "TV Vendas", category: "TV" },
   { id: "TV Veículos", label: "TV Veículos", category: "TV" },
   
+  { id: "Templates Mensagem", label: "Templates de Mensagem", category: "Sistema" },
   { id: "Configurações", label: "Configurações", category: "Sistema" },
   { id: "Macros", label: "Macros", category: "Sistema" },
   { id: "Avisos", label: "Avisos", category: "Sistema" },
