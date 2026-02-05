@@ -268,115 +268,71 @@ export function EnvioMassaTemplatesCRUD({ estabelecimentoId }: EnvioMassaTemplat
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main form */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Informações do Template</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Nome do Template *</Label>
-                    <Input
-                      placeholder="Ex: Boas-vindas, Promoção de Verão..."
-                      value={formData.nome}
-                      onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Descrição (opcional)</Label>
-                    <Input
-                      placeholder="Descrição para identificação interna"
-                      value={formData.descricao}
-                      onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="ativo"
-                    checked={formData.ativo}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, ativo: checked }))}
-                  />
-                  <Label htmlFor="ativo">Template ativo</Label>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Conteúdo do Template</CardTitle>
-                <CardDescription>
-                  Adicione textos, imagens, vídeos, catálogos e anexos. Arraste para reordenar.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <TemplateContentEditor
-                  contentItems={formData.content_items}
-                  onContentChange={(items) => setFormData(prev => ({ ...prev, content_items: items }))}
-                  estabelecimentoId={estabelecimentoId}
-                />
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={handleBackToList}>
-                Cancelar
-              </Button>
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? (
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                Salvar Template
-              </Button>
-            </div>
-          </div>
-
-          {/* Sidebar with variables */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Variable className="h-4 w-4" />
-                  Variáveis Disponíveis
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Informações do Template</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  {VARIAVEIS_DISPONIVEIS.map((v) => (
-                    <div
-                      key={v.key}
-                      className="flex items-center justify-between p-2 rounded-lg bg-muted/50 border"
-                    >
-                      <div>
-                        <code className="text-xs font-mono bg-background px-2 py-0.5 rounded">
-                          {v.key}
-                        </code>
-                        <p className="text-xs text-muted-foreground mt-1">{v.desc}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => handleCopyVariable(v.key)}
-                      >
-                        {copiedVar === v.key ? (
-                          <Check className="h-3 w-3 text-emerald-500" />
-                        ) : (
-                          <Copy className="h-3 w-3" />
-                        )}
-                      </Button>
-                    </div>
-                  ))}
+                  <Label>Nome do Template *</Label>
+                  <Input
+                    placeholder="Ex: Boas-vindas, Promoção de Verão..."
+                    value={formData.nome}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                  />
                 </div>
-              </CardContent>
-            </Card>
+
+                <div className="space-y-2">
+                  <Label>Descrição (opcional)</Label>
+                  <Input
+                    placeholder="Descrição para identificação interna"
+                    value={formData.descricao}
+                    onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="ativo"
+                  checked={formData.ativo}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, ativo: checked }))}
+                />
+                <Label htmlFor="ativo">Template ativo</Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Conteúdo do Template</CardTitle>
+              <CardDescription>
+                Adicione textos, imagens, vídeos, catálogos e anexos. Arraste para reordenar.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TemplateContentEditor
+                contentItems={formData.content_items}
+                onContentChange={(items) => setFormData(prev => ({ ...prev, content_items: items }))}
+                estabelecimentoId={estabelecimentoId}
+              />
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={handleBackToList}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Salvar Template
+            </Button>
           </div>
         </div>
 
