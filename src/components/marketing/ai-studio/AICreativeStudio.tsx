@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import {
   ReactFlow,
   Controls,
@@ -15,13 +16,14 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
-import { Play, Save, Trash2, Undo, Redo, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { Play, Save, Trash2, Undo, Redo, ZoomIn, ZoomOut, Maximize2, Clapperboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
 import StudioNodeComponent from './StudioNodeComponent';
 import StudioNodeLibrary from './StudioNodeLibrary';
 import StudioNodeConfigPanel from './StudioNodeConfigPanel';
 import { useStudioExecution } from './useStudioExecution';
+import PresetsGallery, { Preset } from './PresetsGallery';
 
 const nodeTypes = {
   studioNode: StudioNodeComponent,
@@ -34,6 +36,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<StudioNode | null>(null);
+  const [showPresets, setShowPresets] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
   const { executeWorkflow, isExecuting } = useStudioExecution();
@@ -116,6 +119,37 @@ const AICreativeStudioInner: React.FC = () => {
     setSelectedNode(null);
   }, [setNodes, setEdges]);
 
+  const handlePresetSelect = useCallback((preset: Preset) => {
+    // Create a text input node with the preset prompt and a videoGen node connected to it
+    const inputNode: StudioNode = {
+      id: `textInput_${Date.now()}`,
+      type: 'studioNode',
+      position: { x: 100, y: 200 },
+      data: {
+        label: `Preset: ${preset.name}`,
+        type: 'textInput',
+        config: { text: preset.prompt },
+      },
+    };
+    const videoNode: StudioNode = {
+      id: `videoGen_${Date.now()}`,
+      type: 'studioNode',
+      position: { x: 500, y: 200 },
+      data: {
+        label: 'Gerar Vídeo',
+        type: 'videoGen',
+        config: { duration: 5, resolution: '1080p', aspectRatio: '16:9' },
+      },
+    };
+    setNodes((nds) => [...nds, inputNode, videoNode]);
+    setEdges((eds) => [
+      ...eds,
+      { id: `e_${inputNode.id}_${videoNode.id}`, source: inputNode.id, target: videoNode.id, animated: true, style: { stroke: '#6366f1', strokeWidth: 2 } },
+    ]);
+    setShowPresets(false);
+    toast.success(`Preset "${preset.name}" aplicado ao workflow!`);
+  }, [setNodes, setEdges]);
+
   return (
     <div className="flex h-[calc(100vh-200px)] min-h-[600px] border rounded-xl overflow-hidden bg-background">
       {/* Node Library */}
@@ -173,6 +207,11 @@ const AICreativeStudioInner: React.FC = () => {
               <Button size="icon" variant="ghost" onClick={clearAll} title="Limpar tudo">
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
+              <div className="w-px h-6 bg-border" />
+              <Button size="sm" variant="outline" onClick={() => setShowPresets(true)} className="gap-2" title="Presets de câmera e efeitos">
+                <Clapperboard className="h-4 w-4" />
+                Presets
+              </Button>
             </div>
           </Panel>
 
@@ -190,6 +229,16 @@ const AICreativeStudioInner: React.FC = () => {
             </Panel>
           )}
         </ReactFlow>
+
+        {/* Presets Gallery overlay */}
+        <AnimatePresence>
+          {showPresets && (
+            <PresetsGallery
+              onSelectPreset={handlePresetSelect}
+              onClose={() => setShowPresets(false)}
+            />
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Config Panel */}
