@@ -165,9 +165,13 @@ const AICreativeStudioInner: React.FC = () => {
         nodes as StudioNode[],
         edges,
         startFromNodeId,
-        (realtimeNodes) => setNodes(realtimeNodes as any)
+        (realtimeNodes) => {
+          // Use functional update to ensure ReactFlow detects data changes
+          setNodes(() => realtimeNodes.map(n => ({ ...n, data: { ...n.data } })) as any);
+        }
       );
-      setNodes(updatedNodes as any);
+      // Final update with all results - force new references
+      setNodes(() => updatedNodes.map(n => ({ ...n, data: { ...n.data } })) as any);
       toast.success(startFromNodeId ? 'Execução parcial concluída!' : 'Workflow executado com sucesso!');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao executar workflow');
