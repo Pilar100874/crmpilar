@@ -2,33 +2,26 @@ import React, { useState } from 'react';
 import { NODE_CATEGORIES } from './types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Plus, X, ChevronRight, ChevronDown, Search, GripVertical } from 'lucide-react';
+import { Plus, X, Search, GripVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 
-const CATEGORY_GRADIENTS: Record<string, { from: string; to: string; accent: string }> = {
-  input: { from: '#6366f1', to: '#8b5cf6', accent: 'rgba(99,102,241,0.12)' },
-  'ai-text': { from: '#0ea5e9', to: '#06b6d4', accent: 'rgba(14,165,233,0.12)' },
-  'ai-image': { from: '#f43f5e', to: '#ec4899', accent: 'rgba(244,63,94,0.12)' },
-  'ai-video': { from: '#f59e0b', to: '#f97316', accent: 'rgba(245,158,11,0.12)' },
-  'ai-audio': { from: '#22c55e', to: '#10b981', accent: 'rgba(34,197,94,0.12)' },
-  output: { from: '#64748b', to: '#475569', accent: 'rgba(100,116,139,0.12)' },
+const CATEGORY_COLORS: Record<string, { bg: string; border: string; dot: string }> = {
+  input: { bg: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.15)', dot: '#6366f1' },
+  'ai-text': { bg: 'rgba(14,165,233,0.08)', border: 'rgba(14,165,233,0.15)', dot: '#0ea5e9' },
+  'ai-image': { bg: 'rgba(244,63,94,0.08)', border: 'rgba(244,63,94,0.15)', dot: '#f43f5e' },
+  'ai-video': { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.15)', dot: '#f59e0b' },
+  'ai-audio': { bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.15)', dot: '#22c55e' },
+  output: { bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.15)', dot: '#64748b' },
 };
 
 const StudioNodeLibrary: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [expandedCats, setExpandedCats] = useState<string[]>(NODE_CATEGORIES.map(c => c.id));
   const [search, setSearch] = useState('');
 
   const onDragStart = (event: React.DragEvent, nodeType: string) => {
     event.dataTransfer.setData('application/studioNodeType', nodeType);
     event.dataTransfer.effectAllowed = 'move';
-  };
-
-  const toggleCat = (catId: string) => {
-    setExpandedCats(prev =>
-      prev.includes(catId) ? prev.filter(c => c !== catId) : [...prev, catId]
-    );
   };
 
   const filteredCategories = NODE_CATEGORIES.map(cat => ({
@@ -48,9 +41,7 @@ const StudioNodeLibrary: React.FC = () => {
               size="icon"
               onClick={() => setIsOpen(true)}
               className="h-11 w-11 rounded-xl shadow-xl border-0"
-              style={{
-                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              }}
+              style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
             >
               <Plus className="h-5 w-5 text-white" />
             </Button>
@@ -61,20 +52,20 @@ const StudioNodeLibrary: React.FC = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ x: -280, opacity: 0 }}
+            initial={{ x: -300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -280, opacity: 0 }}
+            exit={{ x: -300, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className="absolute top-3 left-3 z-20 w-[268px] flex flex-col overflow-hidden rounded-2xl border border-border/50"
+            className="absolute top-3 left-3 z-20 w-[280px] flex flex-col overflow-hidden rounded-2xl border border-border/50"
             style={{
               maxHeight: 'calc(100% - 24px)',
-              background: 'rgba(255,255,255,0.92)',
+              background: 'rgba(255,255,255,0.95)',
               backdropFilter: 'blur(20px)',
               boxShadow: '0 8px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.6) inset',
             }}
           >
             {/* Header */}
-            <div className="px-4 pt-4 pb-3">
+            <div className="px-4 pt-4 pb-3 shrink-0">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
                   <div
@@ -108,86 +99,64 @@ const StudioNodeLibrary: React.FC = () => {
               </div>
             </div>
 
-            <div className="h-px bg-border/50 mx-3" />
+            <div className="h-px bg-border/40 mx-3 shrink-0" />
 
-            {/* Node list */}
+            {/* Flat list - all nodes visible */}
             <ScrollArea className="flex-1">
-              <div className="p-3 space-y-2">
+              <div className="p-2.5 space-y-3">
                 {filteredCategories.map((cat) => {
-                  const isExpanded = expandedCats.includes(cat.id);
-                  const gradient = CATEGORY_GRADIENTS[cat.id] || CATEGORY_GRADIENTS.output;
+                  const colors = CATEGORY_COLORS[cat.id] || CATEGORY_COLORS.output;
 
                   return (
-                    <div key={cat.id} className="rounded-xl overflow-hidden">
-                      <button
-                        onClick={() => toggleCat(cat.id)}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-accent/50 transition-all text-left group"
-                      >
+                    <div key={cat.id}>
+                      {/* Category label */}
+                      <div className="flex items-center gap-2 px-2 mb-1.5">
                         <div
-                          className="h-6 w-6 rounded-md flex items-center justify-center text-[11px] shrink-0"
-                          style={{ background: gradient.accent }}
-                        >
-                          {cat.icon}
-                        </div>
-                        <span className="text-[11px] font-semibold text-foreground/80 uppercase tracking-wider flex-1">
-                          {cat.label}
+                          className="h-2 w-2 rounded-full shrink-0"
+                          style={{ background: colors.dot }}
+                        />
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                          {cat.icon} {cat.label}
                         </span>
-                        <span className="text-[10px] text-muted-foreground/60 mr-1">{cat.nodes.length}</span>
-                        <motion.div
-                          animate={{ rotate: isExpanded ? 90 : 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <ChevronRight className="h-3 w-3 text-muted-foreground/50" />
-                        </motion.div>
-                      </button>
+                        <div className="flex-1 h-px bg-border/40" />
+                      </div>
 
-                      <AnimatePresence>
-                        {isExpanded && (
+                      {/* Nodes - always visible */}
+                      <div className="space-y-1">
+                        {cat.nodes.map((node) => (
                           <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden"
+                            key={node.type}
+                            draggable
+                            onDragStart={(e) => onDragStart(e as unknown as React.DragEvent, node.type)}
+                            whileHover={{ x: 3 }}
+                            whileTap={{ scale: 0.97 }}
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-grab active:cursor-grabbing transition-all group/node hover:shadow-sm"
+                            style={{
+                              background: colors.bg,
+                              border: `1px solid ${colors.border}`,
+                            }}
                           >
-                            <div className="space-y-1.5 px-1 pb-2 pt-1">
-                              {cat.nodes.map((node) => (
-                                <motion.div
-                                  key={node.type}
-                                  draggable
-                                  onDragStart={(e) => onDragStart(e as unknown as React.DragEvent, node.type)}
-                                  whileHover={{ scale: 1.02, y: -1 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl cursor-grab active:cursor-grabbing transition-all group/node"
-                                  style={{
-                                    background: `linear-gradient(135deg, ${gradient.accent}, transparent)`,
-                                    border: '1px solid rgba(0,0,0,0.04)',
-                                  }}
-                                >
-                                  <div
-                                    className="h-8 w-8 rounded-lg flex items-center justify-center text-base shrink-0 shadow-sm"
-                                    style={{
-                                      background: `linear-gradient(135deg, ${node.color}20, ${node.color}10)`,
-                                      border: `1px solid ${node.color}25`,
-                                    }}
-                                  >
-                                    {node.icon}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <p className="font-semibold text-[11px] truncate text-foreground/80 group-hover/node:text-foreground">
-                                      {node.label}
-                                    </p>
-                                    <p className="text-[9px] text-muted-foreground truncate leading-tight mt-0.5">
-                                      {node.description}
-                                    </p>
-                                  </div>
-                                  <GripVertical className="h-3 w-3 text-muted-foreground/30 group-hover/node:text-muted-foreground/60 shrink-0 transition-colors" />
-                                </motion.div>
-                              ))}
+                            <div
+                              className="h-7 w-7 rounded-md flex items-center justify-center text-sm shrink-0"
+                              style={{
+                                background: `${node.color}18`,
+                                border: `1px solid ${node.color}30`,
+                              }}
+                            >
+                              {node.icon}
                             </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-[11px] truncate text-foreground/80 group-hover/node:text-foreground leading-tight">
+                                {node.label}
+                              </p>
+                              <p className="text-[9px] text-muted-foreground truncate leading-tight">
+                                {node.description}
+                              </p>
+                            </div>
+                            <GripVertical className="h-3 w-3 text-muted-foreground/20 group-hover/node:text-muted-foreground/50 shrink-0 transition-colors" />
                           </motion.div>
-                        )}
-                      </AnimatePresence>
+                        ))}
+                      </div>
                     </div>
                   );
                 })}
@@ -201,10 +170,10 @@ const StudioNodeLibrary: React.FC = () => {
             </ScrollArea>
 
             {/* Footer */}
-            <div className="h-px bg-border/50 mx-3" />
-            <div className="px-4 py-2.5">
+            <div className="h-px bg-border/40 mx-3 shrink-0" />
+            <div className="px-4 py-2 shrink-0">
               <p className="text-[9px] text-muted-foreground/60 text-center">
-                {NODE_CATEGORIES.reduce((acc, c) => acc + c.nodes.length, 0)} blocos disponíveis
+                {NODE_CATEGORIES.reduce((acc, c) => acc + c.nodes.length, 0)} blocos · arraste para adicionar
               </p>
             </div>
           </motion.div>
