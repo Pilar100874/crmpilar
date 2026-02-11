@@ -17,13 +17,11 @@ interface Props {
 }
 
 const LLM_MODELS = [
-  // Google
   { value: 'google/gemini-2.5-flash', label: '🟦 Gemini 2.5 Flash', provider: 'Google' },
   { value: 'google/gemini-2.5-flash-lite', label: '🟦 Gemini 2.5 Flash Lite', provider: 'Google' },
   { value: 'google/gemini-2.5-pro', label: '🟦 Gemini 2.5 Pro', provider: 'Google' },
   { value: 'google/gemini-3-flash-preview', label: '🟦 Gemini 3 Flash', provider: 'Google' },
   { value: 'google/gemini-3-pro-preview', label: '🟦 Gemini 3 Pro', provider: 'Google' },
-  // OpenAI
   { value: 'openai/gpt-5', label: '🟢 GPT-5', provider: 'OpenAI' },
   { value: 'openai/gpt-5-mini', label: '🟢 GPT-5 Mini', provider: 'OpenAI' },
   { value: 'openai/gpt-5-nano', label: '🟢 GPT-5 Nano', provider: 'OpenAI' },
@@ -31,79 +29,55 @@ const LLM_MODELS = [
 ];
 
 const IMAGE_MODELS = [
-  // Google ImageFX
   { value: 'google/imagefx', label: '🟦 Google ImageFX', provider: 'Google' },
   { value: 'google/gemini-2.5-flash-image', label: '🟦 Gemini Flash Image', provider: 'Google' },
   { value: 'google/gemini-3-pro-image-preview', label: '🟦 Gemini 3 Pro Image', provider: 'Google' },
-  // OpenAI
   { value: 'openai/dall-e-4', label: '🟢 DALL·E 4', provider: 'OpenAI' },
   { value: 'openai/dall-e-3', label: '🟢 DALL·E 3', provider: 'OpenAI' },
-  // Stability AI
   { value: 'stability/sd3.5-turbo', label: '🟣 SD 3.5 Turbo', provider: 'Stability AI' },
   { value: 'stability/sd3', label: '🟣 Stable Diffusion 3', provider: 'Stability AI' },
   { value: 'stability/sdxl', label: '🟣 Stable Diffusion XL', provider: 'Stability AI' },
-  // Midjourney
   { value: 'midjourney/v7', label: '🔵 Midjourney v7', provider: 'Midjourney' },
   { value: 'midjourney/v6.1', label: '🔵 Midjourney v6.1', provider: 'Midjourney' },
-  // Flux
   { value: 'flux/1.1-pro', label: '⚡ Flux 1.1 Pro', provider: 'Black Forest Labs' },
   { value: 'flux/schnell', label: '⚡ Flux Schnell', provider: 'Black Forest Labs' },
-  // Ideogram
   { value: 'ideogram/v3', label: '🎨 Ideogram v3', provider: 'Ideogram' },
-  // Adobe
   { value: 'adobe/firefly-3', label: '🔥 Adobe Firefly 3', provider: 'Adobe' },
 ];
 
 const VIDEO_MODELS = [
-  // Google Flow / Veo
   { value: 'google/veo-3.1', label: '🟦 Veo 3.1 (Flow)', provider: 'Google' },
   { value: 'google/veo-3.1-fast', label: '🟦 Veo 3.1 Fast', provider: 'Google' },
   { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'Google' },
   { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'Google' },
-  // OpenAI
   { value: 'openai/sora-3', label: '🟢 Sora 3', provider: 'OpenAI' },
   { value: 'openai/sora-2', label: '🟢 Sora 2', provider: 'OpenAI' },
-  // Runway
   { value: 'runway/gen4', label: '🎬 Gen-4', provider: 'Runway' },
   { value: 'runway/gen3-alpha-turbo', label: '🎬 Gen-3 Alpha Turbo', provider: 'Runway' },
-  // Kling
   { value: 'kling/v2.1', label: '🎥 Kling 2.1', provider: 'Kuaishou' },
   { value: 'kling/v1.6', label: '🎥 Kling 1.6', provider: 'Kuaishou' },
-  // Pika
   { value: 'pika/v2.2', label: '🌊 Pika 2.2', provider: 'Pika' },
-  // Minimax
   { value: 'minimax/video-01', label: '🟠 Hailuo MiniMax', provider: 'MiniMax' },
-  // Luma
   { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'Luma' },
-  // Stability
   { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'Stability AI' },
-  // ByteDance
   { value: 'bytedance/seedvideo', label: '🎯 Seed Video', provider: 'ByteDance' },
 ];
 
 const AUDIO_MODELS = [
-  // ElevenLabs
   { value: 'elevenlabs/v3', label: '🔊 ElevenLabs v3', provider: 'ElevenLabs' },
   { value: 'elevenlabs/turbo-v2.5', label: '🔊 ElevenLabs Turbo', provider: 'ElevenLabs' },
-  // OpenAI
   { value: 'openai/tts-1-hd', label: '🟢 OpenAI TTS HD', provider: 'OpenAI' },
   { value: 'openai/tts-1', label: '🟢 OpenAI TTS', provider: 'OpenAI' },
-  // Google
   { value: 'google/wavenet', label: '🟦 Google WaveNet', provider: 'Google' },
-  // Bark
   { value: 'suno/bark', label: '🐕 Bark', provider: 'Suno' },
 ];
 
 const MUSIC_MODELS = [
-  // Suno
   { value: 'suno/v4', label: '🎵 Suno v4', provider: 'Suno' },
   { value: 'suno/v3.5', label: '🎵 Suno v3.5', provider: 'Suno' },
-  // Udio
   { value: 'udio/v2', label: '🎶 Udio v2', provider: 'Udio' },
   { value: 'udio/v1.5', label: '🎶 Udio v1.5', provider: 'Udio' },
-  // Stable Audio
   { value: 'stability/stable-audio-2', label: '🟣 Stable Audio 2.0', provider: 'Stability AI' },
-  // Google
   { value: 'google/musicfx', label: '🟦 MusicFX', provider: 'Google' },
 ];
 
@@ -155,9 +129,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
             <div>
               <Label className="text-xs">Modelo</Label>
               <Select value={config.model || 'google/gemini-2.5-flash'} onValueChange={(v) => update('model', v)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {LLM_MODELS.map((m) => (
                     <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
@@ -186,9 +158,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
             <div>
               <Label className="text-xs">Modelo de Imagem</Label>
               <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => update('model', v)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {IMAGE_MODELS.map((m) => (
                     <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
@@ -447,24 +417,23 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   };
 
   return (
-    <div className="w-72 border-l border-white/[0.08] bg-[#0f0f1a] flex flex-col shrink-0">
-      <div className="p-3 border-b border-white/[0.08] flex items-center justify-between">
+    <div className="w-72 border-l border-border bg-card flex flex-col shrink-0">
+      <div className="p-3 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span>{meta?.icon}</span>
-          <h3 className="font-semibold text-sm truncate text-white/80">{node.data.label}</h3>
+          <h3 className="font-semibold text-sm truncate text-foreground">{node.data.label}</h3>
         </div>
-        <Button size="icon" variant="ghost" onClick={onClose} className="h-7 w-7 text-white/40 hover:text-white hover:bg-white/10">
+        <Button size="icon" variant="ghost" onClick={onClose} className="h-7 w-7">
           <X className="h-4 w-4" />
         </Button>
       </div>
 
-      {/* Execute from this node */}
       {onExecuteFromNode && (
-        <div className="px-3 py-2 border-b border-white/[0.08]">
+        <div className="px-3 py-2 border-b border-border">
           <Button
             size="sm"
             onClick={() => onExecuteFromNode(node.id)}
-            className="w-full gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border-0 rounded-lg text-xs"
+            className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-lg text-xs"
           >
             <SkipForward className="h-3.5 w-3.5" />
             Executar deste ponto
@@ -474,19 +443,18 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
       <ScrollArea className="flex-1 p-3">
         {renderConfig()}
 
-        {/* Result preview */}
         {node.data.result && (
-          <div className="mt-4 pt-4 border-t border-white/[0.08]">
-            <Label className="text-xs font-semibold text-white/60">Resultado</Label>
-            <div className="mt-2 rounded-lg border border-white/[0.06] bg-white/[0.02] p-2">
+          <div className="mt-4 pt-4 border-t border-border">
+            <Label className="text-xs font-semibold text-muted-foreground">Resultado</Label>
+            <div className="mt-2 rounded-lg border border-border bg-muted/30 p-2">
               {typeof node.data.result === 'string' && (
-                <p className="text-xs whitespace-pre-wrap text-white/60">{node.data.result}</p>
+                <p className="text-xs whitespace-pre-wrap text-foreground/60">{node.data.result}</p>
               )}
               {node.data.result?.imageUrl && (
                 <img src={node.data.result.imageUrl} alt="Result" className="w-full rounded" />
               )}
               {node.data.result?.text && (
-                <p className="text-xs whitespace-pre-wrap mt-2 text-white/60">{node.data.result.text}</p>
+                <p className="text-xs whitespace-pre-wrap mt-2 text-foreground/60">{node.data.result.text}</p>
               )}
             </div>
           </div>
