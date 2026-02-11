@@ -1,9 +1,23 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData } from './types';
 
+export interface ExecutionLogEntry {
+  nodeId: string;
+  nodeLabel: string;
+  nodeType: string;
+  status: 'pending' | 'running' | 'success' | 'error' | 'skipped';
+  startedAt?: number;
+  completedAt?: number;
+  elapsedMs?: number;
+  errorMessage?: string;
+}
+
 export function useStudioExecution() {
   const [isExecuting, setIsExecuting] = useState(false);
+  const [executionLog, setExecutionLog] = useState<ExecutionLogEntry[]>([]);
+  const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
+  const onNodesUpdateRef = useRef<((nodes: StudioNode[]) => void) | null>(null);
 
   const callStudio = async (action: string, params: Record<string, any>) => {
     const { data, error } = await supabase.functions.invoke('ai-creative-studio', {
@@ -14,7 +28,6 @@ export function useStudioExecution() {
     return data?.result;
   };
 
-  // Build execution order via topological sort
   const getExecutionOrder = (nodes: StudioNode[], edges: StudioEdge[]): string[] => {
     const inDegree = new Map<string, number>();
     const adj = new Map<string, string[]>();
@@ -58,17 +71,14 @@ export function useStudioExecution() {
   ): Promise<any> => {
     const { type, config } = node.data;
 
-    // Collect text inputs
     const textInputs = inputs
       .map((i) => (typeof i === 'string' ? i : i?.text || i?.imageUrl || ''))
       .filter(Boolean);
     const combinedInput = textInputs.join('\n\n');
 
-    // Find system prompts from inputs
     const systemPrompts = inputs.filter((i) => i?._isSystemPrompt).map((i) => i.text);
     const systemPrompt = systemPrompts.length > 0 ? systemPrompts.join('\n') : undefined;
 
-    // Find image inputs
     const imageInputs = inputs.filter((i) => i?.imageUrl).map((i) => i.imageUrl);
 
     switch (type) {
@@ -116,7 +126,6 @@ export function useStudioExecution() {
       }
 
       case 'videoGen':
-        // Video generation placeholder - returns descriptive text
         return {
           text: `🎬 Vídeo gerado: "${combinedInput}"\nDuração: ${config.duration}s | Resolução: ${config.resolution} | Aspecto: ${config.aspectRatio}\n\n⚠️ Para geração real de vídeo, conecte uma API externa como RunwayML ou ElevenLabs.`,
         };
@@ -142,7 +151,6 @@ export function useStudioExecution() {
         };
 
       case 'output':
-        // Pass through last input
         return inputs[inputs.length - 1] || { text: 'Nenhuma entrada recebida' };
 
       default:
@@ -153,20 +161,20 @@ export function useStudioExecution() {
   const executeWorkflow = useCallback(async (
     nodes: StudioNode[],
     edges: StudioEdge[],
-    startFromNodeId?: string
+    startFromNodeId?: string,
+    onNodesUpdate?: (nodes: StudioNode[]) => void
   ): Promise<StudioNode[]> => {
     setIsExecuting(true);
+    onNodesUpdateRef.current = onNodesUpdate || null;
 
     const order = getExecutionOrder(nodes, edges);
     const results = new Map<string, any>();
     let updatedNodes = [...nodes];
 
-    // If starting from a specific node, skip preceding nodes but use their existing results
     let startIndex = 0;
     if (startFromNodeId) {
       startIndex = order.indexOf(startFromNodeId);
       if (startIndex < 0) startIndex = 0;
-      // Pre-populate results from nodes before the start point
       for (let i = 0; i < startIndex; i++) {
         const node = nodes.find((n) => n.id === order[i]);
         if (node?.data.result) {
@@ -175,10 +183,34 @@ export function useStudioExecution() {
       }
     }
 
+    // Build initial log
+    const initialLog: ExecutionLogEntry[] = order.map((nodeId, idx) => {
+      const node = nodes.find((n) => n.id === nodeId);
+      const nd = node?.data as StudioNodeData;
+      const isPaused = !!nd?.config?._paused;
+      return {
+        nodeId,
+        nodeLabel: nd?.label || nodeId,
+        nodeType: nd?.type || 'unknown',
+        status: idx < startIndex ? 'skipped' : isPaused ? 'skipped' : 'pending',
+      };
+    });
+    setExecutionLog(initialLog);
+
+    const updateLog = (nodeId: string, partial: Partial<ExecutionLogEntry>) => {
+      setExecutionLog((prev) =>
+        prev.map((e) => (e.nodeId === nodeId ? { ...e, ...partial } : e))
+      );
+    };
+
     const updateNode = (id: string, partial: Partial<StudioNodeData>) => {
       updatedNodes = updatedNodes.map((n) =>
         n.id === id ? { ...n, data: { ...n.data, ...partial } } : n
       );
+      // Emit real-time update
+      if (onNodesUpdateRef.current) {
+        onNodesUpdateRef.current([...updatedNodes]);
+      }
     };
 
     try {
@@ -187,24 +219,45 @@ export function useStudioExecution() {
         const node = nodes.find((n) => n.id === nodeId);
         if (!node) continue;
 
+        const nd = node.data as StudioNodeData;
+
+        // Skip paused nodes
+        if (nd.config?._paused) {
+          updateLog(nodeId, { status: 'skipped' });
+          updateNode(nodeId, { isProcessing: false });
+          continue;
+        }
+
+        setCurrentNodeId(nodeId);
+        const startTime = Date.now();
         updateNode(nodeId, { isProcessing: true, error: undefined });
+        updateLog(nodeId, { status: 'running', startedAt: startTime });
 
         try {
           const inputs = getInputResults(nodeId, edges, results);
           const result = await executeNode(node, inputs);
+          const elapsed = Date.now() - startTime;
           results.set(nodeId, result);
           updateNode(nodeId, { isProcessing: false, result });
+          updateLog(nodeId, { status: 'success', completedAt: Date.now(), elapsedMs: elapsed });
         } catch (err: any) {
+          const elapsed = Date.now() - startTime;
           updateNode(nodeId, { isProcessing: false, error: err.message });
+          updateLog(nodeId, { status: 'error', completedAt: Date.now(), elapsedMs: elapsed, errorMessage: err.message });
           throw err;
         }
       }
     } finally {
       setIsExecuting(false);
+      setCurrentNodeId(null);
     }
 
     return updatedNodes;
   }, []);
 
-  return { executeWorkflow, isExecuting };
+  const clearLog = useCallback(() => {
+    setExecutionLog([]);
+  }, []);
+
+  return { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog };
 }

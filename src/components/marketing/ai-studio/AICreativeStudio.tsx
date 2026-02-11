@@ -27,6 +27,7 @@ import PresetsGallery, { Preset } from './PresetsGallery';
 import AISettingsPanel from './AISettingsPanel';
 import CreativeAgentPanel, { StoryboardScene } from './CreativeAgentPanel';
 import StudioCreditsPanel from './StudioCreditsPanel';
+import ExecutionLogPanel from './ExecutionLogPanel';
 
 interface ContextMenuState {
   x: number;
@@ -67,7 +68,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
-  const { executeWorkflow, isExecuting } = useStudioExecution();
+  const { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog } = useStudioExecution();
 
   const onConnect = useCallback((connection: Connection) => {
     setEdges((eds) => addEdge({ ...connection, animated: true, style: EDGE_STYLE, type: 'smoothstep' }, eds));
@@ -160,7 +161,12 @@ const AICreativeStudioInner: React.FC = () => {
 
   const handleExecute = useCallback(async (startFromNodeId?: string) => {
     try {
-      const updatedNodes = await executeWorkflow(nodes as StudioNode[], edges, startFromNodeId);
+      const updatedNodes = await executeWorkflow(
+        nodes as StudioNode[],
+        edges,
+        startFromNodeId,
+        (realtimeNodes) => setNodes(realtimeNodes as any)
+      );
       setNodes(updatedNodes as any);
       toast.success(startFromNodeId ? 'Execução parcial concluída!' : 'Workflow executado com sucesso!');
     } catch (err: any) {
@@ -592,6 +598,18 @@ const AICreativeStudioInner: React.FC = () => {
                 );
               })()}
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Execution Log Panel */}
+        <AnimatePresence>
+          {executionLog.length > 0 && (
+            <ExecutionLogPanel
+              log={executionLog}
+              isExecuting={isExecuting}
+              currentNodeId={currentNodeId}
+              onClear={clearLog}
+            />
           )}
         </AnimatePresence>
       </div>
