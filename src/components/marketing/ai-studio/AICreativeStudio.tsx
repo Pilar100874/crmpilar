@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
-import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize } from 'lucide-react';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Coins } from 'lucide-react';
 import { toast } from 'sonner';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
 import StudioNodeComponent from './StudioNodeComponent';
@@ -26,6 +26,7 @@ import { useStudioExecution } from './useStudioExecution';
 import PresetsGallery, { Preset } from './PresetsGallery';
 import AISettingsPanel from './AISettingsPanel';
 import CreativeAgentPanel, { StoryboardScene } from './CreativeAgentPanel';
+import StudioCreditsPanel from './StudioCreditsPanel';
 
 const nodeTypes = {
   studioNode: StudioNodeComponent,
@@ -55,6 +56,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [showCanvas, setShowCanvas] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCreativeAgent, setShowCreativeAgent] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
@@ -309,6 +311,10 @@ const AICreativeStudioInner: React.FC = () => {
                 <Settings2 className="h-4 w-4" />
                 Configurações IA
               </Button>
+              <Button onClick={() => setShowCredits(true)} variant="outline" className="border-amber-500/30 text-amber-600 hover:bg-amber-500/10 px-6 py-2.5 rounded-full font-medium gap-2">
+                <Coins className="h-4 w-4" />
+                Créditos
+              </Button>
             </div>
           </motion.div>
 
@@ -355,6 +361,7 @@ const AICreativeStudioInner: React.FC = () => {
         </AnimatePresence>
         <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
         <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
+        <StudioCreditsPanel open={showCredits} onClose={() => setShowCredits(false)} />
       </div>
     );
   }
@@ -439,6 +446,10 @@ const AICreativeStudioInner: React.FC = () => {
                 <Settings2 className="h-3.5 w-3.5" />
                 Config
               </Button>
+              <Button size="sm" variant="ghost" onClick={() => setShowCredits(true)} className="gap-1.5 text-xs h-8 text-amber-600">
+                <Coins className="h-3.5 w-3.5" />
+                Créditos
+              </Button>
               <div className="w-px h-5 bg-border" />
               <Button
                 size="icon"
@@ -495,6 +506,7 @@ const AICreativeStudioInner: React.FC = () => {
 
       <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
       <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
+      <StudioCreditsPanel open={showCredits} onClose={() => setShowCredits(false)} />
     </div>
   );
 };
