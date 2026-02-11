@@ -16,7 +16,8 @@ import {
   GitBranch,
   BookOpen,
   Send,
-  Sparkles
+  Sparkles,
+  Clapperboard
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -39,6 +40,7 @@ import { N8nWorkflowEditor } from '@/components/marketing/n8n-editor';
 import { MarketingCatalogo } from '@/components/marketing/catalogo';
 import { EnvioMassaMarketing } from '@/components/marketing/EnvioMassaMarketing';
 import { AICreativeStudio } from '@/components/marketing/ai-studio';
+import { VideoTimelineEditor } from '@/components/marketing/video-editor';
 
 interface TabItem {
   id: string;
@@ -49,6 +51,7 @@ interface TabItem {
 
 const tabItems: TabItem[] = [
   { id: 'ai-studio', label: 'AI Creative Studio', icon: Sparkles, description: 'Crie conteúdo com IA: imagens, vídeos, áudio e música' },
+  { id: 'video-editor', label: 'Editor de Vídeo', icon: Clapperboard, description: 'Timeline completa com efeitos, cortes e transições' },
   { id: 'envio-massa', label: 'Envio em Massa', icon: Send, description: 'Dispare mensagens para múltiplos contatos' },
   { id: 'recursos', label: 'Recursos IA', icon: Wand2, description: 'Crie conteúdo com IA e n8n' },
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
@@ -74,6 +77,8 @@ const MarketingHub: React.FC = () => {
     switch (activeTab) {
       case 'ai-studio':
         return <AICreativeStudio />;
+      case 'video-editor':
+        return <VideoTimelineEditor />;
       case 'envio-massa':
         return <EnvioMassaMarketing />;
       case 'recursos':
