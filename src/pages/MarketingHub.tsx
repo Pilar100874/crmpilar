@@ -15,7 +15,8 @@ import {
   Server,
   GitBranch,
   BookOpen,
-  Send
+  Send,
+  Sparkles
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,6 +38,7 @@ import RailwayVariables from '@/components/marketing/RailwayVariables';
 import { N8nWorkflowEditor } from '@/components/marketing/n8n-editor';
 import { MarketingCatalogo } from '@/components/marketing/catalogo';
 import { EnvioMassaMarketing } from '@/components/marketing/EnvioMassaMarketing';
+import { AICreativeStudio } from '@/components/marketing/ai-studio';
 
 interface TabItem {
   id: string;
@@ -46,6 +48,7 @@ interface TabItem {
 }
 
 const tabItems: TabItem[] = [
+  { id: 'ai-studio', label: 'AI Creative Studio', icon: Sparkles, description: 'Crie conteúdo com IA: imagens, vídeos, áudio e música' },
   { id: 'envio-massa', label: 'Envio em Massa', icon: Send, description: 'Dispare mensagens para múltiplos contatos' },
   { id: 'recursos', label: 'Recursos IA', icon: Wand2, description: 'Crie conteúdo com IA e n8n' },
   { id: 'galeria', label: 'Galeria', icon: FolderOpen, description: 'Visualize o conteúdo criado' },
@@ -61,7 +64,7 @@ const tabItems: TabItem[] = [
 ];
 
 const MarketingHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('envio-massa');
+  const [activeTab, setActiveTab] = useState('ai-studio');
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
   const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
@@ -69,6 +72,8 @@ const MarketingHub: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'ai-studio':
+        return <AICreativeStudio />;
       case 'envio-massa':
         return <EnvioMassaMarketing />;
       case 'recursos':
