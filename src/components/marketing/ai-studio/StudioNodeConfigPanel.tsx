@@ -30,33 +30,38 @@ const LLM_MODELS = [
 ];
 
 const IMAGE_MODELS = [
-  // Lovable AI
+  // Google ImageFX
+  { value: 'google/imagefx', label: '🟦 Google ImageFX', provider: 'Google' },
   { value: 'google/gemini-2.5-flash-image', label: '🟦 Gemini Flash Image', provider: 'Google' },
   { value: 'google/gemini-3-pro-image-preview', label: '🟦 Gemini 3 Pro Image', provider: 'Google' },
   // OpenAI
-  { value: 'openai/dall-e-3', label: '🟢 DALL·E 3', provider: 'OpenAI' },
   { value: 'openai/dall-e-4', label: '🟢 DALL·E 4', provider: 'OpenAI' },
+  { value: 'openai/dall-e-3', label: '🟢 DALL·E 3', provider: 'OpenAI' },
   // Stability AI
-  { value: 'stability/sdxl', label: '🟣 Stable Diffusion XL', provider: 'Stability AI' },
-  { value: 'stability/sd3', label: '🟣 Stable Diffusion 3', provider: 'Stability AI' },
   { value: 'stability/sd3.5-turbo', label: '🟣 SD 3.5 Turbo', provider: 'Stability AI' },
+  { value: 'stability/sd3', label: '🟣 Stable Diffusion 3', provider: 'Stability AI' },
+  { value: 'stability/sdxl', label: '🟣 Stable Diffusion XL', provider: 'Stability AI' },
   // Midjourney
-  { value: 'midjourney/v6.1', label: '🔵 Midjourney v6.1', provider: 'Midjourney' },
   { value: 'midjourney/v7', label: '🔵 Midjourney v7', provider: 'Midjourney' },
+  { value: 'midjourney/v6.1', label: '🔵 Midjourney v6.1', provider: 'Midjourney' },
   // Flux
   { value: 'flux/1.1-pro', label: '⚡ Flux 1.1 Pro', provider: 'Black Forest Labs' },
   { value: 'flux/schnell', label: '⚡ Flux Schnell', provider: 'Black Forest Labs' },
   // Ideogram
   { value: 'ideogram/v3', label: '🎨 Ideogram v3', provider: 'Ideogram' },
+  // Adobe
+  { value: 'adobe/firefly-3', label: '🔥 Adobe Firefly 3', provider: 'Adobe' },
 ];
 
 const VIDEO_MODELS = [
+  // Google Flow / Veo
+  { value: 'google/veo-3.1', label: '🟦 Veo 3.1 (Flow)', provider: 'Google' },
+  { value: 'google/veo-3.1-fast', label: '🟦 Veo 3.1 Fast', provider: 'Google' },
+  { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'Google' },
+  { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'Google' },
   // OpenAI
   { value: 'openai/sora-3', label: '🟢 Sora 3', provider: 'OpenAI' },
   { value: 'openai/sora-2', label: '🟢 Sora 2', provider: 'OpenAI' },
-  // Google
-  { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'Google' },
-  { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'Google' },
   // Runway
   { value: 'runway/gen4', label: '🎬 Gen-4', provider: 'Runway' },
   { value: 'runway/gen3-alpha-turbo', label: '🎬 Gen-3 Alpha Turbo', provider: 'Runway' },
@@ -71,6 +76,8 @@ const VIDEO_MODELS = [
   { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'Luma' },
   // Stability
   { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'Stability AI' },
+  // ByteDance
+  { value: 'bytedance/seedvideo', label: '🎯 Seed Video', provider: 'ByteDance' },
 ];
 
 const AUDIO_MODELS = [
@@ -439,13 +446,13 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose 
   };
 
   return (
-    <div className="w-72 border-l bg-card flex flex-col shrink-0">
-      <div className="p-3 border-b flex items-center justify-between">
+    <div className="w-72 border-l border-white/[0.08] bg-[#0f0f1a] flex flex-col shrink-0">
+      <div className="p-3 border-b border-white/[0.08] flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span>{meta?.icon}</span>
-          <h3 className="font-semibold text-sm truncate">{node.data.label}</h3>
+          <h3 className="font-semibold text-sm truncate text-white/80">{node.data.label}</h3>
         </div>
-        <Button size="icon" variant="ghost" onClick={onClose} className="h-7 w-7">
+        <Button size="icon" variant="ghost" onClick={onClose} className="h-7 w-7 text-white/40 hover:text-white hover:bg-white/10">
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -454,17 +461,17 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose 
 
         {/* Result preview */}
         {node.data.result && (
-          <div className="mt-4 pt-4 border-t">
-            <Label className="text-xs font-semibold">Resultado</Label>
-            <div className="mt-2 rounded-lg border bg-muted/30 p-2">
+          <div className="mt-4 pt-4 border-t border-white/[0.08]">
+            <Label className="text-xs font-semibold text-white/60">Resultado</Label>
+            <div className="mt-2 rounded-lg border border-white/[0.06] bg-white/[0.02] p-2">
               {typeof node.data.result === 'string' && (
-                <p className="text-xs whitespace-pre-wrap">{node.data.result}</p>
+                <p className="text-xs whitespace-pre-wrap text-white/60">{node.data.result}</p>
               )}
               {node.data.result?.imageUrl && (
                 <img src={node.data.result.imageUrl} alt="Result" className="w-full rounded" />
               )}
               {node.data.result?.text && (
-                <p className="text-xs whitespace-pre-wrap mt-2">{node.data.result.text}</p>
+                <p className="text-xs whitespace-pre-wrap mt-2 text-white/60">{node.data.result.text}</p>
               )}
             </div>
           </div>
