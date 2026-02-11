@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
-import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot } from 'lucide-react';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize } from 'lucide-react';
 import { toast } from 'sonner';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
 import StudioNodeComponent from './StudioNodeComponent';
@@ -33,6 +33,8 @@ const nodeTypes = {
 
 const initialNodes: StudioNode[] = [];
 const initialEdges: StudioEdge[] = [];
+
+const EDGE_STYLE = { stroke: '#22c55e', strokeWidth: 2 };
 
 const QUICK_TOOLS = [
   { id: 'text-to-video', icon: Video, label: 'Texto p/ Vídeo', desc: 'Gere vídeos a partir de prompts', nodeType: 'videoGen' as const },
@@ -53,12 +55,13 @@ const AICreativeStudioInner: React.FC = () => {
   const [showCanvas, setShowCanvas] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCreativeAgent, setShowCreativeAgent] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
   const { executeWorkflow, isExecuting } = useStudioExecution();
 
   const onConnect = useCallback((connection: Connection) => {
-    setEdges((eds) => addEdge({ ...connection, animated: true, style: { stroke: 'hsl(25 95% 53%)', strokeWidth: 2 } }, eds));
+    setEdges((eds) => addEdge({ ...connection, animated: true, style: EDGE_STYLE, type: 'smoothstep' }, eds));
   }, [setEdges]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -153,23 +156,14 @@ const AICreativeStudioInner: React.FC = () => {
         newNodes.push({
           id: mediaId,
           type: 'studioNode',
-          position: { x: x + 350, y: yBase - 60 },
+          position: { x: x + 380, y: yBase - 60 },
           data: {
             label: scene.mediaType === 'video' ? `🎬 Vídeo: ${scene.title}` : `🖼️ Imagem: ${scene.title}`,
             type: mediaType,
-            config: {
-              ...meta?.defaultConfig,
-              ...(scene.mediaType === 'video' ? { duration: scene.duration } : {}),
-            },
+            config: { ...meta?.defaultConfig, ...(scene.mediaType === 'video' ? { duration: scene.duration } : {}) },
           },
         });
-        newEdges.push({
-          id: `e_${promptId}_${mediaId}`,
-          source: promptId,
-          target: mediaId,
-          animated: true,
-          style: { stroke: 'hsl(25 95% 53%)', strokeWidth: 2 },
-        });
+        newEdges.push({ id: `e_${promptId}_${mediaId}`, source: promptId, target: mediaId, animated: true, style: EDGE_STYLE, type: 'smoothstep' });
       }
 
       if (scene.audioType !== 'none') {
@@ -179,30 +173,19 @@ const AICreativeStudioInner: React.FC = () => {
         newNodes.push({
           id: audioId,
           type: 'studioNode',
-          position: { x: x + 350, y: yBase + 60 },
+          position: { x: x + 380, y: yBase + 80 },
           data: {
             label: scene.audioType === 'music' ? `🎵 Música: ${scene.title}` :
                    scene.audioType === 'narration' ? `🎙️ Narração: ${scene.title}` :
                    `🔊 SFX: ${scene.title}`,
             type: audioType,
-            config: {
-              ...meta?.defaultConfig,
-              duration: scene.duration,
-              ...(scene.audioType === 'narration' ? { type: 'narration' } : {}),
-              ...(scene.audioType === 'sfx' ? { type: 'sfx' } : {}),
-            },
+            config: { ...meta?.defaultConfig, duration: scene.duration, ...(scene.audioType === 'narration' ? { type: 'narration' } : {}), ...(scene.audioType === 'sfx' ? { type: 'sfx' } : {}) },
           },
         });
-        newEdges.push({
-          id: `e_${promptId}_${audioId}`,
-          source: promptId,
-          target: audioId,
-          animated: true,
-          style: { stroke: 'hsl(25 95% 53%)', strokeWidth: 2 },
-        });
+        newEdges.push({ id: `e_${promptId}_${audioId}`, source: promptId, target: audioId, animated: true, style: EDGE_STYLE, type: 'smoothstep' });
       }
 
-      x += 700;
+      x += 750;
     });
 
     const outputId = `output_${Date.now()}`;
@@ -241,7 +224,7 @@ const AICreativeStudioInner: React.FC = () => {
     setNodes((nds) => [...nds, inputNode, videoNode]);
     setEdges((eds) => [
       ...eds,
-      { id: `e_${inputNode.id}_${videoNode.id}`, source: inputNode.id, target: videoNode.id, animated: true, style: { stroke: 'hsl(25 95% 53%)', strokeWidth: 2 } },
+      { id: `e_${inputNode.id}_${videoNode.id}`, source: inputNode.id, target: videoNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
     ]);
     setShowPresets(false);
     setShowCanvas(true);
@@ -273,8 +256,8 @@ const AICreativeStudioInner: React.FC = () => {
 
     setNodes([inputNode, processNode, outputNode]);
     setEdges([
-      { id: `e1_${Date.now()}`, source: inputNode.id, target: processNode.id, animated: true, style: { stroke: 'hsl(25 95% 53%)', strokeWidth: 2 } },
-      { id: `e2_${Date.now()}`, source: processNode.id, target: outputNode.id, animated: true, style: { stroke: 'hsl(25 95% 53%)', strokeWidth: 2 } },
+      { id: `e1_${Date.now()}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+      { id: `e2_${Date.now()}`, source: processNode.id, target: outputNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
     ]);
     setShowCanvas(true);
     toast.success(`Workflow "${meta.label}" criado!`);
@@ -284,9 +267,7 @@ const AICreativeStudioInner: React.FC = () => {
   if (!showCanvas && nodes.length === 0) {
     return (
       <div className="h-[calc(100vh-200px)] min-h-[600px] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
-        {/* Hero */}
         <div className="flex-1 flex flex-col items-center justify-center px-6 relative overflow-hidden">
-          {/* Ambient glow */}
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px]" />
           <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/3 rounded-full blur-[100px]" />
 
@@ -302,55 +283,36 @@ const AICreativeStudioInner: React.FC = () => {
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
-              <span className="text-foreground">
-                AI Creative
-              </span>
+              <span className="text-foreground">AI Creative</span>
               <br />
-              <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                Studio
-              </span>
+              <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">Studio</span>
             </h1>
 
             <p className="text-base md:text-lg text-muted-foreground mb-10 max-w-xl mx-auto leading-relaxed">
-              Crie vídeos, imagens, músicas e áudio com os modelos de IA mais avançados do mundo. Uma experiência cinematográfica completa.
+              Crie vídeos, imagens, músicas e áudio com os modelos de IA mais avançados do mundo.
             </p>
 
             <div className="flex items-center justify-center gap-3 mb-12 flex-wrap">
-              <Button
-                onClick={() => setShowCanvas(true)}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-full font-medium gap-2"
-              >
+              <Button onClick={() => setShowCanvas(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-full font-medium gap-2">
                 <Play className="h-4 w-4" />
                 Criar Workflow
               </Button>
-              <Button
-                onClick={() => setShowPresets(true)}
-                variant="outline"
-                className="px-6 py-2.5 rounded-full font-medium gap-2"
-              >
+              <Button onClick={() => setShowPresets(true)} variant="outline" className="px-6 py-2.5 rounded-full font-medium gap-2">
                 <Clapperboard className="h-4 w-4" />
                 Explorar Presets
               </Button>
-              <Button
-                onClick={() => setShowCreativeAgent(true)}
-                variant="outline"
-                className="border-primary/30 text-primary hover:bg-primary/10 px-6 py-2.5 rounded-full font-medium gap-2"
-              >
+              <Button onClick={() => setShowCreativeAgent(true)} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 px-6 py-2.5 rounded-full font-medium gap-2">
                 <Bot className="h-4 w-4" />
                 Agente Criativo
               </Button>
-              <Button
-                onClick={() => setShowSettings(true)}
-                variant="outline"
-                className="px-6 py-2.5 rounded-full font-medium gap-2"
-              >
+              <Button onClick={() => setShowSettings(true)} variant="outline" className="px-6 py-2.5 rounded-full font-medium gap-2">
                 <Settings2 className="h-4 w-4" />
                 Configurações IA
               </Button>
             </div>
           </motion.div>
 
-          {/* Quick Tools Grid */}
+          {/* Quick Tools */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -388,30 +350,28 @@ const AICreativeStudioInner: React.FC = () => {
 
         <AnimatePresence>
           {showPresets && (
-            <PresetsGallery
-              onSelectPreset={handlePresetSelect}
-              onClose={() => setShowPresets(false)}
-            />
+            <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => setShowPresets(false)} />
           )}
         </AnimatePresence>
-
         <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
-        <CreativeAgentPanel
-          open={showCreativeAgent}
-          onClose={() => setShowCreativeAgent(false)}
-          onCreateWorkflow={handleStoryboardToWorkflow}
-        />
+        <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-200px)] min-h-[600px] border border-border rounded-xl overflow-hidden bg-card">
-      {/* Node Library */}
-      <StudioNodeLibrary />
-
+    <div
+      className={`flex border border-border rounded-xl overflow-hidden bg-background transition-all duration-300 ${
+        isFullscreen
+          ? 'fixed inset-0 z-50 rounded-none border-0'
+          : 'h-[calc(100vh-200px)] min-h-[600px]'
+      }`}
+    >
       {/* Canvas */}
       <div className="flex-1 relative" ref={reactFlowWrapper}>
+        {/* Node Library (floating, collapsible) */}
+        <StudioNodeLibrary />
+
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -427,31 +387,29 @@ const AICreativeStudioInner: React.FC = () => {
           snapToGrid
           snapGrid={[16, 16]}
           className="bg-background"
-          defaultEdgeOptions={{ animated: true, style: { stroke: 'hsl(25 95% 53%)', strokeWidth: 2 } }}
+          defaultEdgeOptions={{ animated: true, style: EDGE_STYLE, type: 'smoothstep' }}
         >
-          <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="hsl(25 95% 53% / 0.08)" />
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsl(var(--muted-foreground) / 0.15)" />
           <Controls
             showInteractive={false}
-            className="!bg-card !border-border !shadow-lg !rounded-lg [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-muted-foreground [&>button:hover]:!bg-accent"
+            className="!bg-card !border-border !shadow-md !rounded-lg [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-muted-foreground [&>button:hover]:!bg-accent"
           />
           <MiniMap
             className="!bg-card !border-border !rounded-lg"
-            nodeColor={(n) => {
-              const meta = getNodeMeta((n.data as StudioNodeData)?.type);
-              return meta?.color || '#64748b';
-            }}
+            nodeColor={() => 'hsl(25 95% 53%)'}
+            maskColor="hsl(var(--background) / 0.7)"
           />
 
           {/* Toolbar */}
           <Panel position="top-center">
-            <div className="flex items-center gap-2 bg-card/95 backdrop-blur border border-border rounded-xl px-4 py-2 shadow-lg">
+            <div className="flex items-center gap-2 bg-card/95 backdrop-blur border border-border rounded-xl px-3 py-1.5 shadow-md">
               <Button
                 size="sm"
                 onClick={() => handleExecute()}
                 disabled={isExecuting || nodes.length === 0}
-                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-lg"
+                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-lg text-xs h-8"
               >
-                <Play className="h-4 w-4" />
+                <Play className="h-3.5 w-3.5" />
                 {isExecuting ? 'Executando...' : 'Executar Tudo'}
               </Button>
               {selectedNode && (
@@ -459,47 +417,48 @@ const AICreativeStudioInner: React.FC = () => {
                   size="sm"
                   onClick={handleExecuteFromNode}
                   disabled={isExecuting}
-                  className="gap-2 bg-warning hover:bg-warning/90 text-warning-foreground border-0 rounded-lg"
-                  title="Executar a partir deste nó"
+                  className="gap-2 bg-warning hover:bg-warning/90 text-warning-foreground border-0 rounded-lg text-xs h-8"
                 >
-                  <SkipForward className="h-4 w-4" />
+                  <SkipForward className="h-3.5 w-3.5" />
                   Daqui em diante
                 </Button>
               )}
-              <div className="w-px h-6 bg-border" />
-              <Button size="icon" variant="ghost" onClick={deleteSelected} disabled={!selectedNode} title="Excluir nó" className="text-muted-foreground hover:text-foreground hover:bg-accent">
-                <Trash2 className="h-4 w-4" />
+              <div className="w-px h-5 bg-border" />
+              <Button size="icon" variant="ghost" onClick={deleteSelected} disabled={!selectedNode} title="Excluir" className="h-8 w-8">
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" onClick={clearAll} title="Limpar tudo" className="text-destructive/60 hover:text-destructive hover:bg-destructive/10">
-                <Trash2 className="h-4 w-4" />
+              <Button size="icon" variant="ghost" onClick={clearAll} title="Limpar" className="h-8 w-8 text-destructive/60 hover:text-destructive">
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
-              <div className="w-px h-6 bg-border" />
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowPresets(true)}
-                className="gap-2 text-muted-foreground hover:text-foreground hover:bg-accent"
-              >
-                <Clapperboard className="h-4 w-4" />
+              <div className="w-px h-5 bg-border" />
+              <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1.5 text-xs h-8">
+                <Clapperboard className="h-3.5 w-3.5" />
                 Presets
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowSettings(true)}
-                className="gap-2 text-muted-foreground hover:text-foreground hover:bg-accent"
-              >
-                <Settings2 className="h-4 w-4" />
-                Config IA
+              <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} className="gap-1.5 text-xs h-8">
+                <Settings2 className="h-3.5 w-3.5" />
+                Config
               </Button>
+              <div className="w-px h-5 bg-border" />
               <Button
-                size="sm"
+                size="icon"
                 variant="ghost"
-                onClick={() => { clearAll(); setShowCanvas(false); }}
-                className="gap-2 text-muted-foreground hover:text-foreground hover:bg-accent"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                title={isFullscreen ? 'Sair do Fullscreen' : 'Tela Cheia'}
+                className="h-8 w-8"
               >
-                Início
+                {isFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
               </Button>
+              {!isFullscreen && (
+                <Button size="sm" variant="ghost" onClick={() => { clearAll(); setShowCanvas(false); }} className="text-xs h-8">
+                  Início
+                </Button>
+              )}
+              {isFullscreen && (
+                <Button size="sm" variant="ghost" onClick={() => setIsFullscreen(false)} className="text-xs h-8">
+                  Voltar
+                </Button>
+              )}
             </div>
           </Panel>
 
@@ -510,7 +469,7 @@ const AICreativeStudioInner: React.FC = () => {
                 <div className="text-6xl mb-4">🎬</div>
                 <h3 className="text-lg font-semibold mb-2 text-foreground/80">Arraste blocos para começar</h3>
                 <p className="text-sm max-w-md text-muted-foreground">
-                  Use o painel lateral para adicionar blocos ao canvas, ou volte ao início para usar as ferramentas rápidas.
+                  Clique no botão <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">+</span> para adicionar blocos ao canvas.
                 </p>
               </div>
             </Panel>
@@ -519,10 +478,7 @@ const AICreativeStudioInner: React.FC = () => {
 
         <AnimatePresence>
           {showPresets && (
-            <PresetsGallery
-              onSelectPreset={handlePresetSelect}
-              onClose={() => setShowPresets(false)}
-            />
+            <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => setShowPresets(false)} />
           )}
         </AnimatePresence>
       </div>
@@ -538,11 +494,7 @@ const AICreativeStudioInner: React.FC = () => {
       )}
 
       <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
-      <CreativeAgentPanel
-        open={showCreativeAgent}
-        onClose={() => setShowCreativeAgent(false)}
-        onCreateWorkflow={handleStoryboardToWorkflow}
-      />
+      <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
     </div>
   );
 };
