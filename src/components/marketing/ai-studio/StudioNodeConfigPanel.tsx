@@ -16,19 +16,87 @@ interface Props {
 }
 
 const LLM_MODELS = [
-  { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-  { value: 'google/gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite' },
-  { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
-  { value: 'google/gemini-3-flash-preview', label: 'Gemini 3 Flash Preview' },
-  { value: 'google/gemini-3-pro-preview', label: 'Gemini 3 Pro Preview' },
-  { value: 'openai/gpt-5', label: 'GPT-5' },
-  { value: 'openai/gpt-5-mini', label: 'GPT-5 Mini' },
-  { value: 'openai/gpt-5-nano', label: 'GPT-5 Nano' },
+  // Google
+  { value: 'google/gemini-2.5-flash', label: '🟦 Gemini 2.5 Flash', provider: 'Google' },
+  { value: 'google/gemini-2.5-flash-lite', label: '🟦 Gemini 2.5 Flash Lite', provider: 'Google' },
+  { value: 'google/gemini-2.5-pro', label: '🟦 Gemini 2.5 Pro', provider: 'Google' },
+  { value: 'google/gemini-3-flash-preview', label: '🟦 Gemini 3 Flash', provider: 'Google' },
+  { value: 'google/gemini-3-pro-preview', label: '🟦 Gemini 3 Pro', provider: 'Google' },
+  // OpenAI
+  { value: 'openai/gpt-5', label: '🟢 GPT-5', provider: 'OpenAI' },
+  { value: 'openai/gpt-5-mini', label: '🟢 GPT-5 Mini', provider: 'OpenAI' },
+  { value: 'openai/gpt-5-nano', label: '🟢 GPT-5 Nano', provider: 'OpenAI' },
+  { value: 'openai/gpt-5.2', label: '🟢 GPT-5.2', provider: 'OpenAI' },
 ];
 
 const IMAGE_MODELS = [
-  { value: 'google/gemini-2.5-flash-image', label: 'Nano Banana' },
-  { value: 'google/gemini-3-pro-image-preview', label: 'Nano Banana Pro' },
+  // Lovable AI
+  { value: 'google/gemini-2.5-flash-image', label: '🟦 Gemini Flash Image', provider: 'Google' },
+  { value: 'google/gemini-3-pro-image-preview', label: '🟦 Gemini 3 Pro Image', provider: 'Google' },
+  // OpenAI
+  { value: 'openai/dall-e-3', label: '🟢 DALL·E 3', provider: 'OpenAI' },
+  { value: 'openai/dall-e-4', label: '🟢 DALL·E 4', provider: 'OpenAI' },
+  // Stability AI
+  { value: 'stability/sdxl', label: '🟣 Stable Diffusion XL', provider: 'Stability AI' },
+  { value: 'stability/sd3', label: '🟣 Stable Diffusion 3', provider: 'Stability AI' },
+  { value: 'stability/sd3.5-turbo', label: '🟣 SD 3.5 Turbo', provider: 'Stability AI' },
+  // Midjourney
+  { value: 'midjourney/v6.1', label: '🔵 Midjourney v6.1', provider: 'Midjourney' },
+  { value: 'midjourney/v7', label: '🔵 Midjourney v7', provider: 'Midjourney' },
+  // Flux
+  { value: 'flux/1.1-pro', label: '⚡ Flux 1.1 Pro', provider: 'Black Forest Labs' },
+  { value: 'flux/schnell', label: '⚡ Flux Schnell', provider: 'Black Forest Labs' },
+  // Ideogram
+  { value: 'ideogram/v3', label: '🎨 Ideogram v3', provider: 'Ideogram' },
+];
+
+const VIDEO_MODELS = [
+  // OpenAI
+  { value: 'openai/sora-3', label: '🟢 Sora 3', provider: 'OpenAI' },
+  { value: 'openai/sora-2', label: '🟢 Sora 2', provider: 'OpenAI' },
+  // Google
+  { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'Google' },
+  { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'Google' },
+  // Runway
+  { value: 'runway/gen4', label: '🎬 Gen-4', provider: 'Runway' },
+  { value: 'runway/gen3-alpha-turbo', label: '🎬 Gen-3 Alpha Turbo', provider: 'Runway' },
+  // Kling
+  { value: 'kling/v2.1', label: '🎥 Kling 2.1', provider: 'Kuaishou' },
+  { value: 'kling/v1.6', label: '🎥 Kling 1.6', provider: 'Kuaishou' },
+  // Pika
+  { value: 'pika/v2.2', label: '🌊 Pika 2.2', provider: 'Pika' },
+  // Minimax
+  { value: 'minimax/video-01', label: '🟠 Hailuo MiniMax', provider: 'MiniMax' },
+  // Luma
+  { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'Luma' },
+  // Stability
+  { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'Stability AI' },
+];
+
+const AUDIO_MODELS = [
+  // ElevenLabs
+  { value: 'elevenlabs/v3', label: '🔊 ElevenLabs v3', provider: 'ElevenLabs' },
+  { value: 'elevenlabs/turbo-v2.5', label: '🔊 ElevenLabs Turbo', provider: 'ElevenLabs' },
+  // OpenAI
+  { value: 'openai/tts-1-hd', label: '🟢 OpenAI TTS HD', provider: 'OpenAI' },
+  { value: 'openai/tts-1', label: '🟢 OpenAI TTS', provider: 'OpenAI' },
+  // Google
+  { value: 'google/wavenet', label: '🟦 Google WaveNet', provider: 'Google' },
+  // Bark
+  { value: 'suno/bark', label: '🐕 Bark', provider: 'Suno' },
+];
+
+const MUSIC_MODELS = [
+  // Suno
+  { value: 'suno/v4', label: '🎵 Suno v4', provider: 'Suno' },
+  { value: 'suno/v3.5', label: '🎵 Suno v3.5', provider: 'Suno' },
+  // Udio
+  { value: 'udio/v2', label: '🎶 Udio v2', provider: 'Udio' },
+  { value: 'udio/v1.5', label: '🎶 Udio v1.5', provider: 'Udio' },
+  // Stable Audio
+  { value: 'stability/stable-audio-2', label: '🟣 Stable Audio 2.0', provider: 'Stability AI' },
+  // Google
+  { value: 'google/musicfx', label: '🟦 MusicFX', provider: 'Google' },
 ];
 
 const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose }) => {
@@ -139,12 +207,27 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose 
         return (
           <div className="space-y-3">
             <div>
+              <Label className="text-xs">Modelo de Vídeo</Label>
+              <Select value={config.videoModel || 'openai/sora-3'} onValueChange={(v) => update('videoModel', v)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {VIDEO_MODELS.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>
+                      <span className="flex items-center gap-1">{m.label} <span className="text-[10px] text-muted-foreground">({m.provider})</span></span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label className="text-xs">Duração (segundos)</Label>
               <Select value={String(config.duration || 5)} onValueChange={(v) => update('duration', Number(v))}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="5">5 segundos</SelectItem>
                   <SelectItem value="10">10 segundos</SelectItem>
+                  <SelectItem value="15">15 segundos</SelectItem>
+                  <SelectItem value="20">20 segundos</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -154,7 +237,9 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose 
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="480p">480p (Rápido)</SelectItem>
-                  <SelectItem value="1080p">1080p (Qualidade)</SelectItem>
+                  <SelectItem value="720p">720p (Balanceado)</SelectItem>
+                  <SelectItem value="1080p">1080p (HD)</SelectItem>
+                  <SelectItem value="4k">4K (Ultra HD)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -164,8 +249,10 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose 
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="16:9">16:9 (Paisagem)</SelectItem>
-                  <SelectItem value="9:16">9:16 (Retrato)</SelectItem>
+                  <SelectItem value="9:16">9:16 (Retrato/Reels)</SelectItem>
                   <SelectItem value="1:1">1:1 (Quadrado)</SelectItem>
+                  <SelectItem value="4:3">4:3 (Clássico)</SelectItem>
+                  <SelectItem value="21:9">21:9 (Cinemascope)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -176,6 +263,19 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose 
         return (
           <div className="space-y-3">
             <div>
+              <Label className="text-xs">Modelo de Áudio</Label>
+              <Select value={config.audioModel || 'elevenlabs/v3'} onValueChange={(v) => update('audioModel', v)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {AUDIO_MODELS.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>
+                      <span className="flex items-center gap-1">{m.label} <span className="text-[10px] text-muted-foreground">({m.provider})</span></span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label className="text-xs">Tipo</Label>
               <Select value={config.type || 'sfx'} onValueChange={(v) => update('type', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
@@ -183,6 +283,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose 
                   <SelectItem value="sfx">Efeito Sonoro</SelectItem>
                   <SelectItem value="narration">Narração</SelectItem>
                   <SelectItem value="ambient">Ambiente</SelectItem>
+                  <SelectItem value="voiceover">Voice Over</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -192,7 +293,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose 
                 value={[config.duration || 5]}
                 onValueChange={([v]) => update('duration', v)}
                 min={1}
-                max={22}
+                max={60}
                 step={1}
                 className="mt-2"
               />
@@ -203,6 +304,19 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose 
       case 'musicGen':
         return (
           <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Modelo de Música</Label>
+              <Select value={config.musicModel || 'suno/v4'} onValueChange={(v) => update('musicModel', v)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {MUSIC_MODELS.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>
+                      <span className="flex items-center gap-1">{m.label} <span className="text-[10px] text-muted-foreground">({m.provider})</span></span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label className="text-xs">Gênero</Label>
               <Select value={config.genre || 'ambient'} onValueChange={(v) => update('genre', v)}>
@@ -215,6 +329,9 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose 
                   <SelectItem value="rock">Rock</SelectItem>
                   <SelectItem value="jazz">Jazz</SelectItem>
                   <SelectItem value="lofi">Lo-Fi</SelectItem>
+                  <SelectItem value="hiphop">Hip-Hop</SelectItem>
+                  <SelectItem value="classical">Clássico</SelectItem>
+                  <SelectItem value="rnb">R&B</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -224,7 +341,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose 
                 value={[config.duration || 30]}
                 onValueChange={([v]) => update('duration', v)}
                 min={5}
-                max={120}
+                max={240}
                 step={5}
                 className="mt-2"
               />
