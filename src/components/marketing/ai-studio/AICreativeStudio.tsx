@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
-import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Coins } from 'lucide-react';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Coins, Copy, Pause, PlayCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
 import StudioNodeComponent from './StudioNodeComponent';
@@ -27,6 +27,12 @@ import PresetsGallery, { Preset } from './PresetsGallery';
 import AISettingsPanel from './AISettingsPanel';
 import CreativeAgentPanel, { StoryboardScene } from './CreativeAgentPanel';
 import StudioCreditsPanel from './StudioCreditsPanel';
+
+interface ContextMenuState {
+  x: number;
+  y: number;
+  nodeId: string;
+}
 
 const nodeTypes = {
   studioNode: StudioNodeComponent,
@@ -58,6 +64,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [showCreativeAgent, setShowCreativeAgent] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
   const { executeWorkflow, isExecuting } = useStudioExecution();
@@ -93,7 +100,42 @@ const AICreativeStudioInner: React.FC = () => {
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null);
+    setContextMenu(null);
   }, []);
+
+  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: any) => {
+    event.preventDefault();
+    setContextMenu({ x: event.clientX, y: event.clientY, nodeId: node.id });
+    setSelectedNode(node as StudioNode);
+  }, []);
+
+  const duplicateNode = useCallback((nodeId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return;
+    const nd = node.data as StudioNodeData;
+    const newNode: StudioNode = {
+      id: `${nd.type}_${Date.now()}`,
+      type: 'studioNode',
+      position: { x: (node.position?.x ?? 0) + 50, y: (node.position?.y ?? 0) + 80 },
+      data: { ...nd, config: { ...nd.config }, result: undefined, error: undefined, isProcessing: false },
+    };
+    setNodes((nds) => [...nds, newNode as any]);
+    setContextMenu(null);
+    toast.success('Bloco duplicado!');
+  }, [nodes, setNodes]);
+
+  const togglePauseNode = useCallback((nodeId: string) => {
+    setNodes((nds) => nds.map((n) => {
+      if (n.id === nodeId) {
+        const d = n.data as StudioNodeData;
+        const paused = !d.config?._paused;
+        return { ...n, data: { ...d, config: { ...d.config, _paused: paused } } };
+      }
+      return n;
+    }));
+    setContextMenu(null);
+    toast.info('Estado do bloco alterado');
+  }, [setNodes]);
 
   const updateNodeConfig = useCallback((nodeId: string, config: Record<string, any>) => {
     setNodes((nds) => nds.map((n) => {
@@ -388,6 +430,7 @@ const AICreativeStudioInner: React.FC = () => {
           onDragOver={onDragOver}
           onDrop={onDrop}
           onNodeClick={onNodeClick}
+          onNodeContextMenu={onNodeContextMenu}
           onPaneClick={onPaneClick}
           nodeTypes={nodeTypes}
           fitView
@@ -490,6 +533,65 @@ const AICreativeStudioInner: React.FC = () => {
         <AnimatePresence>
           {showPresets && (
             <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => setShowPresets(false)} />
+          )}
+        </AnimatePresence>
+
+        {/* Context Menu */}
+        <AnimatePresence>
+          {contextMenu && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.12 }}
+              className="fixed z-[100] min-w-[180px] rounded-xl border border-border bg-card shadow-xl overflow-hidden"
+              style={{ left: contextMenu.x, top: contextMenu.y }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {(() => {
+                const ctxNode = nodes.find(n => n.id === contextMenu.nodeId);
+                const isPaused = (ctxNode?.data as StudioNodeData)?.config?._paused;
+                return (
+                  <>
+                    <button
+                      onClick={() => { handleExecute(contextMenu.nodeId); setContextMenu(null); }}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-accent transition-colors text-left"
+                    >
+                      <PlayCircle className="h-4 w-4 text-emerald-500" />
+                      <span className="text-foreground">Executar daqui</span>
+                    </button>
+                    <button
+                      onClick={() => duplicateNode(contextMenu.nodeId)}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-accent transition-colors text-left"
+                    >
+                      <Copy className="h-4 w-4 text-sky-500" />
+                      <span className="text-foreground">Duplicar</span>
+                    </button>
+                    <button
+                      onClick={() => togglePauseNode(contextMenu.nodeId)}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-accent transition-colors text-left"
+                    >
+                      <Pause className="h-4 w-4 text-amber-500" />
+                      <span className="text-foreground">{isPaused ? 'Ativar bloco' : 'Pausar bloco'}</span>
+                    </button>
+                    <div className="h-px bg-border mx-2" />
+                    <button
+                      onClick={() => {
+                        setNodes((nds) => nds.filter(n => n.id !== contextMenu.nodeId));
+                        setEdges((eds) => eds.filter(e => e.source !== contextMenu.nodeId && e.target !== contextMenu.nodeId));
+                        if (selectedNode?.id === contextMenu.nodeId) setSelectedNode(null);
+                        setContextMenu(null);
+                        toast.success('Bloco excluído');
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-destructive/10 transition-colors text-left"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <span className="text-destructive">Excluir</span>
+                    </button>
+                  </>
+                );
+              })()}
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
