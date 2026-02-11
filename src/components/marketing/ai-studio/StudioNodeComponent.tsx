@@ -4,7 +4,7 @@ import { StudioNodeData, getNodeMeta } from './types';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
-  Search, LinkIcon, Headphones, ScanEye
+  Search, LinkIcon, Headphones, ScanEye, PauseCircle
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
@@ -75,6 +75,7 @@ const StudioNodeComponent: React.FC<NodeProps> = memo(({ data, selected }) => {
   const IconComponent = nodeIconMap[nodeData.type] || Play;
   const gradient = nodeGradientMap[nodeData.type] || 'from-slate-500/20 to-zinc-500/20';
   const iconColor = nodeIconColorMap[nodeData.type] || 'text-slate-400';
+  const isPaused = !!nodeData.config?._paused;
 
   const hasInput = !['textInput', 'systemPrompt'].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
@@ -94,7 +95,7 @@ const StudioNodeComponent: React.FC<NodeProps> = memo(({ data, selected }) => {
         relative rounded-2xl transition-all duration-300 overflow-visible
         ${selected ? 'scale-[1.02]' : 'hover:scale-[1.01]'}
         ${nodeData.error ? 'ring-2 ring-destructive/40' : ''}
-        ${nodeData.isProcessing ? '' : ''}
+        ${isPaused ? 'opacity-50 grayscale' : ''}
       `}
       style={{
         width: nodeWidth,
@@ -106,6 +107,13 @@ const StudioNodeComponent: React.FC<NodeProps> = memo(({ data, selected }) => {
           : '0 2px 12px -4px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
       }}
     >
+      {/* Paused badge */}
+      {isPaused && (
+        <div className="absolute -top-2.5 right-3 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-bold shadow-md">
+          <PauseCircle className="h-3 w-3" />
+          PAUSADO
+        </div>
+      )}
       {/* Cinematic Header with gradient */}
       <div className={`px-3.5 py-2.5 flex items-center gap-2.5 bg-gradient-to-r ${gradient} rounded-t-2xl border-b border-border/50`}>
         <div
