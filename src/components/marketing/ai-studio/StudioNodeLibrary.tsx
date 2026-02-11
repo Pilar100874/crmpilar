@@ -102,7 +102,7 @@ const StudioNodeLibrary: React.FC = () => {
             <div className="h-px bg-border/40 mx-3 shrink-0" />
 
             {/* Flat list - all nodes visible */}
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 min-h-0" style={{ maxHeight: 'calc(100vh - 250px)' }}>
               <div className="p-2.5 space-y-3">
                 {filteredCategories.map((cat) => {
                   const colors = CATEGORY_COLORS[cat.id] || CATEGORY_COLORS.output;
