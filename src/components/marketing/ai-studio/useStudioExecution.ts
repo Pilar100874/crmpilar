@@ -152,13 +152,28 @@ export function useStudioExecution() {
 
   const executeWorkflow = useCallback(async (
     nodes: StudioNode[],
-    edges: StudioEdge[]
+    edges: StudioEdge[],
+    startFromNodeId?: string
   ): Promise<StudioNode[]> => {
     setIsExecuting(true);
 
     const order = getExecutionOrder(nodes, edges);
     const results = new Map<string, any>();
     let updatedNodes = [...nodes];
+
+    // If starting from a specific node, skip preceding nodes but use their existing results
+    let startIndex = 0;
+    if (startFromNodeId) {
+      startIndex = order.indexOf(startFromNodeId);
+      if (startIndex < 0) startIndex = 0;
+      // Pre-populate results from nodes before the start point
+      for (let i = 0; i < startIndex; i++) {
+        const node = nodes.find((n) => n.id === order[i]);
+        if (node?.data.result) {
+          results.set(order[i], node.data.result);
+        }
+      }
+    }
 
     const updateNode = (id: string, partial: Partial<StudioNodeData>) => {
       updatedNodes = updatedNodes.map((n) =>
@@ -167,7 +182,8 @@ export function useStudioExecution() {
     };
 
     try {
-      for (const nodeId of order) {
+      for (let i = startIndex; i < order.length; i++) {
+        const nodeId = order[i];
         const node = nodes.find((n) => n.id === nodeId);
         if (!node) continue;
 

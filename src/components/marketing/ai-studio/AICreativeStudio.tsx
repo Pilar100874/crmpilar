@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
-import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2 } from 'lucide-react';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot } from 'lucide-react';
 import { toast } from 'sonner';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
 import StudioNodeComponent from './StudioNodeComponent';
@@ -25,6 +25,7 @@ import StudioNodeConfigPanel from './StudioNodeConfigPanel';
 import { useStudioExecution } from './useStudioExecution';
 import PresetsGallery, { Preset } from './PresetsGallery';
 import AISettingsPanel from './AISettingsPanel';
+import CreativeAgentPanel, { StoryboardScene } from './CreativeAgentPanel';
 
 const nodeTypes = {
   studioNode: StudioNodeComponent,
@@ -52,6 +53,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [showPresets, setShowPresets] = useState(false);
   const [showCanvas, setShowCanvas] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCreativeAgent, setShowCreativeAgent] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
   const { executeWorkflow, isExecuting } = useStudioExecution();
@@ -110,15 +112,116 @@ const AICreativeStudioInner: React.FC = () => {
     }
   }, [selectedNode, setNodes, setEdges]);
 
-  const handleExecute = useCallback(async () => {
+  const handleExecute = useCallback(async (startFromNodeId?: string) => {
     try {
-      const updatedNodes = await executeWorkflow(nodes as StudioNode[], edges);
+      const updatedNodes = await executeWorkflow(nodes as StudioNode[], edges, startFromNodeId);
       setNodes(updatedNodes as any);
-      toast.success('Workflow executado com sucesso!');
+      toast.success(startFromNodeId ? 'Execução parcial concluída!' : 'Workflow executado com sucesso!');
     } catch (err: any) {
       toast.error(err.message || 'Erro ao executar workflow');
     }
   }, [nodes, edges, executeWorkflow, setNodes]);
+
+  const handleExecuteFromNode = useCallback(() => {
+    if (selectedNode) {
+      handleExecute(selectedNode.id);
+    }
+  }, [selectedNode, handleExecute]);
+
+  const handleStoryboardToWorkflow = useCallback((scenes: StoryboardScene[]) => {
+    const newNodes: StudioNode[] = [];
+    const newEdges: StudioEdge[] = [];
+    let x = 100;
+    const yBase = 150;
+
+    scenes.forEach((scene, i) => {
+      const promptId = `prompt_${Date.now()}_${i}`;
+      newNodes.push({
+        id: promptId,
+        type: 'studioNode',
+        position: { x, y: yBase },
+        data: {
+          label: `📝 ${scene.title}`,
+          type: 'textInput',
+          config: { text: `${scene.description}\n\nNarração: ${scene.narration}\nCâmera: ${scene.cameraMovement}\nMood: ${scene.mood}` },
+        },
+      });
+
+      // Media node
+      if (scene.mediaType !== 'none') {
+        const mediaId = `media_${Date.now()}_${i}`;
+        const mediaType = scene.mediaType === 'video' ? 'videoGen' : 'imageGen';
+        const meta = getNodeMeta(mediaType);
+        newNodes.push({
+          id: mediaId,
+          type: 'studioNode',
+          position: { x: x + 350, y: yBase - 60 },
+          data: {
+            label: scene.mediaType === 'video' ? `🎬 Vídeo: ${scene.title}` : `🖼️ Imagem: ${scene.title}`,
+            type: mediaType,
+            config: {
+              ...meta?.defaultConfig,
+              ...(scene.mediaType === 'video' ? { duration: scene.duration } : {}),
+            },
+          },
+        });
+        newEdges.push({
+          id: `e_${promptId}_${mediaId}`,
+          source: promptId,
+          target: mediaId,
+          animated: true,
+          style: { stroke: '#a78bfa', strokeWidth: 2 },
+        });
+      }
+
+      // Audio node
+      if (scene.audioType !== 'none') {
+        const audioId = `audio_${Date.now()}_${i}`;
+        const audioType = scene.audioType === 'music' ? 'musicGen' : 'audioGen';
+        const meta = getNodeMeta(audioType);
+        newNodes.push({
+          id: audioId,
+          type: 'studioNode',
+          position: { x: x + 350, y: yBase + 60 },
+          data: {
+            label: scene.audioType === 'music' ? `🎵 Música: ${scene.title}` :
+                   scene.audioType === 'narration' ? `🎙️ Narração: ${scene.title}` :
+                   `🔊 SFX: ${scene.title}`,
+            type: audioType,
+            config: {
+              ...meta?.defaultConfig,
+              duration: scene.duration,
+              ...(scene.audioType === 'narration' ? { type: 'narration' } : {}),
+              ...(scene.audioType === 'sfx' ? { type: 'sfx' } : {}),
+            },
+          },
+        });
+        newEdges.push({
+          id: `e_${promptId}_${audioId}`,
+          source: promptId,
+          target: audioId,
+          animated: true,
+          style: { stroke: '#a78bfa', strokeWidth: 2 },
+        });
+      }
+
+      x += 700;
+    });
+
+    // Output node at the end
+    const outputId = `output_${Date.now()}`;
+    newNodes.push({
+      id: outputId,
+      type: 'studioNode',
+      position: { x, y: yBase },
+      data: { label: 'Resultado Final', type: 'output', config: { format: 'auto' } },
+    });
+
+    setNodes(newNodes as any);
+    setEdges(newEdges as any);
+    setShowCreativeAgent(false);
+    setShowCanvas(true);
+  }, [setNodes, setEdges]);
 
   const clearAll = useCallback(() => {
     setNodes([]);
@@ -234,6 +337,14 @@ const AICreativeStudioInner: React.FC = () => {
                 Explorar Presets
               </Button>
               <Button
+                onClick={() => setShowCreativeAgent(true)}
+                variant="outline"
+                className="border-purple-500/30 text-purple-300 hover:bg-purple-500/10 px-6 py-2.5 rounded-full font-medium gap-2 bg-purple-500/5"
+              >
+                <Bot className="h-4 w-4" />
+                Agente Criativo
+              </Button>
+              <Button
                 onClick={() => setShowSettings(true)}
                 variant="outline"
                 className="border-white/20 text-white hover:bg-white/10 px-6 py-2.5 rounded-full font-medium gap-2 bg-transparent"
@@ -292,6 +403,13 @@ const AICreativeStudioInner: React.FC = () => {
 
         {/* AI Settings Panel */}
         <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
+
+        {/* Creative Agent Panel */}
+        <CreativeAgentPanel
+          open={showCreativeAgent}
+          onClose={() => setShowCreativeAgent(false)}
+          onCreateWorkflow={handleStoryboardToWorkflow}
+        />
       </div>
     );
   }
@@ -338,13 +456,25 @@ const AICreativeStudioInner: React.FC = () => {
             <div className="flex items-center gap-2 bg-[#1a1a2e]/95 backdrop-blur border border-white/10 rounded-xl px-4 py-2 shadow-2xl">
               <Button
                 size="sm"
-                onClick={handleExecute}
+                onClick={() => handleExecute()}
                 disabled={isExecuting || nodes.length === 0}
                 className="gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white border-0 rounded-lg"
               >
                 <Play className="h-4 w-4" />
-                {isExecuting ? 'Executando...' : 'Executar'}
+                {isExecuting ? 'Executando...' : 'Executar Tudo'}
               </Button>
+              {selectedNode && (
+                <Button
+                  size="sm"
+                  onClick={handleExecuteFromNode}
+                  disabled={isExecuting}
+                  className="gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border-0 rounded-lg"
+                  title="Executar a partir deste nó"
+                >
+                  <SkipForward className="h-4 w-4" />
+                  Daqui em diante
+                </Button>
+              )}
               <div className="w-px h-6 bg-white/10" />
               <Button size="icon" variant="ghost" onClick={deleteSelected} disabled={!selectedNode} title="Excluir nó" className="text-white/60 hover:text-white hover:bg-white/10">
                 <Trash2 className="h-4 w-4" />
@@ -418,6 +548,13 @@ const AICreativeStudioInner: React.FC = () => {
 
       {/* AI Settings Panel */}
       <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
+
+      {/* Creative Agent Panel */}
+      <CreativeAgentPanel
+        open={showCreativeAgent}
+        onClose={() => setShowCreativeAgent(false)}
+        onCreateWorkflow={handleStoryboardToWorkflow}
+      />
     </div>
   );
 };
