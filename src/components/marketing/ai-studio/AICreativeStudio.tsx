@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   ReactFlow,
   Controls,
@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
-import { Play, Save, Trash2, Undo, Redo, ZoomIn, ZoomOut, Maximize2, Clapperboard } from 'lucide-react';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
 import StudioNodeComponent from './StudioNodeComponent';
@@ -32,17 +32,30 @@ const nodeTypes = {
 const initialNodes: StudioNode[] = [];
 const initialEdges: StudioEdge[] = [];
 
+// Flow-style quick tools
+const QUICK_TOOLS = [
+  { id: 'text-to-video', icon: Video, label: 'Texto p/ Vídeo', desc: 'Gere vídeos a partir de prompts', nodeType: 'videoGen' as const },
+  { id: 'image-to-video', icon: Film, label: 'Imagem p/ Vídeo', desc: 'Anime imagens em vídeos', nodeType: 'videoGen' as const },
+  { id: 'image-gen', icon: Image, label: 'Gerar Imagem', desc: 'Crie imagens com IA', nodeType: 'imageGen' as const },
+  { id: 'music-gen', icon: Music, label: 'Criar Música', desc: 'Compose músicas originais', nodeType: 'musicGen' as const },
+  { id: 'audio-gen', icon: Mic, label: 'Gerar Áudio', desc: 'Narração e efeitos sonoros', nodeType: 'audioGen' as const },
+  { id: 'text-gen', icon: Type, label: 'Texto com IA', desc: 'Processar com LLM', nodeType: 'llmProcess' as const },
+  { id: 'edit-image', icon: Wand2, label: 'Editar Imagem', desc: 'Edite com instruções', nodeType: 'imageEdit' as const },
+  { id: 'lip-sync', icon: Sparkles, label: 'Lip Sync', desc: 'Sincronismo labial', nodeType: 'lipSync' as const },
+];
+
 const AICreativeStudioInner: React.FC = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<StudioNode | null>(null);
   const [showPresets, setShowPresets] = useState(false);
+  const [showCanvas, setShowCanvas] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
   const { executeWorkflow, isExecuting } = useStudioExecution();
 
   const onConnect = useCallback((connection: Connection) => {
-    setEdges((eds) => addEdge({ ...connection, animated: true, style: { stroke: '#6366f1', strokeWidth: 2 } }, eds));
+    setEdges((eds) => addEdge({ ...connection, animated: true, style: { stroke: '#a78bfa', strokeWidth: 2 } }, eds));
   }, [setEdges]);
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -54,23 +67,15 @@ const AICreativeStudioInner: React.FC = () => {
     event.preventDefault();
     const type = event.dataTransfer.getData('application/studioNodeType');
     if (!type) return;
-
     const meta = getNodeMeta(type as any);
     if (!meta) return;
-
     const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
-
     const newNode: StudioNode = {
       id: `${type}_${Date.now()}`,
       type: 'studioNode',
       position,
-      data: {
-        label: meta.label,
-        type: type as any,
-        config: { ...meta.defaultConfig },
-      },
+      data: { label: meta.label, type: type as any, config: { ...meta.defaultConfig } },
     };
-
     setNodes((nds) => [...nds, newNode]);
   }, [screenToFlowPosition, setNodes]);
 
@@ -120,38 +125,166 @@ const AICreativeStudioInner: React.FC = () => {
   }, [setNodes, setEdges]);
 
   const handlePresetSelect = useCallback((preset: Preset) => {
-    // Create a text input node with the preset prompt and a videoGen node connected to it
     const inputNode: StudioNode = {
       id: `textInput_${Date.now()}`,
       type: 'studioNode',
       position: { x: 100, y: 200 },
-      data: {
-        label: `Preset: ${preset.name}`,
-        type: 'textInput',
-        config: { text: preset.prompt },
-      },
+      data: { label: `Preset: ${preset.name}`, type: 'textInput', config: { text: preset.prompt } },
     };
     const videoNode: StudioNode = {
       id: `videoGen_${Date.now()}`,
       type: 'studioNode',
       position: { x: 500, y: 200 },
-      data: {
-        label: 'Gerar Vídeo',
-        type: 'videoGen',
-        config: { duration: 5, resolution: '1080p', aspectRatio: '16:9' },
-      },
+      data: { label: 'Gerar Vídeo', type: 'videoGen', config: { duration: 5, resolution: '1080p', aspectRatio: '16:9', videoModel: 'google/veo-3.1' } },
     };
     setNodes((nds) => [...nds, inputNode, videoNode]);
     setEdges((eds) => [
       ...eds,
-      { id: `e_${inputNode.id}_${videoNode.id}`, source: inputNode.id, target: videoNode.id, animated: true, style: { stroke: '#6366f1', strokeWidth: 2 } },
+      { id: `e_${inputNode.id}_${videoNode.id}`, source: inputNode.id, target: videoNode.id, animated: true, style: { stroke: '#a78bfa', strokeWidth: 2 } },
     ]);
     setShowPresets(false);
+    setShowCanvas(true);
     toast.success(`Preset "${preset.name}" aplicado ao workflow!`);
   }, [setNodes, setEdges]);
 
+  const handleQuickTool = useCallback((toolId: string, nodeType: string) => {
+    const meta = getNodeMeta(nodeType as any);
+    if (!meta) return;
+
+    const inputNode: StudioNode = {
+      id: `textInput_${Date.now()}`,
+      type: 'studioNode',
+      position: { x: 100, y: 200 },
+      data: { label: 'Prompt', type: 'textInput', config: { text: '' } },
+    };
+    const processNode: StudioNode = {
+      id: `${nodeType}_${Date.now()}`,
+      type: 'studioNode',
+      position: { x: 500, y: 200 },
+      data: { label: meta.label, type: nodeType as any, config: { ...meta.defaultConfig } },
+    };
+    const outputNode: StudioNode = {
+      id: `output_${Date.now()}`,
+      type: 'studioNode',
+      position: { x: 900, y: 200 },
+      data: { label: 'Resultado Final', type: 'output', config: { format: 'auto' } },
+    };
+
+    setNodes([inputNode, processNode, outputNode]);
+    setEdges([
+      { id: `e1_${Date.now()}`, source: inputNode.id, target: processNode.id, animated: true, style: { stroke: '#a78bfa', strokeWidth: 2 } },
+      { id: `e2_${Date.now()}`, source: processNode.id, target: outputNode.id, animated: true, style: { stroke: '#a78bfa', strokeWidth: 2 } },
+    ]);
+    setShowCanvas(true);
+    toast.success(`Workflow "${meta.label}" criado!`);
+  }, [setNodes, setEdges]);
+
+  // Flow-style landing page (when no nodes and not in canvas mode)
+  if (!showCanvas && nodes.length === 0) {
+    return (
+      <div className="h-[calc(100vh-200px)] min-h-[600px] rounded-xl overflow-hidden bg-gradient-to-br from-[#0a0a0f] via-[#0f0f1a] to-[#1a1025] text-white flex flex-col">
+        {/* Hero */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 relative overflow-hidden">
+          {/* Ambient glow effects */}
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/8 rounded-full blur-[100px]" />
+          <div className="absolute top-1/3 right-1/3 w-64 h-64 bg-indigo-500/6 rounded-full blur-[80px]" />
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="relative z-10 text-center max-w-3xl"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 text-xs text-white/60">
+              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+              Powered by Veo 3.1, Sora 3, Gemini & mais
+            </div>
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
+              <span className="bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">
+                AI Creative
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-purple-300 via-indigo-300 to-blue-300 bg-clip-text text-transparent">
+                Studio
+              </span>
+            </h1>
+
+            <p className="text-base md:text-lg text-white/50 mb-10 max-w-xl mx-auto leading-relaxed">
+              Crie vídeos, imagens, músicas e áudio com os modelos de IA mais avançados do mundo. Uma experiência cinematográfica completa.
+            </p>
+
+            <div className="flex items-center justify-center gap-3 mb-12">
+              <Button
+                onClick={() => setShowCanvas(true)}
+                className="bg-white text-black hover:bg-white/90 px-6 py-2.5 rounded-full font-medium gap-2"
+              >
+                <Play className="h-4 w-4" />
+                Criar Workflow
+              </Button>
+              <Button
+                onClick={() => setShowPresets(true)}
+                variant="outline"
+                className="border-white/20 text-white hover:bg-white/10 px-6 py-2.5 rounded-full font-medium gap-2 bg-transparent"
+              >
+                <Clapperboard className="h-4 w-4" />
+                Explorar Presets
+              </Button>
+            </div>
+          </motion.div>
+
+          {/* Quick Tools Grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="relative z-10 w-full max-w-4xl"
+          >
+            <p className="text-xs text-white/30 uppercase tracking-widest text-center mb-4">Ferramentas</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {QUICK_TOOLS.map((tool) => {
+                const Icon = tool.icon;
+                return (
+                  <motion.button
+                    key={tool.id}
+                    whileHover={{ scale: 1.03, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleQuickTool(tool.id, tool.nodeType)}
+                    className="group flex flex-col items-start gap-2 p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.06] hover:border-white/[0.15] transition-all text-left"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/20 flex items-center justify-center border border-purple-500/20">
+                        <Icon className="h-4 w-4 text-purple-300" />
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/40 transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-white/80 group-hover:text-white transition-colors">{tool.label}</p>
+                      <p className="text-[11px] text-white/30">{tool.desc}</p>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Presets Gallery overlay */}
+        <AnimatePresence>
+          {showPresets && (
+            <PresetsGallery
+              onSelectPreset={handlePresetSelect}
+              onClose={() => setShowPresets(false)}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-[calc(100vh-200px)] min-h-[600px] border rounded-xl overflow-hidden bg-background">
+    <div className="flex h-[calc(100vh-200px)] min-h-[600px] border rounded-xl overflow-hidden bg-[#0a0a0f]">
       {/* Node Library */}
       <StudioNodeLibrary />
 
@@ -171,16 +304,16 @@ const AICreativeStudioInner: React.FC = () => {
           fitView
           snapToGrid
           snapGrid={[16, 16]}
-          className="bg-muted/10"
-          defaultEdgeOptions={{ animated: true, style: { stroke: '#6366f1', strokeWidth: 2 } }}
+          className="bg-[#0d0d14]"
+          defaultEdgeOptions={{ animated: true, style: { stroke: '#a78bfa', strokeWidth: 2 } }}
         >
-          <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="hsl(var(--muted-foreground) / 0.15)" />
-          <Controls 
+          <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="rgba(167, 139, 250, 0.08)" />
+          <Controls
             showInteractive={false}
-            className="!bg-background !border-border !shadow-lg !rounded-lg"
+            className="!bg-[#1a1a2e] !border-white/10 !shadow-lg !rounded-lg [&>button]:!bg-[#1a1a2e] [&>button]:!border-white/10 [&>button]:!text-white/60 [&>button:hover]:!bg-white/10"
           />
-          <MiniMap 
-            className="!bg-background !border-border !rounded-lg"
+          <MiniMap
+            className="!bg-[#1a1a2e] !border-white/10 !rounded-lg"
             nodeColor={(n) => {
               const meta = getNodeMeta((n.data as StudioNodeData)?.type);
               return meta?.color || '#64748b';
@@ -189,28 +322,40 @@ const AICreativeStudioInner: React.FC = () => {
 
           {/* Toolbar */}
           <Panel position="top-center">
-            <div className="flex items-center gap-2 bg-background/95 backdrop-blur border rounded-xl px-4 py-2 shadow-lg">
+            <div className="flex items-center gap-2 bg-[#1a1a2e]/95 backdrop-blur border border-white/10 rounded-xl px-4 py-2 shadow-2xl">
               <Button
                 size="sm"
-                variant="default"
                 onClick={handleExecute}
                 disabled={isExecuting || nodes.length === 0}
-                className="gap-2"
+                className="gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white border-0 rounded-lg"
               >
                 <Play className="h-4 w-4" />
                 {isExecuting ? 'Executando...' : 'Executar'}
               </Button>
-              <div className="w-px h-6 bg-border" />
-              <Button size="icon" variant="ghost" onClick={deleteSelected} disabled={!selectedNode} title="Excluir nó">
+              <div className="w-px h-6 bg-white/10" />
+              <Button size="icon" variant="ghost" onClick={deleteSelected} disabled={!selectedNode} title="Excluir nó" className="text-white/60 hover:text-white hover:bg-white/10">
                 <Trash2 className="h-4 w-4" />
               </Button>
-              <Button size="icon" variant="ghost" onClick={clearAll} title="Limpar tudo">
-                <Trash2 className="h-4 w-4 text-destructive" />
+              <Button size="icon" variant="ghost" onClick={clearAll} title="Limpar tudo" className="text-red-400/60 hover:text-red-400 hover:bg-red-400/10">
+                <Trash2 className="h-4 w-4" />
               </Button>
-              <div className="w-px h-6 bg-border" />
-              <Button size="sm" variant="outline" onClick={() => setShowPresets(true)} className="gap-2" title="Presets de câmera e efeitos">
+              <div className="w-px h-6 bg-white/10" />
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowPresets(true)}
+                className="gap-2 text-white/60 hover:text-white hover:bg-white/10"
+              >
                 <Clapperboard className="h-4 w-4" />
                 Presets
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => { clearAll(); setShowCanvas(false); }}
+                className="gap-2 text-white/60 hover:text-white hover:bg-white/10"
+              >
+                Início
               </Button>
             </div>
           </Panel>
@@ -218,12 +363,11 @@ const AICreativeStudioInner: React.FC = () => {
           {/* Empty state */}
           {nodes.length === 0 && (
             <Panel position="top-center" className="!top-1/2 !-translate-y-1/2">
-              <div className="text-center text-muted-foreground p-8">
-                <div className="text-6xl mb-4">🎨</div>
-                <h3 className="text-lg font-semibold mb-2">AI Creative Studio</h3>
-                <p className="text-sm max-w-md">
-                  Arraste blocos do painel lateral para criar seu workflow de IA.
-                  Conecte os nós para definir o fluxo de processamento.
+              <div className="text-center p-8">
+                <div className="text-6xl mb-4">🎬</div>
+                <h3 className="text-lg font-semibold mb-2 text-white/80">Arraste blocos para começar</h3>
+                <p className="text-sm max-w-md text-white/40">
+                  Use o painel lateral para adicionar blocos ao canvas, ou volte ao início para usar as ferramentas rápidas.
                 </p>
               </div>
             </Panel>
