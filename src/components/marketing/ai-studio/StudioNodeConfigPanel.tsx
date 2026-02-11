@@ -6,13 +6,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X } from 'lucide-react';
+import { X, Play, SkipForward } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 
 interface Props {
   node: StudioNode;
   onUpdateConfig: (nodeId: string, config: Record<string, any>) => void;
   onClose: () => void;
+  onExecuteFromNode?: (nodeId: string) => void;
 }
 
 const LLM_MODELS = [
@@ -106,7 +107,7 @@ const MUSIC_MODELS = [
   { value: 'google/musicfx', label: '🟦 MusicFX', provider: 'Google' },
 ];
 
-const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose }) => {
+const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose, onExecuteFromNode }) => {
   const meta = getNodeMeta(node.data.type);
   const config = node.data.config;
 
@@ -456,6 +457,20 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose 
           <X className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Execute from this node */}
+      {onExecuteFromNode && (
+        <div className="px-3 py-2 border-b border-white/[0.08]">
+          <Button
+            size="sm"
+            onClick={() => onExecuteFromNode(node.id)}
+            className="w-full gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border-0 rounded-lg text-xs"
+          >
+            <SkipForward className="h-3.5 w-3.5" />
+            Executar deste ponto
+          </Button>
+        </div>
+      )}
       <ScrollArea className="flex-1 p-3">
         {renderConfig()}
 
