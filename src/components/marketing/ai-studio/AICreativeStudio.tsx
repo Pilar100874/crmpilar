@@ -543,6 +543,7 @@ const AICreativeStudioInner: React.FC = () => {
           node={selectedNode}
           onUpdateConfig={updateNodeConfig}
           onClose={() => setSelectedNode(null)}
+          onExecuteFromNode={(nodeId) => handleExecute(nodeId)}
         />
       )}
 
