@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
-import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight } from 'lucide-react';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
 import StudioNodeComponent from './StudioNodeComponent';
@@ -24,6 +24,7 @@ import StudioNodeLibrary from './StudioNodeLibrary';
 import StudioNodeConfigPanel from './StudioNodeConfigPanel';
 import { useStudioExecution } from './useStudioExecution';
 import PresetsGallery, { Preset } from './PresetsGallery';
+import AISettingsPanel from './AISettingsPanel';
 
 const nodeTypes = {
   studioNode: StudioNodeComponent,
@@ -50,6 +51,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<StudioNode | null>(null);
   const [showPresets, setShowPresets] = useState(false);
   const [showCanvas, setShowCanvas] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
   const { executeWorkflow, isExecuting } = useStudioExecution();
@@ -231,6 +233,14 @@ const AICreativeStudioInner: React.FC = () => {
                 <Clapperboard className="h-4 w-4" />
                 Explorar Presets
               </Button>
+              <Button
+                onClick={() => setShowSettings(true)}
+                variant="outline"
+                className="border-white/20 text-white hover:bg-white/10 px-6 py-2.5 rounded-full font-medium gap-2 bg-transparent"
+              >
+                <Settings2 className="h-4 w-4" />
+                Configurações IA
+              </Button>
             </div>
           </motion.div>
 
@@ -279,6 +289,9 @@ const AICreativeStudioInner: React.FC = () => {
             />
           )}
         </AnimatePresence>
+
+        {/* AI Settings Panel */}
+        <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
       </div>
     );
   }
@@ -352,6 +365,15 @@ const AICreativeStudioInner: React.FC = () => {
               <Button
                 size="sm"
                 variant="ghost"
+                onClick={() => setShowSettings(true)}
+                className="gap-2 text-white/60 hover:text-white hover:bg-white/10"
+              >
+                <Settings2 className="h-4 w-4" />
+                Config IA
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={() => { clearAll(); setShowCanvas(false); }}
                 className="gap-2 text-white/60 hover:text-white hover:bg-white/10"
               >
@@ -393,6 +415,9 @@ const AICreativeStudioInner: React.FC = () => {
           onClose={() => setSelectedNode(null)}
         />
       )}
+
+      {/* AI Settings Panel */}
+      <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 };
