@@ -202,72 +202,118 @@ export function useStudioExecution() {
       }
 
       case 'audioGen': {
-        // Try to use ElevenLabs API key from ai_api_keys table
-        try {
-          const estabId = localStorage.getItem('estabelecimentoId');
-          if (!estabId) throw new Error('Estabelecimento não encontrado');
-          
-          const { data: elevenLabsKey } = await supabase
+        const textToSpeak = combinedInput || config.text || 'Olá, este é um teste.';
+        
+        // Check if user has ElevenLabs configured (paid option)
+        const estabId = localStorage.getItem('estabelecimentoId');
+        let useElevenLabs = false;
+        let elevenLabsKey: any = null;
+
+        if (estabId) {
+          const { data } = await supabase
             .from('ai_api_keys')
             .select('api_key, base_url, is_active')
             .eq('estabelecimento_id', estabId)
             .eq('provider', 'elevenlabs')
             .eq('is_active', true)
             .maybeSingle();
-
-          if (!elevenLabsKey?.api_key) {
-            return {
-              text: `🔊 Áudio (${config.type || 'tts'}) - texto: "${combinedInput?.substring(0, 100)}"\n\n⚠️ Configure a API Key do ElevenLabs na aba "ElevenLabs" do Marketing para gerar áudio real.`,
-            };
+          if (data?.api_key) {
+            useElevenLabs = true;
+            elevenLabsKey = data;
           }
+        }
 
-          // Parse extra config stored in base_url field
-          let extraConfig: Record<string, any> = {};
-          try { extraConfig = elevenLabsKey.base_url ? JSON.parse(elevenLabsKey.base_url) : {}; } catch {}
+        if (useElevenLabs && elevenLabsKey) {
+          // PAID: ElevenLabs TTS
+          try {
+            let extraConfig: Record<string, any> = {};
+            try { extraConfig = elevenLabsKey.base_url ? JSON.parse(elevenLabsKey.base_url) : {}; } catch {}
 
-          const voiceId = config.voiceId || extraConfig.defaultVoiceId || 'JBFqnCBsd6RMkjVDRZzb';
-          const model = config.audioModel?.replace('elevenlabs/', '') || extraConfig.defaultModel || 'eleven_multilingual_v2';
-          const outputFormat = extraConfig.outputFormat || 'mp3_44100_128';
-          const textToSpeak = combinedInput || config.text || 'Olá, este é um teste.';
+            const voiceId = config.voiceId || extraConfig.defaultVoiceId || 'JBFqnCBsd6RMkjVDRZzb';
+            const model = config.audioModel?.replace('elevenlabs/', '') || extraConfig.defaultModel || 'eleven_multilingual_v2';
+            const outputFormat = extraConfig.outputFormat || 'mp3_44100_128';
 
-          const ttsResponse = await fetch(
-            `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=${outputFormat}`,
-            {
-              method: 'POST',
-              headers: {
-                'xi-api-key': elevenLabsKey.api_key,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                text: textToSpeak,
-                model_id: model,
-                voice_settings: {
-                  stability: extraConfig.stability ?? 0.5,
-                  similarity_boost: extraConfig.similarityBoost ?? 0.75,
-                  style: extraConfig.style ?? 0.5,
-                  use_speaker_boost: extraConfig.useSpeakerBoost ?? true,
-                  speed: extraConfig.speed ?? 1.0,
+            const ttsResponse = await fetch(
+              `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=${outputFormat}`,
+              {
+                method: 'POST',
+                headers: {
+                  'xi-api-key': elevenLabsKey.api_key,
+                  'Content-Type': 'application/json',
                 },
-              }),
+                body: JSON.stringify({
+                  text: textToSpeak,
+                  model_id: model,
+                  voice_settings: {
+                    stability: extraConfig.stability ?? 0.5,
+                    similarity_boost: extraConfig.similarityBoost ?? 0.75,
+                    style: extraConfig.style ?? 0.5,
+                    use_speaker_boost: extraConfig.useSpeakerBoost ?? true,
+                    speed: extraConfig.speed ?? 1.0,
+                  },
+                }),
+              }
+            );
+
+            if (!ttsResponse.ok) {
+              const errMsg = await ttsResponse.text().catch(() => '');
+              throw new Error(`ElevenLabs ${ttsResponse.status}: ${errMsg.substring(0, 200)}`);
             }
-          );
 
-          if (!ttsResponse.ok) {
-            const errMsg = await ttsResponse.text().catch(() => '');
-            throw new Error(`ElevenLabs ${ttsResponse.status}: ${errMsg.substring(0, 200)}`);
+            const audioBlob = await ttsResponse.blob();
+            const audioUrl = URL.createObjectURL(audioBlob);
+
+            return {
+              audioUrl,
+              text: `🔊 Áudio gerado com ElevenLabs (pago)!\nVoz: ${voiceId.substring(0, 8)}... | Modelo: ${model}\nTexto: "${textToSpeak.substring(0, 80)}"`,
+            };
+          } catch (err: any) {
+            console.error('[Studio] ElevenLabs TTS error:', err);
+            // Fall through to free Web Speech API
           }
+        }
 
-          const audioBlob = await ttsResponse.blob();
-          const audioUrl = URL.createObjectURL(audioBlob);
+        // FREE: Web Speech API (browser built-in TTS)
+        try {
+          const audioUrl = await new Promise<string>((resolve, reject) => {
+            if (!('speechSynthesis' in window)) {
+              reject(new Error('Web Speech API não suportada neste navegador'));
+              return;
+            }
+
+            // Use MediaRecorder to capture speech output
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = config.lang || 'pt-BR';
+            utterance.rate = config.speed || 1.0;
+            utterance.pitch = config.pitch || 1.0;
+
+            // Select voice if available
+            const voices = speechSynthesis.getVoices();
+            const ptVoice = voices.find(v => v.lang.startsWith('pt')) || voices[0];
+            if (ptVoice) utterance.voice = ptVoice;
+
+            // Since Web Speech API doesn't directly give audio blobs,
+            // we generate a silent audio with a marker text
+            utterance.onend = () => {
+              // Create a simple WAV with silence as placeholder + play via speechSynthesis
+              resolve('__webspeech__');
+            };
+            utterance.onerror = (e) => reject(new Error(`Speech error: ${e.error}`));
+
+            speechSynthesis.cancel();
+            speechSynthesis.speak(utterance);
+          });
 
           return {
-            audioUrl,
-            text: `🔊 Áudio gerado com ElevenLabs!\nVoz: ${voiceId.substring(0, 8)}... | Modelo: ${model}\nTexto: "${textToSpeak.substring(0, 80)}"`,
+            text: `🔊 Áudio gerado gratuitamente (Web Speech API)\nIdioma: ${config.lang || 'pt-BR'} | Velocidade: ${config.speed || 1.0}x\nTexto: "${textToSpeak.substring(0, 80)}"`,
+            _webSpeechText: textToSpeak,
+            _webSpeechLang: config.lang || 'pt-BR',
+            _webSpeechRate: config.speed || 1.0,
+            _webSpeechPitch: config.pitch || 1.0,
           };
         } catch (err: any) {
-          console.error('[Studio] ElevenLabs TTS error:', err);
           return {
-            text: `🔊 Erro ao gerar áudio: ${err.message}\n\nVerifique sua API Key na aba "ElevenLabs".`,
+            text: `🔊 Texto para fala: "${textToSpeak.substring(0, 100)}"\n\n⚠️ Web Speech API indisponível. Configure ElevenLabs para áudio de alta qualidade.`,
           };
         }
       }

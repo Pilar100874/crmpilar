@@ -5,7 +5,8 @@ import { useNodeResult } from './useNodeResults';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
-  Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download
+  Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download,
+  DollarSign, Volume2
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
@@ -75,6 +76,9 @@ const nodeAccentMap: Record<string, string> = {
   imageAnalyze: '#14b8a6',
   output: '#64748b',
 };
+// Blocks that REQUIRE paid external APIs (no free alternative)
+const PAID_ONLY_BLOCKS: Set<string> = new Set(['musicGen', 'lipSync', 'videoMerge']);
+
 const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as unknown as StudioNodeData;
   const meta = getNodeMeta(nodeData.type);
@@ -84,6 +88,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const gradient = nodeGradientMap[nodeData.type] || 'from-slate-500/20 to-zinc-500/20';
   const iconColor = nodeIconColorMap[nodeData.type] || 'text-slate-400';
   const isPaused = !!nodeData.config?._paused;
+  const isPaidBlock = PAID_ONLY_BLOCKS.has(nodeData.type);
   const updateNodeInternals = useUpdateNodeInternals();
 
   const hasInput = !['textInput', 'systemPrompt', 'imageInput'].includes(nodeData.type);
@@ -150,6 +155,12 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         <div className="absolute -top-2.5 right-3 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-bold shadow-md">
           <PauseCircle className="h-3 w-3" />
           PAUSADO
+        </div>
+      )}
+      {isPaidBlock && (
+        <div className="absolute -top-2.5 left-3 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-500 text-white text-[9px] font-bold shadow-md" title="Este bloco requer API paga externa">
+          <DollarSign className="h-3 w-3" />
+          API PAGA
         </div>
       )}
       {/* Cinematic Header with gradient */}
@@ -384,6 +395,32 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     <Download className="h-3 w-3" />
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Web Speech API playback button */}
+            {activeResult?._webSpeechText && !resultAudio && (
+              <div className="px-3 pb-2 pt-1 space-y-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if ('speechSynthesis' in window) {
+                      speechSynthesis.cancel();
+                      const utt = new SpeechSynthesisUtterance(activeResult._webSpeechText);
+                      utt.lang = activeResult._webSpeechLang || 'pt-BR';
+                      utt.rate = activeResult._webSpeechRate || 1.0;
+                      utt.pitch = activeResult._webSpeechPitch || 1.0;
+                      const voices = speechSynthesis.getVoices();
+                      const ptVoice = voices.find((v: SpeechSynthesisVoice) => v.lang.startsWith('pt')) || voices[0];
+                      if (ptVoice) utt.voice = ptVoice;
+                      speechSynthesis.speak(utt);
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-colors"
+                >
+                  <Volume2 className="h-4 w-4 text-emerald-500" />
+                  <span className="text-xs font-medium text-emerald-500">Reproduzir (Gratuito)</span>
+                </button>
               </div>
             )}
 
