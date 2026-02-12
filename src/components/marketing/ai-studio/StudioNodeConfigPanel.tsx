@@ -291,9 +291,9 @@ const QualityStars = ({ level }: { level: number }) => (
 );
 
 const CostBadge = ({ cost }: { cost: string }) => {
-  if (cost === 'GRÁTIS') return <span className="text-[9px] font-bold px-1 py-0.5 rounded text-emerald-600 bg-emerald-500/10">✅ GRÁTIS</span>;
-  const color = cost.length <= 1 ? 'text-emerald-600 bg-emerald-500/10' : cost.length === 2 ? 'text-blue-600 bg-blue-500/10' : cost.length === 3 ? 'text-orange-600 bg-orange-500/10' : 'text-red-600 bg-red-500/10';
-  return <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${color}`}>{cost}</span>;
+  if (cost === 'GRÁTIS') return <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-emerald-600 bg-emerald-500/15 ring-1 ring-emerald-500/20">✅ GRÁTIS</span>;
+  const color = cost.length <= 1 ? 'text-emerald-600 bg-emerald-500/10 ring-emerald-500/20' : cost.length === 2 ? 'text-blue-600 bg-blue-500/10 ring-blue-500/20' : cost.length === 3 ? 'text-orange-600 bg-orange-500/10 ring-orange-500/20' : 'text-red-600 bg-red-500/10 ring-red-500/20';
+  return <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ring-1 ${color}`}>{cost}</span>;
 };
 
 const ModelSelectItem = ({ model }: { model: ModelInfo }) => (
@@ -310,13 +310,28 @@ const ModelSelectItem = ({ model }: { model: ModelInfo }) => (
 );
 
 const SectionTitle = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
-  <div className="flex items-center gap-2 mt-5 mb-3">
-    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
-    <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-primary/70 font-bold whitespace-nowrap">
+  <div className="flex items-center gap-2.5 mt-6 mb-3 px-0.5">
+    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+    <span className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.15em] text-primary/60 font-bold whitespace-nowrap">
       {icon}
       {children}
     </span>
-    <div className="h-px flex-1 bg-gradient-to-r from-border via-transparent to-transparent" />
+    <div className="h-px flex-1 bg-gradient-to-r from-border/60 via-transparent to-transparent" />
+  </div>
+);
+
+const ConfigField = ({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) => (
+  <div className="rounded-lg bg-muted/30 border border-border/40 p-3 space-y-1.5 hover:border-border/70 transition-colors">
+    <Label className="text-[11px] font-semibold text-foreground/80">{label}</Label>
+    {hint && <p className="text-[10px] text-muted-foreground leading-relaxed">{hint}</p>}
+    {children}
+  </div>
+);
+
+const ToggleField = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) => (
+  <div className="flex items-center justify-between rounded-lg bg-muted/30 border border-border/40 px-3 py-2.5 hover:border-border/70 transition-colors">
+    <Label className="text-[11px] font-medium text-foreground/80">{label}</Label>
+    <Switch checked={checked} onCheckedChange={onChange} />
   </div>
 );
 
@@ -338,26 +353,23 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
     switch (node.data.type) {
       case 'textInput':
         return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Texto / Prompt</Label>
+          <div className="space-y-2.5">
+            <ConfigField label="Texto / Prompt">
               <Textarea
                 value={config.text || ''}
                 onChange={(e) => update('text', e.target.value)}
                 placeholder="Escreva seu prompt aqui..."
                 rows={6}
-                className="mt-1"
+                className="mt-1 text-sm"
               />
-            </div>
+            </ConfigField>
           </div>
         );
 
       case 'imageInput':
         return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Imagens de Referência</Label>
-              <p className="text-[10px] text-muted-foreground mb-2">Cole URLs de imagens ou imagens base64. Cada linha é uma imagem.</p>
+          <div className="space-y-2.5">
+            <ConfigField label="Imagens de Referência" hint="Cole URLs de imagens ou imagens base64. Cada linha é uma imagem.">
               <Textarea
                 value={(config.images || []).join('\n')}
                 onChange={(e) => {
@@ -368,14 +380,13 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 rows={4}
                 className="mt-1 font-mono text-[10px]"
               />
-            </div>
-            <div>
-              <Label className="text-xs">Ou carregue um arquivo</Label>
+            </ConfigField>
+            <ConfigField label="Ou carregue um arquivo">
               <input
                 type="file"
                 accept="image/*"
                 multiple
-                className="mt-1 text-xs w-full"
+                className="mt-1 text-xs w-full file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20 file:cursor-pointer file:transition-colors"
                 onChange={(e) => {
                   const files = Array.from(e.target.files || []);
                   files.forEach((file) => {
@@ -388,17 +399,17 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   });
                 }}
               />
-            </div>
+            </ConfigField>
             {(config.images || []).length > 0 && (
-              <div>
-                <Label className="text-xs">{config.images.length} imagem(ns) carregada(s)</Label>
-                <div className="grid grid-cols-3 gap-1 mt-1">
+              <div className="rounded-lg bg-muted/30 border border-border/40 p-3">
+                <Label className="text-[11px] font-semibold text-foreground/80">{config.images.length} imagem(ns) carregada(s)</Label>
+                <div className="grid grid-cols-3 gap-1.5 mt-2">
                   {config.images.map((img: string, idx: number) => (
-                    <div key={idx} className="relative group rounded-md overflow-hidden border border-border aspect-square">
+                    <div key={idx} className="relative group rounded-lg overflow-hidden border border-border/50 aspect-square shadow-sm hover:shadow-md transition-shadow">
                       <img src={img} alt={`Ref ${idx + 1}`} className="w-full h-full object-cover" />
                       <button
                         onClick={() => update('images', config.images.filter((_: any, i: number) => i !== idx))}
-                        className="absolute top-0.5 right-0.5 p-0.5 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 right-1 p-1 rounded-md bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -412,25 +423,23 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
 
       case 'systemPrompt':
         return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Instruções do Sistema</Label>
+          <div className="space-y-2.5">
+            <ConfigField label="Instruções do Sistema">
               <Textarea
                 value={config.systemPrompt || ''}
                 onChange={(e) => update('systemPrompt', e.target.value)}
                 placeholder="Defina como o modelo deve se comportar..."
                 rows={6}
-                className="mt-1"
+                className="mt-1 text-sm"
               />
-            </div>
+            </ConfigField>
           </div>
         );
 
       case 'llmProcess':
         return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Modelo</Label>
+          <div className="space-y-2.5">
+            <ConfigField label="Modelo">
               <Select value={config.model || 'google/gemini-2.5-flash'} onValueChange={(v) => update('model', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
@@ -439,55 +448,49 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Temperatura ({config.temperature ?? 0.7})</Label>
+            </ConfigField>
+            <ConfigField label={`Temperatura (${config.temperature ?? 0.7})`}>
               <Slider
                 value={[config.temperature ?? 0.7]}
                 onValueChange={([v]) => update('temperature', v)}
                 min={0} max={2} step={0.1}
-                className="mt-2"
+                className="mt-1"
               />
-            </div>
-            <div>
-              <Label className="text-xs">Max Tokens ({config.maxTokens ?? 2048})</Label>
+            </ConfigField>
+            <ConfigField label={`Max Tokens (${config.maxTokens ?? 2048})`}>
               <Slider
                 value={[config.maxTokens ?? 2048]}
                 onValueChange={([v]) => update('maxTokens', v)}
                 min={256} max={16384} step={256}
-                className="mt-2"
+                className="mt-1"
               />
-            </div>
-            <div>
-              <Label className="text-xs">Top P ({config.topP ?? 1})</Label>
+            </ConfigField>
+            <ConfigField label={`Top P (${config.topP ?? 1})`}>
               <Slider
                 value={[config.topP ?? 1]}
                 onValueChange={([v]) => update('topP', v)}
                 min={0} max={1} step={0.05}
-                className="mt-2"
+                className="mt-1"
               />
-            </div>
-            <div>
-              <Label className="text-xs">Frequência Penalty ({config.frequencyPenalty ?? 0})</Label>
+            </ConfigField>
+            <ConfigField label={`Frequência Penalty (${config.frequencyPenalty ?? 0})`}>
               <Slider
                 value={[config.frequencyPenalty ?? 0]}
                 onValueChange={([v]) => update('frequencyPenalty', v)}
                 min={-2} max={2} step={0.1}
-                className="mt-2"
+                className="mt-1"
               />
-            </div>
-            <div>
-              <Label className="text-xs">Presença Penalty ({config.presencePenalty ?? 0})</Label>
+            </ConfigField>
+            <ConfigField label={`Presença Penalty (${config.presencePenalty ?? 0})`}>
               <Slider
                 value={[config.presencePenalty ?? 0]}
                 onValueChange={([v]) => update('presencePenalty', v)}
                 min={-2} max={2} step={0.1}
-                className="mt-2"
+                className="mt-1"
               />
-            </div>
+            </ConfigField>
             <SectionTitle>Formato de Resposta</SectionTitle>
-            <div>
-              <Label className="text-xs">Formato</Label>
+            <ConfigField label="Formato">
               <Select value={config.responseFormat || 'text'} onValueChange={(v) => update('responseFormat', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -497,11 +500,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   <SelectItem value="code">Código</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">Streaming</Label>
-              <Switch checked={config.streaming ?? false} onCheckedChange={(v) => update('streaming', v)} />
-            </div>
+            </ConfigField>
+            <ToggleField label="Streaming" checked={config.streaming ?? false} onChange={(v) => update('streaming', v)} />
           </div>
         );
 
@@ -509,9 +509,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
       case 'imageEdit':
       case 'productComposite':
         return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Modelo de Imagem</Label>
+          <div className="space-y-2.5">
+            <ConfigField label="Modelo de Imagem">
               <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => update('model', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
@@ -520,10 +519,9 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </ConfigField>
             {node.data.type === 'imageEdit' && (
-              <div>
-                <Label className="text-xs">Instrução de Edição</Label>
+              <ConfigField label="Instrução de Edição">
                 <Textarea
                   value={config.editPrompt || ''}
                   onChange={(e) => update('editPrompt', e.target.value)}
@@ -531,11 +529,10 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   rows={3}
                   className="mt-1"
                 />
-              </div>
+              </ConfigField>
             )}
             <SectionTitle>Estilo & Tamanho</SectionTitle>
-            <div>
-              <Label className="text-xs">Estilo Visual</Label>
+            <ConfigField label="Estilo Visual">
               <Select value={config.imageStyle || 'natural'} onValueChange={(v) => update('imageStyle', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -544,9 +541,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Tamanho</Label>
+            </ConfigField>
+            <ConfigField label="Tamanho">
               <Select value={config.imageSize || '1024x1024'} onValueChange={(v) => update('imageSize', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -555,9 +551,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Qualidade</Label>
+            </ConfigField>
+            <ConfigField label="Qualidade">
               <Select value={config.quality || 'standard'} onValueChange={(v) => update('quality', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -567,37 +562,33 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   <SelectItem value="ultra">Ultra HD</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </ConfigField>
             <SectionTitle>Ajustes Avançados</SectionTitle>
-            <div>
-              <Label className="text-xs">Número de Variações ({config.numImages ?? 1})</Label>
+            <ConfigField label={`Número de Variações (${config.numImages ?? 1})`}>
               <Slider
                 value={[config.numImages ?? 1]}
                 onValueChange={([v]) => update('numImages', v)}
                 min={1} max={4} step={1}
-                className="mt-2"
+                className="mt-1"
               />
-            </div>
-            <div>
-              <Label className="text-xs">Guidance Scale ({config.guidanceScale ?? 7.5})</Label>
+            </ConfigField>
+            <ConfigField label={`Guidance Scale (${config.guidanceScale ?? 7.5})`}>
               <Slider
                 value={[config.guidanceScale ?? 7.5]}
                 onValueChange={([v]) => update('guidanceScale', v)}
                 min={1} max={20} step={0.5}
-                className="mt-2"
+                className="mt-1"
               />
-            </div>
-            <div>
-              <Label className="text-xs">Steps ({config.steps ?? 30})</Label>
+            </ConfigField>
+            <ConfigField label={`Steps (${config.steps ?? 30})`}>
               <Slider
                 value={[config.steps ?? 30]}
                 onValueChange={([v]) => update('steps', v)}
                 min={10} max={150} step={5}
-                className="mt-2"
+                className="mt-1"
               />
-            </div>
-            <div>
-              <Label className="text-xs">Seed (Semente)</Label>
+            </ConfigField>
+            <ConfigField label="Seed (Semente)">
               <Input
                 type="number"
                 value={config.seed || ''}
@@ -605,9 +596,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 placeholder="Aleatório"
                 className="mt-1"
               />
-            </div>
-            <div>
-              <Label className="text-xs">Prompt Negativo</Label>
+            </ConfigField>
+            <ConfigField label="Prompt Negativo">
               <Textarea
                 value={config.negativePrompt || ''}
                 onChange={(e) => update('negativePrompt', e.target.value)}
@@ -615,21 +605,19 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 rows={2}
                 className="mt-1"
               />
-            </div>
+            </ConfigField>
             {node.data.type === 'imageEdit' && (
               <>
                 <SectionTitle>Opções de Edição</SectionTitle>
-                <div>
-                  <Label className="text-xs">Força da Edição ({config.editStrength ?? 0.75})</Label>
+                <ConfigField label={`Força da Edição (${config.editStrength ?? 0.75})`}>
                   <Slider
                     value={[config.editStrength ?? 0.75]}
                     onValueChange={([v]) => update('editStrength', v)}
                     min={0.1} max={1} step={0.05}
-                    className="mt-2"
+                    className="mt-1"
                   />
-                </div>
-                <div>
-                  <Label className="text-xs">Tipo de Edição</Label>
+                </ConfigField>
+                <ConfigField label="Tipo de Edição">
                   <Select value={config.editType || 'general'} onValueChange={(v) => update('editType', v)}>
                     <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -642,7 +630,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                       <SelectItem value="style-transfer">Transferir Estilo</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </ConfigField>
               </>
             )}
           </div>
@@ -651,9 +639,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
       case 'videoGen':
         const isGifModel = (config.videoModel || 'free/gif-animated') === 'free/gif-animated';
         return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Modelo de Vídeo</Label>
+          <div className="space-y-2.5">
+            <ConfigField label="Modelo de Vídeo">
               <Select value={config.videoModel || 'free/gif-animated'} onValueChange={(v) => {
                 update('videoModel', v);
                 if (v === 'free/gif-animated') {
@@ -669,9 +656,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Estilo de Vídeo</Label>
+            </ConfigField>
+            <ConfigField label="Estilo de Vídeo">
               <Select value={config.videoStyle || 'realistic'} onValueChange={(v) => update('videoStyle', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -680,14 +666,13 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </ConfigField>
             {isGifModel && (
               <>
                 <SectionTitle>Configuração do GIF</SectionTitle>
-                <div>
-                  <Label className="text-xs">Quantidade de Frames: {config.frameCount || 4}</Label>
+                <ConfigField label={`Quantidade de Frames: ${config.frameCount || 4}`}>
                   <Slider
-                    className="mt-2"
+                    className="mt-1"
                     min={2}
                     max={20}
                     step={1}
@@ -698,9 +683,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                     <span>2</span>
                     <span>20</span>
                   </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Velocidade (FPS)</Label>
+                </ConfigField>
+                <ConfigField label="Velocidade (FPS)">
                   <Select value={String(config.fps || 3)} onValueChange={(v) => update('fps', Number(v))}>
                     <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -711,17 +695,16 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                       <SelectItem value="4">4 fps (Muito rápido)</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Duração total estimada</Label>
+                </ConfigField>
+                <div className="rounded-lg bg-muted/30 border border-border/40 p-3">
+                  <Label className="text-[11px] font-semibold text-foreground/80">Duração total estimada</Label>
                   <p className="text-xs text-muted-foreground mt-1">
                     ~{((config.frameCount || 4) / (config.fps || 2)).toFixed(1)}s ({config.frameCount || 4} frames × {(1 / (config.fps || 2)).toFixed(1)}s)
                   </p>
                 </div>
               </>
             )}
-            <div>
-              <Label className="text-xs">Resolução</Label>
+            <ConfigField label="Resolução">
               <Select value={config.resolution || '1080p'} onValueChange={(v) => update('resolution', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -732,9 +715,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   <SelectItem value="4k">4K (Ultra HD)</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Aspecto</Label>
+            </ConfigField>
+            <ConfigField label="Aspecto">
               <Select value={config.aspectRatio || '16:9'} onValueChange={(v) => update('aspectRatio', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -747,10 +729,9 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   <SelectItem value="2.35:1">2.35:1 (Anamórfico)</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </ConfigField>
             <SectionTitle>Câmera</SectionTitle>
-            <div>
-              <Label className="text-xs">Movimento de Câmera</Label>
+            <ConfigField label="Movimento de Câmera">
               <Select value={config.cameraMovement || 'none'} onValueChange={(v) => update('cameraMovement', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -759,19 +740,17 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Velocidade da Câmera ({config.cameraSpeed ?? 1}x)</Label>
+            </ConfigField>
+            <ConfigField label={`Velocidade da Câmera (${config.cameraSpeed ?? 1}x)`}>
               <Slider
                 value={[config.cameraSpeed ?? 1]}
                 onValueChange={([v]) => update('cameraSpeed', v)}
                 min={0.25} max={4} step={0.25}
-                className="mt-2"
+                className="mt-1"
               />
-            </div>
+            </ConfigField>
             <SectionTitle>Qualidade & FPS</SectionTitle>
-            <div>
-              <Label className="text-xs">Frames por Segundo</Label>
+            <ConfigField label="Frames por Segundo">
               <Select value={config.fps || '24'} onValueChange={(v) => update('fps', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -780,18 +759,16 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">CFG Scale ({config.cfgScale ?? 7})</Label>
+            </ConfigField>
+            <ConfigField label={`CFG Scale (${config.cfgScale ?? 7})`}>
               <Slider
                 value={[config.cfgScale ?? 7]}
                 onValueChange={([v]) => update('cfgScale', v)}
                 min={1} max={20} step={0.5}
-                className="mt-2"
+                className="mt-1"
               />
-            </div>
-            <div>
-              <Label className="text-xs">Seed (Semente)</Label>
+            </ConfigField>
+            <ConfigField label="Seed (Semente)">
               <Input
                 type="number"
                 value={config.videoSeed || ''}
@@ -799,18 +776,11 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 placeholder="Aleatório"
                 className="mt-1"
               />
-            </div>
+            </ConfigField>
             <SectionTitle>Opções</SectionTitle>
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">Loop Infinito</Label>
-              <Switch checked={config.loop ?? false} onCheckedChange={(v) => update('loop', v)} />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">Gerar com Áudio</Label>
-              <Switch checked={config.withAudio ?? false} onCheckedChange={(v) => update('withAudio', v)} />
-            </div>
-            <div>
-              <Label className="text-xs">Prompt Negativo</Label>
+            <ToggleField label="Loop Infinito" checked={config.loop ?? false} onChange={(v) => update('loop', v)} />
+            <ToggleField label="Gerar com Áudio" checked={config.withAudio ?? false} onChange={(v) => update('withAudio', v)} />
+            <ConfigField label="Prompt Negativo">
               <Textarea
                 value={config.videoNegativePrompt || ''}
                 onChange={(e) => update('videoNegativePrompt', e.target.value)}
@@ -818,15 +788,14 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 rows={2}
                 className="mt-1"
               />
-            </div>
+            </ConfigField>
           </div>
         );
 
       case 'audioGen':
         return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Modelo de Áudio</Label>
+          <div className="space-y-2.5">
+            <ConfigField label="Modelo de Áudio">
               <Select value={config.audioModel || 'elevenlabs/v3'} onValueChange={(v) => update('audioModel', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
@@ -835,9 +804,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Tipo</Label>
+            </ConfigField>
+            <ConfigField label="Tipo">
               <Select value={config.type || 'sfx'} onValueChange={(v) => update('type', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -851,11 +819,10 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   <SelectItem value="audiobook">Audiobook</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </ConfigField>
 
             <SectionTitle>Locutor / Voz</SectionTitle>
-            <div>
-              <Label className="text-xs">Idioma</Label>
+            <ConfigField label="Idioma">
               <Select value={config.language || 'pt-BR'} onValueChange={(v) => update('language', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -864,11 +831,10 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </ConfigField>
 
             {isElevenLabs && (
-              <div>
-                <Label className="text-xs">Voz (ElevenLabs)</Label>
+              <ConfigField label="Voz (ElevenLabs)">
                 <Select value={config.voiceId || ELEVENLABS_VOICES[0].value} onValueChange={(v) => update('voiceId', v)}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -877,12 +843,11 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </ConfigField>
             )}
 
             {isOpenAITTS && (
-              <div>
-                <Label className="text-xs">Voz (OpenAI)</Label>
+              <ConfigField label="Voz (OpenAI)">
                 <Select value={config.voiceId || 'alloy'} onValueChange={(v) => update('voiceId', v)}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -891,12 +856,11 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </ConfigField>
             )}
 
             {isGoogleTTS && (
-              <div>
-                <Label className="text-xs">Voz (Google pt-BR)</Label>
+              <ConfigField label="Voz (Google pt-BR)">
                 <Select value={config.voiceId || GOOGLE_VOICES_PT[0].value} onValueChange={(v) => update('voiceId', v)}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -905,63 +869,29 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </ConfigField>
             )}
 
             <SectionTitle>Configurações de Voz</SectionTitle>
-            <div>
-              <Label className="text-xs">Estabilidade ({config.stability ?? 0.5})</Label>
-              <Slider
-                value={[config.stability ?? 0.5]}
-                onValueChange={([v]) => update('stability', v)}
-                min={0} max={1} step={0.05}
-                className="mt-2"
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Similaridade ({config.similarityBoost ?? 0.75})</Label>
-              <Slider
-                value={[config.similarityBoost ?? 0.75]}
-                onValueChange={([v]) => update('similarityBoost', v)}
-                min={0} max={1} step={0.05}
-                className="mt-2"
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Estilo ({config.style ?? 0.5})</Label>
-              <Slider
-                value={[config.style ?? 0.5]}
-                onValueChange={([v]) => update('style', v)}
-                min={0} max={1} step={0.05}
-                className="mt-2"
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Velocidade ({config.speed ?? 1}x)</Label>
-              <Slider
-                value={[config.speed ?? 1]}
-                onValueChange={([v]) => update('speed', v)}
-                min={0.5} max={2} step={0.1}
-                className="mt-2"
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">Speaker Boost</Label>
-              <Switch checked={config.speakerBoost ?? true} onCheckedChange={(v) => update('speakerBoost', v)} />
-            </div>
+            <ConfigField label={`Estabilidade (${config.stability ?? 0.5})`}>
+              <Slider value={[config.stability ?? 0.5]} onValueChange={([v]) => update('stability', v)} min={0} max={1} step={0.05} className="mt-1" />
+            </ConfigField>
+            <ConfigField label={`Similaridade (${config.similarityBoost ?? 0.75})`}>
+              <Slider value={[config.similarityBoost ?? 0.75]} onValueChange={([v]) => update('similarityBoost', v)} min={0} max={1} step={0.05} className="mt-1" />
+            </ConfigField>
+            <ConfigField label={`Estilo (${config.style ?? 0.5})`}>
+              <Slider value={[config.style ?? 0.5]} onValueChange={([v]) => update('style', v)} min={0} max={1} step={0.05} className="mt-1" />
+            </ConfigField>
+            <ConfigField label={`Velocidade (${config.speed ?? 1}x)`}>
+              <Slider value={[config.speed ?? 1]} onValueChange={([v]) => update('speed', v)} min={0.5} max={2} step={0.1} className="mt-1" />
+            </ConfigField>
+            <ToggleField label="Speaker Boost" checked={config.speakerBoost ?? true} onChange={(v) => update('speakerBoost', v)} />
 
             <SectionTitle>Duração & Formato</SectionTitle>
-            <div>
-              <Label className="text-xs">Duração ({config.duration || 5}s)</Label>
-              <Slider
-                value={[config.duration || 5]}
-                onValueChange={([v]) => update('duration', v)}
-                min={1} max={300} step={1}
-                className="mt-2"
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Formato de Saída</Label>
+            <ConfigField label={`Duração (${config.duration || 5}s)`}>
+              <Slider value={[config.duration || 5]} onValueChange={([v]) => update('duration', v)} min={1} max={300} step={1} className="mt-1" />
+            </ConfigField>
+            <ConfigField label="Formato de Saída">
               <Select value={config.audioFormat || 'mp3'} onValueChange={(v) => update('audioFormat', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -970,9 +900,8 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Sample Rate</Label>
+            </ConfigField>
+            <ConfigField label="Sample Rate">
               <Select value={config.sampleRate || '44100'} onValueChange={(v) => update('sampleRate', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -981,35 +910,25 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Prompt Influence ({config.promptInfluence ?? 0.3})</Label>
-              <Slider
-                value={[config.promptInfluence ?? 0.3]}
-                onValueChange={([v]) => update('promptInfluence', v)}
-                min={0} max={1} step={0.05}
-                className="mt-2"
-              />
-            </div>
+            </ConfigField>
+            <ConfigField label={`Prompt Influence (${config.promptInfluence ?? 0.3})`}>
+              <Slider value={[config.promptInfluence ?? 0.3]} onValueChange={([v]) => update('promptInfluence', v)} min={0} max={1} step={0.05} className="mt-1" />
+            </ConfigField>
           </div>
         );
 
       case 'musicGen':
         return (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Modelo de Música</Label>
+          <div className="space-y-2.5">
+            <ConfigField label="Modelo de Música">
               <Select value={config.musicModel || 'suno/v4'} onValueChange={(v) => update('musicModel', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
-                  {MUSIC_MODELS.map((m) => (
-                    <ModelSelectItem key={m.value} model={m} />
-                  ))}
+                  {MUSIC_MODELS.map((m) => <ModelSelectItem key={m.value} model={m} />)}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Gênero</Label>
+            </ConfigField>
+            <ConfigField label="Gênero">
               <Select value={config.genre || 'ambient'} onValueChange={(v) => update('genre', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -1044,75 +963,50 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   <SelectItem value="kpop">K-Pop</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </ConfigField>
             <SectionTitle>Humor & Tom</SectionTitle>
-            <div>
-              <Label className="text-xs">Humor</Label>
+            <ConfigField label="Humor">
               <Select value={config.mood || 'calm'} onValueChange={(v) => update('mood', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {MUSIC_MOODS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                  ))}
+                  {MUSIC_MOODS.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Tempo</Label>
+            </ConfigField>
+            <ConfigField label="Tempo">
               <Select value={config.tempo || 'moderate'} onValueChange={(v) => update('tempo', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {MUSIC_TEMPOS.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                  ))}
+                  {MUSIC_TEMPOS.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">BPM Específico ({config.bpm || 'Auto'})</Label>
-              <Slider
-                value={[config.bpm ?? 120]}
-                onValueChange={([v]) => update('bpm', v)}
-                min={40} max={200} step={5}
-                className="mt-2"
-              />
-            </div>
+            </ConfigField>
+            <ConfigField label={`BPM Específico (${config.bpm || 'Auto'})`}>
+              <Slider value={[config.bpm ?? 120]} onValueChange={([v]) => update('bpm', v)} min={40} max={200} step={5} className="mt-1" />
+            </ConfigField>
             <SectionTitle>Instrumentos</SectionTitle>
-            <div>
-              <Label className="text-xs">Instrumento Principal</Label>
+            <ConfigField label="Instrumento Principal">
               <Select value={config.mainInstrument || 'piano'} onValueChange={(v) => update('mainInstrument', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {MUSIC_INSTRUMENTS.map((i) => (
-                    <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>
-                  ))}
+                  {MUSIC_INSTRUMENTS.map((i) => <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Instrumento Secundário</Label>
+            </ConfigField>
+            <ConfigField label="Instrumento Secundário">
               <Select value={config.secondaryInstrument || ''} onValueChange={(v) => update('secondaryInstrument', v)}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Nenhum" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Nenhum</SelectItem>
-                  {MUSIC_INSTRUMENTS.map((i) => (
-                    <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>
-                  ))}
+                  {MUSIC_INSTRUMENTS.map((i) => <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
+            </ConfigField>
             <SectionTitle>Duração & Tom</SectionTitle>
-            <div>
-              <Label className="text-xs">Duração ({config.duration || 30}s)</Label>
-              <Slider
-                value={[config.duration || 30]}
-                onValueChange={([v]) => update('duration', v)}
-                min={5} max={300} step={5}
-                className="mt-2"
-              />
-            </div>
-            <div>
-              <Label className="text-xs">Tonalidade</Label>
+            <ConfigField label={`Duração (${config.duration || 30}s)`}>
+              <Slider value={[config.duration || 30]} onValueChange={([v]) => update('duration', v)} min={5} max={300} step={5} className="mt-1" />
+            </ConfigField>
+            <ConfigField label="Tonalidade">
               <Select value={config.key || 'auto'} onValueChange={(v) => update('key', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -1132,31 +1026,19 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   <SelectItem value="B">Si Maior (B)</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </ConfigField>
             <SectionTitle>Opções</SectionTitle>
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">Incluir Vocal</Label>
-              <Switch checked={config.withVocals ?? false} onCheckedChange={(v) => update('withVocals', v)} />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">Loop (Repetível)</Label>
-              <Switch checked={config.loopable ?? false} onCheckedChange={(v) => update('loopable', v)} />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label className="text-xs">Fade In/Out</Label>
-              <Switch checked={config.fadeInOut ?? true} onCheckedChange={(v) => update('fadeInOut', v)} />
-            </div>
-            <div>
-              <Label className="text-xs">Formato de Saída</Label>
+            <ToggleField label="Incluir Vocal" checked={config.withVocals ?? false} onChange={(v) => update('withVocals', v)} />
+            <ToggleField label="Loop (Repetível)" checked={config.loopable ?? false} onChange={(v) => update('loopable', v)} />
+            <ToggleField label="Fade In/Out" checked={config.fadeInOut ?? true} onChange={(v) => update('fadeInOut', v)} />
+            <ConfigField label="Formato de Saída">
               <Select value={config.musicFormat || 'mp3'} onValueChange={(v) => update('musicFormat', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {AUDIO_FORMATS.map((f) => (
-                    <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-                  ))}
+                  {AUDIO_FORMATS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
+            </ConfigField>
           </div>
         );
 
@@ -1398,39 +1280,40 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   };
   const accent = nodeAccentMap[node.data.type] || '#64748b';
 
-  return (
-    <div className="w-80 border-l border-border bg-card flex flex-col shrink-0">
+   return (
+    <div className="w-[340px] border-l border-border/60 bg-gradient-to-b from-card to-card/95 flex flex-col shrink-0 shadow-[-4px_0_24px_-8px_hsl(var(--foreground)/0.06)]">
       {/* Modern header with accent gradient */}
       <div
-        className="p-4 border-b border-border/50 relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${accent}08, ${accent}03)` }}
+        className="p-4 border-b border-border/40 relative overflow-hidden"
+        style={{ background: `linear-gradient(135deg, ${accent}12, ${accent}05, transparent)` }}
       >
-        <div className="absolute inset-0 opacity-[0.03]" style={{ background: `radial-gradient(circle at 80% 20%, ${accent}, transparent 60%)` }} />
+        <div className="absolute inset-0 opacity-[0.04]" style={{ background: `radial-gradient(circle at 80% 20%, ${accent}, transparent 50%)` }} />
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${accent}30, transparent)` }} />
         <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: `linear-gradient(135deg, ${accent}25, ${accent}10)`, border: `1px solid ${accent}25` }}
+              className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+              style={{ background: `linear-gradient(135deg, ${accent}30, ${accent}15)`, border: `1px solid ${accent}30` }}
             >
-              <span className="text-base">{meta?.icon}</span>
+              <span className="text-lg">{meta?.icon}</span>
             </div>
             <div>
-              <h3 className="font-bold text-sm text-foreground">{node.data.label}</h3>
-              <p className="text-[10px] text-muted-foreground">{meta?.description || 'Configurações'}</p>
+              <h3 className="font-bold text-[13px] text-foreground leading-tight">{node.data.label}</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{meta?.description || 'Configurações'}</p>
             </div>
           </div>
-          <Button size="icon" variant="ghost" onClick={onClose} className="h-7 w-7 rounded-lg hover:bg-background/50">
-            <X className="h-4 w-4" />
+          <Button size="icon" variant="ghost" onClick={onClose} className="h-7 w-7 rounded-lg hover:bg-background/60">
+            <X className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
 
       {onExecuteFromNode && (
-        <div className="px-3 py-2.5 border-b border-border/50 bg-muted/20">
+        <div className="px-4 py-3 border-b border-border/40 bg-muted/15">
           <Button
             size="sm"
             onClick={() => onExecuteFromNode(node.id)}
-            className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-lg text-xs h-9 font-semibold shadow-sm"
+            className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-xl text-xs h-9 font-semibold shadow-sm hover:shadow-md transition-all"
           >
             <SkipForward className="h-3.5 w-3.5" />
             Executar deste ponto
@@ -1438,25 +1321,27 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
         </div>
       )}
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-1">
+        <div className="p-4 space-y-2.5">
           {renderConfig()}
         </div>
 
         {activeResult && (
-          <div className="mx-4 mb-4 mt-2 pt-3 border-t border-border">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Sparkles className="h-3 w-3 text-primary" />
+          <div className="mx-4 mb-4 mt-3 pt-4 border-t border-border/40">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
+                <Sparkles className="h-3 w-3 text-primary" />
+              </div>
               <Label className="text-xs font-bold text-primary">Resultado</Label>
             </div>
-            <div className="rounded-xl border border-border bg-muted/30 p-3">
+            <div className="rounded-xl border border-border/50 bg-gradient-to-br from-muted/40 to-muted/20 p-3.5 shadow-sm">
               {typeof activeResult === 'string' && (
-                <p className="text-xs whitespace-pre-wrap text-foreground/60">{activeResult}</p>
+                <p className="text-xs whitespace-pre-wrap text-foreground/70 leading-relaxed">{activeResult}</p>
               )}
               {activeResult?.imageUrl && (
-                <img src={activeResult.imageUrl} alt="Result" className="w-full rounded-lg" />
+                <img src={activeResult.imageUrl} alt="Result" className="w-full rounded-lg shadow-sm" />
               )}
               {activeResult?.text && (
-                <p className="text-xs whitespace-pre-wrap mt-2 text-foreground/60">{activeResult.text}</p>
+                <p className="text-xs whitespace-pre-wrap mt-2 text-foreground/70 leading-relaxed">{activeResult.text}</p>
               )}
             </div>
           </div>
