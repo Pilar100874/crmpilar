@@ -233,13 +233,19 @@ export function useStudioExecution() {
         let gifUrl: string | undefined;
         if (frames.length > 1) {
           nodeResultStore.setResult(node.id, { 
-            text: `🎬 Montando GIF animado com ${frames.length} frames...`, 
+            text: `🎬 Montando GIF animado (0/${frames.length} frames)...`, 
             _animFrames: [...frames],
             _totalFrames: frameCount,
           });
           try {
             const { createAnimatedGif } = await import('./gifEncoder');
-            gifUrl = await createAnimatedGif(frames, fps, 512);
+            gifUrl = await createAnimatedGif(frames, fps, 512, (current, total) => {
+              nodeResultStore.setResult(node.id, { 
+                text: `🎬 Montando GIF animado (${current}/${total} frames)...`, 
+                _animFrames: [...frames],
+                _totalFrames: frameCount,
+              });
+            });
           } catch (gifErr) {
             console.error('Error creating GIF:', gifErr);
           }
