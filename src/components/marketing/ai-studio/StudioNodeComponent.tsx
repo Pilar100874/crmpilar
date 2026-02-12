@@ -289,34 +289,20 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           <div className="relative">
            {resultImage && (
               <div className="relative group px-3 pb-3 pt-1">
-                <div className="rounded-xl overflow-hidden border border-border/50" style={{ boxShadow: `0 4px 20px -4px ${accent}20`, minHeight: 120 }}>
-                  <img
-                    src={resultImage}
-                    alt="Resultado gerado"
-                    className="object-contain cursor-pointer transition-all block"
-                    style={{ 
-                      maxHeight: imageExpanded ? 500 : 220,
-                      minHeight: 120,
-                      width: '100%',
-                      height: 'auto',
-                      display: 'block',
-                      backgroundColor: 'hsl(var(--muted))',
-                    }}
-                    onClick={() => setImageExpanded(!imageExpanded)}
-                    onError={(e) => {
-                      console.error(`[StudioNode ${id}] Image FAILED to load, URL length: ${resultImage?.length}`);
-                      const img = e.target as HTMLImageElement;
-                      img.style.minHeight = '60px';
-                      img.style.background = '#ef444444';
-                    }}
-                    onLoad={(e) => {
-                      console.log(`[StudioNode ${id}] Image loaded successfully`);
-                      const img = e.target as HTMLImageElement;
-                      img.style.opacity = '1';
-                      if (updateNodeInternals) updateNodeInternals(id);
-                    }}
-                  />
-                </div>
+                <div 
+                  className="rounded-xl overflow-hidden border border-border/50 cursor-pointer"
+                  style={{ 
+                    boxShadow: `0 4px 20px -4px ${accent}20`,
+                    height: imageExpanded ? 400 : 200,
+                    width: '100%',
+                    backgroundImage: `url(${resultImage})`,
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center',
+                    backgroundColor: 'hsl(var(--muted))',
+                  }}
+                  onClick={() => setImageExpanded(!imageExpanded)}
+                />
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => setImageExpanded(!imageExpanded)}
