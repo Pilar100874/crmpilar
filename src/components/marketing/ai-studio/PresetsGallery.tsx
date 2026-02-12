@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Play, Info, Video, Image, Music, Mic, Type, Clapperboard } from 'lucide-react';
+import { X, Play, Info, Video, Image, Music, Mic, Type, Clapperboard, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -53,6 +53,7 @@ interface Preset {
 }
 
 const PRESET_CATEGORIES = [
+  { id: 'ecommerce', label: 'E-commerce', icon: ShoppingBag },
   { id: 'video', label: 'Vídeo', icon: Video },
   { id: 'image', label: 'Imagem', icon: Image },
   { id: 'music', label: 'Música', icon: Music },
@@ -366,6 +367,62 @@ const PRESETS: Preset[] = [
     image: presetTextTranslate,
     category: 'text',
     toolType: 'llmProcess',
+  },
+
+  // ===== E-COMMERCE (Produto em Pessoa) =====
+  {
+    id: 'ecom-clothing-tryon',
+    name: 'Provador Virtual de Roupas',
+    description: 'Vista uma peça de roupa em uma modelo automaticamente. Envie a foto da pessoa e do produto.',
+    prompt: 'Dress the person in this clothing item naturally. Maintain realistic body proportions, fabric draping, and lighting consistency.',
+    image: presetImagePortrait,
+    category: 'ecommerce',
+    toolType: 'productComposite',
+  },
+  {
+    id: 'ecom-accessory-tryon',
+    name: 'Experimentar Acessório',
+    description: 'Coloque óculos, relógios, chapéus ou joias em uma pessoa. Resultado realista e natural.',
+    prompt: 'Place this accessory on the person naturally. Match perspective, scale, lighting and shadows for photorealistic result.',
+    image: presetImagePortrait,
+    category: 'ecommerce',
+    toolType: 'productComposite',
+  },
+  {
+    id: 'ecom-product-in-hand',
+    name: 'Produto na Mão',
+    description: 'Coloque um produto (celular, garrafa, bolsa) na mão de uma pessoa para fotos de lifestyle.',
+    prompt: 'Place this product naturally in the person\'s hand. Ensure correct grip, perspective and consistent lighting for lifestyle photo.',
+    image: presetImageProduct,
+    category: 'ecommerce',
+    toolType: 'productComposite',
+  },
+  {
+    id: 'ecom-scene-placement',
+    name: 'Produto na Cena',
+    description: 'Insira um produto em uma cena com pessoa, como se fosse uma foto real de campanha publicitária.',
+    prompt: 'Insert this product into the scene with the person naturally. Create a professional advertising campaign look with correct shadows and reflections.',
+    image: presetImageSocial,
+    category: 'ecommerce',
+    toolType: 'productComposite',
+  },
+  {
+    id: 'ecom-before-after',
+    name: 'Antes e Depois',
+    description: 'Gere uma imagem mostrando "antes sem produto" e "depois com produto" para comparação visual.',
+    prompt: 'Show a before and after comparison. Place the product on the person to create a compelling transformation visual for marketing.',
+    image: presetImageProduct,
+    category: 'ecommerce',
+    toolType: 'productComposite',
+  },
+  {
+    id: 'ecom-multi-color',
+    name: 'Variações de Cor',
+    description: 'Mostre a mesma roupa/acessório em diferentes cores na mesma pessoa. Ideal para catálogo.',
+    prompt: 'Show this clothing item on the person. Generate a clean catalog-style photo that can showcase the product in different color variations.',
+    image: presetImageProduct,
+    category: 'ecommerce',
+    toolType: 'productComposite',
   },
 
   // ===== CÂMERA (presets existentes) =====
