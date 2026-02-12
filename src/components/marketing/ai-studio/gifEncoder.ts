@@ -7,7 +7,7 @@ import { GIFEncoder, quantize, applyPalette } from 'gifenc';
 export async function createAnimatedGif(
   frameUrls: string[],
   fps: number = 2,
-  maxWidth: number = 256,
+  maxWidth: number = 192,
   onProgress?: (current: number, total: number) => void
 ): Promise<string> {
   if (!frameUrls.length) throw new Error('No frames provided');
