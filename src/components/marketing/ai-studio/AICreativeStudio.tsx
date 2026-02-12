@@ -449,27 +449,42 @@ const AICreativeStudioInner: React.FC = () => {
   }, [handleSaveWorkflow, clearAll, fetchWorkflows]);
 
   const handlePresetSelect = useCallback((preset: Preset) => {
+    const targetType = (preset.toolType || 'videoGen') as StudioNodeData['type'];
+    const meta = getNodeMeta(targetType);
+
     const inputNode: StudioNode = {
       id: `textInput_${Date.now()}`,
       type: 'studioNode',
       position: { x: 100, y: 200 },
       data: { label: `Preset: ${preset.name}`, type: 'textInput', config: { text: preset.prompt } },
     };
-    const videoNode: StudioNode = {
-      id: `videoGen_${Date.now()}`,
+
+    const defaultConfig: Record<string, any> = meta?.defaultConfig ? { ...meta.defaultConfig } : {};
+    // Apply sensible defaults per type
+    if (targetType === 'videoGen') {
+      defaultConfig.duration = defaultConfig.duration || 5;
+      defaultConfig.resolution = defaultConfig.resolution || '1080p';
+      defaultConfig.aspectRatio = defaultConfig.aspectRatio || '16:9';
+      defaultConfig.videoModel = defaultConfig.videoModel || 'google/veo-3.1';
+    }
+
+    const processNode: StudioNode = {
+      id: `${targetType}_${Date.now()}`,
       type: 'studioNode',
       position: { x: 500, y: 200 },
-      data: { label: 'Gerar Vídeo', type: 'videoGen', config: { duration: 5, resolution: '1080p', aspectRatio: '16:9', videoModel: 'google/veo-3.1' } },
+      data: { label: meta?.label || preset.name, type: targetType, config: defaultConfig },
     };
-    setNodes((nds) => [...nds, inputNode, videoNode]);
+
+    setNodes((nds) => [...nds, inputNode, processNode]);
     setEdges((eds) => [
       ...eds,
-      { id: `e_${inputNode.id}_${videoNode.id}`, source: inputNode.id, target: videoNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+      { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
     ]);
     setShowPresets(false);
     setCurrentWorkflowId(null);
     setCurrentWorkflowName('');
     setShowCanvas(true);
+    setHasUnsavedChanges(true);
     toast.success(`Preset "${preset.name}" aplicado ao workflow!`);
   }, [setNodes, setEdges]);
 
