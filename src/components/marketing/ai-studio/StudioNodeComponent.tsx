@@ -109,6 +109,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
   const resultFrames: string[] | undefined = activeResult?._animFrames;
   const resultFps: number = activeResult?._fps || 2;
+  const resultGif: string | undefined = activeResult?._gifUrl;
   const resultImage = resultFrames ? undefined : activeResult?.imageUrl;
   const resultVideo = activeResult?.videoUrl;
   const resultAudio = activeResult?.audioUrl;
@@ -374,6 +375,22 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   ))}
                 </div>
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {resultGif && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const link = document.createElement('a');
+                        link.href = resultGif;
+                        link.download = `studio-animation-${id}.gif`;
+                        link.click();
+                      }}
+                      className="px-2 py-1.5 rounded-lg bg-emerald-600/80 backdrop-blur-sm hover:bg-emerald-600 transition-colors flex items-center gap-1"
+                      title="Download GIF animado"
+                    >
+                      <Download className="h-3 w-3 text-white" />
+                      <span className="text-[10px] text-white font-medium">GIF</span>
+                    </button>
+                  )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
