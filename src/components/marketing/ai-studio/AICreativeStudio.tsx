@@ -810,141 +810,144 @@ const AICreativeStudioInner: React.FC = () => {
         </div>
       </div>
 
-      {/* Canvas */}
-      <div className="flex-1 relative" ref={reactFlowWrapper}>
-        {/* Node Library (floating, collapsible) */}
-        <StudioNodeLibrary />
+      {/* Canvas + Config Panel row */}
+      <div className="flex-1 flex min-h-0">
+        {/* Canvas */}
+        <div className="flex-1 relative" ref={reactFlowWrapper}>
+          {/* Node Library (floating, collapsible) */}
+          <StudioNodeLibrary />
 
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={(changes) => { onNodesChange(changes); setHasUnsavedChanges(true); }}
-          onEdgesChange={(changes) => { onEdgesChange(changes); setHasUnsavedChanges(true); }}
-          onConnect={onConnect}
-          onDragOver={onDragOver}
-          onDrop={onDrop}
-          onNodeClick={onNodeClick}
-          onNodeContextMenu={onNodeContextMenu}
-          onPaneClick={onPaneClick}
-          nodeTypes={nodeTypes}
-          fitView
-          snapToGrid
-          snapGrid={[16, 16]}
-          className="bg-background"
-          defaultEdgeOptions={{ animated: true, style: EDGE_STYLE, type: 'smoothstep' }}
-        >
-          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsl(var(--muted-foreground) / 0.15)" />
-          <Controls
-            showInteractive={false}
-            className="!bg-card !border-border !shadow-md !rounded-lg [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-muted-foreground [&>button:hover]:!bg-accent"
-          />
-          <MiniMap
-            className="!bg-card !border-border !rounded-lg"
-            nodeColor={() => 'hsl(25 95% 53%)'}
-            maskColor="hsl(var(--background) / 0.7)"
-          />
-
-          {/* Empty state */}
-          {nodes.length === 0 && (
-            <Panel position="top-center" className="!top-1/2 !-translate-y-1/2">
-              <div className="text-center p-8">
-                <div className="text-6xl mb-4">🎬</div>
-                <h3 className="text-lg font-semibold mb-2 text-foreground/80">Arraste blocos para começar</h3>
-                <p className="text-sm max-w-md text-muted-foreground">
-                  Clique no botão <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">+</span> para adicionar blocos ao canvas.
-                </p>
-              </div>
-            </Panel>
-          )}
-        </ReactFlow>
-
-        <AnimatePresence>
-          {showPresets && (
-            <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => setShowPresets(false)} />
-          )}
-        </AnimatePresence>
-
-        {/* Context Menu */}
-        <AnimatePresence>
-          {contextMenu && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.12 }}
-              className="fixed z-[100] min-w-[180px] rounded-xl border border-border bg-card shadow-xl overflow-hidden"
-              style={{ left: contextMenu.x, top: contextMenu.y }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {(() => {
-                const ctxNode = nodes.find(n => n.id === contextMenu.nodeId);
-                const isPaused = (ctxNode?.data as StudioNodeData)?.config?._paused;
-                return (
-                  <>
-                    <button
-                      onClick={() => { handleExecute(contextMenu.nodeId); setContextMenu(null); }}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-accent transition-colors text-left"
-                    >
-                      <PlayCircle className="h-4 w-4 text-emerald-500" />
-                      <span className="text-foreground">Executar daqui</span>
-                    </button>
-                    <button
-                      onClick={() => duplicateNode(contextMenu.nodeId)}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-accent transition-colors text-left"
-                    >
-                      <Copy className="h-4 w-4 text-sky-500" />
-                      <span className="text-foreground">Duplicar</span>
-                    </button>
-                    <button
-                      onClick={() => togglePauseNode(contextMenu.nodeId)}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-accent transition-colors text-left"
-                    >
-                      <Pause className="h-4 w-4 text-amber-500" />
-                      <span className="text-foreground">{isPaused ? 'Ativar bloco' : 'Pausar bloco'}</span>
-                    </button>
-                    <div className="h-px bg-border mx-2" />
-                    <button
-                      onClick={() => {
-                        setNodes((nds) => nds.filter(n => n.id !== contextMenu.nodeId));
-                        setEdges((eds) => eds.filter(e => e.source !== contextMenu.nodeId && e.target !== contextMenu.nodeId));
-                        if (selectedNode?.id === contextMenu.nodeId) setSelectedNode(null);
-                        setContextMenu(null);
-                        toast.success('Bloco excluído');
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-destructive/10 transition-colors text-left"
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                      <span className="text-destructive">Excluir</span>
-                    </button>
-                  </>
-                );
-              })()}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Execution Log Panel */}
-        <AnimatePresence>
-          {executionLog.length > 0 && (
-            <ExecutionLogPanel
-              log={executionLog}
-              isExecuting={isExecuting}
-              currentNodeId={currentNodeId}
-              onClear={clearLog}
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={(changes) => { onNodesChange(changes); setHasUnsavedChanges(true); }}
+            onEdgesChange={(changes) => { onEdgesChange(changes); setHasUnsavedChanges(true); }}
+            onConnect={onConnect}
+            onDragOver={onDragOver}
+            onDrop={onDrop}
+            onNodeClick={onNodeClick}
+            onNodeContextMenu={onNodeContextMenu}
+            onPaneClick={onPaneClick}
+            nodeTypes={nodeTypes}
+            fitView
+            snapToGrid
+            snapGrid={[16, 16]}
+            className="bg-background"
+            defaultEdgeOptions={{ animated: true, style: EDGE_STYLE, type: 'smoothstep' }}
+          >
+            <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsl(var(--muted-foreground) / 0.15)" />
+            <Controls
+              showInteractive={false}
+              className="!bg-card !border-border !shadow-md !rounded-lg [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-muted-foreground [&>button:hover]:!bg-accent"
             />
-          )}
-        </AnimatePresence>
-      </div>
+            <MiniMap
+              className="!bg-card !border-border !rounded-lg"
+              nodeColor={() => 'hsl(25 95% 53%)'}
+              maskColor="hsl(var(--background) / 0.7)"
+            />
 
-      {/* Config Panel */}
-      {selectedNode && (
-        <StudioNodeConfigPanel
-          node={selectedNode}
-          onUpdateConfig={updateNodeConfig}
-          onClose={() => setSelectedNode(null)}
-          onExecuteFromNode={(nodeId) => handleExecute(nodeId)}
-        />
-      )}
+            {/* Empty state */}
+            {nodes.length === 0 && (
+              <Panel position="top-center" className="!top-1/2 !-translate-y-1/2">
+                <div className="text-center p-8">
+                  <div className="text-6xl mb-4">🎬</div>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground/80">Arraste blocos para começar</h3>
+                  <p className="text-sm max-w-md text-muted-foreground">
+                    Clique no botão <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">+</span> para adicionar blocos ao canvas.
+                  </p>
+                </div>
+              </Panel>
+            )}
+          </ReactFlow>
+
+          <AnimatePresence>
+            {showPresets && (
+              <PresetsGallery onSelectPreset={handlePresetSelect} onClose={() => setShowPresets(false)} />
+            )}
+          </AnimatePresence>
+
+          {/* Context Menu */}
+          <AnimatePresence>
+            {contextMenu && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.12 }}
+                className="fixed z-[100] min-w-[180px] rounded-xl border border-border bg-card shadow-xl overflow-hidden"
+                style={{ left: contextMenu.x, top: contextMenu.y }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {(() => {
+                  const ctxNode = nodes.find(n => n.id === contextMenu.nodeId);
+                  const isPaused = (ctxNode?.data as StudioNodeData)?.config?._paused;
+                  return (
+                    <>
+                      <button
+                        onClick={() => { handleExecute(contextMenu.nodeId); setContextMenu(null); }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-accent transition-colors text-left"
+                      >
+                        <PlayCircle className="h-4 w-4 text-emerald-500" />
+                        <span className="text-foreground">Executar daqui</span>
+                      </button>
+                      <button
+                        onClick={() => duplicateNode(contextMenu.nodeId)}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-accent transition-colors text-left"
+                      >
+                        <Copy className="h-4 w-4 text-sky-500" />
+                        <span className="text-foreground">Duplicar</span>
+                      </button>
+                      <button
+                        onClick={() => togglePauseNode(contextMenu.nodeId)}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-accent transition-colors text-left"
+                      >
+                        <Pause className="h-4 w-4 text-amber-500" />
+                        <span className="text-foreground">{isPaused ? 'Ativar bloco' : 'Pausar bloco'}</span>
+                      </button>
+                      <div className="h-px bg-border mx-2" />
+                      <button
+                        onClick={() => {
+                          setNodes((nds) => nds.filter(n => n.id !== contextMenu.nodeId));
+                          setEdges((eds) => eds.filter(e => e.source !== contextMenu.nodeId && e.target !== contextMenu.nodeId));
+                          if (selectedNode?.id === contextMenu.nodeId) setSelectedNode(null);
+                          setContextMenu(null);
+                          toast.success('Bloco excluído');
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm hover:bg-destructive/10 transition-colors text-left"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                        <span className="text-destructive">Excluir</span>
+                      </button>
+                    </>
+                  );
+                })()}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Execution Log Panel */}
+          <AnimatePresence>
+            {executionLog.length > 0 && (
+              <ExecutionLogPanel
+                log={executionLog}
+                isExecuting={isExecuting}
+                currentNodeId={currentNodeId}
+                onClear={clearLog}
+              />
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Config Panel - right side */}
+        {selectedNode && (
+          <StudioNodeConfigPanel
+            node={selectedNode}
+            onUpdateConfig={updateNodeConfig}
+            onClose={() => setSelectedNode(null)}
+            onExecuteFromNode={(nodeId) => handleExecute(nodeId)}
+          />
+        )}
+      </div>
 
       <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
       <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
