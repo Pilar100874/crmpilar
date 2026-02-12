@@ -88,7 +88,8 @@ export function useStudioExecution() {
     const { type, config } = node.data;
 
     const textInputs = inputs
-      .map((i) => (typeof i === 'string' ? i : i?.text || i?.imageUrl || ''))
+      .filter((i) => !i?._isSystemPrompt && !i?.imageUrls && !i?.imageUrl)
+      .map((i) => (typeof i === 'string' ? i : i?.text || ''))
       .filter(Boolean);
     const combinedInput = textInputs.join('\n\n');
 
