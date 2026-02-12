@@ -668,20 +668,38 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 </SelectContent>
               </Select>
             </div>
+            <SectionTitle>Animação (GIF Gratuito)</SectionTitle>
             <div>
-              <Label className="text-xs">Duração (segundos)</Label>
-              <Select value={String(config.duration || 5)} onValueChange={(v) => update('duration', Number(v))}>
+              <Label className="text-xs">Quantidade de Frames</Label>
+              <Select value={String(config.frameCount || 4)} onValueChange={(v) => update('frameCount', Number(v))}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="3">3 segundos</SelectItem>
-                  <SelectItem value="5">5 segundos</SelectItem>
-                  <SelectItem value="10">10 segundos</SelectItem>
-                  <SelectItem value="15">15 segundos</SelectItem>
-                  <SelectItem value="20">20 segundos</SelectItem>
-                  <SelectItem value="30">30 segundos</SelectItem>
-                  <SelectItem value="60">60 segundos</SelectItem>
+                  <SelectItem value="2">2 frames (Rápido)</SelectItem>
+                  <SelectItem value="3">3 frames</SelectItem>
+                  <SelectItem value="4">4 frames (Padrão)</SelectItem>
+                  <SelectItem value="5">5 frames</SelectItem>
+                  <SelectItem value="6">6 frames (Detalhado)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Velocidade (FPS)</Label>
+              <Select value={String(config.fps || 2)} onValueChange={(v) => update('fps', Number(v))}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0.5">0.5 fps (Muito lento — 2s/frame)</SelectItem>
+                  <SelectItem value="1">1 fps (Lento — 1s/frame)</SelectItem>
+                  <SelectItem value="2">2 fps (Normal — 0.5s/frame)</SelectItem>
+                  <SelectItem value="3">3 fps (Rápido)</SelectItem>
+                  <SelectItem value="4">4 fps (Muito rápido)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Duração total estimada</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                ~{((config.frameCount || 4) / (config.fps || 2)).toFixed(1)}s ({config.frameCount || 4} frames × {(1 / (config.fps || 2)).toFixed(1)}s)
+              </p>
             </div>
             <div>
               <Label className="text-xs">Resolução</Label>
