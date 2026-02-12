@@ -1,4 +1,44 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { decode as base64Decode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+
+async function uploadBase64ToStorage(base64DataUrl: string): Promise<string | null> {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn("[upload] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+      return null;
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const [header, base64] = base64DataUrl.split(",");
+    const mime = header.match(/data:(.*?);/)?.[1] || "image/png";
+    const ext = mime.includes("jpeg") || mime.includes("jpg") ? "jpg" : "png";
+    const fileName = `studio/${crypto.randomUUID()}.${ext}`;
+    
+    const bytes = base64Decode(base64);
+    
+    const { error } = await supabase.storage
+      .from("marketing-images")
+      .upload(fileName, bytes, { contentType: mime, upsert: true });
+
+    if (error) {
+      console.error("[upload] Storage upload error:", error.message);
+      return null;
+    }
+
+    const { data: publicData } = supabase.storage
+      .from("marketing-images")
+      .getPublicUrl(fileName);
+
+    console.log("[upload] Uploaded to storage:", publicData.publicUrl?.substring(0, 100));
+    return publicData.publicUrl;
+  } catch (err) {
+    console.error("[upload] Failed to upload:", err);
+    return null;
+  }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -146,6 +186,11 @@ serve(async (req) => {
           console.warn(`[generate_image] Full response structure:`, JSON.stringify(data).substring(0, 500));
         } else {
           console.log(`[generate_image] Image extracted, length: ${imageUrl.length}`);
+          // Upload to storage for reliable delivery
+          if (imageUrl.startsWith('data:')) {
+            const publicUrl = await uploadBase64ToStorage(imageUrl);
+            if (publicUrl) imageUrl = publicUrl;
+          }
         }
 
         return new Response(JSON.stringify({ result: { imageUrl, text } }), {
@@ -184,6 +229,12 @@ serve(async (req) => {
               imageUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`;
             }
           }
+        }
+
+        // Upload to storage for reliable delivery
+        if (imageUrl && imageUrl.startsWith('data:')) {
+          const publicUrl = await uploadBase64ToStorage(imageUrl);
+          if (publicUrl) imageUrl = publicUrl;
         }
 
         return new Response(JSON.stringify({ result: { imageUrl } }), {

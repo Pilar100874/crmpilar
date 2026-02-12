@@ -549,7 +549,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 </div>
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.stopPropagation();
                       try {
                         if (resultImage.startsWith('data:')) {
@@ -567,10 +567,16 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                           link.click();
                           setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 200);
                         } else {
+                          // For regular URLs, fetch as blob to force download
+                          const resp = await fetch(resultImage);
+                          const blob = await resp.blob();
+                          const url = URL.createObjectURL(blob);
                           const link = document.createElement('a');
-                          link.href = resultImage;
+                          link.href = url;
                           link.download = `studio-${nodeData.type}-${id}.png`;
+                          document.body.appendChild(link);
                           link.click();
+                          setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 200);
                         }
                       } catch (err) {
                         console.error('Download image error:', err);
