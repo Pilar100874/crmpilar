@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { StudioNodeData, getNodeMeta } from './types';
+import { useNodeResult } from './useNodeResults';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
@@ -67,7 +68,7 @@ const nodeAccentMap: Record<string, string> = {
   output: '#64748b',
 };
 
-const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected }) => {
+const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as unknown as StudioNodeData;
   const meta = getNodeMeta(nodeData.type);
   const accent = nodeAccentMap[nodeData.type] || '#64748b';
@@ -80,11 +81,17 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected }) => {
   const hasInput = !['textInput', 'systemPrompt'].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
 
-  const resultImage = nodeData.result?.imageUrl;
-  const resultVideo = nodeData.result?.videoUrl;
-  const resultText = typeof nodeData.result === 'string'
-    ? nodeData.result
-    : nodeData.result?.text;
+  // Use external store for results (bypasses ReactFlow's shallow diff)
+  const { result: storeResult, isProcessing: storeProcessing, error: storeError } = useNodeResult(id);
+  const activeResult = storeResult ?? nodeData.result;
+  const activeProcessing = storeProcessing || nodeData.isProcessing;
+  const activeError = storeError || nodeData.error;
+
+  const resultImage = activeResult?.imageUrl;
+  const resultVideo = activeResult?.videoUrl;
+  const resultText = typeof activeResult === 'string'
+    ? activeResult
+    : activeResult?.text;
   const hasResult = !!(resultImage || resultVideo || resultText);
 
   const nodeWidth = (resultImage || resultVideo) ? 340 : 280;
@@ -131,13 +138,13 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected }) => {
           <p className="text-[10px] text-muted-foreground truncate">{meta?.description || ''}</p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {nodeData.isProcessing && (
+          {activeProcessing && (
             <div className="relative">
               <div className="absolute inset-0 rounded-full animate-ping" style={{ background: `${accent}30` }} />
               <Loader2 className="h-4 w-4 animate-spin" style={{ color: accent }} />
             </div>
           )}
-          {hasResult && !nodeData.isProcessing && (
+          {hasResult && !activeProcessing && (
             <div className="relative">
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
               <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping opacity-50" />
@@ -285,14 +292,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected }) => {
         )}
 
         {/* Error */}
-        {nodeData.error && (
+        {activeError && (
           <div className="mx-3 mb-3 px-3 py-2 bg-destructive/5 rounded-lg border border-destructive/10">
-            <p className="text-[11px] text-destructive line-clamp-2">{nodeData.error}</p>
+            <p className="text-[11px] text-destructive line-clamp-2">{activeError}</p>
           </div>
         )}
 
         {/* Processing overlay */}
-        {nodeData.isProcessing && (
+        {activeProcessing && (
           <div className="absolute inset-0 bg-card/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 z-10 rounded-b-2xl">
             <div className="relative">
               <div className="absolute inset-0 rounded-full animate-ping opacity-30" style={{ background: accent, width: 32, height: 32, margin: 'auto' }} />

@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData } from './types';
+import { nodeResultStore } from './useNodeResults';
 
 export interface ExecutionLogEntry {
   nodeId: string;
@@ -231,6 +232,8 @@ export function useStudioExecution() {
         setCurrentNodeId(nodeId);
         const startTime = Date.now();
         updateNode(nodeId, { isProcessing: true, error: undefined });
+        nodeResultStore.setProcessing(nodeId, true);
+        nodeResultStore.clearError(nodeId);
         updateLog(nodeId, { status: 'running', startedAt: startTime });
 
         try {
@@ -241,10 +244,14 @@ export function useStudioExecution() {
           const elapsed = Date.now() - startTime;
           results.set(nodeId, result);
           updateNode(nodeId, { isProcessing: false, result });
+          nodeResultStore.setResult(nodeId, result);
+          nodeResultStore.setProcessing(nodeId, false);
           updateLog(nodeId, { status: 'success', completedAt: Date.now(), elapsedMs: elapsed });
         } catch (err: any) {
           const elapsed = Date.now() - startTime;
           updateNode(nodeId, { isProcessing: false, error: err.message });
+          nodeResultStore.setProcessing(nodeId, false);
+          nodeResultStore.setError(nodeId, err.message);
           updateLog(nodeId, { status: 'error', completedAt: Date.now(), elapsedMs: elapsed, errorMessage: err.message });
           throw err;
         }
