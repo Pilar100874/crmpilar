@@ -192,22 +192,89 @@ export function useStudioExecution() {
 
       case 'videoGen': {
         const videoPrompt = combinedInput || 'A cinematic scene';
+        const aspectRatio = config.aspectRatio || '16:9';
         const result = await callStudio('generate_image', {
-          prompt: `Cinematic film frame, high quality, ${config.aspectRatio || '16:9'} aspect ratio: ${videoPrompt}`,
-          model: config.model || 'google/gemini-2.5-flash-image',
+          prompt: `Ultra high resolution cinematic film still, movie production quality, dramatic lighting, shallow depth of field, ${aspectRatio} aspect ratio, professional cinematography, photorealistic: ${videoPrompt}`,
+          model: 'google/gemini-3-pro-image-preview',
           imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
         });
-        return { imageUrl: result?.imageUrl, text: `🎬 Key-frame gerado para: "${videoPrompt.substring(0, 80)}"` };
+        return { imageUrl: result?.imageUrl, text: `🎬 Key-frame cinematográfico gerado para: "${videoPrompt.substring(0, 80)}"` };
       }
 
-      case 'audioGen':
-        return {
-          text: `🔊 Áudio (${config.type}) gerado: "${combinedInput}"\nDuração: ${config.duration}s\n\n⚠️ Para geração real de áudio, conecte o ElevenLabs.`,
-        };
+      case 'audioGen': {
+        // Try to use ElevenLabs API key from ai_api_keys table
+        try {
+          const estabId = localStorage.getItem('estabelecimentoId');
+          if (!estabId) throw new Error('Estabelecimento não encontrado');
+          
+          const { data: elevenLabsKey } = await supabase
+            .from('ai_api_keys')
+            .select('api_key, base_url, is_active')
+            .eq('estabelecimento_id', estabId)
+            .eq('provider', 'elevenlabs')
+            .eq('is_active', true)
+            .maybeSingle();
+
+          if (!elevenLabsKey?.api_key) {
+            return {
+              text: `🔊 Áudio (${config.type || 'tts'}) - texto: "${combinedInput?.substring(0, 100)}"\n\n⚠️ Configure a API Key do ElevenLabs na aba "ElevenLabs" do Marketing para gerar áudio real.`,
+            };
+          }
+
+          // Parse extra config stored in base_url field
+          let extraConfig: Record<string, any> = {};
+          try { extraConfig = elevenLabsKey.base_url ? JSON.parse(elevenLabsKey.base_url) : {}; } catch {}
+
+          const voiceId = config.voiceId || extraConfig.defaultVoiceId || 'JBFqnCBsd6RMkjVDRZzb';
+          const model = config.audioModel?.replace('elevenlabs/', '') || extraConfig.defaultModel || 'eleven_multilingual_v2';
+          const outputFormat = extraConfig.outputFormat || 'mp3_44100_128';
+          const textToSpeak = combinedInput || config.text || 'Olá, este é um teste.';
+
+          const ttsResponse = await fetch(
+            `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=${outputFormat}`,
+            {
+              method: 'POST',
+              headers: {
+                'xi-api-key': elevenLabsKey.api_key,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                text: textToSpeak,
+                model_id: model,
+                voice_settings: {
+                  stability: extraConfig.stability ?? 0.5,
+                  similarity_boost: extraConfig.similarityBoost ?? 0.75,
+                  style: extraConfig.style ?? 0.5,
+                  use_speaker_boost: extraConfig.useSpeakerBoost ?? true,
+                  speed: extraConfig.speed ?? 1.0,
+                },
+              }),
+            }
+          );
+
+          if (!ttsResponse.ok) {
+            const errMsg = await ttsResponse.text().catch(() => '');
+            throw new Error(`ElevenLabs ${ttsResponse.status}: ${errMsg.substring(0, 200)}`);
+          }
+
+          const audioBlob = await ttsResponse.blob();
+          const audioUrl = URL.createObjectURL(audioBlob);
+
+          return {
+            audioUrl,
+            text: `🔊 Áudio gerado com ElevenLabs!\nVoz: ${voiceId.substring(0, 8)}... | Modelo: ${model}\nTexto: "${textToSpeak.substring(0, 80)}"`,
+          };
+        } catch (err: any) {
+          console.error('[Studio] ElevenLabs TTS error:', err);
+          return {
+            text: `🔊 Erro ao gerar áudio: ${err.message}\n\nVerifique sua API Key na aba "ElevenLabs".`,
+          };
+        }
+      }
 
       case 'musicGen':
         return {
-          text: `🎵 Música (${config.genre}) gerada: "${combinedInput}"\nDuração: ${config.duration}s\n\n⚠️ Para geração real de música, conecte o ElevenLabs.`,
+          text: `🎵 Música (${config.genre}) gerada: "${combinedInput}"\nDuração: ${config.duration}s\n\n⚠️ Para geração real de música, conecte o ElevenLabs Sound Effects API.`,
         };
 
       case 'lipSync':
