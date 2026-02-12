@@ -15,6 +15,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   llmProcess: Type,
   imageGen: ImageIcon,
   imageEdit: Wand2,
+  productComposite: Wand2,
   videoGen: Film,
   audioGen: Mic,
   musicGen: Music,
@@ -31,6 +32,7 @@ const nodeGradientMap: Record<string, string> = {
   llmProcess: 'from-sky-500/20 to-cyan-500/20',
   imageGen: 'from-rose-500/20 to-pink-500/20',
   imageEdit: 'from-pink-500/20 to-fuchsia-500/20',
+  productComposite: 'from-violet-500/20 to-purple-500/20',
   videoGen: 'from-amber-500/20 to-orange-500/20',
   audioGen: 'from-emerald-500/20 to-green-500/20',
   musicGen: 'from-teal-500/20 to-emerald-500/20',
@@ -47,6 +49,7 @@ const nodeIconColorMap: Record<string, string> = {
   llmProcess: 'text-sky-400',
   imageGen: 'text-rose-400',
   imageEdit: 'text-pink-400',
+  productComposite: 'text-violet-400',
   videoGen: 'text-amber-400',
   audioGen: 'text-emerald-400',
   musicGen: 'text-teal-400',
@@ -63,6 +66,7 @@ const nodeAccentMap: Record<string, string> = {
   llmProcess: '#0ea5e9',
   imageGen: '#f43f5e',
   imageEdit: '#ec4899',
+  productComposite: '#8b5cf6',
   videoGen: '#f59e0b',
   audioGen: '#22c55e',
   musicGen: '#14b8a6',
@@ -235,7 +239,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.aspectRatio || '16:9'}</span>
           </div>
         )}
-        {!hasResult && (nodeData.type === 'imageGen' || nodeData.type === 'imageEdit') && (
+        {!hasResult && (nodeData.type === 'imageGen' || nodeData.type === 'imageEdit' || nodeData.type === 'productComposite') && (
           <div className="px-3.5 py-2.5 flex items-center gap-1.5 flex-wrap">
             <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium">
               <ImageIcon className="h-2.5 w-2.5" />
