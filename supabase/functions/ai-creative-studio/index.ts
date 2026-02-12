@@ -109,16 +109,43 @@ serve(async (req) => {
           modalities: ["image", "text"],
         });
 
-        console.log(`[generate_image] Response keys:`, JSON.stringify(Object.keys(data?.choices?.[0]?.message || {})));
-        console.log(`[generate_image] Has images:`, !!(data?.choices?.[0]?.message?.images?.length));
+        const msg = data.choices?.[0]?.message;
+        console.log(`[generate_image] Full message keys:`, JSON.stringify(Object.keys(msg || {})));
+        console.log(`[generate_image] Has images array:`, !!(msg?.images?.length));
+        console.log(`[generate_image] Content type:`, typeof msg?.content);
+        if (Array.isArray(msg?.content)) {
+          console.log(`[generate_image] Content parts:`, msg.content.map((p: any) => p.type || typeof p));
+        }
         
-        const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-        const text = data.choices?.[0]?.message?.content;
+        // Try multiple extraction paths for the image
+        let imageUrl = msg?.images?.[0]?.image_url?.url;
+        let text = typeof msg?.content === 'string' ? msg.content : '';
+        
+        // If content is an array of parts (multimodal), extract image from there
+        if (!imageUrl && Array.isArray(msg?.content)) {
+          for (const part of msg.content) {
+            if (part.type === 'image_url' && part.image_url?.url) {
+              imageUrl = part.image_url.url;
+            } else if (part.type === 'text' && part.text) {
+              text = part.text;
+            }
+          }
+        }
+
+        // Also check inline_data format
+        if (!imageUrl && Array.isArray(msg?.content)) {
+          for (const part of msg.content) {
+            if (part.inline_data?.mime_type?.startsWith('image/')) {
+              imageUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`;
+            }
+          }
+        }
 
         if (!imageUrl) {
-          console.warn(`[generate_image] No image returned from AI. Text response: "${(text || '').substring(0, 200)}"`);
+          console.warn(`[generate_image] No image in response. Text: "${(text || '').substring(0, 200)}"`);
+          console.warn(`[generate_image] Full response structure:`, JSON.stringify(data).substring(0, 500));
         } else {
-          console.log(`[generate_image] Image returned, base64 length: ${imageUrl.length}`);
+          console.log(`[generate_image] Image extracted, length: ${imageUrl.length}`);
         }
 
         return new Response(JSON.stringify({ result: { imageUrl, text } }), {
@@ -146,7 +173,18 @@ serve(async (req) => {
           modalities: ["image", "text"],
         });
 
-        const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        const msg = data.choices?.[0]?.message;
+        let imageUrl = msg?.images?.[0]?.image_url?.url;
+        
+        if (!imageUrl && Array.isArray(msg?.content)) {
+          for (const part of msg.content) {
+            if (part.type === 'image_url' && part.image_url?.url) {
+              imageUrl = part.image_url.url;
+            } else if (part.inline_data?.mime_type?.startsWith('image/')) {
+              imageUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`;
+            }
+          }
+        }
 
         return new Response(JSON.stringify({ result: { imageUrl } }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
