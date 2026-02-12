@@ -8,6 +8,7 @@ export type StudioNodeType =
   | 'llmProcess'
   | 'imageGen'
   | 'imageEdit'
+  | 'productComposite'
   | 'videoGen'
   | 'audioGen'
   | 'musicGen'
@@ -118,6 +119,18 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '✨',
         color: '#ec4899',
         defaultConfig: { model: 'google/gemini-2.5-flash-image', editPrompt: '' },
+      },
+      {
+        type: 'productComposite',
+        label: 'Produto em Pessoa',
+        description: 'Coloque produtos/roupas em pessoas com IA',
+        icon: '👕',
+        color: '#8b5cf6',
+        defaultConfig: { 
+          model: 'google/gemini-2.5-flash-image',
+          compositeMode: 'clothing',
+          prompt: '',
+        },
       },
     ],
   },

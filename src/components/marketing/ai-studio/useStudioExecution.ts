@@ -162,6 +162,24 @@ export function useStudioExecution() {
         return result;
       }
 
+      case 'productComposite': {
+        const modeDescriptions: Record<string, string> = {
+          clothing: 'Vista esta roupa na pessoa da foto.',
+          holding: 'Coloque este produto na mão da pessoa da foto.',
+          wearing: 'Coloque este acessório na pessoa da foto.',
+          scene: 'Insira este produto na cena com a pessoa.',
+        };
+        const modePrompt = modeDescriptions[config.compositeMode] || modeDescriptions.clothing;
+        const userPrompt = config.prompt || combinedInput || '';
+        const fullPrompt = `${modePrompt} ${userPrompt}`.trim();
+        const result = await callStudio('generate_image', {
+          prompt: fullPrompt,
+          model: config.model || 'google/gemini-2.5-flash-image',
+          imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
+        });
+        return result;
+      }
+
       case 'imageAnalyze': {
         const imageUrl = imageInputs[0];
         const result = await callStudio('analyze_image', {

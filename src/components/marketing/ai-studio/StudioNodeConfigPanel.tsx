@@ -1,5 +1,6 @@
 import React from 'react';
 import { StudioNode, getNodeMeta } from './types';
+import { useNodeResult } from './useNodeResults';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -317,6 +318,8 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
 const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose, onExecuteFromNode }) => {
   const meta = getNodeMeta(node.data.type);
   const config = node.data.config;
+  const { result: storeResult } = useNodeResult(node.id);
+  const activeResult = storeResult ?? node.data.result;
 
   const update = (key: string, value: any) => {
     onUpdateConfig(node.id, { [key]: value });
@@ -499,6 +502,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
 
       case 'imageGen':
       case 'imageEdit':
+      case 'productComposite':
         return (
           <div className="space-y-3">
             <div>
@@ -1374,18 +1378,18 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
       <ScrollArea className="flex-1 p-3">
         {renderConfig()}
 
-        {node.data.result && (
+        {activeResult && (
           <div className="mt-4 pt-4 border-t border-border">
             <Label className="text-xs font-semibold text-muted-foreground">Resultado</Label>
             <div className="mt-2 rounded-lg border border-border bg-muted/30 p-2">
-              {typeof node.data.result === 'string' && (
-                <p className="text-xs whitespace-pre-wrap text-foreground/60">{node.data.result}</p>
+              {typeof activeResult === 'string' && (
+                <p className="text-xs whitespace-pre-wrap text-foreground/60">{activeResult}</p>
               )}
-              {node.data.result?.imageUrl && (
-                <img src={node.data.result.imageUrl} alt="Result" className="w-full rounded" />
+              {activeResult?.imageUrl && (
+                <img src={activeResult.imageUrl} alt="Result" className="w-full rounded" />
               )}
-              {node.data.result?.text && (
-                <p className="text-xs whitespace-pre-wrap mt-2 text-foreground/60">{node.data.result.text}</p>
+              {activeResult?.text && (
+                <p className="text-xs whitespace-pre-wrap mt-2 text-foreground/60">{activeResult.text}</p>
               )}
             </div>
           </div>
