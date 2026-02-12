@@ -19,7 +19,7 @@ interface Props {
   onExecuteFromNode?: (nodeId: string) => void;
 }
 
-type ModelInfo = { value: string; label: string; provider: string; cost: '$' | '$$' | '$$$' | '$$$$'; quality: 1 | 2 | 3 | 4 | 5; tip: string };
+type ModelInfo = { value: string; label: string; provider: string; cost: '$' | '$$' | '$$$' | '$$$$' | 'GRÁTIS'; quality: 1 | 2 | 3 | 4 | 5; tip: string };
 
 const LLM_MODELS: ModelInfo[] = [
   { value: 'google/gemini-2.5-flash', label: '🟦 Gemini 2.5 Flash', provider: 'Google', cost: '$', quality: 4, tip: 'Rápido e econômico, ótimo custo-benefício' },
@@ -51,6 +51,7 @@ const IMAGE_MODELS: ModelInfo[] = [
 ];
 
 const VIDEO_MODELS: ModelInfo[] = [
+  { value: 'free/gif-animated', label: '🎞️ GIF Animado (Gratuito)', provider: 'Lovable AI', cost: 'GRÁTIS', quality: 3, tip: 'Gera múltiplos frames animados, sem custo' },
   { value: 'google/veo-3.1', label: '🟦 Veo 3.1 (Flow)', provider: 'Google', cost: '$$$$', quality: 5, tip: 'Melhor vídeo Google, com áudio' },
   { value: 'google/veo-3.1-fast', label: '🟦 Veo 3.1 Fast', provider: 'Google', cost: '$$$', quality: 4, tip: 'Versão rápida do Veo 3.1' },
   { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'Google', cost: '$$$', quality: 5, tip: 'Alta qualidade com diálogos' },
@@ -290,6 +291,7 @@ const QualityStars = ({ level }: { level: number }) => (
 );
 
 const CostBadge = ({ cost }: { cost: string }) => {
+  if (cost === 'GRÁTIS') return <span className="text-[9px] font-bold px-1 py-0.5 rounded text-emerald-600 bg-emerald-500/10">✅ GRÁTIS</span>;
   const color = cost.length <= 1 ? 'text-emerald-600 bg-emerald-500/10' : cost.length === 2 ? 'text-blue-600 bg-blue-500/10' : cost.length === 3 ? 'text-orange-600 bg-orange-500/10' : 'text-red-600 bg-red-500/10';
   return <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${color}`}>{cost}</span>;
 };
@@ -644,11 +646,12 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
         );
 
       case 'videoGen':
+        const isGifModel = (config.videoModel || 'free/gif-animated') === 'free/gif-animated';
         return (
           <div className="space-y-3">
             <div>
               <Label className="text-xs">Modelo de Vídeo</Label>
-              <Select value={config.videoModel || 'openai/sora-3'} onValueChange={(v) => update('videoModel', v)}>
+              <Select value={config.videoModel || 'free/gif-animated'} onValueChange={(v) => update('videoModel', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
                   {VIDEO_MODELS.map((m) => (
@@ -668,39 +671,43 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 </SelectContent>
               </Select>
             </div>
-            <SectionTitle>Animação (GIF Gratuito)</SectionTitle>
-            <div>
-              <Label className="text-xs">Quantidade de Frames</Label>
-              <Select value={String(config.frameCount || 4)} onValueChange={(v) => update('frameCount', Number(v))}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2">2 frames (Rápido)</SelectItem>
-                  <SelectItem value="3">3 frames</SelectItem>
-                  <SelectItem value="4">4 frames (Padrão)</SelectItem>
-                  <SelectItem value="5">5 frames</SelectItem>
-                  <SelectItem value="6">6 frames (Detalhado)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Velocidade (FPS)</Label>
-              <Select value={String(config.fps || 2)} onValueChange={(v) => update('fps', Number(v))}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0.5">0.5 fps (Muito lento — 2s/frame)</SelectItem>
-                  <SelectItem value="1">1 fps (Lento — 1s/frame)</SelectItem>
-                  <SelectItem value="2">2 fps (Normal — 0.5s/frame)</SelectItem>
-                  <SelectItem value="3">3 fps (Rápido)</SelectItem>
-                  <SelectItem value="4">4 fps (Muito rápido)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Duração total estimada</Label>
-              <p className="text-xs text-muted-foreground mt-1">
-                ~{((config.frameCount || 4) / (config.fps || 2)).toFixed(1)}s ({config.frameCount || 4} frames × {(1 / (config.fps || 2)).toFixed(1)}s)
-              </p>
-            </div>
+            {isGifModel && (
+              <>
+                <SectionTitle>Configuração do GIF</SectionTitle>
+                <div>
+                  <Label className="text-xs">Quantidade de Frames</Label>
+                  <Select value={String(config.frameCount || 4)} onValueChange={(v) => update('frameCount', Number(v))}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2">2 frames (Rápido)</SelectItem>
+                      <SelectItem value="3">3 frames</SelectItem>
+                      <SelectItem value="4">4 frames (Padrão)</SelectItem>
+                      <SelectItem value="5">5 frames</SelectItem>
+                      <SelectItem value="6">6 frames (Detalhado)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Velocidade (FPS)</Label>
+                  <Select value={String(config.fps || 2)} onValueChange={(v) => update('fps', Number(v))}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0.5">0.5 fps (Muito lento — 2s/frame)</SelectItem>
+                      <SelectItem value="1">1 fps (Lento — 1s/frame)</SelectItem>
+                      <SelectItem value="2">2 fps (Normal — 0.5s/frame)</SelectItem>
+                      <SelectItem value="3">3 fps (Rápido)</SelectItem>
+                      <SelectItem value="4">4 fps (Muito rápido)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Duração total estimada</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    ~{((config.frameCount || 4) / (config.fps || 2)).toFixed(1)}s ({config.frameCount || 4} frames × {(1 / (config.fps || 2)).toFixed(1)}s)
+                  </p>
+                </div>
+              </>
+            )}
             <div>
               <Label className="text-xs">Resolução</Label>
               <Select value={config.resolution || '1080p'} onValueChange={(v) => update('resolution', v)}>

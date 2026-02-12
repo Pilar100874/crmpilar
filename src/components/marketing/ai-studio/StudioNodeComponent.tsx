@@ -269,12 +269,25 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         )}
         {!hasResult && nodeData.type === 'videoGen' && (
           <div className="px-3.5 py-2.5 flex items-center gap-1.5 flex-wrap">
-            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+            <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium ${
+              (nodeData.config.videoModel || 'free/gif-animated') === 'free/gif-animated'
+                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+            }`}>
               <Film className="h-2.5 w-2.5" />
-              {(nodeData.config.videoModel || 'veo-3.1').split('/').pop()}
+              {(nodeData.config.videoModel || 'free/gif-animated') === 'free/gif-animated' ? 'GIF Animado' : (nodeData.config.videoModel || '').split('/').pop()}
             </span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.duration || 5}s</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.resolution || '1080p'}</span>
+            {(nodeData.config.videoModel || 'free/gif-animated') === 'free/gif-animated' ? (
+              <>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.frameCount || 4} frames</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.fps || 2} fps</span>
+              </>
+            ) : (
+              <>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.duration || 5}s</span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.resolution || '1080p'}</span>
+              </>
+            )}
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{nodeData.config.aspectRatio || '16:9'}</span>
           </div>
         )}
