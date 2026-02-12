@@ -260,7 +260,7 @@ export function useStudioExecution() {
           try {
             const { createAnimatedGif } = await import('./gifEncoder');
             // Race GIF encoding against a 60s timeout
-            const gifPromise = createAnimatedGif(frames, fps, 256, (current, total) => {
+            const gifPromise = createAnimatedGif(frames, fps, 192, (current, total) => {
               nodeResultStore.setResult(node.id, { 
                 text: `🎬 Montando GIF animado (${current}/${total} frames)...`, 
                 _animFrames: [...frames],
