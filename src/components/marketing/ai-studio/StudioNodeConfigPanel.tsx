@@ -344,6 +344,64 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
           </div>
         );
 
+      case 'imageInput':
+        return (
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Imagens de Referência</Label>
+              <p className="text-[10px] text-muted-foreground mb-2">Cole URLs de imagens ou imagens base64. Cada linha é uma imagem.</p>
+              <Textarea
+                value={(config.images || []).join('\n')}
+                onChange={(e) => {
+                  const lines = e.target.value.split('\n').filter((l: string) => l.trim());
+                  update('images', lines);
+                }}
+                placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg&#10;data:image/png;base64,..."
+                rows={4}
+                className="mt-1 font-mono text-[10px]"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Ou carregue um arquivo</Label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="mt-1 text-xs w-full"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  files.forEach((file) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      const base64 = reader.result as string;
+                      update('images', [...(config.images || []), base64]);
+                    };
+                    reader.readAsDataURL(file);
+                  });
+                }}
+              />
+            </div>
+            {(config.images || []).length > 0 && (
+              <div>
+                <Label className="text-xs">{config.images.length} imagem(ns) carregada(s)</Label>
+                <div className="grid grid-cols-3 gap-1 mt-1">
+                  {config.images.map((img: string, idx: number) => (
+                    <div key={idx} className="relative group rounded-md overflow-hidden border border-border aspect-square">
+                      <img src={img} alt={`Ref ${idx + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => update('images', config.images.filter((_: any, i: number) => i !== idx))}
+                        className="absolute top-0.5 right-0.5 p-0.5 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
       case 'systemPrompt':
         return (
           <div className="space-y-3">

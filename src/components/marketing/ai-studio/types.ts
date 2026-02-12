@@ -4,6 +4,7 @@ import { Node, Edge } from '@xyflow/react';
 export type StudioNodeType = 
   | 'textInput'
   | 'systemPrompt'
+  | 'imageInput'
   | 'llmProcess'
   | 'imageGen'
   | 'imageEdit'
@@ -63,6 +64,14 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '⚙️',
         color: '#8b5cf6',
         defaultConfig: { systemPrompt: '' },
+      },
+      {
+        type: 'imageInput',
+        label: 'Imagens de Referência',
+        description: 'Carregue imagens como referência para geração',
+        icon: '🖼️',
+        color: '#f97316',
+        defaultConfig: { images: [] },
       },
     ],
   },
