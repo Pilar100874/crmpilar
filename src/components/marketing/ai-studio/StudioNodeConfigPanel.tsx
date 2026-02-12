@@ -675,17 +675,19 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <>
                 <SectionTitle>Configuração do GIF</SectionTitle>
                 <div>
-                  <Label className="text-xs">Quantidade de Frames</Label>
-                  <Select value={String(config.frameCount || 4)} onValueChange={(v) => update('frameCount', Number(v))}>
-                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2">2 frames (Rápido)</SelectItem>
-                      <SelectItem value="3">3 frames</SelectItem>
-                      <SelectItem value="4">4 frames (Padrão)</SelectItem>
-                      <SelectItem value="5">5 frames</SelectItem>
-                      <SelectItem value="6">6 frames (Detalhado)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-xs">Quantidade de Frames: {config.frameCount || 4}</Label>
+                  <Slider
+                    className="mt-2"
+                    min={2}
+                    max={60}
+                    step={1}
+                    value={[config.frameCount || 4]}
+                    onValueChange={([v]) => update('frameCount', v)}
+                  />
+                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                    <span>2</span>
+                    <span>60</span>
+                  </div>
                 </div>
                 <div>
                   <Label className="text-xs">Velocidade (FPS)</Label>
