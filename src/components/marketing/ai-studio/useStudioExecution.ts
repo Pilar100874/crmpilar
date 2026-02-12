@@ -39,9 +39,18 @@ export function useStudioExecution() {
       throw new Error(`Edge function error: ${response.status}`);
     }
     const data = await response.json();
-    console.log(`[Studio] Edge function result keys:`, data?.result ? Object.keys(data.result) : typeof data?.result);
+    const result = data?.result;
+    console.log(`[Studio] Edge function result:`, {
+      hasResult: !!result,
+      type: typeof result,
+      keys: result ? Object.keys(result) : 'none',
+      hasImageUrl: !!result?.imageUrl,
+      imageUrlLength: result?.imageUrl?.length || 0,
+      hasText: !!result?.text,
+      textPreview: typeof result === 'string' ? result.substring(0, 100) : result?.text?.substring(0, 100),
+    });
     if (data?.error) throw new Error(data.error);
-    return data?.result;
+    return result;
   };
 
   const getExecutionOrder = (nodes: StudioNode[], edges: StudioEdge[]): string[] => {
