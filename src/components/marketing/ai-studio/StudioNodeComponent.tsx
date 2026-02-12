@@ -5,12 +5,13 @@ import { useNodeResult } from './useNodeResults';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
-  Search, LinkIcon, Headphones, ScanEye, PauseCircle
+  Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
   textInput: FileText,
   systemPrompt: Clapperboard,
+  imageInput: Upload,
   llmProcess: Type,
   imageGen: ImageIcon,
   imageEdit: Wand2,
@@ -26,6 +27,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
 const nodeGradientMap: Record<string, string> = {
   textInput: 'from-indigo-500/20 to-violet-500/20',
   systemPrompt: 'from-purple-500/20 to-fuchsia-500/20',
+  imageInput: 'from-orange-500/20 to-amber-500/20',
   llmProcess: 'from-sky-500/20 to-cyan-500/20',
   imageGen: 'from-rose-500/20 to-pink-500/20',
   imageEdit: 'from-pink-500/20 to-fuchsia-500/20',
@@ -41,6 +43,7 @@ const nodeGradientMap: Record<string, string> = {
 const nodeIconColorMap: Record<string, string> = {
   textInput: 'text-indigo-400',
   systemPrompt: 'text-purple-400',
+  imageInput: 'text-orange-400',
   llmProcess: 'text-sky-400',
   imageGen: 'text-rose-400',
   imageEdit: 'text-pink-400',
@@ -56,6 +59,7 @@ const nodeIconColorMap: Record<string, string> = {
 const nodeAccentMap: Record<string, string> = {
   textInput: '#6366f1',
   systemPrompt: '#a855f7',
+  imageInput: '#f97316',
   llmProcess: '#0ea5e9',
   imageGen: '#f43f5e',
   imageEdit: '#ec4899',
@@ -78,7 +82,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const iconColor = nodeIconColorMap[nodeData.type] || 'text-slate-400';
   const isPaused = !!nodeData.config?._paused;
 
-  const hasInput = !['textInput', 'systemPrompt'].includes(nodeData.type);
+  const hasInput = !['textInput', 'systemPrompt', 'imageInput'].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
 
   // Use external store for results (bypasses ReactFlow's shallow diff)
@@ -93,6 +97,18 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     ? activeResult
     : activeResult?.text;
   const hasResult = !!(resultImage || resultVideo || resultText);
+
+  // Debug: log when result changes
+  React.useEffect(() => {
+    if (activeResult) {
+      console.log(`[StudioNode ${id}] activeResult:`, {
+        hasImageUrl: !!resultImage,
+        imageUrlLength: resultImage?.length,
+        hasText: !!resultText,
+        hasResult,
+      });
+    }
+  }, [activeResult, id, resultImage, resultText, hasResult]);
 
   const nodeWidth = (resultImage || resultVideo) ? 340 : 280;
 
@@ -170,8 +186,35 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
             </p>
           </div>
         )}
+        {/* Image input preview */}
+        {nodeData.type === 'imageInput' && (
+          <div className="px-3 pb-3 pt-1">
+            {(nodeData.config.images?.length > 0) ? (
+              <div className="grid grid-cols-2 gap-1.5">
+                {nodeData.config.images.slice(0, 4).map((img: string, idx: number) => (
+                  <div key={idx} className="rounded-lg overflow-hidden border border-border/50 aspect-square">
+                    <img src={img} alt={`Ref ${idx + 1}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+                {nodeData.config.images.length > 4 && (
+                  <div className="rounded-lg border border-border/50 aspect-square flex items-center justify-center bg-muted/50">
+                    <span className="text-xs text-muted-foreground font-medium">+{nodeData.config.images.length - 4}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-1.5 py-3 border border-dashed border-border/50 rounded-xl">
+                <Upload className="h-5 w-5 text-muted-foreground/40" />
+                <p className="text-[10px] text-muted-foreground">Clique para adicionar imagens</p>
+              </div>
+            )}
+            {nodeData.config.images?.length > 0 && (
+              <p className="text-[10px] text-muted-foreground mt-1.5">{nodeData.config.images.length} imagem(ns) de referência</p>
+            )}
+          </div>
+        )}
 
-        {/* Model info badges */}
+
         {!hasResult && nodeData.type === 'llmProcess' && (
           <div className="px-3.5 py-2.5 flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-medium">
@@ -230,7 +273,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         {/* Result display */}
         {hasResult && (
           <div className="relative">
-            {resultImage && (
+           {resultImage && (
               <div className="relative group px-3 pb-3 pt-1">
                 <div className="rounded-xl overflow-hidden border border-border/50" style={{ boxShadow: `0 4px 20px -4px ${accent}20` }}>
                   <img
@@ -239,6 +282,11 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     className="w-full object-cover cursor-pointer transition-all"
                     style={{ maxHeight: imageExpanded ? 500 : 180 }}
                     onClick={() => setImageExpanded(!imageExpanded)}
+                    onError={(e) => {
+                      console.error(`[StudioNode ${id}] Image failed to load, URL length: ${resultImage?.length}`);
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                    onLoad={() => console.log(`[StudioNode ${id}] Image loaded successfully`)}
                   />
                 </div>
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

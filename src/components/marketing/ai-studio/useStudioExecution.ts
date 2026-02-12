@@ -95,7 +95,15 @@ export function useStudioExecution() {
     const systemPrompts = inputs.filter((i) => i?._isSystemPrompt).map((i) => i.text);
     const systemPrompt = systemPrompts.length > 0 ? systemPrompts.join('\n') : undefined;
 
-    const imageInputs = inputs.filter((i) => i?.imageUrl).map((i) => i.imageUrl);
+    // Collect all image URLs from inputs (single imageUrl or multiple imageUrls)
+    const imageInputs: string[] = [];
+    inputs.forEach((i) => {
+      if (i?.imageUrls && Array.isArray(i.imageUrls)) {
+        imageInputs.push(...i.imageUrls);
+      } else if (i?.imageUrl) {
+        imageInputs.push(i.imageUrl);
+      }
+    });
 
     switch (type) {
       case 'textInput':
@@ -103,6 +111,10 @@ export function useStudioExecution() {
 
       case 'systemPrompt':
         return { _isSystemPrompt: true, text: config.systemPrompt || '' };
+
+      case 'imageInput':
+        // Return all images as an array of imageUrl objects
+        return { imageUrls: config.images || [], imageUrl: config.images?.[0] };
 
       case 'llmProcess': {
         const result = await callStudio('generate_text', {
@@ -117,15 +129,15 @@ export function useStudioExecution() {
         const result = await callStudio('generate_image', {
           prompt: combinedInput || 'A beautiful scene',
           model: config.model,
+          imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
         });
         return result;
       }
 
       case 'imageEdit': {
-        const imageUrl = imageInputs[0];
         const result = await callStudio('edit_image', {
           prompt: config.editPrompt || combinedInput || 'Enhance this image',
-          imageUrl,
+          imageUrls: imageInputs,
           model: config.model,
         });
         return result;

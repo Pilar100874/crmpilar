@@ -74,11 +74,18 @@ serve(async (req) => {
 
       case "generate_image": {
         const model = validateModel(params.model || "google/gemini-2.5-flash-image", "image");
+        const content: any[] = [
+          { type: "text", text: params.prompt },
+        ];
+        // Attach reference images if provided
+        const refImages = params.imageUrls || [];
+        for (const url of refImages) {
+          content.push({ type: "image_url", image_url: { url } });
+        }
+
         const data = await callGateway(LOVABLE_API_KEY, {
           model,
-          messages: [
-            { role: "user", content: params.prompt },
-          ],
+          messages: [{ role: "user", content }],
           modalities: ["image", "text"],
         });
 
@@ -95,8 +102,10 @@ serve(async (req) => {
         const content: any[] = [
           { type: "text", text: params.prompt },
         ];
-        if (params.imageUrl) {
-          content.push({ type: "image_url", image_url: { url: params.imageUrl } });
+        // Support single imageUrl or multiple imageUrls
+        const imageUrls = params.imageUrls || (params.imageUrl ? [params.imageUrl] : []);
+        for (const url of imageUrls) {
+          content.push({ type: "image_url", image_url: { url } });
         }
 
         const data = await callGateway(LOVABLE_API_KEY, {
