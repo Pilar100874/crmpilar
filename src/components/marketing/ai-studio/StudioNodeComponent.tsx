@@ -466,24 +466,32 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 )}
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {resultGif && (
-                    <button
+                     <button
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
+                        e.preventDefault();
                         try {
-                          const byteString = atob(resultGif.split(',')[1]);
-                          const mimeString = resultGif.split(',')[0].split(':')[1].split(';')[0];
-                          const ab = new ArrayBuffer(byteString.length);
-                          const ia = new Uint8Array(ab);
-                          for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
-                          const blob = new Blob([ab], { type: mimeString });
+                          const base64 = resultGif.split(',')[1];
+                          if (!base64) { console.error('GIF data missing'); return; }
+                          const byteChars = atob(base64);
+                          const byteArray = new Uint8Array(byteChars.length);
+                          for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+                          const blob = new Blob([byteArray], { type: 'image/gif' });
                           const url = URL.createObjectURL(blob);
                           const link = document.createElement('a');
                           link.href = url;
                           link.download = `studio-animation-${id}.gif`;
+                          link.style.display = 'none';
                           document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          URL.revokeObjectURL(url);
+                          setTimeout(() => {
+                            link.click();
+                            setTimeout(() => {
+                              document.body.removeChild(link);
+                              URL.revokeObjectURL(url);
+                            }, 200);
+                          }, 0);
                         } catch (err) {
                           console.error('Download GIF error:', err);
                         }
