@@ -195,6 +195,16 @@ const AICreativeStudioInner: React.FC = () => {
     }
   }, [setNodes, selectedNode]);
 
+  // Listen for inline config updates from nodes
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { nodeId, config } = (e as CustomEvent).detail;
+      updateNodeConfig(nodeId, config);
+    };
+    window.addEventListener('studio-node-config-update', handler);
+    return () => window.removeEventListener('studio-node-config-update', handler);
+  }, [updateNodeConfig]);
+
   const deleteSelected = useCallback(() => {
     if (selectedNode) {
       setNodes((nds) => nds.filter((n) => n.id !== selectedNode.id));
@@ -644,7 +654,28 @@ const AICreativeStudioInner: React.FC = () => {
 
           {/* Toolbar */}
           <Panel position="top-center">
-            <div className="flex items-center gap-2 bg-card/95 backdrop-blur border border-border rounded-xl px-3 py-1.5 shadow-md">
+            <div className="flex flex-col gap-0 bg-card/95 backdrop-blur border border-border rounded-xl shadow-md overflow-hidden">
+              {/* Progress bar */}
+              {isExecuting && executionLog.length > 0 && (() => {
+                const total = executionLog.filter(e => e.status !== 'skipped').length;
+                const done = executionLog.filter(e => e.status === 'success' || e.status === 'error').length;
+                const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                const currentLabel = executionLog.find(e => e.status === 'running')?.nodeLabel;
+                return (
+                  <div className="px-3 pt-2 pb-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] text-muted-foreground font-medium truncate max-w-[200px]">
+                        {currentLabel ? `⚡ ${currentLabel}` : 'Processando...'}
+                      </span>
+                      <span className="text-[10px] font-bold text-primary">{pct}%</span>
+                    </div>
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full transition-all duration-500 ease-out" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })()}
+              <div className="flex items-center gap-2 px-3 py-1.5">
               <Button
                 size="sm"
                 onClick={() => handleExecute()}
@@ -720,6 +751,7 @@ const AICreativeStudioInner: React.FC = () => {
                   Voltar
                 </Button>
               )}
+              </div>
             </div>
           </Panel>
 

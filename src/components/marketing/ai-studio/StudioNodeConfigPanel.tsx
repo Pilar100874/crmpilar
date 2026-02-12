@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, Play, SkipForward } from 'lucide-react';
+import { X, Play, SkipForward, Settings2, Sparkles } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
@@ -309,11 +309,14 @@ const ModelSelectItem = ({ model }: { model: ModelInfo }) => (
   </SelectItem>
 );
 
-const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex items-center gap-2 mt-4 mb-2">
-    <Separator className="flex-1" />
-    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold whitespace-nowrap">{children}</span>
-    <Separator className="flex-1" />
+const SectionTitle = ({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) => (
+  <div className="flex items-center gap-2 mt-5 mb-3">
+    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+    <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-primary/70 font-bold whitespace-nowrap">
+      {icon}
+      {children}
+    </span>
+    <div className="h-px flex-1 bg-gradient-to-r from-border via-transparent to-transparent" />
   </div>
 );
 
@@ -1378,42 +1381,72 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
     }
   };
 
+  // Get accent color for this node type
+  const nodeAccentMap: Record<string, string> = {
+    textInput: '#6366f1', systemPrompt: '#a855f7', imageInput: '#f97316',
+    llmProcess: '#0ea5e9', imageGen: '#f43f5e', imageEdit: '#ec4899',
+    productComposite: '#8b5cf6', videoGen: '#f59e0b', audioGen: '#22c55e',
+    musicGen: '#14b8a6', lipSync: '#06b6d4', videoMerge: '#eab308',
+    imageAnalyze: '#14b8a6', output: '#64748b',
+  };
+  const accent = nodeAccentMap[node.data.type] || '#64748b';
+
   return (
     <div className="w-80 border-l border-border bg-card flex flex-col shrink-0">
-      <div className="p-3 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span>{meta?.icon}</span>
-          <h3 className="font-semibold text-sm truncate text-foreground">{node.data.label}</h3>
+      {/* Modern header with accent gradient */}
+      <div
+        className="p-4 border-b border-border/50 relative overflow-hidden"
+        style={{ background: `linear-gradient(135deg, ${accent}08, ${accent}03)` }}
+      >
+        <div className="absolute inset-0 opacity-[0.03]" style={{ background: `radial-gradient(circle at 80% 20%, ${accent}, transparent 60%)` }} />
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-2.5">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: `linear-gradient(135deg, ${accent}25, ${accent}10)`, border: `1px solid ${accent}25` }}
+            >
+              <span className="text-base">{meta?.icon}</span>
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-foreground">{node.data.label}</h3>
+              <p className="text-[10px] text-muted-foreground">{meta?.description || 'Configurações'}</p>
+            </div>
+          </div>
+          <Button size="icon" variant="ghost" onClick={onClose} className="h-7 w-7 rounded-lg hover:bg-background/50">
+            <X className="h-4 w-4" />
+          </Button>
         </div>
-        <Button size="icon" variant="ghost" onClick={onClose} className="h-7 w-7">
-          <X className="h-4 w-4" />
-        </Button>
       </div>
 
       {onExecuteFromNode && (
-        <div className="px-3 py-2 border-b border-border">
+        <div className="px-3 py-2.5 border-b border-border/50 bg-muted/20">
           <Button
             size="sm"
             onClick={() => onExecuteFromNode(node.id)}
-            className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-lg text-xs"
+            className="w-full gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-lg text-xs h-9 font-semibold shadow-sm"
           >
             <SkipForward className="h-3.5 w-3.5" />
             Executar deste ponto
           </Button>
         </div>
       )}
-      <ScrollArea className="flex-1 p-3">
-        {renderConfig()}
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-1">
+          {renderConfig()}
+        </div>
 
         {activeResult && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <Label className="text-xs font-semibold text-muted-foreground">Resultado</Label>
-            <div className="mt-2 rounded-lg border border-border bg-muted/30 p-2">
+          <div className="mx-4 mb-4 mt-2 pt-3 border-t border-border">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Sparkles className="h-3 w-3 text-primary" />
+              <Label className="text-xs font-bold text-primary">Resultado</Label>
+            </div>
+            <div className="rounded-xl border border-border bg-muted/30 p-3">
               {typeof activeResult === 'string' && (
                 <p className="text-xs whitespace-pre-wrap text-foreground/60">{activeResult}</p>
               )}
               {activeResult?.imageUrl && (
-                <img src={activeResult.imageUrl} alt="Result" className="w-full rounded" />
+                <img src={activeResult.imageUrl} alt="Result" className="w-full rounded-lg" />
               )}
               {activeResult?.text && (
                 <p className="text-xs whitespace-pre-wrap mt-2 text-foreground/60">{activeResult.text}</p>
