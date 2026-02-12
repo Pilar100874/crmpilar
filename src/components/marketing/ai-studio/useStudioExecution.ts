@@ -190,10 +190,15 @@ export function useStudioExecution() {
         return result;
       }
 
-      case 'videoGen':
-        return {
-          text: `🎬 Vídeo gerado: "${combinedInput}"\nDuração: ${config.duration}s | Resolução: ${config.resolution} | Aspecto: ${config.aspectRatio}\n\n⚠️ Para geração real de vídeo, conecte uma API externa como RunwayML ou ElevenLabs.`,
-        };
+      case 'videoGen': {
+        const videoPrompt = combinedInput || 'A cinematic scene';
+        const result = await callStudio('generate_image', {
+          prompt: `Cinematic film frame, high quality, ${config.aspectRatio || '16:9'} aspect ratio: ${videoPrompt}`,
+          model: config.model || 'google/gemini-2.5-flash-image',
+          imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
+        });
+        return { imageUrl: result?.imageUrl, text: `🎬 Key-frame gerado para: "${videoPrompt.substring(0, 80)}"` };
+      }
 
       case 'audioGen':
         return {
@@ -304,7 +309,7 @@ export function useStudioExecution() {
           const inputs = getInputResults(nodeId, edges, results);
           console.log(`[Studio] Node ${nodeId} (${nd.type}) inputs:`, inputs.length, 'items');
           const result = await executeNode(node, inputs);
-          console.log(`[Studio] Node ${nodeId} (${nd.type}) result:`, typeof result, result?.imageUrl ? 'has imageUrl' : 'no imageUrl');
+          console.log(`[Studio] Node ${nodeId} (${nd.type}) result:`, typeof result, result?.imageUrl ? 'has imageUrl' : 'no imageUrl', result?.videoUrl ? 'has videoUrl' : '');
           const elapsed = Date.now() - startTime;
           results.set(nodeId, result);
           updateNode(nodeId, { isProcessing: false, result });
