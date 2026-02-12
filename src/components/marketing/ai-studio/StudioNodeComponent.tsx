@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Handle, Position, NodeProps } from '@xyflow/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/react';
 import { StudioNodeData, getNodeMeta } from './types';
 import { useNodeResult } from './useNodeResults';
 import { 
@@ -81,6 +81,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const gradient = nodeGradientMap[nodeData.type] || 'from-slate-500/20 to-zinc-500/20';
   const iconColor = nodeIconColorMap[nodeData.type] || 'text-slate-400';
   const isPaused = !!nodeData.config?._paused;
+  const updateNodeInternals = useUpdateNodeInternals();
 
   const hasInput = !['textInput', 'systemPrompt', 'imageInput'].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
@@ -98,17 +99,16 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     : activeResult?.text;
   const hasResult = !!(resultImage || resultVideo || resultText);
 
-  // Debug: log when result changes
-  React.useEffect(() => {
-    if (activeResult) {
-      console.log(`[StudioNode ${id}] activeResult:`, {
-        hasImageUrl: !!resultImage,
-        imageUrlLength: resultImage?.length,
-        hasText: !!resultText,
-        hasResult,
-      });
+  // Force ReactFlow to re-measure node dimensions when result changes
+  useEffect(() => {
+    if (hasResult || activeProcessing) {
+      // Small delay to let the DOM update before re-measuring
+      const timer = setTimeout(() => {
+        updateNodeInternals(id);
+      }, 50);
+      return () => clearTimeout(timer);
     }
-  }, [activeResult, id, resultImage, resultText, hasResult]);
+  }, [hasResult, activeProcessing, resultImage, resultVideo, resultText, id, updateNodeInternals]);
 
   const nodeWidth = (resultImage || resultVideo || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0)) ? 340 : 280;
 
