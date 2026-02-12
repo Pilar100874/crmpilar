@@ -197,15 +197,19 @@ export function useStudioExecution() {
         const motionStages = [
           'opening shot, beginning of movement',
           'early progression, slight camera movement forward',
+          'building momentum, increasing intensity',
           'mid-action, peak of the motion, dynamic angle',
+          'continuation, evolving perspective',
+          'transition, shifting focus',
+          'climax approaching, tension building',
           'final frame, concluding the movement, dramatic resolution',
           'aftermath, calm settling shot',
           'wide establishing shot, full reveal',
         ];
 
         const frames: string[] = [];
-        for (let i = 0; i < Math.min(frameCount, 6); i++) {
-          const stage = motionStages[i] || motionStages[motionStages.length - 1];
+        for (let i = 0; i < frameCount; i++) {
+          const stage = motionStages[i % motionStages.length];
           const framePrompt = `Ultra high resolution cinematic film still, movie production quality, dramatic lighting, shallow depth of field, ${aspectRatio} aspect ratio, professional cinematography, photorealistic, frame ${i + 1} of ${frameCount} — ${stage}: ${videoPrompt}`;
           
           nodeResultStore.setResult(node.id, { 
