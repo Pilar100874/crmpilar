@@ -34,15 +34,16 @@ const StudioNodeLibrary: React.FC = () => {
   return (
     <>
       {!isOpen && (
-        <div className="absolute top-[72px] left-1/2 -translate-x-1/2 z-20">
+        <div className="absolute top-3 left-3 z-20">
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
             <Button
-              size="icon"
+              size="sm"
               onClick={() => setIsOpen(true)}
-              className="h-11 w-11 rounded-xl shadow-xl border-0"
+              className="h-9 rounded-lg shadow-lg border-0 gap-1.5 px-3 text-xs font-medium"
               style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
             >
-              <Plus className="h-5 w-5 text-white" />
+              <Plus className="h-4 w-4 text-white" />
+              <span className="text-white">Adicionar Bloco</span>
             </Button>
           </motion.div>
         </div>
