@@ -22,15 +22,24 @@ export function useStudioExecution() {
 
   const callStudio = async (action: string, params: Record<string, any>) => {
     console.log(`[Studio] Calling edge function: action=${action}`, params);
-    const { data, error } = await supabase.functions.invoke('ai-creative-studio', {
-      body: { action, params },
-    });
-    console.log(`[Studio] Edge function response:`, { data, error });
-    if (error) {
-      // supabase.functions.invoke wraps non-2xx as FunctionsHttpError
-      const msg = typeof error === 'object' && error.message ? error.message : String(error);
-      throw new Error(msg);
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ action, params }),
+      }
+    );
+    if (!response.ok) {
+      const errText = await response.text().catch(() => 'Unknown error');
+      console.error(`[Studio] Edge function error ${response.status}:`, errText);
+      throw new Error(`Edge function error: ${response.status}`);
     }
+    const data = await response.json();
+    console.log(`[Studio] Edge function result keys:`, data?.result ? Object.keys(data.result) : typeof data?.result);
     if (data?.error) throw new Error(data.error);
     return data?.result;
   };
