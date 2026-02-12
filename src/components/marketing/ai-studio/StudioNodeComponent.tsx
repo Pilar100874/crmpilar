@@ -110,7 +110,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [activeResult, id, resultImage, resultText, hasResult]);
 
-  const nodeWidth = (resultImage || resultVideo) ? 340 : 280;
+  const nodeWidth = (resultImage || resultVideo || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0)) ? 340 : 280;
 
   return (
     <div
@@ -279,8 +279,12 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   <img
                     src={resultImage}
                     alt="Resultado gerado"
-                    className="w-full object-cover cursor-pointer transition-all"
-                    style={{ maxHeight: imageExpanded ? 500 : 180 }}
+                    className="w-full object-contain cursor-pointer transition-all block"
+                    style={{ 
+                      maxHeight: imageExpanded ? 500 : 220,
+                      minHeight: 80,
+                      backgroundColor: 'hsl(var(--muted))',
+                    }}
                     onClick={() => setImageExpanded(!imageExpanded)}
                     onError={(e) => {
                       console.error(`[StudioNode ${id}] Image failed to load, URL length: ${resultImage?.length}`);
