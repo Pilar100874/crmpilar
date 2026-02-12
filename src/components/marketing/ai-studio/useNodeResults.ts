@@ -1,78 +1,73 @@
-import { create } from 'zustand';
-
-interface NodeResultState {
-  results: Record<string, any>;
-  processing: Record<string, boolean>;
-  errors: Record<string, string>;
-  setResult: (nodeId: string, result: any) => void;
-  setProcessing: (nodeId: string, processing: boolean) => void;
-  setError: (nodeId: string, error: string) => void;
-  clearError: (nodeId: string) => void;
-  clearAll: () => void;
-}
-
-// We use a simple event-driven approach instead of zustand
-// since zustand may not be installed
+import { useSyncExternalStore, useCallback } from 'react';
 
 type Listener = () => void;
 
-class NodeResultStore {
-  results: Record<string, any> = {};
-  processing: Record<string, boolean> = {};
-  errors: Record<string, string> = {};
-  private listeners: Set<Listener> = new Set();
+interface Snapshot {
+  results: Record<string, any>;
+  processing: Record<string, boolean>;
+  errors: Record<string, string>;
+}
 
-  subscribe(listener: Listener) {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+class NodeResultStore {
+  private _results: Record<string, any> = {};
+  private _processing: Record<string, boolean> = {};
+  private _errors: Record<string, string> = {};
+  private _listeners: Set<Listener> = new Set();
+  private _snapshot: Snapshot;
+
+  constructor() {
+    this._snapshot = { results: this._results, processing: this._processing, errors: this._errors };
   }
 
-  private notify() {
-    this.listeners.forEach(l => l());
+  subscribe = (listener: Listener) => {
+    this._listeners.add(listener);
+    return () => { this._listeners.delete(listener); };
+  };
+
+  private _updateSnapshot() {
+    this._snapshot = { results: this._results, processing: this._processing, errors: this._errors };
+    this._listeners.forEach(l => l());
   }
 
   setResult(nodeId: string, result: any) {
-    this.results = { ...this.results, [nodeId]: result };
-    this.notify();
+    this._results = { ...this._results, [nodeId]: result };
+    this._updateSnapshot();
   }
 
   setProcessing(nodeId: string, isProcessing: boolean) {
-    this.processing = { ...this.processing, [nodeId]: isProcessing };
-    this.notify();
+    this._processing = { ...this._processing, [nodeId]: isProcessing };
+    this._updateSnapshot();
   }
 
   setError(nodeId: string, error: string) {
-    this.errors = { ...this.errors, [nodeId]: error };
-    this.notify();
+    this._errors = { ...this._errors, [nodeId]: error };
+    this._updateSnapshot();
   }
 
   clearError(nodeId: string) {
-    const { [nodeId]: _, ...rest } = this.errors;
-    this.errors = rest;
-    this.notify();
+    const { [nodeId]: _, ...rest } = this._errors;
+    this._errors = rest;
+    this._updateSnapshot();
   }
 
   clearAll() {
-    this.results = {};
-    this.processing = {};
-    this.errors = {};
-    this.notify();
+    this._results = {};
+    this._processing = {};
+    this._errors = {};
+    this._updateSnapshot();
   }
 
-  getSnapshot() {
-    return { results: this.results, processing: this.processing, errors: this.errors };
-  }
+  getSnapshot = (): Snapshot => {
+    return this._snapshot;
+  };
 }
 
 export const nodeResultStore = new NodeResultStore();
 
-// React hook
-import { useSyncExternalStore } from 'react';
-
 export function useNodeResult(nodeId: string) {
   const snapshot = useSyncExternalStore(
-    (cb) => nodeResultStore.subscribe(cb),
-    () => nodeResultStore.getSnapshot()
+    nodeResultStore.subscribe,
+    nodeResultStore.getSnapshot
   );
 
   return {
@@ -84,7 +79,7 @@ export function useNodeResult(nodeId: string) {
 
 export function useNodeResults() {
   return useSyncExternalStore(
-    (cb) => nodeResultStore.subscribe(cb),
-    () => nodeResultStore.getSnapshot()
+    nodeResultStore.subscribe,
+    nodeResultStore.getSnapshot
   );
 }
