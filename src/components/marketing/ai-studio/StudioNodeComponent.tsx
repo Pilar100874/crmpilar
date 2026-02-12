@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/react';
 import { StudioNodeData, getNodeMeta } from './types';
 import { useNodeResult } from './useNodeResults';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
   Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download,
-  DollarSign, Volume2
+  DollarSign, Volume2, Edit3
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
@@ -79,11 +80,17 @@ const nodeAccentMap: Record<string, string> = {
 // Blocks that REQUIRE paid external APIs (no free alternative)
 const PAID_ONLY_BLOCKS: Set<string> = new Set(['musicGen', 'lipSync', 'videoMerge']);
 
+// Helper: dispatch config update via custom event (avoids prop drilling through ReactFlow)
+const dispatchConfigUpdate = useCallback((nodeId: string, config: Record<string, any>) => {
+  window.dispatchEvent(new CustomEvent('studio-node-config-update', { detail: { nodeId, config } }));
+}, []);
+
 const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as unknown as StudioNodeData;
   const meta = getNodeMeta(nodeData.type);
   const accent = nodeAccentMap[nodeData.type] || '#64748b';
   const [imageExpanded, setImageExpanded] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const IconComponent = nodeIconMap[nodeData.type] || Play;
   const gradient = nodeGradientMap[nodeData.type] || 'from-slate-500/20 to-zinc-500/20';
   const iconColor = nodeIconColorMap[nodeData.type] || 'text-slate-400';
@@ -118,25 +125,30 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     : activeResult?.text;
   const hasResult = !!(resultImage || resultVideo || resultAudio || resultText || resultFrames);
 
+  // Stabilize frames reference to avoid flickering re-renders
+  const stableFramesRef = useRef<string[]>([]);
+  const stableFramesLengthRef = useRef(0);
+  if (resultFrames && resultFrames.length !== stableFramesLengthRef.current) {
+    stableFramesRef.current = resultFrames;
+    stableFramesLengthRef.current = resultFrames.length;
+  }
+  const stableFrames = resultFrames ? stableFramesRef.current : undefined;
+  const frameCount = stableFrames?.length || 0;
+
   // Animated frames playback
   const [currentFrame, setCurrentFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const frameIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (resultFrames && resultFrames.length > 1 && isPlaying) {
+    if (frameCount > 1 && isPlaying) {
       frameIntervalRef.current = setInterval(() => {
-        setCurrentFrame(prev => (prev + 1) % resultFrames.length);
+        setCurrentFrame(prev => (prev + 1) % frameCount);
       }, 1000 / resultFps);
       return () => { if (frameIntervalRef.current) clearInterval(frameIntervalRef.current); };
     }
     return () => { if (frameIntervalRef.current) clearInterval(frameIntervalRef.current); };
-  }, [resultFrames, resultFps, isPlaying]);
-
-  // Debug render state
-  useEffect(() => {
-    console.log(`[StudioNode ${id}] RENDER: hasResult=${hasResult}, hasImage=${!!resultImage}, storeResult=${!!storeResult}, persistedResult=${!!persistedResult.current}, nodeDataResult=${!!nodeData.result}`);
-  });
+  }, [frameCount, resultFps, isPlaying]);
 
   // Force ReactFlow to re-measure node dimensions when result changes
   useEffect(() => {
@@ -149,6 +161,11 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   }, [hasResult, activeProcessing, resultImage, resultVideo, resultAudio, resultText, id, updateNodeInternals]);
 
   const nodeWidth = (resultImage || resultVideo || resultAudio || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0)) ? 340 : 280;
+
+  // Inline edit handler
+  const handleInlineUpdate = useCallback((key: string, value: any) => {
+    dispatchConfigUpdate(id, { [key]: value });
+  }, [id]);
 
   return (
     <div
@@ -215,29 +232,72 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
       {/* Body */}
       <div className="relative">
-        {/* Text input preview */}
+        {/* Inline editable text input */}
         {nodeData.type === 'textInput' && (
           <div className="px-3.5 py-2.5">
-            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-5 whitespace-pre-wrap font-mono">
-              {nodeData.config.text || 'Clique para editar o texto...'}
-            </p>
+            {isEditing ? (
+              <textarea
+                autoFocus
+                value={nodeData.config.text || ''}
+                onChange={(e) => handleInlineUpdate('text', e.target.value)}
+                onBlur={() => setIsEditing(false)}
+                onKeyDown={(e) => { if (e.key === 'Escape') setIsEditing(false); }}
+                className="w-full text-xs text-foreground leading-relaxed whitespace-pre-wrap font-mono bg-muted/50 border border-border rounded-lg p-2 resize-none focus:outline-none focus:ring-1 focus:ring-primary/40 min-h-[80px] max-h-[200px]"
+                placeholder="Escreva seu prompt aqui..."
+              />
+            ) : (
+              <div
+                onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                className="cursor-text hover:bg-muted/30 rounded-lg p-1.5 -m-1.5 transition-colors group/edit"
+              >
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-5 whitespace-pre-wrap font-mono">
+                  {nodeData.config.text || <span className="italic opacity-50">Clique para editar o texto...</span>}
+                </p>
+                <Edit3 className="h-3 w-3 text-muted-foreground/30 group-hover/edit:text-muted-foreground/60 transition-colors mt-1" />
+              </div>
+            )}
           </div>
         )}
         {nodeData.type === 'systemPrompt' && (
           <div className="px-3.5 py-2.5">
-            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-5 whitespace-pre-wrap font-mono">
-              {nodeData.config.systemPrompt || 'Clique para definir instruções...'}
-            </p>
+            {isEditing ? (
+              <textarea
+                autoFocus
+                value={nodeData.config.systemPrompt || ''}
+                onChange={(e) => handleInlineUpdate('systemPrompt', e.target.value)}
+                onBlur={() => setIsEditing(false)}
+                onKeyDown={(e) => { if (e.key === 'Escape') setIsEditing(false); }}
+                className="w-full text-xs text-foreground leading-relaxed whitespace-pre-wrap font-mono bg-muted/50 border border-border rounded-lg p-2 resize-none focus:outline-none focus:ring-1 focus:ring-primary/40 min-h-[80px] max-h-[200px]"
+                placeholder="Defina instruções do sistema..."
+              />
+            ) : (
+              <div
+                onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                className="cursor-text hover:bg-muted/30 rounded-lg p-1.5 -m-1.5 transition-colors group/edit"
+              >
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-5 whitespace-pre-wrap font-mono">
+                  {nodeData.config.systemPrompt || <span className="italic opacity-50">Clique para definir instruções...</span>}
+                </p>
+                <Edit3 className="h-3 w-3 text-muted-foreground/30 group-hover/edit:text-muted-foreground/60 transition-colors mt-1" />
+              </div>
+            )}
           </div>
         )}
-        {/* Image input preview */}
+        {/* Image input with inline upload */}
         {nodeData.type === 'imageInput' && (
           <div className="px-3 pb-3 pt-1">
             {(nodeData.config.images?.length > 0) ? (
               <div className="grid grid-cols-2 gap-1.5">
                 {nodeData.config.images.slice(0, 4).map((img: string, idx: number) => (
-                  <div key={idx} className="rounded-lg overflow-hidden border border-border/50 aspect-square">
+                  <div key={idx} className="rounded-lg overflow-hidden border border-border/50 aspect-square relative group/img">
                     <img src={img} alt={`Ref ${idx + 1}`} className="w-full h-full object-cover" />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleInlineUpdate('images', nodeData.config.images.filter((_: any, i: number) => i !== idx));
+                      }}
+                      className="absolute top-0.5 right-0.5 p-0.5 rounded bg-black/60 text-white opacity-0 group-hover/img:opacity-100 transition-opacity text-[8px]"
+                    >✕</button>
                   </div>
                 ))}
                 {nodeData.config.images.length > 4 && (
@@ -246,12 +306,29 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="flex flex-col items-center gap-1.5 py-3 border border-dashed border-border/50 rounded-xl">
-                <Upload className="h-5 w-5 text-muted-foreground/40" />
-                <p className="text-[10px] text-muted-foreground">Clique para adicionar imagens</p>
-              </div>
-            )}
+            ) : null}
+            <label className="flex flex-col items-center gap-1.5 py-3 border border-dashed border-border/50 rounded-xl cursor-pointer hover:bg-muted/30 transition-colors mt-1.5">
+              <Upload className="h-5 w-5 text-muted-foreground/40" />
+              <p className="text-[10px] text-muted-foreground">Clique ou arraste imagens</p>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  files.forEach((file) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      const base64 = reader.result as string;
+                      handleInlineUpdate('images', [...(nodeData.config.images || []), base64]);
+                    };
+                    reader.readAsDataURL(file);
+                  });
+                  e.target.value = '';
+                }}
+              />
+            </label>
             {nodeData.config.images?.length > 0 && (
               <p className="text-[10px] text-muted-foreground mt-1.5">{nodeData.config.images.length} imagem(ns) de referência</p>
             )}
@@ -331,7 +408,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         {hasResult && (
           <div className="relative">
             {/* Animated frames player */}
-            {resultFrames && resultFrames.length > 0 && (
+            {stableFrames && stableFrames.length > 0 && (
               <div className="relative group px-3 pb-3 pt-1">
                 <div
                   className="rounded-xl overflow-hidden border border-border/50 cursor-pointer relative"
@@ -339,7 +416,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     boxShadow: `0 4px 20px -4px ${accent}20`,
                     height: imageExpanded ? 400 : 200,
                     width: '100%',
-                    backgroundImage: `url(${resultFrames[currentFrame]})`,
+                    backgroundImage: `url(${stableFrames[currentFrame % stableFrames.length]})`,
                     backgroundSize: 'contain',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center',
@@ -349,7 +426,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 >
                   {/* Frame counter */}
                   <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-sm text-white text-[10px] font-mono">
-                    {currentFrame + 1}/{resultFrames.length}
+                    {(currentFrame % stableFrames.length) + 1}/{stableFrames.length}
+                    {activeResult?._totalFrames && stableFrames.length < activeResult._totalFrames && (
+                      <span className="text-amber-300 ml-1">({activeResult._totalFrames} total)</span>
+                    )}
                   </div>
                   {/* Play/Pause */}
                   <button
@@ -363,17 +443,27 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     )}
                   </button>
                 </div>
-                {/* Frame dots */}
-                <div className="flex justify-center gap-1 mt-1.5">
-                  {resultFrames.map((_: string, idx: number) => (
-                    <button
-                      key={idx}
-                      onClick={() => { setCurrentFrame(idx); setIsPlaying(false); }}
-                      className={`w-2 h-2 rounded-full transition-all ${idx === currentFrame ? 'scale-125' : 'opacity-50'}`}
-                      style={{ backgroundColor: idx === currentFrame ? accent : 'hsl(var(--muted-foreground))' }}
-                    />
-                  ))}
-                </div>
+                {/* Frame dots (max 20 shown) */}
+                {stableFrames.length <= 20 && (
+                  <div className="flex justify-center gap-1 mt-1.5">
+                    {stableFrames.map((_: string, idx: number) => (
+                      <button
+                        key={idx}
+                        onClick={() => { setCurrentFrame(idx); setIsPlaying(false); }}
+                        className={`w-2 h-2 rounded-full transition-all ${idx === currentFrame ? 'scale-125' : 'opacity-50'}`}
+                        style={{ backgroundColor: idx === currentFrame ? accent : 'hsl(var(--muted-foreground))' }}
+                      />
+                    ))}
+                  </div>
+                )}
+                {stableFrames.length > 20 && (
+                  <div className="flex items-center gap-2 mt-1.5 px-1">
+                    <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${((currentFrame % stableFrames.length) / stableFrames.length) * 100}%`, backgroundColor: accent }} />
+                    </div>
+                    <span className="text-[9px] text-muted-foreground font-mono">{stableFrames.length}f</span>
+                  </div>
+                )}
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {resultGif && (
                     <button
@@ -394,7 +484,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      resultFrames.forEach((frame: string, idx: number) => {
+                      stableFrames.forEach((frame: string, idx: number) => {
                         const link = document.createElement('a');
                         link.href = frame;
                         link.download = `studio-video-${id}-frame${idx + 1}.png`;
