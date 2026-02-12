@@ -21,10 +21,16 @@ export function useStudioExecution() {
   const onNodesUpdateRef = useRef<((nodes: StudioNode[]) => void) | null>(null);
 
   const callStudio = async (action: string, params: Record<string, any>) => {
+    console.log(`[Studio] Calling edge function: action=${action}`, params);
     const { data, error } = await supabase.functions.invoke('ai-creative-studio', {
       body: { action, params },
     });
-    if (error) throw new Error(error.message || 'Erro na execução');
+    console.log(`[Studio] Edge function response:`, { data, error });
+    if (error) {
+      // supabase.functions.invoke wraps non-2xx as FunctionsHttpError
+      const msg = typeof error === 'object' && error.message ? error.message : String(error);
+      throw new Error(msg);
+    }
     if (data?.error) throw new Error(data.error);
     return data?.result;
   };
@@ -90,12 +96,12 @@ export function useStudioExecution() {
         return { _isSystemPrompt: true, text: config.systemPrompt || '' };
 
       case 'llmProcess': {
-        const result = await callStudio('enhance_prompt', {
+        const result = await callStudio('generate_text', {
           prompt: combinedInput,
           systemPrompt,
           model: config.model,
         });
-        return result;
+        return { text: result };
       }
 
       case 'imageGen': {
