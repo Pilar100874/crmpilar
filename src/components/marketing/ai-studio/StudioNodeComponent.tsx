@@ -289,6 +289,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           <div className="relative">
            {resultImage && (
               <div className="relative group px-3 pb-3 pt-1">
+                <div className="text-[10px] px-2 py-1 mb-1 rounded bg-green-500/20 text-green-400 font-mono">
+                  ✅ img: {Math.round(resultImage.length / 1024)}KB
+                </div>
                 <div className="rounded-xl overflow-hidden border border-border/50" style={{ boxShadow: `0 4px 20px -4px ${accent}20` }}>
                   <img
                     src={resultImage}
@@ -297,12 +300,12 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     style={{ 
                       maxHeight: imageExpanded ? 500 : 220,
                       minHeight: 80,
+                      width: '100%',
                       backgroundColor: 'hsl(var(--muted))',
                     }}
                     onClick={() => setImageExpanded(!imageExpanded)}
                     onError={(e) => {
-                      console.error(`[StudioNode ${id}] Image failed to load, URL length: ${resultImage?.length}`);
-                      (e.target as HTMLImageElement).style.display = 'none';
+                      console.error(`[StudioNode ${id}] Image FAILED to load, URL length: ${resultImage?.length}`);
                     }}
                     onLoad={() => console.log(`[StudioNode ${id}] Image loaded successfully`)}
                   />
