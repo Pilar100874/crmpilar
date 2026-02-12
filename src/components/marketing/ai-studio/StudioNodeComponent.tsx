@@ -567,16 +567,22 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                           link.click();
                           setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 200);
                         } else {
-                          // For regular URLs, fetch as blob to force download
-                          const resp = await fetch(resultImage);
-                          const blob = await resp.blob();
-                          const url = URL.createObjectURL(blob);
-                          const link = document.createElement('a');
-                          link.href = url;
-                          link.download = `studio-${nodeData.type}-${id}.png`;
-                          document.body.appendChild(link);
-                          link.click();
-                          setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 200);
+                          // For storage URLs, fetch as blob with no-cors fallback
+                          try {
+                            const resp = await fetch(resultImage, { mode: 'cors' });
+                            if (!resp.ok) throw new Error('fetch failed');
+                            const blob = await resp.blob();
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `studio-${nodeData.type}-${id}.png`;
+                            document.body.appendChild(link);
+                            link.click();
+                            setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 200);
+                          } catch {
+                            // Fallback: open in new tab for manual save
+                            window.open(resultImage, '_blank');
+                          }
                         }
                       } catch (err) {
                         console.error('Download image error:', err);
