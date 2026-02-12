@@ -497,11 +497,14 @@ export function useStudioExecution() {
           }
         } catch (err: any) {
           const elapsed = Date.now() - startTime;
-          updateNode(nodeId, { isProcessing: false, error: err.message });
+          const errMsg = err.message || 'Erro desconhecido';
+          console.error(`[Studio] Node ${nodeId} (${nd.type}) failed:`, errMsg);
+          updateNode(nodeId, { isProcessing: false, error: errMsg });
           nodeResultStore.setProcessing(nodeId, false);
-          nodeResultStore.setError(nodeId, err.message);
-          updateLog(nodeId, { status: 'error', completedAt: Date.now(), elapsedMs: elapsed, errorMessage: err.message });
-          throw err;
+          nodeResultStore.setError(nodeId, errMsg);
+          updateLog(nodeId, { status: 'error', completedAt: Date.now(), elapsedMs: elapsed, errorMessage: errMsg });
+          toast.error(`Erro no bloco "${nd.label}": ${errMsg.substring(0, 100)}`, { duration: 6000 });
+          // Continue to next node instead of aborting the whole workflow
         }
       }
     } finally {
