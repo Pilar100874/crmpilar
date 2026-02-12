@@ -552,6 +552,8 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     onClick={async (e) => {
                       e.stopPropagation();
                       try {
+                        let blobUrl: string | null = null;
+                        
                         if (resultImage.startsWith('data:')) {
                           const [header, base64] = resultImage.split(',');
                           const mime = header.match(/data:(.*?);/)?.[1] || 'image/png';
@@ -559,31 +561,31 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                           const byteArray = new Uint8Array(byteChars.length);
                           for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
                           const blob = new Blob([byteArray], { type: mime });
-                          const url = URL.createObjectURL(blob);
-                          const link = document.createElement('a');
-                          link.href = url;
-                          link.download = `studio-${nodeData.type}-${id}.png`;
-                          document.body.appendChild(link);
-                          link.click();
-                          setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 200);
+                          blobUrl = URL.createObjectURL(blob);
                         } else {
-                          // For storage URLs, fetch as blob with no-cors fallback
                           try {
-                            const resp = await fetch(resultImage, { mode: 'cors' });
-                            if (!resp.ok) throw new Error('fetch failed');
-                            const blob = await resp.blob();
-                            const url = URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = `studio-${nodeData.type}-${id}.png`;
-                            document.body.appendChild(link);
-                            link.click();
-                            setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 200);
+                            const resp = await fetch(resultImage);
+                            if (resp.ok) {
+                              const blob = await resp.blob();
+                              blobUrl = URL.createObjectURL(blob);
+                            }
                           } catch {
-                            // Fallback: open in new tab for manual save
-                            window.open(resultImage, '_blank');
+                            // fetch failed, use direct link
                           }
                         }
+
+                        const link = document.createElement('a');
+                        link.href = blobUrl || resultImage;
+                        link.download = `studio-${nodeData.type}-${id}.png`;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        link.style.display = 'none';
+                        document.body.appendChild(link);
+                        link.click();
+                        setTimeout(() => {
+                          document.body.removeChild(link);
+                          if (blobUrl) URL.revokeObjectURL(blobUrl);
+                        }, 500);
                       } catch (err) {
                         console.error('Download image error:', err);
                       }
