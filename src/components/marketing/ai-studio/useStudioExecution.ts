@@ -21,19 +21,32 @@ export function useStudioExecution() {
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
   const onNodesUpdateRef = useRef<((nodes: StudioNode[]) => void) | null>(null);
 
-  const callStudio = async (action: string, params: Record<string, any>) => {
+  const callStudio = async (action: string, params: Record<string, any>, timeoutMs: number = 120000) => {
     console.log(`[Studio] Calling edge function: action=${action}`, params);
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ action, params }),
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let response: Response;
+    try {
+      response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-creative-studio`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ action, params }),
+          signal: controller.signal,
+        }
+      );
+    } catch (fetchErr: any) {
+      clearTimeout(timer);
+      if (fetchErr.name === 'AbortError') {
+        throw new Error(`Timeout: a geração demorou mais de ${Math.round(timeoutMs / 1000)}s`);
       }
-    );
+      throw fetchErr;
+    }
+    clearTimeout(timer);
     if (!response.ok) {
       const errText = await response.text().catch(() => 'Unknown error');
       console.error(`[Studio] Edge function error ${response.status}:`, errText);
@@ -208,6 +221,7 @@ export function useStudioExecution() {
         ];
 
         const frames: string[] = [];
+        const perFrameTimeout = 90000; // 90s per frame
         for (let i = 0; i < frameCount; i++) {
           const stage = motionStages[i % motionStages.length];
           const framePrompt = `Ultra high resolution cinematic film still, movie production quality, dramatic lighting, shallow depth of field, ${aspectRatio} aspect ratio, professional cinematography, photorealistic, frame ${i + 1} of ${frameCount} — ${stage}: ${videoPrompt}`;
@@ -218,13 +232,19 @@ export function useStudioExecution() {
             _totalFrames: frameCount,
           });
 
-          const result = await callStudio('generate_image', {
-            prompt: framePrompt,
-            model: 'google/gemini-3-pro-image-preview',
-            imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
-          });
-          if (result?.imageUrl) {
-            frames.push(result.imageUrl);
+          try {
+            const result = await callStudio('generate_image', {
+              prompt: framePrompt,
+              model: 'google/gemini-3-pro-image-preview',
+              imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
+            }, perFrameTimeout);
+            if (result?.imageUrl) {
+              frames.push(result.imageUrl);
+            }
+          } catch (frameErr: any) {
+            console.warn(`[Studio] Frame ${i + 1} failed, skipping:`, frameErr.message);
+            toast.error(`Frame ${i + 1} falhou: ${frameErr.message?.substring(0, 80)}`, { duration: 4000 });
+            // Continue generating remaining frames
           }
         }
 
