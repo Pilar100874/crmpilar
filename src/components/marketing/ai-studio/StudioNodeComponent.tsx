@@ -536,22 +536,45 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     boxShadow: `0 4px 20px -4px ${accent}20`,
                     height: imageExpanded ? 400 : 200,
                     width: '100%',
-                    backgroundImage: `url(${resultImage})`,
-                    backgroundSize: 'contain',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'center',
                     backgroundColor: 'hsl(var(--muted))',
                   }}
                   onClick={() => setImageExpanded(!imageExpanded)}
-                />
+                >
+                  <img 
+                    src={resultImage} 
+                    alt="Generated" 
+                    className="w-full h-full object-contain"
+                    loading="eager"
+                  />
+                </div>
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      const link = document.createElement('a');
-                      link.href = resultImage;
-                      link.download = `studio-${nodeData.type}-${id}.png`;
-                      link.click();
+                      try {
+                        if (resultImage.startsWith('data:')) {
+                          const [header, base64] = resultImage.split(',');
+                          const mime = header.match(/data:(.*?);/)?.[1] || 'image/png';
+                          const byteChars = atob(base64);
+                          const byteArray = new Uint8Array(byteChars.length);
+                          for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
+                          const blob = new Blob([byteArray], { type: mime });
+                          const url = URL.createObjectURL(blob);
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.download = `studio-${nodeData.type}-${id}.png`;
+                          document.body.appendChild(link);
+                          link.click();
+                          setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 200);
+                        } else {
+                          const link = document.createElement('a');
+                          link.href = resultImage;
+                          link.download = `studio-${nodeData.type}-${id}.png`;
+                          link.click();
+                        }
+                      } catch (err) {
+                        console.error('Download image error:', err);
+                      }
                     }}
                     className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
                     title="Download"
