@@ -228,12 +228,32 @@ export function useStudioExecution() {
           }
         }
 
+        // Generate real animated GIF from frames
+        const fps = config.fps || 2;
+        let gifUrl: string | undefined;
+        if (frames.length > 1) {
+          nodeResultStore.setResult(node.id, { 
+            text: `🎬 Montando GIF animado com ${frames.length} frames...`, 
+            _animFrames: [...frames],
+            _totalFrames: frameCount,
+          });
+          try {
+            const { createAnimatedGif } = await import('./gifEncoder');
+            gifUrl = await createAnimatedGif(frames, fps, 512);
+          } catch (gifErr) {
+            console.error('Error creating GIF:', gifErr);
+          }
+        }
+
         return { 
           _animFrames: frames,
           _totalFrames: frameCount,
-          _fps: config.fps || 2,
-          imageUrl: frames[0],
-          text: `🎬 Animação gerada com ${frames.length} frames para: "${videoPrompt.substring(0, 60)}"`,
+          _fps: fps,
+          imageUrl: gifUrl || frames[0],
+          _gifUrl: gifUrl,
+          text: gifUrl 
+            ? `🎬 GIF animado gerado com ${frames.length} frames (${fps} fps) para: "${videoPrompt.substring(0, 60)}"`
+            : `🎬 Animação gerada com ${frames.length} frames para: "${videoPrompt.substring(0, 60)}"`,
         };
       }
 
