@@ -18,6 +18,7 @@ import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Copy, Pause, PlayCircle, Save, Plus, X, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -1046,30 +1047,29 @@ const AICreativeStudioInner: React.FC = () => {
       </AlertDialog>
 
       {/* Rename workflow dialog */}
-      <AlertDialog open={!!renameDialog} onOpenChange={(open) => !open && setRenameDialog(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Renomear workflow</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={!!renameDialog} onOpenChange={(open) => !open && setRenameDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear workflow</DialogTitle>
+            <DialogDescription>
               Digite o novo nome para o workflow.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
+            </DialogDescription>
+          </DialogHeader>
           <Input
             value={renameValue}
             onChange={(e) => setRenameValue(e.target.value)}
             placeholder="Nome do workflow"
-            className="mt-2"
             autoFocus
             onKeyDown={(e) => e.key === 'Enter' && renameDialog && handleRenameWorkflow(renameDialog.id, renameValue)}
           />
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => renameDialog && handleRenameWorkflow(renameDialog.id, renameValue)}>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenameDialog(null)}>Cancelar</Button>
+            <Button onClick={() => renameDialog && handleRenameWorkflow(renameDialog.id, renameValue)}>
               Renomear
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
