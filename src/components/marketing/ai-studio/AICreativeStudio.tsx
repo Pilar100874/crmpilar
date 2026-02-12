@@ -726,29 +726,25 @@ const AICreativeStudioInner: React.FC = () => {
         </AlertDialog>
 
         {/* Rename workflow dialog */}
-        <Dialog open={!!renameDialog} onOpenChange={(open) => !open && setRenameDialog(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Renomear workflow</DialogTitle>
-              <DialogDescription>
-                Digite o novo nome para o workflow.
-              </DialogDescription>
-            </DialogHeader>
-            <Input
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              placeholder="Nome do workflow"
-              autoFocus
-              onKeyDown={(e) => e.key === 'Enter' && renameDialog && handleRenameWorkflow(renameDialog.id, renameValue)}
-            />
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setRenameDialog(null)}>Cancelar</Button>
-              <Button onClick={() => renameDialog && handleRenameWorkflow(renameDialog.id, renameValue)}>
-                Renomear
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {renameDialog && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60" onClick={() => setRenameDialog(null)}>
+            <div className="bg-background border border-border rounded-2xl p-6 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold mb-1">Renomear workflow</h3>
+              <p className="text-sm text-muted-foreground mb-4">Digite o novo nome para o workflow.</p>
+              <Input
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                placeholder="Nome do workflow"
+                autoFocus
+                onKeyDown={(e) => e.key === 'Enter' && handleRenameWorkflow(renameDialog.id, renameValue)}
+              />
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setRenameDialog(null)}>Cancelar</Button>
+                <Button onClick={() => handleRenameWorkflow(renameDialog.id, renameValue)}>Renomear</Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
