@@ -4,17 +4,20 @@ import { StudioNodeData, getNodeMeta } from './types';
 import { useNodeResult } from './useNodeResults';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { Input } from '@/components/ui/input';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
   Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download,
-  DollarSign, Volume2, Edit3
+  DollarSign, Volume2, Edit3, Package
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
   textInput: FileText,
   systemPrompt: Clapperboard,
   imageInput: Upload,
+  productImageSelect: Package,
   llmProcess: Type,
   imageGen: ImageIcon,
   imageEdit: Wand2,
@@ -32,6 +35,7 @@ const nodeGradientMap: Record<string, string> = {
   textInput: 'from-indigo-500/20 to-violet-500/20',
   systemPrompt: 'from-purple-500/20 to-fuchsia-500/20',
   imageInput: 'from-orange-500/20 to-amber-500/20',
+  productImageSelect: 'from-emerald-500/20 to-teal-500/20',
   llmProcess: 'from-sky-500/20 to-cyan-500/20',
   imageGen: 'from-rose-500/20 to-pink-500/20',
   imageEdit: 'from-pink-500/20 to-fuchsia-500/20',
@@ -49,6 +53,7 @@ const nodeIconColorMap: Record<string, string> = {
   textInput: 'text-indigo-400',
   systemPrompt: 'text-purple-400',
   imageInput: 'text-orange-400',
+  productImageSelect: 'text-emerald-400',
   llmProcess: 'text-sky-400',
   imageGen: 'text-rose-400',
   imageEdit: 'text-pink-400',
@@ -66,6 +71,7 @@ const nodeAccentMap: Record<string, string> = {
   textInput: '#6366f1',
   systemPrompt: '#a855f7',
   imageInput: '#f97316',
+  productImageSelect: '#10b981',
   llmProcess: '#0ea5e9',
   imageGen: '#f43f5e',
   imageEdit: '#ec4899',
@@ -86,6 +92,117 @@ const dispatchConfigUpdate = (nodeId: string, config: Record<string, any>) => {
   window.dispatchEvent(new CustomEvent('studio-node-config-update', { detail: { nodeId, config } }));
 };
 
+// Inline product image selector component
+const ProductImageSelectInline: React.FC<{ config: Record<string, any>; onUpdate: (key: string, value: any) => void }> = ({ config, onUpdate }) => {
+  const [products, setProducts] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showList, setShowList] = useState(false);
+
+  const fetchProducts = useCallback(async () => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from('produtos')
+      .select('id, nome, codigo, foto_url, foto_url_2, foto_url_3')
+      .eq('estabelecimento_id', estabId)
+      .eq('ativo', true)
+      .order('nome', { ascending: true })
+      .limit(200);
+    setProducts(data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (showList && products.length === 0) fetchProducts();
+  }, [showList, fetchProducts, products.length]);
+
+  const filtered = products.filter(p => 
+    p.nome?.toLowerCase().includes(search.toLowerCase()) || 
+    p.codigo?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const selectedProduct = config.productName;
+  const selectedImage = config.selectedImageUrl;
+
+  if (selectedImage) {
+    return (
+      <div className="px-3 pb-3 pt-1">
+        <div className="rounded-xl overflow-hidden border border-border/50 relative group">
+          <img src={selectedImage} alt={selectedProduct || 'Produto'} className="w-full h-40 object-contain bg-muted/30" />
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <button
+              onClick={(e) => { e.stopPropagation(); onUpdate('selectedImageUrl', ''); onUpdate('productId', ''); onUpdate('productName', ''); setShowList(true); }}
+              className="px-3 py-1.5 rounded-lg bg-white/20 backdrop-blur-sm text-white text-xs font-medium hover:bg-white/30 transition-colors"
+            >
+              Trocar produto
+            </button>
+          </div>
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-1.5 truncate">📦 {selectedProduct}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-3 pb-3 pt-1">
+      {!showList ? (
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowList(true); }}
+          className="w-full flex flex-col items-center gap-1.5 py-4 border border-dashed border-emerald-500/30 rounded-xl cursor-pointer hover:bg-emerald-500/5 transition-colors"
+        >
+          <Package className="h-5 w-5 text-emerald-500/40" />
+          <p className="text-[10px] text-muted-foreground">Clique para selecionar um produto</p>
+        </button>
+      ) : (
+        <div className="space-y-2">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+            <input
+              autoFocus
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="Buscar produto..."
+              className="w-full h-7 pl-7 pr-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
+            />
+          </div>
+          <div className="max-h-[200px] overflow-y-auto space-y-1 rounded-lg">
+            {loading && <p className="text-[10px] text-muted-foreground text-center py-3">Carregando...</p>}
+            {!loading && filtered.length === 0 && <p className="text-[10px] text-muted-foreground text-center py-3">Nenhum produto com imagem</p>}
+            {filtered.filter(p => p.foto_url).map((p) => (
+              <button
+                key={p.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUpdate('productId', p.id);
+                  onUpdate('selectedImageUrl', p.foto_url);
+                  onUpdate('productName', p.nome);
+                  setShowList(false);
+                }}
+                className="w-full flex items-center gap-2 p-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors text-left"
+              >
+                <img src={p.foto_url} alt={p.nome} className="w-8 h-8 rounded-md object-cover border border-border/50 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-medium truncate text-foreground">{p.nome}</p>
+                  {p.codigo && <p className="text-[9px] text-muted-foreground truncate">{p.codigo}</p>}
+                </div>
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowList(false); }}
+            className="text-[10px] text-muted-foreground hover:text-foreground transition-colors w-full text-center py-1"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as unknown as StudioNodeData;
   const meta = getNodeMeta(nodeData.type);
@@ -100,7 +217,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const isPaidBlock = PAID_ONLY_BLOCKS.has(nodeData.type);
   const updateNodeInternals = useUpdateNodeInternals();
 
-  const hasInput = !['textInput', 'systemPrompt', 'imageInput'].includes(nodeData.type);
+  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect'].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
 
   // Use external store for results (bypasses ReactFlow's shallow diff)
@@ -162,7 +279,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [hasResult, activeProcessing, resultImage, resultVideo, resultAudio, resultText, id, updateNodeInternals]);
 
-  const nodeWidth = (resultImage || resultVideo || resultAudio || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0)) ? 340 : 280;
+  const nodeWidth = (resultImage || resultVideo || resultAudio || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0) || (nodeData.type === 'productImageSelect' && nodeData.config?.selectedImageUrl)) ? 340 : 280;
 
   // Inline edit handler
   const handleInlineUpdate = useCallback((key: string, value: any) => {
@@ -338,6 +455,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           </div>
         )}
 
+        {/* Product image select inline display */}
+        {nodeData.type === 'productImageSelect' && (
+          <ProductImageSelectInline config={nodeData.config} onUpdate={handleInlineUpdate} />
+        )}
 
         {!hasResult && nodeData.type === 'llmProcess' && (
           <div className="px-3.5 py-2.5 flex items-center gap-2 flex-wrap">

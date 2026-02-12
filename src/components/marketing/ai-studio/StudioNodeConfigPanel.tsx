@@ -417,6 +417,27 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
           </div>
         );
 
+      case 'productImageSelect':
+        return (
+          <div className="space-y-2.5">
+            <ConfigField label="Produto Selecionado" hint="Selecione um produto diretamente no bloco do canvas. A imagem será usada como referência para outros blocos.">
+              {config.selectedImageUrl ? (
+                <div className="mt-2 space-y-2">
+                  <div className="rounded-lg overflow-hidden border border-border/50">
+                    <img src={config.selectedImageUrl} alt={config.productName || 'Produto'} className="w-full h-40 object-contain bg-muted/30" />
+                  </div>
+                  <p className="text-xs font-medium">📦 {config.productName}</p>
+                  <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => { update('selectedImageUrl', ''); update('productId', ''); update('productName', ''); }}>
+                    Trocar produto
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-2">Nenhum produto selecionado. Use o bloco no canvas para selecionar.</p>
+              )}
+            </ConfigField>
+          </div>
+        );
+
       case 'systemPrompt':
         return (
           <div className="space-y-2.5">

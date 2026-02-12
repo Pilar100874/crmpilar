@@ -148,6 +148,13 @@ export function useStudioExecution() {
         // Return all images as an array of imageUrl objects
         return { imageUrls: config.images || [], imageUrl: config.images?.[0] };
 
+      case 'productImageSelect':
+        // Return the selected product image as reference
+        if (config.selectedImageUrl) {
+          return { imageUrls: [config.selectedImageUrl], imageUrl: config.selectedImageUrl };
+        }
+        throw new Error('Nenhum produto selecionado. Selecione um produto com imagem.');
+
       case 'llmProcess': {
         const result = await callStudio('generate_text', {
           prompt: combinedInput,

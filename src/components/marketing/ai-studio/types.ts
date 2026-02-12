@@ -5,6 +5,7 @@ export type StudioNodeType =
   | 'textInput'
   | 'systemPrompt'
   | 'imageInput'
+  | 'productImageSelect'
   | 'llmProcess'
   | 'imageGen'
   | 'imageEdit'
@@ -73,6 +74,14 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '🖼️',
         color: '#f97316',
         defaultConfig: { images: [] },
+      },
+      {
+        type: 'productImageSelect',
+        label: 'Imagem de Produto',
+        description: 'Selecione imagem de um produto cadastrado',
+        icon: '📦',
+        color: '#10b981',
+        defaultConfig: { productId: '', selectedImageUrl: '', productName: '' },
       },
     ],
   },
