@@ -3,6 +3,7 @@ import { Handle, Position, NodeProps, useUpdateNodeInternals } from '@xyflow/rea
 import { StudioNodeData, getNodeMeta } from './types';
 import { useNodeResult } from './useNodeResults';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
@@ -90,6 +91,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const meta = getNodeMeta(nodeData.type);
   const accent = nodeAccentMap[nodeData.type] || '#64748b';
   const [imageExpanded, setImageExpanded] = useState(false);
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const IconComponent = nodeIconMap[nodeData.type] || Play;
   const gradient = nodeGradientMap[nodeData.type] || 'from-slate-500/20 to-zinc-500/20';
@@ -168,6 +170,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   }, [id]);
 
   return (
+    <>
     <div
       className={`
         relative rounded-2xl transition-all duration-300 overflow-visible
@@ -549,46 +552,12 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 </div>
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={async (e) => {
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
                       e.stopPropagation();
-                      try {
-                        let blobUrl: string | null = null;
-                        
-                        if (resultImage.startsWith('data:')) {
-                          const [header, base64] = resultImage.split(',');
-                          const mime = header.match(/data:(.*?);/)?.[1] || 'image/png';
-                          const byteChars = atob(base64);
-                          const byteArray = new Uint8Array(byteChars.length);
-                          for (let i = 0; i < byteChars.length; i++) byteArray[i] = byteChars.charCodeAt(i);
-                          const blob = new Blob([byteArray], { type: mime });
-                          blobUrl = URL.createObjectURL(blob);
-                        } else {
-                          try {
-                            const resp = await fetch(resultImage);
-                            if (resp.ok) {
-                              const blob = await resp.blob();
-                              blobUrl = URL.createObjectURL(blob);
-                            }
-                          } catch {
-                            // fetch failed, use direct link
-                          }
-                        }
-
-                        const link = document.createElement('a');
-                        link.href = blobUrl || resultImage;
-                        link.download = `studio-${nodeData.type}-${id}.png`;
-                        link.target = '_blank';
-                        link.rel = 'noopener noreferrer';
-                        link.style.display = 'none';
-                        document.body.appendChild(link);
-                        link.click();
-                        setTimeout(() => {
-                          document.body.removeChild(link);
-                          if (blobUrl) URL.revokeObjectURL(blobUrl);
-                        }, 500);
-                      } catch (err) {
-                        console.error('Download image error:', err);
-                      }
+                      e.preventDefault();
+                      window.open(resultImage, '_blank', 'noopener,noreferrer');
                     }}
                     className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
                     title="Download"
@@ -596,7 +565,13 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     <Download className="h-3 w-3 text-white" />
                   </button>
                   <button
-                    onClick={() => setImageExpanded(!imageExpanded)}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setImagePreviewOpen(true);
+                    }}
                     className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
                   >
                     <Maximize2 className="h-3 w-3 text-white" />
@@ -761,6 +736,19 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         />
       )}
     </div>
+
+    {resultImage && (
+      <Dialog open={imagePreviewOpen} onOpenChange={setImagePreviewOpen}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-2">
+          <img 
+            src={resultImage} 
+            alt="Preview" 
+            className="w-full h-full object-contain max-h-[85vh] rounded-lg"
+          />
+        </DialogContent>
+      </Dialog>
+    )}
+    </>
   );
 };
 
