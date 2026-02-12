@@ -34,7 +34,7 @@ const StudioNodeLibrary: React.FC = () => {
   return (
     <>
       {!isOpen && (
-        <div className="absolute bottom-4 left-4 z-20">
+        <div className="absolute top-4 right-4 z-20">
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
             <Button
               size="icon"
