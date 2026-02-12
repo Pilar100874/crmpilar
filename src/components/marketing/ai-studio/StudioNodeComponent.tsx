@@ -1,4 +1,4 @@
-import React, { memo, useState } from 'react';
+import React, { useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { StudioNodeData, getNodeMeta } from './types';
 import { 
@@ -67,7 +67,7 @@ const nodeAccentMap: Record<string, string> = {
   output: '#64748b',
 };
 
-const StudioNodeComponent: React.FC<NodeProps> = memo(({ data, selected }) => {
+const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected }) => {
   const nodeData = data as unknown as StudioNodeData;
   const meta = getNodeMeta(nodeData.type);
   const accent = nodeAccentMap[nodeData.type] || '#64748b';
@@ -330,7 +330,7 @@ const StudioNodeComponent: React.FC<NodeProps> = memo(({ data, selected }) => {
       )}
     </div>
   );
-});
+};
 
 StudioNodeComponent.displayName = 'StudioNodeComponent';
 export default StudioNodeComponent;
