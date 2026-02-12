@@ -17,7 +17,8 @@ import {
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Coins, Copy, Pause, PlayCircle, Save, Plus, X } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Coins, Copy, Pause, PlayCircle, Save, Plus, X, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
@@ -94,6 +95,8 @@ const AICreativeStudioInner: React.FC = () => {
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
@@ -348,6 +351,7 @@ const AICreativeStudioInner: React.FC = () => {
       toast.error('Erro ao salvar workflow');
     } else {
       toast.success('Workflow salvo!');
+      setHasUnsavedChanges(false);
       fetchWorkflows();
     }
     setSaving(false);
@@ -380,6 +384,7 @@ const AICreativeStudioInner: React.FC = () => {
       setShowNewDialog(false);
       setNewName('');
       setNewDesc('');
+      setHasUnsavedChanges(false);
       fetchWorkflows();
     }
     setSaving(false);
@@ -393,6 +398,7 @@ const AICreativeStudioInner: React.FC = () => {
     setCurrentWorkflowId(workflow.id);
     setCurrentWorkflowName(workflow.nome);
     setShowCanvas(true);
+    setHasUnsavedChanges(false);
   }, [setNodes, setEdges]);
 
   const handleDeleteWorkflow = useCallback(async (id: string, nome: string) => {
@@ -408,13 +414,39 @@ const AICreativeStudioInner: React.FC = () => {
     }
   }, [fetchWorkflows]);
 
-  const handleBackToLanding = useCallback(() => {
+  const handleCloseCanvas = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setShowCloseConfirm(true);
+      return;
+    }
     clearAll();
     setShowCanvas(false);
     setCurrentWorkflowId(null);
     setCurrentWorkflowName('');
+    setHasUnsavedChanges(false);
+    fetchWorkflows();
+  }, [clearAll, fetchWorkflows, hasUnsavedChanges]);
+
+  const handleForceClose = useCallback(() => {
+    setShowCloseConfirm(false);
+    clearAll();
+    setShowCanvas(false);
+    setCurrentWorkflowId(null);
+    setCurrentWorkflowName('');
+    setHasUnsavedChanges(false);
     fetchWorkflows();
   }, [clearAll, fetchWorkflows]);
+
+  const handleSaveAndClose = useCallback(async () => {
+    setShowCloseConfirm(false);
+    await handleSaveWorkflow();
+    clearAll();
+    setShowCanvas(false);
+    setCurrentWorkflowId(null);
+    setCurrentWorkflowName('');
+    setHasUnsavedChanges(false);
+    fetchWorkflows();
+  }, [handleSaveWorkflow, clearAll, fetchWorkflows]);
 
   const handlePresetSelect = useCallback((preset: Preset) => {
     const inputNode: StudioNode = {
@@ -612,12 +644,108 @@ const AICreativeStudioInner: React.FC = () => {
 
   return (
     <div
-      className={`flex border border-border rounded-xl overflow-hidden bg-background transition-all duration-300 ${
+      className={`flex flex-col border border-border rounded-xl overflow-hidden bg-background transition-all duration-300 ${
         isFullscreen
           ? 'fixed inset-0 z-50 rounded-none border-0'
           : 'h-[calc(100vh-200px)] min-h-[600px]'
       }`}
     >
+      {/* Header Toolbar */}
+      <div className="flex-shrink-0 bg-card/95 backdrop-blur border-b border-border">
+        {/* Progress bar */}
+        {isExecuting && executionLog.length > 0 && (() => {
+          const total = executionLog.filter(e => e.status !== 'skipped').length;
+          const done = executionLog.filter(e => e.status === 'success' || e.status === 'error').length;
+          const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+          const currentLabel = executionLog.find(e => e.status === 'running')?.nodeLabel;
+          return (
+            <div className="px-3 pt-2 pb-1">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-muted-foreground font-medium truncate max-w-[200px]">
+                  {currentLabel ? `⚡ ${currentLabel}` : 'Processando...'}
+                </span>
+                <span className="text-[10px] font-bold text-primary">{pct}%</span>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full transition-all duration-500 ease-out" style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          );
+        })()}
+        <div className="flex items-center gap-2 px-3 py-1.5 flex-wrap">
+          <Button
+            size="sm"
+            onClick={() => handleExecute()}
+            disabled={isExecuting || nodes.length === 0}
+            className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-lg text-xs h-8"
+          >
+            <Play className="h-3.5 w-3.5" />
+            {isExecuting ? 'Executando...' : 'Executar Tudo'}
+          </Button>
+          {selectedNode && (
+            <Button
+              size="sm"
+              onClick={handleExecuteFromNode}
+              disabled={isExecuting}
+              className="gap-2 bg-warning hover:bg-warning/90 text-warning-foreground border-0 rounded-lg text-xs h-8"
+            >
+              <SkipForward className="h-3.5 w-3.5" />
+              Daqui em diante
+            </Button>
+          )}
+          <div className="w-px h-5 bg-border" />
+          <Button size="icon" variant="ghost" onClick={deleteSelected} disabled={!selectedNode} title="Excluir" className="h-8 w-8">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+          <Button size="icon" variant="ghost" onClick={clearAll} title="Limpar" className="h-8 w-8 text-destructive/60 hover:text-destructive">
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+          <div className="w-px h-5 bg-border" />
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleSaveWorkflow}
+            disabled={nodes.length === 0 || saving}
+            className="gap-1.5 text-xs h-8"
+          >
+            <Save className="h-3.5 w-3.5" />
+            {saving ? 'Salvando...' : 'Salvar'}
+          </Button>
+          {currentWorkflowName && (
+            <span className="text-[11px] text-muted-foreground max-w-[120px] truncate" title={currentWorkflowName}>
+              {currentWorkflowName}
+            </span>
+          )}
+          <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1.5 text-xs h-8">
+            <Clapperboard className="h-3.5 w-3.5" />
+            Presets
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} className="gap-1.5 text-xs h-8">
+            <Settings2 className="h-3.5 w-3.5" />
+            Config
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setShowCredits(true)} className="gap-1.5 text-xs h-8 text-amber-600">
+            <Coins className="h-3.5 w-3.5" />
+            Créditos
+          </Button>
+          <div className="w-px h-5 bg-border" />
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            title={isFullscreen ? 'Sair do Fullscreen' : 'Tela Cheia'}
+            className="h-8 w-8"
+          >
+            {isFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
+          </Button>
+          <div className="flex-1" />
+          <Button size="sm" variant="ghost" onClick={handleCloseCanvas} className="text-xs h-8 gap-1.5">
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Fechar
+          </Button>
+        </div>
+      </div>
+
       {/* Canvas */}
       <div className="flex-1 relative" ref={reactFlowWrapper}>
         {/* Node Library (floating, collapsible) */}
@@ -626,8 +754,8 @@ const AICreativeStudioInner: React.FC = () => {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
+          onNodesChange={(changes) => { onNodesChange(changes); setHasUnsavedChanges(true); }}
+          onEdgesChange={(changes) => { onEdgesChange(changes); setHasUnsavedChanges(true); }}
           onConnect={onConnect}
           onDragOver={onDragOver}
           onDrop={onDrop}
@@ -651,109 +779,6 @@ const AICreativeStudioInner: React.FC = () => {
             nodeColor={() => 'hsl(25 95% 53%)'}
             maskColor="hsl(var(--background) / 0.7)"
           />
-
-          {/* Toolbar */}
-          <Panel position="top-center">
-            <div className="flex flex-col gap-0 bg-card/95 backdrop-blur border border-border rounded-xl shadow-md overflow-hidden">
-              {/* Progress bar */}
-              {isExecuting && executionLog.length > 0 && (() => {
-                const total = executionLog.filter(e => e.status !== 'skipped').length;
-                const done = executionLog.filter(e => e.status === 'success' || e.status === 'error').length;
-                const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-                const currentLabel = executionLog.find(e => e.status === 'running')?.nodeLabel;
-                return (
-                  <div className="px-3 pt-2 pb-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] text-muted-foreground font-medium truncate max-w-[200px]">
-                        {currentLabel ? `⚡ ${currentLabel}` : 'Processando...'}
-                      </span>
-                      <span className="text-[10px] font-bold text-primary">{pct}%</span>
-                    </div>
-                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-primary rounded-full transition-all duration-500 ease-out" style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })()}
-              <div className="flex items-center gap-2 px-3 py-1.5">
-              <Button
-                size="sm"
-                onClick={() => handleExecute()}
-                disabled={isExecuting || nodes.length === 0}
-                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-lg text-xs h-8"
-              >
-                <Play className="h-3.5 w-3.5" />
-                {isExecuting ? 'Executando...' : 'Executar Tudo'}
-              </Button>
-              {selectedNode && (
-                <Button
-                  size="sm"
-                  onClick={handleExecuteFromNode}
-                  disabled={isExecuting}
-                  className="gap-2 bg-warning hover:bg-warning/90 text-warning-foreground border-0 rounded-lg text-xs h-8"
-                >
-                  <SkipForward className="h-3.5 w-3.5" />
-                  Daqui em diante
-                </Button>
-              )}
-              <div className="w-px h-5 bg-border" />
-              <Button size="icon" variant="ghost" onClick={deleteSelected} disabled={!selectedNode} title="Excluir" className="h-8 w-8">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-              <Button size="icon" variant="ghost" onClick={clearAll} title="Limpar" className="h-8 w-8 text-destructive/60 hover:text-destructive">
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-              <div className="w-px h-5 bg-border" />
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleSaveWorkflow}
-                disabled={nodes.length === 0 || saving}
-                className="gap-1.5 text-xs h-8"
-              >
-                <Save className="h-3.5 w-3.5" />
-                {saving ? 'Salvando...' : 'Salvar'}
-              </Button>
-              {currentWorkflowName && (
-                <span className="text-[11px] text-muted-foreground max-w-[120px] truncate" title={currentWorkflowName}>
-                  {currentWorkflowName}
-                </span>
-              )}
-              <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1.5 text-xs h-8">
-                <Clapperboard className="h-3.5 w-3.5" />
-                Presets
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} className="gap-1.5 text-xs h-8">
-                <Settings2 className="h-3.5 w-3.5" />
-                Config
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setShowCredits(true)} className="gap-1.5 text-xs h-8 text-amber-600">
-                <Coins className="h-3.5 w-3.5" />
-                Créditos
-              </Button>
-              <div className="w-px h-5 bg-border" />
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                title={isFullscreen ? 'Sair do Fullscreen' : 'Tela Cheia'}
-                className="h-8 w-8"
-              >
-                {isFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
-              </Button>
-              {!isFullscreen && (
-                <Button size="sm" variant="ghost" onClick={handleBackToLanding} className="text-xs h-8">
-                  Início
-                </Button>
-              )}
-              {isFullscreen && (
-                <Button size="sm" variant="ghost" onClick={() => setIsFullscreen(false)} className="text-xs h-8">
-                  Voltar
-                </Button>
-              )}
-              </div>
-            </div>
-          </Panel>
 
           {/* Empty state */}
           {nodes.length === 0 && (
@@ -918,6 +943,23 @@ const AICreativeStudioInner: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Close confirmation dialog */}
+      <AlertDialog open={showCloseConfirm} onOpenChange={setShowCloseConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterações não salvas</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem alterações que não foram salvas. O que deseja fazer?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex gap-2">
+            <AlertDialogCancel onClick={() => setShowCloseConfirm(false)}>Cancelar</AlertDialogCancel>
+            <Button variant="destructive" onClick={handleForceClose}>Sair sem salvar</Button>
+            <AlertDialogAction onClick={handleSaveAndClose}>Salvar e sair</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
