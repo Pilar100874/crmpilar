@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData } from './types';
 import { nodeResultStore } from './useNodeResults';
+import { toast } from 'sonner';
 
 export interface ExecutionLogEntry {
   nodeId: string;
@@ -292,6 +293,10 @@ export function useStudioExecution() {
           nodeResultStore.setResult(nodeId, result);
           nodeResultStore.setProcessing(nodeId, false);
           updateLog(nodeId, { status: 'success', completedAt: Date.now(), elapsedMs: elapsed });
+          // Notify user of image generation success
+          if (result?.imageUrl) {
+            toast.success('🎨 Imagem gerada com sucesso!', { duration: 4000 });
+          }
         } catch (err: any) {
           const elapsed = Date.now() - startTime;
           updateNode(nodeId, { isProcessing: false, error: err.message });

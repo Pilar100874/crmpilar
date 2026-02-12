@@ -102,11 +102,11 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   // Force ReactFlow to re-measure node dimensions when result changes
   useEffect(() => {
     if (hasResult || activeProcessing) {
-      // Small delay to let the DOM update before re-measuring
-      const timer = setTimeout(() => {
-        updateNodeInternals(id);
-      }, 50);
-      return () => clearTimeout(timer);
+      // Multiple re-measures to ensure ReactFlow picks up the new size
+      const t1 = setTimeout(() => updateNodeInternals(id), 50);
+      const t2 = setTimeout(() => updateNodeInternals(id), 200);
+      const t3 = setTimeout(() => updateNodeInternals(id), 500);
+      return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
     }
   }, [hasResult, activeProcessing, resultImage, resultVideo, resultText, id, updateNodeInternals]);
 
