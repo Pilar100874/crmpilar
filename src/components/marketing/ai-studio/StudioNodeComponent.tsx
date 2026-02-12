@@ -5,7 +5,7 @@ import { useNodeResult } from './useNodeResults';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
-  Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload
+  Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
@@ -304,6 +304,19 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   onClick={() => setImageExpanded(!imageExpanded)}
                 />
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const link = document.createElement('a');
+                      link.href = resultImage;
+                      link.download = `studio-${nodeData.type}-${id}.png`;
+                      link.click();
+                    }}
+                    className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
+                    title="Download"
+                  >
+                    <Download className="h-3 w-3 text-white" />
+                  </button>
                   <button
                     onClick={() => setImageExpanded(!imageExpanded)}
                     className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
