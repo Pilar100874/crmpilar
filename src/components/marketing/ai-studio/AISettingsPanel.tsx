@@ -5,103 +5,37 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { X, Settings2, Key, Check, Lock, ExternalLink, Save, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, TestTube, Play, Pause, Mic, Music, Volume2, DollarSign } from 'lucide-react';
+import { X, Settings2, Key, Lock, ExternalLink, Save, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, TestTube, Play, Pause, Mic, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 // ── Paid providers that need API keys ──────────────────────────────────────
 
 interface PaidProvider {
-  id: string;            // matches ai_api_keys.provider
+  id: string;
   name: string;
   icon: string;
   category: 'audio' | 'video' | 'image' | 'music';
   description: string;
   website: string;
   keyPlaceholder: string;
-  hasExtraConfig?: boolean;  // e.g. ElevenLabs voice settings
+  hasExtraConfig?: boolean;
 }
 
 const PAID_PROVIDERS: PaidProvider[] = [
-  {
-    id: 'elevenlabs',
-    name: 'ElevenLabs',
-    icon: '🔊',
-    category: 'audio',
-    description: 'Vozes realistas, TTS e narração de alta qualidade.',
-    website: 'https://elevenlabs.io/app/settings/api-keys',
-    keyPlaceholder: 'xi-...',
-    hasExtraConfig: true,
-  },
-  {
-    id: 'runway',
-    name: 'Runway',
-    icon: '🎬',
-    category: 'video',
-    description: 'Geração e edição de vídeos com Gen-4.',
-    website: 'https://app.runwayml.com/account/api-keys',
-    keyPlaceholder: 'rw-...',
-  },
-  {
-    id: 'suno',
-    name: 'Suno',
-    icon: '🎵',
-    category: 'music',
-    description: 'Criação de músicas completas com IA.',
-    website: 'https://suno.com/account',
-    keyPlaceholder: 'sk-...',
-  },
-  {
-    id: 'kling',
-    name: 'Kling (Kuaishou)',
-    icon: '🎥',
-    category: 'video',
-    description: 'Vídeos realistas de alta qualidade.',
-    website: 'https://klingai.com',
-    keyPlaceholder: 'sk-...',
-  },
-  {
-    id: 'stability',
-    name: 'Stability AI',
-    icon: '🟣',
-    category: 'image',
-    description: 'Stable Diffusion para geração de imagens.',
-    website: 'https://platform.stability.ai/account/keys',
-    keyPlaceholder: 'sk-...',
-  },
-  {
-    id: 'pika',
-    name: 'Pika',
-    icon: '🌊',
-    category: 'video',
-    description: 'Vídeos criativos e estilizados.',
-    website: 'https://pika.art',
-    keyPlaceholder: 'pk-...',
-  },
-  {
-    id: 'luma',
-    name: 'Luma Dream Machine',
-    icon: '🌙',
-    category: 'video',
-    description: 'Geração de vídeos com Dream Machine.',
-    website: 'https://lumalabs.ai',
-    keyPlaceholder: 'lm-...',
-  },
-  {
-    id: 'udio',
-    name: 'Udio',
-    icon: '🎶',
-    category: 'music',
-    description: 'Composição musical avançada.',
-    website: 'https://udio.com',
-    keyPlaceholder: 'sk-...',
-  },
+  { id: 'elevenlabs', name: 'ElevenLabs', icon: '🔊', category: 'audio', description: 'Vozes realistas, TTS e narração de alta qualidade.', website: 'https://elevenlabs.io/app/settings/api-keys', keyPlaceholder: 'xi-...', hasExtraConfig: true },
+  { id: 'runway', name: 'Runway', icon: '🎬', category: 'video', description: 'Geração e edição de vídeos com Gen-4.', website: 'https://app.runwayml.com/account/api-keys', keyPlaceholder: 'rw-...' },
+  { id: 'suno', name: 'Suno', icon: '🎵', category: 'music', description: 'Criação de músicas completas com IA.', website: 'https://suno.com/account', keyPlaceholder: 'sk-...' },
+  { id: 'kling', name: 'Kling (Kuaishou)', icon: '🎥', category: 'video', description: 'Vídeos realistas de alta qualidade.', website: 'https://klingai.com', keyPlaceholder: 'sk-...' },
+  { id: 'stability', name: 'Stability AI', icon: '🟣', category: 'image', description: 'Stable Diffusion para geração de imagens.', website: 'https://platform.stability.ai/account/keys', keyPlaceholder: 'sk-...' },
+  { id: 'pika', name: 'Pika', icon: '🌊', category: 'video', description: 'Vídeos criativos e estilizados.', website: 'https://pika.art', keyPlaceholder: 'pk-...' },
+  { id: 'luma', name: 'Luma Dream Machine', icon: '🌙', category: 'video', description: 'Geração de vídeos com Dream Machine.', website: 'https://lumalabs.ai', keyPlaceholder: 'lm-...' },
+  { id: 'udio', name: 'Udio', icon: '🎶', category: 'music', description: 'Composição musical avançada.', website: 'https://udio.com', keyPlaceholder: 'sk-...' },
 ];
 
 const CATEGORY_LABELS: Record<string, { label: string; icon: string }> = {
@@ -183,7 +117,6 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // ElevenLabs extra config
   const [elConfig, setElConfig] = useState<ELConfig>(DEFAULT_EL_CONFIG);
   const [testText, setTestText] = useState('Olá! Este é um teste de áudio do ElevenLabs.');
   const [isTesting, setIsTesting] = useState(false);
@@ -193,7 +126,6 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
-  // Load all keys from DB
   const loadKeys = useCallback(async () => {
     if (!estabelecimentoId) return;
     setLoading(true);
@@ -209,8 +141,6 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
         data.forEach((row) => {
           keys[row.provider] = row.api_key || '';
           sts[row.provider] = (row.validation_status as any) || 'none';
-
-          // Load ElevenLabs extra config
           if (row.provider === 'elevenlabs' && row.base_url) {
             try {
               const extra = JSON.parse(row.base_url);
@@ -232,17 +162,12 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
     if (open) loadKeys();
   }, [open, loadKeys]);
 
-  // Save a single provider's key
   const handleSave = async (providerId: string) => {
-    if (!estabelecimentoId) {
-      toast.error('Estabelecimento não encontrado');
-      return;
-    }
+    if (!estabelecimentoId) { toast.error('Estabelecimento não encontrado'); return; }
     setSaving(providerId);
     try {
       const provider = PAID_PROVIDERS.find(p => p.id === providerId);
       const apiKey = apiKeys[providerId]?.trim() || null;
-
       const payload: Record<string, any> = {
         estabelecimento_id: estabelecimentoId,
         provider: providerId,
@@ -251,19 +176,9 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
         is_active: true,
         validation_status: apiKey ? 'pending' : 'none',
       };
+      if (providerId === 'elevenlabs') payload.base_url = JSON.stringify(elConfig);
 
-      // Attach ElevenLabs extra config
-      if (providerId === 'elevenlabs') {
-        payload.base_url = JSON.stringify(elConfig);
-      }
-
-      const { data: existing } = await supabase
-        .from('ai_api_keys')
-        .select('id')
-        .eq('estabelecimento_id', estabelecimentoId)
-        .eq('provider', providerId)
-        .maybeSingle();
-
+      const { data: existing } = await supabase.from('ai_api_keys').select('id').eq('estabelecimento_id', estabelecimentoId).eq('provider', providerId).maybeSingle();
       if (existing) {
         const { error } = await supabase.from('ai_api_keys').update(payload).eq('id', existing.id);
         if (error) throw error;
@@ -271,7 +186,6 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
         const { error } = await supabase.from('ai_api_keys').insert([payload] as any);
         if (error) throw error;
       }
-
       setStatuses(prev => ({ ...prev, [providerId]: apiKey ? 'pending' : 'none' }));
       toast.success(`Configurações de ${provider?.name} salvas!`);
     } catch (err) {
@@ -282,7 +196,6 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
     }
   };
 
-  // ElevenLabs test
   const handleTestEL = async () => {
     const key = apiKeys['elevenlabs'];
     if (!key) { toast.error('Configure a API Key primeiro'); return; }
@@ -297,13 +210,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
           body: JSON.stringify({
             text: testText,
             model_id: elConfig.defaultModel,
-            voice_settings: {
-              stability: elConfig.stability,
-              similarity_boost: elConfig.similarityBoost,
-              style: elConfig.style,
-              use_speaker_boost: elConfig.useSpeakerBoost,
-              speed: elConfig.speed,
-            },
+            voice_settings: { stability: elConfig.stability, similarity_boost: elConfig.similarityBoost, style: elConfig.style, use_speaker_boost: elConfig.useSpeakerBoost, speed: elConfig.speed },
           }),
         }
       );
@@ -312,10 +219,8 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
         throw new Error(`Erro ${resp.status}`);
       }
       setStatuses(prev => ({ ...prev, elevenlabs: 'valid' }));
-      // update DB status
       const { data: ex } = await supabase.from('ai_api_keys').select('id').eq('estabelecimento_id', estabelecimentoId).eq('provider', 'elevenlabs').maybeSingle();
       if (ex) await supabase.from('ai_api_keys').update({ validation_status: 'valid' }).eq('id', ex.id);
-
       const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
       if (testAudioUrl) URL.revokeObjectURL(testAudioUrl);
@@ -343,9 +248,9 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
   const statusBadge = (providerId: string) => {
     const key = apiKeys[providerId];
     const status = statuses[providerId];
-    if (status === 'valid') return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] px-1.5 py-0"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Ativo</Badge>;
-    if (key) return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[9px] px-1.5 py-0"><AlertCircle className="h-2.5 w-2.5 mr-0.5" />Pendente</Badge>;
-    return <Badge className="bg-white/5 text-white/25 border-white/10 text-[9px] px-1.5 py-0"><Lock className="h-2.5 w-2.5 mr-0.5" />Sem Key</Badge>;
+    if (status === 'valid') return <Badge className="bg-success/10 text-success border-success/20 text-[9px] px-1.5 py-0"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Ativo</Badge>;
+    if (key) return <Badge className="bg-warning/10 text-warning border-warning/20 text-[9px] px-1.5 py-0"><AlertCircle className="h-2.5 w-2.5 mr-0.5" />Pendente</Badge>;
+    return <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground"><Lock className="h-2.5 w-2.5 mr-0.5" />Sem Key</Badge>;
   };
 
   return (
@@ -355,7 +260,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 backdrop-blur-sm"
           onClick={onClose}
         >
           <motion.div
@@ -364,30 +269,33 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-5xl max-h-[85vh] bg-[#0f0f1a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            className="w-full max-w-5xl max-h-[85vh] bg-card border border-border rounded-2xl shadow-lg overflow-hidden flex flex-col"
+            style={{ boxShadow: 'var(--shadow-lg)' }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center border border-orange-500/20">
-                  <DollarSign className="h-5 w-5 text-orange-400" />
+            {/* Header with gradient */}
+            <div className="bg-gradient-to-r from-primary to-primary-glow px-6 py-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary-foreground/20 flex items-center justify-center">
+                    <DollarSign className="h-5 w-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-primary-foreground">APIs Pagas — Configuração</h2>
+                    <p className="text-xs text-primary-foreground/70">Gerencie as chaves de API dos serviços externos pagos</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">APIs Pagas — Configuração</h2>
-                  <p className="text-xs text-white/40">Gerencie as chaves de API dos serviços externos pagos</p>
-                </div>
+                <Button size="icon" variant="ghost" onClick={onClose} className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10">
+                  <X className="h-5 w-5" />
+                </Button>
               </div>
-              <Button size="icon" variant="ghost" onClick={onClose} className="text-white/40 hover:text-white hover:bg-white/10">
-                <X className="h-5 w-5" />
-              </Button>
             </div>
 
             {/* Content */}
             <div className="flex flex-1 overflow-hidden">
               {/* Provider sidebar */}
-              <div className="w-[280px] border-r border-white/[0.08] flex flex-col">
-                <div className="p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-white/30 mb-2 px-1">Provedores</p>
+              <div className="w-[280px] border-r border-border flex flex-col bg-muted/30">
+                <div className="p-3 pt-4">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-2 px-1">Provedores</p>
                 </div>
                 <ScrollArea className="flex-1">
                   <div className="px-3 pb-3 space-y-1">
@@ -396,7 +304,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                       if (providers.length === 0) return null;
                       return (
                         <div key={cat} className="mb-3">
-                          <p className="text-[10px] uppercase tracking-wider text-white/20 mb-1.5 px-2 flex items-center gap-1.5">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-1.5 px-2 flex items-center gap-1.5 font-medium">
                             <span>{icon}</span> {label}
                           </p>
                           {providers.map((provider) => (
@@ -405,14 +313,14 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                               onClick={() => setSelectedProvider(provider.id)}
                               className={`w-full text-left p-2.5 rounded-lg border transition-all mb-1 ${
                                 selectedProvider === provider.id
-                                  ? 'bg-orange-500/10 border-orange-500/30'
-                                  : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04]'
+                                  ? 'bg-accent border-primary/30 shadow-sm'
+                                  : 'bg-card border-border hover:bg-accent/50 hover:border-border'
                               }`}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <span className="text-base">{provider.icon}</span>
-                                  <span className="text-sm font-medium text-white/80">{provider.name}</span>
+                                  <span className="text-sm font-medium text-foreground">{provider.name}</span>
                                 </div>
                                 {statusBadge(provider.id)}
                               </div>
@@ -426,10 +334,10 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
               </div>
 
               {/* Detail panel */}
-              <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 flex flex-col overflow-hidden bg-background">
                 {loading ? (
                   <div className="flex-1 flex items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-white/20" />
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                   </div>
                 ) : selectedProviderData ? (
                   <ScrollArea className="flex-1">
@@ -437,22 +345,24 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                       {/* Provider header */}
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="text-3xl">{selectedProviderData.icon}</span>
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-2xl">
+                            {selectedProviderData.icon}
+                          </div>
                           <div>
-                            <h3 className="text-xl font-bold text-white">{selectedProviderData.name}</h3>
-                            <p className="text-sm text-white/40">{selectedProviderData.description}</p>
+                            <h3 className="text-xl font-bold text-foreground">{selectedProviderData.name}</h3>
+                            <p className="text-sm text-muted-foreground">{selectedProviderData.description}</p>
                           </div>
                         </div>
-                        <a href={selectedProviderData.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 transition-colors">
+                        <a href={selectedProviderData.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors font-medium">
                           <ExternalLink className="h-3 w-3" />
                           Obter Key
                         </a>
                       </div>
 
-                      {/* API Key */}
-                      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-3">
-                        <Label className="text-sm text-white/60 flex items-center gap-1.5">
-                          <Key className="h-3.5 w-3.5" />
+                      {/* API Key card */}
+                      <div className="rounded-xl border border-border bg-card p-5 space-y-3" style={{ boxShadow: 'var(--shadow-sm)' }}>
+                        <Label className="text-sm text-foreground font-semibold flex items-center gap-1.5">
+                          <Key className="h-3.5 w-3.5 text-primary" />
                           API Key
                         </Label>
                         <div className="flex gap-2">
@@ -462,13 +372,13 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                               value={apiKeys[selectedProviderData.id] || ''}
                               onChange={(e) => setApiKeys(prev => ({ ...prev, [selectedProviderData.id]: e.target.value }))}
                               placeholder={selectedProviderData.keyPlaceholder}
-                              className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 font-mono text-sm pr-10"
+                              className="font-mono text-sm pr-10"
                             />
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 text-white/30 hover:text-white"
+                              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
                               onClick={() => setShowKeys(prev => ({ ...prev, [selectedProviderData.id]: !prev[selectedProviderData.id] }))}
                             >
                               {showKeys[selectedProviderData.id] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -477,13 +387,13 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                           <Button
                             onClick={() => handleSave(selectedProviderData.id)}
                             disabled={saving === selectedProviderData.id}
-                            className="bg-orange-600 hover:bg-orange-500 text-white shrink-0 gap-1.5"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground shrink-0 gap-1.5"
                           >
                             {saving === selectedProviderData.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                             Salvar
                           </Button>
                         </div>
-                        <p className="text-[11px] text-white/25">A chave é armazenada de forma segura no banco de dados e usada apenas para chamadas deste provedor.</p>
+                        <p className="text-[11px] text-muted-foreground">A chave é armazenada de forma segura no banco de dados e usada apenas para chamadas deste provedor.</p>
                       </div>
 
                       {/* ElevenLabs extra config */}
@@ -506,9 +416,9 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                 ) : (
                   <div className="flex-1 flex items-center justify-center text-center p-8">
                     <div>
-                      <Settings2 className="h-12 w-12 text-white/10 mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold text-white/30 mb-2">Selecione um Provedor</h3>
-                      <p className="text-sm text-white/20 max-w-xs mx-auto">Escolha um provedor ao lado para configurar sua API key.</p>
+                      <Settings2 className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-muted-foreground mb-2">Selecione um Provedor</h3>
+                      <p className="text-sm text-muted-foreground/60 max-w-xs mx-auto">Escolha um provedor ao lado para configurar sua API key.</p>
                     </div>
                   </div>
                 )}
@@ -543,123 +453,129 @@ const ElevenLabsExtraConfig: React.FC<ELExtraProps> = ({
 
   return (
     <div className="space-y-5">
-      <Separator className="bg-white/[0.06]" />
+      <Separator className="bg-border" />
 
-      <h4 className="text-sm font-semibold text-white/70 flex items-center gap-2">
-        <Mic className="h-4 w-4 text-orange-400" />
+      <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Mic className="h-3.5 w-3.5 text-primary" />
+        </div>
         Configurações de Voz
       </h4>
 
       {/* Voice selection */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground font-medium">Voz Padrão</Label>
+            <Select value={config.defaultVoiceId} onValueChange={(v) => update('defaultVoiceId', v)}>
+              <SelectTrigger className="text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ELEVENLABS_VOICES.map(v => (
+                  <SelectItem key={v.value} value={v.value}>
+                    {v.label} ({v.gender})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground font-medium">Modelo</Label>
+            <Select value={config.defaultModel} onValueChange={(v) => update('defaultModel', v)}>
+              <SelectTrigger className="text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {EL_MODELS.map(m => (
+                  <SelectItem key={m.value} value={m.value}>
+                    {m.label} — {m.desc}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         <div className="space-y-1.5">
-          <Label className="text-xs text-white/50">Voz Padrão</Label>
-          <Select value={config.defaultVoiceId} onValueChange={(v) => update('defaultVoiceId', v)}>
-            <SelectTrigger className="bg-white/[0.04] border-white/10 text-white text-sm">
+          <Label className="text-xs text-muted-foreground font-medium">Formato de Saída</Label>
+          <Select value={config.outputFormat} onValueChange={(v) => update('outputFormat', v)}>
+            <SelectTrigger className="text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ELEVENLABS_VOICES.map(v => (
-                <SelectItem key={v.value} value={v.value}>
-                  {v.label} ({v.gender})
-                </SelectItem>
+              {EL_FORMATS.map(f => (
+                <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs text-white/50">Modelo</Label>
-          <Select value={config.defaultModel} onValueChange={(v) => update('defaultModel', v)}>
-            <SelectTrigger className="bg-white/[0.04] border-white/10 text-white text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {EL_MODELS.map(m => (
-                <SelectItem key={m.value} value={m.value}>
-                  {m.label} — {m.desc}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-xs text-white/50">Formato de Saída</Label>
-        <Select value={config.outputFormat} onValueChange={(v) => update('outputFormat', v)}>
-          <SelectTrigger className="bg-white/[0.04] border-white/10 text-white text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {EL_FORMATS.map(f => (
-              <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Sliders */}
-      <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <Label className="text-xs text-white/50">Estabilidade</Label>
-            <span className="text-[10px] text-white/30 font-mono">{config.stability.toFixed(2)}</span>
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parâmetros de Voz</p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label className="text-xs text-muted-foreground">Estabilidade</Label>
+              <span className="text-[10px] text-muted-foreground/60 font-mono bg-muted px-1.5 py-0.5 rounded">{config.stability.toFixed(2)}</span>
+            </div>
+            <Slider value={[config.stability]} onValueChange={([v]) => update('stability', v)} min={0} max={1} step={0.05} />
           </div>
-          <Slider value={[config.stability]} onValueChange={([v]) => update('stability', v)} min={0} max={1} step={0.05} className="[&_[role=slider]]:bg-orange-500" />
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label className="text-xs text-muted-foreground">Similaridade</Label>
+              <span className="text-[10px] text-muted-foreground/60 font-mono bg-muted px-1.5 py-0.5 rounded">{config.similarityBoost.toFixed(2)}</span>
+            </div>
+            <Slider value={[config.similarityBoost]} onValueChange={([v]) => update('similarityBoost', v)} min={0} max={1} step={0.05} />
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label className="text-xs text-muted-foreground">Estilo</Label>
+              <span className="text-[10px] text-muted-foreground/60 font-mono bg-muted px-1.5 py-0.5 rounded">{config.style.toFixed(2)}</span>
+            </div>
+            <Slider value={[config.style]} onValueChange={([v]) => update('style', v)} min={0} max={1} step={0.05} />
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Label className="text-xs text-muted-foreground">Velocidade</Label>
+              <span className="text-[10px] text-muted-foreground/60 font-mono bg-muted px-1.5 py-0.5 rounded">{config.speed.toFixed(1)}x</span>
+            </div>
+            <Slider value={[config.speed]} onValueChange={([v]) => update('speed', v)} min={0.7} max={1.2} step={0.1} />
+          </div>
         </div>
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <Label className="text-xs text-white/50">Similaridade</Label>
-            <span className="text-[10px] text-white/30 font-mono">{config.similarityBoost.toFixed(2)}</span>
-          </div>
-          <Slider value={[config.similarityBoost]} onValueChange={([v]) => update('similarityBoost', v)} min={0} max={1} step={0.05} className="[&_[role=slider]]:bg-orange-500" />
-        </div>
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <Label className="text-xs text-white/50">Estilo</Label>
-            <span className="text-[10px] text-white/30 font-mono">{config.style.toFixed(2)}</span>
-          </div>
-          <Slider value={[config.style]} onValueChange={([v]) => update('style', v)} min={0} max={1} step={0.05} className="[&_[role=slider]]:bg-orange-500" />
-        </div>
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <Label className="text-xs text-white/50">Velocidade</Label>
-            <span className="text-[10px] text-white/30 font-mono">{config.speed.toFixed(1)}x</span>
-          </div>
-          <Slider value={[config.speed]} onValueChange={([v]) => update('speed', v)} min={0.7} max={1.2} step={0.1} className="[&_[role=slider]]:bg-orange-500" />
+
+        <div className="flex items-center gap-3 pt-1">
+          <Switch checked={config.useSpeakerBoost} onCheckedChange={(v) => update('useSpeakerBoost', v)} />
+          <Label className="text-xs text-muted-foreground">Speaker Boost (melhora clareza)</Label>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <Switch
-          checked={config.useSpeakerBoost}
-          onCheckedChange={(v) => update('useSpeakerBoost', v)}
-        />
-        <Label className="text-xs text-white/50">Speaker Boost (melhora clareza)</Label>
-      </div>
-
-      <Separator className="bg-white/[0.06]" />
+      <Separator className="bg-border" />
 
       {/* Test section */}
-      <h4 className="text-sm font-semibold text-white/70 flex items-center gap-2">
-        <TestTube className="h-4 w-4 text-orange-400" />
-        Testar Voz
-      </h4>
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4" style={{ boxShadow: 'var(--shadow-sm)' }}>
+        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <TestTube className="h-3.5 w-3.5 text-primary" />
+          </div>
+          Testar Voz
+        </h4>
 
-      <div className="space-y-3">
         <Textarea
           value={testText}
           onChange={(e) => setTestText(e.target.value)}
           placeholder="Digite um texto para testar..."
-          className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 text-sm min-h-[60px] resize-none"
+          className="text-sm min-h-[60px] resize-none"
           rows={2}
         />
         <div className="flex gap-2">
           <Button
             onClick={onTest}
             disabled={isTesting || !apiKey}
-            className="bg-orange-600 hover:bg-orange-500 text-white gap-1.5"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5"
           >
             {isTesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
             {isTesting ? 'Gerando...' : 'Testar'}
@@ -668,7 +584,7 @@ const ElevenLabsExtraConfig: React.FC<ELExtraProps> = ({
             <Button
               onClick={onTogglePlayback}
               variant="outline"
-              className="border-white/10 text-white/70 gap-1.5"
+              className="gap-1.5"
             >
               {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
               {isPlaying ? 'Pausar' : 'Reproduzir'}
