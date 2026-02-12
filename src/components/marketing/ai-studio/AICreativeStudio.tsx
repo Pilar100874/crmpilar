@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ReactFlow,
@@ -16,8 +16,10 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
-import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Coins, Copy, Pause, PlayCircle, Save, FolderOpen } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Coins, Copy, Pause, PlayCircle, Save, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
 import StudioNodeComponent from './StudioNodeComponent';
 import StudioNodeLibrary from './StudioNodeLibrary';
@@ -28,8 +30,19 @@ import AISettingsPanel from './AISettingsPanel';
 import CreativeAgentPanel, { StoryboardScene } from './CreativeAgentPanel';
 import StudioCreditsPanel from './StudioCreditsPanel';
 import ExecutionLogPanel from './ExecutionLogPanel';
-import WorkflowSaveLoad from './WorkflowSaveLoad';
 import { nodeResultStore } from './useNodeResults';
+import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
+import { format } from 'date-fns';
+
+interface SavedWorkflow {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  nodes_data: any;
+  edges_data: any;
+  created_at: string;
+  updated_at: string;
+}
 
 interface ContextMenuState {
   x: number;
@@ -71,6 +84,35 @@ const AICreativeStudioInner: React.FC = () => {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
   const { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog } = useStudioExecution();
+
+  // Workflow management state
+  const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
+  const [currentWorkflowName, setCurrentWorkflowName] = useState('');
+  const [savedWorkflows, setSavedWorkflows] = useState<SavedWorkflow[]>([]);
+  const [loadingWorkflows, setLoadingWorkflows] = useState(true);
+  const [showNewDialog, setShowNewDialog] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newDesc, setNewDesc] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
+
+  // Fetch saved workflows on mount and when returning to landing
+  const fetchWorkflows = useCallback(async () => {
+    if (!estabelecimentoId) return;
+    setLoadingWorkflows(true);
+    const { data, error } = await supabase
+      .from('ai_studio_workflows')
+      .select('*')
+      .eq('estabelecimento_id', estabelecimentoId)
+      .order('updated_at', { ascending: false });
+    if (!error) setSavedWorkflows((data as SavedWorkflow[]) || []);
+    setLoadingWorkflows(false);
+  }, [estabelecimentoId]);
+
+  useEffect(() => {
+    fetchWorkflows();
+  }, [fetchWorkflows]);
 
   const onConnect = useCallback((connection: Connection) => {
     setEdges((eds) => addEdge({ ...connection, animated: true, style: EDGE_STYLE, type: 'smoothstep' }, eds));
@@ -168,11 +210,9 @@ const AICreativeStudioInner: React.FC = () => {
         edges,
         startFromNodeId,
         (realtimeNodes) => {
-          // Use functional update to ensure ReactFlow detects data changes
           setNodes(() => realtimeNodes.map(n => ({ ...n, data: { ...n.data } })) as any);
         }
       );
-      // Final update with all results - force new references
       setNodes(() => updatedNodes.map(n => ({ ...n, data: { ...n.data } })) as any);
       toast.success(startFromNodeId ? 'Execução parcial concluída!' : 'Workflow executado com sucesso!');
     } catch (err: any) {
@@ -255,6 +295,8 @@ const AICreativeStudioInner: React.FC = () => {
     setNodes(newNodes as any);
     setEdges(newEdges as any);
     setShowCreativeAgent(false);
+    setCurrentWorkflowId(null);
+    setCurrentWorkflowName('');
     setShowCanvas(true);
   }, [setNodes, setEdges]);
 
@@ -265,15 +307,104 @@ const AICreativeStudioInner: React.FC = () => {
     nodeResultStore.clearAll();
   }, [setNodes, setEdges]);
 
-  const handleLoadWorkflow = useCallback((loadedNodes: StudioNode[], loadedEdges: StudioEdge[]) => {
+  // --- Workflow CRUD ---
+
+  const getCleanNodes = useCallback(() => {
+    return (nodes as StudioNode[]).map(n => {
+      const d = n.data as StudioNodeData;
+      return {
+        ...n,
+        data: { label: d.label, type: d.type, config: d.config },
+      };
+    });
+  }, [nodes]);
+
+  const handleSaveWorkflow = useCallback(async () => {
+    if (!currentWorkflowId) {
+      // No current workflow — show new dialog
+      setShowNewDialog(true);
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from('ai_studio_workflows')
+      .update({
+        nodes_data: getCleanNodes() as any,
+        edges_data: edges as any,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', currentWorkflowId);
+    if (error) {
+      toast.error('Erro ao salvar workflow');
+    } else {
+      toast.success('Workflow salvo!');
+      fetchWorkflows();
+    }
+    setSaving(false);
+  }, [currentWorkflowId, getCleanNodes, edges, fetchWorkflows]);
+
+  const handleCreateWorkflow = useCallback(async () => {
+    if (!newName.trim()) {
+      toast.error('Digite um nome para o workflow');
+      return;
+    }
+    setSaving(true);
+    const { data, error } = await supabase
+      .from('ai_studio_workflows')
+      .insert([{
+        estabelecimento_id: estabelecimentoId,
+        nome: newName.trim(),
+        descricao: newDesc.trim() || null,
+        nodes_data: getCleanNodes() as any,
+        edges_data: edges as any,
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      toast.error('Erro ao criar workflow');
+    } else {
+      toast.success('Workflow criado e salvo!');
+      setCurrentWorkflowId(data.id);
+      setCurrentWorkflowName(data.nome);
+      setShowNewDialog(false);
+      setNewName('');
+      setNewDesc('');
+      fetchWorkflows();
+    }
+    setSaving(false);
+  }, [newName, newDesc, estabelecimentoId, getCleanNodes, edges, fetchWorkflows]);
+
+  const handleOpenWorkflow = useCallback((workflow: SavedWorkflow) => {
     nodeResultStore.clearAll();
-    setNodes(loadedNodes as any);
-    setEdges(loadedEdges as any);
+    setNodes((workflow.nodes_data as StudioNode[]) as any);
+    setEdges((workflow.edges_data as StudioEdge[]) as any);
     setSelectedNode(null);
+    setCurrentWorkflowId(workflow.id);
+    setCurrentWorkflowName(workflow.nome);
     setShowCanvas(true);
   }, [setNodes, setEdges]);
 
-  const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
+  const handleDeleteWorkflow = useCallback(async (id: string, nome: string) => {
+    const { error } = await supabase
+      .from('ai_studio_workflows')
+      .delete()
+      .eq('id', id);
+    if (error) {
+      toast.error('Erro ao excluir workflow');
+    } else {
+      toast.success(`"${nome}" excluído`);
+      fetchWorkflows();
+    }
+  }, [fetchWorkflows]);
+
+  const handleBackToLanding = useCallback(() => {
+    clearAll();
+    setShowCanvas(false);
+    setCurrentWorkflowId(null);
+    setCurrentWorkflowName('');
+    fetchWorkflows();
+  }, [clearAll, fetchWorkflows]);
 
   const handlePresetSelect = useCallback((preset: Preset) => {
     const inputNode: StudioNode = {
@@ -294,6 +425,8 @@ const AICreativeStudioInner: React.FC = () => {
       { id: `e_${inputNode.id}_${videoNode.id}`, source: inputNode.id, target: videoNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
     ]);
     setShowPresets(false);
+    setCurrentWorkflowId(null);
+    setCurrentWorkflowName('');
     setShowCanvas(true);
     toast.success(`Preset "${preset.name}" aplicado ao workflow!`);
   }, [setNodes, setEdges]);
@@ -326,6 +459,8 @@ const AICreativeStudioInner: React.FC = () => {
       { id: `e1_${Date.now()}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
       { id: `e2_${Date.now()}`, source: processNode.id, target: outputNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
     ]);
+    setCurrentWorkflowId(null);
+    setCurrentWorkflowName('');
     setShowCanvas(true);
     toast.success(`Workflow "${meta.label}" criado!`);
   }, [setNodes, setEdges]);
@@ -333,8 +468,8 @@ const AICreativeStudioInner: React.FC = () => {
   // Landing page
   if (!showCanvas && nodes.length === 0) {
     return (
-      <div className="h-[calc(100vh-200px)] min-h-[600px] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
-        <div className="flex-1 flex flex-col items-center justify-center px-6 relative overflow-hidden">
+      <div className="h-[calc(100vh-200px)] min-h-[600px] rounded-xl overflow-hidden overflow-y-auto bg-card border border-border text-card-foreground flex flex-col">
+        <div className="flex-1 flex flex-col items-center justify-start px-6 relative overflow-hidden pt-12">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px]" />
           <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/3 rounded-full blur-[100px]" />
 
@@ -359,10 +494,10 @@ const AICreativeStudioInner: React.FC = () => {
               Crie vídeos, imagens, músicas e áudio com os modelos de IA mais avançados do mundo.
             </p>
 
-            <div className="flex items-center justify-center gap-3 mb-12 flex-wrap">
-              <Button onClick={() => setShowCanvas(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-full font-medium gap-2">
-                <Play className="h-4 w-4" />
-                Criar Workflow
+            <div className="flex items-center justify-center gap-3 mb-8 flex-wrap">
+              <Button onClick={() => { setCurrentWorkflowId(null); setCurrentWorkflowName(''); setShowCanvas(true); }} className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2.5 rounded-full font-medium gap-2">
+                <Plus className="h-4 w-4" />
+                Novo Workflow
               </Button>
               <Button onClick={() => setShowPresets(true)} variant="outline" className="px-6 py-2.5 rounded-full font-medium gap-2">
                 <Clapperboard className="h-4 w-4" />
@@ -383,12 +518,46 @@ const AICreativeStudioInner: React.FC = () => {
             </div>
           </motion.div>
 
+          {/* Saved Workflows */}
+          {savedWorkflows.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative z-10 w-full max-w-5xl mb-10"
+            >
+              <p className="text-xs text-muted-foreground uppercase tracking-widest text-center mb-4">Meus Workflows</p>
+              <WorkflowCardGrid>
+                {savedWorkflows.map((w) => {
+                  const nodesCount = Array.isArray(w.nodes_data) ? w.nodes_data.length : 0;
+                  return (
+                    <WorkflowCard
+                      key={w.id}
+                      id={w.id}
+                      title={w.nome}
+                      description={w.descricao}
+                      isActive={true}
+                      blocksCount={nodesCount}
+                      createdAt={w.created_at}
+                      onOpenEditor={() => handleOpenWorkflow(w)}
+                      onDelete={() => handleDeleteWorkflow(w.id, w.nome)}
+                    />
+                  );
+                })}
+              </WorkflowCardGrid>
+            </motion.div>
+          )}
+
+          {loadingWorkflows && savedWorkflows.length === 0 && (
+            <p className="text-sm text-muted-foreground">Carregando workflows...</p>
+          )}
+
           {/* Quick Tools */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="relative z-10 w-full max-w-4xl"
+            className="relative z-10 w-full max-w-4xl mb-12"
           >
             <p className="text-xs text-muted-foreground uppercase tracking-widest text-center mb-4">Ferramentas</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -504,12 +673,21 @@ const AICreativeStudioInner: React.FC = () => {
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
               <div className="w-px h-5 bg-border" />
-              <WorkflowSaveLoad
-                nodes={nodes as StudioNode[]}
-                edges={edges as StudioEdge[]}
-                onLoad={handleLoadWorkflow}
-                estabelecimentoId={estabelecimentoId}
-              />
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleSaveWorkflow}
+                disabled={nodes.length === 0 || saving}
+                className="gap-1.5 text-xs h-8"
+              >
+                <Save className="h-3.5 w-3.5" />
+                {saving ? 'Salvando...' : 'Salvar'}
+              </Button>
+              {currentWorkflowName && (
+                <span className="text-[11px] text-muted-foreground max-w-[120px] truncate" title={currentWorkflowName}>
+                  {currentWorkflowName}
+                </span>
+              )}
               <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1.5 text-xs h-8">
                 <Clapperboard className="h-3.5 w-3.5" />
                 Presets
@@ -533,7 +711,7 @@ const AICreativeStudioInner: React.FC = () => {
                 {isFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
               </Button>
               {!isFullscreen && (
-                <Button size="sm" variant="ghost" onClick={() => { clearAll(); setShowCanvas(false); }} className="text-xs h-8">
+                <Button size="sm" variant="ghost" onClick={handleBackToLanding} className="text-xs h-8">
                   Início
                 </Button>
               )}
@@ -650,6 +828,64 @@ const AICreativeStudioInner: React.FC = () => {
       <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
       <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
       <StudioCreditsPanel open={showCredits} onClose={() => setShowCredits(false)} />
+
+      {/* New Workflow Dialog */}
+      <AnimatePresence>
+        {showNewDialog && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowNewDialog(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card border border-border rounded-2xl p-6 w-full max-w-md shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-foreground">Salvar Workflow</h3>
+                <button onClick={() => setShowNewDialog(false)} className="p-1 rounded-lg hover:bg-accent">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block">Nome *</label>
+                  <Input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="Ex: Campanha de Verão"
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block">Descrição</label>
+                  <Input
+                    value={newDesc}
+                    onChange={(e) => setNewDesc(e.target.value)}
+                    placeholder="Descrição opcional..."
+                  />
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {nodes.length} blocos • {edges.length} conexões
+                </div>
+              </div>
+              <div className="flex gap-2 mt-5">
+                <Button variant="outline" onClick={() => setShowNewDialog(false)} className="flex-1">
+                  Cancelar
+                </Button>
+                <Button onClick={handleCreateWorkflow} disabled={saving || !newName.trim()} className="flex-1 bg-primary text-primary-foreground">
+                  {saving ? 'Salvando...' : 'Salvar'}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
