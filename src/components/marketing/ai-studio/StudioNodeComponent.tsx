@@ -469,10 +469,24 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        const link = document.createElement('a');
-                        link.href = resultGif;
-                        link.download = `studio-animation-${id}.gif`;
-                        link.click();
+                        try {
+                          const byteString = atob(resultGif.split(',')[1]);
+                          const mimeString = resultGif.split(',')[0].split(':')[1].split(';')[0];
+                          const ab = new ArrayBuffer(byteString.length);
+                          const ia = new Uint8Array(ab);
+                          for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                          const blob = new Blob([ab], { type: mimeString });
+                          const url = URL.createObjectURL(blob);
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.download = `studio-animation-${id}.gif`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          URL.revokeObjectURL(url);
+                        } catch (err) {
+                          console.error('Download GIF error:', err);
+                        }
                       }}
                       className="px-2 py-1.5 rounded-lg bg-emerald-600/80 backdrop-blur-sm hover:bg-emerald-600 transition-colors flex items-center gap-1"
                       title="Download GIF animado"
