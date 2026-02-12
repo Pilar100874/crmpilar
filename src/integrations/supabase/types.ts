@@ -352,6 +352,42 @@ export type Database = {
           },
         ]
       }
+      ai_studio_workflows: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          edges_data: Json
+          estabelecimento_id: string
+          id: string
+          nodes_data: Json
+          nome: string
+          thumbnail: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          edges_data?: Json
+          estabelecimento_id: string
+          id?: string
+          nodes_data?: Json
+          nome: string
+          thumbnail?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          edges_data?: Json
+          estabelecimento_id?: string
+          id?: string
+          nodes_data?: Json
+          nome?: string
+          thumbnail?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       api_endpoints: {
         Row: {
           active: boolean | null

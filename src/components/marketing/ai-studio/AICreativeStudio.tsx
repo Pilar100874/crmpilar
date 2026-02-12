@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Button } from '@/components/ui/button';
-import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Coins, Copy, Pause, PlayCircle } from 'lucide-react';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Coins, Copy, Pause, PlayCircle, Save, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
 import StudioNodeComponent from './StudioNodeComponent';
@@ -28,6 +28,8 @@ import AISettingsPanel from './AISettingsPanel';
 import CreativeAgentPanel, { StoryboardScene } from './CreativeAgentPanel';
 import StudioCreditsPanel from './StudioCreditsPanel';
 import ExecutionLogPanel from './ExecutionLogPanel';
+import WorkflowSaveLoad from './WorkflowSaveLoad';
+import { nodeResultStore } from './useNodeResults';
 
 interface ContextMenuState {
   x: number;
@@ -260,7 +262,18 @@ const AICreativeStudioInner: React.FC = () => {
     setNodes([]);
     setEdges([]);
     setSelectedNode(null);
+    nodeResultStore.clearAll();
   }, [setNodes, setEdges]);
+
+  const handleLoadWorkflow = useCallback((loadedNodes: StudioNode[], loadedEdges: StudioEdge[]) => {
+    nodeResultStore.clearAll();
+    setNodes(loadedNodes as any);
+    setEdges(loadedEdges as any);
+    setSelectedNode(null);
+    setShowCanvas(true);
+  }, [setNodes, setEdges]);
+
+  const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
   const handlePresetSelect = useCallback((preset: Preset) => {
     const inputNode: StudioNode = {
@@ -491,6 +504,12 @@ const AICreativeStudioInner: React.FC = () => {
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
               <div className="w-px h-5 bg-border" />
+              <WorkflowSaveLoad
+                nodes={nodes as StudioNode[]}
+                edges={edges as StudioEdge[]}
+                onLoad={handleLoadWorkflow}
+                estabelecimentoId={estabelecimentoId}
+              />
               <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1.5 text-xs h-8">
                 <Clapperboard className="h-3.5 w-3.5" />
                 Presets
