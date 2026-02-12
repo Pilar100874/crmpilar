@@ -235,7 +235,9 @@ export function useStudioExecution() {
 
         try {
           const inputs = getInputResults(nodeId, edges, results);
+          console.log(`[Studio] Node ${nodeId} (${nd.type}) inputs:`, inputs.length, 'items');
           const result = await executeNode(node, inputs);
+          console.log(`[Studio] Node ${nodeId} (${nd.type}) result:`, typeof result, result?.imageUrl ? 'has imageUrl' : 'no imageUrl');
           const elapsed = Date.now() - startTime;
           results.set(nodeId, result);
           updateNode(nodeId, { isProcessing: false, result });
