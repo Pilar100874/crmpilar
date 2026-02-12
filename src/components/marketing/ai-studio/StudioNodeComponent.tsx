@@ -551,46 +551,19 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   />
                 </div>
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
+                  <a
+                    href={resultImage}
+                    download={`studio-${nodeData.type}-${id}.png`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     onPointerDown={(e) => e.stopPropagation()}
                     onMouseDown={(e) => e.stopPropagation()}
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      try {
-                        // Create an off-screen image to draw on canvas (avoids CORS fetch issues)
-                        const img = new Image();
-                        img.crossOrigin = 'anonymous';
-                        img.onload = () => {
-                          const canvas = document.createElement('canvas');
-                          canvas.width = img.naturalWidth;
-                          canvas.height = img.naturalHeight;
-                          const ctx = canvas.getContext('2d');
-                          if (!ctx) return;
-                          ctx.drawImage(img, 0, 0);
-                          canvas.toBlob((blob) => {
-                            if (!blob) return;
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `studio-${nodeData.type}-${id}.png`;
-                            a.style.display = 'none';
-                            document.body.appendChild(a);
-                            a.click();
-                            setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
-                          }, 'image/png');
-                        };
-                        img.onerror = () => window.open(resultImage, '_blank');
-                        img.src = resultImage;
-                      } catch {
-                        window.open(resultImage, '_blank');
-                      }
-                    }}
-                    className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
-                    title="Download"
+                    onClick={(e) => e.stopPropagation()}
+                    className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors cursor-pointer"
+                    title="Download / Abrir imagem"
                   >
                     <Download className="h-3 w-3 text-white" />
-                  </button>
+                  </a>
                   <button
                     onPointerDown={(e) => e.stopPropagation()}
                     onMouseDown={(e) => e.stopPropagation()}
