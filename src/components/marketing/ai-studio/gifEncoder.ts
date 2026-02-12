@@ -7,16 +7,17 @@ import { GIFEncoder, quantize, applyPalette } from 'gifenc';
 export async function createAnimatedGif(
   frameUrls: string[],
   fps: number = 2,
-  maxWidth: number = 512,
+  maxWidth: number = 256,
   onProgress?: (current: number, total: number) => void
 ): Promise<string> {
   if (!frameUrls.length) throw new Error('No frames provided');
 
   const delay = Math.round(1000 / fps);
 
-  // Scale down more aggressively for large frame counts
-  const effectiveMaxWidth = frameUrls.length > 15 ? Math.min(maxWidth, 320) : 
-                            frameUrls.length > 8 ? Math.min(maxWidth, 384) : maxWidth;
+  // Scale down aggressively to avoid long encoding times
+  const effectiveMaxWidth = frameUrls.length > 15 ? Math.min(maxWidth, 192) : 
+                            frameUrls.length > 8 ? Math.min(maxWidth, 224) : 
+                            Math.min(maxWidth, 256);
 
   const loadImage = (url: string): Promise<HTMLImageElement> =>
     new Promise((resolve, reject) => {

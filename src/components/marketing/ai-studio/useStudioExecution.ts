@@ -259,15 +259,21 @@ export function useStudioExecution() {
           });
           try {
             const { createAnimatedGif } = await import('./gifEncoder');
-            gifUrl = await createAnimatedGif(frames, fps, 512, (current, total) => {
+            // Race GIF encoding against a 60s timeout
+            const gifPromise = createAnimatedGif(frames, fps, 256, (current, total) => {
               nodeResultStore.setResult(node.id, { 
                 text: `🎬 Montando GIF animado (${current}/${total} frames)...`, 
                 _animFrames: [...frames],
                 _totalFrames: frameCount,
               });
             });
-          } catch (gifErr) {
+            const timeoutPromise = new Promise<string>((_, reject) => 
+              setTimeout(() => reject(new Error('GIF encoding timeout')), 60000)
+            );
+            gifUrl = await Promise.race([gifPromise, timeoutPromise]);
+          } catch (gifErr: any) {
             console.error('Error creating GIF:', gifErr);
+            toast.error('GIF demorou demais, usando primeira imagem como resultado.', { duration: 4000 });
           }
         }
 
