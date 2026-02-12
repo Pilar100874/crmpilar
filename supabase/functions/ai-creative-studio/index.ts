@@ -101,14 +101,25 @@ serve(async (req) => {
           }
         }
 
+        console.log(`[generate_image] Sending prompt: "${(params.prompt || '').substring(0, 100)}", ref images: ${content.length - 1}`);
+        
         const data = await callGateway(LOVABLE_API_KEY, {
           model,
           messages: [{ role: "user", content }],
           modalities: ["image", "text"],
         });
 
+        console.log(`[generate_image] Response keys:`, JSON.stringify(Object.keys(data?.choices?.[0]?.message || {})));
+        console.log(`[generate_image] Has images:`, !!(data?.choices?.[0]?.message?.images?.length));
+        
         const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
         const text = data.choices?.[0]?.message?.content;
+
+        if (!imageUrl) {
+          console.warn(`[generate_image] No image returned from AI. Text response: "${(text || '').substring(0, 200)}"`);
+        } else {
+          console.log(`[generate_image] Image returned, base64 length: ${imageUrl.length}`);
+        }
 
         return new Response(JSON.stringify({ result: { imageUrl, text } }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
