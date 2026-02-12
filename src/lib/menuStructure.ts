@@ -30,7 +30,7 @@ export const menuStructure: MenuCategory[] = [
       { id: "SLA Dashboard", title: "Dashboard SLA", url: "/sla-dashboard", icon: LucideIcons.Activity },
       { id: "Analytics Dashboard", title: "Analytics Avançado", url: "/advanced-analytics", icon: LucideIcons.FileBarChart },
       { id: "Dashboard CSAT/NPS", title: "Pesquisas de Satisfação", url: "/dashboard-pesquisas-satisfacao", icon: LucideIcons.Star },
-      { id: "Dashboard Gastos IA", title: "Gastos com IA", url: "/dashboard-gastos-ia", icon: LucideIcons.Brain },
+      
     ]
   },
   { id: "Clientes", title: "Funil", url: "/funil", icon: LucideIcons.Users },
