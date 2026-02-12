@@ -46,8 +46,8 @@ function validateModel(model: string, type: "llm" | "image"): string {
   return type === "image" ? "google/gemini-2.5-flash-image" : "google/gemini-3-flash-preview";
 }
 
-// Truncate base64 images that are too large (max ~500KB base64 per image)
-const MAX_IMAGE_BASE64_LENGTH = 700_000; // ~500KB
+// Max ~200KB base64 per image to stay well under token limits
+const MAX_IMAGE_BASE64_LENGTH = 300_000;
 
 function truncateImageUrl(url: string): string | null {
   if (!url) return null;
