@@ -703,6 +703,52 @@ const AICreativeStudioInner: React.FC = () => {
         </AnimatePresence>
         <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
         <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
+
+        {/* Delete workflow confirm */}
+        <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir workflow</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o workflow "{deleteConfirm?.nome}"? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => deleteConfirm && handleDeleteWorkflow(deleteConfirm.id, deleteConfirm.nome)}
+              >
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Rename workflow dialog */}
+        <Dialog open={!!renameDialog} onOpenChange={(open) => !open && setRenameDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Renomear workflow</DialogTitle>
+              <DialogDescription>
+                Digite o novo nome para o workflow.
+              </DialogDescription>
+            </DialogHeader>
+            <Input
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              placeholder="Nome do workflow"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && renameDialog && handleRenameWorkflow(renameDialog.id, renameValue)}
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRenameDialog(null)}>Cancelar</Button>
+              <Button onClick={() => renameDialog && handleRenameWorkflow(renameDialog.id, renameValue)}>
+                Renomear
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
