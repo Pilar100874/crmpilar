@@ -104,10 +104,11 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
   const resultImage = activeResult?.imageUrl;
   const resultVideo = activeResult?.videoUrl;
+  const resultAudio = activeResult?.audioUrl;
   const resultText = typeof activeResult === 'string'
     ? activeResult
     : activeResult?.text;
-  const hasResult = !!(resultImage || resultVideo || resultText);
+  const hasResult = !!(resultImage || resultVideo || resultAudio || resultText);
 
   // Debug render state
   useEffect(() => {
@@ -122,9 +123,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
       const t3 = setTimeout(() => updateNodeInternals(id), 500);
       return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
     }
-  }, [hasResult, activeProcessing, resultImage, resultVideo, resultText, id, updateNodeInternals]);
+  }, [hasResult, activeProcessing, resultImage, resultVideo, resultAudio, resultText, id, updateNodeInternals]);
 
-  const nodeWidth = (resultImage || resultVideo || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0)) ? 340 : 280;
+  const nodeWidth = (resultImage || resultVideo || resultAudio || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0)) ? 340 : 280;
 
   return (
     <div
@@ -365,7 +366,28 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
               </div>
             )}
 
-            {resultText && !resultImage && !resultVideo && (
+            {resultAudio && (
+              <div className="px-3 pb-3 pt-1 space-y-2">
+                <audio controls src={resultAudio} className="w-full h-10 rounded-lg" />
+                <div className="flex justify-end">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const link = document.createElement('a');
+                      link.href = resultAudio;
+                      link.download = `studio-${nodeData.type}-${id}.mp3`;
+                      link.click();
+                    }}
+                    className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                    title="Download áudio"
+                  >
+                    <Download className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {resultText && !resultImage && !resultVideo && !resultAudio && (
               <div className="px-3.5 py-2.5">
                 <p className="text-xs text-foreground/70 leading-relaxed line-clamp-6 whitespace-pre-wrap">
                   {resultText}
