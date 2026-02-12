@@ -665,7 +665,14 @@ const AICreativeStudioInner: React.FC = () => {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="relative z-10 w-full max-w-4xl mb-12"
           >
-            <p className="text-xs text-muted-foreground uppercase tracking-widest text-center mb-4">Ferramentas</p>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-border to-transparent" />
+              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted/60 border border-border/50">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-foreground/70">Ferramentas Rápidas</span>
+              </div>
+              <div className="h-px flex-1 bg-gradient-to-r from-border via-transparent to-transparent" />
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {QUICK_TOOLS.map((tool) => {
                 const Icon = tool.icon;
@@ -675,17 +682,17 @@ const AICreativeStudioInner: React.FC = () => {
                     whileHover={{ scale: 1.03, y: -2 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleQuickTool(tool.id, tool.nodeType)}
-                    className="group flex flex-col items-start gap-2 p-4 rounded-xl bg-muted/50 border border-border hover:bg-accent hover:border-primary/30 transition-all text-left"
+                    className="group flex flex-col items-start gap-2.5 p-4 rounded-xl bg-card/80 border border-border/60 hover:bg-accent hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all text-left"
                   >
                     <div className="flex items-center justify-between w-full">
-                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
-                        <Icon className="h-4 w-4 text-primary" />
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:bg-primary/15 transition-colors">
+                        <Icon className="h-4.5 w-4.5 text-primary" />
                       </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground/80 group-hover:text-foreground transition-colors">{tool.label}</p>
-                      <p className="text-[11px] text-muted-foreground">{tool.desc}</p>
+                      <p className="text-sm font-semibold text-foreground/85 group-hover:text-foreground transition-colors">{tool.label}</p>
+                      <p className="text-[11px] text-muted-foreground/70 mt-0.5">{tool.desc}</p>
                     </div>
                   </motion.button>
                 );

@@ -297,14 +297,10 @@ const CostBadge = ({ cost }: { cost: string }) => {
 };
 
 const ModelSelectItem = ({ model }: { model: ModelInfo }) => (
-  <SelectItem key={model.value} value={model.value}>
-    <div className="flex flex-col gap-0.5 py-0.5">
-      <div className="flex items-center gap-2">
-        <span>{model.label}</span>
-        <CostBadge cost={model.cost} />
-        <QualityStars level={model.quality} />
-      </div>
-      <span className="text-[10px] text-muted-foreground">{model.tip}</span>
+  <SelectItem key={model.value} value={model.value} className="py-2">
+    <div className="flex items-center gap-1.5 min-w-0">
+      <span className="truncate text-sm">{model.label}</span>
+      <CostBadge cost={model.cost} />
     </div>
   </SelectItem>
 );
