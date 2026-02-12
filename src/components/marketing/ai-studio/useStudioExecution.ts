@@ -36,9 +36,18 @@ export function useStudioExecution() {
     if (!response.ok) {
       const errText = await response.text().catch(() => 'Unknown error');
       console.error(`[Studio] Edge function error ${response.status}:`, errText);
-      throw new Error(`Edge function error: ${response.status}`);
+      throw new Error(`Edge function returned ${response.status}: ${errText.substring(0, 200)}`);
     }
-    const data = await response.json();
+    // Read as text first to handle large payloads safely
+    const rawText = await response.text();
+    console.log(`[Studio] Raw response length: ${rawText.length} chars`);
+    let data: any;
+    try {
+      data = JSON.parse(rawText);
+    } catch (parseErr) {
+      console.error(`[Studio] Failed to parse JSON response (${rawText.length} chars):`, parseErr);
+      throw new Error(`Failed to parse response (${rawText.length} chars)`);
+    }
     const result = data?.result;
     console.log(`[Studio] Edge function result:`, {
       hasResult: !!result,
@@ -47,7 +56,6 @@ export function useStudioExecution() {
       hasImageUrl: !!result?.imageUrl,
       imageUrlLength: result?.imageUrl?.length || 0,
       hasText: !!result?.text,
-      textPreview: typeof result === 'string' ? result.substring(0, 100) : result?.text?.substring(0, 100),
     });
     if (data?.error) throw new Error(data.error);
     return result;
