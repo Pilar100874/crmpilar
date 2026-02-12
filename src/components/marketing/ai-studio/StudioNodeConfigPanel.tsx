@@ -654,7 +654,14 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
           <div className="space-y-3">
             <div>
               <Label className="text-xs">Modelo de Vídeo</Label>
-              <Select value={config.videoModel || 'free/gif-animated'} onValueChange={(v) => update('videoModel', v)}>
+              <Select value={config.videoModel || 'free/gif-animated'} onValueChange={(v) => {
+                update('videoModel', v);
+                if (v === 'free/gif-animated') {
+                  update('frameCount', 4);
+                  update('fps', 3);
+                  update('resolution', '480p');
+                }
+              }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
                   {VIDEO_MODELS.map((m) => (
@@ -682,19 +689,19 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   <Slider
                     className="mt-2"
                     min={2}
-                    max={60}
+                    max={20}
                     step={1}
                     value={[config.frameCount || 4]}
                     onValueChange={([v]) => update('frameCount', v)}
                   />
                   <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
                     <span>2</span>
-                    <span>60</span>
+                    <span>20</span>
                   </div>
                 </div>
                 <div>
                   <Label className="text-xs">Velocidade (FPS)</Label>
-                  <Select value={String(config.fps || 2)} onValueChange={(v) => update('fps', Number(v))}>
+                  <Select value={String(config.fps || 3)} onValueChange={(v) => update('fps', Number(v))}>
                     <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="0.5">0.5 fps (Muito lento — 2s/frame)</SelectItem>
