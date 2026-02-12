@@ -46,6 +46,21 @@ function validateModel(model: string, type: "llm" | "image"): string {
   return type === "image" ? "google/gemini-2.5-flash-image" : "google/gemini-3-flash-preview";
 }
 
+// Truncate base64 images that are too large (max ~500KB base64 per image)
+const MAX_IMAGE_BASE64_LENGTH = 700_000; // ~500KB
+
+function truncateImageUrl(url: string): string | null {
+  if (!url) return null;
+  // If it's a regular URL (not base64), keep it
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  // If base64 is too large, skip it
+  if (url.length > MAX_IMAGE_BASE64_LENGTH) {
+    console.warn(`Skipping image: base64 too large (${(url.length / 1024).toFixed(0)}KB)`);
+    return null;
+  }
+  return url;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -77,10 +92,13 @@ serve(async (req) => {
         const content: any[] = [
           { type: "text", text: params.prompt },
         ];
-        // Attach reference images if provided
-        const refImages = params.imageUrls || [];
+        // Attach reference images if provided (filter out oversized ones)
+        const refImages = (params.imageUrls || []) as string[];
         for (const url of refImages) {
-          content.push({ type: "image_url", image_url: { url } });
+          const safe = truncateImageUrl(url);
+          if (safe) {
+            content.push({ type: "image_url", image_url: { url: safe } });
+          }
         }
 
         const data = await callGateway(LOVABLE_API_KEY, {
@@ -102,10 +120,13 @@ serve(async (req) => {
         const content: any[] = [
           { type: "text", text: params.prompt },
         ];
-        // Support single imageUrl or multiple imageUrls
+        // Support single imageUrl or multiple imageUrls (filter oversized)
         const imageUrls = params.imageUrls || (params.imageUrl ? [params.imageUrl] : []);
         for (const url of imageUrls) {
-          content.push({ type: "image_url", image_url: { url } });
+          const safe = truncateImageUrl(url);
+          if (safe) {
+            content.push({ type: "image_url", image_url: { url: safe } });
+          }
         }
 
         const data = await callGateway(LOVABLE_API_KEY, {
