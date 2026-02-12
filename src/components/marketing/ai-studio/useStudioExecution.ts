@@ -193,12 +193,44 @@ export function useStudioExecution() {
       case 'videoGen': {
         const videoPrompt = combinedInput || 'A cinematic scene';
         const aspectRatio = config.aspectRatio || '16:9';
-        const result = await callStudio('generate_image', {
-          prompt: `Ultra high resolution cinematic film still, movie production quality, dramatic lighting, shallow depth of field, ${aspectRatio} aspect ratio, professional cinematography, photorealistic: ${videoPrompt}`,
-          model: 'google/gemini-3-pro-image-preview',
-          imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
-        });
-        return { imageUrl: result?.imageUrl, text: `🎬 Key-frame cinematográfico gerado para: "${videoPrompt.substring(0, 80)}"` };
+        const frameCount = config.frameCount || 4;
+        const motionStages = [
+          'opening shot, beginning of movement',
+          'early progression, slight camera movement forward',
+          'mid-action, peak of the motion, dynamic angle',
+          'final frame, concluding the movement, dramatic resolution',
+          'aftermath, calm settling shot',
+          'wide establishing shot, full reveal',
+        ];
+
+        const frames: string[] = [];
+        for (let i = 0; i < Math.min(frameCount, 6); i++) {
+          const stage = motionStages[i] || motionStages[motionStages.length - 1];
+          const framePrompt = `Ultra high resolution cinematic film still, movie production quality, dramatic lighting, shallow depth of field, ${aspectRatio} aspect ratio, professional cinematography, photorealistic, frame ${i + 1} of ${frameCount} — ${stage}: ${videoPrompt}`;
+          
+          nodeResultStore.setResult(node.id, { 
+            text: `🎬 Gerando frame ${i + 1}/${frameCount}...`, 
+            _animFrames: frames.length > 0 ? [...frames] : undefined,
+            _totalFrames: frameCount,
+          });
+
+          const result = await callStudio('generate_image', {
+            prompt: framePrompt,
+            model: 'google/gemini-3-pro-image-preview',
+            imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
+          });
+          if (result?.imageUrl) {
+            frames.push(result.imageUrl);
+          }
+        }
+
+        return { 
+          _animFrames: frames,
+          _totalFrames: frameCount,
+          _fps: config.fps || 2,
+          imageUrl: frames[0],
+          text: `🎬 Animação gerada com ${frames.length} frames para: "${videoPrompt.substring(0, 60)}"`,
+        };
       }
 
       case 'audioGen': {
