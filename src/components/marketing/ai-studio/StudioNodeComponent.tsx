@@ -75,7 +75,6 @@ const nodeAccentMap: Record<string, string> = {
   imageAnalyze: '#14b8a6',
   output: '#64748b',
 };
-
 const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as unknown as StudioNodeData;
   const meta = getNodeMeta(nodeData.type);
@@ -92,7 +91,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
   // Use external store for results (bypasses ReactFlow's shallow diff)
   const { result: storeResult, isProcessing: storeProcessing, error: storeError } = useNodeResult(id);
-  const activeResult = storeResult ?? nodeData.result;
+  
+  // Keep a persistent ref so the result survives ReactFlow re-renders
+  const persistedResult = useRef<any>(null);
+  if (storeResult !== undefined && storeResult !== null) {
+    persistedResult.current = storeResult;
+  }
+  
+  const activeResult = storeResult ?? persistedResult.current ?? nodeData.result;
   const activeProcessing = storeProcessing || nodeData.isProcessing;
   const activeError = storeError || nodeData.error;
 
@@ -103,10 +109,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     : activeResult?.text;
   const hasResult = !!(resultImage || resultVideo || resultText);
 
+  // Debug render state
+  useEffect(() => {
+    console.log(`[StudioNode ${id}] RENDER: hasResult=${hasResult}, hasImage=${!!resultImage}, storeResult=${!!storeResult}, persistedResult=${!!persistedResult.current}, nodeDataResult=${!!nodeData.result}`);
+  });
+
   // Force ReactFlow to re-measure node dimensions when result changes
   useEffect(() => {
     if (hasResult || activeProcessing) {
-      // Multiple re-measures to ensure ReactFlow picks up the new size
       const t1 = setTimeout(() => updateNodeInternals(id), 50);
       const t2 = setTimeout(() => updateNodeInternals(id), 200);
       const t3 = setTimeout(() => updateNodeInternals(id), 500);
