@@ -1,338 +1,174 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X, Settings2, Key, Check, Lock, ExternalLink } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import { X, Settings2, Key, Check, Lock, ExternalLink, Save, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, TestTube, Play, Pause, Mic, Music, Volume2, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
-interface AIProvider {
-  id: string;
+// ── Paid providers that need API keys ──────────────────────────────────────
+
+interface PaidProvider {
+  id: string;            // matches ai_api_keys.provider
   name: string;
   icon: string;
-  available: boolean;
+  category: 'audio' | 'video' | 'image' | 'music';
   description: string;
-  category: 'text' | 'image' | 'video' | 'audio' | 'music';
-  models: {
-    id: string;
-    name: string;
-    available: boolean;
-    description?: string;
-  }[];
-  apiKeyConfigured?: boolean;
-  website?: string;
+  website: string;
+  keyPlaceholder: string;
+  hasExtraConfig?: boolean;  // e.g. ElevenLabs voice settings
 }
 
-const AI_PROVIDERS: AIProvider[] = [
-  // TEXT / LLM
+const PAID_PROVIDERS: PaidProvider[] = [
   {
-    id: 'google',
-    name: 'Google (Gemini)',
-    icon: '🟦',
-    available: true,
-    description: 'Modelos Gemini via Lovable AI — sem necessidade de API key.',
-    category: 'text',
-    apiKeyConfigured: true,
-    website: 'https://ai.google.dev',
-    models: [
-      { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash', available: true, description: 'Rápido e eficiente' },
-      { id: 'google/gemini-3-pro-preview', name: 'Gemini 3 Pro', available: true, description: 'Raciocínio avançado' },
-      { id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro', available: true, description: 'Multimodal completo' },
-      { id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', available: true, description: 'Balanceado' },
-      { id: 'google/gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite', available: true, description: 'Ultra rápido' },
-    ],
-  },
-  {
-    id: 'openai',
-    name: 'OpenAI (GPT)',
-    icon: '🟢',
-    available: true,
-    description: 'Modelos GPT via Lovable AI — sem necessidade de API key.',
-    category: 'text',
-    apiKeyConfigured: true,
-    website: 'https://openai.com',
-    models: [
-      { id: 'openai/gpt-5.2', name: 'GPT-5.2', available: true, description: 'Mais recente e poderoso' },
-      { id: 'openai/gpt-5', name: 'GPT-5', available: true, description: 'Raciocínio avançado' },
-      { id: 'openai/gpt-5-mini', name: 'GPT-5 Mini', available: true, description: 'Custo-benefício' },
-      { id: 'openai/gpt-5-nano', name: 'GPT-5 Nano', available: true, description: 'Ultra rápido' },
-    ],
-  },
-  // IMAGE
-  {
-    id: 'google-image',
-    name: 'Google ImageFX',
-    icon: '🟦',
-    available: true,
-    description: 'Geração de imagens via Gemini — disponível via Lovable AI.',
-    category: 'image',
-    apiKeyConfigured: true,
-    website: 'https://labs.google/fx',
-    models: [
-      { id: 'google/gemini-3-pro-image-preview', name: 'Gemini 3 Pro Image', available: true },
-      { id: 'google/gemini-2.5-flash-image', name: 'Gemini Flash Image', available: true },
-      { id: 'google/imagefx', name: 'ImageFX', available: true },
-    ],
-  },
-  {
-    id: 'openai-image',
-    name: 'OpenAI DALL·E',
-    icon: '🟢',
-    available: false,
-    description: 'Geração de imagens com DALL·E. Requer API key da OpenAI.',
-    category: 'image',
-    website: 'https://openai.com/dall-e',
-    models: [
-      { id: 'openai/dall-e-4', name: 'DALL·E 4', available: false },
-      { id: 'openai/dall-e-3', name: 'DALL·E 3', available: false },
-    ],
-  },
-  {
-    id: 'midjourney',
-    name: 'Midjourney',
-    icon: '🔵',
-    available: false,
-    description: 'Imagens artísticas de alta qualidade. Requer API key.',
-    category: 'image',
-    website: 'https://midjourney.com',
-    models: [
-      { id: 'midjourney/v7', name: 'Midjourney v7', available: false },
-      { id: 'midjourney/v6.1', name: 'Midjourney v6.1', available: false },
-    ],
-  },
-  {
-    id: 'stability-image',
-    name: 'Stability AI',
-    icon: '🟣',
-    available: false,
-    description: 'Stable Diffusion e variantes. Requer API key.',
-    category: 'image',
-    website: 'https://stability.ai',
-    models: [
-      { id: 'stability/sd3.5-turbo', name: 'SD 3.5 Turbo', available: false },
-      { id: 'stability/sd3', name: 'Stable Diffusion 3', available: false },
-      { id: 'stability/sdxl', name: 'Stable Diffusion XL', available: false },
-    ],
-  },
-  {
-    id: 'flux',
-    name: 'Black Forest Labs (Flux)',
-    icon: '⚡',
-    available: false,
-    description: 'Modelos Flux de alta qualidade. Requer API key.',
-    category: 'image',
-    website: 'https://blackforestlabs.ai',
-    models: [
-      { id: 'flux/1.1-pro', name: 'Flux 1.1 Pro', available: false },
-      { id: 'flux/schnell', name: 'Flux Schnell', available: false },
-    ],
-  },
-  {
-    id: 'ideogram',
-    name: 'Ideogram',
-    icon: '🎨',
-    available: false,
-    description: 'Especialista em texto em imagens. Requer API key.',
-    category: 'image',
-    website: 'https://ideogram.ai',
-    models: [
-      { id: 'ideogram/v3', name: 'Ideogram v3', available: false },
-    ],
-  },
-  {
-    id: 'adobe',
-    name: 'Adobe Firefly',
-    icon: '🔥',
-    available: false,
-    description: 'Geração criativa Adobe. Requer API key.',
-    category: 'image',
-    website: 'https://firefly.adobe.com',
-    models: [
-      { id: 'adobe/firefly-3', name: 'Firefly 3', available: false },
-    ],
-  },
-  // VIDEO
-  {
-    id: 'google-video',
-    name: 'Google Veo (Flow)',
-    icon: '🟦',
-    available: false,
-    description: 'Geração de vídeos com Veo. Em breve via Lovable AI.',
-    category: 'video',
-    website: 'https://labs.google/flow',
-    models: [
-      { id: 'google/veo-3.1', name: 'Veo 3.1 (Flow)', available: false },
-      { id: 'google/veo-3.1-fast', name: 'Veo 3.1 Fast', available: false },
-      { id: 'google/veo-3', name: 'Veo 3', available: false },
-      { id: 'google/veo-2', name: 'Veo 2', available: false },
-    ],
-  },
-  {
-    id: 'openai-video',
-    name: 'OpenAI Sora',
-    icon: '🟢',
-    available: false,
-    description: 'Geração de vídeos com Sora. Requer API key.',
-    category: 'video',
-    website: 'https://openai.com/sora',
-    models: [
-      { id: 'openai/sora-3', name: 'Sora 3', available: false },
-      { id: 'openai/sora-2', name: 'Sora 2', available: false },
-    ],
+    id: 'elevenlabs',
+    name: 'ElevenLabs',
+    icon: '🔊',
+    category: 'audio',
+    description: 'Vozes realistas, TTS e narração de alta qualidade.',
+    website: 'https://elevenlabs.io/app/settings/api-keys',
+    keyPlaceholder: 'xi-...',
+    hasExtraConfig: true,
   },
   {
     id: 'runway',
     name: 'Runway',
     icon: '🎬',
-    available: false,
-    description: 'Edição e geração de vídeos. Requer API key.',
     category: 'video',
-    website: 'https://runwayml.com',
-    models: [
-      { id: 'runway/gen4', name: 'Gen-4', available: false },
-      { id: 'runway/gen3-alpha-turbo', name: 'Gen-3 Alpha Turbo', available: false },
-    ],
+    description: 'Geração e edição de vídeos com Gen-4.',
+    website: 'https://app.runwayml.com/account/api-keys',
+    keyPlaceholder: 'rw-...',
+  },
+  {
+    id: 'suno',
+    name: 'Suno',
+    icon: '🎵',
+    category: 'music',
+    description: 'Criação de músicas completas com IA.',
+    website: 'https://suno.com/account',
+    keyPlaceholder: 'sk-...',
   },
   {
     id: 'kling',
     name: 'Kling (Kuaishou)',
     icon: '🎥',
-    available: false,
-    description: 'Vídeos realistas. Requer API key.',
     category: 'video',
+    description: 'Vídeos realistas de alta qualidade.',
     website: 'https://klingai.com',
-    models: [
-      { id: 'kling/v2.1', name: 'Kling 2.1', available: false },
-      { id: 'kling/v1.6', name: 'Kling 1.6', available: false },
-    ],
+    keyPlaceholder: 'sk-...',
+  },
+  {
+    id: 'stability',
+    name: 'Stability AI',
+    icon: '🟣',
+    category: 'image',
+    description: 'Stable Diffusion para geração de imagens.',
+    website: 'https://platform.stability.ai/account/keys',
+    keyPlaceholder: 'sk-...',
   },
   {
     id: 'pika',
     name: 'Pika',
     icon: '🌊',
-    available: false,
-    description: 'Vídeos criativos. Requer API key.',
     category: 'video',
+    description: 'Vídeos criativos e estilizados.',
     website: 'https://pika.art',
-    models: [
-      { id: 'pika/v2.2', name: 'Pika 2.2', available: false },
-    ],
+    keyPlaceholder: 'pk-...',
   },
   {
     id: 'luma',
     name: 'Luma Dream Machine',
     icon: '🌙',
-    available: false,
-    description: 'Vídeos com Dream Machine. Requer API key.',
     category: 'video',
+    description: 'Geração de vídeos com Dream Machine.',
     website: 'https://lumalabs.ai',
-    models: [
-      { id: 'luma/dream-machine-1.5', name: 'Dream Machine 1.5', available: false },
-    ],
-  },
-  // AUDIO
-  {
-    id: 'elevenlabs',
-    name: 'ElevenLabs',
-    icon: '🔊',
-    available: false,
-    description: 'Vozes realistas e TTS. Requer API key.',
-    category: 'audio',
-    website: 'https://elevenlabs.io',
-    models: [
-      { id: 'elevenlabs/v3', name: 'ElevenLabs v3', available: false },
-      { id: 'elevenlabs/turbo-v2.5', name: 'ElevenLabs Turbo', available: false },
-    ],
-  },
-  {
-    id: 'openai-audio',
-    name: 'OpenAI TTS',
-    icon: '🟢',
-    available: false,
-    description: 'Text-to-Speech da OpenAI. Requer API key.',
-    category: 'audio',
-    website: 'https://openai.com',
-    models: [
-      { id: 'openai/tts-1-hd', name: 'OpenAI TTS HD', available: false },
-      { id: 'openai/tts-1', name: 'OpenAI TTS', available: false },
-    ],
-  },
-  {
-    id: 'google-audio',
-    name: 'Google WaveNet',
-    icon: '🟦',
-    available: false,
-    description: 'Vozes naturais do Google Cloud. Requer API key.',
-    category: 'audio',
-    website: 'https://cloud.google.com/text-to-speech',
-    models: [
-      { id: 'google/wavenet', name: 'Google WaveNet', available: false },
-    ],
-  },
-  // MUSIC
-  {
-    id: 'suno',
-    name: 'Suno',
-    icon: '🎵',
-    available: false,
-    description: 'Criação de músicas com IA. Requer API key.',
-    category: 'music',
-    website: 'https://suno.com',
-    models: [
-      { id: 'suno/v4', name: 'Suno v4', available: false },
-      { id: 'suno/v3.5', name: 'Suno v3.5', available: false },
-    ],
+    keyPlaceholder: 'lm-...',
   },
   {
     id: 'udio',
     name: 'Udio',
     icon: '🎶',
-    available: false,
-    description: 'Composição musical avançada. Requer API key.',
     category: 'music',
+    description: 'Composição musical avançada.',
     website: 'https://udio.com',
-    models: [
-      { id: 'udio/v2', name: 'Udio v2', available: false },
-      { id: 'udio/v1.5', name: 'Udio v1.5', available: false },
-    ],
-  },
-  {
-    id: 'stability-audio',
-    name: 'Stability Audio',
-    icon: '🟣',
-    available: false,
-    description: 'Geração de áudio musical. Requer API key.',
-    category: 'music',
-    website: 'https://stability.ai',
-    models: [
-      { id: 'stability/stable-audio-2', name: 'Stable Audio 2.0', available: false },
-    ],
-  },
-  {
-    id: 'google-music',
-    name: 'Google MusicFX',
-    icon: '🟦',
-    available: false,
-    description: 'Criação de música do Google Labs. Em breve.',
-    category: 'music',
-    website: 'https://labs.google/fx',
-    models: [
-      { id: 'google/musicfx', name: 'MusicFX', available: false },
-    ],
+    keyPlaceholder: 'sk-...',
   },
 ];
 
 const CATEGORY_LABELS: Record<string, { label: string; icon: string }> = {
-  text: { label: 'Texto / LLM', icon: '🧠' },
-  image: { label: 'Imagem', icon: '🎨' },
-  video: { label: 'Vídeo', icon: '🎬' },
   audio: { label: 'Áudio', icon: '🔊' },
+  video: { label: 'Vídeo', icon: '🎬' },
+  image: { label: 'Imagem', icon: '🎨' },
   music: { label: 'Música', icon: '🎵' },
 };
+
+// ── ElevenLabs voice config helpers ────────────────────────────────────────
+
+const ELEVENLABS_VOICES = [
+  { value: 'CwhRBWXzGAHq8TQ4Fs17', label: 'Roger', gender: 'Masculino' },
+  { value: 'EXAVITQu4vr4xnSDxMaL', label: 'Sarah', gender: 'Feminino' },
+  { value: 'FGY2WhTYpPnrIDTdsKH5', label: 'Laura', gender: 'Feminino' },
+  { value: 'IKne3meq5aSn9XLyUdCD', label: 'Charlie', gender: 'Masculino' },
+  { value: 'JBFqnCBsd6RMkjVDRZzb', label: 'George', gender: 'Masculino' },
+  { value: 'N2lVS1w4EtoT3dr4eOWO', label: 'Callum', gender: 'Masculino' },
+  { value: 'SAz9YHcvj6GT2YYXdXww', label: 'River', gender: 'Neutro' },
+  { value: 'TX3LPaxmHKxFdv7VOQHJ', label: 'Liam', gender: 'Masculino' },
+  { value: 'Xb7hH8MSUJpSbSDYk0k2', label: 'Alice', gender: 'Feminino' },
+  { value: 'XrExE9yKIg1WjnnlVkGX', label: 'Matilda', gender: 'Feminino' },
+  { value: 'bIHbv24MWmeRgasZH58o', label: 'Will', gender: 'Masculino' },
+  { value: 'cgSgspJ2msm6clMCkdW9', label: 'Jessica', gender: 'Feminino' },
+  { value: 'cjVigY5qzO86Huf0OWal', label: 'Eric', gender: 'Masculino' },
+  { value: 'iP95p4xoKVk53GoZ742B', label: 'Chris', gender: 'Masculino' },
+  { value: 'nPczCjzI2devNBz1zQrb', label: 'Brian', gender: 'Masculino' },
+  { value: 'onwK4e9ZLuTAKqWW03F9', label: 'Daniel', gender: 'Masculino' },
+  { value: 'pFZP5JQG7iQjIQuC4Bku', label: 'Lily', gender: 'Feminino' },
+  { value: 'pqHfZKP75CvOlQylNhV4', label: 'Bill', gender: 'Masculino' },
+];
+
+const EL_MODELS = [
+  { value: 'eleven_multilingual_v2', label: 'Multilingual v2', desc: '29 idiomas, alta qualidade' },
+  { value: 'eleven_turbo_v2_5', label: 'Turbo v2.5', desc: 'Baixa latência' },
+  { value: 'eleven_turbo_v2', label: 'Turbo v2', desc: 'Mais rápido' },
+];
+
+const EL_FORMATS = [
+  { value: 'mp3_44100_128', label: 'MP3 44.1kHz 128kbps' },
+  { value: 'mp3_22050_32', label: 'MP3 22kHz 32kbps' },
+  { value: 'pcm_24000', label: 'PCM 24kHz' },
+];
+
+interface ELConfig {
+  defaultVoiceId: string;
+  defaultModel: string;
+  outputFormat: string;
+  stability: number;
+  similarityBoost: number;
+  style: number;
+  useSpeakerBoost: boolean;
+  speed: number;
+}
+
+const DEFAULT_EL_CONFIG: ELConfig = {
+  defaultVoiceId: 'JBFqnCBsd6RMkjVDRZzb',
+  defaultModel: 'eleven_multilingual_v2',
+  outputFormat: 'mp3_44100_128',
+  stability: 0.5,
+  similarityBoost: 0.75,
+  style: 0.5,
+  useSpeakerBoost: true,
+  speed: 1.0,
+};
+
+// ── Main component ─────────────────────────────────────────────────────────
 
 interface Props {
   open: boolean;
@@ -340,16 +176,177 @@ interface Props {
 }
 
 const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
-  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<string>('elevenlabs');
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
+  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
+  const [statuses, setStatuses] = useState<Record<string, 'none' | 'pending' | 'valid' | 'invalid'>>({});
+  const [saving, setSaving] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleSaveKey = (providerId: string) => {
-    if (apiKeys[providerId]?.trim()) {
-      toast.success(`API Key do ${AI_PROVIDERS.find(p => p.id === providerId)?.name} salva com sucesso!`);
+  // ElevenLabs extra config
+  const [elConfig, setElConfig] = useState<ELConfig>(DEFAULT_EL_CONFIG);
+  const [testText, setTestText] = useState('Olá! Este é um teste de áudio do ElevenLabs.');
+  const [isTesting, setIsTesting] = useState(false);
+  const [testAudioUrl, setTestAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+
+  const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
+
+  // Load all keys from DB
+  const loadKeys = useCallback(async () => {
+    if (!estabelecimentoId) return;
+    setLoading(true);
+    try {
+      const { data } = await supabase
+        .from('ai_api_keys')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId);
+
+      if (data) {
+        const keys: Record<string, string> = {};
+        const sts: Record<string, 'none' | 'pending' | 'valid' | 'invalid'> = {};
+        data.forEach((row) => {
+          keys[row.provider] = row.api_key || '';
+          sts[row.provider] = (row.validation_status as any) || 'none';
+
+          // Load ElevenLabs extra config
+          if (row.provider === 'elevenlabs' && row.base_url) {
+            try {
+              const extra = JSON.parse(row.base_url);
+              setElConfig(prev => ({ ...prev, ...extra }));
+            } catch { /* ignore */ }
+          }
+        });
+        setApiKeys(keys);
+        setStatuses(sts);
+      }
+    } catch (err) {
+      console.error('Error loading API keys:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [estabelecimentoId]);
+
+  useEffect(() => {
+    if (open) loadKeys();
+  }, [open, loadKeys]);
+
+  // Save a single provider's key
+  const handleSave = async (providerId: string) => {
+    if (!estabelecimentoId) {
+      toast.error('Estabelecimento não encontrado');
+      return;
+    }
+    setSaving(providerId);
+    try {
+      const provider = PAID_PROVIDERS.find(p => p.id === providerId);
+      const apiKey = apiKeys[providerId]?.trim() || null;
+
+      const payload: Record<string, any> = {
+        estabelecimento_id: estabelecimentoId,
+        provider: providerId,
+        provider_display_name: provider?.name || providerId,
+        api_key: apiKey,
+        is_active: true,
+        validation_status: apiKey ? 'pending' : 'none',
+      };
+
+      // Attach ElevenLabs extra config
+      if (providerId === 'elevenlabs') {
+        payload.base_url = JSON.stringify(elConfig);
+      }
+
+      const { data: existing } = await supabase
+        .from('ai_api_keys')
+        .select('id')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('provider', providerId)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase.from('ai_api_keys').update(payload).eq('id', existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('ai_api_keys').insert([payload] as any);
+        if (error) throw error;
+      }
+
+      setStatuses(prev => ({ ...prev, [providerId]: apiKey ? 'pending' : 'none' }));
+      toast.success(`Configurações de ${provider?.name} salvas!`);
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao salvar configurações');
+    } finally {
+      setSaving(null);
     }
   };
 
-  const selectedProviderData = AI_PROVIDERS.find(p => p.id === selectedProvider);
+  // ElevenLabs test
+  const handleTestEL = async () => {
+    const key = apiKeys['elevenlabs'];
+    if (!key) { toast.error('Configure a API Key primeiro'); return; }
+    if (!testText.trim()) { toast.error('Digite um texto para testar'); return; }
+    setIsTesting(true);
+    try {
+      const resp = await fetch(
+        `https://api.elevenlabs.io/v1/text-to-speech/${elConfig.defaultVoiceId}?output_format=${elConfig.outputFormat}`,
+        {
+          method: 'POST',
+          headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: testText,
+            model_id: elConfig.defaultModel,
+            voice_settings: {
+              stability: elConfig.stability,
+              similarity_boost: elConfig.similarityBoost,
+              style: elConfig.style,
+              use_speaker_boost: elConfig.useSpeakerBoost,
+              speed: elConfig.speed,
+            },
+          }),
+        }
+      );
+      if (!resp.ok) {
+        if (resp.status === 401) { setStatuses(prev => ({ ...prev, elevenlabs: 'invalid' })); toast.error('API Key inválida'); return; }
+        throw new Error(`Erro ${resp.status}`);
+      }
+      setStatuses(prev => ({ ...prev, elevenlabs: 'valid' }));
+      // update DB status
+      const { data: ex } = await supabase.from('ai_api_keys').select('id').eq('estabelecimento_id', estabelecimentoId).eq('provider', 'elevenlabs').maybeSingle();
+      if (ex) await supabase.from('ai_api_keys').update({ validation_status: 'valid' }).eq('id', ex.id);
+
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      if (testAudioUrl) URL.revokeObjectURL(testAudioUrl);
+      setTestAudioUrl(url);
+      const audio = new Audio(url);
+      audio.onended = () => setIsPlaying(false);
+      setAudioElement(audio);
+      audio.play();
+      setIsPlaying(true);
+      toast.success('Áudio gerado! API Key válida.');
+    } catch (err: any) {
+      toast.error('Erro ao testar: ' + (err.message || 'Desconhecido'));
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  const togglePlayback = () => {
+    if (!audioElement) return;
+    if (isPlaying) { audioElement.pause(); setIsPlaying(false); } else { audioElement.play(); setIsPlaying(true); }
+  };
+
+  const selectedProviderData = PAID_PROVIDERS.find(p => p.id === selectedProvider);
+
+  const statusBadge = (providerId: string) => {
+    const key = apiKeys[providerId];
+    const status = statuses[providerId];
+    if (status === 'valid') return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] px-1.5 py-0"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Ativo</Badge>;
+    if (key) return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[9px] px-1.5 py-0"><AlertCircle className="h-2.5 w-2.5 mr-0.5" />Pendente</Badge>;
+    return <Badge className="bg-white/5 text-white/25 border-white/10 text-[9px] px-1.5 py-0"><Lock className="h-2.5 w-2.5 mr-0.5" />Sem Key</Badge>;
+  };
 
   return (
     <AnimatePresence>
@@ -367,17 +364,17 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.3 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-4xl max-h-[85vh] bg-[#0f0f1a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            className="w-full max-w-5xl max-h-[85vh] bg-[#0f0f1a] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.08]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 flex items-center justify-center border border-purple-500/20">
-                  <Settings2 className="h-5 w-5 text-purple-400" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 flex items-center justify-center border border-orange-500/20">
+                  <DollarSign className="h-5 w-5 text-orange-400" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-white">Configurações de IA</h2>
-                  <p className="text-xs text-white/40">Gerencie provedores e API keys dos modelos</p>
+                  <h2 className="text-lg font-bold text-white">APIs Pagas — Configuração</h2>
+                  <p className="text-xs text-white/40">Gerencie as chaves de API dos serviços externos pagos</p>
                 </div>
               </div>
               <Button size="icon" variant="ghost" onClick={onClose} className="text-white/40 hover:text-white hover:bg-white/10">
@@ -387,81 +384,57 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
 
             {/* Content */}
             <div className="flex flex-1 overflow-hidden">
-              {/* Provider List */}
-              <div className="w-[340px] border-r border-white/[0.08] flex flex-col">
-                <Tabs defaultValue="text" className="flex flex-col flex-1">
-                  <TabsList className="mx-3 mt-3 bg-white/[0.04] border border-white/[0.08] rounded-lg p-1 grid grid-cols-5 h-auto">
-                    {Object.entries(CATEGORY_LABELS).map(([key, { label, icon }]) => (
-                      <TabsTrigger
-                        key={key}
-                        value={key}
-                        className="text-[10px] py-1.5 px-1 data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-300 text-white/40 rounded-md flex flex-col gap-0.5"
-                      >
-                        <span className="text-sm">{icon}</span>
-                        <span>{label}</span>
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-
-                  {Object.keys(CATEGORY_LABELS).map((cat) => (
-                    <TabsContent key={cat} value={cat} className="flex-1 m-0 overflow-hidden">
-                      <ScrollArea className="h-full">
-                        <div className="p-3 space-y-1.5">
-                          {AI_PROVIDERS.filter(p => p.category === cat).map((provider) => (
+              {/* Provider sidebar */}
+              <div className="w-[280px] border-r border-white/[0.08] flex flex-col">
+                <div className="p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-white/30 mb-2 px-1">Provedores</p>
+                </div>
+                <ScrollArea className="flex-1">
+                  <div className="px-3 pb-3 space-y-1">
+                    {Object.entries(CATEGORY_LABELS).map(([cat, { label, icon }]) => {
+                      const providers = PAID_PROVIDERS.filter(p => p.category === cat);
+                      if (providers.length === 0) return null;
+                      return (
+                        <div key={cat} className="mb-3">
+                          <p className="text-[10px] uppercase tracking-wider text-white/20 mb-1.5 px-2 flex items-center gap-1.5">
+                            <span>{icon}</span> {label}
+                          </p>
+                          {providers.map((provider) => (
                             <button
                               key={provider.id}
-                              onClick={() => {
-                                if (provider.available) {
-                                  setSelectedProvider(provider.id);
-                                } else {
-                                  setSelectedProvider(provider.id);
-                                }
-                              }}
-                              className={`w-full text-left p-3 rounded-xl border transition-all ${
+                              onClick={() => setSelectedProvider(provider.id)}
+                              className={`w-full text-left p-2.5 rounded-lg border transition-all mb-1 ${
                                 selectedProvider === provider.id
-                                  ? 'bg-purple-500/10 border-purple-500/30'
-                                  : provider.available
-                                    ? 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04] hover:border-white/[0.12]'
-                                    : 'bg-white/[0.01] border-white/[0.04] opacity-50 cursor-default'
+                                  ? 'bg-orange-500/10 border-orange-500/30'
+                                  : 'bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.04]'
                               }`}
                             >
-                              <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-lg">{provider.icon}</span>
-                                  <span className={`text-sm font-medium ${provider.available ? 'text-white/90' : 'text-white/30'}`}>
-                                    {provider.name}
-                                  </span>
+                                  <span className="text-base">{provider.icon}</span>
+                                  <span className="text-sm font-medium text-white/80">{provider.name}</span>
                                 </div>
-                                {provider.available ? (
-                                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] px-1.5 py-0">
-                                    <Check className="h-2.5 w-2.5 mr-0.5" />
-                                    Ativo
-                                  </Badge>
-                                ) : (
-                                  <Badge className="bg-white/5 text-white/25 border-white/10 text-[9px] px-1.5 py-0">
-                                    <Lock className="h-2.5 w-2.5 mr-0.5" />
-                                    API Key
-                                  </Badge>
-                                )}
+                                {statusBadge(provider.id)}
                               </div>
-                              <p className={`text-[11px] leading-tight ${provider.available ? 'text-white/40' : 'text-white/20'}`}>
-                                {provider.description}
-                              </p>
                             </button>
                           ))}
                         </div>
-                      </ScrollArea>
-                    </TabsContent>
-                  ))}
-                </Tabs>
+                      );
+                    })}
+                  </div>
+                </ScrollArea>
               </div>
 
-              {/* Provider Detail */}
-              <div className="flex-1 flex flex-col">
-                {selectedProviderData ? (
+              {/* Detail panel */}
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {loading ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-white/20" />
+                  </div>
+                ) : selectedProviderData ? (
                   <ScrollArea className="flex-1">
                     <div className="p-6 space-y-6">
-                      {/* Provider Header */}
+                      {/* Provider header */}
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
                           <span className="text-3xl">{selectedProviderData.icon}</span>
@@ -470,111 +443,64 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                             <p className="text-sm text-white/40">{selectedProviderData.description}</p>
                           </div>
                         </div>
-                        {selectedProviderData.website && (
-                          <a
-                            href={selectedProviderData.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            Site
-                          </a>
-                        )}
+                        <a href={selectedProviderData.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 transition-colors">
+                          <ExternalLink className="h-3 w-3" />
+                          Obter Key
+                        </a>
                       </div>
 
-                      {/* Status */}
-                      <div className={`rounded-xl border p-4 ${
-                        selectedProviderData.available
-                          ? 'bg-emerald-500/5 border-emerald-500/20'
-                          : 'bg-amber-500/5 border-amber-500/20'
-                      }`}>
-                        <div className="flex items-center gap-2 mb-2">
-                          {selectedProviderData.available ? (
-                            <>
-                              <Check className="h-4 w-4 text-emerald-400" />
-                              <span className="text-sm font-medium text-emerald-400">Disponível e Ativo</span>
-                            </>
-                          ) : (
-                            <>
-                              <Lock className="h-4 w-4 text-amber-400" />
-                              <span className="text-sm font-medium text-amber-400">Requer Configuração</span>
-                            </>
-                          )}
-                        </div>
-                        <p className="text-xs text-white/40">
-                          {selectedProviderData.available
-                            ? 'Este provedor está integrado via Lovable AI e pronto para uso. Nenhuma configuração adicional é necessária.'
-                            : 'Para utilizar este provedor, é necessário fornecer uma API key válida. Obtenha a chave no site oficial do provedor.'}
-                        </p>
-                      </div>
-
-                      {/* API Key Input (for unavailable providers) */}
-                      {!selectedProviderData.available && (
-                        <div className="space-y-3">
-                          <Label className="text-sm text-white/60">
-                            <Key className="h-3.5 w-3.5 inline mr-1" />
-                            API Key
-                          </Label>
-                          <div className="flex gap-2">
+                      {/* API Key */}
+                      <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 space-y-3">
+                        <Label className="text-sm text-white/60 flex items-center gap-1.5">
+                          <Key className="h-3.5 w-3.5" />
+                          API Key
+                        </Label>
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
                             <Input
-                              type="password"
+                              type={showKeys[selectedProviderData.id] ? 'text' : 'password'}
                               value={apiKeys[selectedProviderData.id] || ''}
                               onChange={(e) => setApiKeys(prev => ({ ...prev, [selectedProviderData.id]: e.target.value }))}
-                              placeholder="sk-..."
-                              className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 font-mono text-sm"
+                              placeholder={selectedProviderData.keyPlaceholder}
+                              className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 font-mono text-sm pr-10"
                             />
                             <Button
-                              onClick={() => handleSaveKey(selectedProviderData.id)}
-                              disabled={!apiKeys[selectedProviderData.id]?.trim()}
-                              className="bg-purple-600 hover:bg-purple-500 text-white shrink-0"
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 text-white/30 hover:text-white"
+                              onClick={() => setShowKeys(prev => ({ ...prev, [selectedProviderData.id]: !prev[selectedProviderData.id] }))}
                             >
-                              Salvar
+                              {showKeys[selectedProviderData.id] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                             </Button>
                           </div>
-                          <p className="text-[11px] text-white/30">
-                            A chave será armazenada de forma segura e usada apenas para chamadas de API deste provedor.
-                          </p>
+                          <Button
+                            onClick={() => handleSave(selectedProviderData.id)}
+                            disabled={saving === selectedProviderData.id}
+                            className="bg-orange-600 hover:bg-orange-500 text-white shrink-0 gap-1.5"
+                          >
+                            {saving === selectedProviderData.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                            Salvar
+                          </Button>
                         </div>
-                      )}
-
-                      {/* Models List */}
-                      <div className="space-y-3">
-                        <h4 className="text-sm font-semibold text-white/60">Modelos Disponíveis</h4>
-                        <div className="space-y-2">
-                          {selectedProviderData.models.map((model) => (
-                            <div
-                              key={model.id}
-                              className={`flex items-center justify-between p-3 rounded-lg border ${
-                                model.available
-                                  ? 'bg-white/[0.03] border-white/[0.08]'
-                                  : 'bg-white/[0.01] border-white/[0.04] opacity-40'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full ${model.available ? 'bg-emerald-400' : 'bg-white/20'}`} />
-                                <div>
-                                  <p className={`text-sm font-medium ${model.available ? 'text-white/80' : 'text-white/30'}`}>
-                                    {model.name}
-                                  </p>
-                                  {model.description && (
-                                    <p className={`text-[11px] ${model.available ? 'text-white/40' : 'text-white/15'}`}>
-                                      {model.description}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                              <code className={`text-[10px] font-mono px-2 py-0.5 rounded ${
-                                model.available
-                                  ? 'bg-white/[0.05] text-white/30'
-                                  : 'bg-white/[0.02] text-white/15'
-                              }`}>
-                                {model.id}
-                              </code>
-                            </div>
-                          ))}
-                        </div>
+                        <p className="text-[11px] text-white/25">A chave é armazenada de forma segura no banco de dados e usada apenas para chamadas deste provedor.</p>
                       </div>
+
+                      {/* ElevenLabs extra config */}
+                      {selectedProviderData.id === 'elevenlabs' && (
+                        <ElevenLabsExtraConfig
+                          config={elConfig}
+                          setConfig={setElConfig}
+                          apiKey={apiKeys['elevenlabs'] || ''}
+                          testText={testText}
+                          setTestText={setTestText}
+                          isTesting={isTesting}
+                          onTest={handleTestEL}
+                          testAudioUrl={testAudioUrl}
+                          isPlaying={isPlaying}
+                          onTogglePlayback={togglePlayback}
+                        />
+                      )}
                     </div>
                   </ScrollArea>
                 ) : (
@@ -582,9 +508,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
                     <div>
                       <Settings2 className="h-12 w-12 text-white/10 mx-auto mb-4" />
                       <h3 className="text-lg font-semibold text-white/30 mb-2">Selecione um Provedor</h3>
-                      <p className="text-sm text-white/20 max-w-xs mx-auto">
-                        Escolha um provedor de IA ao lado para ver seus modelos e configurações.
-                      </p>
+                      <p className="text-sm text-white/20 max-w-xs mx-auto">Escolha um provedor ao lado para configurar sua API key.</p>
                     </div>
                   </div>
                 )}
@@ -594,6 +518,165 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
         </motion.div>
       )}
     </AnimatePresence>
+  );
+};
+
+// ── ElevenLabs extra configuration subcomponent ────────────────────────────
+
+interface ELExtraProps {
+  config: ELConfig;
+  setConfig: React.Dispatch<React.SetStateAction<ELConfig>>;
+  apiKey: string;
+  testText: string;
+  setTestText: (v: string) => void;
+  isTesting: boolean;
+  onTest: () => void;
+  testAudioUrl: string | null;
+  isPlaying: boolean;
+  onTogglePlayback: () => void;
+}
+
+const ElevenLabsExtraConfig: React.FC<ELExtraProps> = ({
+  config, setConfig, apiKey, testText, setTestText, isTesting, onTest, testAudioUrl, isPlaying, onTogglePlayback,
+}) => {
+  const update = <K extends keyof ELConfig>(key: K, value: ELConfig[K]) => setConfig(prev => ({ ...prev, [key]: value }));
+
+  return (
+    <div className="space-y-5">
+      <Separator className="bg-white/[0.06]" />
+
+      <h4 className="text-sm font-semibold text-white/70 flex items-center gap-2">
+        <Mic className="h-4 w-4 text-orange-400" />
+        Configurações de Voz
+      </h4>
+
+      {/* Voice selection */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-xs text-white/50">Voz Padrão</Label>
+          <Select value={config.defaultVoiceId} onValueChange={(v) => update('defaultVoiceId', v)}>
+            <SelectTrigger className="bg-white/[0.04] border-white/10 text-white text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ELEVENLABS_VOICES.map(v => (
+                <SelectItem key={v.value} value={v.value}>
+                  {v.label} ({v.gender})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs text-white/50">Modelo</Label>
+          <Select value={config.defaultModel} onValueChange={(v) => update('defaultModel', v)}>
+            <SelectTrigger className="bg-white/[0.04] border-white/10 text-white text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {EL_MODELS.map(m => (
+                <SelectItem key={m.value} value={m.value}>
+                  {m.label} — {m.desc}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs text-white/50">Formato de Saída</Label>
+        <Select value={config.outputFormat} onValueChange={(v) => update('outputFormat', v)}>
+          <SelectTrigger className="bg-white/[0.04] border-white/10 text-white text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {EL_FORMATS.map(f => (
+              <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Sliders */}
+      <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label className="text-xs text-white/50">Estabilidade</Label>
+            <span className="text-[10px] text-white/30 font-mono">{config.stability.toFixed(2)}</span>
+          </div>
+          <Slider value={[config.stability]} onValueChange={([v]) => update('stability', v)} min={0} max={1} step={0.05} className="[&_[role=slider]]:bg-orange-500" />
+        </div>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label className="text-xs text-white/50">Similaridade</Label>
+            <span className="text-[10px] text-white/30 font-mono">{config.similarityBoost.toFixed(2)}</span>
+          </div>
+          <Slider value={[config.similarityBoost]} onValueChange={([v]) => update('similarityBoost', v)} min={0} max={1} step={0.05} className="[&_[role=slider]]:bg-orange-500" />
+        </div>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label className="text-xs text-white/50">Estilo</Label>
+            <span className="text-[10px] text-white/30 font-mono">{config.style.toFixed(2)}</span>
+          </div>
+          <Slider value={[config.style]} onValueChange={([v]) => update('style', v)} min={0} max={1} step={0.05} className="[&_[role=slider]]:bg-orange-500" />
+        </div>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label className="text-xs text-white/50">Velocidade</Label>
+            <span className="text-[10px] text-white/30 font-mono">{config.speed.toFixed(1)}x</span>
+          </div>
+          <Slider value={[config.speed]} onValueChange={([v]) => update('speed', v)} min={0.7} max={1.2} step={0.1} className="[&_[role=slider]]:bg-orange-500" />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Switch
+          checked={config.useSpeakerBoost}
+          onCheckedChange={(v) => update('useSpeakerBoost', v)}
+        />
+        <Label className="text-xs text-white/50">Speaker Boost (melhora clareza)</Label>
+      </div>
+
+      <Separator className="bg-white/[0.06]" />
+
+      {/* Test section */}
+      <h4 className="text-sm font-semibold text-white/70 flex items-center gap-2">
+        <TestTube className="h-4 w-4 text-orange-400" />
+        Testar Voz
+      </h4>
+
+      <div className="space-y-3">
+        <Textarea
+          value={testText}
+          onChange={(e) => setTestText(e.target.value)}
+          placeholder="Digite um texto para testar..."
+          className="bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 text-sm min-h-[60px] resize-none"
+          rows={2}
+        />
+        <div className="flex gap-2">
+          <Button
+            onClick={onTest}
+            disabled={isTesting || !apiKey}
+            className="bg-orange-600 hover:bg-orange-500 text-white gap-1.5"
+          >
+            {isTesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+            {isTesting ? 'Gerando...' : 'Testar'}
+          </Button>
+          {testAudioUrl && (
+            <Button
+              onClick={onTogglePlayback}
+              variant="outline"
+              className="border-white/10 text-white/70 gap-1.5"
+            >
+              {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+              {isPlaying ? 'Pausar' : 'Reproduzir'}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
