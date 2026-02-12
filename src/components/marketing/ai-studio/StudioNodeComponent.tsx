@@ -81,9 +81,9 @@ const nodeAccentMap: Record<string, string> = {
 const PAID_ONLY_BLOCKS: Set<string> = new Set(['musicGen', 'lipSync', 'videoMerge']);
 
 // Helper: dispatch config update via custom event (avoids prop drilling through ReactFlow)
-const dispatchConfigUpdate = useCallback((nodeId: string, config: Record<string, any>) => {
+const dispatchConfigUpdate = (nodeId: string, config: Record<string, any>) => {
   window.dispatchEvent(new CustomEvent('studio-node-config-update', { detail: { nodeId, config } }));
-}, []);
+};
 
 const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as unknown as StudioNodeData;
