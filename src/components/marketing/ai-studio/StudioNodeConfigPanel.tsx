@@ -18,75 +18,77 @@ interface Props {
   onExecuteFromNode?: (nodeId: string) => void;
 }
 
-const LLM_MODELS = [
-  { value: 'google/gemini-2.5-flash', label: '🟦 Gemini 2.5 Flash', provider: 'Google' },
-  { value: 'google/gemini-2.5-flash-lite', label: '🟦 Gemini 2.5 Flash Lite', provider: 'Google' },
-  { value: 'google/gemini-2.5-pro', label: '🟦 Gemini 2.5 Pro', provider: 'Google' },
-  { value: 'google/gemini-3-flash-preview', label: '🟦 Gemini 3 Flash', provider: 'Google' },
-  { value: 'google/gemini-3-pro-preview', label: '🟦 Gemini 3 Pro', provider: 'Google' },
-  { value: 'openai/gpt-5', label: '🟢 GPT-5', provider: 'OpenAI' },
-  { value: 'openai/gpt-5-mini', label: '🟢 GPT-5 Mini', provider: 'OpenAI' },
-  { value: 'openai/gpt-5-nano', label: '🟢 GPT-5 Nano', provider: 'OpenAI' },
-  { value: 'openai/gpt-5.2', label: '🟢 GPT-5.2', provider: 'OpenAI' },
+type ModelInfo = { value: string; label: string; provider: string; cost: '$' | '$$' | '$$$' | '$$$$'; quality: 1 | 2 | 3 | 4 | 5; tip: string };
+
+const LLM_MODELS: ModelInfo[] = [
+  { value: 'google/gemini-2.5-flash', label: '🟦 Gemini 2.5 Flash', provider: 'Google', cost: '$', quality: 4, tip: 'Rápido e econômico, ótimo custo-benefício' },
+  { value: 'google/gemini-2.5-flash-lite', label: '🟦 Gemini 2.5 Flash Lite', provider: 'Google', cost: '$', quality: 3, tip: 'Mais barato, bom para tarefas simples' },
+  { value: 'google/gemini-2.5-pro', label: '🟦 Gemini 2.5 Pro', provider: 'Google', cost: '$$$', quality: 5, tip: 'Top de linha Google, melhor raciocínio' },
+  { value: 'google/gemini-3-flash-preview', label: '🟦 Gemini 3 Flash', provider: 'Google', cost: '$', quality: 4, tip: 'Nova geração, rápido e capaz' },
+  { value: 'google/gemini-3-pro-preview', label: '🟦 Gemini 3 Pro', provider: 'Google', cost: '$$$', quality: 5, tip: 'Nova geração Pro, máxima qualidade' },
+  { value: 'openai/gpt-5', label: '🟢 GPT-5', provider: 'OpenAI', cost: '$$$$', quality: 5, tip: 'Poderoso, caro, excelente raciocínio' },
+  { value: 'openai/gpt-5-mini', label: '🟢 GPT-5 Mini', provider: 'OpenAI', cost: '$$', quality: 4, tip: 'Bom equilíbrio custo vs qualidade' },
+  { value: 'openai/gpt-5-nano', label: '🟢 GPT-5 Nano', provider: 'OpenAI', cost: '$', quality: 3, tip: 'Econômico, tarefas simples e rápidas' },
+  { value: 'openai/gpt-5.2', label: '🟢 GPT-5.2', provider: 'OpenAI', cost: '$$$$', quality: 5, tip: 'Mais recente OpenAI, raciocínio avançado' },
 ];
 
-const IMAGE_MODELS = [
-  { value: 'google/imagefx', label: '🟦 Google ImageFX', provider: 'Google' },
-  { value: 'google/gemini-2.5-flash-image', label: '🟦 Gemini Flash Image', provider: 'Google' },
-  { value: 'google/gemini-3-pro-image-preview', label: '🟦 Gemini 3 Pro Image', provider: 'Google' },
-  { value: 'openai/dall-e-4', label: '🟢 DALL·E 4', provider: 'OpenAI' },
-  { value: 'openai/dall-e-3', label: '🟢 DALL·E 3', provider: 'OpenAI' },
-  { value: 'stability/sd3.5-turbo', label: '🟣 SD 3.5 Turbo', provider: 'Stability AI' },
-  { value: 'stability/sd3', label: '🟣 Stable Diffusion 3', provider: 'Stability AI' },
-  { value: 'stability/sdxl', label: '🟣 Stable Diffusion XL', provider: 'Stability AI' },
-  { value: 'midjourney/v7', label: '🔵 Midjourney v7', provider: 'Midjourney' },
-  { value: 'midjourney/v6.1', label: '🔵 Midjourney v6.1', provider: 'Midjourney' },
-  { value: 'flux/1.1-pro', label: '⚡ Flux 1.1 Pro', provider: 'Black Forest Labs' },
-  { value: 'flux/schnell', label: '⚡ Flux Schnell', provider: 'Black Forest Labs' },
-  { value: 'ideogram/v3', label: '🎨 Ideogram v3', provider: 'Ideogram' },
-  { value: 'adobe/firefly-3', label: '🔥 Adobe Firefly 3', provider: 'Adobe' },
+const IMAGE_MODELS: ModelInfo[] = [
+  { value: 'google/imagefx', label: '🟦 Google ImageFX', provider: 'Google', cost: '$', quality: 3, tip: 'Gratuito, qualidade básica' },
+  { value: 'google/gemini-2.5-flash-image', label: '🟦 Gemini Flash Image', provider: 'Google', cost: '$', quality: 4, tip: 'Rápido e econômico para imagens' },
+  { value: 'google/gemini-3-pro-image-preview', label: '🟦 Gemini 3 Pro Image', provider: 'Google', cost: '$$', quality: 5, tip: 'Nova geração, alta qualidade' },
+  { value: 'openai/dall-e-4', label: '🟢 DALL·E 4', provider: 'OpenAI', cost: '$$$$', quality: 5, tip: 'Máxima qualidade, mais caro' },
+  { value: 'openai/dall-e-3', label: '🟢 DALL·E 3', provider: 'OpenAI', cost: '$$$', quality: 4, tip: 'Boa qualidade, custo moderado' },
+  { value: 'stability/sd3.5-turbo', label: '🟣 SD 3.5 Turbo', provider: 'Stability AI', cost: '$', quality: 3, tip: 'Rápido e barato' },
+  { value: 'stability/sd3', label: '🟣 Stable Diffusion 3', provider: 'Stability AI', cost: '$$', quality: 4, tip: 'Boa qualidade, open source' },
+  { value: 'stability/sdxl', label: '🟣 Stable Diffusion XL', provider: 'Stability AI', cost: '$', quality: 3, tip: 'Versátil, custo baixo' },
+  { value: 'midjourney/v7', label: '🔵 Midjourney v7', provider: 'Midjourney', cost: '$$$$', quality: 5, tip: 'Líder em estética, premium' },
+  { value: 'midjourney/v6.1', label: '🔵 Midjourney v6.1', provider: 'Midjourney', cost: '$$$', quality: 5, tip: 'Excelente qualidade artística' },
+  { value: 'flux/1.1-pro', label: '⚡ Flux 1.1 Pro', provider: 'Black Forest Labs', cost: '$$', quality: 4, tip: 'Alta qualidade, boa velocidade' },
+  { value: 'flux/schnell', label: '⚡ Flux Schnell', provider: 'Black Forest Labs', cost: '$', quality: 3, tip: 'Ultra rápido, qualidade OK' },
+  { value: 'ideogram/v3', label: '🎨 Ideogram v3', provider: 'Ideogram', cost: '$$', quality: 4, tip: 'Excelente com texto em imagens' },
+  { value: 'adobe/firefly-3', label: '🔥 Adobe Firefly 3', provider: 'Adobe', cost: '$$$', quality: 4, tip: 'Comercialmente seguro, boa qualidade' },
 ];
 
-const VIDEO_MODELS = [
-  { value: 'google/veo-3.1', label: '🟦 Veo 3.1 (Flow)', provider: 'Google' },
-  { value: 'google/veo-3.1-fast', label: '🟦 Veo 3.1 Fast', provider: 'Google' },
-  { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'Google' },
-  { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'Google' },
-  { value: 'openai/sora-3', label: '🟢 Sora 3', provider: 'OpenAI' },
-  { value: 'openai/sora-2', label: '🟢 Sora 2', provider: 'OpenAI' },
-  { value: 'runway/gen4', label: '🎬 Gen-4', provider: 'Runway' },
-  { value: 'runway/gen3-alpha-turbo', label: '🎬 Gen-3 Alpha Turbo', provider: 'Runway' },
-  { value: 'kling/v2.1', label: '🎥 Kling 2.1', provider: 'Kuaishou' },
-  { value: 'kling/v1.6', label: '🎥 Kling 1.6', provider: 'Kuaishou' },
-  { value: 'pika/v2.2', label: '🌊 Pika 2.2', provider: 'Pika' },
-  { value: 'minimax/video-01', label: '🟠 Hailuo MiniMax', provider: 'MiniMax' },
-  { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'Luma' },
-  { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'Stability AI' },
-  { value: 'bytedance/seedvideo', label: '🎯 Seed Video', provider: 'ByteDance' },
+const VIDEO_MODELS: ModelInfo[] = [
+  { value: 'google/veo-3.1', label: '🟦 Veo 3.1 (Flow)', provider: 'Google', cost: '$$$$', quality: 5, tip: 'Melhor vídeo Google, com áudio' },
+  { value: 'google/veo-3.1-fast', label: '🟦 Veo 3.1 Fast', provider: 'Google', cost: '$$$', quality: 4, tip: 'Versão rápida do Veo 3.1' },
+  { value: 'google/veo-3', label: '🟦 Veo 3', provider: 'Google', cost: '$$$', quality: 5, tip: 'Alta qualidade com diálogos' },
+  { value: 'google/veo-2', label: '🟦 Veo 2', provider: 'Google', cost: '$$', quality: 4, tip: 'Bom custo-benefício em vídeo' },
+  { value: 'openai/sora-3', label: '🟢 Sora 3', provider: 'OpenAI', cost: '$$$$', quality: 5, tip: 'Referência em vídeo IA, premium' },
+  { value: 'openai/sora-2', label: '🟢 Sora 2', provider: 'OpenAI', cost: '$$$', quality: 4, tip: 'Boa qualidade, custo alto' },
+  { value: 'runway/gen4', label: '🎬 Gen-4', provider: 'Runway', cost: '$$$$', quality: 5, tip: 'Cinematográfico, controle preciso' },
+  { value: 'runway/gen3-alpha-turbo', label: '🎬 Gen-3 Alpha Turbo', provider: 'Runway', cost: '$$', quality: 4, tip: 'Rápido, bom para iteração' },
+  { value: 'kling/v2.1', label: '🎥 Kling 2.1', provider: 'Kuaishou', cost: '$$', quality: 4, tip: 'Bom com movimento, acessível' },
+  { value: 'kling/v1.6', label: '🎥 Kling 1.6', provider: 'Kuaishou', cost: '$', quality: 3, tip: 'Econômico, qualidade aceitável' },
+  { value: 'pika/v2.2', label: '🌊 Pika 2.2', provider: 'Pika', cost: '$$', quality: 4, tip: 'Criativo, bom para efeitos' },
+  { value: 'minimax/video-01', label: '🟠 Hailuo MiniMax', provider: 'MiniMax', cost: '$', quality: 3, tip: 'Barato, vídeos curtos' },
+  { value: 'luma/dream-machine-1.5', label: '🌙 Dream Machine 1.5', provider: 'Luma', cost: '$$', quality: 4, tip: 'Boa física e movimentos' },
+  { value: 'stability/stable-video', label: '🟣 Stable Video Diffusion', provider: 'Stability AI', cost: '$', quality: 3, tip: 'Open source, econômico' },
+  { value: 'bytedance/seedvideo', label: '🎯 Seed Video', provider: 'ByteDance', cost: '$', quality: 3, tip: 'Emergente, custo baixo' },
 ];
 
-const AUDIO_MODELS = [
-  { value: 'elevenlabs/v3', label: '🔊 ElevenLabs v3', provider: 'ElevenLabs' },
-  { value: 'elevenlabs/turbo-v2.5', label: '🔊 ElevenLabs Turbo', provider: 'ElevenLabs' },
-  { value: 'openai/tts-1-hd', label: '🟢 OpenAI TTS HD', provider: 'OpenAI' },
-  { value: 'openai/tts-1', label: '🟢 OpenAI TTS', provider: 'OpenAI' },
-  { value: 'google/wavenet', label: '🟦 Google WaveNet', provider: 'Google' },
-  { value: 'google/neural2', label: '🟦 Google Neural2', provider: 'Google' },
-  { value: 'google/studio', label: '🟦 Google Studio', provider: 'Google' },
-  { value: 'suno/bark', label: '🐕 Bark', provider: 'Suno' },
-  { value: 'microsoft/azure-tts', label: '🔵 Azure Neural TTS', provider: 'Microsoft' },
-  { value: 'amazon/polly-neural', label: '🟡 Amazon Polly Neural', provider: 'AWS' },
+const AUDIO_MODELS: ModelInfo[] = [
+  { value: 'elevenlabs/v3', label: '🔊 ElevenLabs v3', provider: 'ElevenLabs', cost: '$$$', quality: 5, tip: 'Melhor qualidade de voz, realista' },
+  { value: 'elevenlabs/turbo-v2.5', label: '🔊 ElevenLabs Turbo', provider: 'ElevenLabs', cost: '$$', quality: 4, tip: 'Rápido, boa qualidade' },
+  { value: 'openai/tts-1-hd', label: '🟢 OpenAI TTS HD', provider: 'OpenAI', cost: '$$', quality: 4, tip: 'HD, vozes naturais' },
+  { value: 'openai/tts-1', label: '🟢 OpenAI TTS', provider: 'OpenAI', cost: '$', quality: 3, tip: 'Econômico, qualidade boa' },
+  { value: 'google/wavenet', label: '🟦 Google WaveNet', provider: 'Google', cost: '$', quality: 4, tip: 'Bom PT-BR, acessível' },
+  { value: 'google/neural2', label: '🟦 Google Neural2', provider: 'Google', cost: '$', quality: 4, tip: 'Neural, natural em PT-BR' },
+  { value: 'google/studio', label: '🟦 Google Studio', provider: 'Google', cost: '$$', quality: 5, tip: 'Máxima qualidade Google' },
+  { value: 'suno/bark', label: '🐕 Bark', provider: 'Suno', cost: '$', quality: 3, tip: 'Open source, expressivo' },
+  { value: 'microsoft/azure-tts', label: '🔵 Azure Neural TTS', provider: 'Microsoft', cost: '$$', quality: 4, tip: 'Muitas vozes, boa qualidade' },
+  { value: 'amazon/polly-neural', label: '🟡 Amazon Polly Neural', provider: 'AWS', cost: '$', quality: 3, tip: 'Estável, integração AWS' },
 ];
 
-const MUSIC_MODELS = [
-  { value: 'suno/v4', label: '🎵 Suno v4', provider: 'Suno' },
-  { value: 'suno/v3.5', label: '🎵 Suno v3.5', provider: 'Suno' },
-  { value: 'udio/v2', label: '🎶 Udio v2', provider: 'Udio' },
-  { value: 'udio/v1.5', label: '🎶 Udio v1.5', provider: 'Udio' },
-  { value: 'stability/stable-audio-2', label: '🟣 Stable Audio 2.0', provider: 'Stability AI' },
-  { value: 'google/musicfx', label: '🟦 MusicFX', provider: 'Google' },
-  { value: 'meta/musicgen-large', label: '🔵 MusicGen Large', provider: 'Meta' },
-  { value: 'meta/musicgen-melody', label: '🔵 MusicGen Melody', provider: 'Meta' },
+const MUSIC_MODELS: ModelInfo[] = [
+  { value: 'suno/v4', label: '🎵 Suno v4', provider: 'Suno', cost: '$$$', quality: 5, tip: 'Líder em música IA, com vocal' },
+  { value: 'suno/v3.5', label: '🎵 Suno v3.5', provider: 'Suno', cost: '$$', quality: 4, tip: 'Boa qualidade, mais barato' },
+  { value: 'udio/v2', label: '🎶 Udio v2', provider: 'Udio', cost: '$$$', quality: 5, tip: 'Alta fidelidade, produção pro' },
+  { value: 'udio/v1.5', label: '🎶 Udio v1.5', provider: 'Udio', cost: '$$', quality: 4, tip: 'Bom para prototipagem' },
+  { value: 'stability/stable-audio-2', label: '🟣 Stable Audio 2.0', provider: 'Stability AI', cost: '$', quality: 3, tip: 'Open source, instrumental' },
+  { value: 'google/musicfx', label: '🟦 MusicFX', provider: 'Google', cost: '$', quality: 3, tip: 'Gratuito, experimental' },
+  { value: 'meta/musicgen-large', label: '🔵 MusicGen Large', provider: 'Meta', cost: '$', quality: 3, tip: 'Open source, versátil' },
+  { value: 'meta/musicgen-melody', label: '🔵 MusicGen Melody', provider: 'Meta', cost: '$', quality: 3, tip: 'Segue melodias de referência' },
 ];
 
 // Voices / Locutores
@@ -278,6 +280,32 @@ const MUSIC_TEMPOS = [
   { value: 'very-fast', label: 'Muito Rápido (> 140 BPM)' },
 ];
 
+const QualityStars = ({ level }: { level: number }) => (
+  <span className="text-[10px] leading-none">
+    {Array.from({ length: 5 }, (_, i) => (
+      <span key={i} className={i < level ? 'text-amber-500' : 'text-muted-foreground/30'}>★</span>
+    ))}
+  </span>
+);
+
+const CostBadge = ({ cost }: { cost: string }) => {
+  const color = cost.length <= 1 ? 'text-emerald-600 bg-emerald-500/10' : cost.length === 2 ? 'text-blue-600 bg-blue-500/10' : cost.length === 3 ? 'text-orange-600 bg-orange-500/10' : 'text-red-600 bg-red-500/10';
+  return <span className={`text-[9px] font-bold px-1 py-0.5 rounded ${color}`}>{cost}</span>;
+};
+
+const ModelSelectItem = ({ model }: { model: ModelInfo }) => (
+  <SelectItem key={model.value} value={model.value}>
+    <div className="flex flex-col gap-0.5 py-0.5">
+      <div className="flex items-center gap-2">
+        <span>{model.label}</span>
+        <CostBadge cost={model.cost} />
+        <QualityStars level={model.quality} />
+      </div>
+      <span className="text-[10px] text-muted-foreground">{model.tip}</span>
+    </div>
+  </SelectItem>
+);
+
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <div className="flex items-center gap-2 mt-4 mb-2">
     <Separator className="flex-1" />
@@ -339,9 +367,9 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <Label className="text-xs">Modelo</Label>
               <Select value={config.model || 'google/gemini-2.5-flash'} onValueChange={(v) => update('model', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[400px]">
                   {LLM_MODELS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    <ModelSelectItem key={m.value} model={m} />
                   ))}
                 </SelectContent>
               </Select>
@@ -419,9 +447,9 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <Label className="text-xs">Modelo de Imagem</Label>
               <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => update('model', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[400px]">
                   {IMAGE_MODELS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    <ModelSelectItem key={m.value} model={m} />
                   ))}
                 </SelectContent>
               </Select>
@@ -560,11 +588,9 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <Label className="text-xs">Modelo de Vídeo</Label>
               <Select value={config.videoModel || 'openai/sora-3'} onValueChange={(v) => update('videoModel', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[400px]">
                   {VIDEO_MODELS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
-                      <span className="flex items-center gap-1">{m.label} <span className="text-[10px] text-muted-foreground">({m.provider})</span></span>
-                    </SelectItem>
+                    <ModelSelectItem key={m.value} model={m} />
                   ))}
                 </SelectContent>
               </Select>
@@ -704,11 +730,9 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <Label className="text-xs">Modelo de Áudio</Label>
               <Select value={config.audioModel || 'elevenlabs/v3'} onValueChange={(v) => update('audioModel', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[400px]">
                   {AUDIO_MODELS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
-                      <span className="flex items-center gap-1">{m.label} <span className="text-[10px] text-muted-foreground">({m.provider})</span></span>
-                    </SelectItem>
+                    <ModelSelectItem key={m.value} model={m} />
                   ))}
                 </SelectContent>
               </Select>
@@ -878,11 +902,9 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <Label className="text-xs">Modelo de Música</Label>
               <Select value={config.musicModel || 'suno/v4'} onValueChange={(v) => update('musicModel', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[400px]">
                   {MUSIC_MODELS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
-                      <span className="flex items-center gap-1">{m.label} <span className="text-[10px] text-muted-foreground">({m.provider})</span></span>
-                    </SelectItem>
+                    <ModelSelectItem key={m.value} model={m} />
                   ))}
                 </SelectContent>
               </Select>
@@ -1161,9 +1183,9 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <Label className="text-xs">Modelo</Label>
               <Select value={config.model || 'google/gemini-2.5-flash'} onValueChange={(v) => update('model', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[400px]">
                   {LLM_MODELS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    <ModelSelectItem key={m.value} model={m} />
                   ))}
                 </SelectContent>
               </Select>
