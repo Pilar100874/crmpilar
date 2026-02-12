@@ -329,13 +329,38 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
             {resultVideo && (
               <div className="relative group px-3 pb-3 pt-1">
-                <div className="rounded-xl overflow-hidden border border-border/50" style={{ boxShadow: `0 4px 20px -4px ${accent}20` }}>
+                <div 
+                  className="rounded-xl overflow-hidden border border-border/50"
+                  style={{ boxShadow: `0 4px 20px -4px ${accent}20` }}
+                >
                   <video
                     src={resultVideo}
                     controls
                     className="w-full object-cover"
-                    style={{ maxHeight: 200 }}
+                    style={{ maxHeight: imageExpanded ? 400 : 200 }}
                   />
+                </div>
+                <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const link = document.createElement('a');
+                      link.href = resultVideo;
+                      link.download = `studio-${nodeData.type}-${id}.mp4`;
+                      link.click();
+                    }}
+                    className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
+                    title="Download"
+                  >
+                    <Download className="h-3 w-3 text-white" />
+                  </button>
+                  <button
+                    onClick={() => setImageExpanded(!imageExpanded)}
+                    className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
+                    title={imageExpanded ? 'Reduzir' : 'Expandir'}
+                  >
+                    <Maximize2 className="h-3 w-3 text-white" />
+                  </button>
                 </div>
               </div>
             )}
