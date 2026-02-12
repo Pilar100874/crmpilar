@@ -451,35 +451,84 @@ const AICreativeStudioInner: React.FC = () => {
   const handlePresetSelect = useCallback((preset: Preset) => {
     const targetType = (preset.toolType || 'videoGen') as StudioNodeData['type'];
     const meta = getNodeMeta(targetType);
-
-    const inputNode: StudioNode = {
-      id: `textInput_${Date.now()}`,
-      type: 'studioNode',
-      position: { x: 100, y: 200 },
-      data: { label: `Preset: ${preset.name}`, type: 'textInput', config: { text: preset.prompt } },
-    };
+    const ts = Date.now();
 
     const defaultConfig: Record<string, any> = meta?.defaultConfig ? { ...meta.defaultConfig } : {};
-    // Apply sensible defaults per type
     if (targetType === 'videoGen') {
       defaultConfig.duration = defaultConfig.duration || 5;
       defaultConfig.resolution = defaultConfig.resolution || '1080p';
       defaultConfig.aspectRatio = defaultConfig.aspectRatio || '16:9';
       defaultConfig.videoModel = defaultConfig.videoModel || 'google/veo-3.1';
     }
+    if (targetType === 'productComposite') {
+      const modeMap: Record<string, string> = {
+        'clothing-tryon': 'clothing',
+        'accessory-tryon': 'wearing',
+        'product-in-hand': 'holding',
+        'scene-placement': 'scene',
+      };
+      const matchedMode = Object.entries(modeMap).find(([key]) => preset.id.includes(key));
+      if (matchedMode) defaultConfig.compositeMode = matchedMode[1];
+      defaultConfig.prompt = preset.prompt;
+    }
 
-    const processNode: StudioNode = {
-      id: `${targetType}_${Date.now()}`,
-      type: 'studioNode',
-      position: { x: 500, y: 200 },
-      data: { label: meta?.label || preset.name, type: targetType, config: defaultConfig },
-    };
+    const newNodes: StudioNode[] = [];
+    const newEdges: any[] = [];
 
-    setNodes((nds) => [...nds, inputNode, processNode]);
-    setEdges((eds) => [
-      ...eds,
-      { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
-    ]);
+    if (targetType === 'productComposite') {
+      // productComposite needs: imageInput (pessoa) + textInput (prompt) -> productComposite
+      const personNode: StudioNode = {
+        id: `imageInput_person_${ts}`,
+        type: 'studioNode',
+        position: { x: 50, y: 100 },
+        data: { label: '📷 Foto da Pessoa', type: 'imageInput', config: {} },
+      };
+      const productNode: StudioNode = {
+        id: `imageInput_product_${ts}`,
+        type: 'studioNode',
+        position: { x: 50, y: 350 },
+        data: { label: '🛍️ Foto do Produto', type: 'imageInput', config: {} },
+      };
+      const promptNode: StudioNode = {
+        id: `textInput_${ts}`,
+        type: 'studioNode',
+        position: { x: 50, y: 550 },
+        data: { label: `Preset: ${preset.name}`, type: 'textInput', config: { text: preset.prompt } },
+      };
+      const compositeNode: StudioNode = {
+        id: `productComposite_${ts}`,
+        type: 'studioNode',
+        position: { x: 500, y: 250 },
+        data: { label: meta?.label || 'Produto em Pessoa', type: 'productComposite', config: defaultConfig },
+      };
+      newNodes.push(personNode, productNode, promptNode, compositeNode);
+      newEdges.push(
+        { id: `e_${personNode.id}_${compositeNode.id}`, source: personNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+        { id: `e_${productNode.id}_${compositeNode.id}`, source: productNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+        { id: `e_${promptNode.id}_${compositeNode.id}`, source: promptNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+      );
+    } else {
+      // Standard: textInput -> processNode
+      const inputNode: StudioNode = {
+        id: `textInput_${ts}`,
+        type: 'studioNode',
+        position: { x: 100, y: 200 },
+        data: { label: `Preset: ${preset.name}`, type: 'textInput', config: { text: preset.prompt } },
+      };
+      const processNode: StudioNode = {
+        id: `${targetType}_${ts}`,
+        type: 'studioNode',
+        position: { x: 500, y: 200 },
+        data: { label: meta?.label || preset.name, type: targetType, config: defaultConfig },
+      };
+      newNodes.push(inputNode, processNode);
+      newEdges.push(
+        { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+      );
+    }
+
+    setNodes((nds) => [...nds, ...newNodes]);
+    setEdges((eds) => [...eds, ...newEdges]);
     setShowPresets(false);
     setCurrentWorkflowId(null);
     setCurrentWorkflowName('');
