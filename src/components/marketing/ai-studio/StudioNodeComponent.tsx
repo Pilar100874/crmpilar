@@ -107,13 +107,30 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const activeProcessing = storeProcessing || nodeData.isProcessing;
   const activeError = storeError || nodeData.error;
 
-  const resultImage = activeResult?.imageUrl;
+  const resultFrames: string[] | undefined = activeResult?._animFrames;
+  const resultFps: number = activeResult?._fps || 2;
+  const resultImage = resultFrames ? undefined : activeResult?.imageUrl;
   const resultVideo = activeResult?.videoUrl;
   const resultAudio = activeResult?.audioUrl;
   const resultText = typeof activeResult === 'string'
     ? activeResult
     : activeResult?.text;
-  const hasResult = !!(resultImage || resultVideo || resultAudio || resultText);
+  const hasResult = !!(resultImage || resultVideo || resultAudio || resultText || resultFrames);
+
+  // Animated frames playback
+  const [currentFrame, setCurrentFrame] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const frameIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (resultFrames && resultFrames.length > 1 && isPlaying) {
+      frameIntervalRef.current = setInterval(() => {
+        setCurrentFrame(prev => (prev + 1) % resultFrames.length);
+      }, 1000 / resultFps);
+      return () => { if (frameIntervalRef.current) clearInterval(frameIntervalRef.current); };
+    }
+    return () => { if (frameIntervalRef.current) clearInterval(frameIntervalRef.current); };
+  }, [resultFrames, resultFps, isPlaying]);
 
   // Debug render state
   useEffect(() => {
@@ -299,6 +316,76 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         {/* Result display */}
         {hasResult && (
           <div className="relative">
+            {/* Animated frames player */}
+            {resultFrames && resultFrames.length > 0 && (
+              <div className="relative group px-3 pb-3 pt-1">
+                <div
+                  className="rounded-xl overflow-hidden border border-border/50 cursor-pointer relative"
+                  style={{
+                    boxShadow: `0 4px 20px -4px ${accent}20`,
+                    height: imageExpanded ? 400 : 200,
+                    width: '100%',
+                    backgroundImage: `url(${resultFrames[currentFrame]})`,
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center',
+                    backgroundColor: 'hsl(var(--muted))',
+                  }}
+                  onClick={() => setImageExpanded(!imageExpanded)}
+                >
+                  {/* Frame counter */}
+                  <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-sm text-white text-[10px] font-mono">
+                    {currentFrame + 1}/{resultFrames.length}
+                  </div>
+                  {/* Play/Pause */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setIsPlaying(!isPlaying); }}
+                    className="absolute bottom-2 right-2 p-1.5 rounded-md bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
+                  >
+                    {isPlaying ? (
+                      <PauseCircle className="h-3.5 w-3.5 text-white" />
+                    ) : (
+                      <Play className="h-3.5 w-3.5 text-white" />
+                    )}
+                  </button>
+                </div>
+                {/* Frame dots */}
+                <div className="flex justify-center gap-1 mt-1.5">
+                  {resultFrames.map((_: string, idx: number) => (
+                    <button
+                      key={idx}
+                      onClick={() => { setCurrentFrame(idx); setIsPlaying(false); }}
+                      className={`w-2 h-2 rounded-full transition-all ${idx === currentFrame ? 'scale-125' : 'opacity-50'}`}
+                      style={{ backgroundColor: idx === currentFrame ? accent : 'hsl(var(--muted-foreground))' }}
+                    />
+                  ))}
+                </div>
+                <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      resultFrames.forEach((frame: string, idx: number) => {
+                        const link = document.createElement('a');
+                        link.href = frame;
+                        link.download = `studio-video-${id}-frame${idx + 1}.png`;
+                        link.click();
+                      });
+                    }}
+                    className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
+                    title="Download todos os frames"
+                  >
+                    <Download className="h-3 w-3 text-white" />
+                  </button>
+                  <button
+                    onClick={() => setImageExpanded(!imageExpanded)}
+                    className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
+                  >
+                    <Maximize2 className="h-3 w-3 text-white" />
+                  </button>
+                </div>
+              </div>
+            )}
+
            {resultImage && (
               <div className="relative group px-3 pb-3 pt-1">
                 <div 
