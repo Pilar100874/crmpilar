@@ -14,7 +14,7 @@ const routeTitles: Record<string, string> = {
   '/sla-dashboard': 'Dashboard SLA',
   '/advanced-analytics': 'Analytics Avançado',
   '/dashboard-pesquisas-satisfacao': 'Pesquisas de Satisfação',
-  '/dashboard-gastos-ia': 'Gastos com IA',
+  
   '/funil': 'Funil',
   '/atendimento': 'Painel de Chats',
   '/monitor-filas': 'Monitor de Filas',

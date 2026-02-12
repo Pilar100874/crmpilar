@@ -16,7 +16,7 @@ export const MENU_CONFIG: MenuConfigItem[] = [
   { id: "SLA Dashboard", label: "Dashboard SLA", category: "Dashboards" },
   { id: "Analytics Dashboard", label: "Analytics Avançado", category: "Dashboards" },
   { id: "Dashboard CSAT/NPS", label: "Pesquisas de Satisfação", category: "Dashboards" },
-  { id: "Dashboard Gastos IA", label: "Gastos com IA", category: "Dashboards" },
+  
   
   // Chats / Atendimento
   { id: "Atendimento", label: "Chats (Categoria)", category: "Chats" },
