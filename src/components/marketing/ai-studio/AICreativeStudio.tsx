@@ -97,6 +97,9 @@ const AICreativeStudioInner: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; nome: string } | null>(null);
+  const [renameDialog, setRenameDialog] = useState<{ id: string; nome: string } | null>(null);
+  const [renameValue, setRenameValue] = useState('');
 
   const estabelecimentoId = localStorage.getItem('estabelecimentoId') || '';
 
@@ -412,7 +415,41 @@ const AICreativeStudioInner: React.FC = () => {
       toast.success(`"${nome}" excluído`);
       fetchWorkflows();
     }
+    setDeleteConfirm(null);
   }, [fetchWorkflows]);
+
+  const handleRenameWorkflow = useCallback(async (id: string, newName: string) => {
+    if (!newName.trim()) return;
+    const { error } = await supabase
+      .from('ai_studio_workflows')
+      .update({ nome: newName.trim() })
+      .eq('id', id);
+    if (error) {
+      toast.error('Erro ao renomear workflow');
+    } else {
+      toast.success('Workflow renomeado');
+      fetchWorkflows();
+    }
+    setRenameDialog(null);
+  }, [fetchWorkflows]);
+
+  const handleDuplicateWorkflow = useCallback(async (w: SavedWorkflow) => {
+    const { error } = await supabase
+      .from('ai_studio_workflows')
+      .insert({
+        nome: `${w.nome} (Cópia)`,
+        descricao: w.descricao,
+        nodes_data: w.nodes_data,
+        edges_data: w.edges_data,
+        estabelecimento_id: estabelecimentoId,
+      });
+    if (error) {
+      toast.error('Erro ao duplicar workflow');
+    } else {
+      toast.success('Workflow duplicado');
+      fetchWorkflows();
+    }
+  }, [fetchWorkflows, estabelecimentoId]);
 
   const handleCloseCanvas = useCallback(() => {
     if (hasUnsavedChanges) {
@@ -574,8 +611,8 @@ const AICreativeStudioInner: React.FC = () => {
   // Landing page
   if (!showCanvas && nodes.length === 0) {
     return (
-      <div className="h-[calc(100vh-200px)] min-h-[600px] rounded-xl overflow-hidden overflow-y-auto bg-card border border-border text-card-foreground flex flex-col">
-        <div className="flex-1 flex flex-col items-center justify-start px-6 relative overflow-hidden pt-12">
+      <div className="h-[calc(100vh-200px)] min-h-[600px] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
+        <div className="flex-1 flex flex-col items-center justify-start px-6 relative overflow-y-auto pt-12 pb-16">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px]" />
           <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/3 rounded-full blur-[100px]" />
 
@@ -646,7 +683,9 @@ const AICreativeStudioInner: React.FC = () => {
                       blocksCount={nodesCount}
                       createdAt={w.created_at}
                       onOpenEditor={() => handleOpenWorkflow(w)}
-                      onDelete={() => handleDeleteWorkflow(w.id, w.nome)}
+                      onRename={() => { setRenameDialog({ id: w.id, nome: w.nome }); setRenameValue(w.nome); }}
+                      onDuplicate={() => handleDuplicateWorkflow(w)}
+                      onDelete={() => setDeleteConfirm({ id: w.id, nome: w.nome })}
                     />
                   );
                 })}
@@ -1031,6 +1070,53 @@ const AICreativeStudioInner: React.FC = () => {
             <AlertDialogCancel onClick={() => setShowCloseConfirm(false)}>Cancelar</AlertDialogCancel>
             <Button variant="destructive" onClick={handleForceClose}>Sair sem salvar</Button>
             <AlertDialogAction onClick={handleSaveAndClose}>Salvar e sair</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete workflow confirmation */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir workflow</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir "{deleteConfirm?.nome}"? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteConfirm && handleDeleteWorkflow(deleteConfirm.id, deleteConfirm.nome)}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Rename workflow dialog */}
+      <AlertDialog open={!!renameDialog} onOpenChange={(open) => !open && setRenameDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Renomear workflow</AlertDialogTitle>
+            <AlertDialogDescription>
+              Digite o novo nome para o workflow.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            placeholder="Nome do workflow"
+            className="mt-2"
+            autoFocus
+            onKeyDown={(e) => e.key === 'Enter' && renameDialog && handleRenameWorkflow(renameDialog.id, renameValue)}
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => renameDialog && handleRenameWorkflow(renameDialog.id, renameValue)}>
+              Renomear
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
