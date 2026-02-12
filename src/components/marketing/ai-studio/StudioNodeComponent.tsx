@@ -554,10 +554,37 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   <button
                     onPointerDown={(e) => e.stopPropagation()}
                     onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      window.open(resultImage, '_blank', 'noopener,noreferrer');
+                      try {
+                        // Create an off-screen image to draw on canvas (avoids CORS fetch issues)
+                        const img = new Image();
+                        img.crossOrigin = 'anonymous';
+                        img.onload = () => {
+                          const canvas = document.createElement('canvas');
+                          canvas.width = img.naturalWidth;
+                          canvas.height = img.naturalHeight;
+                          const ctx = canvas.getContext('2d');
+                          if (!ctx) return;
+                          ctx.drawImage(img, 0, 0);
+                          canvas.toBlob((blob) => {
+                            if (!blob) return;
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `studio-${nodeData.type}-${id}.png`;
+                            a.style.display = 'none';
+                            document.body.appendChild(a);
+                            a.click();
+                            setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 300);
+                          }, 'image/png');
+                        };
+                        img.onerror = () => window.open(resultImage, '_blank');
+                        img.src = resultImage;
+                      } catch {
+                        window.open(resultImage, '_blank');
+                      }
                     }}
                     className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
                     title="Download"
