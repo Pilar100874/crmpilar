@@ -11,6 +11,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; border: string; dot: string 
   'ai-image': { bg: 'rgba(244,63,94,0.08)', border: 'rgba(244,63,94,0.15)', dot: '#f43f5e' },
   'ai-video': { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.15)', dot: '#f59e0b' },
   'ai-audio': { bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.15)', dot: '#22c55e' },
+  loop: { bg: 'rgba(124,58,237,0.08)', border: 'rgba(124,58,237,0.15)', dot: '#7c3aed' },
   output: { bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.15)', dot: '#64748b' },
 };
 

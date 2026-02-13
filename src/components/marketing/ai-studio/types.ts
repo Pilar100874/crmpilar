@@ -6,6 +6,7 @@ export type StudioNodeType =
   | 'systemPrompt'
   | 'imageInput'
   | 'productImageSelect'
+  | 'multiProductSelect'
   | 'galleryInfluencer'
   | 'galleryAmbiente'
   | 'galleryEstilo'
@@ -27,6 +28,8 @@ export type StudioNodeType =
   | 'lipSync'
   | 'videoMerge'
   | 'imageAnalyze'
+  | 'loopOutput'
+  | 'randomPick'
   | 'output';
 
 export interface StudioNodeData {
@@ -93,6 +96,14 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '📦',
         color: '#10b981',
         defaultConfig: { productId: '', selectedImageUrl: '', productName: '' },
+      },
+      {
+        type: 'multiProductSelect',
+        label: 'Múltiplos Produtos',
+        description: 'Selecione vários produtos para processamento em lote',
+        icon: '📦📦',
+        color: '#059669',
+        defaultConfig: { products: [] },
       },
       {
         type: 'galleryInfluencer',
@@ -302,6 +313,29 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '👄',
         color: '#06b6d4',
         defaultConfig: {},
+      },
+    ],
+  },
+  {
+    id: 'loop',
+    label: 'Looping',
+    icon: '🔄',
+    nodes: [
+      {
+        type: 'loopOutput',
+        label: 'Saída em Lote',
+        description: 'Processa cada produto e salva na galeria automaticamente',
+        icon: '🔄',
+        color: '#7c3aed',
+        defaultConfig: { autoSave: true, savePrefix: 'AI Studio Lote' },
+      },
+      {
+        type: 'randomPick',
+        label: 'Randômico',
+        description: 'Escolhe uma imagem aleatória da galeria a cada iteração',
+        icon: '🎲',
+        color: '#e11d48',
+        defaultConfig: { galleryCategory: 'salvas' },
       },
     ],
   },

@@ -1413,6 +1413,73 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
         );
       }
 
+      case 'multiProductSelect':
+        return (
+          <div className="space-y-2.5">
+            <ConfigField label="Produtos Selecionados" hint="Selecione múltiplos produtos diretamente no bloco do canvas. Cada produto será processado individualmente pelo bloco de Saída em Lote.">
+              {(config.products || []).length > 0 ? (
+                <div className="mt-2 space-y-2">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {(config.products || []).map((p: any, idx: number) => (
+                      <div key={idx} className="rounded-lg overflow-hidden border border-border/50 relative group">
+                        <img src={p.foto_url} alt={p.nome} className="w-full h-20 object-cover" />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5">
+                          <p className="text-[8px] text-white truncate">{p.nome}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{config.products.length} produto(s)</p>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-2">Nenhum produto selecionado. Use o bloco no canvas para adicionar.</p>
+              )}
+            </ConfigField>
+          </div>
+        );
+
+      case 'loopOutput':
+        return (
+          <div className="space-y-2.5">
+            <ConfigField label="Salvamento Automático" hint="Quando ativado, cada imagem gerada no loop será automaticamente salva na galeria de mídia.">
+              <div className="flex items-center justify-between mt-2">
+                <Label className="text-[11px]">Auto-salvar na galeria</Label>
+                <Switch checked={config.autoSave !== false} onCheckedChange={(v) => update('autoSave', v)} />
+              </div>
+            </ConfigField>
+            <ConfigField label="Prefixo de Nome" hint="Prefixo usado ao salvar as imagens na galeria.">
+              <Input
+                value={config.savePrefix || 'AI Studio Lote'}
+                onChange={(e) => update('savePrefix', e.target.value)}
+                className="mt-1 text-sm"
+                placeholder="AI Studio Lote"
+              />
+            </ConfigField>
+          </div>
+        );
+
+      case 'randomPick':
+        return (
+          <div className="space-y-2.5">
+            <ConfigField label="Categoria da Galeria" hint="De qual categoria da galeria de referências as imagens serão sorteadas aleatoriamente a cada iteração.">
+              <Select value={config.galleryCategory || 'salvas'} onValueChange={(v) => update('galleryCategory', v)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="salvas">📁 Imagens Salvas</SelectItem>
+                  <SelectItem value="influencer">👤 Influencers</SelectItem>
+                  <SelectItem value="ambiente">🏔️ Ambientes</SelectItem>
+                  <SelectItem value="estilo">🎨 Estilos</SelectItem>
+                  <SelectItem value="paleta">🎨 Paletas</SelectItem>
+                  <SelectItem value="textura">🧱 Texturas</SelectItem>
+                  <SelectItem value="logo">⭐ Logos</SelectItem>
+                  <SelectItem value="pose">🤸 Poses</SelectItem>
+                  <SelectItem value="roupa">👗 Roupas</SelectItem>
+                </SelectContent>
+              </Select>
+            </ConfigField>
+          </div>
+        );
+
       default:
         return <p className="text-xs text-muted-foreground">Sem configurações adicionais</p>;
     }
@@ -1421,10 +1488,12 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   // Get accent color for this node type
   const nodeAccentMap: Record<string, string> = {
     textInput: '#6366f1', systemPrompt: '#a855f7', imageInput: '#f97316',
+    multiProductSelect: '#059669',
     llmProcess: '#0ea5e9', imageGen: '#f43f5e', imageEdit: '#ec4899',
     productComposite: '#8b5cf6', videoGen: '#f59e0b', audioGen: '#22c55e',
     musicGen: '#14b8a6', lipSync: '#06b6d4', videoMerge: '#eab308',
-    imageAnalyze: '#14b8a6', output: '#64748b', textContent: '#7c3aed',
+    imageAnalyze: '#14b8a6', loopOutput: '#7c3aed', randomPick: '#e11d48',
+    output: '#64748b', textContent: '#7c3aed',
   };
   const accent = nodeAccentMap[node.data.type] || '#64748b';
 

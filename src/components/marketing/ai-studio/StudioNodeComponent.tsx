@@ -14,7 +14,7 @@ import {
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
   Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download,
   DollarSign, Volume2, Edit3, Package, User, Mountain, Brush, Palette,
-  Box, Star, Move, TypeIcon, Save, FolderOpen
+  Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
@@ -22,6 +22,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   systemPrompt: Clapperboard,
   imageInput: Upload,
   productImageSelect: Package,
+  multiProductSelect: Layers,
   galleryInfluencer: User,
   galleryAmbiente: Mountain,
   galleryEstilo: Brush,
@@ -43,6 +44,8 @@ const nodeIconMap: Record<string, React.ElementType> = {
   lipSync: Headphones,
   videoMerge: LinkIcon,
   imageAnalyze: ScanEye,
+  loopOutput: Repeat,
+  randomPick: Shuffle,
   output: Play,
 };
 
@@ -51,6 +54,7 @@ const nodeGradientMap: Record<string, string> = {
   systemPrompt: 'from-purple-500/20 to-fuchsia-500/20',
   imageInput: 'from-orange-500/20 to-amber-500/20',
   productImageSelect: 'from-emerald-500/20 to-teal-500/20',
+  multiProductSelect: 'from-emerald-600/20 to-green-500/20',
   galleryInfluencer: 'from-pink-500/20 to-rose-500/20',
   galleryAmbiente: 'from-green-500/20 to-emerald-500/20',
   galleryEstilo: 'from-violet-500/20 to-purple-500/20',
@@ -72,6 +76,8 @@ const nodeGradientMap: Record<string, string> = {
   lipSync: 'from-cyan-500/20 to-sky-500/20',
   videoMerge: 'from-yellow-500/20 to-amber-500/20',
   imageAnalyze: 'from-teal-500/20 to-cyan-500/20',
+  loopOutput: 'from-violet-600/20 to-purple-500/20',
+  randomPick: 'from-rose-600/20 to-pink-500/20',
   output: 'from-slate-500/20 to-zinc-500/20',
 };
 
@@ -80,6 +86,7 @@ const nodeIconColorMap: Record<string, string> = {
   systemPrompt: 'text-purple-400',
   imageInput: 'text-orange-400',
   productImageSelect: 'text-emerald-400',
+  multiProductSelect: 'text-emerald-500',
   galleryInfluencer: 'text-pink-400',
   galleryAmbiente: 'text-green-400',
   galleryEstilo: 'text-violet-400',
@@ -101,6 +108,8 @@ const nodeIconColorMap: Record<string, string> = {
   lipSync: 'text-cyan-400',
   videoMerge: 'text-yellow-400',
   imageAnalyze: 'text-teal-400',
+  loopOutput: 'text-violet-400',
+  randomPick: 'text-rose-400',
   output: 'text-slate-400',
 };
 
@@ -109,6 +118,7 @@ const nodeAccentMap: Record<string, string> = {
   systemPrompt: '#a855f7',
   imageInput: '#f97316',
   productImageSelect: '#10b981',
+  multiProductSelect: '#059669',
   galleryInfluencer: '#ec4899',
   galleryAmbiente: '#22c55e',
   galleryEstilo: '#8b5cf6',
@@ -130,6 +140,8 @@ const nodeAccentMap: Record<string, string> = {
   lipSync: '#06b6d4',
   videoMerge: '#eab308',
   imageAnalyze: '#14b8a6',
+  loopOutput: '#7c3aed',
+  randomPick: '#e11d48',
   output: '#64748b',
 };
 // Blocks that REQUIRE paid external APIs (no free alternative)
@@ -251,6 +263,117 @@ const ProductImageSelectInline: React.FC<{ config: Record<string, any>; onUpdate
   );
 };
 
+// Inline multi-product selector component
+const MultiProductSelectInline: React.FC<{ config: Record<string, any>; onUpdate: (key: string, value: any) => void }> = ({ config, onUpdate }) => {
+  const [products, setProducts] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showList, setShowList] = useState(false);
+
+  const selectedProducts: { id: string; nome: string; foto_url: string }[] = config.products || [];
+
+  const fetchProducts = useCallback(async () => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from('produtos')
+      .select('id, nome, codigo, foto_url')
+      .eq('estabelecimento_id', estabId)
+      .eq('ativo', true)
+      .not('foto_url', 'is', null)
+      .order('nome', { ascending: true })
+      .limit(200);
+    setProducts(data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (showList && products.length === 0) fetchProducts();
+  }, [showList, fetchProducts, products.length]);
+
+  const filtered = products.filter(p =>
+    !selectedProducts.some(sp => sp.id === p.id) &&
+    (p.nome?.toLowerCase().includes(search.toLowerCase()) || p.codigo?.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const addProduct = (p: any) => {
+    onUpdate('products', [...selectedProducts, { id: p.id, nome: p.nome, foto_url: p.foto_url }]);
+  };
+
+  const removeProduct = (id: string) => {
+    onUpdate('products', selectedProducts.filter(sp => sp.id !== id));
+  };
+
+  return (
+    <div className="px-3 pb-3 pt-1">
+      {selectedProducts.length > 0 && (
+        <div className="grid grid-cols-3 gap-1.5 mb-2">
+          {selectedProducts.map((p) => (
+            <div key={p.id} className="relative group rounded-lg overflow-hidden border border-border/50 aspect-square">
+              <img src={p.foto_url} alt={p.nome} className="w-full h-full object-cover" />
+              <button
+                onClick={(e) => { e.stopPropagation(); removeProduct(p.id); }}
+                className="absolute top-0.5 right-0.5 p-0.5 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity text-[8px]"
+              >✕</button>
+              <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5">
+                <p className="text-[8px] text-white truncate">{p.nome}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="text-[10px] text-muted-foreground mb-1.5">{selectedProducts.length} produto(s) selecionado(s)</p>
+      {!showList ? (
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowList(true); }}
+          className="w-full flex flex-col items-center gap-1.5 py-3 border border-dashed border-emerald-500/30 rounded-xl cursor-pointer hover:bg-emerald-500/5 transition-colors"
+        >
+          <Layers className="h-5 w-5 text-emerald-500/40" />
+          <p className="text-[10px] text-muted-foreground">Adicionar produtos</p>
+        </button>
+      ) : (
+        <div className="space-y-2">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+            <input
+              autoFocus
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="Buscar produto..."
+              className="w-full h-7 pl-7 pr-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
+            />
+          </div>
+          <div className="max-h-[180px] overflow-y-auto space-y-1 rounded-lg">
+            {loading && <p className="text-[10px] text-muted-foreground text-center py-3">Carregando...</p>}
+            {!loading && filtered.length === 0 && <p className="text-[10px] text-muted-foreground text-center py-3">Nenhum produto disponível</p>}
+            {filtered.map((p) => (
+              <button
+                key={p.id}
+                onClick={(e) => { e.stopPropagation(); addProduct(p); }}
+                className="w-full flex items-center gap-2 p-1.5 rounded-lg hover:bg-emerald-500/10 transition-colors text-left"
+              >
+                <img src={p.foto_url} alt={p.nome} className="w-8 h-8 rounded-md object-cover border border-border/50 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-medium truncate text-foreground">{p.nome}</p>
+                  {p.codigo && <p className="text-[9px] text-muted-foreground truncate">{p.codigo}</p>}
+                </div>
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowList(false); }}
+            className="text-[10px] text-muted-foreground hover:text-foreground transition-colors w-full text-center py-1"
+          >
+            Fechar lista
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const nodeData = data as unknown as StudioNodeData;
   const meta = getNodeMeta(nodeData.type);
@@ -273,7 +396,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     galleryPaleta: 'paleta', galleryTextura: 'textura', galleryLogo: 'logo', galleryPose: 'pose',
     galleryRoupa: 'roupa', gallerySalvas: 'salvas',
   };
-  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'textStyle', 'textContent', ...GALLERY_TYPES].includes(nodeData.type);
+  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'multiProductSelect', 'textStyle', 'textContent', 'randomPick', ...GALLERY_TYPES].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
 
   // Use external store for results (bypasses ReactFlow's shallow diff)
@@ -577,6 +700,54 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         {/* Product image select inline display */}
         {nodeData.type === 'productImageSelect' && (
           <ProductImageSelectInline config={nodeData.config} onUpdate={handleInlineUpdate} />
+        )}
+
+        {/* Multi Product Select inline display */}
+        {nodeData.type === 'multiProductSelect' && (
+          <MultiProductSelectInline config={nodeData.config} onUpdate={handleInlineUpdate} />
+        )}
+
+        {/* Loop Output inline display */}
+        {nodeData.type === 'loopOutput' && (
+          <div className="px-3.5 py-2.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20 font-medium">
+                <Repeat className="h-2.5 w-2.5" />
+                Lote Automático
+              </span>
+              {nodeData.config.autoSave !== false && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">💾 Auto-salvar</span>
+              )}
+            </div>
+            {activeResult?.loopResults && (
+              <div className="mt-2 space-y-1">
+                <p className="text-[10px] text-muted-foreground font-medium">{activeResult.loopResults.length} imagens geradas</p>
+                <div className="grid grid-cols-3 gap-1">
+                  {activeResult.loopResults.slice(0, 6).map((r: any, idx: number) => (
+                    <div key={idx} className="rounded-lg overflow-hidden border border-border/50 aspect-square">
+                      <img src={r.imageUrl} alt={r.productName || `Item ${idx+1}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+                {activeResult.loopResults.length > 6 && (
+                  <p className="text-[9px] text-muted-foreground text-center">+{activeResult.loopResults.length - 6} mais</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Random Pick inline display */}
+        {nodeData.type === 'randomPick' && (
+          <div className="px-3.5 py-2.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 font-medium">
+                <Shuffle className="h-2.5 w-2.5" />
+                {nodeData.config.galleryCategory || 'salvas'}
+              </span>
+            </div>
+            <p className="text-[9px] text-muted-foreground mt-1.5">Seleciona imagem aleatória da galeria a cada iteração do loop</p>
+          </div>
         )}
 
         {/* Gallery select inline display */}
