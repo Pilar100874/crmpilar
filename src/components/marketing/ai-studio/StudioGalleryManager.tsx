@@ -107,13 +107,24 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
   }, [estabelecimentoId, activeCategory, fetchImages]);
 
   const handleDelete = useCallback(async (img: GalleryImage) => {
-    if (img.storage_path) {
-      await supabase.storage.from('studio-gallery').remove([img.storage_path]);
+    try {
+      if (img.storage_path) {
+        await supabase.storage.from('studio-gallery').remove([img.storage_path]);
+      }
+      const { error } = await supabase.from('studio_gallery_images').delete().eq('id', img.id);
+      if (error) {
+        console.error('Erro ao excluir:', error);
+        toast.error('Erro ao remover imagem');
+        return;
+      }
+      toast.success('Imagem removida');
+      fetchImages();
+    } catch (err) {
+      console.error('Erro ao excluir:', err);
+      toast.error('Erro ao remover imagem');
+    } finally {
+      setDeleteConfirm(null);
     }
-    await supabase.from('studio_gallery_images').delete().eq('id', img.id);
-    toast.success('Imagem removida');
-    setDeleteConfirm(null);
-    fetchImages();
   }, [fetchImages]);
 
   const filtered = images.filter(img => 
@@ -266,23 +277,31 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
         </div>
       </motion.div>
 
-      {/* Delete confirm */}
-      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remover imagem</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja remover "{deleteConfirm?.nome}"?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>
-              Remover
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete confirm - rendered with portal via AlertDialog */}
+      {deleteConfirm && (
+        <AlertDialog open={true} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
+          <AlertDialogContent className="z-[200]" onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remover imagem</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja remover "{deleteConfirm.nome}"? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteConfirm(null)}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction 
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDelete(deleteConfirm);
+                }}
+              >
+                Remover
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </motion.div>
   );
 };
