@@ -222,7 +222,7 @@ export function useStudioExecution() {
         }
         // If downstream has randomPick, skip validation - randomPick will load its own images
         if (allEdges && allNodes && hasDownstreamRandomPick(node.id, allEdges, allNodes)) {
-          return { _referenceRole: 'produto', _referenceDesc: '', _skipNoImage: true };
+          return { _referenceRole: 'produto', _referenceDesc: '[PRODUTO] Imagem aleatória da galeria de produtos.', _skipNoImage: true };
         }
         throw new Error('Nenhum produto selecionado. Selecione um produto com imagem.');
 
@@ -256,7 +256,19 @@ export function useStudioExecution() {
         }
         // If downstream has randomPick, skip validation - randomPick will load its own images
         if (allEdges && allNodes && hasDownstreamRandomPick(node.id, allEdges, allNodes)) {
-          return { _referenceRole: type.replace('gallery', '').toLowerCase(), _referenceDesc: '', _skipNoImage: true };
+          const skipRoleMap: Record<string, string> = {
+            galleryInfluencer: '[PESSOA/INFLUENCER - NÃO ALTERAR] Reproduza a pessoa EXATAMENTE como aparece.',
+            galleryAmbiente: '[AMBIENTE - REFERÊNCIA FLEXÍVEL] Use como inspiração para o cenário.',
+            galleryEstilo: 'Use como referência de estilo visual.',
+            galleryPaleta: 'Use como referência de paleta de cores.',
+            galleryTextura: 'Use como referência de textura.',
+            galleryLogo: '[LOGO - NÃO ALTERAR] Reproduza o logo EXATAMENTE.',
+            galleryPose: 'Use como referência de pose.',
+            galleryRoupa: '[ROUPA - NÃO ALTERAR] Mantenha a roupa EXATAMENTE como aparece.',
+            gallerySalvas: 'Use como referência visual.',
+          };
+          const role = type.replace('gallery', '').toLowerCase();
+          return { _referenceRole: role, _referenceDesc: skipRoleMap[type] || 'Referência visual.', _skipNoImage: true };
         }
         throw new Error('Nenhuma imagem selecionada da galeria. Selecione uma imagem.');
       }
@@ -665,7 +677,7 @@ export function useStudioExecution() {
         let inheritedRole = '';
         let inheritedDesc = '';
 
-        // Check if there's a connected input with a gallery role (e.g. galleryInfluencer)
+        // Check if there's a connected input with a gallery role (e.g. galleryInfluencer or _skipNoImage)
         const inputWithRole = inputs.find((i) => i?._referenceRole);
         if (inputWithRole?._referenceRole) {
           // Load ALL images from the same gallery category as the connected block
