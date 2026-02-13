@@ -131,16 +131,28 @@ export function useStudioExecution() {
     const imageInputs: string[] = [];
     // Collect reference role descriptions to enrich prompts
     const referenceDescs: string[] = [];
+    // Track which images are products vs other references
+    const productImageUrls: string[] = [];
+    const otherImageUrls: string[] = [];
     inputs.forEach((i) => {
+      const urls: string[] = [];
       if (i?.imageUrls && Array.isArray(i.imageUrls)) {
-        imageInputs.push(...i.imageUrls);
+        urls.push(...i.imageUrls);
       } else if (i?.imageUrl) {
-        imageInputs.push(i.imageUrl);
+        urls.push(i.imageUrl);
       }
+      if (i?._referenceRole === 'produto') {
+        productImageUrls.push(...urls);
+      } else {
+        otherImageUrls.push(...urls);
+      }
+      imageInputs.push(...urls);
       if (i?._referenceDesc) {
         referenceDescs.push(i._referenceDesc);
       }
     });
+    // Reorder: product images always first so the model sees them as primary
+    const orderedImageInputs = [...productImageUrls, ...otherImageUrls];
 
     switch (type) {
       case 'textInput':
@@ -255,12 +267,16 @@ export function useStudioExecution() {
           enrichedPrompt = `${enrichedPrompt}\n\n[INSTRUÇÃO PADRÃO] A pessoa/influencer deve estar SEGURANDO o produto na mão, mostrando-o de forma natural e elegante. O produto deve estar visível e em destaque na mão da pessoa.`;
         }
         if (referenceDescs.length > 0) {
-          enrichedPrompt = `${enrichedPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS (MUST FOLLOW):\nItems marked [NÃO ALTERAR] MUST be reproduced EXACTLY as shown in the reference image — do NOT change, reimagine, or substitute them.\nItems marked [REFERÊNCIA FLEXÍVEL] can be adapted creatively.\n\n${referenceDescs.join('\n')}`;
+          let imagePositionHint = '';
+          if (productImageUrls.length > 0) {
+            imagePositionHint = `\n\n🔒 IMAGE ORDER: The FIRST image${productImageUrls.length > 1 ? 's' : ''} (image${productImageUrls.length > 1 ? 's 1-' + productImageUrls.length : ' 1'}) ${productImageUrls.length > 1 ? 'are' : 'is'} the PRODUCT — preserve ${productImageUrls.length > 1 ? 'them' : 'it'} EXACTLY as-is. Other images are references for style/environment/pose ONLY — they should NEVER replace or alter the product.`;
+          }
+          enrichedPrompt = `${enrichedPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS (MUST FOLLOW):\nItems marked [NÃO ALTERAR] MUST be reproduced EXACTLY as shown in the reference image — do NOT change, reimagine, or substitute them.\nItems marked [REFERÊNCIA FLEXÍVEL] can be adapted creatively. Environment/ambient references should ONLY affect the background and scenery, NEVER the product or person.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
         }
         const result = await callStudio('generate_image', {
           prompt: enrichedPrompt,
           model: config.model,
-          imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
+          imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
         });
         return result;
       }
@@ -285,12 +301,16 @@ export function useStudioExecution() {
         const userPrompt = config.prompt || combinedInput || '';
         let fullPrompt = `${modePrompt} ${userPrompt}`.trim();
         if (referenceDescs.length > 0) {
-          fullPrompt = `${fullPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS (MUST FOLLOW):\nItems marked [NÃO ALTERAR] MUST be reproduced EXACTLY as shown in the reference image — do NOT change, reimagine, or substitute them.\nItems marked [REFERÊNCIA FLEXÍVEL] can be adapted creatively.\n\n${referenceDescs.join('\n')}`;
+          let imagePositionHint = '';
+          if (productImageUrls.length > 0) {
+            imagePositionHint = `\n\n🔒 IMAGE ORDER: The FIRST image is the PRODUCT — preserve it EXACTLY. Other images are for environment/style ONLY.`;
+          }
+          fullPrompt = `${fullPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS (MUST FOLLOW):\nItems marked [NÃO ALTERAR] MUST be reproduced EXACTLY as shown in the reference image — do NOT change, reimagine, or substitute them.\nItems marked [REFERÊNCIA FLEXÍVEL] can be adapted creatively. Environment references affect ONLY the background, NEVER the product.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
         }
         const result = await callStudio('generate_image', {
           prompt: fullPrompt,
           model: config.model || 'google/gemini-2.5-flash-image',
-          imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
+          imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
         });
         return result;
       }
