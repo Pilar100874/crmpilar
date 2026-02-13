@@ -61,7 +61,7 @@ const nodeTypes = {
 const initialNodes: StudioNode[] = [];
 const initialEdges: StudioEdge[] = [];
 
-const EDGE_STYLE = { stroke: '#22c55e', strokeWidth: 2 };
+const EDGE_STYLE = { stroke: '#22c55e', strokeWidth: 2, cursor: 'pointer' };
 
 const QUICK_TOOLS = [
   { id: 'text-to-video', icon: Video, label: 'Texto p/ Vídeo', desc: 'Gere vídeos a partir de prompts', nodeType: 'videoGen' as const },
@@ -880,7 +880,8 @@ const AICreativeStudioInner: React.FC = () => {
             snapToGrid
             snapGrid={[16, 16]}
             className="bg-background"
-            defaultEdgeOptions={{ animated: true, style: EDGE_STYLE, type: 'smoothstep' }}
+            deleteKeyCode={["Delete", "Backspace"]}
+            defaultEdgeOptions={{ animated: true, style: EDGE_STYLE, type: 'smoothstep', interactionWidth: 20, focusable: true, selectable: true }}
           >
             <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="hsl(var(--muted-foreground) / 0.15)" />
             <Controls
