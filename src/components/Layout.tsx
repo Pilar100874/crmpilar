@@ -192,7 +192,8 @@ export default function Layout({ children }: LayoutProps) {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (!session && location.pathname !== "/") {
+        // Only redirect on explicit sign-out, not on transient token refresh failures
+        if (event === 'SIGNED_OUT' && location.pathname !== "/") {
           navigate("/");
         }
       }
@@ -201,6 +202,9 @@ export default function Layout({ children }: LayoutProps) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (!session && location.pathname !== "/") {
+        navigate("/");
+      }
     });
 
     return () => subscription.unsubscribe();
