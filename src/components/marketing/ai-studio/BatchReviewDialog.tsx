@@ -102,6 +102,7 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
       <Dialog open={open} onOpenChange={(v) => { if (!v && zoomedIndex === null) onClose(); }}>
         <DialogContent
           className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+          onPointerDownOutside={(e) => { if (zoomedIndex !== null) e.preventDefault(); }}
           onInteractOutside={(e) => { if (zoomedIndex !== null) e.preventDefault(); }}
           onEscapeKeyDown={(e) => {
             if (zoomedIndex !== null) {
@@ -191,25 +192,18 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
         <div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 cursor-zoom-out"
           style={{ zIndex: 99999 }}
-          onMouseDown={(e) => {
-            // Close zoom when clicking the backdrop (not children)
-            if (e.target === e.currentTarget) {
-              setZoomedIndex(null);
-            }
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setZoomedIndex(null);
           }}
         >
           <button
-            onMouseDown={(e) => {
-              e.stopPropagation();
-              setZoomedIndex(null);
-            }}
+            onClick={() => setZoomedIndex(null)}
             className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
           >
             <X className="h-6 w-6 text-white" />
           </button>
           <div
             className="relative max-w-[90vw] max-h-[85vh] flex flex-col items-center gap-3"
-            onMouseDown={(e) => e.stopPropagation()}
           >
             <img
               src={results[zoomedIndex].imageUrl}
@@ -225,7 +219,7 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
                 variant="outline"
                 className="text-white border-white/30 hover:bg-white/10"
                 disabled={zoomedIndex <= 0}
-                onMouseDown={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex - 1); }}
+                onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex - 1); }}
               >
                 ← Anterior
               </Button>
@@ -234,7 +228,7 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
                 variant="outline"
                 className="text-white border-white/30 hover:bg-white/10"
                 disabled={zoomedIndex >= results.length - 1}
-                onMouseDown={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex + 1); }}
+                onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex + 1); }}
               >
                 Próxima →
               </Button>
