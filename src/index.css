@@ -379,3 +379,15 @@ All colors MUST be HSL.
     transform: translateY(0) scale(1);
   }
 }
+
+/* React Flow edge selection styles */
+.react-flow__edge {
+  cursor: pointer;
+}
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: hsl(25 95% 53%) !important;
+  stroke-width: 3px !important;
+}
+.react-flow__edge .react-flow__edge-interaction {
+  stroke-width: 20px;
+}
