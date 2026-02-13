@@ -14,6 +14,7 @@ export type StudioNodeType =
   | 'galleryLogo'
   | 'galleryPose'
   | 'galleryRoupa'
+  | 'gallerySalvas'
   | 'textStyle'
   | 'textContent'
   | 'llmProcess'
@@ -155,6 +156,14 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Referência de roupas e vestuário',
         icon: '👗',
         color: '#d946ef',
+        defaultConfig: { selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
+      },
+      {
+        type: 'gallerySalvas',
+        label: 'Imagens Salvas',
+        description: 'Imagens salvas na galeria do sistema',
+        icon: '📁',
+        color: '#3b82f6',
         defaultConfig: { selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
       },
       {

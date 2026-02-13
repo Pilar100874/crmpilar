@@ -133,7 +133,7 @@ export function useStudioExecution() {
     // Priority buckets: logo > produto > influencer > roupa > pose > ambiente > others
     const rolePriority: Record<string, number> = {
       logo: 0, produto: 1, influencer: 2, roupa: 3, pose: 4,
-      estilo: 5, paleta: 6, textura: 7, ambiente: 8,
+      estilo: 5, paleta: 6, textura: 7, ambiente: 8, salvas: 9,
     };
     const bucketedImages: { role: string; urls: string[] }[] = [];
     const productImageUrls: string[] = [];
@@ -168,6 +168,7 @@ export function useStudioExecution() {
       pose: 'POSE REFERENCE (flexible)', estilo: 'STYLE REFERENCE (flexible)',
       paleta: 'COLOR PALETTE (flexible)', textura: 'TEXTURE (flexible)',
       ambiente: 'ENVIRONMENT/BACKGROUND (flexible, use for scenery only)',
+      salvas: 'SAVED IMAGE REFERENCE (flexible)',
       __none__: 'GENERAL REFERENCE',
     };
     const orderedImageRoles = bucketedImages.flatMap((b) => b.urls.map(() => roleLabelsMap[b.role] || 'REFERENCE'));
@@ -202,7 +203,8 @@ export function useStudioExecution() {
       case 'galleryTextura':
       case 'galleryLogo':
       case 'galleryPose':
-      case 'galleryRoupa': {
+      case 'galleryRoupa':
+      case 'gallerySalvas': {
         if (config.selectedImageUrl) {
           const roleMap: Record<string, string> = {
             galleryInfluencer: '[PESSOA/INFLUENCER - NÃO ALTERAR] Você DEVE reproduzir esta pessoa EXATAMENTE como aparece: mesmo rosto, tom de pele, cabelo, traços faciais e aparência geral. NÃO mude a identidade, etnia, cor de cabelo ou características faciais desta pessoa de forma alguma.',
@@ -213,6 +215,7 @@ export function useStudioExecution() {
             galleryLogo: '[LOGO - NÃO ALTERAR] Reproduza este logo/marca EXATAMENTE como aparece, sem modificar cores, tipografia ou elementos gráficos.',
             galleryPose: 'Use esta pose/composição corporal como referência para a posição da pessoa na imagem.',
             galleryRoupa: '[ROUPA - NÃO ALTERAR] Você DEVE manter esta roupa/vestuário EXATAMENTE como aparece na referência: mesma cor, padrão, estampa, corte e estilo. NÃO substitua, modifique ou reimagine a peça de roupa.',
+            gallerySalvas: 'Use esta imagem salva como referência visual para a geração.',
           };
           return { 
             imageUrls: [config.selectedImageUrl], 
