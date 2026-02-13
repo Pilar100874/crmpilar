@@ -28,7 +28,7 @@ const GallerySelectInline: React.FC<GallerySelectInlineProps> = ({ categoria, co
         .from('media_gallery')
         .select('*')
         .eq('estabelecimento_id', estabId)
-        .in('tipo', ['imagem', 'image'])
+        .in('tipo', ['imagem', 'image', 'gif'])
         .order('created_at', { ascending: false })
         .limit(200);
       setImages((data || []).map((item: any) => ({
