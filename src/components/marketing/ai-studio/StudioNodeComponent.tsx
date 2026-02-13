@@ -345,12 +345,27 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   // Save image to media_gallery (system-wide gallery for catalogs, attachments, etc.)
   const handleSaveToMediaGallery = useCallback(async (imageUrl: string) => {
     const estabId = localStorage.getItem('estabelecimentoId');
-    if (!estabId || !imageUrl) return;
+    if (!estabId || !imageUrl) {
+      toast.error('Erro: estabelecimento ou imagem não encontrados');
+      return;
+    }
     setIsSavingToGallery(true);
     try {
-      // Fetch image as blob
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
+      let blob: Blob;
+      // Handle base64 data URLs directly
+      if (imageUrl.startsWith('data:')) {
+        const [header, b64] = imageUrl.split(',');
+        const mime = header.match(/data:(.*?);/)?.[1] || 'image/png';
+        const binary = atob(b64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        blob = new Blob([bytes], { type: mime });
+      } else {
+        const response = await fetch(imageUrl);
+        if (!response.ok) throw new Error(`Fetch falhou: ${response.status}`);
+        blob = await response.blob();
+      }
+      
       const ext = blob.type?.includes('png') ? 'png' : blob.type?.includes('gif') ? 'gif' : 'jpg';
       const fileName = `studio-${nodeData.type}-${id}-${Date.now()}.${ext}`;
       const storagePath = `${estabId}/${fileName}`;
@@ -381,10 +396,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         });
       if (dbErr) throw dbErr;
 
-      toast.success('✅ Salvo na galeria do sistema! Disponível em catálogos, anexos rápidos, etc.');
+      toast.success('✅ Imagem salva! Disponível no bloco "Imagens Salvas".');
     } catch (err: any) {
       console.error('Erro ao salvar na galeria:', err);
-      toast.error('Erro ao salvar na galeria: ' + (err.message || ''));
+      toast.error('Erro ao salvar: ' + (err.message || String(err)));
     } finally {
       setIsSavingToGallery(false);
     }
