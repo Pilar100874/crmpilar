@@ -160,7 +160,7 @@ export function useStudioExecution() {
             imageUrls: [config.selectedImageUrl], 
             imageUrl: config.selectedImageUrl,
             _referenceRole: 'produto',
-            _referenceDesc: `Este é o produto "${config.productName || 'selecionado'}". Use esta imagem como o produto principal na composição.`,
+            _referenceDesc: `[PRODUTO - NÃO ALTERAR] Este é o produto "${config.productName || 'selecionado'}". Você DEVE manter este produto EXATAMENTE como aparece na imagem de referência: mesmas cores, formato, detalhes, logotipo e proporções. NÃO modifique, substitua ou reimagine o produto de forma alguma.`,
           };
         }
         throw new Error('Nenhum produto selecionado. Selecione um produto com imagem.');
@@ -175,14 +175,14 @@ export function useStudioExecution() {
       case 'galleryRoupa': {
         if (config.selectedImageUrl) {
           const roleMap: Record<string, string> = {
-            galleryInfluencer: 'Use esta pessoa/modelo como referência para a aparência e estilo da pessoa na imagem.',
-            galleryAmbiente: 'Use este cenário/ambiente como referência para o fundo e ambientação da imagem gerada.',
+            galleryInfluencer: '[PESSOA/INFLUENCER - NÃO ALTERAR] Você DEVE reproduzir esta pessoa EXATAMENTE como aparece: mesmo rosto, tom de pele, cabelo, traços faciais e aparência geral. NÃO mude a identidade, etnia, cor de cabelo ou características faciais desta pessoa de forma alguma.',
+            galleryAmbiente: '[AMBIENTE - REFERÊNCIA FLEXÍVEL] Use este cenário/ambiente como inspiração para o fundo e ambientação. Você pode ser criativo e adaptar o ambiente livremente, mantendo apenas a essência geral (interno/externo, clima, iluminação).',
             galleryEstilo: 'Use este estilo visual como referência artística para a imagem gerada (cores, mood, estética).',
             galleryPaleta: 'Use esta paleta de cores como referência para as cores dominantes na imagem.',
             galleryTextura: 'Use esta textura/material como referência para os materiais e superfícies na imagem.',
-            galleryLogo: 'Use este logo/marca como referência de identidade visual a ser incorporada.',
+            galleryLogo: '[LOGO - NÃO ALTERAR] Reproduza este logo/marca EXATAMENTE como aparece, sem modificar cores, tipografia ou elementos gráficos.',
             galleryPose: 'Use esta pose/composição corporal como referência para a posição da pessoa na imagem.',
-            galleryRoupa: 'Use esta roupa/vestuário como referência para o que a pessoa deve vestir na imagem.',
+            galleryRoupa: '[ROUPA - NÃO ALTERAR] Você DEVE manter esta roupa/vestuário EXATAMENTE como aparece na referência: mesma cor, padrão, estampa, corte e estilo. NÃO substitua, modifique ou reimagine a peça de roupa.',
           };
           return { 
             imageUrls: [config.selectedImageUrl], 
@@ -212,6 +212,7 @@ export function useStudioExecution() {
       case 'textContent':
         return {
           text: [config.title, config.subtitle, config.body].filter(Boolean).join('\n'),
+          _referenceDesc: `[TEXTO - NÃO ALTERAR] O conteúdo de texto deve ser mantido EXATAMENTE como fornecido: título="${config.title || ''}", subtítulo="${config.subtitle || ''}", corpo="${config.body || ''}". NÃO modifique, traduza ou reformule o texto.`,
           textContent: {
             title: config.title || '',
             subtitle: config.subtitle || '',
@@ -246,7 +247,7 @@ export function useStudioExecution() {
         // Build enriched prompt with reference descriptions
         let enrichedPrompt = combinedInput || 'A beautiful scene';
         if (referenceDescs.length > 0) {
-          enrichedPrompt = `${enrichedPrompt}\n\nIMPORTANT REFERENCE INSTRUCTIONS:\n${referenceDescs.join('\n')}`;
+          enrichedPrompt = `${enrichedPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS (MUST FOLLOW):\nItems marked [NÃO ALTERAR] MUST be reproduced EXACTLY as shown in the reference image — do NOT change, reimagine, or substitute them.\nItems marked [REFERÊNCIA FLEXÍVEL] can be adapted creatively.\n\n${referenceDescs.join('\n')}`;
         }
         const result = await callStudio('generate_image', {
           prompt: enrichedPrompt,
@@ -276,7 +277,7 @@ export function useStudioExecution() {
         const userPrompt = config.prompt || combinedInput || '';
         let fullPrompt = `${modePrompt} ${userPrompt}`.trim();
         if (referenceDescs.length > 0) {
-          fullPrompt = `${fullPrompt}\n\nREFERENCE INSTRUCTIONS:\n${referenceDescs.join('\n')}`;
+          fullPrompt = `${fullPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS (MUST FOLLOW):\nItems marked [NÃO ALTERAR] MUST be reproduced EXACTLY as shown in the reference image — do NOT change, reimagine, or substitute them.\nItems marked [REFERÊNCIA FLEXÍVEL] can be adapted creatively.\n\n${referenceDescs.join('\n')}`;
         }
         const result = await callStudio('generate_image', {
           prompt: fullPrompt,
