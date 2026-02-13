@@ -182,6 +182,30 @@ export function useStudioExecution() {
           },
         };
 
+      case 'textContent':
+        return {
+          text: [config.title, config.subtitle, config.body].filter(Boolean).join('\n'),
+          textContent: {
+            title: config.title || '',
+            subtitle: config.subtitle || '',
+            body: config.body || '',
+            templateId: config.templateId || 'heading-bold',
+            titleFont: config.titleFont || 'Montserrat',
+            titleSize: config.titleSize || 72,
+            titleWeight: config.titleWeight || 'bold',
+            titleColor: config.titleColor || '#000000',
+            subtitleFont: config.subtitleFont || 'Montserrat',
+            subtitleSize: config.subtitleSize || 42,
+            subtitleWeight: config.subtitleWeight || '600',
+            subtitleColor: config.subtitleColor || '#4A4A4A',
+            bodyFont: config.bodyFont || 'Inter',
+            bodySize: config.bodySize || 24,
+            bodyWeight: config.bodyWeight || 'normal',
+            bodyColor: config.bodyColor || '#666666',
+            textAlign: config.textAlign || 'center',
+          },
+        };
+
       case 'llmProcess': {
         const result = await callStudio('generate_text', {
           prompt: combinedInput,

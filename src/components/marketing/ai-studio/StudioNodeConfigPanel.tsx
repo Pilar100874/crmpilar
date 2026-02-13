@@ -1282,6 +1282,97 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
           </div>
         );
 
+      case 'textContent': {
+        const TEXT_STYLE_TEMPLATES = [
+          { id: 'heading-bold', name: 'Título Grande', titleFont: 'Montserrat', titleSize: 72, titleWeight: 'bold', titleColor: '#000000', subtitleFont: 'Montserrat', subtitleSize: 42, subtitleWeight: '600', subtitleColor: '#4A4A4A', bodyFont: 'Inter', bodySize: 24, bodyWeight: 'normal', bodyColor: '#666666', textAlign: 'center' },
+          { id: 'heading-elegant', name: 'Elegante', titleFont: 'Playfair Display', titleSize: 64, titleWeight: 'bold', titleColor: '#2C2C2C', subtitleFont: 'Raleway', subtitleSize: 36, subtitleWeight: '300', subtitleColor: '#555555', bodyFont: 'Georgia', bodySize: 20, bodyWeight: 'normal', bodyColor: '#666666', textAlign: 'center' },
+          { id: 'modern-minimal', name: 'Moderno Minimal', titleFont: 'Poppins', titleSize: 56, titleWeight: '600', titleColor: '#1A1A1A', subtitleFont: 'Poppins', subtitleSize: 32, subtitleWeight: 'normal', subtitleColor: '#666666', bodyFont: 'Inter', bodySize: 18, bodyWeight: 'normal', bodyColor: '#888888', textAlign: 'left' },
+          { id: 'retro-bold', name: 'Retro Negrito', titleFont: 'Bebas Neue', titleSize: 80, titleWeight: 'normal', titleColor: '#FF6B6B', subtitleFont: 'Oswald', subtitleSize: 40, subtitleWeight: 'bold', subtitleColor: '#4ECDC4', bodyFont: 'Arial', bodySize: 22, bodyWeight: 'normal', bodyColor: '#333333', textAlign: 'center' },
+          { id: 'corporate-clean', name: 'Corporativo', titleFont: 'Roboto', titleSize: 60, titleWeight: 'bold', titleColor: '#2D3748', subtitleFont: 'Roboto', subtitleSize: 34, subtitleWeight: '400', subtitleColor: '#4A5568', bodyFont: 'Open Sans', bodySize: 20, bodyWeight: 'normal', bodyColor: '#718096', textAlign: 'left' },
+          { id: 'creative-fun', name: 'Criativo', titleFont: 'Pacifico', titleSize: 68, titleWeight: 'normal', titleColor: '#9B59B6', subtitleFont: 'Dancing Script', subtitleSize: 44, subtitleWeight: 'normal', subtitleColor: '#E74C3C', bodyFont: 'Comic Sans MS', bodySize: 24, bodyWeight: 'normal', bodyColor: '#3498DB', textAlign: 'center' },
+          { id: 'luxury-gold', name: 'Luxo Dourado', titleFont: 'Cinzel', titleSize: 58, titleWeight: 'bold', titleColor: '#D4AF37', subtitleFont: 'Cormorant Garamond', subtitleSize: 38, subtitleWeight: '600', subtitleColor: '#8B7355', bodyFont: 'Crimson Text', bodySize: 22, bodyWeight: 'normal', bodyColor: '#5A5A5A', textAlign: 'center' },
+          { id: 'tech-future', name: 'Tech Futurista', titleFont: 'Orbitron', titleSize: 64, titleWeight: 'bold', titleColor: '#00FF88', subtitleFont: 'Rajdhani', subtitleSize: 36, subtitleWeight: '600', subtitleColor: '#00CCFF', bodyFont: 'Share Tech', bodySize: 20, bodyWeight: 'normal', bodyColor: '#AAAAAA', textAlign: 'left' },
+          { id: 'neon-vibrant', name: 'Neon Vibrante', titleFont: 'Righteous', titleSize: 70, titleWeight: 'normal', titleColor: '#FF00FF', subtitleFont: 'Audiowide', subtitleSize: 40, subtitleWeight: 'normal', subtitleColor: '#00FFFF', bodyFont: 'Electrolize', bodySize: 22, bodyWeight: 'normal', bodyColor: '#FFFF00', textAlign: 'center' },
+          { id: 'editorial-magazine', name: 'Editorial Revista', titleFont: 'DM Serif Display', titleSize: 62, titleWeight: 'normal', titleColor: '#2F4F4F', subtitleFont: 'Source Serif Pro', subtitleSize: 36, subtitleWeight: '600', subtitleColor: '#696969', bodyFont: 'IBM Plex Serif', bodySize: 20, bodyWeight: 'normal', bodyColor: '#808080', textAlign: 'left' },
+          { id: 'sports-dynamic', name: 'Esportivo', titleFont: 'Alfa Slab One', titleSize: 72, titleWeight: 'normal', titleColor: '#FF4500', subtitleFont: 'Teko', subtitleSize: 42, subtitleWeight: 'bold', subtitleColor: '#FF6347', bodyFont: 'Saira Condensed', bodySize: 24, bodyWeight: 'normal', bodyColor: '#FF7F50', textAlign: 'center' },
+          { id: 'fashion-chic', name: 'Fashion Chic', titleFont: 'Oswald', titleSize: 60, titleWeight: '600', titleColor: '#000000', subtitleFont: 'Montserrat', subtitleSize: 36, subtitleWeight: '300', subtitleColor: '#333333', bodyFont: 'Raleway', bodySize: 20, bodyWeight: 'normal', bodyColor: '#666666', textAlign: 'left' },
+          { id: 'food-gourmet', name: 'Food Gourmet', titleFont: 'Lobster Two', titleSize: 62, titleWeight: 'bold', titleColor: '#8B0000', subtitleFont: 'Marck Script', subtitleSize: 40, subtitleWeight: 'normal', subtitleColor: '#A52A2A', bodyFont: 'Caudex', bodySize: 22, bodyWeight: 'normal', bodyColor: '#CD5C5C', textAlign: 'center' },
+          { id: 'zen-minimal', name: 'Zen Minimalista', titleFont: 'Zen Antique', titleSize: 58, titleWeight: 'normal', titleColor: '#8FBC8F', subtitleFont: 'Zen Kaku Gothic New', subtitleSize: 34, subtitleWeight: '300', subtitleColor: '#9ACD32', bodyFont: 'Noto Serif JP', bodySize: 20, bodyWeight: 'normal', bodyColor: '#6B8E23', textAlign: 'center' },
+        ];
+
+        const applyTemplate = (tpl: typeof TEXT_STYLE_TEMPLATES[0]) => {
+          Object.entries(tpl).forEach(([key, value]) => {
+            if (key !== 'id' && key !== 'name') {
+              update(key, value);
+            }
+          });
+          update('templateId', tpl.id);
+        };
+
+        return (
+          <div className="space-y-2.5">
+            <SectionTitle icon={<Sparkles className="h-3 w-3" />}>Modelo de Estilo</SectionTitle>
+            <div className="grid grid-cols-2 gap-1.5">
+              {TEXT_STYLE_TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  onClick={() => applyTemplate(tpl)}
+                  className={`p-2.5 rounded-lg border text-left transition-all hover:shadow-sm ${
+                    config.templateId === tpl.id 
+                      ? 'border-primary bg-primary/5 ring-1 ring-primary/20' 
+                      : 'border-border/40 bg-muted/20 hover:border-border/70'
+                  }`}
+                >
+                  <p style={{ fontFamily: tpl.titleFont, fontWeight: tpl.titleWeight as any, color: tpl.titleColor, fontSize: 13 }} className="truncate leading-tight">{tpl.name}</p>
+                  <p style={{ fontFamily: tpl.subtitleFont, color: tpl.subtitleColor, fontSize: 9 }} className="truncate leading-tight mt-0.5">Subtítulo</p>
+                </button>
+              ))}
+            </div>
+
+            <SectionTitle>Conteúdo</SectionTitle>
+            <ConfigField label="Título">
+              <Input value={config.title || ''} onChange={(e) => update('title', e.target.value)} placeholder="Título principal" className="mt-1" />
+            </ConfigField>
+            <ConfigField label="Subtítulo">
+              <Input value={config.subtitle || ''} onChange={(e) => update('subtitle', e.target.value)} placeholder="Subtítulo" className="mt-1" />
+            </ConfigField>
+            <ConfigField label="Corpo">
+              <Textarea value={config.body || ''} onChange={(e) => update('body', e.target.value)} placeholder="Texto do corpo..." rows={3} className="mt-1" />
+            </ConfigField>
+
+            <SectionTitle>Tipografia Avançada</SectionTitle>
+            <ConfigField label="Fonte do Título">
+              <div className="flex gap-1.5 mt-1">
+                <Input value={config.titleFont || 'Montserrat'} onChange={(e) => update('titleFont', e.target.value)} placeholder="Font family" className="flex-1" />
+                <input type="color" value={config.titleColor || '#000000'} onChange={(e) => update('titleColor', e.target.value)} className="h-10 w-10 rounded-lg border border-border/50 cursor-pointer" />
+              </div>
+            </ConfigField>
+            <ConfigField label="Fonte do Subtítulo">
+              <div className="flex gap-1.5 mt-1">
+                <Input value={config.subtitleFont || 'Montserrat'} onChange={(e) => update('subtitleFont', e.target.value)} placeholder="Font family" className="flex-1" />
+                <input type="color" value={config.subtitleColor || '#4A4A4A'} onChange={(e) => update('subtitleColor', e.target.value)} className="h-10 w-10 rounded-lg border border-border/50 cursor-pointer" />
+              </div>
+            </ConfigField>
+            <ConfigField label="Fonte do Corpo">
+              <div className="flex gap-1.5 mt-1">
+                <Input value={config.bodyFont || 'Inter'} onChange={(e) => update('bodyFont', e.target.value)} placeholder="Font family" className="flex-1" />
+                <input type="color" value={config.bodyColor || '#666666'} onChange={(e) => update('bodyColor', e.target.value)} className="h-10 w-10 rounded-lg border border-border/50 cursor-pointer" />
+              </div>
+            </ConfigField>
+            <ConfigField label="Alinhamento">
+              <Select value={config.textAlign || 'center'} onValueChange={(v) => update('textAlign', v)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">Esquerda</SelectItem>
+                  <SelectItem value="center">Centro</SelectItem>
+                  <SelectItem value="right">Direita</SelectItem>
+                </SelectContent>
+              </Select>
+            </ConfigField>
+          </div>
+        );
+      }
+
       default:
         return <p className="text-xs text-muted-foreground">Sem configurações adicionais</p>;
     }
@@ -1293,7 +1384,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
     llmProcess: '#0ea5e9', imageGen: '#f43f5e', imageEdit: '#ec4899',
     productComposite: '#8b5cf6', videoGen: '#f59e0b', audioGen: '#22c55e',
     musicGen: '#14b8a6', lipSync: '#06b6d4', videoMerge: '#eab308',
-    imageAnalyze: '#14b8a6', output: '#64748b',
+    imageAnalyze: '#14b8a6', output: '#64748b', textContent: '#7c3aed',
   };
   const accent = nodeAccentMap[node.data.type] || '#64748b';
 
