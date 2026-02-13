@@ -22,14 +22,30 @@ const GallerySelectInline: React.FC<GallerySelectInlineProps> = ({ categoria, co
     const estabId = localStorage.getItem('estabelecimentoId');
     if (!estabId) return;
     setLoading(true);
-    const { data } = await supabase
-      .from('studio_gallery_images')
-      .select('*')
-      .eq('estabelecimento_id', estabId)
-      .eq('categoria', categoria)
-      .order('created_at', { ascending: false })
-      .limit(200);
-    setImages(data || []);
+    
+    if (categoria === 'salvas') {
+      const { data } = await supabase
+        .from('media_gallery')
+        .select('*')
+        .eq('estabelecimento_id', estabId)
+        .in('tipo', ['imagem', 'image'])
+        .order('created_at', { ascending: false })
+        .limit(200);
+      setImages((data || []).map((item: any) => ({
+        id: item.id,
+        nome: item.nome,
+        image_url: item.public_url,
+      })));
+    } else {
+      const { data } = await supabase
+        .from('studio_gallery_images')
+        .select('*')
+        .eq('estabelecimento_id', estabId)
+        .eq('categoria', categoria)
+        .order('created_at', { ascending: false })
+        .limit(200);
+      setImages(data || []);
+    }
     setLoading(false);
   }, [categoria]);
 
