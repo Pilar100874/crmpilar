@@ -191,13 +191,13 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
         <div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 cursor-zoom-out"
           style={{ zIndex: 99999 }}
-          onPointerDownCapture={(e) => e.nativeEvent.stopImmediatePropagation()}
-          onClickCapture={(e) => e.nativeEvent.stopImmediatePropagation()}
-          onMouseDownCapture={(e) => e.nativeEvent.stopImmediatePropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
           onClick={() => setZoomedIndex(null)}
         >
           <button
             onClick={(e) => { e.stopPropagation(); setZoomedIndex(null); }}
+            onPointerDown={(e) => e.stopPropagation()}
             className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
           >
             <X className="h-6 w-6 text-white" />
