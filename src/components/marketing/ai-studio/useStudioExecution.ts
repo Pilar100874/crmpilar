@@ -598,42 +598,81 @@ export function useStudioExecution() {
       }
 
       case 'randomPick': {
-        // randomPick loads gallery images and picks one; in loop context the pick is done by the loop runner
-        const category = config.galleryCategory || 'salvas';
+        // randomPick inherits gallery from connected input block OR uses its own config
         const estabId = localStorage.getItem('estabelecimentoId');
         let galleryImages: string[] = [];
+        let inheritedRole = '';
+        let inheritedDesc = '';
 
-        if (category === 'salvas') {
-          const { data } = await supabase
-            .from('media_gallery')
-            .select('public_url')
-            .eq('estabelecimento_id', estabId || '')
-            .in('tipo', ['image', 'gif'])
-            .order('created_at', { ascending: false })
-            .limit(100);
-          galleryImages = (data || []).map((d: any) => d.public_url).filter(Boolean);
+        // Check if there's a connected input with a gallery role (e.g. galleryInfluencer)
+        const inputWithRole = inputs.find((i) => i?._referenceRole);
+        if (inputWithRole?._referenceRole) {
+          // Load ALL images from the same gallery category as the connected block
+          inheritedRole = inputWithRole._referenceRole;
+          const category = inheritedRole;
+
+          if (category === 'salvas') {
+            const { data } = await supabase
+              .from('media_gallery')
+              .select('public_url')
+              .eq('estabelecimento_id', estabId || '')
+              .in('tipo', ['image', 'gif'])
+              .order('created_at', { ascending: false })
+              .limit(100);
+            galleryImages = (data || []).map((d: any) => d.public_url).filter(Boolean);
+          } else {
+            const { data } = await supabase
+              .from('studio_gallery_images')
+              .select('image_url')
+              .eq('estabelecimento_id', estabId || '')
+              .eq('categoria', category)
+              .order('created_at', { ascending: false })
+              .limit(100);
+            galleryImages = (data || []).map((d: any) => d.image_url).filter(Boolean);
+          }
+
+          // Build desc from the connected block's desc pattern
+          inheritedDesc = inputWithRole._referenceDesc || `Imagem aleatória da galeria "${category}" — use como referência visual.`;
         } else {
-          const { data } = await supabase
-            .from('studio_gallery_images')
-            .select('image_url')
-            .eq('estabelecimento_id', estabId || '')
-            .eq('categoria', category)
-            .order('created_at', { ascending: false })
-            .limit(100);
-          galleryImages = (data || []).map((d: any) => d.image_url).filter(Boolean);
+          // Fallback: use own galleryCategory config
+          const category = config.galleryCategory || 'salvas';
+          inheritedRole = category;
+
+          if (category === 'salvas') {
+            const { data } = await supabase
+              .from('media_gallery')
+              .select('public_url')
+              .eq('estabelecimento_id', estabId || '')
+              .in('tipo', ['image', 'gif'])
+              .order('created_at', { ascending: false })
+              .limit(100);
+            galleryImages = (data || []).map((d: any) => d.public_url).filter(Boolean);
+          } else {
+            const { data } = await supabase
+              .from('studio_gallery_images')
+              .select('image_url')
+              .eq('estabelecimento_id', estabId || '')
+              .eq('categoria', category)
+              .order('created_at', { ascending: false })
+              .limit(100);
+            galleryImages = (data || []).map((d: any) => d.image_url).filter(Boolean);
+          }
+          inheritedDesc = `Imagem aleatória da galeria "${category}" — use como referência visual.`;
         }
 
-        if (galleryImages.length === 0) throw new Error(`Nenhuma imagem encontrada na galeria "${category}".`);
+        if (galleryImages.length === 0) throw new Error(`Nenhuma imagem encontrada na galeria "${inheritedRole}".`);
 
         // Pick a random one for single execution; loop runner will override per iteration
         const randomUrl = galleryImages[Math.floor(Math.random() * galleryImages.length)];
         return {
           _isRandomPick: true,
           _galleryImages: galleryImages,
+          _inheritedRole: inheritedRole,
+          _inheritedDesc: inheritedDesc,
           imageUrl: randomUrl,
           imageUrls: [randomUrl],
-          _referenceRole: category === 'influencer' ? 'influencer' : category === 'ambiente' ? 'ambiente' : category,
-          _referenceDesc: `Imagem aleatória da galeria "${category}" — use como referência visual.`,
+          _referenceRole: inheritedRole,
+          _referenceDesc: inheritedDesc,
         };
       }
 
@@ -811,8 +850,11 @@ export function useStudioExecution() {
               const n = nodes.find(nn => nn.id === id);
               if (!n) return false;
               const nType = (n.data as StudioNodeData).type;
-              // Only re-execute processing nodes in the path, not pure inputs
-              return ancestors.has(id) && !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'multiProductSelect'].includes(nType);
+              // Only re-execute processing nodes in the path, not pure inputs or galleries
+              const inputTypes = ['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'multiProductSelect',
+                'galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura',
+                'galleryLogo', 'galleryPose', 'galleryRoupa', 'gallerySalvas'];
+              return ancestors.has(id) && !inputTypes.includes(nType);
             });
 
             // 3. Find randomPick nodes in the chain
