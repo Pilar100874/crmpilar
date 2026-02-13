@@ -155,6 +155,33 @@ export function useStudioExecution() {
         }
         throw new Error('Nenhum produto selecionado. Selecione um produto com imagem.');
 
+      case 'galleryInfluencer':
+      case 'galleryAmbiente':
+      case 'galleryEstilo':
+      case 'galleryPaleta':
+      case 'galleryTextura':
+      case 'galleryLogo':
+      case 'galleryPose':
+        if (config.selectedImageUrl) {
+          return { imageUrls: [config.selectedImageUrl], imageUrl: config.selectedImageUrl };
+        }
+        throw new Error('Nenhuma imagem selecionada da galeria. Selecione uma imagem.');
+
+      case 'textStyle':
+        return {
+          text: config.text || '',
+          textStyle: {
+            fontFamily: config.fontFamily || 'Arial',
+            fontSize: config.fontSize || 48,
+            fontWeight: config.fontWeight || 'bold',
+            color: config.color || '#ffffff',
+            bgColor: config.bgColor || '',
+            align: config.align || 'center',
+            shadow: config.shadow ?? true,
+            outline: config.outline ?? true,
+          },
+        };
+
       case 'llmProcess': {
         const result = await callStudio('generate_text', {
           prompt: combinedInput,

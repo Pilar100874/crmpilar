@@ -6,11 +6,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
+import GallerySelectInline from './GallerySelectInline';
+import { GalleryCategoryId } from './StudioGalleryManager';
 import { 
   Loader2, Play, Maximize2, Image as ImageIcon, Film, Music, Type, 
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
   Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download,
-  DollarSign, Volume2, Edit3, Package
+  DollarSign, Volume2, Edit3, Package, User, Mountain, Brush, Palette,
+  Box, Star, Move, TypeIcon
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
@@ -18,6 +21,14 @@ const nodeIconMap: Record<string, React.ElementType> = {
   systemPrompt: Clapperboard,
   imageInput: Upload,
   productImageSelect: Package,
+  galleryInfluencer: User,
+  galleryAmbiente: Mountain,
+  galleryEstilo: Brush,
+  galleryPaleta: Palette,
+  galleryTextura: Box,
+  galleryLogo: Star,
+  galleryPose: Move,
+  textStyle: TypeIcon,
   llmProcess: Type,
   imageGen: ImageIcon,
   imageEdit: Wand2,
@@ -36,6 +47,14 @@ const nodeGradientMap: Record<string, string> = {
   systemPrompt: 'from-purple-500/20 to-fuchsia-500/20',
   imageInput: 'from-orange-500/20 to-amber-500/20',
   productImageSelect: 'from-emerald-500/20 to-teal-500/20',
+  galleryInfluencer: 'from-pink-500/20 to-rose-500/20',
+  galleryAmbiente: 'from-green-500/20 to-emerald-500/20',
+  galleryEstilo: 'from-violet-500/20 to-purple-500/20',
+  galleryPaleta: 'from-amber-500/20 to-yellow-500/20',
+  galleryTextura: 'from-cyan-500/20 to-sky-500/20',
+  galleryLogo: 'from-rose-500/20 to-red-500/20',
+  galleryPose: 'from-indigo-500/20 to-blue-500/20',
+  textStyle: 'from-rose-500/20 to-pink-500/20',
   llmProcess: 'from-sky-500/20 to-cyan-500/20',
   imageGen: 'from-rose-500/20 to-pink-500/20',
   imageEdit: 'from-pink-500/20 to-fuchsia-500/20',
@@ -54,6 +73,14 @@ const nodeIconColorMap: Record<string, string> = {
   systemPrompt: 'text-purple-400',
   imageInput: 'text-orange-400',
   productImageSelect: 'text-emerald-400',
+  galleryInfluencer: 'text-pink-400',
+  galleryAmbiente: 'text-green-400',
+  galleryEstilo: 'text-violet-400',
+  galleryPaleta: 'text-amber-400',
+  galleryTextura: 'text-cyan-400',
+  galleryLogo: 'text-rose-400',
+  galleryPose: 'text-indigo-400',
+  textStyle: 'text-rose-400',
   llmProcess: 'text-sky-400',
   imageGen: 'text-rose-400',
   imageEdit: 'text-pink-400',
@@ -72,6 +99,14 @@ const nodeAccentMap: Record<string, string> = {
   systemPrompt: '#a855f7',
   imageInput: '#f97316',
   productImageSelect: '#10b981',
+  galleryInfluencer: '#ec4899',
+  galleryAmbiente: '#22c55e',
+  galleryEstilo: '#8b5cf6',
+  galleryPaleta: '#f59e0b',
+  galleryTextura: '#06b6d4',
+  galleryLogo: '#f43f5e',
+  galleryPose: '#6366f1',
+  textStyle: '#e11d48',
   llmProcess: '#0ea5e9',
   imageGen: '#f43f5e',
   imageEdit: '#ec4899',
@@ -217,7 +252,13 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const isPaidBlock = PAID_ONLY_BLOCKS.has(nodeData.type);
   const updateNodeInternals = useUpdateNodeInternals();
 
-  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect'].includes(nodeData.type);
+  const GALLERY_TYPES = ['galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura', 'galleryLogo', 'galleryPose'];
+  const isGalleryType = GALLERY_TYPES.includes(nodeData.type);
+  const galleryCategoryMap: Record<string, GalleryCategoryId> = {
+    galleryInfluencer: 'influencer', galleryAmbiente: 'ambiente', galleryEstilo: 'estilo',
+    galleryPaleta: 'paleta', galleryTextura: 'textura', galleryLogo: 'logo', galleryPose: 'pose',
+  };
+  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'textStyle', ...GALLERY_TYPES].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
 
   // Use external store for results (bypasses ReactFlow's shallow diff)
@@ -279,7 +320,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     }
   }, [hasResult, activeProcessing, resultImage, resultVideo, resultAudio, resultText, id, updateNodeInternals]);
 
-  const nodeWidth = (resultImage || resultVideo || resultAudio || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0) || (nodeData.type === 'productImageSelect' && nodeData.config?.selectedImageUrl)) ? 340 : 280;
+  const nodeWidth = (resultImage || resultVideo || resultAudio || (nodeData.type === 'imageInput' && nodeData.config?.images?.length > 0) || (nodeData.type === 'productImageSelect' && nodeData.config?.selectedImageUrl) || (isGalleryType && nodeData.config?.selectedImageUrl)) ? 340 : 280;
 
   // Inline edit handler
   const handleInlineUpdate = useCallback((key: string, value: any) => {
@@ -458,6 +499,71 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         {/* Product image select inline display */}
         {nodeData.type === 'productImageSelect' && (
           <ProductImageSelectInline config={nodeData.config} onUpdate={handleInlineUpdate} />
+        )}
+
+        {/* Gallery select inline display */}
+        {isGalleryType && (
+          <GallerySelectInline
+            categoria={galleryCategoryMap[nodeData.type]}
+            config={nodeData.config}
+            onUpdate={handleInlineUpdate}
+          />
+        )}
+
+        {/* Text Style inline editor */}
+        {nodeData.type === 'textStyle' && (
+          <div className="px-3 pb-3 pt-1 space-y-2">
+            <input
+              value={nodeData.config.text || ''}
+              onChange={(e) => { e.stopPropagation(); handleInlineUpdate('text', e.target.value); }}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="Texto para aplicar..."
+              className="w-full h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-rose-500/40"
+            />
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <select
+                value={nodeData.config.fontFamily || 'Arial'}
+                onChange={(e) => handleInlineUpdate('fontFamily', e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                className="h-6 px-1.5 text-[10px] rounded bg-muted/50 border border-border/50"
+              >
+                {['Arial', 'Helvetica', 'Georgia', 'Times New Roman', 'Courier New', 'Impact', 'Comic Sans MS', 'Verdana'].map(f => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                value={nodeData.config.fontSize || 48}
+                onChange={(e) => handleInlineUpdate('fontSize', parseInt(e.target.value) || 48)}
+                onClick={(e) => e.stopPropagation()}
+                className="h-6 w-12 px-1.5 text-[10px] rounded bg-muted/50 border border-border/50"
+                title="Tamanho"
+              />
+              <input
+                type="color"
+                value={nodeData.config.color || '#ffffff'}
+                onChange={(e) => handleInlineUpdate('color', e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                className="h-6 w-6 rounded border border-border/50 cursor-pointer"
+                title="Cor do texto"
+              />
+            </div>
+            {nodeData.config.text && (
+              <div
+                className="rounded-lg p-3 bg-muted/30 border border-border/30 text-center overflow-hidden"
+                style={{
+                  fontFamily: nodeData.config.fontFamily || 'Arial',
+                  fontSize: Math.min(nodeData.config.fontSize || 48, 24),
+                  fontWeight: nodeData.config.fontWeight || 'bold',
+                  color: nodeData.config.color || '#ffffff',
+                  textShadow: nodeData.config.shadow ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none',
+                  WebkitTextStroke: nodeData.config.outline ? '1px rgba(0,0,0,0.3)' : 'none',
+                }}
+              >
+                {nodeData.config.text}
+              </div>
+            )}
+          </div>
         )}
 
         {!hasResult && nodeData.type === 'llmProcess' && (

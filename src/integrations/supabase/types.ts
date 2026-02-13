@@ -10016,6 +10016,45 @@ export type Database = {
           },
         ]
       }
+      studio_gallery_images: {
+        Row: {
+          categoria: string
+          created_at: string
+          descricao: string | null
+          estabelecimento_id: string
+          id: string
+          image_url: string
+          nome: string | null
+          storage_path: string | null
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id: string
+          id?: string
+          image_url: string
+          nome?: string | null
+          storage_path?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          descricao?: string | null
+          estabelecimento_id?: string
+          id?: string
+          image_url?: string
+          nome?: string | null
+          storage_path?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       supervisor_acoes: {
         Row: {
           acao: string
