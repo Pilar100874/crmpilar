@@ -665,7 +665,7 @@ export function useStudioExecution() {
             imageUrl: p.foto_url,
             imageUrls: [p.foto_url],
             _referenceRole: 'produto',
-            _referenceDesc: `[PRODUTO - NÃO ALTERAR] Este é o produto "${p.nome}". Você DEVE manter este produto EXATAMENTE como aparece na imagem de referência.`,
+            _referenceDesc: `[PRODUTO - NÃO ALTERAR] Este é o produto "${p.nome}". Você DEVE manter este produto EXATAMENTE como aparece na imagem de referência: mesmas cores, formato, detalhes, logotipo e proporções. NÃO modifique, substitua ou reimagine o produto de forma alguma.`,
           })),
         };
       }
