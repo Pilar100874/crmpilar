@@ -100,7 +100,16 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => { if (!v && zoomedIndex === null) onClose(); }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" onInteractOutside={(e) => { if (zoomedIndex !== null) e.preventDefault(); }}>
+        <DialogContent
+          className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+          onInteractOutside={(e) => { if (zoomedIndex !== null) e.preventDefault(); }}
+          onEscapeKeyDown={(e) => {
+            if (zoomedIndex !== null) {
+              e.preventDefault();
+              setZoomedIndex(null);
+            }
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ImageIcon className="h-5 w-5 text-primary" />
@@ -182,14 +191,14 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
         <div
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 cursor-zoom-out"
           style={{ zIndex: 99999 }}
-          onClick={(e) => { e.stopPropagation(); setZoomedIndex(null); }}
-          onPointerDown={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
+          onPointerDownCapture={(e) => e.nativeEvent.stopImmediatePropagation()}
+          onClickCapture={(e) => e.nativeEvent.stopImmediatePropagation()}
+          onMouseDownCapture={(e) => e.nativeEvent.stopImmediatePropagation()}
+          onClick={() => setZoomedIndex(null)}
         >
           <button
             onClick={(e) => { e.stopPropagation(); setZoomedIndex(null); }}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
           >
             <X className="h-6 w-6 text-white" />
           </button>
