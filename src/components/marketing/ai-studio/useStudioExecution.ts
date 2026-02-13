@@ -15,10 +15,17 @@ export interface ExecutionLogEntry {
   errorMessage?: string;
 }
 
+export interface BatchReviewItem {
+  imageUrl: string;
+  productName: string;
+  productId?: string;
+}
+
 export function useStudioExecution() {
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionLog, setExecutionLog] = useState<ExecutionLogEntry[]>([]);
   const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
+  const [batchReviewResults, setBatchReviewResults] = useState<BatchReviewItem[]>([]);
   const onNodesUpdateRef = useRef<((nodes: StudioNode[]) => void) | null>(null);
 
   const callStudio = async (action: string, params: Record<string, any>, timeoutMs: number = 120000) => {
@@ -758,50 +765,6 @@ export function useStudioExecution() {
       return ancestors;
     };
 
-    // Helper: save image to media_gallery
-    const saveToGallery = async (imageUrl: string, name: string) => {
-      const estabId = localStorage.getItem('estabelecimentoId');
-      if (!estabId || !imageUrl) return;
-      try {
-        let blob: Blob;
-        if (imageUrl.startsWith('data:')) {
-          const [header, b64] = imageUrl.split(',');
-          const mime = header.match(/data:(.*?);/)?.[1] || 'image/png';
-          const binary = atob(b64);
-          const bytes = new Uint8Array(binary.length);
-          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-          blob = new Blob([bytes], { type: mime });
-        } else {
-          const response = await fetch(imageUrl);
-          if (!response.ok) return;
-          blob = await response.blob();
-        }
-        const ext = blob.type?.includes('png') ? 'png' : 'jpg';
-        const fileName = `loop-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
-        const storagePath = `${estabId}/${fileName}`;
-        const { error: uploadErr } = await supabase.storage
-          .from('marketing-images')
-          .upload(storagePath, blob, { contentType: blob.type || 'image/png' });
-        if (uploadErr) { console.error('Upload error:', uploadErr); return; }
-        const { data: { publicUrl } } = supabase.storage
-          .from('marketing-images')
-          .getPublicUrl(storagePath);
-        await supabase.from('media_gallery').insert({
-          estabelecimento_id: estabId,
-          tipo: 'image',
-          storage_path: storagePath,
-          public_url: publicUrl,
-          nome: name,
-          descricao: 'Gerado automaticamente pelo loop do AI Studio',
-          tamanho_bytes: blob.size,
-          mime_type: blob.type || 'image/png',
-          origem: 'ai_studio',
-        });
-      } catch (err) {
-        console.error('Auto-save error:', err);
-      }
-    };
-
     try {
       for (let i = startIndex; i < order.length; i++) {
         const nodeId = order[i];
@@ -873,9 +836,7 @@ export function useStudioExecution() {
               }
             }
 
-            const loopResults: any[] = [];
-            const autoSave = nd.config?.autoSave !== false;
-            const savePrefix = nd.config?.savePrefix || 'AI Studio Lote';
+      const loopResults: any[] = [];
 
             // 4. Loop through each product
             for (let pi = 0; pi < products.length; pi++) {
@@ -936,12 +897,6 @@ export function useStudioExecution() {
 
               if (finalResult?.imageUrl) {
                 loopResults.push({ imageUrl: finalResult.imageUrl, productName, productId: product.id });
-
-                // Auto-save to gallery
-                if (autoSave) {
-                  await saveToGallery(finalResult.imageUrl, `${savePrefix} - ${productName}`);
-                }
-
                 toast.success(`✅ ${pi + 1}/${products.length}: ${productName} concluído!`, { duration: 3000 });
               }
             }
@@ -950,8 +905,9 @@ export function useStudioExecution() {
             results.set(multiProductNodeId, multiResult);
 
             const finalLoopResult = {
-              text: `🔄 Lote concluído! ${loopResults.length}/${products.length} imagens geradas.${autoSave ? ' Salvas automaticamente na galeria.' : ''}`,
+              text: `🔄 Lote concluído! ${loopResults.length}/${products.length} imagens geradas. Revise e selecione quais salvar.`,
               loopResults,
+              _needsReview: true,
             };
             const elapsed = Date.now() - startTime;
             results.set(nodeId, finalLoopResult);
@@ -959,7 +915,12 @@ export function useStudioExecution() {
             nodeResultStore.setResult(nodeId, finalLoopResult);
             nodeResultStore.setProcessing(nodeId, false);
             updateLog(nodeId, { status: 'success', completedAt: Date.now(), elapsedMs: elapsed });
-            toast.success(`🎉 Lote finalizado! ${loopResults.length} imagens geradas.`, { duration: 6000 });
+            
+            // Open review dialog instead of auto-saving
+            if (loopResults.length > 0) {
+              setBatchReviewResults(loopResults);
+            }
+            toast.success(`🎉 Lote finalizado! ${loopResults.length} imagens geradas. Revise e salve.`, { duration: 6000 });
 
           } catch (err: any) {
             const elapsed = Date.now() - startTime;
@@ -1020,5 +981,5 @@ export function useStudioExecution() {
     setExecutionLog([]);
   }, []);
 
-  return { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog };
+  return { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog, batchReviewResults, setBatchReviewResults };
 }

@@ -34,6 +34,7 @@ import CreativeAgentPanel, { StoryboardScene } from './CreativeAgentPanel';
 import ExecutionLogPanel from './ExecutionLogPanel';
 import StudioGalleryManager from './StudioGalleryManager';
 import { nodeResultStore } from './useNodeResults';
+import BatchReviewDialog from './BatchReviewDialog';
 import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
 import { format } from 'date-fns';
 
@@ -87,7 +88,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
-  const { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog } = useStudioExecution();
+  const { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog, batchReviewResults, setBatchReviewResults } = useStudioExecution();
 
   // Workflow management state
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
@@ -1120,6 +1121,13 @@ const AICreativeStudioInner: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Batch Review Dialog */}
+      <BatchReviewDialog
+        open={batchReviewResults.length > 0}
+        onClose={() => setBatchReviewResults([])}
+        results={batchReviewResults}
+      />
     </div>
   );
 };
