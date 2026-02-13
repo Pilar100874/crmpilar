@@ -14,7 +14,7 @@ import {
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
   Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download,
   DollarSign, Volume2, Edit3, Package, User, Mountain, Brush, Palette,
-  Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers
+  Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers, Monitor
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
@@ -34,6 +34,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   gallerySalvas: FolderOpen,
   textStyle: TypeIcon,
   textContent: FileText,
+  platformFormat: Monitor,
   llmProcess: Type,
   imageGen: ImageIcon,
   imageEdit: Wand2,
@@ -396,7 +397,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     galleryPaleta: 'paleta', galleryTextura: 'textura', galleryLogo: 'logo', galleryPose: 'pose',
     galleryRoupa: 'roupa', gallerySalvas: 'salvas',
   };
-  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'multiProductSelect', 'textStyle', 'textContent', ...GALLERY_TYPES].includes(nodeData.type);
+  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'multiProductSelect', 'textStyle', 'textContent', 'platformFormat', ...GALLERY_TYPES].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
 
   // Use external store for results (bypasses ReactFlow's shallow diff)
@@ -850,6 +851,114 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
             <p className="text-[9px] text-muted-foreground">📝 {nodeData.config.templateId || 'heading-bold'}</p>
           </div>
         )}
+
+        {/* Platform Format inline selector */}
+        {nodeData.type === 'platformFormat' && (() => {
+          const PLATFORM_PRESETS = [
+            { platform: 'instagram', type: 'post', width: 1080, height: 1080, label: 'Post Quadrado' },
+            { platform: 'instagram', type: 'story', width: 1080, height: 1920, label: 'Stories' },
+            { platform: 'instagram', type: 'reel', width: 1080, height: 1920, label: 'Reels' },
+            { platform: 'instagram', type: 'landscape', width: 1080, height: 566, label: 'Post Paisagem' },
+            { platform: 'instagram', type: 'portrait', width: 1080, height: 1350, label: 'Post Retrato' },
+            { platform: 'whatsapp', type: 'status', width: 1080, height: 1920, label: 'Status' },
+            { platform: 'whatsapp', type: 'profile', width: 640, height: 640, label: 'Foto de Perfil' },
+            { platform: 'whatsapp', type: 'group', width: 640, height: 640, label: 'Foto de Grupo' },
+            { platform: 'facebook', type: 'post', width: 1200, height: 630, label: 'Post' },
+            { platform: 'facebook', type: 'story', width: 1080, height: 1920, label: 'Stories' },
+            { platform: 'facebook', type: 'cover', width: 820, height: 312, label: 'Capa' },
+            { platform: 'facebook', type: 'profile', width: 180, height: 180, label: 'Foto de Perfil' },
+            { platform: 'telegram', type: 'post', width: 1280, height: 720, label: 'Post' },
+            { platform: 'telegram', type: 'story', width: 1080, height: 1920, label: 'Stories' },
+            { platform: 'telegram', type: 'profile', width: 640, height: 640, label: 'Foto de Perfil' },
+          ];
+          const PLATFORMS = [
+            { id: 'instagram', name: 'Instagram', emoji: '📸' },
+            { id: 'whatsapp', name: 'WhatsApp', emoji: '💬' },
+            { id: 'facebook', name: 'Facebook', emoji: '👤' },
+            { id: 'telegram', name: 'Telegram', emoji: '✈️' },
+            { id: 'custom', name: 'Personalizado', emoji: '📐' },
+          ];
+          const currentPlatform = nodeData.config.platform || 'instagram';
+          const currentType = nodeData.config.contentType || 'post';
+          const types = PLATFORM_PRESETS.filter(p => p.platform === currentPlatform);
+          const selected = PLATFORM_PRESETS.find(p => p.platform === currentPlatform && p.type === currentType);
+          
+          return (
+            <div className="px-3 pb-3 pt-1 space-y-2" onClick={e => e.stopPropagation()}>
+              <div className="flex flex-wrap gap-1">
+                {PLATFORMS.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const firstType = PLATFORM_PRESETS.find(pr => pr.platform === p.id);
+                      handleInlineUpdate('platform', p.id);
+                      if (p.id === 'custom') {
+                        handleInlineUpdate('contentType', 'custom');
+                      } else if (firstType) {
+                        handleInlineUpdate('contentType', firstType.type);
+                        handleInlineUpdate('width', firstType.width);
+                        handleInlineUpdate('height', firstType.height);
+                      }
+                    }}
+                    className={`text-[10px] px-2 py-1 rounded-md border transition-all ${
+                      currentPlatform === p.id
+                        ? 'bg-primary/10 border-primary/40 text-primary font-semibold'
+                        : 'bg-muted/30 border-border/50 text-muted-foreground hover:bg-muted/60'
+                    }`}
+                  >
+                    {p.emoji} {p.name}
+                  </button>
+                ))}
+              </div>
+              {currentPlatform !== 'custom' && types.length > 0 && (
+                <select
+                  value={currentType}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    const preset = PLATFORM_PRESETS.find(p => p.platform === currentPlatform && p.type === e.target.value);
+                    handleInlineUpdate('contentType', e.target.value);
+                    if (preset) {
+                      handleInlineUpdate('width', preset.width);
+                      handleInlineUpdate('height', preset.height);
+                    }
+                  }}
+                  className="w-full h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
+                >
+                  {types.map(t => (
+                    <option key={t.type} value={t.type}>{t.label} ({t.width}x{t.height})</option>
+                  ))}
+                </select>
+              )}
+              {currentPlatform === 'custom' && (
+                <div className="flex gap-1.5">
+                  <input
+                    type="number" min="100" max="4096"
+                    value={nodeData.config.width || 1080}
+                    onChange={(e) => { e.stopPropagation(); handleInlineUpdate('width', parseInt(e.target.value) || 1080); }}
+                    onClick={e => e.stopPropagation()}
+                    className="w-1/2 h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
+                    placeholder="Largura"
+                  />
+                  <span className="text-muted-foreground text-[10px] self-center">×</span>
+                  <input
+                    type="number" min="100" max="4096"
+                    value={nodeData.config.height || 1080}
+                    onChange={(e) => { e.stopPropagation(); handleInlineUpdate('height', parseInt(e.target.value) || 1080); }}
+                    onClick={e => e.stopPropagation()}
+                    className="w-1/2 h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
+                    placeholder="Altura"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground bg-muted/30 rounded-md px-2 py-1.5 border border-border/30">
+                <Monitor className="h-3 w-3" />
+                <span className="font-medium">{nodeData.config.width || 1080} × {nodeData.config.height || 1080}px</span>
+                {selected && <span className="ml-auto opacity-70">{selected.label}</span>}
+              </div>
+            </div>
+          );
+        })()}
 
         {!hasResult && nodeData.type === 'llmProcess' && (
           <div className="px-3.5 py-2.5 flex items-center gap-2 flex-wrap">
