@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Copy, Pause, PlayCircle, Save, Plus, X, ArrowLeft } from 'lucide-react';
+import { Play, Trash2, Clapperboard, Film, Image, Music, Mic, Type, Wand2, Sparkles, Video, ChevronRight, Settings2, SkipForward, Bot, Maximize, Minimize, Copy, Pause, PlayCircle, Save, Plus, X, ArrowLeft, Images } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { StudioNode, StudioEdge, StudioNodeData, NODE_CATEGORIES, getNodeMeta } from './types';
@@ -32,6 +32,7 @@ import AISettingsPanel from './AISettingsPanel';
 import CreativeAgentPanel, { StoryboardScene } from './CreativeAgentPanel';
 
 import ExecutionLogPanel from './ExecutionLogPanel';
+import StudioGalleryManager from './StudioGalleryManager';
 import { nodeResultStore } from './useNodeResults';
 import { WorkflowCard, WorkflowCardGrid } from '@/components/ui/workflow-card';
 import { format } from 'date-fns';
@@ -80,6 +81,7 @@ const AICreativeStudioInner: React.FC = () => {
   const [showCanvas, setShowCanvas] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCreativeAgent, setShowCreativeAgent] = useState(false);
+  const [showGallery, setShowGallery] = useState(false);
   
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
@@ -655,6 +657,10 @@ const AICreativeStudioInner: React.FC = () => {
                 <Settings2 className="h-4 w-4" />
                 Configurações IA
               </Button>
+              <Button onClick={() => setShowGallery(true)} variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 px-6 py-2.5 rounded-full font-medium gap-2">
+                <Images className="h-4 w-4" />
+                Galeria de Referências
+              </Button>
             </div>
           </motion.div>
 
@@ -703,6 +709,7 @@ const AICreativeStudioInner: React.FC = () => {
         </AnimatePresence>
         <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
         <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
+        <StudioGalleryManager open={showGallery} onClose={() => setShowGallery(false)} />
 
         {/* Delete workflow confirm */}
         <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
@@ -990,6 +997,7 @@ const AICreativeStudioInner: React.FC = () => {
 
       <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
       <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
+      <StudioGalleryManager open={showGallery} onClose={() => setShowGallery(false)} />
       
 
       {/* New Workflow Dialog */}

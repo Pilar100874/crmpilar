@@ -6,6 +6,14 @@ export type StudioNodeType =
   | 'systemPrompt'
   | 'imageInput'
   | 'productImageSelect'
+  | 'galleryInfluencer'
+  | 'galleryAmbiente'
+  | 'galleryEstilo'
+  | 'galleryPaleta'
+  | 'galleryTextura'
+  | 'galleryLogo'
+  | 'galleryPose'
+  | 'textStyle'
   | 'llmProcess'
   | 'imageGen'
   | 'imageEdit'
@@ -82,6 +90,70 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         icon: '📦',
         color: '#10b981',
         defaultConfig: { productId: '', selectedImageUrl: '', productName: '' },
+      },
+      {
+        type: 'galleryInfluencer',
+        label: 'Influencer',
+        description: 'Selecione foto de influencer da galeria',
+        icon: '👤',
+        color: '#ec4899',
+        defaultConfig: { selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
+      },
+      {
+        type: 'galleryAmbiente',
+        label: 'Ref. Ambiente',
+        description: 'Referência de cenário ou ambientação',
+        icon: '🏔️',
+        color: '#22c55e',
+        defaultConfig: { selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
+      },
+      {
+        type: 'galleryEstilo',
+        label: 'Ref. Estilo',
+        description: 'Referência de estilo visual',
+        icon: '🎨',
+        color: '#8b5cf6',
+        defaultConfig: { selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
+      },
+      {
+        type: 'galleryPaleta',
+        label: 'Paleta de Cores',
+        description: 'Referência de paleta de cores',
+        icon: '🎨',
+        color: '#f59e0b',
+        defaultConfig: { selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
+      },
+      {
+        type: 'galleryTextura',
+        label: 'Textura/Material',
+        description: 'Referência de textura ou material',
+        icon: '🧱',
+        color: '#06b6d4',
+        defaultConfig: { selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
+      },
+      {
+        type: 'galleryLogo',
+        label: 'Logo/Marca',
+        description: 'Logo e identidade visual',
+        icon: '⭐',
+        color: '#f43f5e',
+        defaultConfig: { selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
+      },
+      {
+        type: 'galleryPose',
+        label: 'Ref. Pose',
+        description: 'Referência de pose e composição',
+        icon: '🤸',
+        color: '#6366f1',
+        defaultConfig: { selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
+      },
+      {
+        type: 'textStyle',
+        label: 'Estilo de Texto',
+        description: 'Configure estilo visual de texto para aplicar na imagem',
+        icon: '🔤',
+        color: '#e11d48',
+        defaultConfig: { text: '', fontFamily: 'Arial', fontSize: 48, fontWeight: 'bold', color: '#ffffff', bgColor: '', align: 'center', shadow: true, outline: true },
       },
     ],
   },
