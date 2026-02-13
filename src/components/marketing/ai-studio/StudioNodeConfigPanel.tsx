@@ -1441,19 +1441,10 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
       case 'loopOutput':
         return (
           <div className="space-y-2.5">
-            <ConfigField label="Salvamento Automático" hint="Quando ativado, cada imagem gerada no loop será automaticamente salva na galeria de mídia.">
-              <div className="flex items-center justify-between mt-2">
-                <Label className="text-[11px]">Auto-salvar na galeria</Label>
-                <Switch checked={config.autoSave !== false} onCheckedChange={(v) => update('autoSave', v)} />
-              </div>
-            </ConfigField>
-            <ConfigField label="Prefixo de Nome" hint="Prefixo usado ao salvar as imagens na galeria.">
-              <Input
-                value={config.savePrefix || 'AI Studio Lote'}
-                onChange={(e) => update('savePrefix', e.target.value)}
-                className="mt-1 text-sm"
-                placeholder="AI Studio Lote"
-              />
+            <ConfigField label="Revisão de Resultados" hint="Ao finalizar o lote, uma tela de revisão será exibida para você selecionar quais imagens salvar na galeria.">
+              <p className="text-xs text-muted-foreground mt-1">
+                As imagens geradas serão exibidas em uma tela de revisão ao final do processamento. Você poderá selecionar quais salvar na galeria ou descartar.
+              </p>
             </ConfigField>
           </div>
         );
