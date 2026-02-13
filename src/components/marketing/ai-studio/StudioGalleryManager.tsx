@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { 
   Images, Upload, Trash2, Search, X, Plus, 
-  User, Mountain, Palette, Brush, Box, Star, Move
+  User, Mountain, Palette, Brush, Box, Star, Move, FolderOpen
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
@@ -22,6 +22,7 @@ export interface GalleryImage {
 }
 
 export const GALLERY_CATEGORIES = [
+  { id: 'salvas', label: 'Imagens Salvas', icon: FolderOpen, color: '#3b82f6', gradient: 'from-blue-500/20 to-sky-500/20', desc: 'Imagens salvas no sistema (galeria de mídia)' },
   { id: 'influencer', label: 'Influencers', icon: User, color: '#ec4899', gradient: 'from-pink-500/20 to-rose-500/20', desc: 'Fotos de modelos e influenciadores' },
   { id: 'ambiente', label: 'Ambientes', icon: Mountain, color: '#22c55e', gradient: 'from-green-500/20 to-emerald-500/20', desc: 'Cenários e referências de ambientação' },
   { id: 'estilo', label: 'Estilos', icon: Brush, color: '#8b5cf6', gradient: 'from-violet-500/20 to-purple-500/20', desc: 'Referências de estilo visual' },
@@ -51,13 +52,37 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
   const fetchImages = useCallback(async () => {
     if (!estabelecimentoId) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from('studio_gallery_images')
-      .select('*')
-      .eq('estabelecimento_id', estabelecimentoId)
-      .eq('categoria', activeCategory)
-      .order('created_at', { ascending: false });
-    if (!error) setImages((data as GalleryImage[]) || []);
+    
+    if (activeCategory === 'salvas') {
+      // Fetch from media_gallery (system-wide saved images)
+      const { data, error } = await supabase
+        .from('media_gallery')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .in('tipo', ['imagem', 'image'])
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (!error) {
+        setImages((data || []).map((item: any) => ({
+          id: item.id,
+          categoria: 'salvas',
+          nome: item.nome,
+          descricao: item.descricao,
+          image_url: item.public_url,
+          storage_path: item.storage_path,
+          tags: null,
+          created_at: item.created_at,
+        })));
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('studio_gallery_images')
+        .select('*')
+        .eq('estabelecimento_id', estabelecimentoId)
+        .eq('categoria', activeCategory)
+        .order('created_at', { ascending: false });
+      if (!error) setImages((data as GalleryImage[]) || []);
+    }
     setLoading(false);
   }, [estabelecimentoId, activeCategory]);
 
@@ -67,6 +92,10 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
 
   const handleUpload = useCallback(async (files: FileList) => {
     if (!estabelecimentoId || files.length === 0) return;
+    if (activeCategory === 'salvas') {
+      toast.info('Use a galeria de mídia do sistema para adicionar imagens salvas.');
+      return;
+    }
     setUploading(true);
     
     const uploadPromises = Array.from(files).map(async (file) => {
@@ -109,14 +138,25 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
 
   const handleDelete = useCallback(async (img: GalleryImage) => {
     try {
-      if (img.storage_path) {
-        await supabase.storage.from('studio-gallery').remove([img.storage_path]);
-      }
-      const { error } = await supabase.from('studio_gallery_images').delete().eq('id', img.id);
-      if (error) {
-        console.error('Erro ao excluir:', error);
-        toast.error('Erro ao remover imagem');
-        return;
+      if (activeCategory === 'salvas') {
+        // Delete from media_gallery
+        if (img.storage_path) {
+          await supabase.storage.from('media_gallery').remove([img.storage_path]);
+        }
+        const { error } = await supabase.from('media_gallery').delete().eq('id', img.id);
+        if (error) {
+          toast.error('Erro ao remover imagem');
+          return;
+        }
+      } else {
+        if (img.storage_path) {
+          await supabase.storage.from('studio-gallery').remove([img.storage_path]);
+        }
+        const { error } = await supabase.from('studio_gallery_images').delete().eq('id', img.id);
+        if (error) {
+          toast.error('Erro ao remover imagem');
+          return;
+        }
       }
       toast.success('Imagem removida');
       fetchImages();
@@ -126,7 +166,7 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
     } finally {
       setDeleteConfirm(null);
     }
-  }, [fetchImages]);
+  }, [activeCategory, fetchImages]);
 
   const filtered = images.filter(img => 
     !search || img.nome?.toLowerCase().includes(search.toLowerCase())
@@ -208,22 +248,24 @@ const StudioGalleryManager: React.FC<StudioGalleryManagerProps> = ({ open, onClo
                 />
               </div>
               <div className="flex-1" />
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => e.target.files && handleUpload(e.target.files)}
-                  disabled={uploading}
-                />
-                <Button size="sm" className="gap-1.5 text-xs h-8" disabled={uploading} asChild>
-                  <span>
-                    <Upload className="h-3.5 w-3.5" />
-                    {uploading ? 'Enviando...' : 'Adicionar'}
-                  </span>
-                </Button>
-              </label>
+              {activeCategory !== 'salvas' && (
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => e.target.files && handleUpload(e.target.files)}
+                    disabled={uploading}
+                  />
+                  <Button size="sm" className="gap-1.5 text-xs h-8" disabled={uploading} asChild>
+                    <span>
+                      <Upload className="h-3.5 w-3.5" />
+                      {uploading ? 'Enviando...' : 'Adicionar'}
+                    </span>
+                  </Button>
+                </label>
+              )}
             </div>
 
             {/* Grid */}
