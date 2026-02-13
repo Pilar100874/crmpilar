@@ -1438,6 +1438,82 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
           </div>
         );
 
+      case 'platformFormat': {
+        const PLATFORM_PRESETS = [
+          { platform: 'instagram', type: 'post', width: 1080, height: 1080, label: 'Post Quadrado' },
+          { platform: 'instagram', type: 'story', width: 1080, height: 1920, label: 'Stories' },
+          { platform: 'instagram', type: 'reel', width: 1080, height: 1920, label: 'Reels' },
+          { platform: 'instagram', type: 'landscape', width: 1080, height: 566, label: 'Post Paisagem' },
+          { platform: 'instagram', type: 'portrait', width: 1080, height: 1350, label: 'Post Retrato' },
+          { platform: 'whatsapp', type: 'status', width: 1080, height: 1920, label: 'Status' },
+          { platform: 'whatsapp', type: 'profile', width: 640, height: 640, label: 'Foto de Perfil' },
+          { platform: 'whatsapp', type: 'group', width: 640, height: 640, label: 'Foto de Grupo' },
+          { platform: 'facebook', type: 'post', width: 1200, height: 630, label: 'Post' },
+          { platform: 'facebook', type: 'story', width: 1080, height: 1920, label: 'Stories' },
+          { platform: 'facebook', type: 'cover', width: 820, height: 312, label: 'Capa' },
+          { platform: 'facebook', type: 'profile', width: 180, height: 180, label: 'Foto de Perfil' },
+          { platform: 'telegram', type: 'post', width: 1280, height: 720, label: 'Post' },
+          { platform: 'telegram', type: 'story', width: 1080, height: 1920, label: 'Stories' },
+          { platform: 'telegram', type: 'profile', width: 640, height: 640, label: 'Foto de Perfil' },
+        ];
+        const currentPlatform = config.platform || 'instagram';
+        const types = PLATFORM_PRESETS.filter(p => p.platform === currentPlatform);
+        return (
+          <div className="space-y-2.5">
+            <ConfigField label="Plataforma" hint="Selecione a plataforma de destino para definir o tamanho ideal da imagem.">
+              <Select value={currentPlatform} onValueChange={(v) => {
+                update('platform', v);
+                const first = PLATFORM_PRESETS.find(p => p.platform === v);
+                if (first) {
+                  update('contentType', first.type);
+                  update('width', first.width);
+                  update('height', first.height);
+                }
+              }}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="instagram">📸 Instagram</SelectItem>
+                  <SelectItem value="whatsapp">💬 WhatsApp</SelectItem>
+                  <SelectItem value="facebook">👤 Facebook</SelectItem>
+                  <SelectItem value="telegram">✈️ Telegram</SelectItem>
+                  <SelectItem value="custom">📐 Personalizado</SelectItem>
+                </SelectContent>
+              </Select>
+            </ConfigField>
+            {currentPlatform !== 'custom' && (
+              <ConfigField label="Tipo de Conteúdo" hint="Formato específico para a plataforma selecionada.">
+                <Select value={config.contentType || types[0]?.type || 'post'} onValueChange={(v) => {
+                  update('contentType', v);
+                  const preset = PLATFORM_PRESETS.find(p => p.platform === currentPlatform && p.type === v);
+                  if (preset) { update('width', preset.width); update('height', preset.height); }
+                }}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {types.map(t => (
+                      <SelectItem key={t.type} value={t.type}>{t.label} ({t.width}×{t.height})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </ConfigField>
+            )}
+            {currentPlatform === 'custom' && (
+              <div className="grid grid-cols-2 gap-2">
+                <ConfigField label="Largura (px)">
+                  <Input type="number" min={100} max={4096} value={config.width || 1080} onChange={(e) => update('width', parseInt(e.target.value) || 1080)} className="mt-1" />
+                </ConfigField>
+                <ConfigField label="Altura (px)">
+                  <Input type="number" min={100} max={4096} value={config.height || 1080} onChange={(e) => update('height', parseInt(e.target.value) || 1080)} className="mt-1" />
+                </ConfigField>
+              </div>
+            )}
+            <div className="bg-muted/40 rounded-lg p-3 text-center">
+              <p className="text-sm font-semibold">{config.width || 1080} × {config.height || 1080}px</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Conecte à saída de um bloco de geração de imagem</p>
+            </div>
+          </div>
+        );
+      }
+
       case 'loopOutput':
         return (
           <div className="space-y-2.5">

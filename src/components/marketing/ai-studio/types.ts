@@ -18,6 +18,7 @@ export type StudioNodeType =
   | 'gallerySalvas'
   | 'textStyle'
   | 'textContent'
+  | 'platformFormat'
   | 'llmProcess'
   | 'imageGen'
   | 'imageEdit'
@@ -201,6 +202,14 @@ export const NODE_CATEGORIES: NodeCategory[] = [
           bodyFont: 'Inter', bodySize: 24, bodyWeight: 'normal', bodyColor: '#666666',
           textAlign: 'center',
         },
+      },
+      {
+        type: 'platformFormat',
+        label: 'Formato / Plataforma',
+        description: 'Defina tamanho e formato por plataforma (Instagram, Facebook, WhatsApp...)',
+        icon: '📐',
+        color: '#0891b2',
+        defaultConfig: { platform: 'instagram', contentType: 'post', width: 1080, height: 1080 },
       },
     ],
   },

@@ -126,10 +126,18 @@ export function useStudioExecution() {
     const { type, config } = node.data;
 
     const textInputs = inputs
-      .filter((i) => !i?._isSystemPrompt && !i?.imageUrls && !i?.imageUrl)
+      .filter((i) => !i?._isSystemPrompt && !i?.imageUrls && !i?.imageUrl && !i?._isPlatformFormat)
       .map((i) => (typeof i === 'string' ? i : i?.text || ''))
       .filter(Boolean);
     const combinedInput = textInputs.join('\n\n');
+
+    // Detect platform format from inputs
+    const formatInput = inputs.find((i) => i?._isPlatformFormat);
+    const formatWidth = formatInput?._formatWidth;
+    const formatHeight = formatInput?._formatHeight;
+    const formatAspectRatio = formatInput?._formatAspectRatio;
+    const formatPlatform = formatInput?._formatPlatform;
+    const formatContentType = formatInput?._formatContentType;
 
     const systemPrompts = inputs.filter((i) => i?._isSystemPrompt).map((i) => i.text);
     const systemPrompt = systemPrompts.length > 0 ? systemPrompts.join('\n') : undefined;
@@ -274,6 +282,26 @@ export function useStudioExecution() {
           },
         };
 
+      case 'platformFormat': {
+        const platformNames: Record<string, string> = {
+          instagram: 'Instagram', facebook: 'Facebook', whatsapp: 'WhatsApp', telegram: 'Telegram', custom: 'Personalizado',
+        };
+        const w = config.width || 1080;
+        const h = config.height || 1080;
+        const platformLabel = platformNames[config.platform] || config.platform;
+        const contentType = config.contentType || 'post';
+        const aspectRatio = w > h ? `${Math.round(w/h * 100)/100}:1` : w < h ? `1:${Math.round(h/w * 100)/100}` : '1:1';
+        return {
+          _isPlatformFormat: true,
+          _formatWidth: w,
+          _formatHeight: h,
+          _formatPlatform: config.platform,
+          _formatContentType: contentType,
+          _formatAspectRatio: aspectRatio,
+          text: `📐 ${platformLabel} - ${contentType} (${w}×${h}px, ${aspectRatio})`,
+        };
+      }
+
       case 'llmProcess': {
         const result = await callStudio('generate_text', {
           prompt: combinedInput,
@@ -291,6 +319,10 @@ export function useStudioExecution() {
         const hasPlacementHint = /mesa|chão|prateleira|vitrine|cenário|cena|fundo|background|scene|table|shelf|display|flat\s*lay/i.test(promptLower);
         
         let enrichedPrompt = combinedInput || 'A beautiful scene';
+        // Inject platform format dimensions into prompt
+        if (formatWidth && formatHeight) {
+          enrichedPrompt = `${enrichedPrompt}\n\n[FORMAT] Generate this image optimized for ${formatPlatform || 'social media'} ${formatContentType || 'post'}, aspect ratio ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px). Compose the image to fit this exact aspect ratio perfectly.`;
+        }
         if (hasProduct && hasInfluencer && !hasPlacementHint) {
           enrichedPrompt = `${enrichedPrompt}\n\n[INSTRUÇÃO PADRÃO] A pessoa/influencer deve estar SEGURANDO o produto na mão, mostrando-o de forma natural e elegante. O produto deve estar visível e em destaque na mão da pessoa.`;
         }
@@ -338,6 +370,9 @@ export function useStudioExecution() {
         const modePrompt = modeDescriptions[config.compositeMode] || modeDescriptions.clothing;
         const userPrompt = config.prompt || combinedInput || '';
         let fullPrompt = `${modePrompt} ${userPrompt}`.trim();
+        if (formatWidth && formatHeight) {
+          fullPrompt = `${fullPrompt}\n\n[FORMAT] Optimized for ${formatPlatform || 'social media'} ${formatContentType || 'post'}, aspect ratio ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
+        }
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
