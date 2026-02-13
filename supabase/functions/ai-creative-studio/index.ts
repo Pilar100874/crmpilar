@@ -129,23 +129,36 @@ serve(async (req) => {
 
       case "generate_image": {
         const model = validateModel(params.model || "google/gemini-2.5-flash-image", "image");
-        const content: any[] = [
-          { type: "text", text: params.prompt },
-        ];
-        // Attach reference images if provided (filter out oversized ones)
+        const content: any[] = [];
+        
+        // Add each reference image with a text label BEFORE it so the model knows its role
         const refImages = (params.imageUrls || []) as string[];
-        for (const url of refImages) {
-          const safe = truncateImageUrl(url);
+        const imageRoles = (params.imageRoles || []) as string[];
+        for (let idx = 0; idx < refImages.length; idx++) {
+          const safe = truncateImageUrl(refImages[idx]);
           if (safe) {
+            const roleLabel = imageRoles[idx] || `Reference image ${idx + 1}`;
+            content.push({ type: "text", text: `[IMAGE ${idx + 1}: ${roleLabel}]` });
             content.push({ type: "image_url", image_url: { url: safe } });
           }
         }
-
-        console.log(`[generate_image] Sending prompt: "${(params.prompt || '').substring(0, 100)}", ref images: ${content.length - 1}`);
         
+        // Add the main prompt AFTER images so it has full context
+        content.push({ type: "text", text: params.prompt });
+
+        console.log(`[generate_image] Sending prompt: "${(params.prompt || '').substring(0, 100)}", ref images: ${refImages.length}`);
+        
+        // System message enforces strict reference preservation rules
+        const systemMessage = refImages.length > 0
+          ? "You are an image generator. When reference images are provided, follow these ABSOLUTE rules: 1) Images labeled PRODUCT, LOGO, PERSON/INFLUENCER, or CLOTHING must be reproduced EXACTLY as shown - same colors, shapes, details, identity. NEVER modify, reimagine, or replace them. 2) Images labeled ENVIRONMENT or POSE are flexible references - use them only for inspiration on background/scenery/positioning. 3) The generated image must contain the exact product/person/clothing from the references, placed in the scene naturally."
+          : "You are an image generator. Create high-quality images based on the prompt.";
+
         const data = await callGateway(LOVABLE_API_KEY, {
           model,
-          messages: [{ role: "user", content }],
+          messages: [
+            { role: "system", content: systemMessage },
+            { role: "user", content },
+          ],
           modalities: ["image", "text"],
         });
 
