@@ -129,38 +129,95 @@ serve(async (req) => {
 
       case "generate_image": {
         const model = validateModel(params.model || "google/gemini-2.5-flash-image", "image");
-        const content: any[] = [];
-        
-        // Add each reference image with a text label BEFORE it so the model knows its role
         const refImages = (params.imageUrls || []) as string[];
         const imageRoles = (params.imageRoles || []) as string[];
-        for (let idx = 0; idx < refImages.length; idx++) {
-          const safe = truncateImageUrl(refImages[idx]);
-          if (safe) {
-            const roleLabel = imageRoles[idx] || `Reference image ${idx + 1}`;
-            content.push({ type: "text", text: `[IMAGE ${idx + 1}: ${roleLabel}]` });
-            content.push({ type: "image_url", image_url: { url: safe } });
+
+        // Identify if there's a strict reference (product/logo/influencer/clothing) — use EDIT mode
+        const strictRoles = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
+        const hasStrictRef = imageRoles.some(r => strictRoles.includes(r));
+
+        // Find the primary strict image (product takes priority) to use as the BASE image for editing
+        let primaryImageUrl: string | null = null;
+        const otherImages: { url: string; role: string }[] = [];
+        
+        if (hasStrictRef) {
+          // Priority order for primary: product > logo > influencer > clothing
+          const priorityOrder = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
+          for (const targetRole of priorityOrder) {
+            const idx = imageRoles.indexOf(targetRole);
+            if (idx !== -1 && refImages[idx]) {
+              const safe = truncateImageUrl(refImages[idx]);
+              if (safe) {
+                primaryImageUrl = safe;
+                // Collect remaining images as context
+                for (let i = 0; i < refImages.length; i++) {
+                  if (i !== idx) {
+                    const s = truncateImageUrl(refImages[i]);
+                    if (s) otherImages.push({ url: s, role: imageRoles[i] || 'REFERENCE' });
+                  }
+                }
+                break;
+              }
+            }
           }
         }
-        
-        // Add the main prompt AFTER images so it has full context
-        content.push({ type: "text", text: params.prompt });
 
-        console.log(`[generate_image] Sending prompt: "${(params.prompt || '').substring(0, 100)}", ref images: ${refImages.length}`);
-        
-        // System message enforces strict reference preservation rules
-        const systemMessage = refImages.length > 0
-          ? "You are an image generator. When reference images are provided, follow these ABSOLUTE rules: 1) Images labeled PRODUCT, LOGO, PERSON/INFLUENCER, or CLOTHING must be reproduced EXACTLY as shown - same colors, shapes, details, identity. NEVER modify, reimagine, or replace them. 2) Images labeled ENVIRONMENT or POSE are flexible references - use them only for inspiration on background/scenery/positioning. 3) The generated image must contain the exact product/person/clothing from the references, placed in the scene naturally."
-          : "You are an image generator. Create high-quality images based on the prompt.";
+        let data: any;
 
-        const data = await callGateway(LOVABLE_API_KEY, {
-          model,
-          messages: [
-            { role: "system", content: systemMessage },
-            { role: "user", content },
-          ],
-          modalities: ["image", "text"],
-        });
+        if (primaryImageUrl) {
+          // === EDIT MODE: Use the product/main image as base, edit around it ===
+          console.log(`[generate_image] EDIT MODE — preserving primary image, ${otherImages.length} other refs`);
+          
+          const editContent: any[] = [];
+          // Instruction: edit AROUND the product, not the product itself
+          let editPrompt = `EDIT THIS IMAGE: Keep the main subject (product/logo/person) EXACTLY as it is — same shape, colors, label, packaging, proportions. Do NOT change, redraw, or reinterpret the subject. Only modify the BACKGROUND and SURROUNDINGS based on the following instructions:\n\n${params.prompt}`;
+          
+          // Add other reference images as style/environment context
+          for (const other of otherImages) {
+            editContent.push({ type: "text", text: `[STYLE/ENVIRONMENT REFERENCE: ${other.role}]` });
+            editContent.push({ type: "image_url", image_url: { url: other.url } });
+          }
+          
+          // Add the primary image LAST so it's the "subject" being edited
+          editContent.push({ type: "text", text: editPrompt });
+          editContent.push({ type: "image_url", image_url: { url: primaryImageUrl } });
+
+          data = await callGateway(LOVABLE_API_KEY, {
+            model,
+            messages: [
+              { role: "system", content: "You are an image editor. You receive a product/subject image. Your job is to ONLY change the background/environment/scenery. The main subject (product, packaging, logo, person) must remain PIXEL-PERFECT — identical shape, colors, text, labels, proportions. Never redraw, reimagine, or alter the subject in any way." },
+              { role: "user", content: editContent },
+            ],
+            modalities: ["image", "text"],
+          });
+        } else {
+          // === GENERATION MODE: No strict references, generate freely ===
+          const content: any[] = [];
+          for (let idx = 0; idx < refImages.length; idx++) {
+            const safe = truncateImageUrl(refImages[idx]);
+            if (safe) {
+              const roleLabel = imageRoles[idx] || `Reference image ${idx + 1}`;
+              content.push({ type: "text", text: `[IMAGE ${idx + 1}: ${roleLabel}]` });
+              content.push({ type: "image_url", image_url: { url: safe } });
+            }
+          }
+          content.push({ type: "text", text: params.prompt });
+
+          console.log(`[generate_image] GENERATION MODE — ${refImages.length} refs`);
+
+          const systemMessage = refImages.length > 0
+            ? "You are an image generator. Use reference images for style and environment inspiration. Create a high-quality image based on the prompt."
+            : "You are an image generator. Create high-quality images based on the prompt.";
+
+          data = await callGateway(LOVABLE_API_KEY, {
+            model,
+            messages: [
+              { role: "system", content: systemMessage },
+              { role: "user", content },
+            ],
+            modalities: ["image", "text"],
+          });
+        }
 
         const msg = data.choices?.[0]?.message;
         console.log(`[generate_image] Full message keys:`, JSON.stringify(Object.keys(msg || {})));
