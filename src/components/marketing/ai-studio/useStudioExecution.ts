@@ -244,8 +244,16 @@ export function useStudioExecution() {
       }
 
       case 'imageGen': {
-        // Build enriched prompt with reference descriptions
+        // Auto-detect product + influencer without explicit placement prompt → default to holding
+        const hasProduct = inputs.some((i) => i?._referenceRole === 'produto');
+        const hasInfluencer = inputs.some((i) => i?._referenceRole === 'influencer');
+        const promptLower = (combinedInput || '').toLowerCase();
+        const hasPlacementHint = /mesa|chão|prateleira|vitrine|cenário|cena|fundo|background|scene|table|shelf|display|flat\s*lay/i.test(promptLower);
+        
         let enrichedPrompt = combinedInput || 'A beautiful scene';
+        if (hasProduct && hasInfluencer && !hasPlacementHint) {
+          enrichedPrompt = `${enrichedPrompt}\n\n[INSTRUÇÃO PADRÃO] A pessoa/influencer deve estar SEGURANDO o produto na mão, mostrando-o de forma natural e elegante. O produto deve estar visível e em destaque na mão da pessoa.`;
+        }
         if (referenceDescs.length > 0) {
           enrichedPrompt = `${enrichedPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS (MUST FOLLOW):\nItems marked [NÃO ALTERAR] MUST be reproduced EXACTLY as shown in the reference image — do NOT change, reimagine, or substitute them.\nItems marked [REFERÊNCIA FLEXÍVEL] can be adapted creatively.\n\n${referenceDescs.join('\n')}`;
         }
