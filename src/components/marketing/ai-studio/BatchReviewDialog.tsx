@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -176,10 +177,11 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
         </DialogContent>
       </Dialog>
 
-      {/* Zoom overlay */}
-      {zoomedIndex !== null && results[zoomedIndex] && (
+      {/* Zoom overlay - rendered via portal to escape Dialog stacking context */}
+      {zoomedIndex !== null && results[zoomedIndex] && createPortal(
         <div
-          className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 cursor-zoom-out"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 cursor-zoom-out"
+          style={{ zIndex: 99999 }}
           onClick={() => setZoomedIndex(null)}
         >
           <button
@@ -219,7 +221,8 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
