@@ -385,7 +385,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         .from('media_gallery')
         .insert({
           estabelecimento_id: estabId,
-          tipo: ext === 'gif' ? 'gif' : 'imagem',
+          tipo: 'image',
           storage_path: storagePath,
           public_url: publicUrl,
           nome: `AI Studio - ${nodeData.label}`,
