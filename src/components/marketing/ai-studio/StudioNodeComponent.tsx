@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 import GallerySelectInline from './GallerySelectInline';
 import { GalleryCategoryId } from './StudioGalleryManager';
 import { 
@@ -13,7 +14,7 @@ import {
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
   Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download,
   DollarSign, Volume2, Edit3, Package, User, Mountain, Brush, Palette,
-  Box, Star, Move, TypeIcon
+  Box, Star, Move, TypeIcon, Save
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
@@ -253,6 +254,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const [imageExpanded, setImageExpanded] = useState(false);
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSavingToGallery, setIsSavingToGallery] = useState(false);
   const IconComponent = nodeIconMap[nodeData.type] || Play;
   const gradient = nodeGradientMap[nodeData.type] || 'from-slate-500/20 to-zinc-500/20';
   const iconColor = nodeIconColorMap[nodeData.type] || 'text-slate-400';
@@ -335,6 +337,54 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const handleInlineUpdate = useCallback((key: string, value: any) => {
     dispatchConfigUpdate(id, { [key]: value });
   }, [id]);
+
+  // Save image to media_gallery (system-wide gallery for catalogs, attachments, etc.)
+  const handleSaveToMediaGallery = useCallback(async (imageUrl: string) => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId || !imageUrl) return;
+    setIsSavingToGallery(true);
+    try {
+      // Fetch image as blob
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const ext = blob.type?.includes('png') ? 'png' : blob.type?.includes('gif') ? 'gif' : 'jpg';
+      const fileName = `studio-${nodeData.type}-${id}-${Date.now()}.${ext}`;
+      const storagePath = `${estabId}/${fileName}`;
+
+      // Upload to marketing-images bucket
+      const { error: uploadErr } = await supabase.storage
+        .from('marketing-images')
+        .upload(storagePath, blob, { contentType: blob.type || 'image/png' });
+      if (uploadErr) throw uploadErr;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('marketing-images')
+        .getPublicUrl(storagePath);
+
+      // Insert into media_gallery table
+      const { error: dbErr } = await supabase
+        .from('media_gallery')
+        .insert({
+          estabelecimento_id: estabId,
+          tipo: ext === 'gif' ? 'gif' : 'imagem',
+          storage_path: storagePath,
+          public_url: publicUrl,
+          nome: `AI Studio - ${nodeData.label}`,
+          descricao: `Gerado pelo AI Creative Studio (${nodeData.type})`,
+          tamanho_bytes: blob.size,
+          mime_type: blob.type || 'image/png',
+          origem: 'ai_studio',
+        });
+      if (dbErr) throw dbErr;
+
+      toast.success('✅ Salvo na galeria do sistema! Disponível em catálogos, anexos rápidos, etc.');
+    } catch (err: any) {
+      console.error('Erro ao salvar na galeria:', err);
+      toast.error('Erro ao salvar na galeria: ' + (err.message || ''));
+    } finally {
+      setIsSavingToGallery(false);
+    }
+  }, [id, nodeData.type, nodeData.label]);
 
   return (
     <>
@@ -823,6 +873,20 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   />
                 </div>
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      if (resultImage) handleSaveToMediaGallery(resultImage);
+                    }}
+                    disabled={isSavingToGallery}
+                    className="p-1.5 rounded-lg bg-emerald-600/80 backdrop-blur-sm hover:bg-emerald-600 transition-colors"
+                    title="Salvar na galeria do sistema"
+                  >
+                    {isSavingToGallery ? <Loader2 className="h-3 w-3 text-white animate-spin" /> : <Save className="h-3 w-3 text-white" />}
+                  </button>
                   <a
                     href={resultImage}
                     download={`studio-${nodeData.type}-${id}.png`}
