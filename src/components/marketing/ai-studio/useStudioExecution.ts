@@ -161,6 +161,16 @@ export function useStudioExecution() {
       return pa - pb;
     });
     const orderedImageInputs = bucketedImages.flatMap((b) => b.urls);
+    // Build role labels for each image in order (passed to edge function)
+    const roleLabelsMap: Record<string, string> = {
+      logo: 'LOGO - DO NOT MODIFY', produto: 'PRODUCT - DO NOT MODIFY',
+      influencer: 'PERSON/INFLUENCER - DO NOT MODIFY', roupa: 'CLOTHING - DO NOT MODIFY',
+      pose: 'POSE REFERENCE (flexible)', estilo: 'STYLE REFERENCE (flexible)',
+      paleta: 'COLOR PALETTE (flexible)', textura: 'TEXTURE (flexible)',
+      ambiente: 'ENVIRONMENT/BACKGROUND (flexible, use for scenery only)',
+      __none__: 'GENERAL REFERENCE',
+    };
+    const orderedImageRoles = bucketedImages.flatMap((b) => b.urls.map(() => roleLabelsMap[b.role] || 'REFERENCE'));
 
     switch (type) {
       case 'textInput':
@@ -294,6 +304,7 @@ export function useStudioExecution() {
           prompt: enrichedPrompt,
           model: config.model,
           imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
+          imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
         });
         return result;
       }
@@ -333,6 +344,7 @@ export function useStudioExecution() {
           prompt: fullPrompt,
           model: config.model || 'google/gemini-2.5-flash-image',
           imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : undefined,
+          imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
         });
         return result;
       }
