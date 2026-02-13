@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,16 +22,6 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
   const [selected, setSelected] = useState<Set<number>>(() => new Set(results.map((_, i) => i)));
   const [saving, setSaving] = useState(false);
   const [zoomedIndex, setZoomedIndex] = useState<number | null>(null);
-  const zoomOverlayRef = useRef<HTMLDivElement>(null);
-
-  // Native capture-phase pointerdown listener to block Radix's document-level detection
-  useEffect(() => {
-    const el = zoomOverlayRef.current;
-    if (!el) return;
-    const handler = (e: PointerEvent) => e.stopPropagation();
-    el.addEventListener('pointerdown', handler, true); // capture phase
-    return () => el.removeEventListener('pointerdown', handler, true);
-  }, [zoomedIndex]);
 
   const toggleItem = (idx: number) => {
     setSelected(prev => {
@@ -193,61 +182,57 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
               {saving ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
               Salvar {selected.size} na Galeria
             </Button>
-          </DialogFooter>
+           </DialogFooter>
+
+          {/* Zoom overlay - rendered INSIDE DialogContent to stay within Radix's DOM tree */}
+          {zoomedIndex !== null && results[zoomedIndex] && (
+            <div
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 cursor-zoom-out"
+              style={{ zIndex: 99999 }}
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setZoomedIndex(null);
+              }}
+            >
+              <button
+                onClick={() => setZoomedIndex(null)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
+              >
+                <X className="h-6 w-6 text-white" />
+              </button>
+              <div className="relative max-w-[90vw] max-h-[85vh] flex flex-col items-center gap-3">
+                <img
+                  src={results[zoomedIndex].imageUrl}
+                  alt={results[zoomedIndex].productName}
+                  className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                />
+                <p className="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
+                  {results[zoomedIndex].productName}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-white border-white/30 hover:bg-white/10"
+                    disabled={zoomedIndex <= 0}
+                    onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex - 1); }}
+                  >
+                    ← Anterior
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-white border-white/30 hover:bg-white/10"
+                    disabled={zoomedIndex >= results.length - 1}
+                    onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex + 1); }}
+                  >
+                    Próxima →
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
-
-      {/* Zoom overlay - rendered via portal to escape Dialog stacking context */}
-      {zoomedIndex !== null && results[zoomedIndex] && createPortal(
-        <div
-          ref={zoomOverlayRef}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 cursor-zoom-out"
-          style={{ zIndex: 99999 }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setZoomedIndex(null);
-          }}
-        >
-          <button
-            onClick={() => setZoomedIndex(null)}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
-          >
-            <X className="h-6 w-6 text-white" />
-          </button>
-          <div
-            className="relative max-w-[90vw] max-h-[85vh] flex flex-col items-center gap-3"
-          >
-            <img
-              src={results[zoomedIndex].imageUrl}
-              alt={results[zoomedIndex].productName}
-              className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
-            />
-            <p className="text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
-              {results[zoomedIndex].productName}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-white border-white/30 hover:bg-white/10"
-                disabled={zoomedIndex <= 0}
-                onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex - 1); }}
-              >
-                ← Anterior
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-white border-white/30 hover:bg-white/10"
-                disabled={zoomedIndex >= results.length - 1}
-                onClick={(e) => { e.stopPropagation(); setZoomedIndex(zoomedIndex + 1); }}
-              >
-                Próxima →
-              </Button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </>
   );
 };
