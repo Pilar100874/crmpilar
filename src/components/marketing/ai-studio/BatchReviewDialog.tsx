@@ -99,8 +99,8 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <Dialog open={open} onOpenChange={(v) => { if (!v && zoomedIndex === null) onClose(); }}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" onInteractOutside={(e) => { if (zoomedIndex !== null) e.preventDefault(); }}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ImageIcon className="h-5 w-5 text-primary" />

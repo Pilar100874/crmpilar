@@ -90,6 +90,15 @@ const AICreativeStudioInner: React.FC = () => {
   const { screenToFlowPosition } = useReactFlow();
   const { executeWorkflow, isExecuting, executionLog, currentNodeId, clearLog, batchReviewResults, setBatchReviewResults } = useStudioExecution();
 
+  // Listen for reopen batch review event from loopOutput node
+  useEffect(() => {
+    const handler = (e: CustomEvent) => {
+      if (e.detail?.length > 0) setBatchReviewResults(e.detail);
+    };
+    window.addEventListener('studio-reopen-batch', handler as EventListener);
+    return () => window.removeEventListener('studio-reopen-batch', handler as EventListener);
+  }, [setBatchReviewResults]);
+
   // Workflow management state
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
   const [currentWorkflowName, setCurrentWorkflowName] = useState('');
@@ -1000,7 +1009,7 @@ const AICreativeStudioInner: React.FC = () => {
       <AISettingsPanel open={showSettings} onClose={() => setShowSettings(false)} />
       <CreativeAgentPanel open={showCreativeAgent} onClose={() => setShowCreativeAgent(false)} onCreateWorkflow={handleStoryboardToWorkflow} />
       <StudioGalleryManager open={showGallery} onClose={() => setShowGallery(false)} />
-      
+
 
       {/* New Workflow Dialog */}
       <AnimatePresence>

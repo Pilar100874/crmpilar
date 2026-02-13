@@ -733,6 +733,14 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 {activeResult.loopResults.length > 6 && (
                   <p className="text-[9px] text-muted-foreground text-center">+{activeResult.loopResults.length - 6} mais</p>
                 )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('studio-reopen-batch', { detail: activeResult.loopResults })); }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="w-full mt-1 text-[10px] font-medium py-1.5 rounded-lg bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-colors"
+                >
+                  📋 Abrir Revisão do Lote
+                </button>
               </div>
             )}
           </div>
