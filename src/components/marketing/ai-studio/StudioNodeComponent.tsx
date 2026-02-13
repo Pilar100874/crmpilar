@@ -28,6 +28,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   galleryTextura: Box,
   galleryLogo: Star,
   galleryPose: Move,
+  galleryRoupa: Box,
   textStyle: TypeIcon,
   textContent: FileText,
   llmProcess: Type,
@@ -55,6 +56,7 @@ const nodeGradientMap: Record<string, string> = {
   galleryTextura: 'from-cyan-500/20 to-sky-500/20',
   galleryLogo: 'from-rose-500/20 to-red-500/20',
   galleryPose: 'from-indigo-500/20 to-blue-500/20',
+  galleryRoupa: 'from-fuchsia-500/20 to-purple-500/20',
   textStyle: 'from-rose-500/20 to-pink-500/20',
   textContent: 'from-violet-500/20 to-purple-500/20',
   llmProcess: 'from-sky-500/20 to-cyan-500/20',
@@ -82,6 +84,7 @@ const nodeIconColorMap: Record<string, string> = {
   galleryTextura: 'text-cyan-400',
   galleryLogo: 'text-rose-400',
   galleryPose: 'text-indigo-400',
+  galleryRoupa: 'text-fuchsia-400',
   textStyle: 'text-rose-400',
   textContent: 'text-violet-400',
   llmProcess: 'text-sky-400',
@@ -109,6 +112,7 @@ const nodeAccentMap: Record<string, string> = {
   galleryTextura: '#06b6d4',
   galleryLogo: '#f43f5e',
   galleryPose: '#6366f1',
+  galleryRoupa: '#d946ef',
   textStyle: '#e11d48',
   textContent: '#7c3aed',
   llmProcess: '#0ea5e9',
@@ -256,11 +260,12 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const isPaidBlock = PAID_ONLY_BLOCKS.has(nodeData.type);
   const updateNodeInternals = useUpdateNodeInternals();
 
-  const GALLERY_TYPES = ['galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura', 'galleryLogo', 'galleryPose'];
+  const GALLERY_TYPES = ['galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura', 'galleryLogo', 'galleryPose', 'galleryRoupa'];
   const isGalleryType = GALLERY_TYPES.includes(nodeData.type);
   const galleryCategoryMap: Record<string, GalleryCategoryId> = {
     galleryInfluencer: 'influencer', galleryAmbiente: 'ambiente', galleryEstilo: 'estilo',
     galleryPaleta: 'paleta', galleryTextura: 'textura', galleryLogo: 'logo', galleryPose: 'pose',
+    galleryRoupa: 'roupa',
   };
   const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'textStyle', 'textContent', ...GALLERY_TYPES].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';

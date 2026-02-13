@@ -29,6 +29,7 @@ export const GALLERY_CATEGORIES = [
   { id: 'textura', label: 'Texturas', icon: Box, color: '#06b6d4', gradient: 'from-cyan-500/20 to-sky-500/20', desc: 'Texturas e materiais de referência' },
   { id: 'logo', label: 'Logos', icon: Star, color: '#f43f5e', gradient: 'from-rose-500/20 to-red-500/20', desc: 'Logos e identidade visual' },
   { id: 'pose', label: 'Poses', icon: Move, color: '#6366f1', gradient: 'from-indigo-500/20 to-blue-500/20', desc: 'Referências de poses e composição' },
+  { id: 'roupa', label: 'Roupas', icon: Box, color: '#d946ef', gradient: 'from-fuchsia-500/20 to-purple-500/20', desc: 'Roupas e vestuário de referência' },
 ] as const;
 
 export type GalleryCategoryId = typeof GALLERY_CATEGORIES[number]['id'];

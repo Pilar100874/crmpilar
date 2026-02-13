@@ -129,11 +129,16 @@ export function useStudioExecution() {
 
     // Collect all image URLs from inputs (single imageUrl or multiple imageUrls)
     const imageInputs: string[] = [];
+    // Collect reference role descriptions to enrich prompts
+    const referenceDescs: string[] = [];
     inputs.forEach((i) => {
       if (i?.imageUrls && Array.isArray(i.imageUrls)) {
         imageInputs.push(...i.imageUrls);
       } else if (i?.imageUrl) {
         imageInputs.push(i.imageUrl);
+      }
+      if (i?._referenceDesc) {
+        referenceDescs.push(i._referenceDesc);
       }
     });
 
@@ -149,9 +154,14 @@ export function useStudioExecution() {
         return { imageUrls: config.images || [], imageUrl: config.images?.[0] };
 
       case 'productImageSelect':
-        // Return the selected product image as reference
+        // Return the selected product image as reference with role context
         if (config.selectedImageUrl) {
-          return { imageUrls: [config.selectedImageUrl], imageUrl: config.selectedImageUrl };
+          return { 
+            imageUrls: [config.selectedImageUrl], 
+            imageUrl: config.selectedImageUrl,
+            _referenceRole: 'produto',
+            _referenceDesc: `Este é o produto "${config.productName || 'selecionado'}". Use esta imagem como o produto principal na composição.`,
+          };
         }
         throw new Error('Nenhum produto selecionado. Selecione um produto com imagem.');
 
@@ -162,10 +172,27 @@ export function useStudioExecution() {
       case 'galleryTextura':
       case 'galleryLogo':
       case 'galleryPose':
+      case 'galleryRoupa': {
         if (config.selectedImageUrl) {
-          return { imageUrls: [config.selectedImageUrl], imageUrl: config.selectedImageUrl };
+          const roleMap: Record<string, string> = {
+            galleryInfluencer: 'Use esta pessoa/modelo como referência para a aparência e estilo da pessoa na imagem.',
+            galleryAmbiente: 'Use este cenário/ambiente como referência para o fundo e ambientação da imagem gerada.',
+            galleryEstilo: 'Use este estilo visual como referência artística para a imagem gerada (cores, mood, estética).',
+            galleryPaleta: 'Use esta paleta de cores como referência para as cores dominantes na imagem.',
+            galleryTextura: 'Use esta textura/material como referência para os materiais e superfícies na imagem.',
+            galleryLogo: 'Use este logo/marca como referência de identidade visual a ser incorporada.',
+            galleryPose: 'Use esta pose/composição corporal como referência para a posição da pessoa na imagem.',
+            galleryRoupa: 'Use esta roupa/vestuário como referência para o que a pessoa deve vestir na imagem.',
+          };
+          return { 
+            imageUrls: [config.selectedImageUrl], 
+            imageUrl: config.selectedImageUrl,
+            _referenceRole: type.replace('gallery', '').toLowerCase(),
+            _referenceDesc: roleMap[type] || 'Use esta imagem como referência visual.',
+          };
         }
         throw new Error('Nenhuma imagem selecionada da galeria. Selecione uma imagem.');
+      }
 
       case 'textStyle':
         return {
@@ -216,8 +243,13 @@ export function useStudioExecution() {
       }
 
       case 'imageGen': {
+        // Build enriched prompt with reference descriptions
+        let enrichedPrompt = combinedInput || 'A beautiful scene';
+        if (referenceDescs.length > 0) {
+          enrichedPrompt = `${enrichedPrompt}\n\nIMPORTANT REFERENCE INSTRUCTIONS:\n${referenceDescs.join('\n')}`;
+        }
         const result = await callStudio('generate_image', {
-          prompt: combinedInput || 'A beautiful scene',
+          prompt: enrichedPrompt,
           model: config.model,
           imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
         });
@@ -242,7 +274,10 @@ export function useStudioExecution() {
         };
         const modePrompt = modeDescriptions[config.compositeMode] || modeDescriptions.clothing;
         const userPrompt = config.prompt || combinedInput || '';
-        const fullPrompt = `${modePrompt} ${userPrompt}`.trim();
+        let fullPrompt = `${modePrompt} ${userPrompt}`.trim();
+        if (referenceDescs.length > 0) {
+          fullPrompt = `${fullPrompt}\n\nREFERENCE INSTRUCTIONS:\n${referenceDescs.join('\n')}`;
+        }
         const result = await callStudio('generate_image', {
           prompt: fullPrompt,
           model: config.model || 'google/gemini-2.5-flash-image',
