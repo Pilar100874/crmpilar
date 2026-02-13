@@ -611,8 +611,8 @@ const AICreativeStudioInner: React.FC = () => {
     toast.success(`Workflow "${meta.label}" criado!`);
   }, [setNodes, setEdges]);
 
-  // Landing page
-  if (!showCanvas && nodes.length === 0) {
+  // Landing page — only show when user has NOT entered the canvas editor
+  if (!showCanvas) {
     return (
       <div className="h-[calc(100vh-200px)] min-h-[600px] rounded-xl overflow-hidden bg-card border border-border text-card-foreground flex flex-col">
         <div className="flex-1 flex flex-col items-center justify-start px-6 relative overflow-y-auto pt-12 pb-16">
