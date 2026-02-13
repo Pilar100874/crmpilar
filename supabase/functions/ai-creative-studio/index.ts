@@ -132,60 +132,54 @@ serve(async (req) => {
         const refImages = (params.imageUrls || []) as string[];
         const imageRoles = (params.imageRoles || []) as string[];
 
-        // Identify if there's a strict reference (product/logo/influencer/clothing) — use EDIT mode
+        // Identify strict references (product/logo/influencer/clothing) — use EDIT mode
         const strictRoles = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
-        const hasStrictRef = imageRoles.some(r => strictRoles.includes(r));
+        const strictImages: { url: string; role: string }[] = [];
+        const flexibleImages: { url: string; role: string }[] = [];
 
-        // Find the primary strict image (product takes priority) to use as the BASE image for editing
-        let primaryImageUrl: string | null = null;
-        const otherImages: { url: string; role: string }[] = [];
-        
-        if (hasStrictRef) {
-          // Priority order for primary: product > logo > influencer > clothing
-          const priorityOrder = ['PRODUCT - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
-          for (const targetRole of priorityOrder) {
-            const idx = imageRoles.indexOf(targetRole);
-            if (idx !== -1 && refImages[idx]) {
-              const safe = truncateImageUrl(refImages[idx]);
-              if (safe) {
-                primaryImageUrl = safe;
-                // Collect remaining images as context
-                for (let i = 0; i < refImages.length; i++) {
-                  if (i !== idx) {
-                    const s = truncateImageUrl(refImages[i]);
-                    if (s) otherImages.push({ url: s, role: imageRoles[i] || 'REFERENCE' });
-                  }
-                }
-                break;
-              }
-            }
+        for (let i = 0; i < refImages.length; i++) {
+          const safe = truncateImageUrl(refImages[i]);
+          if (!safe) continue;
+          const role = imageRoles[i] || 'REFERENCE';
+          if (strictRoles.includes(role)) {
+            strictImages.push({ url: safe, role });
+          } else {
+            flexibleImages.push({ url: safe, role });
           }
         }
 
         let data: any;
 
-        if (primaryImageUrl) {
-          // === EDIT MODE: Use the product/main image as base, edit around it ===
-          console.log(`[generate_image] EDIT MODE — preserving primary image, ${otherImages.length} other refs`);
+        if (strictImages.length > 0) {
+          // === EDIT MODE: ALL strict images sent as subjects to preserve ===
+          console.log(`[generate_image] EDIT MODE — ${strictImages.length} strict refs, ${flexibleImages.length} flexible refs`);
           
           const editContent: any[] = [];
-          // Instruction: edit AROUND the product, not the product itself
-          let editPrompt = `EDIT THIS IMAGE: Keep the main subject (product/logo/person) EXACTLY as it is — same shape, colors, label, packaging, proportions. Do NOT change, redraw, or reinterpret the subject. Only modify the BACKGROUND and SURROUNDINGS based on the following instructions:\n\n${params.prompt}`;
-          
-          // Add other reference images as style/environment context
-          for (const other of otherImages) {
-            editContent.push({ type: "text", text: `[STYLE/ENVIRONMENT REFERENCE: ${other.role}]` });
-            editContent.push({ type: "image_url", image_url: { url: other.url } });
+
+          // First: flexible references as environment/style context
+          for (const flex of flexibleImages) {
+            editContent.push({ type: "text", text: `[STYLE/ENVIRONMENT REFERENCE: ${flex.role} — use only for background/scenery inspiration]` });
+            editContent.push({ type: "image_url", image_url: { url: flex.url } });
           }
+
+          // Build the list of what must be preserved
+          const subjectDescriptions = strictImages.map((s, i) => `Image ${i + 1}: ${s.role}`).join(', ');
           
-          // Add the primary image LAST so it's the "subject" being edited
+          // Then: ALL strict images with clear labels
+          for (let i = 0; i < strictImages.length; i++) {
+            const s = strictImages[i];
+            editContent.push({ type: "text", text: `[SUBJECT ${i + 1}: ${s.role} — PRESERVE EXACTLY, do NOT modify]` });
+            editContent.push({ type: "image_url", image_url: { url: s.url } });
+          }
+
+          // Finally: the edit instruction
+          const editPrompt = `COMPOSE an image that contains ALL of the above subjects (${subjectDescriptions}) EXACTLY as they appear — same face, identity, body, shape, colors, labels, packaging, proportions. Do NOT redraw, reimagine, or alter any subject. Only create/modify the BACKGROUND and SURROUNDINGS based on:\n\n${params.prompt}`;
           editContent.push({ type: "text", text: editPrompt });
-          editContent.push({ type: "image_url", image_url: { url: primaryImageUrl } });
 
           data = await callGateway(LOVABLE_API_KEY, {
             model,
             messages: [
-              { role: "system", content: "You are an image editor. You receive a product/subject image. Your job is to ONLY change the background/environment/scenery. The main subject (product, packaging, logo, person) must remain PIXEL-PERFECT — identical shape, colors, text, labels, proportions. Never redraw, reimagine, or alter the subject in any way." },
+              { role: "system", content: "You are an image compositor. You receive one or more subject images (products, logos, people, clothing) that must appear in the final image EXACTLY as provided — pixel-perfect identity, face, shape, colors, labels, packaging. NEVER redraw, reimagine, stylize, or alter any subject. You may ONLY change the background, scenery, lighting, and composition around them. If environment/style references are provided, use them ONLY for background inspiration." },
               { role: "user", content: editContent },
             ],
             modalities: ["image", "text"],
