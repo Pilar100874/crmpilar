@@ -76,8 +76,8 @@ const MarketingHub: React.FC = () => {
   const currentTabItem = tabItems.find(t => t.id === activeTab) || tabItems[0];
   const CurrentIcon = currentTabItem.icon;
 
-  const renderContent = () => {
-    switch (activeTab) {
+  const renderTabContent = (tabId: string) => {
+    switch (tabId) {
       case 'ai-studio':
         return <AICreativeStudio />;
       case 'video-editor':
@@ -205,12 +205,15 @@ const MarketingHub: React.FC = () => {
           <div className="flex-1 overflow-auto p-3 sm:p-6">
             {tabItems.map((tab) => {
               const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
               
               return (
                 <TabsContent 
                   key={tab.id} 
                   value={tab.id} 
                   className="mt-0"
+                  forceMount={tab.id === 'ai-studio' ? true : undefined}
+                  style={tab.id === 'ai-studio' && !isActive ? { display: 'none' } : undefined}
                 >
                   <Card className="h-full">
                     <CardHeader className="px-3 sm:px-6 py-3 sm:pb-4">
@@ -223,7 +226,7 @@ const MarketingHub: React.FC = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="px-3 sm:px-6">
-                      {activeTab === tab.id && renderContent()}
+                      {tab.id === 'ai-studio' ? renderTabContent(tab.id) : (isActive && renderTabContent(tab.id))}
                     </CardContent>
                   </Card>
                 </TabsContent>
