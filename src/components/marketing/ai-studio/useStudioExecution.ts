@@ -127,13 +127,16 @@ export function useStudioExecution() {
     const systemPrompts = inputs.filter((i) => i?._isSystemPrompt).map((i) => i.text);
     const systemPrompt = systemPrompts.length > 0 ? systemPrompts.join('\n') : undefined;
 
-    // Collect all image URLs from inputs (single imageUrl or multiple imageUrls)
+    // Collect all image URLs from inputs, bucketed by role for priority ordering
     const imageInputs: string[] = [];
-    // Collect reference role descriptions to enrich prompts
     const referenceDescs: string[] = [];
-    // Track which images are products vs other references
+    // Priority buckets: logo > produto > influencer > roupa > pose > ambiente > others
+    const rolePriority: Record<string, number> = {
+      logo: 0, produto: 1, influencer: 2, roupa: 3, pose: 4,
+      estilo: 5, paleta: 6, textura: 7, ambiente: 8,
+    };
+    const bucketedImages: { role: string; urls: string[] }[] = [];
     const productImageUrls: string[] = [];
-    const otherImageUrls: string[] = [];
     inputs.forEach((i) => {
       const urls: string[] = [];
       if (i?.imageUrls && Array.isArray(i.imageUrls)) {
@@ -141,18 +144,23 @@ export function useStudioExecution() {
       } else if (i?.imageUrl) {
         urls.push(i.imageUrl);
       }
-      if (i?._referenceRole === 'produto') {
-        productImageUrls.push(...urls);
-      } else {
-        otherImageUrls.push(...urls);
+      const role = i?._referenceRole || '__none__';
+      if (role === 'produto') productImageUrls.push(...urls);
+      if (urls.length > 0) {
+        bucketedImages.push({ role, urls });
       }
       imageInputs.push(...urls);
       if (i?._referenceDesc) {
         referenceDescs.push(i._referenceDesc);
       }
     });
-    // Reorder: product images always first so the model sees them as primary
-    const orderedImageInputs = [...productImageUrls, ...otherImageUrls];
+    // Sort by priority: logo first, then produto, influencer, roupa, pose, ambiente, others last
+    bucketedImages.sort((a, b) => {
+      const pa = rolePriority[a.role] ?? 99;
+      const pb = rolePriority[b.role] ?? 99;
+      return pa - pb;
+    });
+    const orderedImageInputs = bucketedImages.flatMap((b) => b.urls);
 
     switch (type) {
       case 'textInput':
@@ -267,11 +275,20 @@ export function useStudioExecution() {
           enrichedPrompt = `${enrichedPrompt}\n\n[INSTRUÇÃO PADRÃO] A pessoa/influencer deve estar SEGURANDO o produto na mão, mostrando-o de forma natural e elegante. O produto deve estar visível e em destaque na mão da pessoa.`;
         }
         if (referenceDescs.length > 0) {
-          let imagePositionHint = '';
-          if (productImageUrls.length > 0) {
-            imagePositionHint = `\n\n🔒 IMAGE ORDER: The FIRST image${productImageUrls.length > 1 ? 's' : ''} (image${productImageUrls.length > 1 ? 's 1-' + productImageUrls.length : ' 1'}) ${productImageUrls.length > 1 ? 'are' : 'is'} the PRODUCT — preserve ${productImageUrls.length > 1 ? 'them' : 'it'} EXACTLY as-is. Other images are references for style/environment/pose ONLY — they should NEVER replace or alter the product.`;
-          }
-          enrichedPrompt = `${enrichedPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS (MUST FOLLOW):\nItems marked [NÃO ALTERAR] MUST be reproduced EXACTLY as shown in the reference image — do NOT change, reimagine, or substitute them.\nItems marked [REFERÊNCIA FLEXÍVEL] can be adapted creatively. Environment/ambient references should ONLY affect the background and scenery, NEVER the product or person.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
+          // Build image position map for the model
+          const positionLabels = bucketedImages.map((b, idx) => {
+            const roleLabel: Record<string, string> = {
+              logo: 'LOGO (preserve exactly)', produto: 'PRODUCT (preserve exactly)',
+              influencer: 'PERSON/INFLUENCER (preserve exactly)', roupa: 'CLOTHING (preserve exactly)',
+              pose: 'POSE REFERENCE', estilo: 'STYLE REFERENCE', paleta: 'COLOR PALETTE',
+              textura: 'TEXTURE REFERENCE', ambiente: 'ENVIRONMENT (flexible, background only)',
+            };
+            return `Image ${idx + 1}: ${roleLabel[b.role] || 'REFERENCE'}`;
+          });
+          const imagePositionHint = positionLabels.length > 0
+            ? `\n\n🔒 IMAGE ORDER (respect strictly):\n${positionLabels.join('\n')}`
+            : '';
+          enrichedPrompt = `${enrichedPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS (MUST FOLLOW):\nItems marked [NÃO ALTERAR] MUST be reproduced EXACTLY as shown — do NOT change, reimagine, or substitute them.\nEnvironment references affect ONLY the background/scenery, NEVER the product, person, clothing or logo.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
         }
         const result = await callStudio('generate_image', {
           prompt: enrichedPrompt,
@@ -301,11 +318,16 @@ export function useStudioExecution() {
         const userPrompt = config.prompt || combinedInput || '';
         let fullPrompt = `${modePrompt} ${userPrompt}`.trim();
         if (referenceDescs.length > 0) {
-          let imagePositionHint = '';
-          if (productImageUrls.length > 0) {
-            imagePositionHint = `\n\n🔒 IMAGE ORDER: The FIRST image is the PRODUCT — preserve it EXACTLY. Other images are for environment/style ONLY.`;
-          }
-          fullPrompt = `${fullPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS (MUST FOLLOW):\nItems marked [NÃO ALTERAR] MUST be reproduced EXACTLY as shown in the reference image — do NOT change, reimagine, or substitute them.\nItems marked [REFERÊNCIA FLEXÍVEL] can be adapted creatively. Environment references affect ONLY the background, NEVER the product.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
+          const positionLabels = bucketedImages.map((b, idx) => {
+            const roleLabel: Record<string, string> = {
+              logo: 'LOGO (preserve exactly)', produto: 'PRODUCT (preserve exactly)',
+              influencer: 'PERSON (preserve exactly)', roupa: 'CLOTHING (preserve exactly)',
+              pose: 'POSE REFERENCE', ambiente: 'ENVIRONMENT (flexible)',
+            };
+            return `Image ${idx + 1}: ${roleLabel[b.role] || 'REFERENCE'}`;
+          });
+          const imagePositionHint = positionLabels.length > 0 ? `\n\n🔒 IMAGE ORDER:\n${positionLabels.join('\n')}` : '';
+          fullPrompt = `${fullPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS:\nEnvironment references affect ONLY the background, NEVER the product, person or clothing.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
         }
         const result = await callStudio('generate_image', {
           prompt: fullPrompt,
