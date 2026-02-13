@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { StudioNode, StudioEdge, StudioNodeData } from './types';
+import { StudioNode, StudioEdge, StudioNodeData, StudioNodeType } from './types';
 import { nodeResultStore } from './useNodeResults';
 import { toast } from 'sonner';
 
@@ -580,6 +580,67 @@ export function useStudioExecution() {
           text: `🔗 Vídeos unidos com transição "${config.transition}" (${config.transitionDuration}s).\n\n⚠️ Para merge real de vídeo, conecte uma API de edição de vídeo.`,
         };
 
+      case 'multiProductSelect': {
+        const products = config.products || [];
+        if (products.length === 0) throw new Error('Nenhum produto selecionado no bloco de múltiplos produtos.');
+        return {
+          _isMultiProduct: true,
+          products: products.map((p: any) => ({
+            id: p.id,
+            nome: p.nome,
+            foto_url: p.foto_url,
+            imageUrl: p.foto_url,
+            imageUrls: [p.foto_url],
+            _referenceRole: 'produto',
+            _referenceDesc: `[PRODUTO - NÃO ALTERAR] Este é o produto "${p.nome}". Você DEVE manter este produto EXATAMENTE como aparece na imagem de referência.`,
+          })),
+        };
+      }
+
+      case 'randomPick': {
+        // randomPick loads gallery images and picks one; in loop context the pick is done by the loop runner
+        const category = config.galleryCategory || 'salvas';
+        const estabId = localStorage.getItem('estabelecimentoId');
+        let galleryImages: string[] = [];
+
+        if (category === 'salvas') {
+          const { data } = await supabase
+            .from('media_gallery')
+            .select('public_url')
+            .eq('estabelecimento_id', estabId || '')
+            .in('tipo', ['image', 'gif'])
+            .order('created_at', { ascending: false })
+            .limit(100);
+          galleryImages = (data || []).map((d: any) => d.public_url).filter(Boolean);
+        } else {
+          const { data } = await supabase
+            .from('studio_gallery_images')
+            .select('image_url')
+            .eq('estabelecimento_id', estabId || '')
+            .eq('categoria', category)
+            .order('created_at', { ascending: false })
+            .limit(100);
+          galleryImages = (data || []).map((d: any) => d.image_url).filter(Boolean);
+        }
+
+        if (galleryImages.length === 0) throw new Error(`Nenhuma imagem encontrada na galeria "${category}".`);
+
+        // Pick a random one for single execution; loop runner will override per iteration
+        const randomUrl = galleryImages[Math.floor(Math.random() * galleryImages.length)];
+        return {
+          _isRandomPick: true,
+          _galleryImages: galleryImages,
+          imageUrl: randomUrl,
+          imageUrls: [randomUrl],
+          _referenceRole: category === 'influencer' ? 'influencer' : category === 'ambiente' ? 'ambiente' : category,
+          _referenceDesc: `Imagem aleatória da galeria "${category}" — use como referência visual.`,
+        };
+      }
+
+      case 'loopOutput':
+        // loopOutput is handled specially in executeWorkflow; here just return inputs
+        return inputs[inputs.length - 1] || { text: 'Aguardando execução em lote...' };
+
       case 'output':
         return inputs[inputs.length - 1] || { text: 'Nenhuma entrada recebida' };
 
@@ -643,6 +704,65 @@ export function useStudioExecution() {
       }
     };
 
+    // Helper: find all ancestor node IDs for a given node
+    const getAncestors = (nodeId: string): Set<string> => {
+      const ancestors = new Set<string>();
+      const visit = (id: string) => {
+        edges.filter(e => e.target === id).forEach(e => {
+          if (!ancestors.has(e.source)) {
+            ancestors.add(e.source);
+            visit(e.source);
+          }
+        });
+      };
+      visit(nodeId);
+      return ancestors;
+    };
+
+    // Helper: save image to media_gallery
+    const saveToGallery = async (imageUrl: string, name: string) => {
+      const estabId = localStorage.getItem('estabelecimentoId');
+      if (!estabId || !imageUrl) return;
+      try {
+        let blob: Blob;
+        if (imageUrl.startsWith('data:')) {
+          const [header, b64] = imageUrl.split(',');
+          const mime = header.match(/data:(.*?);/)?.[1] || 'image/png';
+          const binary = atob(b64);
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+          blob = new Blob([bytes], { type: mime });
+        } else {
+          const response = await fetch(imageUrl);
+          if (!response.ok) return;
+          blob = await response.blob();
+        }
+        const ext = blob.type?.includes('png') ? 'png' : 'jpg';
+        const fileName = `loop-${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+        const storagePath = `${estabId}/${fileName}`;
+        const { error: uploadErr } = await supabase.storage
+          .from('marketing-images')
+          .upload(storagePath, blob, { contentType: blob.type || 'image/png' });
+        if (uploadErr) { console.error('Upload error:', uploadErr); return; }
+        const { data: { publicUrl } } = supabase.storage
+          .from('marketing-images')
+          .getPublicUrl(storagePath);
+        await supabase.from('media_gallery').insert({
+          estabelecimento_id: estabId,
+          tipo: 'image',
+          storage_path: storagePath,
+          public_url: publicUrl,
+          nome: name,
+          descricao: 'Gerado automaticamente pelo loop do AI Studio',
+          tamanho_bytes: blob.size,
+          mime_type: blob.type || 'image/png',
+          origem: 'ai_studio',
+        });
+      } catch (err) {
+        console.error('Auto-save error:', err);
+      }
+    };
+
     try {
       for (let i = startIndex; i < order.length; i++) {
         const nodeId = order[i];
@@ -658,6 +778,160 @@ export function useStudioExecution() {
           continue;
         }
 
+        // ====== LOOP OUTPUT SPECIAL HANDLING ======
+        if (nd.type === 'loopOutput') {
+          setCurrentNodeId(nodeId);
+          const startTime = Date.now();
+          updateNode(nodeId, { isProcessing: true, error: undefined });
+          nodeResultStore.setProcessing(nodeId, true);
+          nodeResultStore.clearError(nodeId);
+          updateLog(nodeId, { status: 'running', startedAt: startTime });
+
+          try {
+            // 1. Find the multiProductSelect ancestor
+            const ancestors = getAncestors(nodeId);
+            const multiProductNodeId = order.find(id => {
+              const n = nodes.find(nn => nn.id === id);
+              return n && (n.data as StudioNodeData).type === 'multiProductSelect' && ancestors.has(id);
+            });
+
+            if (!multiProductNodeId) throw new Error('Bloco "Múltiplos Produtos" não encontrado conectado a este bloco de Saída em Lote.');
+
+            const multiResult = results.get(multiProductNodeId);
+            if (!multiResult?._isMultiProduct || !multiResult.products?.length) {
+              throw new Error('O bloco de Múltiplos Produtos não tem produtos. Selecione pelo menos um produto.');
+            }
+
+            const products = multiResult.products;
+
+            // 2. Find intermediate nodes between multiProduct and loopOutput
+            const directInputEdges = edges.filter(e => e.target === nodeId);
+            const intermediateNodes = order.filter(id => {
+              if (id === multiProductNodeId || id === nodeId) return false;
+              const n = nodes.find(nn => nn.id === id);
+              if (!n) return false;
+              const nType = (n.data as StudioNodeData).type;
+              // Only re-execute processing nodes in the path, not pure inputs
+              return ancestors.has(id) && !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'multiProductSelect'].includes(nType);
+            });
+
+            // 3. Find randomPick nodes in the chain
+            const randomPickNodes = intermediateNodes.filter(id => {
+              const n = nodes.find(nn => nn.id === id);
+              return n && (n.data as StudioNodeData).type === 'randomPick';
+            });
+
+            // Pre-load randomPick galleries
+            for (const rpId of randomPickNodes) {
+              if (!results.has(rpId)) {
+                const rpNode = nodes.find(n => n.id === rpId)!;
+                const rpInputs = getInputResults(rpId, edges, results);
+                const rpResult = await executeNode(rpNode, rpInputs);
+                results.set(rpId, rpResult);
+              }
+            }
+
+            const loopResults: any[] = [];
+            const autoSave = nd.config?.autoSave !== false;
+            const savePrefix = nd.config?.savePrefix || 'AI Studio Lote';
+
+            // 4. Loop through each product
+            for (let pi = 0; pi < products.length; pi++) {
+              const product = products[pi];
+              const productName = product.nome || `Produto ${pi + 1}`;
+
+              nodeResultStore.setResult(nodeId, {
+                text: `🔄 Processando ${pi + 1}/${products.length}: ${productName}...`,
+                loopResults,
+              });
+
+              // Override multiProductSelect result with single product for this iteration
+              const singleProductResult = {
+                imageUrl: product.foto_url,
+                imageUrls: [product.foto_url],
+                _referenceRole: 'produto',
+                _referenceDesc: product._referenceDesc,
+              };
+              results.set(multiProductNodeId, singleProductResult);
+
+              // Override randomPick with new random each iteration
+              for (const rpId of randomPickNodes) {
+                const rpResult = results.get(rpId);
+                if (rpResult?._galleryImages?.length > 0) {
+                  const randomUrl = rpResult._galleryImages[Math.floor(Math.random() * rpResult._galleryImages.length)];
+                  results.set(rpId, {
+                    ...rpResult,
+                    imageUrl: randomUrl,
+                    imageUrls: [randomUrl],
+                  });
+                }
+              }
+
+              // Re-execute intermediate nodes
+              let lastResult: any = null;
+              for (const intId of intermediateNodes) {
+                const intNode = nodes.find(n => n.id === intId)!;
+                const intNd = intNode.data as StudioNodeData;
+
+                // Skip randomPick (already set above) and paused
+                if (intNd.type === 'randomPick' || intNd.config?._paused) continue;
+
+                try {
+                  const intInputs = getInputResults(intId, edges, results);
+                  const intResult = await executeNode(intNode, intInputs);
+                  results.set(intId, intResult);
+                  nodeResultStore.setResult(intId, intResult);
+                  lastResult = intResult;
+                } catch (intErr: any) {
+                  console.error(`[Studio Loop] Node ${intId} failed for product ${pi}:`, intErr.message);
+                  toast.error(`Loop ${pi + 1}: ${intErr.message?.substring(0, 80)}`, { duration: 4000 });
+                }
+              }
+
+              // Get the direct input to loopOutput
+              const loopInputs = getInputResults(nodeId, edges, results);
+              const finalResult = loopInputs[loopInputs.length - 1] || lastResult;
+
+              if (finalResult?.imageUrl) {
+                loopResults.push({ imageUrl: finalResult.imageUrl, productName, productId: product.id });
+
+                // Auto-save to gallery
+                if (autoSave) {
+                  await saveToGallery(finalResult.imageUrl, `${savePrefix} - ${productName}`);
+                }
+
+                toast.success(`✅ ${pi + 1}/${products.length}: ${productName} concluído!`, { duration: 3000 });
+              }
+            }
+
+            // Restore multiProduct result
+            results.set(multiProductNodeId, multiResult);
+
+            const finalLoopResult = {
+              text: `🔄 Lote concluído! ${loopResults.length}/${products.length} imagens geradas.${autoSave ? ' Salvas automaticamente na galeria.' : ''}`,
+              loopResults,
+            };
+            const elapsed = Date.now() - startTime;
+            results.set(nodeId, finalLoopResult);
+            updateNode(nodeId, { isProcessing: false, result: finalLoopResult });
+            nodeResultStore.setResult(nodeId, finalLoopResult);
+            nodeResultStore.setProcessing(nodeId, false);
+            updateLog(nodeId, { status: 'success', completedAt: Date.now(), elapsedMs: elapsed });
+            toast.success(`🎉 Lote finalizado! ${loopResults.length} imagens geradas.`, { duration: 6000 });
+
+          } catch (err: any) {
+            const elapsed = Date.now() - startTime;
+            const errMsg = err.message || 'Erro desconhecido';
+            updateNode(nodeId, { isProcessing: false, error: errMsg });
+            nodeResultStore.setProcessing(nodeId, false);
+            nodeResultStore.setError(nodeId, errMsg);
+            updateLog(nodeId, { status: 'error', completedAt: Date.now(), elapsedMs: elapsed, errorMessage: errMsg });
+            toast.error(`Erro no lote: ${errMsg.substring(0, 100)}`, { duration: 6000 });
+          }
+          continue;
+        }
+
+        // ====== NORMAL NODE EXECUTION ======
         setCurrentNodeId(nodeId);
         const startTime = Date.now();
         updateNode(nodeId, { isProcessing: true, error: undefined });
