@@ -1,7 +1,7 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Upload, ExternalLink, WrapText, Loader2 } from "lucide-react";
+import { Search, Upload, ExternalLink, WrapText, Loader2, FolderOpen } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCanvas } from "@/contexts/CanvasContext";
@@ -16,8 +16,36 @@ const ImagesPanel = () => {
   const [activeCategory, setActiveCategory] = useState("popular");
   const [unsplashImages, setUnsplashImages] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [savedImages, setSavedImages] = useState<any[]>([]);
+  const [loadingSaved, setLoadingSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { fabricCanvas } = useCanvas();
+
+  const fetchSavedImages = useCallback(async () => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) return;
+    setLoadingSaved(true);
+    try {
+      const { data } = await supabase
+        .from('media_gallery')
+        .select('*')
+        .eq('estabelecimento_id', estabId)
+        .in('tipo', ['imagem', 'image', 'gif'])
+        .order('created_at', { ascending: false })
+        .limit(200);
+      setSavedImages(data || []);
+    } catch (err) {
+      console.error('Erro ao buscar imagens salvas:', err);
+    } finally {
+      setLoadingSaved(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeCategory === 'saved') {
+      fetchSavedImages();
+    }
+  }, [activeCategory, fetchSavedImages]);
 
   // Grande biblioteca de imagens HD curadas do Unsplash
   const imageLibrary = {
@@ -155,6 +183,7 @@ const ImagesPanel = () => {
   };
 
   const categories = [
+    { id: "saved", label: "📁 Salvas" },
     { id: "popular", label: "Popular" },
     { id: "nature", label: "Natureza" },
     { id: "food", label: "Comida" },
@@ -338,6 +367,41 @@ const ImagesPanel = () => {
       </div>
 
       <ScrollArea className="flex-1">
+        {activeCategory === 'saved' && (
+          <div className="px-4 py-3">
+            <h4 className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+              <FolderOpen className="h-3 w-3" />
+              Imagens Salvas ({savedImages.length})
+            </h4>
+            {loadingSaved ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : savedImages.length > 0 ? (
+              <div className="grid grid-cols-3 lg:grid-cols-4 gap-1.5">
+                {savedImages.map((img) => (
+                  <div
+                    key={img.id}
+                    className="aspect-square cursor-pointer overflow-hidden rounded border hover:border-primary transition-colors"
+                    onClick={() => addImageToCanvas(img.public_url)}
+                    title={img.nome}
+                  >
+                    <img
+                      src={img.public_url}
+                      alt={img.nome}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-muted-foreground text-xs">
+                Nenhuma imagem salva ainda. Salve imagens no AI Studio para vê-las aqui.
+              </div>
+            )}
+          </div>
+        )}
         {unsplashImages.length > 0 && (
           <div className="px-4 py-3">
             <h4 className="text-xs font-semibold mb-2 flex items-center gap-1.5">
