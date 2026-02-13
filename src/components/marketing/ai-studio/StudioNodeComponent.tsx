@@ -14,7 +14,7 @@ import {
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
   Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download,
   DollarSign, Volume2, Edit3, Package, User, Mountain, Brush, Palette,
-  Box, Star, Move, TypeIcon, Save
+  Box, Star, Move, TypeIcon, Save, FolderOpen
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
@@ -30,6 +30,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   galleryLogo: Star,
   galleryPose: Move,
   galleryRoupa: Box,
+  gallerySalvas: FolderOpen,
   textStyle: TypeIcon,
   textContent: FileText,
   llmProcess: Type,
@@ -58,6 +59,7 @@ const nodeGradientMap: Record<string, string> = {
   galleryLogo: 'from-rose-500/20 to-red-500/20',
   galleryPose: 'from-indigo-500/20 to-blue-500/20',
   galleryRoupa: 'from-fuchsia-500/20 to-purple-500/20',
+  gallerySalvas: 'from-blue-500/20 to-sky-500/20',
   textStyle: 'from-rose-500/20 to-pink-500/20',
   textContent: 'from-violet-500/20 to-purple-500/20',
   llmProcess: 'from-sky-500/20 to-cyan-500/20',
@@ -86,6 +88,7 @@ const nodeIconColorMap: Record<string, string> = {
   galleryLogo: 'text-rose-400',
   galleryPose: 'text-indigo-400',
   galleryRoupa: 'text-fuchsia-400',
+  gallerySalvas: 'text-blue-400',
   textStyle: 'text-rose-400',
   textContent: 'text-violet-400',
   llmProcess: 'text-sky-400',
@@ -114,6 +117,7 @@ const nodeAccentMap: Record<string, string> = {
   galleryLogo: '#f43f5e',
   galleryPose: '#6366f1',
   galleryRoupa: '#d946ef',
+  gallerySalvas: '#3b82f6',
   textStyle: '#e11d48',
   textContent: '#7c3aed',
   llmProcess: '#0ea5e9',
@@ -262,12 +266,12 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const isPaidBlock = PAID_ONLY_BLOCKS.has(nodeData.type);
   const updateNodeInternals = useUpdateNodeInternals();
 
-  const GALLERY_TYPES = ['galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura', 'galleryLogo', 'galleryPose', 'galleryRoupa'];
+  const GALLERY_TYPES = ['galleryInfluencer', 'galleryAmbiente', 'galleryEstilo', 'galleryPaleta', 'galleryTextura', 'galleryLogo', 'galleryPose', 'galleryRoupa', 'gallerySalvas'];
   const isGalleryType = GALLERY_TYPES.includes(nodeData.type);
   const galleryCategoryMap: Record<string, GalleryCategoryId> = {
     galleryInfluencer: 'influencer', galleryAmbiente: 'ambiente', galleryEstilo: 'estilo',
     galleryPaleta: 'paleta', galleryTextura: 'textura', galleryLogo: 'logo', galleryPose: 'pose',
-    galleryRoupa: 'roupa',
+    galleryRoupa: 'roupa', gallerySalvas: 'salvas',
   };
   const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'textStyle', 'textContent', ...GALLERY_TYPES].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
