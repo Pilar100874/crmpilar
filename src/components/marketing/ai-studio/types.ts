@@ -14,6 +14,7 @@ export type StudioNodeType =
   | 'galleryLogo'
   | 'galleryPose'
   | 'textStyle'
+  | 'textContent'
   | 'llmProcess'
   | 'imageGen'
   | 'imageEdit'
@@ -65,7 +66,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Entrada de texto ou prompt do usuário',
         icon: '✏️',
         color: '#6366f1',
-        defaultConfig: { text: '' },
+        defaultConfig: { text: 'Foto profissional de produto em fundo branco, iluminação de estúdio, alta resolução, detalhes nítidos' },
       },
       {
         type: 'systemPrompt',
@@ -73,7 +74,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Instruções para o modelo de IA',
         icon: '⚙️',
         color: '#8b5cf6',
-        defaultConfig: { systemPrompt: '' },
+        defaultConfig: { systemPrompt: 'Você é um diretor criativo especializado em marketing visual. Gere descrições detalhadas e prompts otimizados para geração de imagens publicitárias.' },
       },
       {
         type: 'imageInput',
@@ -153,7 +154,24 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Configure estilo visual de texto para aplicar na imagem',
         icon: '🔤',
         color: '#e11d48',
-        defaultConfig: { text: '', fontFamily: 'Arial', fontSize: 48, fontWeight: 'bold', color: '#ffffff', bgColor: '', align: 'center', shadow: true, outline: true },
+        defaultConfig: { text: 'SEU TEXTO AQUI', fontFamily: 'Montserrat', fontSize: 48, fontWeight: 'bold', color: '#ffffff', bgColor: '', align: 'center', shadow: true, outline: true },
+      },
+      {
+        type: 'textContent',
+        label: 'Conteúdo de Texto',
+        description: 'Título, subtítulo e corpo com estilos prontos',
+        icon: '📝',
+        color: '#7c3aed',
+        defaultConfig: { 
+          title: 'TÍTULO PRINCIPAL', 
+          subtitle: 'Subtítulo complementar', 
+          body: 'Texto descritivo ou informação adicional para sua peça.',
+          templateId: 'heading-bold',
+          titleFont: 'Montserrat', titleSize: 72, titleWeight: 'bold', titleColor: '#000000',
+          subtitleFont: 'Montserrat', subtitleSize: 42, subtitleWeight: '600', subtitleColor: '#4A4A4A',
+          bodyFont: 'Inter', bodySize: 24, bodyWeight: 'normal', bodyColor: '#666666',
+          textAlign: 'center',
+        },
       },
     ],
   },
@@ -176,7 +194,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Analise e descreva imagens com IA',
         icon: '🔍',
         color: '#14b8a6',
-        defaultConfig: { model: 'google/gemini-2.5-flash', prompt: 'Descreva esta imagem em detalhes.' },
+        defaultConfig: { model: 'google/gemini-2.5-flash', prompt: 'Descreva esta imagem em detalhes, incluindo cores, composição, objetos, pessoas, cenário, iluminação e estilo visual.' },
       },
     ],
   },
@@ -199,7 +217,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Edite imagens existentes com IA',
         icon: '✨',
         color: '#ec4899',
-        defaultConfig: { model: 'google/gemini-2.5-flash-image', editPrompt: '' },
+        defaultConfig: { model: 'google/gemini-2.5-flash-image', editPrompt: 'Melhore a qualidade, ajuste cores e iluminação para um visual profissional de marketing' },
       },
       {
         type: 'productComposite',
@@ -210,7 +228,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         defaultConfig: { 
           model: 'google/gemini-2.5-flash-image',
           compositeMode: 'clothing',
-          prompt: '',
+          prompt: 'Integre o produto de forma natural e realista na cena, mantendo a iluminação e proporções corretas',
         },
       },
     ],

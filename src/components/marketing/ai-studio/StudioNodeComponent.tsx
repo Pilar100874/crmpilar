@@ -29,6 +29,7 @@ const nodeIconMap: Record<string, React.ElementType> = {
   galleryLogo: Star,
   galleryPose: Move,
   textStyle: TypeIcon,
+  textContent: FileText,
   llmProcess: Type,
   imageGen: ImageIcon,
   imageEdit: Wand2,
@@ -55,6 +56,7 @@ const nodeGradientMap: Record<string, string> = {
   galleryLogo: 'from-rose-500/20 to-red-500/20',
   galleryPose: 'from-indigo-500/20 to-blue-500/20',
   textStyle: 'from-rose-500/20 to-pink-500/20',
+  textContent: 'from-violet-500/20 to-purple-500/20',
   llmProcess: 'from-sky-500/20 to-cyan-500/20',
   imageGen: 'from-rose-500/20 to-pink-500/20',
   imageEdit: 'from-pink-500/20 to-fuchsia-500/20',
@@ -81,6 +83,7 @@ const nodeIconColorMap: Record<string, string> = {
   galleryLogo: 'text-rose-400',
   galleryPose: 'text-indigo-400',
   textStyle: 'text-rose-400',
+  textContent: 'text-violet-400',
   llmProcess: 'text-sky-400',
   imageGen: 'text-rose-400',
   imageEdit: 'text-pink-400',
@@ -107,6 +110,7 @@ const nodeAccentMap: Record<string, string> = {
   galleryLogo: '#f43f5e',
   galleryPose: '#6366f1',
   textStyle: '#e11d48',
+  textContent: '#7c3aed',
   llmProcess: '#0ea5e9',
   imageGen: '#f43f5e',
   imageEdit: '#ec4899',
@@ -258,7 +262,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     galleryInfluencer: 'influencer', galleryAmbiente: 'ambiente', galleryEstilo: 'estilo',
     galleryPaleta: 'paleta', galleryTextura: 'textura', galleryLogo: 'logo', galleryPose: 'pose',
   };
-  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'textStyle', ...GALLERY_TYPES].includes(nodeData.type);
+  const hasInput = !['textInput', 'systemPrompt', 'imageInput', 'productImageSelect', 'textStyle', 'textContent', ...GALLERY_TYPES].includes(nodeData.type);
   const hasOutput = nodeData.type !== 'output';
 
   // Use external store for results (bypasses ReactFlow's shallow diff)
@@ -563,6 +567,42 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                 {nodeData.config.text}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Text Content inline editor */}
+        {nodeData.type === 'textContent' && (
+          <div className="px-3 pb-3 pt-1 space-y-1.5">
+            <input
+              value={nodeData.config.title || ''}
+              onChange={(e) => { e.stopPropagation(); handleInlineUpdate('title', e.target.value); }}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="Título..."
+              className="w-full h-7 px-2 text-[12px] font-bold rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
+            />
+            <input
+              value={nodeData.config.subtitle || ''}
+              onChange={(e) => { e.stopPropagation(); handleInlineUpdate('subtitle', e.target.value); }}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="Subtítulo..."
+              className="w-full h-7 px-2 text-[11px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40"
+            />
+            <textarea
+              value={nodeData.config.body || ''}
+              onChange={(e) => { e.stopPropagation(); handleInlineUpdate('body', e.target.value); }}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="Corpo do texto..."
+              rows={2}
+              className="w-full px-2 py-1 text-[10px] rounded-lg bg-muted/50 border border-border/50 focus:outline-none focus:ring-1 focus:ring-violet-500/40 resize-none"
+            />
+            {nodeData.config.title && (
+              <div className="rounded-lg p-2.5 bg-muted/30 border border-border/30 overflow-hidden" style={{ textAlign: (nodeData.config.textAlign || 'center') as any }}>
+                <p style={{ fontFamily: nodeData.config.titleFont || 'Montserrat', fontSize: Math.min(nodeData.config.titleSize || 72, 18), fontWeight: nodeData.config.titleWeight || 'bold', color: nodeData.config.titleColor || '#000' }} className="leading-tight truncate">{nodeData.config.title}</p>
+                {nodeData.config.subtitle && <p style={{ fontFamily: nodeData.config.subtitleFont || 'Montserrat', fontSize: Math.min(nodeData.config.subtitleSize || 42, 13), fontWeight: nodeData.config.subtitleWeight || '600', color: nodeData.config.subtitleColor || '#4A4A4A' }} className="leading-tight truncate mt-0.5">{nodeData.config.subtitle}</p>}
+                {nodeData.config.body && <p style={{ fontFamily: nodeData.config.bodyFont || 'Inter', fontSize: Math.min(nodeData.config.bodySize || 24, 10), fontWeight: nodeData.config.bodyWeight || 'normal', color: nodeData.config.bodyColor || '#666' }} className="leading-snug mt-1 line-clamp-2">{nodeData.config.body}</p>}
+              </div>
+            )}
+            <p className="text-[9px] text-muted-foreground">📝 {nodeData.config.templateId || 'heading-bold'}</p>
           </div>
         )}
 
