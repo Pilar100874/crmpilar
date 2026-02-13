@@ -119,9 +119,20 @@ export function useStudioExecution() {
       .filter(Boolean);
   };
 
+  const hasDownstreamRandomPick = (nodeId: string, edges: StudioEdge[], nodes: StudioNode[]): boolean => {
+    return edges
+      .filter(e => e.source === nodeId)
+      .some(e => {
+        const target = nodes.find(n => n.id === e.target);
+        return target && (target.data as StudioNodeData).type === 'randomPick';
+      });
+  };
+
   const executeNode = async (
     node: StudioNode,
-    inputs: any[]
+    inputs: any[],
+    allEdges?: StudioEdge[],
+    allNodes?: StudioNode[]
   ): Promise<any> => {
     const { type, config } = node.data;
 
@@ -209,6 +220,10 @@ export function useStudioExecution() {
             _referenceDesc: `[PRODUTO - NÃO ALTERAR] Este é o produto "${config.productName || 'selecionado'}". Você DEVE manter este produto EXATAMENTE como aparece na imagem de referência: mesmas cores, formato, detalhes, logotipo e proporções. NÃO modifique, substitua ou reimagine o produto de forma alguma.`,
           };
         }
+        // If downstream has randomPick, skip validation - randomPick will load its own images
+        if (allEdges && allNodes && hasDownstreamRandomPick(node.id, allEdges, allNodes)) {
+          return { _referenceRole: 'produto', _referenceDesc: '', _skipNoImage: true };
+        }
         throw new Error('Nenhum produto selecionado. Selecione um produto com imagem.');
 
       case 'galleryInfluencer':
@@ -238,6 +253,10 @@ export function useStudioExecution() {
             _referenceRole: type.replace('gallery', '').toLowerCase(),
             _referenceDesc: roleMap[type] || 'Use esta imagem como referência visual.',
           };
+        }
+        // If downstream has randomPick, skip validation - randomPick will load its own images
+        if (allEdges && allNodes && hasDownstreamRandomPick(node.id, allEdges, allNodes)) {
+          return { _referenceRole: type.replace('gallery', '').toLowerCase(), _referenceDesc: '', _skipNoImage: true };
         }
         throw new Error('Nenhuma imagem selecionada da galeria. Selecione uma imagem.');
       }
@@ -866,7 +885,7 @@ export function useStudioExecution() {
               if (!results.has(rpId)) {
                 const rpNode = nodes.find(n => n.id === rpId)!;
                 const rpInputs = getInputResults(rpId, edges, results);
-                const rpResult = await executeNode(rpNode, rpInputs);
+                const rpResult = await executeNode(rpNode, rpInputs, edges, nodes);
                 results.set(rpId, rpResult);
               }
             }
@@ -916,7 +935,7 @@ export function useStudioExecution() {
 
                 try {
                   const intInputs = getInputResults(intId, edges, results);
-                  const intResult = await executeNode(intNode, intInputs);
+                  const intResult = await executeNode(intNode, intInputs, edges, nodes);
                   results.set(intId, intResult);
                   nodeResultStore.setResult(intId, intResult);
                   lastResult = intResult;
@@ -980,7 +999,7 @@ export function useStudioExecution() {
         try {
           const inputs = getInputResults(nodeId, edges, results);
           console.log(`[Studio] Node ${nodeId} (${nd.type}) inputs:`, inputs.length, 'items');
-          const result = await executeNode(node, inputs);
+          const result = await executeNode(node, inputs, edges, nodes);
           console.log(`[Studio] Node ${nodeId} (${nd.type}) result:`, typeof result, result?.imageUrl ? 'has imageUrl' : 'no imageUrl', result?.videoUrl ? 'has videoUrl' : '');
           const elapsed = Date.now() - startTime;
           results.set(nodeId, result);
