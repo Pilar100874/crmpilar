@@ -13,6 +13,7 @@ export type StudioNodeType =
   | 'galleryTextura'
   | 'galleryLogo'
   | 'galleryPose'
+  | 'galleryRoupa'
   | 'textStyle'
   | 'textContent'
   | 'llmProcess'
@@ -146,6 +147,14 @@ export const NODE_CATEGORIES: NodeCategory[] = [
         description: 'Referência de pose e composição',
         icon: '🤸',
         color: '#6366f1',
+        defaultConfig: { selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
+      },
+      {
+        type: 'galleryRoupa',
+        label: 'Roupa/Vestuário',
+        description: 'Referência de roupas e vestuário',
+        icon: '👗',
+        color: '#d946ef',
         defaultConfig: { selectedImageUrl: '', selectedImageName: '', galleryImageId: '' },
       },
       {
