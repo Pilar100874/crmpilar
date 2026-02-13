@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,16 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
   const [selected, setSelected] = useState<Set<number>>(() => new Set(results.map((_, i) => i)));
   const [saving, setSaving] = useState(false);
   const [zoomedIndex, setZoomedIndex] = useState<number | null>(null);
+  const zoomOverlayRef = useRef<HTMLDivElement>(null);
+
+  // Native capture-phase pointerdown listener to block Radix's document-level detection
+  useEffect(() => {
+    const el = zoomOverlayRef.current;
+    if (!el) return;
+    const handler = (e: PointerEvent) => e.stopPropagation();
+    el.addEventListener('pointerdown', handler, true); // capture phase
+    return () => el.removeEventListener('pointerdown', handler, true);
+  }, [zoomedIndex]);
 
   const toggleItem = (idx: number) => {
     setSelected(prev => {
@@ -190,6 +200,7 @@ const BatchReviewDialog: React.FC<BatchReviewDialogProps> = ({ open, onClose, re
       {/* Zoom overlay - rendered via portal to escape Dialog stacking context */}
       {zoomedIndex !== null && results[zoomedIndex] && createPortal(
         <div
+          ref={zoomOverlayRef}
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-8 cursor-zoom-out"
           style={{ zIndex: 99999 }}
           onClick={(e) => {
