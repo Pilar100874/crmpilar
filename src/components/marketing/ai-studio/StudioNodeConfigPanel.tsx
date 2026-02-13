@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StudioNode, getNodeMeta } from './types';
 import { useNodeResult } from './useNodeResults';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { X, Play, SkipForward, Settings2, Sparkles } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   node: StudioNode;
@@ -331,11 +332,50 @@ const ToggleField = ({ label, checked, onChange }: { label: string; checked: boo
   </div>
 );
 
+// Providers always available via Lovable AI gateway (no external key needed)
+const LOVABLE_GATEWAY_PREFIXES = ['google/', 'openai/', 'free/'];
+
+const isLovableGatewayModel = (modelValue: string) =>
+  LOVABLE_GATEWAY_PREFIXES.some((p) => modelValue.startsWith(p));
+
+const filterModelsByProviders = (models: ModelInfo[], configuredProviders: string[]): ModelInfo[] => {
+  return models.filter((m) => {
+    // Always show Lovable AI gateway models
+    if (isLovableGatewayModel(m.value)) return true;
+    // Show if the provider prefix matches a configured key
+    const prefix = m.value.split('/')[0].toLowerCase();
+    return configuredProviders.some((cp) => cp.toLowerCase() === prefix);
+  });
+};
+
 const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose, onExecuteFromNode }) => {
   const meta = getNodeMeta(node.data.type);
   const config = node.data.config;
   const { result: storeResult } = useNodeResult(node.id);
   const activeResult = storeResult ?? node.data.result;
+
+  const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
+
+  useEffect(() => {
+    const estabId = localStorage.getItem('estabelecimentoId');
+    if (!estabId) return;
+    (async () => {
+      const { data } = await supabase
+        .from('ai_api_keys')
+        .select('provider')
+        .eq('estabelecimento_id', estabId)
+        .eq('is_active', true);
+      if (data) {
+        setConfiguredProviders(data.map((d) => d.provider));
+      }
+    })();
+  }, []);
+
+  const filteredLLM = useMemo(() => filterModelsByProviders(LLM_MODELS, configuredProviders), [configuredProviders]);
+  const filteredImage = useMemo(() => filterModelsByProviders(IMAGE_MODELS, configuredProviders), [configuredProviders]);
+  const filteredVideo = useMemo(() => filterModelsByProviders(VIDEO_MODELS, configuredProviders), [configuredProviders]);
+  const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders), [configuredProviders]);
+  const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders), [configuredProviders]);
 
   const update = (key: string, value: any) => {
     onUpdateConfig(node.id, { [key]: value });
@@ -460,7 +500,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <Select value={config.model || 'google/gemini-2.5-flash'} onValueChange={(v) => update('model', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
-                  {LLM_MODELS.map((m) => (
+                  {filteredLLM.map((m) => (
                     <ModelSelectItem key={m.value} model={m} />
                   ))}
                 </SelectContent>
@@ -531,7 +571,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <Select value={config.model || 'google/gemini-2.5-flash-image'} onValueChange={(v) => update('model', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
-                  {IMAGE_MODELS.map((m) => (
+                  {filteredImage.map((m) => (
                     <ModelSelectItem key={m.value} model={m} />
                   ))}
                 </SelectContent>
@@ -668,7 +708,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               }}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
-                  {VIDEO_MODELS.map((m) => (
+                  {filteredVideo.map((m) => (
                     <ModelSelectItem key={m.value} model={m} />
                   ))}
                 </SelectContent>
@@ -816,7 +856,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <Select value={config.audioModel || 'elevenlabs/v3'} onValueChange={(v) => update('audioModel', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
-                  {AUDIO_MODELS.map((m) => (
+                  {filteredAudio.map((m) => (
                     <ModelSelectItem key={m.value} model={m} />
                   ))}
                 </SelectContent>
@@ -941,7 +981,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <Select value={config.musicModel || 'suno/v4'} onValueChange={(v) => update('musicModel', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
-                  {MUSIC_MODELS.map((m) => <ModelSelectItem key={m.value} model={m} />)}
+                  {filteredMusic.map((m) => <ModelSelectItem key={m.value} model={m} />)}
                 </SelectContent>
               </Select>
             </ConfigField>
@@ -1182,7 +1222,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
               <Select value={config.model || 'google/gemini-2.5-flash'} onValueChange={(v) => update('model', v)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent className="max-h-[400px]">
-                  {LLM_MODELS.map((m) => (
+                  {filteredLLM.map((m) => (
                     <ModelSelectItem key={m.value} model={m} />
                   ))}
                 </SelectContent>
