@@ -93,6 +93,7 @@ import RoboPrecos from "./pages/RoboPrecos";
 import AtendimentoConfig from "./pages/AtendimentoConfig";
 import RailwayEnvVariables from "./pages/RailwayEnvVariables";
 import LandingPage from "./pages/LandingPage";
+import Splash from "./pages/Splash";
 import Avisos from "./pages/Avisos";
 import EmailConfig from "./pages/EmailConfig";
 import OrcamentoReportConfig from "./pages/OrcamentoReportConfig";
@@ -131,7 +132,7 @@ const App = () => (
         <BrowserRouter>
           <WatchRedirectWrapper />
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<Splash />} />
             <Route path="/login" element={<Login />} />
             <Route element={<LayoutWrapper />}>
             <Route path="/dashboard" element={<Dashboard />} />
