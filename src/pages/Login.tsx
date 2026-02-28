@@ -9,7 +9,7 @@ import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
 import logoBranco from "@/assets/logo_branco.png";
-import logoFallback from "@/assets/logo_preto.png";
+import logoPreto from "@/assets/logo_preto.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -69,94 +69,81 @@ export default function Login() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{ background: "linear-gradient(135deg, hsl(220 18% 16%), hsl(220 15% 22%), hsl(220 18% 18%))" }}
-    >
-      {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.08]"
-          style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
-        />
-        <div
-          className="absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full opacity-[0.06]"
-          style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
-        />
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-[0.03]"
-          style={{ border: "1px solid hsl(var(--primary))" }}
-        />
-      </div>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
+      {/* Gradient header stripe - same as internal dashboards */}
+      <div
+        className="absolute top-0 left-0 right-0 h-72"
+        style={{ background: "var(--gradient-hero)" }}
+      />
+      {/* Subtle decorative circle */}
+      <div
+        className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full opacity-[0.08] -translate-y-1/2 translate-x-1/4"
+        style={{ background: "radial-gradient(circle, hsl(0 0% 100%) 0%, transparent 70%)" }}
+      />
 
-      <div className="relative z-10 w-full max-w-md space-y-8">
-        {/* Logo & Branding */}
-        <div className="text-center space-y-4">
+      <div className="relative z-10 w-full max-w-md space-y-6">
+        {/* Logo & Branding - on top of gradient */}
+        <div className="text-center space-y-3">
           <img
             src={logoBranco}
             alt="Logo da Empresa"
-            className="h-24 w-auto mx-auto"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoFallback; }}
+            className="h-20 w-auto mx-auto drop-shadow-lg"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoPreto; }}
           />
           <div>
-            <h1 className="text-3xl font-light tracking-tight text-primary-foreground">
+            <h1 className="text-2xl font-semibold tracking-tight text-primary-foreground">
               Sistema de Gestão
             </h1>
-            <p className="text-sm text-primary-foreground/40 mt-1.5">
+            <p className="text-sm text-primary-foreground/60 mt-1">
               Plataforma Omnicanal
             </p>
           </div>
         </div>
 
         {/* Login Card */}
-        <Card
-          className="border-0 shadow-2xl"
-          style={{ background: "hsl(0 0% 100% / 0.07)", backdropFilter: "blur(20px)", borderRadius: "1rem" }}
-        >
+        <Card className="border-border/50 shadow-lg">
           <CardContent className="pt-8 pb-8 px-8">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold text-primary-foreground">
+              <h2 className="text-xl font-semibold text-foreground">
                 Bem-vindo de volta
               </h2>
-              <p className="text-sm text-primary-foreground/40 mt-1">
-                Entre com suas credenciais
+              <p className="text-sm text-muted-foreground mt-1">
+                Entre com suas credenciais para acessar o sistema
               </p>
             </div>
 
             <form onSubmit={handleUserLogin} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="user-email" className="text-xs font-medium uppercase tracking-wider text-primary-foreground/60">
+                <Label htmlFor="user-email" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Email
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/30" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                   <Input
                     id="user-email"
                     type="email"
                     value={userEmail}
                     onChange={(e) => setUserEmail(e.target.value)}
                     placeholder="seu@email.com"
-                    className="pl-10 h-11 border-0 text-primary-foreground placeholder:text-primary-foreground/20"
-                    style={{ background: "hsl(0 0% 100% / 0.08)" }}
+                    className="pl-10 h-11"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="user-password" className="text-xs font-medium uppercase tracking-wider text-primary-foreground/60">
+                <Label htmlFor="user-password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Senha
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/30" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
                   <Input
                     id="user-password"
                     type="password"
                     value={userPassword}
                     onChange={(e) => setUserPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="pl-10 h-11 border-0 text-primary-foreground placeholder:text-primary-foreground/20"
-                    style={{ background: "hsl(0 0% 100% / 0.08)" }}
+                    className="pl-10 h-11"
                     required
                   />
                 </div>
@@ -181,7 +168,7 @@ export default function Login() {
                 <Button
                   type="button"
                   variant="ghost"
-                  className="w-full text-sm text-primary-foreground/50 hover:text-primary-foreground hover:bg-primary-foreground/5"
+                  className="w-full text-sm text-muted-foreground hover:text-foreground"
                   onClick={() => setShowForgotPasswordDialog(true)}
                 >
                   Esqueci minha senha
@@ -191,20 +178,7 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        {/* Feature pills */}
-        <div className="flex flex-wrap justify-center gap-2">
-          {["Atendimento", "Automação", "Relatórios", "CRM"].map((item) => (
-            <span
-              key={item}
-              className="text-xs px-3 py-1.5 rounded-full text-primary"
-              style={{ background: "hsl(var(--primary) / 0.1)", border: "1px solid hsl(var(--primary) / 0.15)" }}
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-
-        <p className="text-center text-xs text-primary-foreground/25">
+        <p className="text-center text-xs text-muted-foreground/60">
           Plataforma Omnicanal · Todos os direitos reservados
         </p>
       </div>
