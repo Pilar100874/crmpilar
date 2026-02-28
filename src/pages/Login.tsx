@@ -3,13 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
-import { motion } from "framer-motion";
 import { Lock, Mail } from "lucide-react";
-import logo from "@/assets/logo.jpg";
+import logoBranco from "@/assets/logo_branco.png";
 import logoFallback from "@/assets/logo_preto.png";
 
 export default function Login() {
@@ -70,179 +69,144 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex relative overflow-hidden">
-      {/* Left side - Branding panel */}
-      <div className="hidden lg:flex lg:w-[55%] relative bg-gradient-to-br from-sidebar-background via-sidebar-accent to-sidebar-background items-center justify-center p-12">
-        {/* Decorative elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div
-            className="absolute -top-32 -left-32 w-96 h-96 rounded-full opacity-10"
-            style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
-          />
-          <div
-            className="absolute -bottom-48 -right-48 w-[500px] h-[500px] rounded-full opacity-[0.07]"
-            style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
-          />
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full opacity-[0.04]"
-            style={{ border: "1px solid hsl(var(--primary))" }}
-          />
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full opacity-[0.06]"
-            style={{ border: "1px solid hsl(var(--primary))" }}
-          />
-        </div>
-
-        <motion.div
-          className="relative z-10 text-center space-y-8 max-w-md"
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-        >
-          <motion.img
-            src={logo}
-            alt="Logo"
-            className="h-28 w-auto mx-auto rounded-2xl shadow-2xl"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoFallback; }}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-          />
-          <div className="space-y-3">
-            <h1 className="text-4xl font-light tracking-tight text-sidebar-foreground">
-              Sistema de Gestão
-            </h1>
-            <p className="text-sidebar-foreground/50 text-lg font-light leading-relaxed">
-              Plataforma integrada para gestão<br />omnicanal do seu negócio
-            </p>
-          </div>
-
-          {/* Feature highlights */}
-          <div className="grid grid-cols-2 gap-4 pt-4">
-            {[
-              { label: "Atendimento", desc: "Multicanal" },
-              { label: "Automação", desc: "Inteligente" },
-              { label: "Relatórios", desc: "Em tempo real" },
-              { label: "CRM", desc: "Completo" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.label}
-                className="rounded-xl p-4 text-left"
-                style={{ background: "hsl(var(--primary) / 0.08)", border: "1px solid hsl(var(--primary) / 0.12)" }}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + i * 0.1 }}
-              >
-                <p className="text-sm font-medium text-primary">{item.label}</p>
-                <p className="text-xs text-sidebar-foreground/40 mt-0.5">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{ background: "linear-gradient(135deg, hsl(220 18% 16%), hsl(220 15% 22%), hsl(220 18% 18%))" }}
+    >
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full opacity-[0.08]"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute -bottom-32 -left-32 w-[400px] h-[400px] rounded-full opacity-[0.06]"
+          style={{ background: "radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-[0.03]"
+          style={{ border: "1px solid hsl(var(--primary))" }}
+        />
       </div>
 
-      {/* Right side - Login form */}
-      <div className="w-full lg:w-[45%] flex items-center justify-center p-6 sm:p-12 bg-background">
-        <motion.div
-          className="w-full max-w-sm"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-8">
-            <img
-              src={logo}
-              alt="Logo"
-              className="h-20 w-auto mx-auto rounded-xl shadow-lg mb-4"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoFallback; }}
-            />
-            <h1 className="text-2xl font-light tracking-tight text-foreground">
+      <div className="relative z-10 w-full max-w-md space-y-8">
+        {/* Logo & Branding */}
+        <div className="text-center space-y-4">
+          <img
+            src={logoBranco}
+            alt="Logo da Empresa"
+            className="h-24 w-auto mx-auto"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoFallback; }}
+          />
+          <div>
+            <h1 className="text-3xl font-light tracking-tight text-primary-foreground">
               Sistema de Gestão
             </h1>
-          </div>
-
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-foreground tracking-tight">
-              Bem-vindo de volta
-            </h2>
-            <p className="text-muted-foreground mt-1.5 text-sm">
-              Entre com suas credenciais para acessar o sistema
+            <p className="text-sm text-primary-foreground/40 mt-1.5">
+              Plataforma Omnicanal
             </p>
           </div>
+        </div>
 
-          <Card className="border-border/40 shadow-lg bg-card">
-            <form onSubmit={handleUserLogin}>
-              <CardContent className="space-y-5 pt-6">
-                <div className="space-y-2">
-                  <Label htmlFor="user-email" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Email
-                  </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                    <Input
-                      id="user-email"
-                      type="email"
-                      value={userEmail}
-                      onChange={(e) => setUserEmail(e.target.value)}
-                      placeholder="seu@email.com"
-                      className="pl-10 h-11"
-                      required
-                    />
-                  </div>
+        {/* Login Card */}
+        <Card
+          className="border-0 shadow-2xl"
+          style={{ background: "hsl(0 0% 100% / 0.07)", backdropFilter: "blur(20px)", borderRadius: "1rem" }}
+        >
+          <CardContent className="pt-8 pb-8 px-8">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-primary-foreground">
+                Bem-vindo de volta
+              </h2>
+              <p className="text-sm text-primary-foreground/40 mt-1">
+                Entre com suas credenciais
+              </p>
+            </div>
+
+            <form onSubmit={handleUserLogin} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="user-email" className="text-xs font-medium uppercase tracking-wider text-primary-foreground/60">
+                  Email
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/30" />
+                  <Input
+                    id="user-email"
+                    type="email"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                    className="pl-10 h-11 border-0 text-primary-foreground placeholder:text-primary-foreground/20"
+                    style={{ background: "hsl(0 0% 100% / 0.08)" }}
+                    required
+                  />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="user-password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Senha
-                  </Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/50" />
-                    <Input
-                      id="user-password"
-                      type="password"
-                      value={userPassword}
-                      onChange={(e) => setUserPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="pl-10 h-11"
-                      required
-                    />
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="user-password" className="text-xs font-medium uppercase tracking-wider text-primary-foreground/60">
+                  Senha
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground/30" />
+                  <Input
+                    id="user-password"
+                    type="password"
+                    value={userPassword}
+                    onChange={(e) => setUserPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="pl-10 h-11 border-0 text-primary-foreground placeholder:text-primary-foreground/20"
+                    style={{ background: "hsl(0 0% 100% / 0.08)" }}
+                    required
+                  />
                 </div>
+              </div>
 
-                <div className="space-y-3 pt-2">
-                  <Button
-                    type="submit"
-                    className="w-full h-11 text-sm font-medium"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <span className="flex items-center gap-2">
-                        <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                        Entrando...
-                      </span>
-                    ) : (
-                      "Entrar"
-                    )}
-                  </Button>
+              <div className="space-y-3 pt-2">
+                <Button
+                  type="submit"
+                  className="w-full h-11 text-sm font-semibold"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      Entrando...
+                    </span>
+                  ) : (
+                    "Entrar"
+                  )}
+                </Button>
 
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full text-sm text-muted-foreground hover:text-foreground"
-                    onClick={() => setShowForgotPasswordDialog(true)}
-                  >
-                    Esqueci minha senha
-                  </Button>
-                </div>
-              </CardContent>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full text-sm text-primary-foreground/50 hover:text-primary-foreground hover:bg-primary-foreground/5"
+                  onClick={() => setShowForgotPasswordDialog(true)}
+                >
+                  Esqueci minha senha
+                </Button>
+              </div>
             </form>
-          </Card>
+          </CardContent>
+        </Card>
 
-          <p className="text-center text-xs text-muted-foreground/60 mt-8">
-            Plataforma Omnicanal · Todos os direitos reservados
-          </p>
-        </motion.div>
+        {/* Feature pills */}
+        <div className="flex flex-wrap justify-center gap-2">
+          {["Atendimento", "Automação", "Relatórios", "CRM"].map((item) => (
+            <span
+              key={item}
+              className="text-xs px-3 py-1.5 rounded-full text-primary"
+              style={{ background: "hsl(var(--primary) / 0.1)", border: "1px solid hsl(var(--primary) / 0.15)" }}
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+
+        <p className="text-center text-xs text-primary-foreground/25">
+          Plataforma Omnicanal · Todos os direitos reservados
+        </p>
       </div>
 
       <ForgotPasswordDialog
