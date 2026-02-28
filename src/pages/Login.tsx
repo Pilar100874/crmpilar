@@ -69,7 +69,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
+    <div className="h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
       {/* Gradient header stripe - same as internal dashboards */}
       <div
         className="absolute top-0 left-0 right-0 h-72"
