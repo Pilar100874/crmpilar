@@ -1672,19 +1672,24 @@ export default function POSView({
                         </div>
                       )}
                       
-                      {/* Cart indicator */}
                       {inCart && (
                         <div className="absolute top-3 right-3 bg-primary text-primary-foreground text-[11px] font-bold rounded-full min-w-[26px] h-[26px] px-2 flex items-center justify-center shadow-md shadow-primary/25 border-2 border-background">
                           {cartQty}
                         </div>
                       )}
                       
-                      {/* Quick view overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+                      {/* Price overlay bottom-left */}
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/60 via-foreground/25 to-transparent pt-8 pb-2.5 px-3">
+                        <span className="text-[15px] font-bold text-white drop-shadow-md tracking-tight">
+                          R$ 10,00
+                        </span>
+                      </div>
+                      
+                      {/* Quick view */}
+                      <div className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
                         <Button
                           size="icon"
-                          className="h-9 w-9 bg-card hover:bg-card text-foreground shadow-lg rounded-xl border border-border/70"
+                          className="h-8 w-8 bg-card/90 hover:bg-card text-foreground shadow-lg rounded-xl border border-border/70 backdrop-blur-sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowRegrasInDetails(false);
@@ -1693,7 +1698,7 @@ export default function POSView({
                             setActiveTab("details");
                           }}
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-3.5 h-3.5" />
                         </Button>
                       </div>
                     </div>
