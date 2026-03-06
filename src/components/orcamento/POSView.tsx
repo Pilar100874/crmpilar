@@ -1635,7 +1635,7 @@ export default function POSView({
                 return (
                   <Card
                     key={produto.id}
-                    className="bg-background border-border hover:border-primary transition-all overflow-hidden group"
+                    className="bg-card border border-border/60 hover:border-primary/50 hover:shadow-lg transition-all duration-300 overflow-hidden group rounded-xl"
                   >
                     <div 
                       className="aspect-square bg-muted relative overflow-hidden cursor-pointer"
