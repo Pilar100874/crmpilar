@@ -1750,15 +1750,111 @@ export default function POSView({
             <div className="space-y-2">
               {filteredProdutos.map((produto) => {
                 const quantity = gruposQuantities.get(produto.id) || 1;
+                const inCart = cartItems.has(produto.id);
                 return (
-                   <Card
+                  <div
                     key={produto.id}
-                    className="bg-card border border-border/60 hover:border-primary/50 hover:shadow-md transition-all duration-300 overflow-hidden rounded-xl"
+                    className={cn(
+                      "flex items-center gap-4 p-3 bg-card rounded-xl border border-border/40 transition-all duration-200 hover:shadow-md hover:border-primary/30",
+                      inCart && "ring-2 ring-primary ring-offset-1 ring-offset-background border-primary/30"
+                    )}
                   >
-                    <div className="flex items-center gap-4 p-3">
-                      <div 
-                        className="w-16 h-16 bg-gradient-to-br from-muted/80 to-muted rounded-lg flex-shrink-0 overflow-hidden cursor-pointer"
-                        onClick={() => {
+                    <div 
+                      className="w-16 h-16 rounded-xl bg-background border border-border/30 flex-shrink-0 overflow-hidden cursor-pointer flex items-center justify-center"
+                      onClick={() => {
+                        for (let i = 0; i < quantity; i++) {
+                          addToCart(produto);
+                        }
+                        setGruposQuantities(prev => {
+                          const next = new Map(prev);
+                          next.set(produto.id, 1);
+                          return next;
+                        });
+                      }}
+                    >
+                      {produto.foto_url ? (
+                        <img 
+                          src={produto.foto_url} 
+                          alt={produto.nome}
+                          className="w-full h-full object-contain p-1.5"
+                        />
+                      ) : (
+                        <Package className="h-6 w-6 text-muted-foreground/25" />
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm truncate text-foreground">
+                        {produto.nome}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[15px] font-bold text-primary">
+                          R$ 10,00
+                        </span>
+                        {inCart && (
+                          <span className="text-[11px] font-medium text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">
+                            {cartItems.get(produto.id)?.quantity} no carrinho
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowRegrasInDetails(false);
+                          setShowFreteInDetails(false);
+                          setSelectedProduto(produto);
+                          setActiveTab("details");
+                        }}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      
+                      <div className="flex items-center gap-0.5 bg-muted/50 rounded-xl p-0.5">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-lg"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newQty = Math.max(1, quantity - 1);
+                            setGruposQuantities(prev => {
+                              const next = new Map(prev);
+                              next.set(produto.id, newQty);
+                              return next;
+                            });
+                          }}
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </Button>
+                        <span className="text-sm font-semibold w-8 text-center">{quantity}</span>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 rounded-lg"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setGruposQuantities(prev => {
+                              const next = new Map(prev);
+                              next.set(produto.id, quantity + 1);
+                              return next;
+                            });
+                          }}
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                      
+                      <Button
+                        size="icon"
+                        className="bg-primary hover:bg-primary/90 h-9 w-9 rounded-xl shadow-sm shadow-primary/20"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           for (let i = 0; i < quantity; i++) {
                             addToCart(produto);
                           }
@@ -1769,86 +1865,10 @@ export default function POSView({
                           });
                         }}
                       >
-                        {produto.foto_url ? (
-                          <img 
-                            src={produto.foto_url} 
-                            alt={produto.nome}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <span className="text-2xl text-muted-foreground">{produto.nome[0]}</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-sm truncate">
-                          {produto.nome}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-base font-bold text-primary">
-                            R$ 10,00
-                          </span>
-                          {cartItems.has(produto.id) && (
-                            <Badge className="bg-primary text-primary-foreground text-xs">
-                              {cartItems.get(produto.id)?.quantity} no carrinho
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          className="h-9 w-9"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowRegrasInDetails(false);
-                            setShowFreteInDetails(false);
-                            setSelectedProduto(produto);
-                            setActiveTab("details");
-                          }}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={quantity}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            const newQty = parseInt(e.target.value) || 1;
-                            setGruposQuantities(prev => {
-                              const next = new Map(prev);
-                              next.set(produto.id, newQty);
-                              return next;
-                            });
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-20 h-9 text-center text-sm p-1 bg-background border-border"
-                        />
-                        <Button
-                          size="icon"
-                          className="bg-primary hover:bg-primary/90 h-9 w-9"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            for (let i = 0; i < quantity; i++) {
-                              addToCart(produto);
-                            }
-                            setGruposQuantities(prev => {
-                              const next = new Map(prev);
-                              next.set(produto.id, 1);
-                              return next;
-                            });
-                          }}
-                        >
-                          <Plus className="w-5 h-5" />
-                        </Button>
-                      </div>
+                        <Plus className="w-5 h-5" />
+                      </Button>
                     </div>
-                  </Card>
+                  </div>
                 );
               })}
             </div>
