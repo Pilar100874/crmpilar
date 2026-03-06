@@ -81,7 +81,7 @@ export default function VariableSequence({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh]">
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-3xl max-h-[80vh] p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Variáveis Recebidas no Chat do Bot</DialogTitle>
           <DialogDescription>
@@ -105,7 +105,7 @@ export default function VariableSequence({
                   </span>
                 </div>
                 
-                <div className="grid gap-3">
+                <div className="grid gap-3 grid-cols-1">
                   {Object.entries(botVariables).map(([key, value], index) => (
                     <Card key={key} className="p-4 border-l-4 border-l-primary">
                       <div className="space-y-2">
@@ -154,7 +154,7 @@ export default function VariableSequence({
                 </span>
               </div>
               {variables.map((variable, index) => (
-              <div key={variable.id} className="flex gap-2 items-end">
+              <div key={variable.id} className="flex flex-col sm:flex-row gap-2 sm:items-end">
                 <div className="flex-1 space-y-2">
                   <Label htmlFor={`key-${variable.id}`}>
                     Chave {index + 1}
@@ -195,13 +195,13 @@ export default function VariableSequence({
           </div>
         </ScrollArea>
 
-        <div className="flex gap-2 pt-4 border-t">
-          <Button variant="outline" onClick={addVariable} className="flex-1">
+        <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={addVariable} className="flex-1 text-xs sm:text-sm">
             <Plus className="h-4 w-4 mr-2" />
-            Adicionar Variável Customizada
+            Adicionar Variável
           </Button>
-          <Button onClick={handleSubmit} className="flex-1" disabled={botVarsCount === 0 && variables.some(v => !v.key || !v.value)}>
-            Enviar Todas as Variáveis
+          <Button onClick={handleSubmit} className="flex-1 text-xs sm:text-sm" disabled={botVarsCount === 0 && variables.some(v => !v.key || !v.value)}>
+            Enviar Variáveis
           </Button>
         </div>
       </DialogContent>
