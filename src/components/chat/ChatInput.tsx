@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus, Sparkles, FileText, FileSpreadsheet, MessageSquareText, BookOpen, Languages, FileCheck, Plus, Target, Globe } from "lucide-react";
+import { Send, Mic, Image, Paperclip, Variable, Zap, Bot, Webhook, UserPlus, Sparkles, FileText, FileSpreadsheet, MessageSquareText, BookOpen, Languages, FileCheck, Plus, Target, Globe, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -982,7 +982,10 @@ export default function ChatInput({
           </TooltipTrigger>
           <PopoverContent className="w-[calc(100vw-2rem)] sm:w-56 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Traduzir para</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Traduzir para</Label>
+                <button onClick={() => setShowTranslatePopover(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
+              </div>
               <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -1020,7 +1023,10 @@ export default function ChatInput({
             </TooltipTrigger>
             <PopoverContent className="w-[calc(100vw-2rem)] sm:w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
               <div className="space-y-3">
-                <Label className="text-sm font-medium">Redirecionar para Bot</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Redirecionar para Bot</Label>
+                  <button onClick={() => setShowBotPopover(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
+                </div>
                 <Select value={selectedBotRedirect || ""} onValueChange={onBotRedirectChange}>
                   <SelectTrigger><SelectValue placeholder="Selecione um bot" /></SelectTrigger>
                   <SelectContent>
@@ -1058,7 +1064,11 @@ export default function ChatInput({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">Resposta Automática</Label>
-                  <Switch checked={webhookAutoResponseActive} onCheckedChange={onWebhookToggle} />
+                  <div className="flex items-center gap-2">
+                    <Switch checked={webhookAutoResponseActive} onCheckedChange={onWebhookToggle} />
+                    <button onClick={() => setShowWebhookPopover(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
+                  </div>
+                </div>
                 </div>
                 <Select value={selectedWebhookAutoResponse || ""} onValueChange={onWebhookChange}>
                   <SelectTrigger><SelectValue placeholder="Selecione webhook" /></SelectTrigger>
@@ -1092,7 +1102,10 @@ export default function ChatInput({
             </TooltipTrigger>
             <PopoverContent className="w-[calc(100vw-2rem)] sm:w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
               <div className="space-y-3">
-                <Label className="text-sm font-medium">Transferir para</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Transferir para</Label>
+                  <button onClick={() => setShowTransferPopover(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
+                </div>
                 <Select value={selectedTransferUser || ""} onValueChange={onTransferUserChange}>
                   <SelectTrigger><SelectValue placeholder="Selecione um usuário" /></SelectTrigger>
                   <SelectContent>
@@ -1127,7 +1140,10 @@ export default function ChatInput({
           </TooltipTrigger>
           <PopoverContent className="w-[calc(100vw-2rem)] sm:w-72 p-3 rounded-xl shadow-xl border-border/50 bg-popover z-[9999]" align="start" sideOffset={8}>
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Relatórios Importados</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Relatórios Importados</Label>
+                <button onClick={() => setShowImportReportsPopover(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
+              </div>
               {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
               {importReports.length > 0 ? (
                 <div className="space-y-3">
@@ -1217,7 +1233,16 @@ export default function ChatInput({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">Tradução em Tempo Real</Label>
-                  <Switch 
+                  <div className="flex items-center gap-2">
+                    <Switch 
+                      checked={isRealTimeTranslationActive} 
+                      onCheckedChange={() => {
+                        onToggleRealTimeTranslation();
+                      }} 
+                    />
+                    <button onClick={() => setShowRealTimeTranslatePopover(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
+                  </div>
+                </div>
                     checked={isRealTimeTranslationActive} 
                     onCheckedChange={() => {
                       onToggleRealTimeTranslation();
