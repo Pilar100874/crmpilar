@@ -1629,50 +1629,54 @@ export default function POSView({
         {conjuntoItens.length === 0 && (
         <ScrollArea className="flex-1 p-4">
           {viewMode === 'grid' ? (
-            <div className={`grid gap-2 ${isCompact ? 'grid-cols-2' : 'grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3'}`}>
+            <div className={`grid gap-3 ${isCompact ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'}`}>
               {filteredProdutos.map((produto) => {
                 const quantity = gruposQuantities.get(produto.id) || 1;
+                const inCart = cartItems.has(produto.id);
                 return (
-                  <Card
+                  <div
                     key={produto.id}
-                    className="bg-card border border-border/60 hover:border-primary/50 hover:shadow-lg transition-all duration-300 overflow-hidden group rounded-xl"
+                    className={cn(
+                      "group relative bg-card rounded-2xl border border-border/50 overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-primary/40 hover:-translate-y-0.5 cursor-pointer",
+                      inCart && "ring-2 ring-primary/70 ring-offset-2 ring-offset-background"
+                    )}
+                    onClick={() => {
+                      for (let i = 0; i < quantity; i++) {
+                        addToCart(produto);
+                      }
+                      setGruposQuantities(prev => {
+                        const next = new Map(prev);
+                        next.set(produto.id, 1);
+                        return next;
+                      });
+                    }}
                   >
-                    <div 
-                      className="aspect-square bg-gradient-to-br from-muted/80 to-muted relative overflow-hidden cursor-pointer"
-                      onClick={() => {
-                        for (let i = 0; i < quantity; i++) {
-                          addToCart(produto);
-                        }
-                        setGruposQuantities(prev => {
-                          const next = new Map(prev);
-                          next.set(produto.id, 1);
-                          return next;
-                        });
-                      }}
-                    >
+                    {/* Image */}
+                    <div className="relative aspect-[4/3] bg-muted/30 overflow-hidden">
                       {produto.foto_url ? (
                         <img 
                           src={produto.foto_url} 
                           alt={produto.nome}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
-                          <Package className="h-10 w-10 text-primary/30" />
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-1.5">
+                          <Package className="h-8 w-8 text-muted-foreground/25" />
+                          <span className="text-[10px] text-muted-foreground/40 font-medium">Sem imagem</span>
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       
-                      {cartItems.has(produto.id) && (
-                        <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground shadow-lg text-xs font-bold px-2.5 py-0.5">
+                      {/* Cart badge */}
+                      {inCart && (
+                        <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-[11px] font-bold rounded-full h-6 w-6 flex items-center justify-center shadow-lg">
                           {cartItems.get(produto.id)?.quantity}
-                        </Badge>
+                        </div>
                       )}
                       
+                      {/* Eye button */}
                       <Button
                         size="icon"
-                        variant="secondary"
-                        className="absolute top-2 left-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm bg-background/80 hover:bg-background shadow-md rounded-lg"
+                        className="absolute top-2 left-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-background/90 hover:bg-background text-foreground shadow-md rounded-full border border-border/50"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowRegrasInDetails(false);
@@ -1681,17 +1685,18 @@ export default function POSView({
                           setActiveTab("details");
                         }}
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                     
-                    <div className="p-3 space-y-2">
-                      <h3 className="font-semibold text-sm line-clamp-2 min-h-[2.5rem] text-foreground/90 leading-tight">
+                    {/* Info */}
+                    <div className="p-3 border-t border-border/30">
+                      <h3 className="font-medium text-[13px] leading-snug line-clamp-2 min-h-[2.4rem] text-foreground">
                         {produto.nome}
                       </h3>
                       
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
-                        <span className="text-base font-bold text-primary">
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-[15px] font-bold text-primary">
                           R$ 10,00
                         </span>
                         <Input
@@ -1708,11 +1713,11 @@ export default function POSView({
                             });
                           }}
                           onClick={(e) => e.stopPropagation()}
-                          className="w-16 h-8 text-center text-xs p-1 bg-muted/50 border-border/60 rounded-lg"
+                          className="w-14 h-7 text-center text-xs bg-muted/40 border-border/50 rounded-lg"
                         />
                       </div>
                     </div>
-                  </Card>
+                  </div>
                 );
               })}
             </div>
