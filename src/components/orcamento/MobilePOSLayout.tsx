@@ -1023,7 +1023,7 @@ export default function MobilePOSLayout({
                           <p className="text-sm font-medium truncate">{produto.nome}</p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <p className="text-sm font-bold text-primary">
-                              {formatCurrency(produto.preco_venda || 0)}
+                              R$ 10,00
                             </p>
                             {inCart && (
                               <span className="text-[10px] font-medium text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full">
