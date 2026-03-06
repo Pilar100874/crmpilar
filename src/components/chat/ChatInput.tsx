@@ -1278,21 +1278,24 @@ export default function ChatInput({
               {/* All items */}
               {showToolsMenu && (
                 <div 
-                  className="absolute bottom-full left-0 mb-2 flex flex-col-reverse gap-1.5 z-[9999]"
+                  className="absolute bottom-full left-0 mb-2 z-[9999] bg-card/95 backdrop-blur-md border border-border/50 rounded-2xl shadow-2xl p-2 max-h-[60vh] overflow-y-auto overflow-x-hidden"
+                  style={{ width: 'max-content', maxWidth: 'calc(100vw - 2rem)' }}
                 >
-                  {allItems.map((item, index) => (
-                    <div 
-                      key={`tool-${index}`}
-                      className="transform transition-all duration-200 flex-shrink-0"
-                      style={{
-                        transitionDelay: `${index * 30}ms`,
-                        animation: 'fadeInUp 0.2s ease-out forwards',
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {item}
-                    </div>
-                  ))}
+                  <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-1.5">
+                    {allItems.map((item, index) => (
+                      <div 
+                        key={`tool-${index}`}
+                        className="flex-shrink-0"
+                        style={{
+                          animation: 'fadeInUp 0.15s ease-out forwards',
+                          animationDelay: `${index * 20}ms`,
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {item}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
