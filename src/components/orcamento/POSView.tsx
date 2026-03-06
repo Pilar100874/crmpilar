@@ -1748,7 +1748,7 @@ export default function POSView({
               })}
             </div>
           ) : (
-            <div className="space-y-2 px-0.5">
+            <div className="space-y-2">
               {filteredProdutos.map((produto) => {
                 const quantity = gruposQuantities.get(produto.id) || 1;
                 const inCart = cartItems.has(produto.id);
@@ -1756,8 +1756,8 @@ export default function POSView({
                   <div
                     key={produto.id}
                     className={cn(
-                      "flex items-center gap-4 p-3 bg-card rounded-xl border transition-all duration-200 hover:shadow-md",
-                      inCart ? "border-primary/40 bg-primary/[0.03]" : "border-border/40 hover:border-border"
+                      "flex items-center gap-4 p-3 bg-card rounded-xl border border-border/40 transition-all duration-200 hover:shadow-md hover:border-primary/30",
+                      inCart && "ring-2 ring-primary ring-offset-1 ring-offset-background border-primary/30"
                     )}
                   >
                     <div 
