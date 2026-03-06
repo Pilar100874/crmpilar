@@ -980,7 +980,7 @@ export default function ChatInput({
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
-          <PopoverContent className="w-56 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
+          <PopoverContent className="w-[calc(100vw-2rem)] sm:w-56 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
             <div className="space-y-3">
               <Label className="text-sm font-medium">Traduzir para</Label>
               <Select value={targetLanguage} onValueChange={setTargetLanguage}>
@@ -1018,7 +1018,7 @@ export default function ChatInput({
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
+            <PopoverContent className="w-[calc(100vw-2rem)] sm:w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Redirecionar para Bot</Label>
                 <Select value={selectedBotRedirect || ""} onValueChange={onBotRedirectChange}>
@@ -1054,7 +1054,7 @@ export default function ChatInput({
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
+            <PopoverContent className="w-[calc(100vw-2rem)] sm:w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm">Resposta Automática</Label>
@@ -1090,7 +1090,7 @@ export default function ChatInput({
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
+            <PopoverContent className="w-[calc(100vw-2rem)] sm:w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Transferir para</Label>
                 <Select value={selectedTransferUser || ""} onValueChange={onTransferUserChange}>
@@ -1125,7 +1125,7 @@ export default function ChatInput({
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
-          <PopoverContent className="w-72 p-3 rounded-xl shadow-xl border-border/50 bg-popover z-[9999]" align="start" sideOffset={8}>
+          <PopoverContent className="w-[calc(100vw-2rem)] sm:w-72 p-3 rounded-xl shadow-xl border-border/50 bg-popover z-[9999]" align="start" sideOffset={8}>
             <div className="space-y-3">
               <Label className="text-sm font-medium">Relatórios Importados</Label>
               {isProcessingReport && <Progress value={reportProgress} className="h-2" />}
@@ -1213,7 +1213,7 @@ export default function ChatInput({
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
-            <PopoverContent className="w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
+            <PopoverContent className="w-[calc(100vw-2rem)] sm:w-64 p-3 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">Tradução em Tempo Real</Label>
