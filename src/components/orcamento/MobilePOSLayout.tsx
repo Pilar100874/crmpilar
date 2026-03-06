@@ -1045,7 +1045,7 @@ export default function MobilePOSLayout({
                             <p className="text-[10px] text-muted-foreground/70 mt-0.5">{produto.codigo}</p>
                           )}
                           <p className="text-sm font-bold text-primary mt-0.5">
-                            {formatCurrency(produto.preco_tabela || 0)}
+                            R$ 10,00
                           </p>
                         </div>
 
