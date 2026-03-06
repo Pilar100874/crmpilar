@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Link as LinkIcon, FileUp, Image as ImageIcon, FileText, FileSpreadsheet, ZoomIn, File, Search } from "lucide-react";
+import { Link as LinkIcon, FileUp, Image as ImageIcon, FileText, FileSpreadsheet, ZoomIn, File, Search, X } from "lucide-react";
 import { getFileTypeIcon } from "@/lib/imageUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -119,11 +119,14 @@ export default function QuickAttachmentsSelector({ onSelect, disabled }: QuickAt
         </TooltipProvider>
         <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[500px] p-0 rounded-2xl z-[9999]" align="start" sideOffset={8}>
           <div className="p-4 border-b bg-muted/30 space-y-3">
-            <div>
-              <h4 className="font-semibold text-lg">📎 Anexos Rápidos</h4>
-              <p className="text-xs text-muted-foreground mt-1">
-                Selecione um anexo para inserir na conversa
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-semibold text-lg">📎 Anexos Rápidos</h4>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Selecione um anexo para inserir na conversa
+                </p>
+              </div>
+              <button onClick={() => setOpen(false)} className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={16} /></button>
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
