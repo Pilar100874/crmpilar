@@ -1704,22 +1704,14 @@ export default function POSView({
                     </div>
                     
                     {/* Content */}
-                    <div className="flex flex-col flex-1 p-3.5 pt-3 gap-3">
-                      {/* Name */}
+                    <div className="flex flex-col flex-1 p-3.5 pt-3 gap-2.5">
                       <h3 className="font-semibold text-[13px] leading-[1.4] line-clamp-2 min-h-[2.4rem] text-foreground/90">
                         {produto.nome}
                       </h3>
                       
-                      {/* Price + Quantity */}
-                      <div className="mt-auto flex items-center justify-between gap-2">
-                        <div className="flex flex-col">
-                          <span className="text-base font-bold text-primary tracking-tight">
-                            R$ 10,00
-                          </span>
-                        </div>
-                        
-                        {/* Stepper */}
-                        <div className="flex items-center h-8 bg-muted/40 rounded-full border border-border/40 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                      {/* Quantity stepper - centered */}
+                      <div className="mt-auto flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center h-8 bg-muted/40 rounded-full border border-border/40 overflow-hidden">
                           <button
                             className="h-full w-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
                             onClick={(e) => {

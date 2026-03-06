@@ -944,17 +944,48 @@ export default function MobilePOSLayout({
                           >
                             <Eye className="w-3 h-3" />
                           </Button>
+                          {/* Price overlay bottom-left */}
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/60 via-foreground/25 to-transparent pt-6 pb-1.5 px-2">
+                            <span className="text-sm font-bold text-white drop-shadow-md">
+                              R$ 10,00
+                            </span>
+                          </div>
                         </div>
-                        <div className="p-2.5 border-t border-border/30">
+                        <div className="p-2 border-t border-border/30">
                           <p className="text-xs font-medium line-clamp-2 min-h-[2rem] text-foreground leading-snug">
                             {produto.nome}
                           </p>
-                          <div className="flex items-center justify-between mt-1.5">
-                            <p className="text-sm font-bold text-primary">
-                              R$ 10,00
-                            </p>
-                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Plus className="w-3.5 h-3.5 text-primary" />
+                          {/* Quantity stepper - centered */}
+                          <div className="flex items-center justify-center mt-1.5" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center h-7 bg-muted/40 rounded-full border border-border/40 overflow-hidden">
+                              <button
+                                className="h-full w-7 flex items-center justify-center text-muted-foreground"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const newQty = Math.max(1, quantity - 1);
+                                  setGruposQuantities(prev => {
+                                    const next = new Map(prev);
+                                    next.set(produto.id, newQty);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                <Minus className="w-3 h-3" />
+                              </button>
+                              <span className="text-[11px] font-bold w-6 text-center text-foreground select-none">{quantity}</span>
+                              <button
+                                className="h-full w-7 flex items-center justify-center text-muted-foreground"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setGruposQuantities(prev => {
+                                    const next = new Map(prev);
+                                    next.set(produto.id, quantity + 1);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
                             </div>
                           </div>
                         </div>
