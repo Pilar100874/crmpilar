@@ -893,73 +893,72 @@ export default function MobilePOSLayout({
               ) : (
                 <>
                   {viewMode === 'grid' ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                       {filteredProdutos.map((produto) => {
                         const inCart = cartItems.get(produto.id);
                         const quantity = gruposQuantities.get(produto.id) || 1;
                         return (
-                      <Card
+                      <div
                         key={produto.id}
                         className={cn(
-                          "overflow-hidden transition-all duration-300 group rounded-xl border border-border/60 hover:shadow-lg",
-                          inCart && "ring-2 ring-primary ring-offset-1 ring-offset-background"
+                          "group relative bg-card rounded-2xl border border-border/50 overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer",
+                          inCart && "ring-2 ring-primary/70 ring-offset-1 ring-offset-background"
                         )}
+                        onClick={() => {
+                          for (let i = 0; i < quantity; i++) {
+                            addToCart(produto);
+                          }
+                          setGruposQuantities(prev => {
+                            const next = new Map(prev);
+                            next.set(produto.id, 1);
+                            return next;
+                          });
+                        }}
                       >
-                        <div 
-                          className="aspect-square bg-gradient-to-br from-muted/80 to-muted relative overflow-hidden"
-                          onClick={() => {
-                            for (let i = 0; i < quantity; i++) {
-                              addToCart(produto);
-                            }
-                            setGruposQuantities(prev => {
-                              const next = new Map(prev);
-                              next.set(produto.id, 1);
-                              return next;
-                            });
-                          }}
-                        >
+                        <div className="relative aspect-[4/3] bg-muted/30 overflow-hidden">
                           {produto.foto_url ? (
                             <img
                               src={produto.foto_url}
                               alt={produto.nome}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              className="w-full h-full object-contain p-2.5"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
-                              <Package className="h-10 w-10 text-primary/25" />
+                            <div className="w-full h-full flex flex-col items-center justify-center gap-1">
+                              <Package className="h-8 w-8 text-muted-foreground/25" />
+                              <span className="text-[9px] text-muted-foreground/40 font-medium">Sem imagem</span>
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent" />
                           {inCart && (
-                            <Badge className="absolute top-1.5 right-1.5 bg-primary text-primary-foreground text-[10px] font-bold shadow-lg px-2 py-0.5">
+                            <div className="absolute top-1.5 right-1.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg">
                               {inCart.quantity}
-                            </Badge>
+                            </div>
                           )}
                           <Button
                             size="icon"
-                            variant="secondary"
-                            className="absolute top-1.5 left-1.5 h-7 w-7 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm bg-background/80 hover:bg-background shadow-md rounded-lg"
+                            className="absolute top-1.5 left-1.5 h-6 w-6 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-all bg-background/90 hover:bg-background text-foreground shadow-md rounded-full border border-border/50"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedProduto(produto);
                               setActiveView('detalhes');
                             }}
                           >
-                            <Eye className="w-3.5 h-3.5" />
+                            <Eye className="w-3 h-3" />
                           </Button>
                         </div>
-                        <div className="p-2.5 space-y-1.5">
-                          <p className="text-xs font-semibold line-clamp-2 min-h-[2rem] text-foreground/90 leading-snug">
+                        <div className="p-2.5 border-t border-border/30">
+                          <p className="text-xs font-medium line-clamp-2 min-h-[2rem] text-foreground leading-snug">
                             {produto.nome}
                           </p>
-                          <div className="flex items-center justify-between pt-1 border-t border-border/40">
+                          <div className="flex items-center justify-between mt-1.5">
                             <p className="text-sm font-bold text-primary">
                               R$ 10,00
                             </p>
-                            <Plus className="w-4 h-4 text-primary/60" />
+                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Plus className="w-3.5 h-3.5 text-primary" />
+                            </div>
                           </div>
                         </div>
-                      </Card>
+                      </div>
                     );
                   })}
                 </div>
