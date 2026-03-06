@@ -1069,7 +1069,6 @@ export default function ChatInput({
                     <button onClick={() => setShowWebhookPopover(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
                   </div>
                 </div>
-                </div>
                 <Select value={selectedWebhookAutoResponse || ""} onValueChange={onWebhookChange}>
                   <SelectTrigger><SelectValue placeholder="Selecione webhook" /></SelectTrigger>
                   <SelectContent>
@@ -1242,12 +1241,6 @@ export default function ChatInput({
                     />
                     <button onClick={() => setShowRealTimeTranslatePopover(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
                   </div>
-                </div>
-                    checked={isRealTimeTranslationActive} 
-                    onCheckedChange={() => {
-                      onToggleRealTimeTranslation();
-                    }} 
-                  />
                 </div>
                 <Select value={translationLanguage} onValueChange={onTranslationLanguageChange}>
                   <SelectTrigger><SelectValue placeholder="Idioma de destino" /></SelectTrigger>
