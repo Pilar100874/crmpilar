@@ -1286,10 +1286,6 @@ export default function ChatInput({
                       <div 
                         key={`tool-${index}`}
                         className="flex-shrink-0"
-                        style={{
-                          animation: 'fadeInUp 0.15s ease-out forwards',
-                          animationDelay: `${index * 20}ms`,
-                        }}
                         onClick={(e) => e.stopPropagation()}
                       >
                         {item}
