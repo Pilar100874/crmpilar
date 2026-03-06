@@ -1638,7 +1638,7 @@ export default function POSView({
                     className="bg-card border border-border/60 hover:border-primary/50 hover:shadow-lg transition-all duration-300 overflow-hidden group rounded-xl"
                   >
                     <div 
-                      className="aspect-square bg-muted relative overflow-hidden cursor-pointer"
+                      className="aspect-square bg-gradient-to-br from-muted/80 to-muted relative overflow-hidden cursor-pointer"
                       onClick={() => {
                         for (let i = 0; i < quantity; i++) {
                           addToCart(produto);
@@ -1654,17 +1654,17 @@ export default function POSView({
                         <img 
                           src={produto.foto_url} 
                           alt={produto.nome}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-4xl text-muted-foreground">{produto.nome[0]}</span>
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
+                          <Package className="h-10 w-10 text-primary/30" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       
                       {cartItems.has(produto.id) && (
-                        <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground">
+                        <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground shadow-lg text-xs font-bold px-2.5 py-0.5">
                           {cartItems.get(produto.id)?.quantity}
                         </Badge>
                       )}
@@ -1672,7 +1672,7 @@ export default function POSView({
                       <Button
                         size="icon"
                         variant="secondary"
-                        className="absolute top-2 left-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 left-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm bg-background/80 hover:bg-background shadow-md rounded-lg"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowRegrasInDetails(false);
@@ -1685,12 +1685,12 @@ export default function POSView({
                       </Button>
                     </div>
                     
-                    <div className="p-3">
-                      <h3 className="font-medium text-sm line-clamp-2 min-h-[2.5rem]">
+                    <div className="p-3 space-y-2">
+                      <h3 className="font-semibold text-sm line-clamp-2 min-h-[2.5rem] text-foreground/90 leading-tight">
                         {produto.nome}
                       </h3>
                       
-                      <div className="mt-2 flex items-center justify-between gap-2">
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/40">
                         <span className="text-base font-bold text-primary">
                           R$ 10,00
                         </span>
@@ -1708,7 +1708,7 @@ export default function POSView({
                             });
                           }}
                           onClick={(e) => e.stopPropagation()}
-                          className="w-16 h-7 text-center text-xs p-1 bg-background border-border"
+                          className="w-16 h-8 text-center text-xs p-1 bg-muted/50 border-border/60 rounded-lg"
                         />
                       </div>
                     </div>
