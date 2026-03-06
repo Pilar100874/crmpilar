@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Wrench } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Wrench, X } from 'lucide-react';
 import { type FerramentaConfig, type TabType } from '@/hooks/useFerramentasAtendimento';
 
 interface ToolsDropdownProps {
@@ -14,7 +14,6 @@ interface ToolsDropdownProps {
 export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog = false }: ToolsDropdownProps) {
   const [open, setOpen] = useState(false);
 
-  // Filtrar ferramentas por tipo
   const toolsFerramentas = ferramentas.filter(f => f.tipo === 'ferramenta');
   const iaFerramentas = ferramentas.filter(f => f.tipo === 'ia');
 
@@ -23,79 +22,87 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
   }
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-          data-macro-id="tools-dropdown-trigger"
-        >
-          <Wrench className="h-4 w-4" />
-          <span>Ferramentas</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="start" 
-        className="w-56 bg-popover"
-        style={{ zIndex: 9999 }}
-        sideOffset={5}
-        onCloseAutoFocus={(e) => e.preventDefault()}
+    <>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="gap-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+        data-macro-id="tools-dropdown-trigger"
+        onClick={() => setOpen(true)}
       >
-        {toolsFerramentas.length > 0 && (
-          <>
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-              Ferramentas
-            </div>
-            {toolsFerramentas.map(ferramenta => {
-              const Icon = ferramenta.IconComponent;
-              return (
-                <DropdownMenuItem
-                  key={ferramenta.id}
-                  onClick={() => {
-                    onSelectTool(ferramenta.ferramenta_id);
-                    setOpen(false);
-                  }}
-                  className="gap-2 cursor-pointer"
-                  data-macro-id={`tool-${ferramenta.ferramenta_id}`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{ferramenta.nome}</span>
-                </DropdownMenuItem>
-              );
-            })}
-          </>
-        )}
-        
-        {toolsFerramentas.length > 0 && iaFerramentas.length > 0 && (
-          <DropdownMenuSeparator />
-        )}
-        
-        {iaFerramentas.length > 0 && (
-          <>
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-              Inteligência Artificial
-            </div>
-            {iaFerramentas.map(ferramenta => {
-              const Icon = ferramenta.IconComponent;
-              return (
-                <DropdownMenuItem
-                  key={ferramenta.id}
-                  onClick={() => {
-                    onSelectTool(ferramenta.ferramenta_id);
-                    setOpen(false);
-                  }}
-                  className="gap-2 cursor-pointer"
-                  data-macro-id={`tool-${ferramenta.ferramenta_id}`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{ferramenta.nome}</span>
-                </DropdownMenuItem>
-              );
-            })}
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+        <Wrench className="h-4 w-4" />
+        <span>Ferramentas</span>
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-sm mx-auto max-h-[80vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="px-4 pt-4 pb-2 flex flex-row items-center justify-between">
+            <DialogTitle className="text-base font-semibold">Ferramentas</DialogTitle>
+            <button
+              onClick={() => setOpen(false)}
+              className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+            >
+              <X size={16} />
+            </button>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
+            {toolsFerramentas.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground px-1">Ferramentas</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {toolsFerramentas.map(ferramenta => {
+                    const Icon = ferramenta.IconComponent;
+                    return (
+                      <button
+                        key={ferramenta.id}
+                        onClick={() => {
+                          onSelectTool(ferramenta.ferramenta_id);
+                          setOpen(false);
+                        }}
+                        className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer text-center"
+                        data-macro-id={`tool-${ferramenta.ferramenta_id}`}
+                      >
+                        <Icon className="h-5 w-5 text-primary" />
+                        <span className="text-xs font-medium leading-tight">{ferramenta.nome}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {toolsFerramentas.length > 0 && iaFerramentas.length > 0 && (
+              <div className="border-t border-border" />
+            )}
+
+            {iaFerramentas.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-muted-foreground px-1">Inteligência Artificial</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {iaFerramentas.map(ferramenta => {
+                    const Icon = ferramenta.IconComponent;
+                    return (
+                      <button
+                        key={ferramenta.id}
+                        onClick={() => {
+                          onSelectTool(ferramenta.ferramenta_id);
+                          setOpen(false);
+                        }}
+                        className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer text-center"
+                        data-macro-id={`tool-${ferramenta.ferramenta_id}`}
+                      >
+                        <Icon className="h-5 w-5 text-primary" />
+                        <span className="text-xs font-medium leading-tight">{ferramenta.nome}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
