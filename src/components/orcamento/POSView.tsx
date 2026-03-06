@@ -1721,9 +1721,9 @@ export default function POSView({
               {filteredProdutos.map((produto) => {
                 const quantity = gruposQuantities.get(produto.id) || 1;
                 return (
-                  <Card
+                   <Card
                     key={produto.id}
-                    className="bg-card border-border hover:border-primary transition-all overflow-hidden"
+                    className="bg-card border border-border/60 hover:border-primary/50 hover:shadow-md transition-all duration-300 overflow-hidden rounded-xl"
                   >
                     <div className="flex items-center gap-4 p-3">
                       <div 
