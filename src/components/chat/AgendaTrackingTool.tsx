@@ -215,166 +215,170 @@ export default function AgendaTrackingTool({
           <TooltipContent><p>Rastreio com Agendamento</p></TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <DialogContent className="w-[calc(100vw-2rem)] max-w-md mx-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-orange-500" />
-            Rastreio com Agendamento
-          </DialogTitle>
-        </DialogHeader>
-        <p className="text-sm text-muted-foreground">
-          Rastreia quando o cliente clica e cria uma tarefa automática no calendário.
-        </p>
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-md mx-auto max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <div className="p-4 sm:p-6 pb-0">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Target className="h-5 w-5 text-orange-500 flex-shrink-0" />
+              Rastreio com Agendamento
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            Rastreia quando o cliente clica e cria uma tarefa automática.
+          </p>
+        </div>
         
-        <div className="space-y-4">
-          {/* Tipo de rastreamento */}
-          <div className="space-y-2">
-            <Label className="text-sm">Tipo de Rastreamento</Label>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant={tipoRastreio === 'link' ? 'default' : 'outline'}
-                className={cn("flex-1", tipoRastreio === 'link' && "bg-orange-500 hover:bg-orange-600")}
-                onClick={() => setTipoRastreio('link')}
-              >
-                <Link2 className="h-4 w-4 mr-2" />
-                Link Rastreável
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={tipoRastreio === 'anexo' ? 'default' : 'outline'}
-                className={cn("flex-1", tipoRastreio === 'anexo' && "bg-orange-500 hover:bg-orange-600")}
-                onClick={() => setTipoRastreio('anexo')}
-              >
-                <Paperclip className="h-4 w-4 mr-2" />
-                Anexo Rastreável
-              </Button>
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6">
+          <div className="space-y-3 sm:space-y-4 mt-3">
+            {/* Tipo de rastreamento */}
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm">Tipo de Rastreamento</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={tipoRastreio === 'link' ? 'default' : 'outline'}
+                  className={cn("text-xs sm:text-sm", tipoRastreio === 'link' && "bg-orange-500 hover:bg-orange-600")}
+                  onClick={() => setTipoRastreio('link')}
+                >
+                  <Link2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
+                  Link
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={tipoRastreio === 'anexo' ? 'default' : 'outline'}
+                  className={cn("text-xs sm:text-sm", tipoRastreio === 'anexo' && "bg-orange-500 hover:bg-orange-600")}
+                  onClick={() => setTipoRastreio('anexo')}
+                >
+                  <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
+                  Anexo
+                </Button>
+              </div>
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label className="text-sm">Título da Tarefa</Label>
-            <input
-              type="text"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Ex: Retorno cliente"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label className="text-sm">Descrição da Tarefa</Label>
-            <Textarea
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              placeholder="Ex: Cliente clicou no link"
-              className="min-h-[80px]"
-            />
-          </div>
-          
-          {tipoRastreio === 'link' ? (
-            <>
-              <div className="space-y-2">
-                <Label className="text-sm">Texto do Link</Label>
-                <input
-                  type="text"
-                  value={textoLink}
-                  onChange={(e) => setTextoLink(e.target.value)}
-                  placeholder="Ex: Clique aqui"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm">URL de Redirecionamento</Label>
-                <input
-                  type="text"
-                  value={redirectUrl}
-                  onChange={(e) => setRedirectUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Para onde o cliente será direcionado após clicar
-                </p>
-              </div>
-              
-              <Button 
-                className="w-full bg-orange-500 hover:bg-orange-600"
-                onClick={handleInsertLink}
-                disabled={inserting || !titulo.trim() || !textoLink.trim() || !redirectUrl.trim()}
-              >
-                {inserting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Gerando...
-                  </>
-                ) : (
-                  <>
-                    <Link2 className="h-4 w-4 mr-2" />
-                    Inserir Link
-                  </>
-                )}
-              </Button>
-            </>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <Label className="text-sm">Selecionar Arquivo</Label>
-                <input
-                  ref={anexoInputRef}
-                  type="file"
-                  className="hidden"
-                  onChange={handleAnexoChange}
-                />
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => anexoInputRef.current?.click()}
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    {anexoFile ? anexoFile.name : 'Escolher arquivo'}
-                  </Button>
-                  {anexoFile && (
+            
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm">Título da Tarefa</Label>
+              <input
+                type="text"
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
+                placeholder="Ex: Retorno cliente"
+                className="flex h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm">Descrição da Tarefa</Label>
+              <Textarea
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                placeholder="Ex: Cliente clicou no link"
+                className="min-h-[60px] sm:min-h-[80px] text-sm"
+              />
+            </div>
+            
+            {tipoRastreio === 'link' ? (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-xs sm:text-sm">Texto do Link</Label>
+                  <input
+                    type="text"
+                    value={textoLink}
+                    onChange={(e) => setTextoLink(e.target.value)}
+                    placeholder="Ex: Clique aqui"
+                    className="flex h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                </div>
+                
+                <div className="space-y-1.5">
+                  <Label className="text-xs sm:text-sm">URL de Redirecionamento</Label>
+                  <input
+                    type="text"
+                    value={redirectUrl}
+                    onChange={(e) => setRedirectUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="flex h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                  <p className="text-[11px] sm:text-xs text-muted-foreground">
+                    Para onde o cliente será direcionado após clicar
+                  </p>
+                </div>
+                
+                <Button 
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-sm"
+                  onClick={handleInsertLink}
+                  disabled={inserting || !titulo.trim() || !textoLink.trim() || !redirectUrl.trim()}
+                >
+                  {inserting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Gerando...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 className="h-4 w-4 mr-2" />
+                      Inserir Link
+                    </>
+                  )}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  <Label className="text-xs sm:text-sm">Selecionar Arquivo</Label>
+                  <input
+                    ref={anexoInputRef}
+                    type="file"
+                    className="hidden"
+                    onChange={handleAnexoChange}
+                  />
+                  <div className="flex gap-2">
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setAnexoFile(null)}
+                      variant="outline"
+                      className="flex-1 text-xs sm:text-sm truncate"
+                      onClick={() => anexoInputRef.current?.click()}
                     >
-                      ×
+                      <Upload className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                      <span className="truncate">{anexoFile ? anexoFile.name : 'Escolher arquivo'}</span>
                     </Button>
-                  )}
+                    {anexoFile && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setAnexoFile(null)}
+                      >
+                        ×
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-muted-foreground">
+                    Quando o cliente abrir, será criada uma tarefa
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Quando o cliente abrir, será criada uma tarefa
-                </p>
-              </div>
-              
-              <Button 
-                className="w-full bg-orange-500 hover:bg-orange-600"
-                onClick={handleInsertAnexo}
-                disabled={inserting || !titulo.trim() || !anexoFile}
-              >
-                {inserting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Anexando...
-                  </>
-                ) : (
-                  <>
-                    <Paperclip className="h-4 w-4 mr-2" />
-                    Inserir Anexo Rastreável
-                  </>
-                )}
-              </Button>
-            </>
-          )}
+                
+                <Button 
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-sm"
+                  onClick={handleInsertAnexo}
+                  disabled={inserting || !titulo.trim() || !anexoFile}
+                >
+                  {inserting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Anexando...
+                    </>
+                  ) : (
+                    <>
+                      <Paperclip className="h-4 w-4 mr-2" />
+                      Inserir Anexo Rastreável
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
