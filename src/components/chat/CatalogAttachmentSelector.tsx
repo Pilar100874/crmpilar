@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { getEstabelecimentoId } from "@/lib/estabelecimentoUtils";
 import { toast } from "@/lib/toast-config";
-import { BookOpen, Search, FileDown, Calendar, Package, AlertCircle, Loader2 } from "lucide-react";
+import { BookOpen, Search, FileDown, Calendar, Package, AlertCircle, Loader2, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { pdf } from "@react-pdf/renderer";
@@ -321,7 +321,10 @@ const CatalogAttachmentSelector = forwardRef<{ openPopover: () => void }, Catalo
 
       <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 p-0 rounded-2xl shadow-xl z-[9999]" align="start" sideOffset={8}>
         <div className="p-4 border-b">
-          <h4 className="font-semibold text-sm mb-3">Anexar Catálogo de Produtos</h4>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-semibold text-sm">Anexar Catálogo de Produtos</h4>
+            <button onClick={() => setOpen(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input

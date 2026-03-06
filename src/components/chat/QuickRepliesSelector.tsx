@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Popover,
@@ -83,8 +83,9 @@ export default function QuickRepliesSelector({ onSelect, disabled }: QuickReplie
         </Tooltip>
       </TooltipProvider>
       <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80 p-0 rounded-xl shadow-xl border-border/50 z-[9999]" align="start" sideOffset={8}>
-        <div className="p-3 border-b border-border/50 bg-muted/30 rounded-t-xl">
+        <div className="p-3 border-b border-border/50 bg-muted/30 rounded-t-xl flex items-center justify-between">
           <h4 className="font-semibold text-sm">Textos Prontos</h4>
+          <button onClick={() => setOpen(false)} className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><X size={14} /></button>
         </div>
         <ScrollArea className="h-[280px]">
           <div className="p-2 space-y-1.5">
