@@ -1629,7 +1629,7 @@ export default function POSView({
         {conjuntoItens.length === 0 && (
         <ScrollArea className="flex-1 p-4">
           {viewMode === 'grid' ? (
-            <div className={`grid gap-4 ${isCompact ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'}`}>
+            <div className={`grid gap-5 ${isCompact ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'}`}>
               {filteredProdutos.map((produto) => {
                 const quantity = gruposQuantities.get(produto.id) || 1;
                 const inCart = cartItems.has(produto.id);
@@ -1638,11 +1638,11 @@ export default function POSView({
                   <div
                     key={produto.id}
                     className={cn(
-                      "group relative bg-card rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer",
-                      "border border-border/40 shadow-sm hover:shadow-xl hover:-translate-y-1",
+                      "group relative flex flex-col bg-card rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer",
+                      "border shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:-translate-y-1",
                       inCart 
-                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background border-primary/30" 
-                        : "hover:border-primary/30"
+                        ? "border-primary/50 bg-primary/[0.02] shadow-[0_0_0_1px_hsl(var(--primary)/0.15),0_4px_12px_hsl(var(--primary)/0.1)]" 
+                        : "border-border/50 hover:border-border"
                     )}
                     onClick={() => {
                       for (let i = 0; i < quantity; i++) {
@@ -1655,62 +1655,68 @@ export default function POSView({
                       });
                     }}
                   >
-                    {/* Image Area */}
-                    <div className="relative aspect-square bg-background overflow-hidden">
+                    {/* Image */}
+                    <div className="relative aspect-[5/4] overflow-hidden bg-gradient-to-b from-muted/10 to-muted/30">
                       {produto.foto_url ? (
                         <img 
                           src={produto.foto_url} 
                           alt={produto.nome}
-                          className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500 ease-out"
+                          className="w-full h-full object-contain p-5 drop-shadow-sm group-hover:scale-[1.06] transition-transform duration-500 ease-out"
                         />
                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-muted/20">
-                          <div className="h-14 w-14 rounded-2xl bg-muted/50 flex items-center justify-center">
-                            <Package className="h-7 w-7 text-muted-foreground/30" />
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-2.5">
+                          <div className="h-16 w-16 rounded-2xl bg-muted/40 border border-border/30 flex items-center justify-center">
+                            <Package className="h-8 w-8 text-muted-foreground/20" />
                           </div>
-                          <span className="text-[11px] text-muted-foreground/40 font-medium">Sem imagem</span>
+                          <span className="text-[11px] text-muted-foreground/35 font-medium tracking-wide">Sem imagem</span>
                         </div>
                       )}
                       
+                      {/* Cart indicator */}
                       {inCart && (
-                        <div className="absolute top-2.5 right-2.5 bg-primary text-primary-foreground text-[11px] font-bold rounded-full min-w-[24px] h-6 px-1.5 flex items-center justify-center shadow-lg shadow-primary/30">
+                        <div className="absolute top-3 right-3 bg-primary text-primary-foreground text-[11px] font-bold rounded-full min-w-[26px] h-[26px] px-2 flex items-center justify-center shadow-md shadow-primary/25 border-2 border-background">
                           {cartQty}
                         </div>
                       )}
                       
-                      <div className="absolute inset-x-0 bottom-0 p-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-                        <div className="flex gap-1.5 justify-end">
-                          <Button
-                            size="icon"
-                            className="h-8 w-8 bg-background/95 hover:bg-background text-foreground shadow-lg rounded-xl border border-border/60 backdrop-blur-sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowRegrasInDetails(false);
-                              setShowFreteInDetails(false);
-                              setSelectedProduto(produto);
-                              setActiveTab("details");
-                            }}
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
+                      {/* Quick view overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+                        <Button
+                          size="icon"
+                          className="h-9 w-9 bg-card hover:bg-card text-foreground shadow-lg rounded-xl border border-border/70"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowRegrasInDetails(false);
+                            setShowFreteInDetails(false);
+                            setSelectedProduto(produto);
+                            setActiveTab("details");
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                     
-                    <div className="p-3 space-y-2.5 bg-card">
-                      <h3 className="font-semibold text-[13px] leading-[1.35] line-clamp-2 min-h-[2.3rem] text-foreground tracking-tight">
+                    {/* Content */}
+                    <div className="flex flex-col flex-1 p-3.5 pt-3 gap-3">
+                      {/* Name */}
+                      <h3 className="font-semibold text-[13px] leading-[1.4] line-clamp-2 min-h-[2.4rem] text-foreground/90">
                         {produto.nome}
                       </h3>
                       
-                      <div className="flex items-center justify-between">
-                        <span className="text-[15px] font-bold text-primary leading-none">
-                          R$ 10,00
-                        </span>
-                        <div className="flex items-center gap-1 bg-muted/50 rounded-xl p-0.5" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 rounded-lg hover:bg-background text-muted-foreground"
+                      {/* Price + Quantity */}
+                      <div className="mt-auto flex items-center justify-between gap-2">
+                        <div className="flex flex-col">
+                          <span className="text-base font-bold text-primary tracking-tight">
+                            R$ 10,00
+                          </span>
+                        </div>
+                        
+                        {/* Stepper */}
+                        <div className="flex items-center h-8 bg-muted/40 rounded-full border border-border/40 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            className="h-full w-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
                               const newQty = Math.max(1, quantity - 1);
@@ -1722,12 +1728,10 @@ export default function POSView({
                             }}
                           >
                             <Minus className="w-3 h-3" />
-                          </Button>
-                          <span className="text-xs font-semibold w-6 text-center text-foreground">{quantity}</span>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-6 w-6 rounded-lg hover:bg-background text-muted-foreground"
+                          </button>
+                          <span className="text-xs font-bold w-7 text-center text-foreground select-none">{quantity}</span>
+                          <button
+                            className="h-full w-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
                               setGruposQuantities(prev => {
@@ -1738,7 +1742,7 @@ export default function POSView({
                             }}
                           >
                             <Plus className="w-3 h-3" />
-                          </Button>
+                          </button>
                         </div>
                       </div>
                     </div>
