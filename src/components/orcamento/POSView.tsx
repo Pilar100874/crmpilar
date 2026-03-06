@@ -1727,7 +1727,7 @@ export default function POSView({
                   >
                     <div className="flex items-center gap-4 p-3">
                       <div 
-                        className="w-16 h-16 bg-muted rounded flex-shrink-0 overflow-hidden cursor-pointer"
+                        className="w-16 h-16 bg-gradient-to-br from-muted/80 to-muted rounded-lg flex-shrink-0 overflow-hidden cursor-pointer"
                         onClick={() => {
                           for (let i = 0; i < quantity; i++) {
                             addToCart(produto);
