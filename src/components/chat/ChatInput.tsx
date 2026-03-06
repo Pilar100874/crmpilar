@@ -1209,7 +1209,7 @@ export default function ChatInput({
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
                 <button className={isRealTimeTranslationActive ? toolbarBtnActiveClass : toolbarBtnClass}>
-                  <Languages size={18} />
+                  <Globe size={18} />
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>
