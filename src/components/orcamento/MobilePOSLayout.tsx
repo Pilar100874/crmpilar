@@ -994,60 +994,57 @@ export default function MobilePOSLayout({
                   })}
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 px-0.5">
                   {filteredProdutos.map((produto) => {
                     const inCart = cartItems.get(produto.id);
                     return (
-                      <Card
+                      <div
                         key={produto.id}
                         className={cn(
-                          "p-3 transition-all duration-300 rounded-xl border border-border/60 hover:shadow-md",
-                          inCart && "ring-2 ring-primary ring-offset-1 ring-offset-background"
+                          "flex items-center gap-3 p-2.5 bg-card rounded-xl border transition-all duration-200",
+                          inCart ? "border-primary/40 bg-primary/[0.03]" : "border-border/60"
                         )}
                       >
-                        <div className="flex gap-3">
-                          <div 
-                            className="w-16 h-16 bg-muted rounded flex-shrink-0 overflow-hidden cursor-pointer"
-                            onClick={() => addToCart(produto)}
-                          >
-                            {produto.foto_url ? (
-                              <img
-                                src={produto.foto_url}
-                                alt={produto.nome}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Package className="h-8 w-8 text-muted-foreground/30" />
-                              </div>
+                        <div 
+                          className="w-14 h-14 bg-muted/40 rounded-lg flex-shrink-0 overflow-hidden cursor-pointer flex items-center justify-center"
+                          onClick={() => addToCart(produto)}
+                        >
+                          {produto.foto_url ? (
+                            <img
+                              src={produto.foto_url}
+                              alt={produto.nome}
+                              className="w-full h-full object-contain p-1"
+                            />
+                          ) : (
+                            <Package className="h-6 w-6 text-muted-foreground/25" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0" onClick={() => addToCart(produto)}>
+                          <p className="text-sm font-medium truncate">{produto.nome}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-sm font-bold text-primary">
+                              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(produto.preco || 0)}
+                            </p>
+                            {inCart && (
+                              <span className="text-[10px] font-medium text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full">
+                                {inCart.quantity}x
+                              </span>
                             )}
                           </div>
-                          <div className="flex-1 min-w-0" onClick={() => addToCart(produto)}>
-                            <p className="text-sm font-medium truncate">{produto.nome}</p>
-                            <p className="text-xs text-muted-foreground">{produto.codigo}</p>
-                            <div className="flex items-center justify-between mt-1">
-                              <p className="text-base font-bold text-primary">R$ 10,00</p>
-                              {inCart && (
-                                <Badge className="bg-primary text-primary-foreground">
-                                  {inCart.quantity} no carrinho
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 flex-shrink-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedProduto(produto);
-                              setActiveView('detalhes');
-                            }}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
                         </div>
-                      </Card>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 flex-shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedProduto(produto);
+                            setActiveView('detalhes');
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </div>
                     );
                   })}
                 </div>
