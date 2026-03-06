@@ -319,7 +319,7 @@ const CatalogAttachmentSelector = forwardRef<{ openPopover: () => void }, Catalo
         </Tooltip>
       </TooltipProvider>
 
-      <PopoverContent className="w-96 p-0 rounded-2xl shadow-xl z-[9999]" align="start" sideOffset={8}>
+      <PopoverContent className="w-[calc(100vw-2rem)] sm:w-96 p-0 rounded-2xl shadow-xl z-[9999]" align="start" sideOffset={8}>
         <div className="p-4 border-b">
           <h4 className="font-semibold text-sm mb-3">Anexar Catálogo de Produtos</h4>
           <div className="relative">

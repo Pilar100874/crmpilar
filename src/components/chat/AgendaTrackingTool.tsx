@@ -215,7 +215,7 @@ export default function AgendaTrackingTool({
           <TooltipContent><p>Rastreio com Agendamento</p></TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-md mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-orange-500" />
