@@ -57,8 +57,8 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
                       <button
                         key={ferramenta.id}
                         onClick={() => {
-                          onSelectTool(ferramenta.ferramenta_id);
                           setOpen(false);
+                          setTimeout(() => onSelectTool(ferramenta.ferramenta_id), 150);
                         }}
                         className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer text-center"
                         data-macro-id={`tool-${ferramenta.ferramenta_id}`}
@@ -86,8 +86,8 @@ export function ToolsDropdown({ ferramentas, onSelectTool, tabType, insideDialog
                       <button
                         key={ferramenta.id}
                         onClick={() => {
-                          onSelectTool(ferramenta.ferramenta_id);
                           setOpen(false);
+                          setTimeout(() => onSelectTool(ferramenta.ferramenta_id), 150);
                         }}
                         className="flex flex-col items-center gap-1.5 p-3 rounded-lg border border-border hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer text-center"
                         data-macro-id={`tool-${ferramenta.ferramenta_id}`}
