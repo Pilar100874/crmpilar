@@ -3940,7 +3940,7 @@ ${recentMessages}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Languages className="h-5 w-5" />
+            <Globe className="h-5 w-5" />
             Tradução em Tempo Real
           </DialogTitle>
         </DialogHeader>
