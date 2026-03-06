@@ -901,12 +901,12 @@ export default function MobilePOSLayout({
                       <Card
                         key={produto.id}
                         className={cn(
-                          "overflow-hidden transition-all group",
-                          inCart && "ring-2 ring-primary"
+                          "overflow-hidden transition-all duration-300 group rounded-xl border border-border/60 hover:shadow-lg",
+                          inCart && "ring-2 ring-primary ring-offset-1 ring-offset-background"
                         )}
                       >
                         <div 
-                          className="aspect-square bg-muted relative"
+                          className="aspect-square bg-gradient-to-br from-muted/80 to-muted relative overflow-hidden"
                           onClick={() => {
                             for (let i = 0; i < quantity; i++) {
                               addToCart(produto);
@@ -922,23 +922,23 @@ export default function MobilePOSLayout({
                             <img
                               src={produto.foto_url}
                               alt={produto.nome}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Package className="h-12 w-12 text-muted-foreground/30" />
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
+                              <Package className="h-10 w-10 text-primary/25" />
                             </div>
                           )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent" />
                           {inCart && (
-                            <Badge className="absolute top-1 right-1 bg-primary text-primary-foreground text-xs">
+                            <Badge className="absolute top-1.5 right-1.5 bg-primary text-primary-foreground text-[10px] font-bold shadow-lg px-2 py-0.5">
                               {inCart.quantity}
                             </Badge>
                           )}
-                          {/* Eye button for product details */}
                           <Button
                             size="icon"
                             variant="secondary"
-                            className="absolute top-1 left-1 h-7 w-7 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                            className="absolute top-1.5 left-1.5 h-7 w-7 opacity-70 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm bg-background/80 hover:bg-background shadow-md rounded-lg"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedProduto(produto);
@@ -948,13 +948,16 @@ export default function MobilePOSLayout({
                             <Eye className="w-3.5 h-3.5" />
                           </Button>
                         </div>
-                        <div className="p-2">
-                          <p className="text-xs font-medium line-clamp-2 min-h-[2rem]">
+                        <div className="p-2.5 space-y-1.5">
+                          <p className="text-xs font-semibold line-clamp-2 min-h-[2rem] text-foreground/90 leading-snug">
                             {produto.nome}
                           </p>
-                          <p className="text-sm font-bold text-primary mt-1">
-                            R$ 10,00
-                          </p>
+                          <div className="flex items-center justify-between pt-1 border-t border-border/40">
+                            <p className="text-sm font-bold text-primary">
+                              R$ 10,00
+                            </p>
+                            <Plus className="w-4 h-4 text-primary/60" />
+                          </div>
                         </div>
                       </Card>
                     );
@@ -968,8 +971,8 @@ export default function MobilePOSLayout({
                       <Card
                         key={produto.id}
                         className={cn(
-                          "p-3 transition-all",
-                          inCart && "ring-2 ring-primary"
+                          "p-3 transition-all duration-300 rounded-xl border border-border/60 hover:shadow-md",
+                          inCart && "ring-2 ring-primary ring-offset-1 ring-offset-background"
                         )}
                       >
                         <div className="flex gap-3">
