@@ -1748,20 +1748,24 @@ export default function POSView({
               })}
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {filteredProdutos.map((produto) => {
                 const quantity = gruposQuantities.get(produto.id) || 1;
                 const inCart = cartItems.has(produto.id);
+                const cartQty = cartItems.get(produto.id)?.quantity;
                 return (
                   <div
                     key={produto.id}
                     className={cn(
-                      "flex items-center gap-4 p-3 bg-card rounded-xl border border-border/40 transition-all duration-200 hover:shadow-md hover:border-primary/30",
-                      inCart && "ring-2 ring-primary ring-offset-1 ring-offset-background border-primary/30"
+                      "group flex items-center gap-4 p-3 bg-card rounded-2xl border transition-all duration-200 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)]",
+                      inCart 
+                        ? "border-primary/40 bg-primary/[0.02] shadow-[0_0_0_1px_hsl(var(--primary)/0.12)]" 
+                        : "border-border/40 hover:border-border"
                     )}
                   >
+                    {/* Thumbnail */}
                     <div 
-                      className="w-16 h-16 rounded-xl bg-background border border-border/30 flex-shrink-0 overflow-hidden cursor-pointer flex items-center justify-center"
+                      className="relative w-[72px] h-[72px] rounded-xl bg-gradient-to-b from-muted/10 to-muted/30 border border-border/30 flex-shrink-0 overflow-hidden cursor-pointer flex items-center justify-center"
                       onClick={() => {
                         for (let i = 0; i < quantity; i++) {
                           addToCart(produto);
@@ -1777,34 +1781,37 @@ export default function POSView({
                         <img 
                           src={produto.foto_url} 
                           alt={produto.nome}
-                          className="w-full h-full object-contain p-1.5"
+                          className="w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
-                        <Package className="h-6 w-6 text-muted-foreground/25" />
+                        <Package className="h-7 w-7 text-muted-foreground/20" />
+                      )}
+                      {inCart && (
+                        <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full min-w-[20px] h-5 px-1 flex items-center justify-center shadow-md shadow-primary/25 border-2 border-background">
+                          {cartQty}
+                        </div>
                       )}
                     </div>
                     
+                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-sm truncate text-foreground">
                         {produto.nome}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[15px] font-bold text-primary">
-                          R$ 10,00
-                        </span>
-                        {inCart && (
-                          <span className="text-[11px] font-medium text-primary/70 bg-primary/10 px-2 py-0.5 rounded-full">
-                            {cartItems.get(produto.id)?.quantity} no carrinho
-                          </span>
-                        )}
-                      </div>
+                      {produto.codigo && (
+                        <p className="text-[11px] text-muted-foreground/60 mt-0.5">{produto.codigo}</p>
+                      )}
+                      <span className="text-[15px] font-bold text-primary mt-1 block">
+                        R$ 10,00
+                      </span>
                     </div>
                     
+                    {/* Actions */}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground"
+                        className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowRegrasInDetails(false);
@@ -1816,11 +1823,9 @@ export default function POSView({
                         <Eye className="w-4 h-4" />
                       </Button>
                       
-                      <div className="flex items-center gap-0.5 bg-muted/50 rounded-xl p-0.5">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 rounded-lg"
+                      <div className="flex items-center h-9 bg-muted/40 rounded-full border border-border/40 overflow-hidden">
+                        <button
+                          className="h-full w-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
                             const newQty = Math.max(1, quantity - 1);
@@ -1832,12 +1837,10 @@ export default function POSView({
                           }}
                         >
                           <Minus className="w-3.5 h-3.5" />
-                        </Button>
-                        <span className="text-sm font-semibold w-8 text-center">{quantity}</span>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-8 w-8 rounded-lg"
+                        </button>
+                        <span className="text-sm font-bold w-7 text-center text-foreground select-none">{quantity}</span>
+                        <button
+                          className="h-full w-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
                             setGruposQuantities(prev => {
@@ -1848,7 +1851,7 @@ export default function POSView({
                           }}
                         >
                           <Plus className="w-3.5 h-3.5" />
-                        </Button>
+                        </button>
                       </div>
                       
                       <Button
@@ -1866,7 +1869,7 @@ export default function POSView({
                           });
                         }}
                       >
-                        <Plus className="w-5 h-5" />
+                        <ShoppingCart className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>

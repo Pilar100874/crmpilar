@@ -997,57 +997,126 @@ export default function MobilePOSLayout({
                 <div className="space-y-2">
                   {filteredProdutos.map((produto) => {
                     const inCart = cartItems.get(produto.id);
+                    const quantity = gruposQuantities.get(produto.id) || 1;
                     return (
-                      <Card
+                      <div
                         key={produto.id}
                         className={cn(
-                          "p-3 transition-all duration-300 rounded-xl border border-border/60 hover:shadow-md",
-                          inCart && "ring-2 ring-primary ring-offset-1 ring-offset-background"
+                          "flex items-center gap-3 p-2.5 bg-card rounded-2xl border transition-all duration-200 hover:shadow-md",
+                          inCart 
+                            ? "border-primary/40 bg-primary/[0.02] shadow-[0_0_0_1px_hsl(var(--primary)/0.1)]" 
+                            : "border-border/50 hover:border-border"
                         )}
                       >
-                        <div className="flex gap-3">
-                          <div 
-                            className="w-16 h-16 bg-muted rounded flex-shrink-0 overflow-hidden cursor-pointer"
-                            onClick={() => addToCart(produto)}
-                          >
-                            {produto.foto_url ? (
-                              <img
-                                src={produto.foto_url}
-                                alt={produto.nome}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Package className="h-8 w-8 text-muted-foreground/30" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0" onClick={() => addToCart(produto)}>
-                            <p className="text-sm font-medium truncate">{produto.nome}</p>
-                            <p className="text-xs text-muted-foreground">{produto.codigo}</p>
-                            <div className="flex items-center justify-between mt-1">
-                              <p className="text-base font-bold text-primary">R$ 10,00</p>
-                              {inCart && (
-                                <Badge className="bg-primary text-primary-foreground">
-                                  {inCart.quantity} no carrinho
-                                </Badge>
-                              )}
+                        {/* Thumbnail */}
+                        <div 
+                          className="relative w-14 h-14 rounded-xl bg-muted/30 border border-border/30 flex-shrink-0 overflow-hidden cursor-pointer flex items-center justify-center"
+                          onClick={() => {
+                            for (let i = 0; i < quantity; i++) {
+                              addToCart(produto);
+                            }
+                            setGruposQuantities(prev => {
+                              const next = new Map(prev);
+                              next.set(produto.id, 1);
+                              return next;
+                            });
+                          }}
+                        >
+                          {produto.foto_url ? (
+                            <img
+                              src={produto.foto_url}
+                              alt={produto.nome}
+                              className="w-full h-full object-contain p-1"
+                            />
+                          ) : (
+                            <Package className="h-6 w-6 text-muted-foreground/25" />
+                          )}
+                          {inCart && (
+                            <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center shadow-sm border border-background">
+                              {inCart.quantity}
                             </div>
-                          </div>
+                          )}
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold truncate text-foreground">{produto.nome}</p>
+                          {produto.codigo && (
+                            <p className="text-[10px] text-muted-foreground/70 mt-0.5">{produto.codigo}</p>
+                          )}
+                          <p className="text-sm font-bold text-primary mt-0.5">
+                            R$ 10,00
+                          </p>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {/* Detail button */}
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8 flex-shrink-0"
+                            className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedProduto(produto);
                               setActiveView('detalhes');
                             }}
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+
+                          {/* Quantity stepper */}
+                          <div className="flex items-center h-7 bg-muted/40 rounded-full border border-border/40 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              className="h-full w-7 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newQty = Math.max(1, quantity - 1);
+                                setGruposQuantities(prev => {
+                                  const next = new Map(prev);
+                                  next.set(produto.id, newQty);
+                                  return next;
+                                });
+                              }}
+                            >
+                              <Minus className="w-2.5 h-2.5" />
+                            </button>
+                            <span className="text-[11px] font-bold w-5 text-center text-foreground select-none">{quantity}</span>
+                            <button
+                              className="h-full w-7 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setGruposQuantities(prev => {
+                                  const next = new Map(prev);
+                                  next.set(produto.id, quantity + 1);
+                                  return next;
+                                });
+                              }}
+                            >
+                              <Plus className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+
+                          {/* Add button */}
+                          <Button
+                            size="icon"
+                            className="bg-primary hover:bg-primary/90 h-8 w-8 rounded-xl shadow-sm shadow-primary/20"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              for (let i = 0; i < quantity; i++) {
+                                addToCart(produto);
+                              }
+                              setGruposQuantities(prev => {
+                                const next = new Map(prev);
+                                next.set(produto.id, 1);
+                                return next;
+                              });
+                            }}
+                          >
+                            <ShoppingCart className="w-3.5 h-3.5" />
                           </Button>
                         </div>
-                      </Card>
+                      </div>
                     );
                   })}
                 </div>
