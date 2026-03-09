@@ -84,19 +84,20 @@ export default function Login() {
 
       <div className="relative z-10 w-full max-w-md space-y-6">
         {/* Logo & Branding - on top of gradient */}
-        <div className="text-center space-y-3">
-          <img
-            src={logo2}
-            alt="Logo Pilar"
-            className="h-24 w-auto mx-auto drop-shadow-lg"
-            style={{ filter: "brightness(0) invert(1)" }}
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
-          />
+        <div className="text-center space-y-4">
+          <div className="inline-block bg-zinc-900/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
+            <img
+              src={logo2}
+              alt="Logo Pilar"
+              className="h-20 w-auto mx-auto"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
+            />
+          </div>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-primary-foreground">
+            <h1 className="text-2xl font-semibold tracking-tight text-white drop-shadow-md">
               Sistema de Gestão
             </h1>
-            <p className="text-sm text-primary-foreground/60 mt-1">
+            <p className="text-sm text-white/70 mt-1 drop-shadow-sm">
               Plataforma Omnicanal
             </p>
           </div>
