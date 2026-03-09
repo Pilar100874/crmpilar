@@ -70,7 +70,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-background relative">
+    <div className="min-h-screen flex flex-col items-center bg-background relative" data-page="login-v2">
       {/* Gradient header stripe */}
       <div
         className="absolute top-0 left-0 right-0 h-80"
@@ -82,13 +82,12 @@ export default function Login() {
         style={{ background: "radial-gradient(circle, hsl(0 0% 100%) 0%, transparent 70%)" }}
       />
 
-      {/* Logo & Branding - fixed position on gradient */}
-      <div className="relative z-10 flex flex-col items-center pt-10 pb-6">
+      {/* Logo & Branding */}
+      <div className="relative z-20 flex flex-col items-center pt-8 pb-4" data-section="logo">
         <img
           src={logo}
           alt="Logo Pilar"
-          className="h-24 w-auto rounded-2xl shadow-xl mb-4"
-          onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoPreto; }}
+          className="h-24 w-auto rounded-2xl shadow-xl mb-3"
         />
         <h1 className="text-2xl font-semibold tracking-tight text-white drop-shadow-md">
           Sistema de Gestão
