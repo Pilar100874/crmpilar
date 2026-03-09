@@ -132,7 +132,6 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
   formData.append("model", model);
   formData.append("prompt", params.prompt);
   formData.append("size", size);
-  formData.append("duration", "10");
   formData.append("n", "1");
 
   const response = await fetch("https://api.openai.com/v1/videos", {
