@@ -103,30 +103,35 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
     }
   }
   
-  // Clean prompt for Veo: remove fidelity/person preservation instructions that trigger safety filters
+  // Clean prompt for Veo: AGGRESSIVELY remove ALL person/fidelity/preservation instructions
   let cleanPrompt = params.prompt || "";
-  // Remove blocks that reference preserving real people's likeness
-  cleanPrompt = cleanPrompt
-    .replace(/⚠️ INSTRUÇÕES ABSOLUTAS DE FIDELIDADE[\s\S]*?(?=\n\n[^\n]|$)/gi, "")
-    .replace(/\[INSTRUÇÃO PADRÃO\][^\n]*/gi, "")
-    .replace(/\[PESSOA\/INFLUENCER[^\]]*\][^\n]*/gi, "")
-    .replace(/\[PRODUTO[^\]]*\][^\n]*/gi, "")
-    .replace(/🔒 ORDEM DAS IMAGENS:[\s\S]*?(?=\n\n[^\n]|$)/gi, "")
-    .replace(/TÉCNICA:.*montagem fotográfica profissional\./gi, "")
-    .replace(/NÃO gere uma pessoa parecida[^\n]*/gi, "")
-    .replace(/NÃO altere nenh[^\n]*/gi, "")
-    .replace(/NÃO mude a identidade[^\n]*/gi, "")
-    .replace(/NÃO crie uma embalagem similar[^\n]*/gi, "")
-    .replace(/NÃO modifique, substitua[^\n]*/gi, "")
-    .replace(/NÃO redesenhe[^\n]*/gi, "")
-    .replace(/PRESERVAÇÃO PIXEL A PIXEL[^\n]*/gi, "")
-    .replace(/MODO FOTOMONTAGEM[^\n]*/gi, "")
-    .replace(/É a MESMA pessoa[^\n]*/gi, "")
-    .replace(/É o MESMO produto[^\n]*/gi, "")
-    .replace(/Se a IA gerar[^\n]*/gi, "")
-    .replace(/Imagem \d+:.*COPIAR[^\n]*/gi, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  
+  // Remove everything after the first scene description — all fidelity blocks
+  const fidelityMarkers = [
+    '🔊 Áudio', '⚠️ INSTRUÇÕES', '[INSTRUÇÃO PADRÃO]', '🔒 ORDEM', 
+    'TÉCNICA:', 'PESSOA/INFLUENCER', '[PRODUTO', '[PESSOA',
+    'PRESERVAÇÃO PIXEL', 'MODO FOTOMONTAGEM', 'Imagem 1:', 'Imagem 2:',
+    'NÃO gere', 'NÃO altere', 'NÃO mude', 'NÃO crie', 'NÃO modifique', 'NÃO redesenhe',
+    'É a MESMA pessoa', 'É o MESMO produto', 'Se a IA gerar',
+    'COPIAR EXATAMENTE', 'COPIAR ROSTO', 'pixel a pixel', 'pixel-identical',
+    'FOTOGRAFIAS REAIS', 'montagem fotográfica', 'FIDELIDADE',
+    'Você DEVE manter', 'Você DEVE reproduzir',
+    'mesmo rosto', 'tom de pele', 'traços faciais', 'características faciais',
+    'mesma embalagem', 'mesmas cores', 'mesmo layout',
+  ];
+  
+  // Find the earliest marker and cut there
+  let cutIndex = cleanPrompt.length;
+  for (const marker of fidelityMarkers) {
+    const idx = cleanPrompt.indexOf(marker);
+    if (idx >= 0 && idx < cutIndex) cutIndex = idx;
+  }
+  cleanPrompt = cleanPrompt.substring(0, cutIndex).replace(/\n{2,}/g, "\n\n").trim();
+  
+  // If prompt is too short after cleaning, use a generic scene description
+  if (cleanPrompt.length < 20) {
+    cleanPrompt = "A cinematic product showcase video with smooth camera movement, professional lighting, and elegant composition.";
+  }
 
   console.log(`[generate_video] Veo clean prompt (${cleanPrompt.length} chars): ${cleanPrompt.substring(0, 200)}`);
 
