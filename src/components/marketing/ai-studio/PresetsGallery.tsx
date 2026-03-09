@@ -267,7 +267,7 @@ const PRESETS: Preset[] = [
     id: 'image-logo-concept',
     name: 'Conceito de Logo',
     description: 'Geração de conceitos visuais para logotipos e identidade de marca.',
-    prompt: 'Modern minimalist logo concept design, clean lines, professional branding, vector-style, versatile design',
+    prompt: 'Conceito de logotipo moderno e minimalista, linhas limpas, branding profissional, estilo vetorial, design versátil',
     image: presetImageArt,
     category: 'image',
     toolType: 'imageGen',
