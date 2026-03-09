@@ -526,22 +526,51 @@ async function generateHeroFrame(params: any): Promise<string | null> {
 // Route to correct provider
 async function handleVideoGeneration(params: any): Promise<VideoGenerationResult> {
   const model = params.model as string;
-  const provider = model.split("/")[0];
+  let provider = model.split("/")[0];
   const estabelecimentoId = params.estabelecimentoId;
   
   if (!estabelecimentoId) throw new Error("estabelecimentoId é obrigatório para geração de vídeo");
-  
+
+  // Check if there are strict references (product/influencer) that need preservation
+  const imageRoles = (params.imageRoles || []) as string[];
+  const strictRoles = ['PRODUCT - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY'];
+  const hasStrictRefs = imageRoles.some(r => strictRoles.includes(r));
+
+  // AUTO-ROUTING: When strict references exist and provider is text-only (Sora),
+  // automatically switch to Google Veo (image-to-video) if available
+  if (hasStrictRefs && provider === "openai") {
+    const googleKey = await fetchApiKey(estabelecimentoId, "google");
+    if (googleKey) {
+      console.log(`[generate_video] AUTO-ROUTING: Switching from Sora (text-only) to Google Veo (image-to-video) for better fidelity`);
+      provider = "google";
+      params.model = "google/veo-3";
+      // Use Google key directly
+      const heroFrameUrl = await generateHeroFrame(params);
+      if (heroFrameUrl) {
+        console.log(`[generate_video] Using hero frame as starting image for google`);
+        params.imageUrls = [heroFrameUrl];
+      }
+      console.log(`[generate_video] Provider=google (auto-routed), Model=google/veo-3`);
+      return generateVideoGoogle(googleKey, params);
+    } else {
+      console.warn(`[generate_video] Sora is text-only and cannot use reference images. Google Veo key not found for fallback.`);
+      // Proceed with Sora text-only (no hero frame, it's wasted)
+    }
+  }
+
   const apiKey = await fetchApiKey(estabelecimentoId, provider);
   if (!apiKey) {
     throw new Error(`Chave de API não configurada para o provedor "${provider}". Configure em Configurações → APIs Pagas.`);
   }
 
-  // Pre-generate hero frame with preserved product/influencer identity
-  const heroFrameUrl = await generateHeroFrame(params);
-  if (heroFrameUrl) {
-    console.log(`[generate_video] Using hero frame as starting image for ${provider}`);
-    // Replace imageUrls with the composed hero frame
-    params.imageUrls = [heroFrameUrl];
+  // Pre-generate hero frame only for providers that support image-to-video
+  const imageToVideoProviders = ["google", "runway", "luma", "stability"];
+  if (hasStrictRefs && imageToVideoProviders.includes(provider)) {
+    const heroFrameUrl = await generateHeroFrame(params);
+    if (heroFrameUrl) {
+      console.log(`[generate_video] Using hero frame as starting image for ${provider}`);
+      params.imageUrls = [heroFrameUrl];
+    }
   }
 
   console.log(`[generate_video] Provider=${provider}, Model=${model}`);
