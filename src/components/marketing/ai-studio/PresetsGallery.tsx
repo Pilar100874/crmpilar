@@ -258,7 +258,7 @@ const PRESETS: Preset[] = [
     id: 'image-social-media',
     name: 'Post para Redes Sociais',
     description: 'Design visual colorido e atrativo para postagens em redes sociais e marketing.',
-    prompt: 'Vibrant eye-catching social media post design, colorful brand elements, modern layout, marketing visual',
+    prompt: 'Design visual vibrante e atraente para postagem em redes sociais, elementos coloridos de marca, layout moderno, visual de marketing',
     image: presetImageSocial,
     category: 'image',
     toolType: 'imageGen',
