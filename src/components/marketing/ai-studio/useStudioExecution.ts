@@ -504,21 +504,43 @@ export function useStudioExecution() {
         if (formatWidth && formatHeight) {
           videoPrompt = `${videoPrompt}\n\n[FORMAT] Gere este vídeo otimizado para ${formatPlatform || 'redes sociais'} ${formatContentType || 'post'}, proporção ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
         }
-        // Inject reference descriptions with fidelity instructions (same as imageGen)
+        // Inject reference descriptions with STRICT fidelity instructions
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
-              logo: 'LOGO (preservar exatamente)', produto: 'PRODUTO (preservar exatamente)',
-              influencer: 'PESSOA/INFLUENCER (preservar exatamente)', roupa: 'ROUPA (preservar exatamente)',
-              pose: 'REFERÊNCIA DE POSE', estilo: 'REFERÊNCIA DE ESTILO', paleta: 'PALETA DE CORES',
-              textura: 'REFERÊNCIA DE TEXTURA', ambiente: 'AMBIENTE (flexível, apenas cenário)',
+              logo: 'LOGO — COPIAR EXATAMENTE desta imagem', produto: 'PRODUTO/EMBALAGEM — COPIAR EXATAMENTE desta imagem',
+              influencer: 'PESSOA/INFLUENCER — COPIAR ROSTO E CORPO EXATAMENTE desta imagem', roupa: 'ROUPA — COPIAR EXATAMENTE desta imagem',
+              pose: 'REFERÊNCIA DE POSE (flexível)', estilo: 'REFERÊNCIA DE ESTILO (flexível)', paleta: 'PALETA DE CORES (flexível)',
+              textura: 'REFERÊNCIA DE TEXTURA (flexível)', ambiente: 'AMBIENTE/CENÁRIO (flexível, apenas fundo)',
             };
             return `Imagem ${idx + 1}: ${roleLabel[b.role] || 'REFERÊNCIA'}`;
           });
           const imagePositionHint = positionLabels.length > 0
-            ? `\n\n🔒 ORDEM DAS IMAGENS (respeitar rigorosamente):\n${positionLabels.join('\n')}`
+            ? `\n\n🔒 ORDEM DAS IMAGENS:\n${positionLabels.join('\n')}`
             : '';
-          videoPrompt = `${videoPrompt}\n\n⚠️ INSTRUÇÕES CRÍTICAS DE REFERÊNCIA (OBRIGATÓRIO):\nItens marcados [NÃO ALTERAR] DEVEM ser reproduzidos EXATAMENTE como mostrados — NÃO altere, reimagine ou substitua.\nReferências de ambiente afetam APENAS o fundo/cenário, NUNCA o produto, pessoa, roupa ou logo.\nMantenha consistência visual com TODAS as referências ao longo de todo o vídeo.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
+          videoPrompt = `${videoPrompt}\n\n` + [
+            `⚠️ INSTRUÇÕES ABSOLUTAS DE FIDELIDADE (VIOLAÇÃO = ERRO):`,
+            ``,
+            `1. PESSOA/INFLUENCER: A pessoa na imagem de referência É a pessoa real que DEVE aparecer no vídeo.`,
+            `   - Use EXATAMENTE o mesmo rosto, tom de pele, formato do rosto, cabelo, sobrancelhas, olhos, nariz, boca.`,
+            `   - NÃO gere uma pessoa parecida. NÃO altere nenhuma característica facial. É a MESMA pessoa.`,
+            `   - Se a IA gerar um rosto diferente, o resultado está ERRADO.`,
+            ``,
+            `2. PRODUTO/EMBALAGEM: O produto na imagem de referência É o produto real com sua embalagem real.`,
+            `   - Use EXATAMENTE a mesma embalagem: cores, rótulo, formato, tipografia, logo, proporções.`,
+            `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. É o MESMO produto.`,
+            `   - Se a IA gerar uma embalagem diferente, o resultado está ERRADO.`,
+            ``,
+            `3. LOGO: Reproduza pixel a pixel. Mesmas cores, mesma tipografia, mesmo layout.`,
+            ``,
+            `4. AMBIENTE/CENÁRIO: Este é o ÚNICO elemento que pode ser adaptado livremente.`,
+            ``,
+            `TÉCNICA: Trate as imagens de referência como FOTOGRAFIAS REAIS de sujeitos reais.`,
+            `Componha a cena INSERINDO esses sujeitos reais no cenário, como uma montagem fotográfica profissional.`,
+            imagePositionHint,
+            ``,
+            referenceDescs.join('\n'),
+          ].join('\n');
         }
         
         // === PAID VIDEO MODEL PATH ===
