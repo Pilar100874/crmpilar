@@ -558,7 +558,7 @@ const AICreativeStudioInner: React.FC = () => {
         { id: `e_${promptNode.id}_${compositeNode.id}`, source: promptNode.id, target: compositeNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
       );
     } else {
-      // Standard: textInput -> processNode
+      // Standard: textInput -> processNode, with optional reference blocks for image/video
       const inputNode: StudioNode = {
         id: `textInput_${ts}`,
         type: 'studioNode',
@@ -568,13 +568,41 @@ const AICreativeStudioInner: React.FC = () => {
       const processNode: StudioNode = {
         id: `${targetType}_${ts}`,
         type: 'studioNode',
-        position: { x: 500, y: 200 },
+        position: { x: 600, y: 200 },
         data: { label: meta?.label || preset.name, type: targetType, config: defaultConfig },
       };
       newNodes.push(inputNode, processNode);
       newEdges.push(
         { id: `e_${inputNode.id}_${processNode.id}`, source: inputNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
       );
+
+      // For image/video generation presets, add helper reference blocks
+      if (targetType === 'imageGen' || targetType === 'videoGen') {
+        const productNode: StudioNode = {
+          id: `productSelect_${ts}`,
+          type: 'studioNode',
+          position: { x: 100, y: 400 },
+          data: { label: '📦 Produto (opcional)', type: 'productImageSelect', config: {} },
+        };
+        const influencerNode: StudioNode = {
+          id: `imageInput_influencer_${ts}`,
+          type: 'studioNode',
+          position: { x: 100, y: 600 },
+          data: { label: '🧑 Influencer (opcional)', type: 'imageInput', config: { referenceRole: 'influencer', images: [] } },
+        };
+        const logoNode: StudioNode = {
+          id: `imageInput_logo_${ts}`,
+          type: 'studioNode',
+          position: { x: 100, y: 800 },
+          data: { label: '🏷️ Logo (opcional)', type: 'imageInput', config: { referenceRole: 'logo', images: [] } },
+        };
+        newNodes.push(productNode, influencerNode, logoNode);
+        newEdges.push(
+          { id: `e_${productNode.id}_${processNode.id}`, source: productNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+          { id: `e_${influencerNode.id}_${processNode.id}`, source: influencerNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+          { id: `e_${logoNode.id}_${processNode.id}`, source: logoNode.id, target: processNode.id, animated: true, style: EDGE_STYLE, type: 'smoothstep' },
+        );
+      }
     }
 
     setNodes((nds) => [...nds, ...newNodes]);
