@@ -9,7 +9,7 @@ import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
 import pilarBrand from "@/assets/pilar-brand.png";
-import logoFallback from "@/assets/logo.jpg";
+import fallbackBrand from "@/assets/pilar-brand.png";
 
 export default function Login() {
   const navigate = useNavigate();
