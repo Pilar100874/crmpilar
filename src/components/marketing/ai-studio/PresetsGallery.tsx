@@ -155,7 +155,7 @@ const PRESETS: Preset[] = [
   {
     id: 'runway-ocean-waves', name: 'Ondas do Mar',
     description: 'Ondas suaves chegando à praia com luz do pôr do sol. Otimizado para Runway.',
-    prompt: 'Gentle ocean waves rolling onto a sandy beach at sunset, golden light reflections on water, peaceful and serene, cinematic nature footage',
+    prompt: 'Ondas suaves do oceano chegando à praia de areia ao pôr do sol, reflexos de luz dourada na água, pacífico e sereno, filmagem cinematográfica de natureza',
     image: presetImageLandscape, category: 'video', videoSubcategory: 'runway', toolType: 'videoGen', isVideo: true, videoModel: 'runway/gen4', duration: 10,
   },
   {
