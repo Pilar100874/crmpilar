@@ -82,7 +82,7 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
           aspectRatio: params.aspectRatio || "16:9",
           personGeneration: "allow_all",
           numberOfVideos: 1,
-          durationSeconds: 8,
+          durationSeconds: params.duration || 8,
           ...(params.negativePrompt ? { negativePrompt: params.negativePrompt } : {}),
         },
       }),
@@ -128,11 +128,12 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
   const size = params.aspectRatio === "9:16" ? "720x1280" : "1280x720";
 
   // Step 1: Create video job via POST /v1/videos/generations (JSON body)
-  const body = {
+  const body: any = {
     model,
     prompt: params.prompt,
     size,
   };
+  if (params.duration) body.duration = params.duration;
 
   const response = await fetch("https://api.openai.com/v1/videos/generations", {
     method: "POST",
@@ -196,7 +197,7 @@ async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGe
     model,
     promptText: params.prompt,
     ratio: params.aspectRatio === "9:16" ? "portrait" : params.aspectRatio === "1:1" ? "square" : "widescreen",
-    duration: 10,
+    duration: params.duration || 10,
   };
 
   if (params.imageUrls?.[0]?.startsWith("http")) {
@@ -260,7 +261,7 @@ async function generateVideoKling(apiKey: string, params: any): Promise<VideoGen
       cfg_scale: params.cfgScale || 0.5,
       mode: params.model === "kling/v2.1" ? "highquality" : "std",
       aspect_ratio: params.aspectRatio || "16:9",
-      duration: "5",
+      duration: String(params.duration || 5),
     }),
   });
 

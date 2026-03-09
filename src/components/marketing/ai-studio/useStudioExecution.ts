@@ -476,6 +476,7 @@ export function useStudioExecution() {
               model: videoModel,
               aspectRatio,
               resolution: config.resolution || '1080p',
+              duration: config.duration || 5,
               style: config.videoStyle || 'realistic',
               cameraMovement: config.cameraMovement || 'none',
               cameraSpeed: config.cameraSpeed ?? 1,
