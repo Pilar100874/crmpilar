@@ -231,7 +231,7 @@ const PRESETS: Preset[] = [
     id: 'image-product-photo',
     name: 'Foto de Produto',
     description: 'Fotografia profissional de produto em fundo limpo com iluminação de estúdio.',
-    prompt: 'Professional product photography on clean background, studio lighting, commercial quality, high detail',
+    prompt: 'Fotografia profissional de produto em fundo limpo, iluminação de estúdio, qualidade comercial, alto nível de detalhes',
     image: presetImageProduct,
     category: 'image',
     toolType: 'imageGen',
