@@ -69,7 +69,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center py-8 px-4 bg-background relative">
       <div
         className="absolute top-0 left-0 right-0 h-80"
         style={{ background: "var(--gradient-hero)" }}
