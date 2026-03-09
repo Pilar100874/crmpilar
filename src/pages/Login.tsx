@@ -70,36 +70,32 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-background relative" data-page="login-v2">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative">
       {/* Gradient header stripe */}
       <div
         className="absolute top-0 left-0 right-0 h-80"
         style={{ background: "var(--gradient-hero)" }}
       />
-      {/* Subtle decorative circle */}
-      <div
-        className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full opacity-[0.08] -translate-y-1/2 translate-x-1/4"
-        style={{ background: "radial-gradient(circle, hsl(0 0% 100%) 0%, transparent 70%)" }}
-      />
 
-      {/* Logo & Branding */}
-      <div className="relative z-20 flex flex-col items-center pt-8 pb-4" data-section="logo">
+      <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
+        {/* Logo */}
         <img
           src={logo}
           alt="Logo Pilar"
-          className="h-24 w-auto rounded-2xl shadow-xl mb-3"
+          className="h-24 w-auto rounded-2xl shadow-xl"
         />
-        <h1 className="text-2xl font-semibold tracking-tight text-white drop-shadow-md">
-          Sistema de Gestão
-        </h1>
-        <p className="text-sm text-white/70 mt-1 drop-shadow-sm">
-          Plataforma Omnicanal
-        </p>
-      </div>
+        {/* Title */}
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold tracking-tight text-white drop-shadow-md">
+            Sistema de Gestão
+          </h1>
+          <p className="text-sm text-white/70 mt-1">
+            Plataforma Omnicanal
+          </p>
+        </div>
 
-      {/* Login Card */}
-      <div className="relative z-10 w-full max-w-md px-4 pb-8">
-        <Card className="border-border/50 shadow-lg">
+        {/* Login Card */}
+        <Card className="border-border/50 shadow-lg w-full">
           <CardContent className="pt-8 pb-8 px-8">
             <div className="mb-6 text-center">
               <h2 className="text-xl font-semibold text-foreground">
