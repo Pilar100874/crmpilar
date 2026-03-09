@@ -48,19 +48,16 @@ interface Preset {
   prompt: string;
   image: string;
   category: string;
-  toolType?: string; // which node type to create
-  isVideo?: boolean; // animated preview for video presets
-  videoModel?: string; // specific video model for this preset
-  duration?: number; // suggested duration
+  toolType?: string;
+  isVideo?: boolean;
+  videoModel?: string;
+  duration?: number;
+  videoSubcategory?: string; // sub-tab within video: 'geral' | 'google-veo' | 'sora' | 'runway' | 'kling'
 }
 
 const PRESET_CATEGORIES = [
   { id: 'ecommerce', label: 'E-commerce', icon: ShoppingBag },
-  { id: 'video-google', label: 'Vídeo (Google Veo)', icon: Video },
-  { id: 'video-sora', label: 'Vídeo (Sora)', icon: Video },
-  { id: 'video-runway', label: 'Vídeo (Runway)', icon: Video },
-  { id: 'video-kling', label: 'Vídeo (Kling)', icon: Video },
-  { id: 'video', label: 'Vídeo (Geral)', icon: Video },
+  { id: 'video', label: 'Vídeo', icon: Video },
   { id: 'image', label: 'Imagem', icon: Image },
   { id: 'music', label: 'Música', icon: Music },
   { id: 'audio', label: 'Áudio', icon: Mic },
@@ -68,271 +65,156 @@ const PRESET_CATEGORIES = [
   { id: 'camera', label: 'Câmera', icon: Clapperboard },
 ];
 
+const VIDEO_SUBCATEGORIES = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'geral', label: 'Geral' },
+  { id: 'google-veo', label: 'Google Veo' },
+  { id: 'sora', label: 'OpenAI Sora' },
+  { id: 'runway', label: 'Runway' },
+  { id: 'kling', label: 'Kling' },
+];
+
 const PRESETS: Preset[] = [
-  // ===== GOOGLE VEO (melhor para natureza, paisagens, cinematográfico) =====
+  // ===== GOOGLE VEO =====
   {
-    id: 'veo-cinematic-landscape',
-    name: 'Paisagem Cinematográfica',
+    id: 'veo-cinematic-landscape', name: 'Paisagem Cinematográfica',
     description: 'Câmera sobrevoando paisagem ao pôr do sol com iluminação dourada. Otimizado para Google Veo.',
     prompt: 'A smooth cinematic aerial camera flyover of a peaceful countryside landscape at golden hour, gentle camera descent, warm natural lighting, 4K cinematic footage',
-    image: camFlythrough,
-    category: 'video-google',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'google/veo-3.1',
-    duration: 6,
+    image: camFlythrough, category: 'video', videoSubcategory: 'google-veo', toolType: 'videoGen', isVideo: true, videoModel: 'google/veo-3.1', duration: 6,
   },
   {
-    id: 'veo-nature-timelapse',
-    name: 'Timelapse Natureza',
+    id: 'veo-nature-timelapse', name: 'Timelapse Natureza',
     description: 'Nuvens se movendo sobre montanhas verdes. Otimizado para Google Veo.',
     prompt: 'A beautiful time-lapse of white clouds moving peacefully over green mountains from sunrise to sunset, colorful sky gradients, calm nature documentary style',
-    image: fxTimelapse,
-    category: 'video-google',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'google/veo-3.1',
-    duration: 8,
+    image: fxTimelapse, category: 'video', videoSubcategory: 'google-veo', toolType: 'videoGen', isVideo: true, videoModel: 'google/veo-3.1', duration: 8,
   },
   {
-    id: 'veo-water-slowmo',
-    name: 'Gotas em Câmera Lenta',
+    id: 'veo-water-slowmo', name: 'Gotas em Câmera Lenta',
     description: 'Gotas de água caindo em câmera lenta com iluminação suave. Otimizado para Google Veo.',
     prompt: 'Beautiful slow motion of clear water droplets falling into a calm pool, creating gentle ripples, soft natural lighting, peaceful and serene, high-speed camera footage style',
-    image: fxSlowmo,
-    category: 'video-google',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'google/veo-3.1',
-    duration: 5,
+    image: fxSlowmo, category: 'video', videoSubcategory: 'google-veo', toolType: 'videoGen', isVideo: true, videoModel: 'google/veo-3.1', duration: 5,
   },
   {
-    id: 'veo-drone-ascend',
-    name: 'Drone Ascendente',
+    id: 'veo-drone-ascend', name: 'Drone Ascendente',
     description: 'Câmera subindo do nível do solo revelando paisagem verde. Otimizado para Google Veo.',
     prompt: 'A camera smoothly ascending vertically from a green field, progressively revealing a vast peaceful landscape with rolling hills and a river, bright daylight, aerial footage style',
-    image: camAscend,
-    category: 'video-google',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'google/veo-3.1',
-    duration: 7,
+    image: camAscend, category: 'video', videoSubcategory: 'google-veo', toolType: 'videoGen', isVideo: true, videoModel: 'google/veo-3.1', duration: 7,
   },
   {
-    id: 'veo-product-table',
-    name: 'Produto sobre Mesa',
+    id: 'veo-product-table', name: 'Produto sobre Mesa',
     description: 'Objeto elegante sobre mesa de madeira com luz natural da janela. Otimizado para Google Veo.',
     prompt: 'A beautiful still life scene of an elegant product on a wooden table near a window, soft natural daylight streaming in, gentle depth of field, commercial photography style',
-    image: presetImageProduct,
-    category: 'video-google',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'google/veo-3.1',
-    duration: 6,
+    image: presetImageProduct, category: 'video', videoSubcategory: 'google-veo', toolType: 'videoGen', isVideo: true, videoModel: 'google/veo-3.1', duration: 6,
   },
 
-  // ===== OPENAI SORA (bom para cenas abstratas, artísticas, motion graphics) =====
+  // ===== OPENAI SORA =====
   {
-    id: 'sora-paint-splash',
-    name: 'Splash de Tinta',
+    id: 'sora-paint-splash', name: 'Splash de Tinta',
     description: 'Tinta colorida explodindo em câmera lenta contra fundo branco. Otimizado para Sora.',
     prompt: 'A colorful paint splash in mid-air captured in slow motion, vibrant red blue and yellow paint mixing against a clean white background, artistic commercial style',
-    image: fxSpeedramp,
-    category: 'video-sora',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'openai/sora-2',
-    duration: 4,
+    image: fxSpeedramp, category: 'video', videoSubcategory: 'sora', toolType: 'videoGen', isVideo: true, videoModel: 'openai/sora-2', duration: 4,
   },
   {
-    id: 'sora-paper-boat',
-    name: 'Barco de Papel',
+    id: 'sora-paper-boat', name: 'Barco de Papel',
     description: 'Barco de papel navegando em um riacho tranquilo. Otimizado para Sora.',
     prompt: 'A small white paper boat floating gently down a calm clear stream surrounded by green moss and soft sunlight, peaceful cinematic footage',
-    image: camFollow,
-    category: 'video-sora',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'openai/sora-2',
-    duration: 8,
+    image: camFollow, category: 'video', videoSubcategory: 'sora', toolType: 'videoGen', isVideo: true, videoModel: 'openai/sora-2', duration: 8,
   },
   {
-    id: 'sora-abstract-particles',
-    name: 'Partículas Abstratas',
+    id: 'sora-abstract-particles', name: 'Partículas Abstratas',
     description: 'Partículas luminosas dançando no espaço escuro. Otimizado para Sora.',
     prompt: 'Abstract glowing particles dancing gracefully in dark space, soft blue and gold light trails, mesmerizing particle system, elegant motion graphics',
-    image: presetImageArt,
-    category: 'video-sora',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'openai/sora-2',
-    duration: 4,
+    image: presetImageArt, category: 'video', videoSubcategory: 'sora', toolType: 'videoGen', isVideo: true, videoModel: 'openai/sora-2', duration: 4,
   },
   {
-    id: 'sora-product-rotation',
-    name: 'Rotação de Produto',
+    id: 'sora-product-rotation', name: 'Rotação de Produto',
     description: 'Objeto girando suavemente em fundo limpo de estúdio. Otimizado para Sora.',
     prompt: 'A simple elegant object slowly rotating on a clean white studio background, soft professional lighting, smooth continuous rotation, commercial product video',
-    image: camOrbit,
-    category: 'video-sora',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'openai/sora-2',
-    duration: 8,
+    image: camOrbit, category: 'video', videoSubcategory: 'sora', toolType: 'videoGen', isVideo: true, videoModel: 'openai/sora-2', duration: 8,
   },
   {
-    id: 'sora-hallway-zoom',
-    name: 'Corredor Infinito',
+    id: 'sora-hallway-zoom', name: 'Corredor Infinito',
     description: 'Efeito dolly zoom em corredor vazio com iluminação natural. Otimizado para Sora.',
     prompt: 'A smooth dolly zoom effect in a long empty hallway with natural lighting, the background stretches as the camera moves forward, creating a mesmerizing visual illusion',
-    image: fxDollyzoom,
-    category: 'video-sora',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'openai/sora-2',
-    duration: 4,
+    image: fxDollyzoom, category: 'video', videoSubcategory: 'sora', toolType: 'videoGen', isVideo: true, videoModel: 'openai/sora-2', duration: 4,
   },
 
-  // ===== RUNWAY (bom para estilização, image-to-video, transições) =====
+  // ===== RUNWAY =====
   {
-    id: 'runway-flower-bloom',
-    name: 'Flor Desabrochando',
+    id: 'runway-flower-bloom', name: 'Flor Desabrochando',
     description: 'Flor abrindo suas pétalas em timelapse artístico. Otimizado para Runway.',
     prompt: 'A beautiful flower slowly blooming and opening its petals, soft macro lens perspective, warm natural lighting, botanical time-lapse style, delicate and elegant',
-    image: fxTimelapse,
-    category: 'video-runway',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'runway/gen4',
-    duration: 5,
+    image: fxTimelapse, category: 'video', videoSubcategory: 'runway', toolType: 'videoGen', isVideo: true, videoModel: 'runway/gen4', duration: 5,
   },
   {
-    id: 'runway-coffee-steam',
-    name: 'Vapor do Café',
+    id: 'runway-coffee-steam', name: 'Vapor do Café',
     description: 'Xícara de café com vapor subindo suavemente. Otimizado para Runway.',
     prompt: 'A warm cup of coffee on a wooden table with gentle steam rising, soft morning light, cozy atmosphere, shallow depth of field, lifestyle commercial style',
-    image: presetImageProduct,
-    category: 'video-runway',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'runway/gen4',
-    duration: 5,
+    image: presetImageProduct, category: 'video', videoSubcategory: 'runway', toolType: 'videoGen', isVideo: true, videoModel: 'runway/gen4', duration: 5,
   },
   {
-    id: 'runway-ocean-waves',
-    name: 'Ondas do Mar',
+    id: 'runway-ocean-waves', name: 'Ondas do Mar',
     description: 'Ondas suaves chegando à praia com luz do pôr do sol. Otimizado para Runway.',
     prompt: 'Gentle ocean waves rolling onto a sandy beach at sunset, golden light reflections on water, peaceful and serene, cinematic nature footage',
-    image: presetImageLandscape,
-    category: 'video-runway',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'runway/gen4',
-    duration: 10,
+    image: presetImageLandscape, category: 'video', videoSubcategory: 'runway', toolType: 'videoGen', isVideo: true, videoModel: 'runway/gen4', duration: 10,
   },
   {
-    id: 'runway-ink-water',
-    name: 'Tinta na Água',
+    id: 'runway-ink-water', name: 'Tinta na Água',
     description: 'Gota de tinta se espalhando em água cristalina. Otimizado para Runway.',
     prompt: 'A drop of colorful ink slowly diffusing into clear water, beautiful organic patterns forming, macro photography style, mesmerizing fluid dynamics',
-    image: presetImageArt,
-    category: 'video-runway',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'runway/gen4',
-    duration: 5,
+    image: presetImageArt, category: 'video', videoSubcategory: 'runway', toolType: 'videoGen', isVideo: true, videoModel: 'runway/gen4', duration: 5,
   },
 
-  // ===== KLING (bom para cenas dinâmicas, produto, lifestyle) =====
+  // ===== KLING =====
   {
-    id: 'kling-candle-flicker',
-    name: 'Vela Cintilante',
+    id: 'kling-candle-flicker', name: 'Vela Cintilante',
     description: 'Chama de vela oscilando suavemente em ambiente aconchegante. Otimizado para Kling.',
     prompt: 'A warm candle flame gently flickering in a cozy dark room, soft bokeh lights in background, intimate and peaceful atmosphere, cinematic closeup',
-    image: presetMusicAmbient,
-    category: 'video-kling',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'kling/v2.1',
-    duration: 5,
+    image: presetMusicAmbient, category: 'video', videoSubcategory: 'kling', toolType: 'videoGen', isVideo: true, videoModel: 'kling/v2.1', duration: 5,
   },
   {
-    id: 'kling-leaves-falling',
-    name: 'Folhas Caindo',
+    id: 'kling-leaves-falling', name: 'Folhas Caindo',
     description: 'Folhas de outono caindo suavemente com luz dourada. Otimizado para Kling.',
     prompt: 'Autumn leaves gently falling through golden sunlight in a peaceful forest, soft focus background, warm colors, nature footage style',
-    image: fxSlowmo,
-    category: 'video-kling',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'kling/v2.1',
-    duration: 5,
+    image: fxSlowmo, category: 'video', videoSubcategory: 'kling', toolType: 'videoGen', isVideo: true, videoModel: 'kling/v2.1', duration: 5,
   },
   {
-    id: 'kling-sparkles',
-    name: 'Brilhos e Faíscas',
+    id: 'kling-sparkles', name: 'Brilhos e Faíscas',
     description: 'Faíscas douradas brilhantes contra fundo escuro. Otimizado para Kling.',
     prompt: 'Beautiful golden sparkles and light particles floating gracefully against a dark background, magical and elegant, celebration atmosphere, commercial quality',
-    image: presetImageArt,
-    category: 'video-kling',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'kling/v2.1',
-    duration: 10,
+    image: presetImageArt, category: 'video', videoSubcategory: 'kling', toolType: 'videoGen', isVideo: true, videoModel: 'kling/v2.1', duration: 10,
   },
   {
-    id: 'kling-rain-window',
-    name: 'Chuva na Janela',
+    id: 'kling-rain-window', name: 'Chuva na Janela',
     description: 'Gotas de chuva escorrendo em vidro com luzes desfocadas ao fundo. Otimizado para Kling.',
     prompt: 'Raindrops slowly running down a glass window, colorful blurred city lights in the background, cozy and reflective mood, cinematic close-up footage',
-    image: presetMusicLofi,
-    category: 'video-kling',
-    toolType: 'videoGen',
-    isVideo: true,
-    videoModel: 'kling/v2.1',
-    duration: 5,
+    image: presetMusicLofi, category: 'video', videoSubcategory: 'kling', toolType: 'videoGen', isVideo: true, videoModel: 'kling/v2.1', duration: 5,
   },
 
-  // ===== VÍDEO GERAL (sem modelo específico, usa o padrão selecionado) =====
+  // ===== VÍDEO GERAL =====
   {
-    id: 'video-cinematic-intro',
-    name: 'Introdução Cinematográfica',
+    id: 'video-cinematic-intro', name: 'Introdução Cinematográfica',
     description: 'Cena de abertura com câmera sobrevoando uma paisagem ao pôr do sol. Compatível com qualquer modelo.',
     prompt: 'A smooth cinematic aerial camera flyover of a peaceful countryside landscape at golden hour, gentle camera descent, warm natural lighting, 4K commercial footage style',
-    image: camFlythrough,
-    category: 'video',
-    toolType: 'videoGen',
-    isVideo: true,
+    image: camFlythrough, category: 'video', videoSubcategory: 'geral', toolType: 'videoGen', isVideo: true,
   },
   {
-    id: 'video-product-showcase',
-    name: 'Vitrine de Produto',
+    id: 'video-product-showcase', name: 'Vitrine de Produto',
     description: 'Objeto girando em fundo de estúdio com iluminação suave. Compatível com qualquer modelo.',
     prompt: 'A simple elegant object slowly rotating 360 degrees on a clean white studio background, soft professional lighting, smooth slow rotation, commercial product photography style',
-    image: camOrbit,
-    category: 'video',
-    toolType: 'videoGen',
-    isVideo: true,
+    image: camOrbit, category: 'video', videoSubcategory: 'geral', toolType: 'videoGen', isVideo: true,
   },
   {
-    id: 'video-nature-timelapse',
-    name: 'Timelapse Natureza',
+    id: 'video-nature-timelapse', name: 'Timelapse Natureza',
     description: 'Nuvens se movendo sobre montanhas verdes. Compatível com qualquer modelo.',
     prompt: 'A beautiful time-lapse of white clouds moving peacefully over green mountains from sunrise to sunset, colorful sky gradients, calm nature documentary style',
-    image: fxTimelapse,
-    category: 'video',
-    toolType: 'videoGen',
-    isVideo: true,
+    image: fxTimelapse, category: 'video', videoSubcategory: 'geral', toolType: 'videoGen', isVideo: true,
   },
   {
-    id: 'video-slowmo-water',
-    name: 'Câmera Lenta',
+    id: 'video-slowmo-water', name: 'Câmera Lenta',
     description: 'Gotas de água caindo em câmera lenta. Compatível com qualquer modelo.',
     prompt: 'Beautiful slow motion of water droplets falling into a calm pool, creating gentle ripples, soft natural lighting, peaceful and serene, high-speed camera footage style',
-    image: fxSlowmo,
-    category: 'video',
-    toolType: 'videoGen',
-    isVideo: true,
+    image: fxSlowmo, category: 'video', videoSubcategory: 'geral', toolType: 'videoGen', isVideo: true,
   },
 
   // ===== IMAGEM =====
@@ -713,10 +595,17 @@ const VideoPreviewAnimation: React.FC<{ preset: Preset; isHovered: boolean }> = 
 
 const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose }) => {
   const [activeCategory, setActiveCategory] = useState('video');
+  const [activeVideoSub, setActiveVideoSub] = useState('todos');
   const [hoveredPreset, setHoveredPreset] = useState<string | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<Preset | null>(null);
 
-  const filteredPresets = PRESETS.filter((p) => p.category === activeCategory);
+  const filteredPresets = PRESETS.filter((p) => {
+    if (p.category !== activeCategory) return false;
+    if (activeCategory === 'video' && activeVideoSub !== 'todos') {
+      return p.videoSubcategory === activeVideoSub;
+    }
+    return true;
+  });
 
   return (
     <motion.div
@@ -743,7 +632,10 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
           return (
             <button
               key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
+              onClick={() => {
+                setActiveCategory(cat.id);
+                if (cat.id === 'video') setActiveVideoSub('todos');
+              }}
               className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all border whitespace-nowrap ${
                 activeCategory === cat.id
                   ? 'bg-foreground text-background border-foreground'
@@ -756,6 +648,25 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
           );
         })}
       </div>
+
+      {/* Sub-abas de vídeo */}
+      {activeCategory === 'video' && (
+        <div className="flex items-center gap-1.5 px-6 py-2 border-b overflow-x-auto bg-muted/30">
+          {VIDEO_SUBCATEGORIES.map((sub) => (
+            <button
+              key={sub.id}
+              onClick={() => setActiveVideoSub(sub.id)}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
+                activeVideoSub === sub.id
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              {sub.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Grade */}
       <ScrollArea className="flex-1">
@@ -812,15 +723,20 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                       )}
                     </AnimatePresence>
 
-                    {/* Badge de vídeo animado */}
-                    {preset.isVideo && (
-                      <div className="absolute top-2 right-2">
+                    {/* Badges */}
+                    <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                      {preset.isVideo && (
                         <Badge className="bg-purple-500/80 text-white border-0 text-[9px] px-1.5 py-0">
                           <Video className="h-2.5 w-2.5 mr-0.5" />
                           Animado
                         </Badge>
-                      </div>
-                    )}
+                      )}
+                      {preset.videoModel && (
+                        <Badge variant="secondary" className="text-[8px] px-1.5 py-0 opacity-80">
+                          {preset.videoModel.split('/').pop()}
+                        </Badge>
+                      )}
+                    </div>
 
                     {/* Nome */}
                     <div className="absolute bottom-0 left-0 right-0 p-3">
