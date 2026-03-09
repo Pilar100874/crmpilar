@@ -641,26 +641,29 @@ export function useStudioExecution() {
           
           // Build frame prompt with strict fidelity
           let framePrompt: string;
+          
+          // For frames after the first, reference the first generated frame for visual consistency
+          const isFollowUpFrame = i > 0 && frames.length > 0;
+          const consistencyNote = isFollowUpFrame 
+            ? `\n\nCONSISTÊNCIA: A primeira imagem fornecida é o FRAME 1 já gerado. Mantenha EXATAMENTE a mesma pessoa (rosto idêntico), mesmo produto (embalagem idêntica), mesma roupa, mesma iluminação. Mude APENAS a pose/ângulo/movimento sutilmente para criar animação.`
+            : '';
+          
           if (hasReferenceImages && referenceDescs.length > 0) {
             framePrompt = [
               `🔒 COMPOSIÇÃO FOTOGRÁFICA COM SUJEITOS REAIS`,
               ``,
               `As imagens fornecidas são FOTOGRAFIAS DE PESSOAS E PRODUTOS REAIS.`,
-              `Você DEVE inserir esses sujeitos reais na cena, como uma montagem fotográfica profissional.`,
+              `Você DEVE usar EXATAMENTE essas pessoas e produtos — NÃO gere versões similares.`,
               ``,
-              `PROIBIDO:`,
-              `- Gerar um rosto diferente do fornecido (mesmo que "parecido")`,
-              `- Redesenhar ou reinterpretar a embalagem do produto`,
-              `- Alterar cores, proporções ou detalhes de qualquer sujeito`,
-              `- Substituir qualquer elemento marcado como "NÃO ALTERAR"`,
+              `REGRAS INVIOLÁVEIS:`,
+              `- O rosto da pessoa DEVE ser idêntico ao da foto: mesmos olhos, nariz, boca, tom de pele, cabelo`,
+              `- A embalagem do produto DEVE ser idêntica: mesmas cores, rótulo, formato, tipografia, logo`,
+              `- NÃO redesenhe, NÃO reinterprete, NÃO crie versões "inspiradas"`,
+              `- Trate como FOTOMONTAGEM: insira os sujeitos reais na cena`,
+              consistencyNote,
               ``,
-              `OBRIGATÓRIO:`,
-              `- COPIAR o rosto da pessoa EXATAMENTE como na foto de referência`,
-              `- COPIAR a embalagem/produto EXATAMENTE como na foto de referência`,
-              `- Manter iluminação e perspectiva consistentes entre sujeitos e cenário`,
-              ``,
-              `Cena solicitada: ${combinedInput || 'Uma cena cinematográfica'}`,
-              `Estilo visual: Fotografia cinematográfica, iluminação profissional, proporção ${aspectRatio}, fotorrealista`,
+              `Cena: ${combinedInput || 'Uma cena cinematográfica'}`,
+              `Estilo: Fotografia cinematográfica, proporção ${aspectRatio}, fotorrealista`,
               `Sequência: Frame ${i + 1} de ${frameCount} — ${stage}`,
               ``,
               videoPrompt.includes('⚠️') ? videoPrompt.substring(videoPrompt.indexOf('⚠️')) : '',
@@ -675,12 +678,30 @@ export function useStudioExecution() {
             _totalFrames: frameCount,
           });
 
+          // Build image references: for follow-up frames, prepend the first frame as consistency anchor
+          let frameImageUrls: string[];
+          let frameImageRoles: string[];
+          if (isFollowUpFrame && orderedImageInputs.length > 0) {
+            // First frame as consistency reference + original references
+            frameImageUrls = [frames[0], ...orderedImageInputs];
+            frameImageRoles = ['FRAME 1 REFERENCE - MATCH THIS EXACTLY for person identity, product, clothing, style', ...orderedImageRoles];
+          } else if (orderedImageInputs.length > 0) {
+            frameImageUrls = orderedImageInputs;
+            frameImageRoles = orderedImageRoles;
+          } else if (isFollowUpFrame) {
+            frameImageUrls = [frames[0], ...imageInputs];
+            frameImageRoles = ['FRAME 1 REFERENCE - MATCH THIS EXACTLY', ...imageInputs.map(() => 'REFERENCE')];
+          } else {
+            frameImageUrls = imageInputs.length > 0 ? imageInputs : [];
+            frameImageRoles = [];
+          }
+
           try {
             const result = await callStudio('generate_image', {
               prompt: framePrompt,
               model: 'google/gemini-3-pro-image-preview',
-              imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : (imageInputs.length > 0 ? imageInputs : undefined),
-              imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
+              imageUrls: frameImageUrls.length > 0 ? frameImageUrls : undefined,
+              imageRoles: frameImageRoles.length > 0 ? frameImageRoles : undefined,
             }, perFrameTimeout);
             if (result?.imageUrl) {
               frames.push(result.imageUrl);
