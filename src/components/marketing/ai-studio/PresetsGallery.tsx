@@ -723,15 +723,20 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
                       )}
                     </AnimatePresence>
 
-                    {/* Badge de vídeo animado */}
-                    {preset.isVideo && (
-                      <div className="absolute top-2 right-2">
+                    {/* Badges */}
+                    <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                      {preset.isVideo && (
                         <Badge className="bg-purple-500/80 text-white border-0 text-[9px] px-1.5 py-0">
                           <Video className="h-2.5 w-2.5 mr-0.5" />
                           Animado
                         </Badge>
-                      </div>
-                    )}
+                      )}
+                      {preset.videoModel && (
+                        <Badge variant="secondary" className="text-[8px] px-1.5 py-0 opacity-80">
+                          {preset.videoModel.split('/').pop()}
+                        </Badge>
+                      )}
+                    </div>
 
                     {/* Nome */}
                     <div className="absolute bottom-0 left-0 right-0 p-3">
