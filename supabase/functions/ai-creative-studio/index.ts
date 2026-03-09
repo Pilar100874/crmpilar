@@ -197,7 +197,7 @@ async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGe
     model,
     promptText: params.prompt,
     ratio: params.aspectRatio === "9:16" ? "portrait" : params.aspectRatio === "1:1" ? "square" : "widescreen",
-    duration: 10,
+    duration: params.duration || 10,
   };
 
   if (params.imageUrls?.[0]?.startsWith("http")) {
