@@ -502,7 +502,20 @@ export function useStudioExecution() {
             }
           } catch (videoErr: any) {
             console.error('[Studio] Video generation failed:', videoErr);
-            throw new Error(`Falha ao gerar vídeo: ${videoErr.message}`);
+            const msg = videoErr.message || '';
+            if (msg.includes('moderation') || msg.includes('blocked') || msg.includes('content policy') || msg.includes('safety')) {
+              throw new Error('⚠️ O conteúdo do prompt não pôde ser processado pelo provedor de IA. Tente reformular a descrição usando termos mais genéricos e neutros. Evite referências a marcas, pessoas reais ou conteúdo sensível.');
+            }
+            if (msg.includes('rate limit') || msg.includes('429') || msg.includes('too many')) {
+              throw new Error('⏳ Muitas solicitações em pouco tempo. Aguarde alguns segundos e tente novamente.');
+            }
+            if (msg.includes('402') || msg.includes('payment') || msg.includes('quota') || msg.includes('billing')) {
+              throw new Error('💳 Limite de uso atingido no provedor de IA. Verifique seu plano ou créditos disponíveis.');
+            }
+            if (msg.includes('timeout') || msg.includes('timed out')) {
+              throw new Error('⏱️ A geração demorou mais que o esperado. Tente novamente com um prompt mais simples ou duração menor.');
+            }
+            throw new Error(`Não foi possível gerar o vídeo. Tente novamente com uma descrição diferente. (${msg.substring(0, 100)})`);
           }
         }
         
