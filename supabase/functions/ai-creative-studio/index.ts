@@ -1099,19 +1099,26 @@ Deno.serve(async (req) => {
         if (provider === "google") {
           const apiKey = await fetchApiKey(estabId, "google");
           if (!apiKey) throw new Error("Google API key not configured.");
-          // Google Cloud TTS
-          const ttsResp = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
+          // Use Gemini AI Studio TTS endpoint instead of Cloud TTS (avoids 403 billing issues)
+          const ttsResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              input: { text },
-              voice: { languageCode: params.lang || "pt-BR", ssmlGender: "FEMALE" },
-              audioConfig: { audioEncoding: "MP3" },
+              contents: [{ parts: [{ text: `Generate speech audio for the following text in ${params.lang || "pt-BR"}: "${text}"` }] }],
+              generationConfig: { response_modalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } } },
             }),
           });
-          if (!ttsResp.ok) throw new Error(`Google TTS error ${ttsResp.status}`);
+          if (!ttsResp.ok) {
+            const errBody = await ttsResp.text().catch(() => "");
+            console.error(`[generate_audio] Google Gemini TTS error ${ttsResp.status}: ${errBody.substring(0, 300)}`);
+            // Fallback: use Lovable AI gateway
+            throw new Error(`Google TTS error ${ttsResp.status}`);
+          }
           const ttsData = await ttsResp.json();
-          const audioContent = ttsData.audioContent; // base64
+          // Extract audio from Gemini response
+          const audioPart = ttsData.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData?.mimeType?.startsWith("audio/"));
+          if (!audioPart) throw new Error("No audio in Google response");
+          const audioContent = audioPart.inlineData.data; // base64
           const audioBytes = base64Decode(audioContent);
           const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
           const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
