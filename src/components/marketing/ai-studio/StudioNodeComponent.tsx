@@ -381,6 +381,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const accent = nodeAccentMap[nodeData.type] || '#64748b';
   const [imageExpanded, setImageExpanded] = useState(false);
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+  const [videoPreviewOpen, setVideoPreviewOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSavingToGallery, setIsSavingToGallery] = useState(false);
   const IconComponent = nodeIconMap[nodeData.type] || Play;
@@ -1251,9 +1252,9 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     <Download className="h-3 w-3 text-white" />
                   </button>
                   <button
-                    onClick={() => setImageExpanded(!imageExpanded)}
+                    onClick={(e) => { e.stopPropagation(); setVideoPreviewOpen(true); }}
                     className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
-                    title={imageExpanded ? 'Reduzir' : 'Expandir'}
+                    title="Expandir"
                   >
                     <Maximize2 className="h-3 w-3 text-white" />
                   </button>
@@ -1393,10 +1394,10 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
     )}
 
     {resultVideo && (
-      <Dialog open={imageExpanded} onOpenChange={setImageExpanded}>
+      <Dialog open={videoPreviewOpen} onOpenChange={setVideoPreviewOpen}>
         <DialogContent className="max-w-[90vw] max-h-[90vh] p-4 pt-10">
           <button
-            onClick={() => setImageExpanded(false)}
+            onClick={() => setVideoPreviewOpen(false)}
             className="absolute right-3 top-3 z-50 rounded-full p-2 bg-black/70 hover:bg-black/90 text-white transition-colors"
           >
             <X className="h-5 w-5" />
