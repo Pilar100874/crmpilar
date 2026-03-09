@@ -1252,9 +1252,13 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     <Download className="h-3 w-3 text-white" />
                   </button>
                   <button
-                    onClick={() => setImageExpanded(!imageExpanded)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setVideoPreviewOpen(true);
+                    }}
                     className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
-                    title={imageExpanded ? 'Reduzir' : 'Expandir'}
+                    title="Tela cheia"
                   >
                     <Maximize2 className="h-3 w-3 text-white" />
                   </button>
