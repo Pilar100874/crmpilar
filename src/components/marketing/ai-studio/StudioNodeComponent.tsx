@@ -1233,9 +1233,11 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                   <video
                     src={resultVideo}
                     controls
-                    controlsList="nofullscreen"
-                    className="w-full object-cover"
+                    controlsList="nofullscreen nodownload"
+                    disablePictureInPicture
+                    className="w-full object-cover studio-video-no-fullscreen"
                     style={{ maxHeight: 200 }}
+                    onDoubleClick={(e) => { e.preventDefault(); setVideoPreviewOpen(true); }}
                   />
                   {/* Always-visible overlay buttons */}
                   <div className="absolute top-2 right-2 flex gap-1 z-10">
