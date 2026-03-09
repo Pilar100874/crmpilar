@@ -595,9 +595,30 @@ export function useStudioExecution() {
 
         const frames: string[] = [];
         const perFrameTimeout = 90000; // 90s per frame
+        const hasReferenceImages = orderedImageInputs.length > 0 || imageInputs.length > 0;
+        
         for (let i = 0; i < frameCount; i++) {
           const stage = motionStages[i % motionStages.length];
-          const framePrompt = `Ultra high resolution cinematic film still, movie production quality, dramatic lighting, shallow depth of field, ${aspectRatio} aspect ratio, professional cinematography, photorealistic, frame ${i + 1} of ${frameCount} — ${stage}: ${videoPrompt}`;
+          
+          // Build frame prompt with fidelity-first approach (same as imageGen)
+          let framePrompt: string;
+          if (hasReferenceImages && referenceDescs.length > 0) {
+            // When references exist, use inpainting/multi-subject edit approach
+            framePrompt = [
+              `🔒 MODO MULTI-SUBJECT EDIT — PRESERVAÇÃO PIXEL A PIXEL`,
+              `Você está editando/compondo uma cena usando as imagens de referência fornecidas.`,
+              `REGRA ABSOLUTA: Rostos, embalagens, logotipos e roupas das referências DEVEM ser preservados EXATAMENTE como aparecem — pixel a pixel. NÃO reimagine, NÃO substitua, NÃO altere proporções, cores ou detalhes.`,
+              `Apenas o AMBIENTE/CENÁRIO e a COMPOSIÇÃO DA CENA podem ser modificados.`,
+              ``,
+              `Cena: ${combinedInput || 'Uma cena cinematográfica'}`,
+              `Estilo: Fotografia cinematográfica de alta resolução, iluminação dramática, profundidade de campo rasa, proporção ${aspectRatio}, fotorrealista`,
+              `Sequência: Frame ${i + 1} de ${frameCount} — ${stage}`,
+              ``,
+              videoPrompt.includes('⚠️') ? videoPrompt.substring(videoPrompt.indexOf('⚠️')) : '',
+            ].filter(Boolean).join('\n');
+          } else {
+            framePrompt = `Fotografia cinematográfica de alta resolução, qualidade de produção cinematográfica, iluminação dramática, profundidade de campo rasa, proporção ${aspectRatio}, cinematografia profissional, fotorrealista, frame ${i + 1} de ${frameCount} — ${stage}: ${videoPrompt}`;
+          }
           
           nodeResultStore.setResult(node.id, { 
             text: `🎬 Gerando frame ${i + 1}/${frameCount}...`, 
