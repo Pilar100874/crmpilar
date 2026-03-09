@@ -52,7 +52,7 @@ export default function Splash() {
             >
               <div className="absolute inset-0 blur-3xl opacity-30 bg-primary rounded-full scale-150" />
               <img
-                src={logo2}
+                src={logo3}
                 alt="Logo Pilar"
                 className="h-40 w-auto relative z-10"
                 style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 4px rgba(0,0,0,0.3))" }}

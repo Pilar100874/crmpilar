@@ -78,11 +78,11 @@ export default function Login() {
       <div className="relative z-10 w-full max-w-md">
         <Card className="border-border/50 shadow-lg">
           <CardContent className="pt-8 pb-8 px-8">
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-6">
               <img
-                src={logo}
+                src={logo3}
                 alt="Logo Pilar"
-                className="h-20 w-auto rounded-xl shadow-md"
+                className="h-24 w-auto object-contain"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = logoPreto;
                 }}
