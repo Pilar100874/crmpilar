@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "@/assets/logo.jpg";
+import logo3 from "@/assets/logo-3.png";
 import logoFallback from "@/assets/logo_preto.png";
-import logo2 from "@/assets/logo-2.png";
 
 export default function Splash() {
   const navigate = useNavigate();
@@ -53,7 +52,7 @@ export default function Splash() {
             >
               <div className="absolute inset-0 blur-3xl opacity-30 bg-primary rounded-full scale-150" />
               <img
-                src={logo2}
+                src={logo3}
                 alt="Logo Pilar"
                 className="h-40 w-auto relative z-10"
                 style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 4px rgba(0,0,0,0.3))" }}
