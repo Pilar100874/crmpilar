@@ -343,7 +343,7 @@ const PRESETS: Preset[] = [
     id: 'audio-sfx-explosion',
     name: 'Efeito Sonoro: Explosão',
     description: 'Efeito sonoro de explosão cinematográfica com reverberação e sub-graves.',
-    prompt: 'Cinematic explosion sound effect, deep bass rumble, debris, reverb tail, movie quality',
+    prompt: 'Efeito sonoro de explosão cinematográfica, estrondo grave de baixo, detritos, cauda de reverberação, qualidade de filme',
     image: presetAudioSfx,
     category: 'audio',
     toolType: 'audioGen',
