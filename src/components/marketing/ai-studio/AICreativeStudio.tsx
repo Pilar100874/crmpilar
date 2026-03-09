@@ -585,16 +585,16 @@ const AICreativeStudioInner: React.FC = () => {
           data: { label: '📦 Produto (opcional)', type: 'productImageSelect', config: {} },
         };
         const influencerNode: StudioNode = {
-          id: `imageInput_influencer_${ts}`,
+          id: `galleryInfluencer_${ts}`,
           type: 'studioNode',
           position: { x: 100, y: 600 },
-          data: { label: '🧑 Influencer (opcional)', type: 'imageInput', config: { referenceRole: 'influencer', images: [] } },
+          data: { label: '🧑 Influencer', type: 'galleryInfluencer', config: {} },
         };
         const logoNode: StudioNode = {
-          id: `imageInput_logo_${ts}`,
+          id: `galleryLogo_${ts}`,
           type: 'studioNode',
           position: { x: 100, y: 800 },
-          data: { label: '🏷️ Logo (opcional)', type: 'imageInput', config: { referenceRole: 'logo', images: [] } },
+          data: { label: '🏷️ Logo', type: 'galleryLogo', config: {} },
         };
         newNodes.push(productNode, influencerNode, logoNode);
         newEdges.push(
