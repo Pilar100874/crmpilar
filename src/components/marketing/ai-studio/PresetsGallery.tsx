@@ -213,7 +213,7 @@ const PRESETS: Preset[] = [
   {
     id: 'video-slowmo-water', name: 'Câmera Lenta',
     description: 'Gotas de água caindo em câmera lenta. Compatível com qualquer modelo.',
-    prompt: 'Beautiful slow motion of water droplets falling into a calm pool, creating gentle ripples, soft natural lighting, peaceful and serene, high-speed camera footage style',
+    prompt: 'Câmera lenta de gotas de água caindo em uma piscina calma, criando ondulações suaves, iluminação natural suave, pacífico e sereno, estilo filmagem de câmera de alta velocidade',
     image: fxSlowmo, category: 'video', videoSubcategory: 'geral', toolType: 'videoGen', isVideo: true,
   },
 
