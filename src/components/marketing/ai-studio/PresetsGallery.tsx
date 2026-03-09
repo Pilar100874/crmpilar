@@ -135,7 +135,7 @@ const PRESETS: Preset[] = [
   {
     id: 'sora-hallway-zoom', name: 'Corredor Infinito',
     description: 'Efeito dolly zoom em corredor vazio com iluminação natural. Otimizado para Sora.',
-    prompt: 'A smooth dolly zoom effect in a long empty hallway with natural lighting, the background stretches as the camera moves forward, creating a mesmerizing visual illusion',
+    prompt: 'Efeito dolly zoom suave em um corredor longo e vazio com iluminação natural, o fundo se estica enquanto a câmera avança, criando uma ilusão visual hipnotizante',
     image: fxDollyzoom, category: 'video', videoSubcategory: 'sora', toolType: 'videoGen', isVideo: true, videoModel: 'openai/sora-2', duration: 4,
   },
 
