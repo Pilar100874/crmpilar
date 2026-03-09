@@ -70,10 +70,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-y-auto">
-      {/* Gradient header stripe - same as internal dashboards */}
+    <div className="min-h-screen flex flex-col items-center bg-background relative">
+      {/* Gradient header stripe */}
       <div
-        className="absolute top-0 left-0 right-0 h-72"
+        className="absolute top-0 left-0 right-0 h-80"
         style={{ background: "var(--gradient-hero)" }}
       />
       {/* Subtle decorative circle */}
@@ -82,21 +82,28 @@ export default function Login() {
         style={{ background: "radial-gradient(circle, hsl(0 0% 100%) 0%, transparent 70%)" }}
       />
 
-      <div className="relative z-10 w-full max-w-md">
-        {/* Login Card */}
+      {/* Logo & Branding - fixed position on gradient */}
+      <div className="relative z-10 flex flex-col items-center pt-10 pb-6">
+        <div className="rounded-2xl p-5 mb-4" style={{ backgroundColor: 'rgba(39, 39, 42, 0.85)' }}>
+          <img
+            src={logo2}
+            alt="Logo Pilar"
+            className="h-20 w-auto"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
+          />
+        </div>
+        <h1 className="text-2xl font-semibold tracking-tight text-white drop-shadow-md">
+          Sistema de Gestão
+        </h1>
+        <p className="text-sm text-white/70 mt-1 drop-shadow-sm">
+          Plataforma Omnicanal
+        </p>
+      </div>
+
+      {/* Login Card */}
+      <div className="relative z-10 w-full max-w-md px-4 pb-8">
         <Card className="border-border/50 shadow-lg">
           <CardContent className="pt-8 pb-8 px-8">
-            {/* Logo inside card */}
-            <div className="flex justify-center mb-6">
-              <div className="rounded-2xl p-5 shadow-lg" style={{ backgroundColor: '#27272a' }}>
-                <img
-                  src={logo2}
-                  alt="Logo Pilar"
-                  className="h-16 w-auto"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
-                />
-              </div>
-            </div>
             <div className="mb-6 text-center">
               <h2 className="text-xl font-semibold text-foreground">
                 Bem-vindo de volta
