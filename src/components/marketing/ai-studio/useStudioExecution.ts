@@ -319,7 +319,8 @@ export function useStudioExecution() {
           const role = type.replace('gallery', '').toLowerCase();
           return { _referenceRole: role, _referenceDesc: skipRoleMap[type] || 'Referência visual.', _skipNoImage: true };
         }
-        throw new Error('Nenhuma imagem selecionada da galeria. Selecione uma imagem.');
+        // Optional block — return null to skip silently
+        return null;
       }
 
       case 'textStyle':
