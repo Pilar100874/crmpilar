@@ -464,7 +464,7 @@ const PRESETS: Preset[] = [
     id: 'ecom-product-in-hand',
     name: 'Produto na Mão',
     description: 'Coloque um produto (celular, garrafa, bolsa) na mão de uma pessoa para fotos de lifestyle.',
-    prompt: 'Place this product naturally in the person\'s hand. Ensure correct grip, perspective and consistent lighting for lifestyle photo.',
+    prompt: 'Coloque este produto naturalmente na mão da pessoa. Garanta pegada correta, perspectiva e iluminação consistente para foto lifestyle.',
     image: presetImageProduct,
     category: 'ecommerce',
     toolType: 'productComposite',
