@@ -79,7 +79,7 @@ const PRESETS: Preset[] = [
   {
     id: 'veo-cinematic-landscape', name: 'Paisagem Cinematográfica',
     description: 'Câmera sobrevoando paisagem ao pôr do sol com iluminação dourada. Otimizado para Google Veo.',
-    prompt: 'A smooth cinematic aerial camera flyover of a peaceful countryside landscape at golden hour, gentle camera descent, warm natural lighting, 4K cinematic footage',
+    prompt: 'Sobrevoo cinematográfico suave sobre uma paisagem campestre ao pôr do sol, câmera descendente suave, iluminação dourada natural, filmagem 4K cinematográfica',
     image: camFlythrough, category: 'video', videoSubcategory: 'google-veo', toolType: 'videoGen', isVideo: true, videoModel: 'google/veo-3.1', duration: 6,
   },
   {
