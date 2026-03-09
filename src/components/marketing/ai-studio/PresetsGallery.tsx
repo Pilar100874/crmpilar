@@ -91,7 +91,7 @@ const PRESETS: Preset[] = [
   {
     id: 'veo-water-slowmo', name: 'Gotas em Câmera Lenta',
     description: 'Gotas de água caindo em câmera lenta com iluminação suave. Otimizado para Google Veo.',
-    prompt: 'Beautiful slow motion of clear water droplets falling into a calm pool, creating gentle ripples, soft natural lighting, peaceful and serene, high-speed camera footage style',
+    prompt: 'Câmera lenta de gotas de água cristalina caindo em uma piscina calma, criando ondulações suaves, iluminação natural suave, pacífico e sereno, estilo filmagem de câmera de alta velocidade',
     image: fxSlowmo, category: 'video', videoSubcategory: 'google-veo', toolType: 'videoGen', isVideo: true, videoModel: 'google/veo-3.1', duration: 5,
   },
   {
