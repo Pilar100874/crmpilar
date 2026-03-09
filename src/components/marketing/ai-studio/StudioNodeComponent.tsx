@@ -1396,6 +1396,19 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
         </DialogContent>
       </Dialog>
     )}
+
+    {resultVideo && (
+      <Dialog open={videoPreviewOpen} onOpenChange={setVideoPreviewOpen}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-2">
+          <video
+            src={resultVideo}
+            controls
+            autoPlay
+            className="w-full h-full object-contain max-h-[85vh] rounded-lg"
+          />
+        </DialogContent>
+      </Dialog>
+    )}
     </>
   );
 };
