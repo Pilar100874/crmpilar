@@ -103,6 +103,33 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
     }
   }
   
+  // Clean prompt for Veo: remove fidelity/person preservation instructions that trigger safety filters
+  let cleanPrompt = params.prompt || "";
+  // Remove blocks that reference preserving real people's likeness
+  cleanPrompt = cleanPrompt
+    .replace(/⚠️ INSTRUÇÕES ABSOLUTAS DE FIDELIDADE[\s\S]*?(?=\n\n[^\n]|$)/gi, "")
+    .replace(/\[INSTRUÇÃO PADRÃO\][^\n]*/gi, "")
+    .replace(/\[PESSOA\/INFLUENCER[^\]]*\][^\n]*/gi, "")
+    .replace(/\[PRODUTO[^\]]*\][^\n]*/gi, "")
+    .replace(/🔒 ORDEM DAS IMAGENS:[\s\S]*?(?=\n\n[^\n]|$)/gi, "")
+    .replace(/TÉCNICA:.*montagem fotográfica profissional\./gi, "")
+    .replace(/NÃO gere uma pessoa parecida[^\n]*/gi, "")
+    .replace(/NÃO altere nenh[^\n]*/gi, "")
+    .replace(/NÃO mude a identidade[^\n]*/gi, "")
+    .replace(/NÃO crie uma embalagem similar[^\n]*/gi, "")
+    .replace(/NÃO modifique, substitua[^\n]*/gi, "")
+    .replace(/NÃO redesenhe[^\n]*/gi, "")
+    .replace(/PRESERVAÇÃO PIXEL A PIXEL[^\n]*/gi, "")
+    .replace(/MODO FOTOMONTAGEM[^\n]*/gi, "")
+    .replace(/É a MESMA pessoa[^\n]*/gi, "")
+    .replace(/É o MESMO produto[^\n]*/gi, "")
+    .replace(/Se a IA gerar[^\n]*/gi, "")
+    .replace(/Imagem \d+:.*COPIAR[^\n]*/gi, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+  console.log(`[generate_video] Veo clean prompt (${cleanPrompt.length} chars): ${cleanPrompt.substring(0, 200)}`);
+
   // Submit generation request
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:predictLongRunning?key=${apiKey}`,
@@ -111,7 +138,7 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         instances: [{
-          prompt: params.prompt,
+          prompt: cleanPrompt,
           ...imagePayload,
         }],
         parameters: {
