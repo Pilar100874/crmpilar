@@ -609,7 +609,8 @@ export function useStudioExecution() {
             const result = await callStudio('generate_image', {
               prompt: framePrompt,
               model: 'google/gemini-3-pro-image-preview',
-              imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
+              imageUrls: orderedImageInputs.length > 0 ? orderedImageInputs : (imageInputs.length > 0 ? imageInputs : undefined),
+              imageRoles: orderedImageRoles.length > 0 ? orderedImageRoles : undefined,
             }, perFrameTimeout);
             if (result?.imageUrl) {
               frames.push(result.imageUrl);
