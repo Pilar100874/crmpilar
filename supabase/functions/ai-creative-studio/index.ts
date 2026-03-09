@@ -74,10 +74,12 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
     try {
       const imgResp = await fetch(heroUrl);
       if (imgResp.ok) {
+        const contentType = imgResp.headers.get("content-type") || "image/png";
+        const mimeType = contentType.split(";")[0].trim();
         const imgBuf = await imgResp.arrayBuffer();
         const b64 = base64Encode(imgBuf);
-        imagePayload = { image: { bytesBase64Encoded: b64 } };
-        console.log(`[generate_video] Google Veo: hero frame attached (${(imgBuf.byteLength / 1024).toFixed(0)}KB)`);
+        imagePayload = { image: { bytesBase64Encoded: b64, mimeType } };
+        console.log(`[generate_video] Google Veo: hero frame attached (${(imgBuf.byteLength / 1024).toFixed(0)}KB, ${mimeType})`);
       }
     } catch (imgErr) {
       console.warn(`[generate_video] Google Veo: failed to attach hero frame:`, imgErr);
