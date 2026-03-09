@@ -473,7 +473,7 @@ const PRESETS: Preset[] = [
     id: 'ecom-scene-placement',
     name: 'Produto na Cena',
     description: 'Insira um produto em uma cena com pessoa, como se fosse uma foto real de campanha publicitária.',
-    prompt: 'Insert this product into the scene with the person naturally. Create a professional advertising campaign look with correct shadows and reflections.',
+    prompt: 'Insira este produto na cena com a pessoa naturalmente. Crie um visual profissional de campanha publicitária com sombras e reflexos corretos.',
     image: presetImageSocial,
     category: 'ecommerce',
     toolType: 'productComposite',
