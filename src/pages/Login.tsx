@@ -79,10 +79,9 @@ export default function Login() {
         {/* Logo na área do gradiente */}
         <div className="flex justify-center mb-6">
           <img
-            src={logoBranco}
+            src={logo}
             alt="Logo Pilar"
-            className="h-20 w-auto object-contain drop-shadow-lg"
-            style={{ filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.3))" }}
+            className="h-20 w-auto object-contain rounded-xl shadow-lg"
           />
         </div>
 
