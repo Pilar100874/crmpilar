@@ -1,6 +1,23 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
-import { decode as base64Decode, encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+
+function base64Encode(data: ArrayBuffer | Uint8Array): string {
+  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+  const chunks: string[] = [];
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    chunks.push(String.fromCharCode(...bytes.subarray(i, i + chunkSize)));
+  }
+  return btoa(chunks.join(""));
+}
+
+function base64Decode(str: string): Uint8Array {
+  const binary = atob(str);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
 
 // ===== VIDEO PROVIDER API IMPLEMENTATIONS =====
 
@@ -691,7 +708,7 @@ function truncateImageUrl(url: string): string | null {
   return url;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
