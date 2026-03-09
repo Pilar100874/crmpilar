@@ -140,15 +140,30 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
       `https://generativelanguage.googleapis.com/v1beta/${operationName}?key=${apiKey}`
     );
     const pollData = await pollResp.json();
+    console.log(`[generate_video] Poll response done=${pollData.done}, keys=${JSON.stringify(Object.keys(pollData.response || {}))}`);
     if (pollData.done) {
-      const video = pollData.response?.generatedSamples?.[0]?.video;
+      // Try multiple known response structures
+      const resp = pollData.response || pollData.result || pollData;
+      const samples = resp?.generatedSamples || resp?.videos || resp?.predictions || [];
+      const video = samples?.[0]?.video || samples?.[0];
+      
+      console.log(`[generate_video] Response structure: ${JSON.stringify(resp).substring(0, 500)}`);
+      
       if (video?.uri) return { done: true, result: video.uri };
       if (video?.bytesBase64Encoded) {
         const bytes = base64Decode(video.bytesBase64Encoded);
         const url = await uploadVideoToStorage(new Uint8Array(bytes));
         return { done: true, result: url || undefined };
       }
-      return { done: true, error: "No video in response" };
+      // Check if the response itself has a video URL
+      if (typeof video === "string" && video.startsWith("http")) return { done: true, result: video };
+      // Check for generateVideoResponse structure
+      const genResp = resp?.generateVideoResponse;
+      if (genResp?.generatedSamples?.[0]?.video?.uri) {
+        return { done: true, result: genResp.generatedSamples[0].video.uri };
+      }
+      
+      return { done: true, error: `No video in response: ${JSON.stringify(resp).substring(0, 300)}` };
     }
     return { done: false };
   }, 5000, 120);
