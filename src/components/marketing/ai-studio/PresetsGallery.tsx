@@ -143,7 +143,7 @@ const PRESETS: Preset[] = [
   {
     id: 'runway-flower-bloom', name: 'Flor Desabrochando',
     description: 'Flor abrindo suas pétalas em timelapse artístico. Otimizado para Runway.',
-    prompt: 'A beautiful flower slowly blooming and opening its petals, soft macro lens perspective, warm natural lighting, botanical time-lapse style, delicate and elegant',
+    prompt: 'Flor desabrochando lentamente e abrindo suas pétalas, perspectiva macro suave, iluminação natural quente, estilo timelapse botânico, delicado e elegante',
     image: fxTimelapse, category: 'video', videoSubcategory: 'runway', toolType: 'videoGen', isVideo: true, videoModel: 'runway/gen4', duration: 5,
   },
   {
