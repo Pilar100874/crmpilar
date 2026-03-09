@@ -103,7 +103,7 @@ const PRESETS: Preset[] = [
   {
     id: 'veo-product-table', name: 'Produto sobre Mesa',
     description: 'Objeto elegante sobre mesa de madeira com luz natural da janela. Otimizado para Google Veo.',
-    prompt: 'A beautiful still life scene of an elegant product on a wooden table near a window, soft natural daylight streaming in, gentle depth of field, commercial photography style',
+    prompt: 'Cena de natureza-morta de um produto elegante sobre uma mesa de madeira perto de uma janela, luz do dia natural suave entrando, profundidade de campo suave, estilo fotografia comercial',
     image: presetImageProduct, category: 'video', videoSubcategory: 'google-veo', toolType: 'videoGen', isVideo: true, videoModel: 'google/veo-3.1', duration: 6,
   },
 
