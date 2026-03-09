@@ -249,7 +249,7 @@ const PRESETS: Preset[] = [
     id: 'image-portrait',
     name: 'Retrato Artístico',
     description: 'Retrato profissional com iluminação dramática, estilo editorial de alta qualidade.',
-    prompt: 'Artistic portrait with dramatic lighting, editorial photography style, shallow depth of field, professional quality',
+    prompt: 'Retrato artístico com iluminação dramática, estilo fotografia editorial, profundidade de campo rasa, qualidade profissional',
     image: presetImagePortrait,
     category: 'image',
     toolType: 'imageGen',
