@@ -111,7 +111,7 @@ const PRESETS: Preset[] = [
   {
     id: 'sora-paint-splash', name: 'Splash de Tinta',
     description: 'Tinta colorida explodindo em câmera lenta contra fundo branco. Otimizado para Sora.',
-    prompt: 'A colorful paint splash in mid-air captured in slow motion, vibrant red blue and yellow paint mixing against a clean white background, artistic commercial style',
+    prompt: 'Respingo de tinta colorida no ar em câmera lenta, tintas vibrantes vermelha azul e amarela se misturando contra um fundo branco limpo, estilo comercial artístico',
     image: fxSpeedramp, category: 'video', videoSubcategory: 'sora', toolType: 'videoGen', isVideo: true, videoModel: 'openai/sora-2', duration: 4,
   },
   {
