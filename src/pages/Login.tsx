@@ -8,9 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
-import logoBranco from "@/assets/logo_branco.png";
-import logoPreto from "@/assets/logo_preto.png";
 import logo from "@/assets/logo.jpg";
+import logoPreto from "@/assets/logo_preto.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -70,32 +69,33 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative">
-      {/* Gradient header stripe */}
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-hidden">
       <div
         className="absolute top-0 left-0 right-0 h-80"
         style={{ background: "var(--gradient-hero)" }}
       />
 
-      <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
-        {/* Logo */}
-        <img
-          src={logo}
-          alt="Logo Pilar"
-          className="h-24 w-auto rounded-2xl shadow-xl"
-        />
-        {/* Title */}
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-white drop-shadow-md">
-            Sistema de Gestão
-          </h1>
-          <p className="text-sm text-white/70 mt-1">
-            Plataforma Omnicanal
-          </p>
+      <div className="relative z-10 w-full max-w-md space-y-6">
+        <div className="text-center space-y-3">
+          <img
+            src={logo}
+            alt="Logo Pilar"
+            className="h-24 w-auto mx-auto rounded-2xl shadow-xl"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = logoPreto;
+            }}
+          />
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-white drop-shadow-md">
+              Sistema de Gestão
+            </h1>
+            <p className="text-sm text-white/70 mt-1">
+              Plataforma Omnicanal
+            </p>
+          </div>
         </div>
 
-        {/* Login Card */}
-        <Card className="border-border/50 shadow-lg w-full">
+        <Card className="border-border/50 shadow-lg">
           <CardContent className="pt-8 pb-8 px-8">
             <div className="mb-6 text-center">
               <h2 className="text-xl font-semibold text-foreground">
