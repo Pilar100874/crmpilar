@@ -14,7 +14,7 @@ import {
   MoreHorizontal, GripVertical, Mic, Wand2, FileText, Clapperboard,
   Search, LinkIcon, Headphones, ScanEye, PauseCircle, Upload, Download,
   DollarSign, Volume2, Edit3, Package, User, Mountain, Brush, Palette,
-  Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers, Monitor
+  Box, Star, Move, TypeIcon, Save, FolderOpen, Repeat, Shuffle, Layers, Monitor, X
 } from 'lucide-react';
 
 const nodeIconMap: Record<string, React.ElementType> = {
@@ -1394,12 +1394,18 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
 
     {resultVideo && (
       <Dialog open={imageExpanded} onOpenChange={setImageExpanded}>
-        <DialogContent className="max-w-[90vw] max-h-[90vh] p-2">
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-4 pt-10">
+          <button
+            onClick={() => setImageExpanded(false)}
+            className="absolute right-3 top-3 z-50 rounded-full p-2 bg-black/70 hover:bg-black/90 text-white transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
           <video
             src={resultVideo}
             controls
             autoPlay
-            className="w-full h-full object-contain max-h-[85vh] rounded-lg"
+            className="w-full h-full object-contain max-h-[80vh] rounded-lg"
           />
         </DialogContent>
       </Dialog>
