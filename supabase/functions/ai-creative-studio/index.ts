@@ -132,7 +132,11 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
   formData.append("model", model);
   formData.append("prompt", params.prompt);
   formData.append("size", size);
-  if (params.duration) formData.append("seconds", String(params.duration));
+  // Sora only accepts seconds: 4, 8, or 12
+  const validSeconds = [4, 8, 12];
+  const dur = params.duration || 4;
+  const soraSeconds = validSeconds.reduce((prev, curr) => Math.abs(curr - dur) < Math.abs(prev - dur) ? curr : prev);
+  formData.append("seconds", String(soraSeconds));
 
   const response = await fetch("https://api.openai.com/v1/videos", {
     method: "POST",
