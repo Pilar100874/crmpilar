@@ -79,8 +79,8 @@ export default function Login() {
         <div className="text-center">
           <div className="inline-flex min-h-28 min-w-60 items-center justify-center rounded-2xl bg-primary-foreground border border-primary-foreground/60 shadow-lg p-3">
             <img
-              src={logoPrincipal}
-              alt="Logo Pilar"
+              src={pilarBrand}
+              alt="Marca Pilar"
               className="h-20 md:h-24 w-auto object-contain"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).src = logoFallback;
