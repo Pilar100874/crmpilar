@@ -491,7 +491,7 @@ const PRESETS: Preset[] = [
     id: 'ecom-multi-color',
     name: 'Variações de Cor',
     description: 'Mostre a mesma roupa/acessório em diferentes cores na mesma pessoa. Ideal para catálogo.',
-    prompt: 'Show this clothing item on the person. Generate a clean catalog-style photo that can showcase the product in different color variations.',
+    prompt: 'Mostre esta peça de roupa na pessoa. Gere uma foto limpa estilo catálogo que possa exibir o produto em diferentes variações de cor.',
     image: presetImageProduct,
     category: 'ecommerce',
     toolType: 'productComposite',
