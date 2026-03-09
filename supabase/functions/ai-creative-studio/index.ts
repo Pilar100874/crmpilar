@@ -1,6 +1,13 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.49.1";
-import { decode as base64Decode, encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+
+function base64Encode(data: ArrayBuffer | Uint8Array): string {
+  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
 
 // ===== VIDEO PROVIDER API IMPLEMENTATIONS =====
 
