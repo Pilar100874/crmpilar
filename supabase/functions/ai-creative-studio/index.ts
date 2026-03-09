@@ -128,11 +128,12 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
   const size = params.aspectRatio === "9:16" ? "720x1280" : "1280x720";
 
   // Step 1: Create video job via POST /v1/videos/generations (JSON body)
-  const body = {
+  const body: any = {
     model,
     prompt: params.prompt,
     size,
   };
+  if (params.duration) body.duration = params.duration;
 
   const response = await fetch("https://api.openai.com/v1/videos/generations", {
     method: "POST",
