@@ -75,17 +75,17 @@ export default function Login() {
       />
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Logo na área do gradiente laranja */}
-        <div className="flex justify-center mb-8">
-          <img
-            src={logoPilar}
-            alt="Logo Pilar"
-            className="h-24 w-auto object-contain rounded-2xl shadow-xl"
-          />
-        </div>
-
         <Card className="border-border/50 shadow-lg">
           <CardContent className="pt-8 pb-8 px-8">
+            <div className="flex justify-center mb-6">
+              <img
+                src={logoPilar}
+                alt="Logo Pilar"
+                width={200}
+                height={96}
+                className="rounded-2xl shadow-xl"
+              />
+            </div>
             <div className="mb-6 text-center">
               <h2 className="text-xl font-semibold text-foreground">
                 Bem-vindo de volta
