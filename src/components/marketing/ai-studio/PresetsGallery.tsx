@@ -287,7 +287,7 @@ const PRESETS: Preset[] = [
     id: 'music-cinematic',
     name: 'Trilha Cinematográfica',
     description: 'Trilha sonora orquestral épica para filmes, trailers e vídeos emocionantes.',
-    prompt: 'Epic cinematic orchestral score, building tension, dramatic strings and brass, film trailer music, powerful crescendo',
+    prompt: 'Trilha sonora orquestral épica cinematográfica, tensão crescente, cordas e metais dramáticos, música de trailer de filme, crescendo poderoso',
     image: presetMusicCinematic,
     category: 'music',
     toolType: 'musicGen',
