@@ -181,7 +181,7 @@ const PRESETS: Preset[] = [
   {
     id: 'kling-sparkles', name: 'Brilhos e Faíscas',
     description: 'Faíscas douradas brilhantes contra fundo escuro. Otimizado para Kling.',
-    prompt: 'Beautiful golden sparkles and light particles floating gracefully against a dark background, magical and elegant, celebration atmosphere, commercial quality',
+    prompt: 'Brilhos e partículas de luz douradas flutuando graciosamente contra um fundo escuro, mágico e elegante, atmosfera de celebração, qualidade comercial',
     image: presetImageArt, category: 'video', videoSubcategory: 'kling', toolType: 'videoGen', isVideo: true, videoModel: 'kling/v2.1', duration: 10,
   },
   {
