@@ -149,7 +149,7 @@ const PRESETS: Preset[] = [
   {
     id: 'runway-coffee-steam', name: 'Vapor do Café',
     description: 'Xícara de café com vapor subindo suavemente. Otimizado para Runway.',
-    prompt: 'A warm cup of coffee on a wooden table with gentle steam rising, soft morning light, cozy atmosphere, shallow depth of field, lifestyle commercial style',
+    prompt: 'Xícara de café quente sobre mesa de madeira com vapor subindo suavemente, luz da manhã suave, atmosfera aconchegante, profundidade de campo rasa, estilo comercial lifestyle',
     image: presetImageProduct, category: 'video', videoSubcategory: 'runway', toolType: 'videoGen', isVideo: true, videoModel: 'runway/gen4', duration: 5,
   },
   {
