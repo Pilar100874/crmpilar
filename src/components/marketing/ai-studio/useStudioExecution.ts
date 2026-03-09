@@ -520,7 +520,6 @@ export function useStudioExecution() {
             : '';
           videoPrompt = `${videoPrompt}\n\n⚠️ INSTRUÇÕES CRÍTICAS DE REFERÊNCIA (OBRIGATÓRIO):\nItens marcados [NÃO ALTERAR] DEVEM ser reproduzidos EXATAMENTE como mostrados — NÃO altere, reimagine ou substitua.\nReferências de ambiente afetam APENAS o fundo/cenário, NUNCA o produto, pessoa, roupa ou logo.\nMantenha consistência visual com TODAS as referências ao longo de todo o vídeo.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
         }
-        }
         
         // === PAID VIDEO MODEL PATH ===
         if (videoModel !== 'free/gif-animated') {
