@@ -201,7 +201,7 @@ const PRESETS: Preset[] = [
   {
     id: 'video-product-showcase', name: 'Vitrine de Produto',
     description: 'Objeto girando em fundo de estúdio com iluminação suave. Compatível com qualquer modelo.',
-    prompt: 'A simple elegant object slowly rotating 360 degrees on a clean white studio background, soft professional lighting, smooth slow rotation, commercial product photography style',
+    prompt: 'Objeto elegante e simples girando lentamente 360 graus em fundo branco limpo de estúdio, iluminação profissional suave, rotação lenta e suave, estilo fotografia comercial de produto',
     image: camOrbit, category: 'video', videoSubcategory: 'geral', toolType: 'videoGen', isVideo: true,
   },
   {
