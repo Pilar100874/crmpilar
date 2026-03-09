@@ -588,30 +588,30 @@ serve(async (req) => {
           
           const editContent: any[] = [];
 
-          // First: flexible references as environment/style context
+          // CRITICAL: Send strict subject images FIRST so the model "sees" them before anything else
+          for (let i = 0; i < strictImages.length; i++) {
+            const s = strictImages[i];
+            editContent.push({ type: "image_url", image_url: { url: s.url } });
+            editContent.push({ type: "text", text: `↑ THIS IS SUBJECT ${i + 1} (${s.role}). This is a REAL PHOTOGRAPH. The person's face, skin tone, hair, body, and the product's exact packaging, label, colors, and typography MUST appear IDENTICALLY in the output. DO NOT redraw or reimagine.` });
+          }
+
+          // Then: flexible references as environment/style context
           for (const flex of flexibleImages) {
-            editContent.push({ type: "text", text: `[STYLE/ENVIRONMENT REFERENCE: ${flex.role} — use only for background/scenery inspiration]` });
             editContent.push({ type: "image_url", image_url: { url: flex.url } });
+            editContent.push({ type: "text", text: `↑ STYLE/ENVIRONMENT REFERENCE (${flex.role}) — use ONLY for background/scenery inspiration. Do NOT use this to change the subjects.` });
           }
 
           // Build the list of what must be preserved
-          const subjectDescriptions = strictImages.map((s, i) => `Image ${i + 1}: ${s.role}`).join(', ');
+          const subjectDescriptions = strictImages.map((s, i) => `Subject ${i + 1}: ${s.role}`).join(', ');
           
-          // Then: ALL strict images with clear labels
-          for (let i = 0; i < strictImages.length; i++) {
-            const s = strictImages[i];
-            editContent.push({ type: "text", text: `[SUBJECT ${i + 1}: ${s.role} — PRESERVE EXACTLY, do NOT modify]` });
-            editContent.push({ type: "image_url", image_url: { url: s.url } });
-          }
-
           // Finally: the edit instruction
-          const editPrompt = `COMPOSE an image that contains ALL of the above subjects (${subjectDescriptions}) EXACTLY as they appear — same face, identity, body, shape, colors, labels, packaging, proportions. Do NOT redraw, reimagine, or alter any subject. Only create/modify the BACKGROUND and SURROUNDINGS based on:\n\n${params.prompt}`;
+          const editPrompt = `TASK: Create a PHOTOMONTAGE / COMPOSITE image.\n\nYou MUST use the EXACT subjects from the photos above (${subjectDescriptions}). This means:\n- The person's FACE must be IDENTICAL — same eyes, nose, mouth, skin tone, hair. Not similar. IDENTICAL.\n- The product PACKAGING must be IDENTICAL — same label, same colors, same logo, same shape. Not similar. IDENTICAL.\n- You are doing PHOTO EDITING, not generating new content. Cut the subjects from their photos and place them into the new scene.\n\nScene description:\n${params.prompt}`;
           editContent.push({ type: "text", text: editPrompt });
 
           data = await callGateway(LOVABLE_API_KEY, {
             model,
             messages: [
-              { role: "system", content: "You are an image compositor. You receive one or more subject images (products, logos, people, clothing) that must appear in the final image EXACTLY as provided — pixel-perfect identity, face, shape, colors, labels, packaging. NEVER redraw, reimagine, stylize, or alter any subject. You may ONLY change the background, scenery, lighting, and composition around them. If environment/style references are provided, use them ONLY for background inspiration." },
+              { role: "system", content: "You are a professional photo compositor / retoucher. Your job is to take REAL PHOTOGRAPHS of people and products and place them into new scenes WITHOUT changing their appearance AT ALL. You work like Photoshop — you CUT subjects from their original photos and PASTE them into new backgrounds. The face of any person MUST remain pixel-identical to the input photo. The packaging/label of any product MUST remain pixel-identical to the input photo. You NEVER redraw faces. You NEVER redesign packaging. You ONLY change the background, lighting, and composition around the subjects." },
               { role: "user", content: editContent },
             ],
             modalities: ["image", "text"],
