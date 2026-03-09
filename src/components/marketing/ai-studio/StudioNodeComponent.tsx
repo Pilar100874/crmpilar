@@ -1233,7 +1233,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     src={resultVideo}
                     controls
                     className="w-full object-cover"
-                    style={{ maxHeight: imageExpanded ? 400 : 200 }}
+                    style={{ maxHeight: 200 }}
                   />
                 </div>
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
