@@ -8,8 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
-import logoPrincipal from "@/assets/logo-3.png";
-import logoFallback from "@/assets/logo_preto.png";
+import logoPrincipal from "@/assets/logo_preto.png";
+import logoFallback from "@/assets/logo.jpg";
 
 export default function Login() {
   const navigate = useNavigate();
