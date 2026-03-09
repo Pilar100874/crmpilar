@@ -1565,7 +1565,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
   const accent = nodeAccentMap[node.data.type] || '#64748b';
 
    return (
-    <div className="w-[340px] border-l border-border/60 bg-gradient-to-b from-card to-card/95 flex flex-col shrink-0 shadow-[-4px_0_24px_-8px_hsl(var(--foreground)/0.06)]">
+    <div className="w-[85vw] sm:w-[340px] max-w-[340px] h-full border-l border-border/60 bg-gradient-to-b from-card to-card/95 flex flex-col shrink-0 shadow-[-4px_0_24px_-8px_hsl(var(--foreground)/0.06)]">
       {/* Modern header with accent gradient */}
       <div
         className="p-4 border-b border-border/40 relative overflow-hidden"

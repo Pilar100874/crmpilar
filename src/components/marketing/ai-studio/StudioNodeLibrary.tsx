@@ -57,7 +57,7 @@ const StudioNodeLibrary: React.FC = () => {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className="absolute top-3 left-3 z-20 w-[280px] flex flex-col overflow-hidden rounded-2xl border border-border/50"
+            className="absolute top-3 left-3 z-20 w-[calc(100%-24px)] sm:w-[280px] max-w-[320px] flex flex-col overflow-hidden rounded-2xl border border-border/50"
             style={{
               maxHeight: 'calc(100% - 24px)',
               background: 'rgba(255,255,255,0.95)',

@@ -996,14 +996,20 @@ const AICreativeStudioInner: React.FC = () => {
           </AnimatePresence>
         </div>
 
-        {/* Config Panel - right side */}
+        {/* Config Panel - right side (overlay on mobile, side panel on desktop) */}
         {selectedNode && (
-          <StudioNodeConfigPanel
-            node={selectedNode}
-            onUpdateConfig={updateNodeConfig}
-            onClose={() => setSelectedNode(null)}
-            onExecuteFromNode={(nodeId) => handleExecute(nodeId)}
-          />
+          <>
+            {/* Mobile overlay backdrop */}
+            <div className="absolute inset-0 bg-black/40 z-30 lg:hidden" onClick={() => setSelectedNode(null)} />
+            <div className="absolute right-0 top-0 bottom-0 z-40 lg:relative lg:z-auto">
+              <StudioNodeConfigPanel
+                node={selectedNode}
+                onUpdateConfig={updateNodeConfig}
+                onClose={() => setSelectedNode(null)}
+                onExecuteFromNode={(nodeId) => handleExecute(nodeId)}
+              />
+            </div>
+          </>
         )}
       </div>
 
