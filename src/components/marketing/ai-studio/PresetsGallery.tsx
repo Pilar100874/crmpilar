@@ -305,7 +305,7 @@ const PRESETS: Preset[] = [
     id: 'music-electronic',
     name: 'Eletrônico/EDM',
     description: 'Batida eletrônica energética para vídeos dinâmicos, festas ou conteúdo fitness.',
-    prompt: 'Energetic electronic dance music, driving beat, synthesizer lead, festival EDM, high energy drops',
+    prompt: 'Música eletrônica dance energética, batida pulsante, sintetizador lead, EDM de festival, drops de alta energia',
     image: presetMusicElectronic,
     category: 'music',
     toolType: 'musicGen',
