@@ -622,24 +622,34 @@ export function useStudioExecution() {
         for (let i = 0; i < frameCount; i++) {
           const stage = motionStages[i % motionStages.length];
           
-          // Build frame prompt with fidelity-first approach (same as imageGen)
+          // Build frame prompt with strict fidelity
           let framePrompt: string;
           if (hasReferenceImages && referenceDescs.length > 0) {
-            // When references exist, use inpainting/multi-subject edit approach
             framePrompt = [
-              `🔒 MODO MULTI-SUBJECT EDIT — PRESERVAÇÃO PIXEL A PIXEL`,
-              `Você está editando/compondo uma cena usando as imagens de referência fornecidas.`,
-              `REGRA ABSOLUTA: Rostos, embalagens, logotipos e roupas das referências DEVEM ser preservados EXATAMENTE como aparecem — pixel a pixel. NÃO reimagine, NÃO substitua, NÃO altere proporções, cores ou detalhes.`,
-              `Apenas o AMBIENTE/CENÁRIO e a COMPOSIÇÃO DA CENA podem ser modificados.`,
+              `🔒 COMPOSIÇÃO FOTOGRÁFICA COM SUJEITOS REAIS`,
               ``,
-              `Cena: ${combinedInput || 'Uma cena cinematográfica'}`,
-              `Estilo: Fotografia cinematográfica de alta resolução, iluminação dramática, profundidade de campo rasa, proporção ${aspectRatio}, fotorrealista`,
+              `As imagens fornecidas são FOTOGRAFIAS DE PESSOAS E PRODUTOS REAIS.`,
+              `Você DEVE inserir esses sujeitos reais na cena, como uma montagem fotográfica profissional.`,
+              ``,
+              `PROIBIDO:`,
+              `- Gerar um rosto diferente do fornecido (mesmo que "parecido")`,
+              `- Redesenhar ou reinterpretar a embalagem do produto`,
+              `- Alterar cores, proporções ou detalhes de qualquer sujeito`,
+              `- Substituir qualquer elemento marcado como "NÃO ALTERAR"`,
+              ``,
+              `OBRIGATÓRIO:`,
+              `- COPIAR o rosto da pessoa EXATAMENTE como na foto de referência`,
+              `- COPIAR a embalagem/produto EXATAMENTE como na foto de referência`,
+              `- Manter iluminação e perspectiva consistentes entre sujeitos e cenário`,
+              ``,
+              `Cena solicitada: ${combinedInput || 'Uma cena cinematográfica'}`,
+              `Estilo visual: Fotografia cinematográfica, iluminação profissional, proporção ${aspectRatio}, fotorrealista`,
               `Sequência: Frame ${i + 1} de ${frameCount} — ${stage}`,
               ``,
               videoPrompt.includes('⚠️') ? videoPrompt.substring(videoPrompt.indexOf('⚠️')) : '',
             ].filter(Boolean).join('\n');
           } else {
-            framePrompt = `Fotografia cinematográfica de alta resolução, qualidade de produção cinematográfica, iluminação dramática, profundidade de campo rasa, proporção ${aspectRatio}, cinematografia profissional, fotorrealista, frame ${i + 1} de ${frameCount} — ${stage}: ${videoPrompt}`;
+            framePrompt = `Fotografia cinematográfica de alta resolução, qualidade de produção, iluminação dramática, profundidade de campo rasa, proporção ${aspectRatio}, fotorrealista, frame ${i + 1} de ${frameCount} — ${stage}: ${videoPrompt}`;
           }
           
           nodeResultStore.setResult(node.id, { 
