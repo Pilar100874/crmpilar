@@ -161,7 +161,7 @@ const PRESETS: Preset[] = [
   {
     id: 'runway-ink-water', name: 'Tinta na Água',
     description: 'Gota de tinta se espalhando em água cristalina. Otimizado para Runway.',
-    prompt: 'A drop of colorful ink slowly diffusing into clear water, beautiful organic patterns forming, macro photography style, mesmerizing fluid dynamics',
+    prompt: 'Gota de tinta colorida se difundindo lentamente em água cristalina, padrões orgânicos se formando, estilo macrofotografia, dinâmica de fluidos hipnotizante',
     image: presetImageArt, category: 'video', videoSubcategory: 'runway', toolType: 'videoGen', isVideo: true, videoModel: 'runway/gen4', duration: 5,
   },
 
