@@ -169,26 +169,37 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
     const pollData = await pollResp.json();
     console.log(`[generate_video] Poll response done=${pollData.done}, keys=${JSON.stringify(Object.keys(pollData.response || {}))}`);
     if (pollData.done) {
-      // Try multiple known response structures
       const resp = pollData.response || pollData.result || pollData;
-      const samples = resp?.generatedSamples || resp?.videos || resp?.predictions || [];
-      const video = samples?.[0]?.video || samples?.[0];
-      
       console.log(`[generate_video] Response structure: ${JSON.stringify(resp).substring(0, 500)}`);
       
+      // Check for safety/moderation filter
+      const genResp = resp?.generateVideoResponse;
+      if (genResp?.raiMediaFilteredCount > 0 || genResp?.raiMediaFilteredReasons?.length > 0) {
+        const reasons = genResp.raiMediaFilteredReasons?.join("; ") || "Conteúdo bloqueado pela moderação";
+        return { done: true, error: `blocked:${reasons}` };
+      }
+      
+      // Try generateVideoResponse.generatedSamples first (confirmed structure)
+      const genSamples = genResp?.generatedSamples;
+      if (genSamples?.[0]?.video?.uri) {
+        return { done: true, result: genSamples[0].video.uri };
+      }
+      if (genSamples?.[0]?.video?.bytesBase64Encoded) {
+        const bytes = base64Decode(genSamples[0].video.bytesBase64Encoded);
+        const url = await uploadVideoToStorage(new Uint8Array(bytes));
+        return { done: true, result: url || undefined };
+      }
+      
+      // Fallback: try top-level structures
+      const samples = resp?.generatedSamples || resp?.videos || resp?.predictions || [];
+      const video = samples?.[0]?.video || samples?.[0];
       if (video?.uri) return { done: true, result: video.uri };
       if (video?.bytesBase64Encoded) {
         const bytes = base64Decode(video.bytesBase64Encoded);
         const url = await uploadVideoToStorage(new Uint8Array(bytes));
         return { done: true, result: url || undefined };
       }
-      // Check if the response itself has a video URL
       if (typeof video === "string" && video.startsWith("http")) return { done: true, result: video };
-      // Check for generateVideoResponse structure
-      const genResp = resp?.generateVideoResponse;
-      if (genResp?.generatedSamples?.[0]?.video?.uri) {
-        return { done: true, result: genResp.generatedSamples[0].video.uri };
-      }
       
       return { done: true, error: `No video in response: ${JSON.stringify(resp).substring(0, 300)}` };
     }
