@@ -455,7 +455,7 @@ const PRESETS: Preset[] = [
     id: 'ecom-accessory-tryon',
     name: 'Experimentar Acessório',
     description: 'Coloque óculos, relógios, chapéus ou joias em uma pessoa. Resultado realista e natural.',
-    prompt: 'Place this accessory on the person naturally. Match perspective, scale, lighting and shadows for photorealistic result.',
+    prompt: 'Coloque este acessório na pessoa naturalmente. Combine perspectiva, escala, iluminação e sombras para resultado fotorrealista.',
     image: presetImagePortrait,
     category: 'ecommerce',
     toolType: 'productComposite',
