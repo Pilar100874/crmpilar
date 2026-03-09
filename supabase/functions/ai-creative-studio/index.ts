@@ -67,6 +67,23 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
   };
   const modelId = modelMap[params.model] || "veo-3.0-generate-preview";
   
+  // Prepare image reference for image-to-video mode
+  let imagePayload: any = {};
+  const heroUrl = params.imageUrls?.[0];
+  if (heroUrl?.startsWith("http")) {
+    try {
+      const imgResp = await fetch(heroUrl);
+      if (imgResp.ok) {
+        const imgBuf = await imgResp.arrayBuffer();
+        const b64 = btoa(String.fromCharCode(...new Uint8Array(imgBuf)));
+        imagePayload = { image: { bytesBase64Encoded: b64 } };
+        console.log(`[generate_video] Google Veo: hero frame attached (${(imgBuf.byteLength / 1024).toFixed(0)}KB)`);
+      }
+    } catch (imgErr) {
+      console.warn(`[generate_video] Google Veo: failed to attach hero frame:`, imgErr);
+    }
+  }
+  
   // Submit generation request
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:predictLongRunning?key=${apiKey}`,
@@ -76,7 +93,7 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
       body: JSON.stringify({
         instances: [{
           prompt: params.prompt,
-          ...(params.imageUrls?.[0] ? { image: { bytesBase64Encoded: params.imageUrls[0].startsWith("data:") ? params.imageUrls[0].split(",")[1] : undefined, gcsUri: params.imageUrls[0].startsWith("http") ? undefined : undefined } } : {}),
+          ...imagePayload,
         }],
         parameters: {
           aspectRatio: params.aspectRatio || "16:9",
@@ -137,6 +154,21 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
   const dur = params.duration || 4;
   const soraSeconds = validSeconds.reduce((prev, curr) => Math.abs(curr - dur) < Math.abs(prev - dur) ? curr : prev);
   formData.append("seconds", String(soraSeconds));
+
+  // Add reference image (hero frame) if available — enables image-to-video mode
+  if (params.imageUrls?.[0]?.startsWith("http")) {
+    try {
+      console.log(`[generate_video] Downloading hero frame for Sora: ${params.imageUrls[0].substring(0, 80)}`);
+      const imgResp = await fetch(params.imageUrls[0]);
+      if (imgResp.ok) {
+        const imgBlob = await imgResp.blob();
+        formData.append("image", imgBlob, "hero-frame.png");
+        console.log(`[generate_video] Hero frame attached to Sora request (${(imgBlob.size / 1024).toFixed(0)}KB)`);
+      }
+    } catch (imgErr) {
+      console.warn(`[generate_video] Failed to attach hero frame:`, imgErr);
+    }
+  }
 
   const response = await fetch("https://api.openai.com/v1/videos", {
     method: "POST",
@@ -403,6 +435,106 @@ async function generateVideoUnsupported(model: string): Promise<VideoGenerationR
   return { error: `Provedor de vídeo "${model.split('/')[0]}" ainda não possui integração de API implementada. Configure uma chave válida para: Google (Veo), OpenAI (Sora), Runway, Kling, Luma ou Stability.` };
 }
 
+// Pre-generate a "hero frame" compositing product/influencer into the scene
+// This ensures the video starts from a frame with the REAL product and influencer
+async function generateHeroFrame(params: any): Promise<string | null> {
+  const imageUrls = (params.imageUrls || []) as string[];
+  const imageRoles = (params.imageRoles || []) as string[];
+  if (imageUrls.length === 0) return null;
+
+  // Check if there are strict references (product/influencer) that need preservation
+  const strictRoles = ['PRODUCT - DO NOT MODIFY', 'PERSON/INFLUENCER - DO NOT MODIFY', 'LOGO - DO NOT MODIFY', 'CLOTHING - DO NOT MODIFY'];
+  const hasStrictRefs = imageRoles.some(r => strictRoles.includes(r));
+  if (!hasStrictRefs) return null;
+
+  console.log(`[hero-frame] Generating composed hero frame with ${imageUrls.length} references...`);
+
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) return null;
+
+  try {
+    // Build content: subject images first, then prompt
+    const editContent: any[] = [];
+    
+    for (let i = 0; i < imageUrls.length; i++) {
+      const url = imageUrls[i];
+      const role = imageRoles[i] || 'REFERENCE';
+      if (!url) continue;
+      
+      // Send image
+      if (url.startsWith('http')) {
+        editContent.push({ type: "image_url", image_url: { url } });
+      } else if (url.startsWith('data:')) {
+        editContent.push({ type: "image_url", image_url: { url } });
+      } else {
+        continue;
+      }
+      
+      if (strictRoles.includes(role)) {
+        editContent.push({ type: "text", text: `↑ SUBJECT: ${role}. This is a REAL PHOTOGRAPH. The person's face and the product's packaging MUST appear IDENTICALLY in the output.` });
+      } else {
+        editContent.push({ type: "text", text: `↑ ${role} — use for style/background inspiration only.` });
+      }
+    }
+
+    // Extract a clean scene description from the prompt (remove fidelity instructions)
+    let sceneDesc = params.prompt || '';
+    const fidelityStart = sceneDesc.indexOf('⚠️ INSTRUÇÕES');
+    if (fidelityStart > 0) sceneDesc = sceneDesc.substring(0, fidelityStart).trim();
+    const instrStart = sceneDesc.indexOf('[INSTRUÇÃO PADRÃO]');
+    if (instrStart > 0) {
+      const instrEnd = sceneDesc.indexOf('\n\n', instrStart);
+      const instrBlock = instrEnd > 0 ? sceneDesc.substring(instrStart, instrEnd) : sceneDesc.substring(instrStart);
+      sceneDesc = sceneDesc.substring(0, instrStart) + instrBlock;
+    }
+
+    editContent.push({ type: "text", text: `TASK: Create a single PHOTOMONTAGE image.\nYou MUST use the EXACT subjects from the photos above. The person's FACE must be IDENTICAL. The product PACKAGING must be IDENTICAL.\nYou are doing PHOTO EDITING — cut the subjects and paste them into the scene.\n\nScene: ${sceneDesc}\nAspect ratio: ${params.aspectRatio || '16:9'}` });
+
+    const data = await callGateway(LOVABLE_API_KEY, {
+      model: "google/gemini-3-pro-image-preview",
+      messages: [
+        { role: "system", content: "You are a professional photo compositor. Take REAL PHOTOGRAPHS of people and products and place them into new scenes WITHOUT changing their appearance. The face of any person MUST remain pixel-identical. The packaging of any product MUST remain pixel-identical. You NEVER redraw faces or redesign packaging." },
+        { role: "user", content: editContent },
+      ],
+      modalities: ["image", "text"],
+    });
+
+    const msg = data.choices?.[0]?.message;
+    let heroUrl = msg?.images?.[0]?.image_url?.url;
+    if (!heroUrl && Array.isArray(msg?.content)) {
+      for (const part of msg.content) {
+        if (part.type === 'image_url' && part.image_url?.url) {
+          heroUrl = part.image_url.url;
+          break;
+        }
+        if (part.inline_data?.mime_type?.startsWith('image/')) {
+          heroUrl = `data:${part.inline_data.mime_type};base64,${part.inline_data.data}`;
+          break;
+        }
+      }
+    }
+
+    if (heroUrl) {
+      // Upload to storage so video providers can access it via URL
+      if (heroUrl.startsWith('data:')) {
+        const publicUrl = await uploadBase64ToStorage(heroUrl);
+        if (publicUrl) {
+          console.log(`[hero-frame] Hero frame uploaded: ${publicUrl.substring(0, 80)}`);
+          return publicUrl;
+        }
+      }
+      console.log(`[hero-frame] Hero frame generated (${heroUrl.substring(0, 50)}...)`);
+      return heroUrl;
+    }
+
+    console.warn(`[hero-frame] No image in response`);
+    return null;
+  } catch (err) {
+    console.error(`[hero-frame] Failed to generate hero frame:`, err);
+    return null;
+  }
+}
+
 // Route to correct provider
 async function handleVideoGeneration(params: any): Promise<VideoGenerationResult> {
   const model = params.model as string;
@@ -414,6 +546,14 @@ async function handleVideoGeneration(params: any): Promise<VideoGenerationResult
   const apiKey = await fetchApiKey(estabelecimentoId, provider);
   if (!apiKey) {
     throw new Error(`Chave de API não configurada para o provedor "${provider}". Configure em Configurações → APIs Pagas.`);
+  }
+
+  // Pre-generate hero frame with preserved product/influencer identity
+  const heroFrameUrl = await generateHeroFrame(params);
+  if (heroFrameUrl) {
+    console.log(`[generate_video] Using hero frame as starting image for ${provider}`);
+    // Replace imageUrls with the composed hero frame
+    params.imageUrls = [heroFrameUrl];
   }
 
   console.log(`[generate_video] Provider=${provider}, Model=${model}`);
