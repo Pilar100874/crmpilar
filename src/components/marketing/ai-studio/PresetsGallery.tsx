@@ -48,24 +48,30 @@ interface Preset {
   prompt: string;
   image: string;
   category: string;
-  toolType?: string; // which node type to create
-  isVideo?: boolean; // animated preview for video presets
-  videoModel?: string; // specific video model for this preset
-  duration?: number; // suggested duration
+  toolType?: string;
+  isVideo?: boolean;
+  videoModel?: string;
+  duration?: number;
+  videoSubcategory?: string; // sub-tab within video: 'geral' | 'google-veo' | 'sora' | 'runway' | 'kling'
 }
 
 const PRESET_CATEGORIES = [
   { id: 'ecommerce', label: 'E-commerce', icon: ShoppingBag },
-  { id: 'video-google', label: 'Vídeo (Google Veo)', icon: Video },
-  { id: 'video-sora', label: 'Vídeo (Sora)', icon: Video },
-  { id: 'video-runway', label: 'Vídeo (Runway)', icon: Video },
-  { id: 'video-kling', label: 'Vídeo (Kling)', icon: Video },
-  { id: 'video', label: 'Vídeo (Geral)', icon: Video },
+  { id: 'video', label: 'Vídeo', icon: Video },
   { id: 'image', label: 'Imagem', icon: Image },
   { id: 'music', label: 'Música', icon: Music },
   { id: 'audio', label: 'Áudio', icon: Mic },
   { id: 'text', label: 'Texto/LLM', icon: Type },
   { id: 'camera', label: 'Câmera', icon: Clapperboard },
+];
+
+const VIDEO_SUBCATEGORIES = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'geral', label: 'Geral' },
+  { id: 'google-veo', label: 'Google Veo' },
+  { id: 'sora', label: 'OpenAI Sora' },
+  { id: 'runway', label: 'Runway' },
+  { id: 'kling', label: 'Kling' },
 ];
 
 const PRESETS: Preset[] = [
