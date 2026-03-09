@@ -60,12 +60,12 @@ async function pollUntilDone<T>(
 // --- Google Veo (Vertex AI / AI Studio) ---
 async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGenerationResult> {
   const modelMap: Record<string, string> = {
-    "google/veo-3.1": "veo-3.0-generate-preview",
-    "google/veo-3.1-fast": "veo-3.0-generate-preview",
-    "google/veo-3": "veo-3.0-generate-preview",
+    "google/veo-3.1": "veo-3.1-generate-preview",
+    "google/veo-3.1-fast": "veo-3.1-fast-generate-preview",
+    "google/veo-3": "veo-3.1-generate-preview",
     "google/veo-2": "veo-2.0-generate-001",
   };
-  const modelId = modelMap[params.model] || "veo-3.0-generate-preview";
+  const modelId = modelMap[params.model] || "veo-3.1-generate-preview";
   
   // Prepare image reference for image-to-video mode
   let imagePayload: any = {};
@@ -75,7 +75,7 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
       const imgResp = await fetch(heroUrl);
       if (imgResp.ok) {
         const imgBuf = await imgResp.arrayBuffer();
-        const b64 = btoa(String.fromCharCode(...new Uint8Array(imgBuf)));
+        const b64 = base64Encode(imgBuf);
         imagePayload = { image: { bytesBase64Encoded: b64 } };
         console.log(`[generate_video] Google Veo: hero frame attached (${(imgBuf.byteLength / 1024).toFixed(0)}KB)`);
       }
