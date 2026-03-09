@@ -837,7 +837,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                   // Duration limits per provider
                   let minDur = 1, maxDur = 20, stepDur = 1, defaultDur = 5;
                   let durationNote = '';
-                  if (isSora) { minDur = 1; maxDur = 20; defaultDur = 5; durationNote = 'Sora 2: até 20s · Sora 2 Pro: até 20s'; }
+                  if (isSora) { minDur = 4; maxDur = 12; stepDur = 4; defaultDur = 4; durationNote = 'Sora: 4s, 8s ou 12s'; }
                   else if (isRunway) { minDur = 5; maxDur = 10; stepDur = 5; defaultDur = 10; durationNote = 'Runway: 5s ou 10s'; }
                   else if (isKling) { minDur = 5; maxDur = 10; stepDur = 5; defaultDur = 5; durationNote = 'Kling: 5s ou 10s'; }
                   else if (isGoogle) { minDur = 5; maxDur = 8; stepDur = 1; defaultDur = 8; durationNote = 'Veo: 5-8 segundos'; }
