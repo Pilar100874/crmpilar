@@ -50,11 +50,17 @@ interface Preset {
   category: string;
   toolType?: string; // which node type to create
   isVideo?: boolean; // animated preview for video presets
+  videoModel?: string; // specific video model for this preset
+  duration?: number; // suggested duration
 }
 
 const PRESET_CATEGORIES = [
   { id: 'ecommerce', label: 'E-commerce', icon: ShoppingBag },
-  { id: 'video', label: 'Vídeo', icon: Video },
+  { id: 'video-google', label: 'Vídeo (Google Veo)', icon: Video },
+  { id: 'video-sora', label: 'Vídeo (Sora)', icon: Video },
+  { id: 'video-runway', label: 'Vídeo (Runway)', icon: Video },
+  { id: 'video-kling', label: 'Vídeo (Kling)', icon: Video },
+  { id: 'video', label: 'Vídeo (Geral)', icon: Video },
   { id: 'image', label: 'Imagem', icon: Image },
   { id: 'music', label: 'Música', icon: Music },
   { id: 'audio', label: 'Áudio', icon: Mic },
