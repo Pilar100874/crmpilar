@@ -505,10 +505,10 @@ const AICreativeStudioInner: React.FC = () => {
 
     const defaultConfig: Record<string, any> = meta?.defaultConfig ? { ...meta.defaultConfig } : {};
     if (targetType === 'videoGen') {
-      defaultConfig.duration = defaultConfig.duration || 5;
+      defaultConfig.duration = preset.duration || defaultConfig.duration || 5;
       defaultConfig.resolution = defaultConfig.resolution || '1080p';
       defaultConfig.aspectRatio = defaultConfig.aspectRatio || '16:9';
-      defaultConfig.videoModel = defaultConfig.videoModel || 'google/veo-3.1';
+      defaultConfig.videoModel = preset.videoModel || defaultConfig.videoModel || 'google/veo-3.1';
     }
     if (targetType === 'productComposite') {
       const modeMap: Record<string, string> = {
