@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
-import logoPilar from "@/assets/logo-pilar.jpg";
+import logoPilar from "@/assets/logo.jpg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -76,11 +76,15 @@ export default function Login() {
 
       <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
         <div className="text-center">
-          <div className="inline-flex justify-center rounded-2xl bg-card border border-border shadow-lg p-2">
+          <div className="inline-flex min-h-24 min-w-56 items-center justify-center rounded-2xl bg-card border border-border shadow-lg p-3">
             <img
               src={logoPilar}
               alt="Logo Pilar"
-              className="h-20 md:h-24 w-auto object-contain"
+              className="h-16 md:h-20 w-auto object-contain"
+              onError={(e) => {
+                console.error("Falha ao carregar logo:", (e.target as HTMLImageElement).src);
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
             />
           </div>
           <h1 className="text-3xl font-semibold text-primary-foreground mt-4">Sistema de Gestão</h1>
