@@ -82,30 +82,22 @@ export default function Login() {
         style={{ background: "radial-gradient(circle, hsl(0 0% 100%) 0%, transparent 70%)" }}
       />
 
-      <div className="relative z-10 w-full max-w-md space-y-6">
-        {/* Logo & Branding - on top of gradient */}
-        <div className="text-center space-y-4">
-          <div className="bg-zinc-800 rounded-2xl p-6 shadow-xl mx-auto w-48 h-32 flex items-center justify-center border-2 border-red-500">
-            <img
-              src={logo2}
-              alt="Logo Pilar"
-              className="max-h-20 w-auto"
-            />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-white drop-shadow-md">
-              Sistema de Gestão
-            </h1>
-            <p className="text-sm text-white/70 mt-1 drop-shadow-sm">
-              Plataforma Omnicanal
-            </p>
-          </div>
-        </div>
-
+      <div className="relative z-10 w-full max-w-md">
         {/* Login Card */}
         <Card className="border-border/50 shadow-lg">
           <CardContent className="pt-8 pb-8 px-8">
-            <div className="mb-6">
+            {/* Logo inside card */}
+            <div className="flex justify-center mb-6">
+              <div className="bg-zinc-800 rounded-2xl p-5 shadow-lg">
+                <img
+                  src={logo2}
+                  alt="Logo Pilar"
+                  className="h-16 w-auto"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
+                />
+              </div>
+            </div>
+            <div className="mb-6 text-center">
               <h2 className="text-xl font-semibold text-foreground">
                 Bem-vindo de volta
               </h2>
