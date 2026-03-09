@@ -222,7 +222,7 @@ const PRESETS: Preset[] = [
     id: 'image-art-abstract',
     name: 'Arte Abstrata',
     description: 'Pintura abstrata vibrante com explosão de cores, estilo arte digital moderna.',
-    prompt: 'Abstract vibrant painting with explosive colors, modern digital art style, artistic brush strokes, high contrast',
+    prompt: 'Pintura abstrata vibrante com explosão de cores, estilo arte digital moderna, pinceladas artísticas, alto contraste',
     image: presetImageArt,
     category: 'image',
     toolType: 'imageGen',
