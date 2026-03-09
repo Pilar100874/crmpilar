@@ -381,6 +381,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const accent = nodeAccentMap[nodeData.type] || '#64748b';
   const [imageExpanded, setImageExpanded] = useState(false);
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+  const [videoPreviewOpen, setVideoPreviewOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSavingToGallery, setIsSavingToGallery] = useState(false);
   const IconComponent = nodeIconMap[nodeData.type] || Play;
