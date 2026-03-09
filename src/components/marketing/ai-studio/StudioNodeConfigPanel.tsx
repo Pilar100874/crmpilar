@@ -822,6 +822,59 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                 </SelectContent>
               </Select>
             </ConfigField>
+            {!isGifModel && (
+              <>
+                <SectionTitle>Duração</SectionTitle>
+                {(() => {
+                  const vm = config.videoModel || '';
+                  const isSora = vm.startsWith('openai/');
+                  const isRunway = vm.startsWith('runway/');
+                  const isKling = vm.startsWith('kling/');
+                  const isGoogle = vm.startsWith('google/');
+                  const isLuma = vm.startsWith('luma/');
+                  const isStability = vm.startsWith('stability/');
+                  
+                  // Duration limits per provider
+                  let minDur = 1, maxDur = 20, stepDur = 1, defaultDur = 5;
+                  let durationNote = '';
+                  if (isSora) { minDur = 1; maxDur = 20; defaultDur = 5; durationNote = 'Sora 2: até 20s · Sora 2 Pro: até 20s'; }
+                  else if (isRunway) { minDur = 5; maxDur = 10; stepDur = 5; defaultDur = 10; durationNote = 'Runway: 5s ou 10s'; }
+                  else if (isKling) { minDur = 5; maxDur = 10; stepDur = 5; defaultDur = 5; durationNote = 'Kling: 5s ou 10s'; }
+                  else if (isGoogle) { minDur = 5; maxDur = 8; stepDur = 1; defaultDur = 8; durationNote = 'Veo: 5-8 segundos'; }
+                  else if (isLuma) { durationNote = 'Luma: duração automática (~4s)'; }
+                  else if (isStability) { durationNote = 'Stability: duração fixa (~4s)'; }
+                  else { maxDur = 30; defaultDur = 5; }
+
+                  if (isLuma || isStability) {
+                    return (
+                      <div className="rounded-lg bg-muted/30 border border-border/40 p-3">
+                        <p className="text-xs text-muted-foreground">{durationNote}</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <>
+                      <ConfigField label={`Duração (${config.duration || defaultDur}s)`}>
+                        <Slider
+                          value={[config.duration || defaultDur]}
+                          onValueChange={([v]) => update('duration', v)}
+                          min={minDur} max={maxDur} step={stepDur}
+                          className="mt-1"
+                        />
+                        <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                          <span>{minDur}s</span>
+                          <span>{maxDur}s</span>
+                        </div>
+                      </ConfigField>
+                      {durationNote && (
+                        <p className="text-[10px] text-muted-foreground -mt-1">{durationNote}</p>
+                      )}
+                    </>
+                  );
+                })()}
+              </>
+            )}
             <SectionTitle>Câmera</SectionTitle>
             <ConfigField label="Movimento de Câmera">
               <Select value={config.cameraMovement || 'none'} onValueChange={(v) => update('cameraMovement', v)}>
