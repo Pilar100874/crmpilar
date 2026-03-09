@@ -381,6 +381,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const accent = nodeAccentMap[nodeData.type] || '#64748b';
   const [imageExpanded, setImageExpanded] = useState(false);
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+  const [videoPreviewOpen, setVideoPreviewOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSavingToGallery, setIsSavingToGallery] = useState(false);
   const IconComponent = nodeIconMap[nodeData.type] || Play;
@@ -1251,9 +1252,13 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     <Download className="h-3 w-3 text-white" />
                   </button>
                   <button
-                    onClick={() => setImageExpanded(!imageExpanded)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setVideoPreviewOpen(true);
+                    }}
                     className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
-                    title={imageExpanded ? 'Reduzir' : 'Expandir'}
+                    title="Tela cheia"
                   >
                     <Maximize2 className="h-3 w-3 text-white" />
                   </button>
@@ -1386,6 +1391,19 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           <img 
             src={resultImage} 
             alt="Preview" 
+            className="w-full h-full object-contain max-h-[85vh] rounded-lg"
+          />
+        </DialogContent>
+      </Dialog>
+    )}
+
+    {resultVideo && (
+      <Dialog open={videoPreviewOpen} onOpenChange={setVideoPreviewOpen}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-2">
+          <video
+            src={resultVideo}
+            controls
+            autoPlay
             className="w-full h-full object-contain max-h-[85vh] rounded-lg"
           />
         </DialogContent>
