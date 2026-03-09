@@ -361,7 +361,7 @@ const PRESETS: Preset[] = [
     id: 'audio-ambient-nature',
     name: 'Ambiente: Natureza',
     description: 'Sons ambientes de floresta com pássaros, vento suave e riacho para relaxamento.',
-    prompt: 'Forest ambient sounds, birdsong, gentle wind through leaves, stream water, peaceful nature atmosphere',
+    prompt: 'Sons ambientes de floresta, canto de pássaros, vento suave através das folhas, água de riacho, atmosfera pacífica de natureza',
     image: presetAudioAmbient,
     category: 'audio',
     toolType: 'audioGen',
