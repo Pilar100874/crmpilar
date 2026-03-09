@@ -88,7 +88,8 @@ export default function Login() {
           <img
             src={logo2}
             alt="Logo Pilar"
-            className="h-24 w-auto mx-auto drop-shadow-lg"
+            className="h-28 w-auto mx-auto"
+            style={{ filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.4)) drop-shadow(0 0 2px rgba(0,0,0,0.3))" }}
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
           />
           <div>
