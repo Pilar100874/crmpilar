@@ -297,11 +297,12 @@ const CostBadge = ({ cost }: { cost: string }) => {
   return <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ring-1 ${color}`}>{cost}</span>;
 };
 
-const ModelSelectItem = ({ model }: { model: ModelInfo }) => (
-  <SelectItem key={model.value} value={model.value} className="py-2">
+const ModelSelectItem = ({ model, disabled }: { model: ModelInfo; disabled?: boolean }) => (
+  <SelectItem key={model.value} value={model.value} className={`py-2 ${disabled ? 'opacity-50 pointer-events-none' : ''}`} disabled={disabled}>
     <div className="flex items-center gap-1.5 min-w-0">
       <span className="truncate text-sm">{model.label}</span>
       <CostBadge cost={model.cost} />
+      {disabled && <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full text-muted-foreground bg-muted ring-1 ring-border/40 whitespace-nowrap">🔒 Configurar API</span>}
     </div>
   </SelectItem>
 );
