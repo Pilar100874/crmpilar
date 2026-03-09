@@ -97,7 +97,7 @@ const PRESETS: Preset[] = [
   {
     id: 'veo-drone-ascend', name: 'Drone Ascendente',
     description: 'Câmera subindo do nível do solo revelando paisagem verde. Otimizado para Google Veo.',
-    prompt: 'A camera smoothly ascending vertically from a green field, progressively revealing a vast peaceful landscape with rolling hills and a river, bright daylight, aerial footage style',
+    prompt: 'Câmera subindo verticalmente de um campo verde, revelando progressivamente uma vasta paisagem pacífica com colinas onduladas e um rio, luz do dia brilhante, estilo filmagem aérea',
     image: camAscend, category: 'video', videoSubcategory: 'google-veo', toolType: 'videoGen', isVideo: true, videoModel: 'google/veo-3.1', duration: 7,
   },
   {
