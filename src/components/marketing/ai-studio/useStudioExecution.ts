@@ -638,38 +638,32 @@ export function useStudioExecution() {
         
         for (let i = 0; i < frameCount; i++) {
           const stage = motionStages[i % motionStages.length];
+          const isFollowUpFrame = i > 0 && frames.length > 0;
           
-          // Build frame prompt with strict fidelity
+          // SIMPLIFIED PROMPT: Only describe the SCENE.
+          // The edge function EDIT MODE already handles subject preservation via system message + image labels.
+          // Redundant fidelity instructions in the prompt CONFUSE the model.
           let framePrompt: string;
           
-          // For frames after the first, reference the first generated frame for visual consistency
-          const isFollowUpFrame = i > 0 && frames.length > 0;
-          const consistencyNote = isFollowUpFrame 
-            ? `\n\nCONSISTÊNCIA: A primeira imagem fornecida é o FRAME 1 já gerado. Mantenha EXATAMENTE a mesma pessoa (rosto idêntico), mesmo produto (embalagem idêntica), mesma roupa, mesma iluminação. Mude APENAS a pose/ângulo/movimento sutilmente para criar animação.`
-            : '';
+          // Extract just the user's scene description (before fidelity instructions were appended)
+          const sceneDescription = combinedInput || 'Uma cena cinematográfica';
           
-          if (hasReferenceImages && referenceDescs.length > 0) {
-            framePrompt = [
-              `🔒 COMPOSIÇÃO FOTOGRÁFICA COM SUJEITOS REAIS`,
-              ``,
-              `As imagens fornecidas são FOTOGRAFIAS DE PESSOAS E PRODUTOS REAIS.`,
-              `Você DEVE usar EXATAMENTE essas pessoas e produtos — NÃO gere versões similares.`,
-              ``,
-              `REGRAS INVIOLÁVEIS:`,
-              `- O rosto da pessoa DEVE ser idêntico ao da foto: mesmos olhos, nariz, boca, tom de pele, cabelo`,
-              `- A embalagem do produto DEVE ser idêntica: mesmas cores, rótulo, formato, tipografia, logo`,
-              `- NÃO redesenhe, NÃO reinterprete, NÃO crie versões "inspiradas"`,
-              `- Trate como FOTOMONTAGEM: insira os sujeitos reais na cena`,
-              consistencyNote,
-              ``,
-              `Cena: ${combinedInput || 'Uma cena cinematográfica'}`,
-              `Estilo: Fotografia cinematográfica, proporção ${aspectRatio}, fotorrealista`,
-              `Sequência: Frame ${i + 1} de ${frameCount} — ${stage}`,
-              ``,
-              videoPrompt.includes('⚠️') ? videoPrompt.substring(videoPrompt.indexOf('⚠️')) : '',
-            ].filter(Boolean).join('\n');
+          if (hasReferenceImages) {
+            const parts: string[] = [
+              `Place the provided subjects into this scene: ${sceneDescription}`,
+              `Style: Cinematic photography, professional lighting, aspect ratio ${aspectRatio}, photorealistic`,
+              `Sequence: Frame ${i + 1} of ${frameCount} — ${stage}`,
+            ];
+            if (isFollowUpFrame) {
+              parts.push(`CONSISTENCY: Match the first reference image exactly — same person, same product, same lighting. Only vary the camera angle/pose slightly for animation.`);
+            }
+            // Add format info if present
+            if (formatWidth && formatHeight) {
+              parts.push(`Format: ${formatPlatform || 'social media'} ${formatContentType || 'post'}, ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px)`);
+            }
+            framePrompt = parts.join('\n');
           } else {
-            framePrompt = `Fotografia cinematográfica de alta resolução, qualidade de produção, iluminação dramática, profundidade de campo rasa, proporção ${aspectRatio}, fotorrealista, frame ${i + 1} de ${frameCount} — ${stage}: ${videoPrompt}`;
+            framePrompt = `Cinematic photography, professional lighting, aspect ratio ${aspectRatio}, photorealistic, frame ${i + 1} of ${frameCount} — ${stage}: ${sceneDescription}`;
           }
           
           nodeResultStore.setResult(node.id, { 
@@ -682,15 +676,14 @@ export function useStudioExecution() {
           let frameImageUrls: string[];
           let frameImageRoles: string[];
           if (isFollowUpFrame && orderedImageInputs.length > 0) {
-            // First frame as consistency reference + original references
             frameImageUrls = [frames[0], ...orderedImageInputs];
-            frameImageRoles = ['FRAME 1 REFERENCE - MATCH THIS EXACTLY for person identity, product, clothing, style', ...orderedImageRoles];
+            frameImageRoles = ['PERSON/INFLUENCER - DO NOT MODIFY', ...orderedImageRoles];
           } else if (orderedImageInputs.length > 0) {
             frameImageUrls = orderedImageInputs;
             frameImageRoles = orderedImageRoles;
           } else if (isFollowUpFrame) {
             frameImageUrls = [frames[0], ...imageInputs];
-            frameImageRoles = ['FRAME 1 REFERENCE - MATCH THIS EXACTLY', ...imageInputs.map(() => 'REFERENCE')];
+            frameImageRoles = ['PERSON/INFLUENCER - DO NOT MODIFY', ...imageInputs.map(() => 'REFERENCE')];
           } else {
             frameImageUrls = imageInputs.length > 0 ? imageInputs : [];
             frameImageRoles = [];
