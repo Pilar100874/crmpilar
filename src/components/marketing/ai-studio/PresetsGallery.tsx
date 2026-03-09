@@ -117,7 +117,7 @@ const PRESETS: Preset[] = [
   {
     id: 'sora-paper-boat', name: 'Barco de Papel',
     description: 'Barco de papel navegando em um riacho tranquilo. Otimizado para Sora.',
-    prompt: 'A small white paper boat floating gently down a calm clear stream surrounded by green moss and soft sunlight, peaceful cinematic footage',
+    prompt: 'Pequeno barco de papel branco flutuando suavemente em um riacho calmo e cristalino, cercado por musgo verde e luz solar suave, filmagem cinematográfica pacífica',
     image: camFollow, category: 'video', videoSubcategory: 'sora', toolType: 'videoGen', isVideo: true, videoModel: 'openai/sora-2', duration: 8,
   },
   {
