@@ -187,7 +187,7 @@ const PRESETS: Preset[] = [
   {
     id: 'kling-rain-window', name: 'Chuva na Janela',
     description: 'Gotas de chuva escorrendo em vidro com luzes desfocadas ao fundo. Otimizado para Kling.',
-    prompt: 'Raindrops slowly running down a glass window, colorful blurred city lights in the background, cozy and reflective mood, cinematic close-up footage',
+    prompt: 'Gotas de chuva escorrendo lentamente em uma janela de vidro, luzes coloridas da cidade desfocadas ao fundo, clima aconchegante e reflexivo, filmagem cinematográfica em close',
     image: presetMusicLofi, category: 'video', videoSubcategory: 'kling', toolType: 'videoGen', isVideo: true, videoModel: 'kling/v2.1', duration: 5,
   },
 
