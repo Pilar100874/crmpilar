@@ -379,7 +379,7 @@ const PRESETS: Preset[] = [
     id: 'audio-sfx-ui',
     name: 'Sons de Interface',
     description: 'Sons sutis para interfaces: cliques, notificações e feedback de interação.',
-    prompt: 'UI interface sounds, subtle click, soft notification chime, interaction feedback, minimal and clean',
+    prompt: 'Sons de interface UI, clique sutil, sino de notificação suave, feedback de interação, minimalista e limpo',
     image: presetAudioSfx,
     category: 'audio',
     toolType: 'audioGen',
