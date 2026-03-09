@@ -339,14 +339,48 @@ const LOVABLE_GATEWAY_PREFIXES = ['google/', 'openai/', 'free/'];
 const isLovableGatewayModel = (modelValue: string) =>
   LOVABLE_GATEWAY_PREFIXES.some((p) => modelValue.startsWith(p));
 
+// Video models that need external API keys (not available via Lovable AI gateway)
+const VIDEO_MODELS_NEEDING_KEY: Record<string, string> = {
+  'google/veo-3.1': 'google',
+  'google/veo-3.1-fast': 'google',
+  'google/veo-3': 'google',
+  'google/veo-2': 'google',
+  'openai/sora-3': 'openai',
+  'openai/sora-2': 'openai',
+  'runway/gen4': 'runway',
+  'runway/gen3-alpha-turbo': 'runway',
+  'kling/v2.1': 'kling',
+  'kling/v1.6': 'kling',
+  'pika/v2.2': 'pika',
+  'minimax/video-01': 'minimax',
+  'luma/dream-machine-1.5': 'luma',
+  'stability/stable-video': 'stability',
+  'bytedance/seedvideo': 'bytedance',
+};
+
+const isModelConfigured = (modelValue: string, configuredProviders: string[]): boolean => {
+  if (modelValue === 'free/gif-animated') return true;
+  const requiredProvider = VIDEO_MODELS_NEEDING_KEY[modelValue];
+  if (!requiredProvider) return true; // Not in the list = always available
+  return configuredProviders.some((cp) => cp.toLowerCase() === requiredProvider);
+};
+
 const filterModelsByProviders = (models: ModelInfo[], configuredProviders: string[]): ModelInfo[] => {
   return models.filter((m) => {
-    // Always show Lovable AI gateway models
+    // Always show Lovable AI gateway models (for LLM/Image)
     if (isLovableGatewayModel(m.value)) return true;
     // Show if the provider prefix matches a configured key
     const prefix = m.value.split('/')[0].toLowerCase();
     return configuredProviders.some((cp) => cp.toLowerCase() === prefix);
   });
+};
+
+// For video: show ALL models but mark unconfigured as disabled
+const getVideoModelsWithStatus = (models: ModelInfo[], configuredProviders: string[]): (ModelInfo & { disabled: boolean })[] => {
+  return models.map((m) => ({
+    ...m,
+    disabled: !isModelConfigured(m.value, configuredProviders),
+  }));
 };
 
 const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose, onExecuteFromNode }) => {
