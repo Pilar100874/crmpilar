@@ -8,8 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
-import logoPrincipal from "@/assets/logo_preto.png";
-import logoFallback from "@/assets/logo.jpg";
+import pilarBrand from "@/assets/pilar-brand.png";
+import fallbackBrand from "@/assets/pilar-brand-fallback.jpg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -79,11 +79,11 @@ export default function Login() {
         <div className="text-center">
           <div className="inline-flex min-h-28 min-w-60 items-center justify-center rounded-2xl bg-primary-foreground border border-primary-foreground/60 shadow-lg p-3">
             <img
-              src={logoPrincipal}
-              alt="Logo Pilar"
+              src={pilarBrand}
+              alt="Marca Pilar"
               className="h-20 md:h-24 w-auto object-contain"
               onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = logoFallback;
+                (e.currentTarget as HTMLImageElement).src = fallbackBrand;
               }}
             />
           </div>
