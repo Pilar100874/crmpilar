@@ -314,7 +314,7 @@ const PRESETS: Preset[] = [
     id: 'music-corporate',
     name: 'Corporativo Motivacional',
     description: 'Música motivacional corporativa para apresentações, vídeos institucionais e comerciais.',
-    prompt: 'Uplifting corporate motivational music, acoustic guitar, light percussion, positive and inspiring, business presentation',
+    prompt: 'Música motivacional corporativa edificante, violão acústico, percussão leve, positiva e inspiradora, apresentação de negócios',
     image: presetMusicCinematic,
     category: 'music',
     toolType: 'musicGen',
