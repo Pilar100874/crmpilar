@@ -272,7 +272,8 @@ export function useStudioExecution() {
         if (allEdges && allNodes && hasDownstreamRandomPick(node.id, allEdges, allNodes)) {
           return { _referenceRole: 'produto', _referenceDesc: '[PRODUTO] Imagem aleatória da galeria de produtos.', _skipNoImage: true };
         }
-        throw new Error('Nenhum produto selecionado. Selecione um produto com imagem.');
+        // Optional block — return null to skip silently
+        return null;
 
       case 'galleryInfluencer':
       case 'galleryAmbiente':
