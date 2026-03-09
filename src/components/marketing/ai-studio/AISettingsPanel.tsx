@@ -29,12 +29,14 @@ interface PaidProvider {
 
 const PAID_PROVIDERS: PaidProvider[] = [
   { id: 'elevenlabs', name: 'ElevenLabs', icon: '🔊', category: 'audio', description: 'Vozes realistas, TTS e narração de alta qualidade.', website: 'https://elevenlabs.io/app/settings/api-keys', keyPlaceholder: 'xi-...', hasExtraConfig: true },
+  { id: 'google', name: 'Google (Veo / TTS)', icon: '🟦', category: 'video', description: 'Veo 2/3/3.1 para vídeos e WaveNet/Neural2 para áudio. Use sua própria chave Google AI Studio.', website: 'https://aistudio.google.com/apikey', keyPlaceholder: 'AIza...' },
+  { id: 'openai', name: 'OpenAI (Sora / TTS)', icon: '🟢', category: 'video', description: 'Sora 2/3 para vídeos e TTS para áudio. Use sua própria chave OpenAI.', website: 'https://platform.openai.com/api-keys', keyPlaceholder: 'sk-...' },
   { id: 'runway', name: 'Runway', icon: '🎬', category: 'video', description: 'Geração e edição de vídeos com Gen-4.', website: 'https://app.runwayml.com/account/api-keys', keyPlaceholder: 'rw-...' },
-  { id: 'suno', name: 'Suno', icon: '🎵', category: 'music', description: 'Criação de músicas completas com IA.', website: 'https://suno.com/account', keyPlaceholder: 'sk-...' },
   { id: 'kling', name: 'Kling (Kuaishou)', icon: '🎥', category: 'video', description: 'Vídeos realistas de alta qualidade.', website: 'https://klingai.com', keyPlaceholder: 'sk-...' },
-  { id: 'stability', name: 'Stability AI', icon: '🟣', category: 'image', description: 'Stable Diffusion para geração de imagens.', website: 'https://platform.stability.ai/account/keys', keyPlaceholder: 'sk-...' },
   { id: 'pika', name: 'Pika', icon: '🌊', category: 'video', description: 'Vídeos criativos e estilizados.', website: 'https://pika.art', keyPlaceholder: 'pk-...' },
   { id: 'luma', name: 'Luma Dream Machine', icon: '🌙', category: 'video', description: 'Geração de vídeos com Dream Machine.', website: 'https://lumalabs.ai', keyPlaceholder: 'lm-...' },
+  { id: 'stability', name: 'Stability AI', icon: '🟣', category: 'image', description: 'Stable Diffusion para imagens e vídeos.', website: 'https://platform.stability.ai/account/keys', keyPlaceholder: 'sk-...' },
+  { id: 'suno', name: 'Suno', icon: '🎵', category: 'music', description: 'Criação de músicas completas com IA.', website: 'https://suno.com/account', keyPlaceholder: 'sk-...' },
   { id: 'udio', name: 'Udio', icon: '🎶', category: 'music', description: 'Composição musical avançada.', website: 'https://udio.com', keyPlaceholder: 'sk-...' },
 ];
 
