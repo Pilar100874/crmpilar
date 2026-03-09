@@ -103,30 +103,35 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
     }
   }
   
-  // Clean prompt for Veo: remove fidelity/person preservation instructions that trigger safety filters
+  // Clean prompt for Veo: AGGRESSIVELY remove ALL person/fidelity/preservation instructions
   let cleanPrompt = params.prompt || "";
-  // Remove blocks that reference preserving real people's likeness
-  cleanPrompt = cleanPrompt
-    .replace(/⚠️ INSTRUÇÕES ABSOLUTAS DE FIDELIDADE[\s\S]*?(?=\n\n[^\n]|$)/gi, "")
-    .replace(/\[INSTRUÇÃO PADRÃO\][^\n]*/gi, "")
-    .replace(/\[PESSOA\/INFLUENCER[^\]]*\][^\n]*/gi, "")
-    .replace(/\[PRODUTO[^\]]*\][^\n]*/gi, "")
-    .replace(/🔒 ORDEM DAS IMAGENS:[\s\S]*?(?=\n\n[^\n]|$)/gi, "")
-    .replace(/TÉCNICA:.*montagem fotográfica profissional\./gi, "")
-    .replace(/NÃO gere uma pessoa parecida[^\n]*/gi, "")
-    .replace(/NÃO altere nenh[^\n]*/gi, "")
-    .replace(/NÃO mude a identidade[^\n]*/gi, "")
-    .replace(/NÃO crie uma embalagem similar[^\n]*/gi, "")
-    .replace(/NÃO modifique, substitua[^\n]*/gi, "")
-    .replace(/NÃO redesenhe[^\n]*/gi, "")
-    .replace(/PRESERVAÇÃO PIXEL A PIXEL[^\n]*/gi, "")
-    .replace(/MODO FOTOMONTAGEM[^\n]*/gi, "")
-    .replace(/É a MESMA pessoa[^\n]*/gi, "")
-    .replace(/É o MESMO produto[^\n]*/gi, "")
-    .replace(/Se a IA gerar[^\n]*/gi, "")
-    .replace(/Imagem \d+:.*COPIAR[^\n]*/gi, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  
+  // Remove everything after the first scene description — all fidelity blocks
+  const fidelityMarkers = [
+    '🔊 Áudio', '⚠️ INSTRUÇÕES', '[INSTRUÇÃO PADRÃO]', '🔒 ORDEM', 
+    'TÉCNICA:', 'PESSOA/INFLUENCER', '[PRODUTO', '[PESSOA',
+    'PRESERVAÇÃO PIXEL', 'MODO FOTOMONTAGEM', 'Imagem 1:', 'Imagem 2:',
+    'NÃO gere', 'NÃO altere', 'NÃO mude', 'NÃO crie', 'NÃO modifique', 'NÃO redesenhe',
+    'É a MESMA pessoa', 'É o MESMO produto', 'Se a IA gerar',
+    'COPIAR EXATAMENTE', 'COPIAR ROSTO', 'pixel a pixel', 'pixel-identical',
+    'FOTOGRAFIAS REAIS', 'montagem fotográfica', 'FIDELIDADE',
+    'Você DEVE manter', 'Você DEVE reproduzir',
+    'mesmo rosto', 'tom de pele', 'traços faciais', 'características faciais',
+    'mesma embalagem', 'mesmas cores', 'mesmo layout',
+  ];
+  
+  // Find the earliest marker and cut there
+  let cutIndex = cleanPrompt.length;
+  for (const marker of fidelityMarkers) {
+    const idx = cleanPrompt.indexOf(marker);
+    if (idx >= 0 && idx < cutIndex) cutIndex = idx;
+  }
+  cleanPrompt = cleanPrompt.substring(0, cutIndex).replace(/\n{2,}/g, "\n\n").trim();
+  
+  // If prompt is too short after cleaning, use a generic scene description
+  if (cleanPrompt.length < 20) {
+    cleanPrompt = "A cinematic product showcase video with smooth camera movement, professional lighting, and elegant composition.";
+  }
 
   console.log(`[generate_video] Veo clean prompt (${cleanPrompt.length} chars): ${cleanPrompt.substring(0, 200)}`);
 
@@ -1094,25 +1099,34 @@ Deno.serve(async (req) => {
         if (provider === "google") {
           const apiKey = await fetchApiKey(estabId, "google");
           if (!apiKey) throw new Error("Google API key not configured.");
-          // Google Cloud TTS
-          const ttsResp = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
+          // Use Gemini AI Studio TTS endpoint instead of Cloud TTS (avoids 403 billing issues)
+          const ttsResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              input: { text },
-              voice: { languageCode: params.lang || "pt-BR", ssmlGender: "FEMALE" },
-              audioConfig: { audioEncoding: "MP3" },
+              contents: [{ parts: [{ text: `Generate speech audio for the following text in ${params.lang || "pt-BR"}: "${text}"` }] }],
+              generationConfig: { response_modalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } } },
             }),
           });
-          if (!ttsResp.ok) throw new Error(`Google TTS error ${ttsResp.status}`);
+          if (!ttsResp.ok) {
+            const errBody = await ttsResp.text().catch(() => "");
+            console.error(`[generate_audio] Google Gemini TTS error ${ttsResp.status}: ${errBody.substring(0, 300)}`);
+            // Fallback: use Lovable AI gateway
+            throw new Error(`Google TTS error ${ttsResp.status}`);
+          }
           const ttsData = await ttsResp.json();
-          const audioContent = ttsData.audioContent; // base64
+          // Extract audio from Gemini response
+          const audioPart = ttsData.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData?.mimeType?.startsWith("audio/"));
+          if (!audioPart) throw new Error("No audio in Google response");
+          const audioContent = audioPart.inlineData.data; // base64
           const audioBytes = base64Decode(audioContent);
           const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
           const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
           const sb = createClient(supabaseUrl, supabaseKey);
-          const fileName = `studio/${crypto.randomUUID()}.mp3`;
-          await sb.storage.from("marketing-audio").upload(fileName, audioBytes, { contentType: "audio/mpeg", upsert: true });
+          const mimeType = audioPart.inlineData.mimeType || "audio/mpeg";
+          const ext = mimeType.includes("wav") ? "wav" : mimeType.includes("ogg") ? "ogg" : "mp3";
+          const fileName = `studio/${crypto.randomUUID()}.${ext}`;
+          await sb.storage.from("marketing-audio").upload(fileName, audioBytes, { contentType: mimeType, upsert: true });
           const { data: pubData } = sb.storage.from("marketing-audio").getPublicUrl(fileName);
           return new Response(JSON.stringify({ result: { audioUrl: pubData.publicUrl, provider: "google" } }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
