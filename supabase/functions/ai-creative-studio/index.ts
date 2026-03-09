@@ -155,20 +155,8 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
   const soraSeconds = validSeconds.reduce((prev, curr) => Math.abs(curr - dur) < Math.abs(prev - dur) ? curr : prev);
   formData.append("seconds", String(soraSeconds));
 
-  // Add reference image (hero frame) if available — enables image-to-video mode
-  if (params.imageUrls?.[0]?.startsWith("http")) {
-    try {
-      console.log(`[generate_video] Downloading hero frame for Sora: ${params.imageUrls[0].substring(0, 80)}`);
-      const imgResp = await fetch(params.imageUrls[0]);
-      if (imgResp.ok) {
-        const imgBlob = await imgResp.blob();
-        formData.append("image", imgBlob, "hero-frame.png");
-        console.log(`[generate_video] Hero frame attached to Sora request (${(imgBlob.size / 1024).toFixed(0)}KB)`);
-      }
-    } catch (imgErr) {
-      console.warn(`[generate_video] Failed to attach hero frame:`, imgErr);
-    }
-  }
+  // Note: Sora API does not support image-to-video via 'image' param.
+  // Reference images are baked into the prompt by the hero-frame step instead.
 
   const response = await fetch("https://api.openai.com/v1/videos", {
     method: "POST",
