@@ -9,6 +9,7 @@ import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
 import logo3 from "@/assets/logo-3.png";
+import logoBranco from "@/assets/logo_branco.png";
 import logoPreto from "@/assets/logo_preto.png";
 
 export default function Login() {
