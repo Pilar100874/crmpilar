@@ -82,6 +82,7 @@ export default function Login() {
             src={logo}
             alt="Logo Pilar"
             className="h-20 w-auto object-contain rounded-xl shadow-lg"
+            style={{ border: "3px solid red", minHeight: "80px", minWidth: "80px", background: "white" }}
           />
         </div>
 
