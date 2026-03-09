@@ -868,7 +868,7 @@ const AICreativeStudioInner: React.FC = () => {
       </div>
 
       {/* Canvas + Config Panel row */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 relative">
         {/* Canvas */}
         <div className="flex-1 relative" ref={reactFlowWrapper}>
           {/* Node Library (floating, collapsible) */}
