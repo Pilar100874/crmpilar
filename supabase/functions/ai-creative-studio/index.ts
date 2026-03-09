@@ -2,6 +2,408 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { decode as base64Decode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
+// ===== VIDEO PROVIDER API IMPLEMENTATIONS =====
+
+interface VideoGenerationResult {
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  error?: string;
+}
+
+async function fetchApiKey(estabelecimentoId: string, provider: string): Promise<string | null> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !supabaseKey) return null;
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  const { data } = await supabase
+    .from("ai_api_keys")
+    .select("api_key")
+    .eq("estabelecimento_id", estabelecimentoId)
+    .eq("provider", provider)
+    .eq("is_active", true)
+    .limit(1)
+    .single();
+  return data?.api_key || null;
+}
+
+async function uploadVideoToStorage(videoData: Uint8Array, ext: string = "mp4"): Promise<string | null> {
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseKey) return null;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const fileName = `studio/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("marketing-videos")
+      .upload(fileName, videoData, { contentType: `video/${ext}`, upsert: true });
+    if (error) { console.error("[upload-video] Error:", error.message); return null; }
+    const { data: publicData } = supabase.storage.from("marketing-videos").getPublicUrl(fileName);
+    return publicData.publicUrl;
+  } catch (err) { console.error("[upload-video] Failed:", err); return null; }
+}
+
+// Poll a URL until condition met or timeout
+async function pollUntilDone<T>(
+  pollFn: () => Promise<{ done: boolean; result?: T; error?: string }>,
+  intervalMs: number = 5000,
+  maxAttempts: number = 60
+): Promise<T> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const { done, result, error } = await pollFn();
+    if (error) throw new Error(error);
+    if (done && result !== undefined) return result;
+    await new Promise(r => setTimeout(r, intervalMs));
+  }
+  throw new Error("Video generation timed out after polling");
+}
+
+// --- Google Veo (Vertex AI / AI Studio) ---
+async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGenerationResult> {
+  const modelMap: Record<string, string> = {
+    "google/veo-3.1": "veo-3.0-generate-preview",
+    "google/veo-3.1-fast": "veo-3.0-generate-preview",
+    "google/veo-3": "veo-3.0-generate-preview",
+    "google/veo-2": "veo-2.0-generate-001",
+  };
+  const modelId = modelMap[params.model] || "veo-3.0-generate-preview";
+  
+  // Submit generation request
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:predictLongRunning?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        instances: [{
+          prompt: params.prompt,
+          ...(params.imageUrls?.[0] ? { image: { bytesBase64Encoded: params.imageUrls[0].startsWith("data:") ? params.imageUrls[0].split(",")[1] : undefined, gcsUri: params.imageUrls[0].startsWith("http") ? undefined : undefined } } : {}),
+        }],
+        parameters: {
+          aspectRatio: params.aspectRatio || "16:9",
+          personGeneration: "allow_all",
+          numberOfVideos: 1,
+          durationSeconds: 8,
+          ...(params.negativePrompt ? { negativePrompt: params.negativePrompt } : {}),
+        },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Google Veo API error ${response.status}: ${err.substring(0, 200)}`);
+  }
+  
+  const opData = await response.json();
+  const operationName = opData.name;
+  if (!operationName) throw new Error("No operation returned from Veo API");
+
+  console.log(`[generate_video] Google Veo operation: ${operationName}`);
+
+  // Poll for completion
+  const result = await pollUntilDone<string>(async () => {
+    const pollResp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/${operationName}?key=${apiKey}`
+    );
+    const pollData = await pollResp.json();
+    if (pollData.done) {
+      const video = pollData.response?.generatedSamples?.[0]?.video;
+      if (video?.uri) return { done: true, result: video.uri };
+      if (video?.bytesBase64Encoded) {
+        const bytes = base64Decode(video.bytesBase64Encoded);
+        const url = await uploadVideoToStorage(new Uint8Array(bytes));
+        return { done: true, result: url || undefined };
+      }
+      return { done: true, error: "No video in response" };
+    }
+    return { done: false };
+  }, 5000, 120);
+
+  return { videoUrl: result };
+}
+
+// --- OpenAI Sora ---
+async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGenerationResult> {
+  const modelMap: Record<string, string> = {
+    "openai/sora-3": "sora",
+    "openai/sora-2": "sora",
+  };
+  const model = modelMap[params.model] || "sora";
+
+  const response = await fetch("https://api.openai.com/v1/videos/generations", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      prompt: params.prompt,
+      size: params.aspectRatio === "9:16" ? "1080x1920" : params.aspectRatio === "1:1" ? "1080x1080" : "1920x1080",
+      duration: 10,
+      n: 1,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`OpenAI Sora API error ${response.status}: ${err.substring(0, 200)}`);
+  }
+
+  const data = await response.json();
+  const videoUrl = data.data?.[0]?.url;
+  if (!videoUrl) throw new Error("No video URL in OpenAI response");
+
+  // Download and re-upload to our storage
+  const videoResp = await fetch(videoUrl);
+  const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+  const storedUrl = await uploadVideoToStorage(videoBytes);
+
+  return { videoUrl: storedUrl || videoUrl };
+}
+
+// --- Runway ---
+async function generateVideoRunway(apiKey: string, params: any): Promise<VideoGenerationResult> {
+  const modelMap: Record<string, string> = {
+    "runway/gen4": "gen4_turbo",
+    "runway/gen3-alpha-turbo": "gen3a_turbo",
+  };
+  const model = modelMap[params.model] || "gen3a_turbo";
+
+  const body: any = {
+    model,
+    promptText: params.prompt,
+    ratio: params.aspectRatio === "9:16" ? "portrait" : params.aspectRatio === "1:1" ? "square" : "widescreen",
+    duration: 10,
+  };
+
+  if (params.imageUrls?.[0]?.startsWith("http")) {
+    body.promptImage = params.imageUrls[0];
+  }
+
+  const response = await fetch("https://api.dev.runwayml.com/v1/image_to_video", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "X-Runway-Version": "2024-11-06",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Runway API error ${response.status}: ${err.substring(0, 200)}`);
+  }
+
+  const taskData = await response.json();
+  const taskId = taskData.id;
+  if (!taskId) throw new Error("No task ID from Runway");
+
+  console.log(`[generate_video] Runway task: ${taskId}`);
+
+  const result = await pollUntilDone<string>(async () => {
+    const pollResp = await fetch(`https://api.dev.runwayml.com/v1/tasks/${taskId}`, {
+      headers: { "Authorization": `Bearer ${apiKey}`, "X-Runway-Version": "2024-11-06" },
+    });
+    const pollData = await pollResp.json();
+    if (pollData.status === "SUCCEEDED") {
+      return { done: true, result: pollData.output?.[0] };
+    }
+    if (pollData.status === "FAILED") {
+      return { done: true, error: pollData.failure || "Runway generation failed" };
+    }
+    return { done: false };
+  }, 5000, 120);
+
+  // Download and re-upload
+  const videoResp = await fetch(result);
+  const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+  const storedUrl = await uploadVideoToStorage(videoBytes);
+
+  return { videoUrl: storedUrl || result };
+}
+
+// --- Kling (Kuaishou) ---
+async function generateVideoKling(apiKey: string, params: any): Promise<VideoGenerationResult> {
+  const response = await fetch("https://api.klingai.com/v1/videos/text2video", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      prompt: params.prompt,
+      negative_prompt: params.negativePrompt || "",
+      cfg_scale: params.cfgScale || 0.5,
+      mode: params.model === "kling/v2.1" ? "highquality" : "std",
+      aspect_ratio: params.aspectRatio || "16:9",
+      duration: "5",
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Kling API error ${response.status}: ${err.substring(0, 200)}`);
+  }
+
+  const taskData = await response.json();
+  const taskId = taskData.data?.task_id;
+  if (!taskId) throw new Error("No task ID from Kling");
+
+  const result = await pollUntilDone<string>(async () => {
+    const pollResp = await fetch(`https://api.klingai.com/v1/videos/text2video/${taskId}`, {
+      headers: { "Authorization": `Bearer ${apiKey}` },
+    });
+    const pollData = await pollResp.json();
+    const status = pollData.data?.task_status;
+    if (status === "succeed") {
+      const videoUrl = pollData.data?.task_result?.videos?.[0]?.url;
+      return { done: true, result: videoUrl };
+    }
+    if (status === "failed") {
+      return { done: true, error: pollData.data?.task_status_msg || "Kling generation failed" };
+    }
+    return { done: false };
+  }, 5000, 120);
+
+  const videoResp = await fetch(result);
+  const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+  const storedUrl = await uploadVideoToStorage(videoBytes);
+  return { videoUrl: storedUrl || result };
+}
+
+// --- Luma Dream Machine ---
+async function generateVideoLuma(apiKey: string, params: any): Promise<VideoGenerationResult> {
+  const body: any = {
+    prompt: params.prompt,
+    aspect_ratio: params.aspectRatio || "16:9",
+    loop: params.loop || false,
+  };
+  if (params.imageUrls?.[0]?.startsWith("http")) {
+    body.keyframes = { frame0: { type: "image", url: params.imageUrls[0] } };
+  }
+
+  const response = await fetch("https://api.lumalabs.ai/dream-machine/v1/generations", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Luma API error ${response.status}: ${err.substring(0, 200)}`);
+  }
+
+  const taskData = await response.json();
+  const taskId = taskData.id;
+  if (!taskId) throw new Error("No generation ID from Luma");
+
+  const result = await pollUntilDone<string>(async () => {
+    const pollResp = await fetch(`https://api.lumalabs.ai/dream-machine/v1/generations/${taskId}`, {
+      headers: { "Authorization": `Bearer ${apiKey}` },
+    });
+    const pollData = await pollResp.json();
+    if (pollData.state === "completed") {
+      return { done: true, result: pollData.assets?.video };
+    }
+    if (pollData.state === "failed") {
+      return { done: true, error: pollData.failure_reason || "Luma generation failed" };
+    }
+    return { done: false };
+  }, 5000, 120);
+
+  const videoResp = await fetch(result);
+  const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
+  const storedUrl = await uploadVideoToStorage(videoBytes);
+  return { videoUrl: storedUrl || result };
+}
+
+// --- Stability AI Video ---
+async function generateVideoStability(apiKey: string, params: any): Promise<VideoGenerationResult> {
+  // Stability requires an image input for video
+  if (!params.imageUrls?.[0]) {
+    throw new Error("Stability Video requer uma imagem de referência como entrada");
+  }
+
+  const formData = new FormData();
+  // Fetch the image and add as blob
+  const imgResp = await fetch(params.imageUrls[0]);
+  const imgBlob = await imgResp.blob();
+  formData.append("image", imgBlob, "input.png");
+  formData.append("cfg_scale", String(params.cfgScale || 2.5));
+  formData.append("motion_bucket_id", "127");
+
+  const response = await fetch("https://api.stability.ai/v2beta/image-to-video", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${apiKey}` },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Stability API error ${response.status}: ${err.substring(0, 200)}`);
+  }
+
+  const taskData = await response.json();
+  const generationId = taskData.id;
+  if (!generationId) throw new Error("No generation ID from Stability");
+
+  const result = await pollUntilDone<Uint8Array>(async () => {
+    const pollResp = await fetch(`https://api.stability.ai/v2beta/image-to-video/result/${generationId}`, {
+      headers: { "Authorization": `Bearer ${apiKey}`, "Accept": "video/*" },
+    });
+    if (pollResp.status === 202) return { done: false };
+    if (pollResp.ok) {
+      const bytes = new Uint8Array(await pollResp.arrayBuffer());
+      return { done: true, result: bytes };
+    }
+    return { done: true, error: `Stability poll error: ${pollResp.status}` };
+  }, 5000, 120);
+
+  const storedUrl = await uploadVideoToStorage(result);
+  return { videoUrl: storedUrl || undefined };
+}
+
+// --- Generic handler for unsupported providers ---
+async function generateVideoUnsupported(model: string): Promise<VideoGenerationResult> {
+  return { error: `Provedor de vídeo "${model.split('/')[0]}" ainda não possui integração de API implementada. Configure uma chave válida para: Google (Veo), OpenAI (Sora), Runway, Kling, Luma ou Stability.` };
+}
+
+// Route to correct provider
+async function handleVideoGeneration(params: any): Promise<VideoGenerationResult> {
+  const model = params.model as string;
+  const provider = model.split("/")[0];
+  const estabelecimentoId = params.estabelecimentoId;
+  
+  if (!estabelecimentoId) throw new Error("estabelecimentoId é obrigatório para geração de vídeo");
+  
+  const apiKey = await fetchApiKey(estabelecimentoId, provider);
+  if (!apiKey) {
+    throw new Error(`Chave de API não configurada para o provedor "${provider}". Configure em Configurações → APIs Pagas.`);
+  }
+
+  console.log(`[generate_video] Provider=${provider}, Model=${model}`);
+  
+  switch (provider) {
+    case "google": return generateVideoGoogle(apiKey, params);
+    case "openai": return generateVideoOpenAI(apiKey, params);
+    case "runway": return generateVideoRunway(apiKey, params);
+    case "kling": return generateVideoKling(apiKey, params);
+    case "luma": return generateVideoLuma(apiKey, params);
+    case "stability": return generateVideoStability(apiKey, params);
+    case "pika":
+    case "minimax":
+    case "bytedance":
+      return generateVideoUnsupported(model);
+    default:
+      return generateVideoUnsupported(model);
+  }
+}
+
 async function uploadBase64ToStorage(base64DataUrl: string): Promise<string | null> {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -336,6 +738,14 @@ serve(async (req) => {
         });
 
         return new Response(JSON.stringify({ result: data.choices?.[0]?.message?.content }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      case "generate_video": {
+        console.log(`[generate_video] Starting video generation: model=${params.model}`);
+        const videoResult = await handleVideoGeneration(params);
+        return new Response(JSON.stringify({ result: videoResult }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
