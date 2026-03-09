@@ -567,71 +567,46 @@ export function useStudioExecution() {
       case 'audioGen': {
         const textToSpeak = combinedInput || config.text || 'Olá, este é um teste.';
         
-        // Check if user has ElevenLabs configured (paid option)
+        // Check if user has a paid TTS provider configured
         const estabId = localStorage.getItem('estabelecimentoId');
-        let useElevenLabs = false;
-        let elevenLabsKey: any = null;
+        let paidProvider: string | null = null;
 
         if (estabId) {
-          const { data } = await supabase
-            .from('ai_api_keys')
-            .select('api_key, base_url, is_active')
-            .eq('estabelecimento_id', estabId)
-            .eq('provider', 'elevenlabs')
-            .eq('is_active', true)
-            .maybeSingle();
-          if (data?.api_key) {
-            useElevenLabs = true;
-            elevenLabsKey = data;
+          // Check for ElevenLabs, Google, or OpenAI TTS keys
+          for (const provider of ['elevenlabs', 'google', 'openai']) {
+            const { data } = await supabase
+              .from('ai_api_keys')
+              .select('api_key, is_active')
+              .eq('estabelecimento_id', estabId)
+              .eq('provider', provider)
+              .eq('is_active', true)
+              .maybeSingle();
+            if (data?.api_key) {
+              paidProvider = provider;
+              break;
+            }
           }
         }
 
-        if (useElevenLabs && elevenLabsKey) {
-          // PAID: ElevenLabs TTS
+        if (paidProvider && estabId) {
+          // PAID: Route through edge function (secure - no API key exposed)
           try {
-            let extraConfig: Record<string, any> = {};
-            try { extraConfig = elevenLabsKey.base_url ? JSON.parse(elevenLabsKey.base_url) : {}; } catch {}
-
-            const voiceId = config.voiceId || extraConfig.defaultVoiceId || 'JBFqnCBsd6RMkjVDRZzb';
-            const model = config.audioModel?.replace('elevenlabs/', '') || extraConfig.defaultModel || 'eleven_multilingual_v2';
-            const outputFormat = extraConfig.outputFormat || 'mp3_44100_128';
-
-            const ttsResponse = await fetch(
-              `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=${outputFormat}`,
-              {
-                method: 'POST',
-                headers: {
-                  'xi-api-key': elevenLabsKey.api_key,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  text: textToSpeak,
-                  model_id: model,
-                  voice_settings: {
-                    stability: extraConfig.stability ?? 0.5,
-                    similarity_boost: extraConfig.similarityBoost ?? 0.75,
-                    style: extraConfig.style ?? 0.5,
-                    use_speaker_boost: extraConfig.useSpeakerBoost ?? true,
-                    speed: extraConfig.speed ?? 1.0,
-                  },
-                }),
-              }
-            );
-
-            if (!ttsResponse.ok) {
-              const errMsg = await ttsResponse.text().catch(() => '');
-              throw new Error(`ElevenLabs ${ttsResponse.status}: ${errMsg.substring(0, 200)}`);
-            }
-
-            const audioBlob = await ttsResponse.blob();
-            const audioUrl = URL.createObjectURL(audioBlob);
+            const result = await callStudio('generate_audio', {
+              text: textToSpeak,
+              provider: paidProvider,
+              voiceId: config.voiceId,
+              audioModel: config.audioModel,
+              lang: config.lang || 'pt-BR',
+              voice: config.voice,
+              estabelecimentoId: estabId,
+            }, 120000);
 
             return {
-              audioUrl,
-              text: `🔊 Áudio gerado com ElevenLabs (pago)!\nVoz: ${voiceId.substring(0, 8)}... | Modelo: ${model}\nTexto: "${textToSpeak.substring(0, 80)}"`,
+              audioUrl: result.audioUrl,
+              text: `🔊 Áudio gerado com ${paidProvider.charAt(0).toUpperCase() + paidProvider.slice(1)} (pago)!\nTexto: "${textToSpeak.substring(0, 80)}"`,
             };
           } catch (err: any) {
-            console.error('[Studio] ElevenLabs TTS error:', err);
+            console.error('[Studio] Paid TTS error:', err);
             // Fall through to free Web Speech API
           }
         }
@@ -644,23 +619,16 @@ export function useStudioExecution() {
               return;
             }
 
-            // Use MediaRecorder to capture speech output
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
             utterance.lang = config.lang || 'pt-BR';
             utterance.rate = config.speed || 1.0;
             utterance.pitch = config.pitch || 1.0;
 
-            // Select voice if available
             const voices = speechSynthesis.getVoices();
             const ptVoice = voices.find(v => v.lang.startsWith('pt')) || voices[0];
             if (ptVoice) utterance.voice = ptVoice;
 
-            // Since Web Speech API doesn't directly give audio blobs,
-            // we generate a silent audio with a marker text
-            utterance.onend = () => {
-              // Create a simple WAV with silence as placeholder + play via speechSynthesis
-              resolve('__webspeech__');
-            };
+            utterance.onend = () => resolve('__webspeech__');
             utterance.onerror = (e) => reject(new Error(`Speech error: ${e.error}`));
 
             speechSynthesis.cancel();
@@ -681,10 +649,54 @@ export function useStudioExecution() {
         }
       }
 
-      case 'musicGen':
+      case 'musicGen': {
+        const musicPrompt = combinedInput || config.prompt || 'Música ambiente corporativa';
+        const estabId = localStorage.getItem('estabelecimentoId');
+        let musicProvider: string | null = null;
+
+        if (estabId) {
+          for (const provider of ['elevenlabs', 'suno']) {
+            const { data } = await supabase
+              .from('ai_api_keys')
+              .select('api_key, is_active')
+              .eq('estabelecimento_id', estabId)
+              .eq('provider', provider)
+              .eq('is_active', true)
+              .maybeSingle();
+            if (data?.api_key) {
+              musicProvider = provider;
+              break;
+            }
+          }
+        }
+
+        if (musicProvider && estabId) {
+          try {
+            const result = await callStudio('generate_music', {
+              prompt: musicPrompt,
+              duration: config.duration || 30,
+              provider: musicProvider,
+              genre: config.genre,
+              instrumental: config.instrumental,
+              estabelecimentoId: estabId,
+            }, 180000);
+
+            return {
+              audioUrl: result.audioUrl,
+              text: `🎵 Música gerada com ${musicProvider.charAt(0).toUpperCase() + musicProvider.slice(1)}!\nPrompt: "${musicPrompt.substring(0, 80)}"\nDuração: ${result.duration || config.duration}s`,
+            };
+          } catch (err: any) {
+            console.error('[Studio] Music generation error:', err);
+            return {
+              text: `🎵 Erro ao gerar música: ${err.message}\n\n⚠️ Verifique sua chave de API em Configurações → APIs Pagas.`,
+            };
+          }
+        }
+
         return {
-          text: `🎵 Música (${config.genre}) gerada: "${combinedInput}"\nDuração: ${config.duration}s\n\n⚠️ Para geração real de música, conecte o ElevenLabs Sound Effects API.`,
+          text: `🎵 Música (${config.genre || 'ambient'}) - "${musicPrompt.substring(0, 80)}"\nDuração: ${config.duration || 30}s\n\n⚠️ Configure ElevenLabs ou Suno em Configurações → APIs Pagas para gerar música real.`,
         };
+      }
 
       case 'lipSync':
         return {
