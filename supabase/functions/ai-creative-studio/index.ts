@@ -124,25 +124,23 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
 
 // --- OpenAI Sora ---
 async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGenerationResult> {
-  const modelMap: Record<string, string> = {
-    "openai/sora-3": "sora",
-    "openai/sora-2": "sora",
-  };
-  const model = modelMap[params.model] || "sora";
+  const model = "sora";
+  const size = params.aspectRatio === "9:16" ? "1080x1920" : params.aspectRatio === "1:1" ? "1080x1080" : "1920x1080";
 
-  const response = await fetch("https://api.openai.com/v1/videos/generations", {
+  // Step 1: Create video job via POST /v1/videos (multipart/form-data)
+  const formData = new FormData();
+  formData.append("model", model);
+  formData.append("prompt", params.prompt);
+  formData.append("size", size);
+  formData.append("duration", "10");
+  formData.append("n", "1");
+
+  const response = await fetch("https://api.openai.com/v1/videos", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model,
-      prompt: params.prompt,
-      size: params.aspectRatio === "9:16" ? "1080x1920" : params.aspectRatio === "1:1" ? "1080x1080" : "1920x1080",
-      duration: 10,
-      n: 1,
-    }),
+    body: formData,
   });
 
   if (!response.ok) {
@@ -150,9 +148,33 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
     throw new Error(`OpenAI Sora API error ${response.status}: ${err.substring(0, 200)}`);
   }
 
-  const data = await response.json();
-  const videoUrl = data.data?.[0]?.url;
-  if (!videoUrl) throw new Error("No video URL in OpenAI response");
+  const jobData = await response.json();
+  const jobId = jobData.id;
+  if (!jobId) throw new Error("No job ID returned from OpenAI Sora");
+
+  console.log(`[generate_video] OpenAI Sora job created: ${jobId}`);
+
+  // Step 2: Poll GET /v1/videos/{id} until completed
+  const videoUrl = await pollUntilDone<string>(async () => {
+    const pollResp = await fetch(`https://api.openai.com/v1/videos/${jobId}`, {
+      headers: { "Authorization": `Bearer ${apiKey}` },
+    });
+    if (!pollResp.ok) {
+      const errText = await pollResp.text();
+      return { done: false, error: undefined };
+    }
+    const pollData = await pollResp.json();
+    console.log(`[generate_video] Sora poll status: ${pollData.status}`);
+    
+    if (pollData.status === "failed") {
+      return { done: true, error: pollData.error?.message || "Video generation failed" } as any;
+    }
+    if (pollData.status === "completed") {
+      const url = pollData.output?.url || pollData.data?.[0]?.url;
+      if (url) return { done: true, result: url };
+    }
+    return { done: false };
+  }, 5000, 120);
 
   // Download and re-upload to our storage
   const videoResp = await fetch(videoUrl);
