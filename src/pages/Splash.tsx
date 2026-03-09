@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.jpg";
 import logoFallback from "@/assets/logo_preto.png";
+import logo2 from "@/assets/logo-2.png";
 
 export default function Splash() {
   const navigate = useNavigate();
