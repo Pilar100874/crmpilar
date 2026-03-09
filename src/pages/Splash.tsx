@@ -53,9 +53,9 @@ export default function Splash() {
             >
               <div className="absolute inset-0 blur-3xl opacity-30 bg-primary rounded-full scale-150" />
               <img
-                src={logo}
-                alt="Logo"
-                className="h-32 w-auto relative z-10 rounded-2xl shadow-2xl"
+                src={logo2}
+                alt="Logo Pilar"
+                className="h-36 w-auto relative z-10 drop-shadow-2xl"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = logoFallback;
                 }}

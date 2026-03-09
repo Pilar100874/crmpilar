@@ -86,10 +86,10 @@ export default function Login() {
         {/* Logo & Branding - on top of gradient */}
         <div className="text-center space-y-3">
           <img
-            src={logoBranco}
-            alt="Logo da Empresa"
-            className="h-20 w-auto mx-auto drop-shadow-lg"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoPreto; }}
+            src={logo2}
+            alt="Logo Pilar"
+            className="h-24 w-auto mx-auto drop-shadow-lg"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
           />
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-primary-foreground">
