@@ -127,21 +127,19 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
   const model = params.model?.includes("sora-2-pro") ? "sora-2-pro" : "sora-2";
   const size = params.aspectRatio === "9:16" ? "720x1280" : "1280x720";
 
-  // Step 1: Create video job via POST /v1/videos/generations (JSON body)
-  const body: any = {
-    model,
-    prompt: params.prompt,
-    size,
-  };
-  if (params.duration) body.duration = params.duration;
+  // Step 1: Create video job via POST /v1/videos (multipart/form-data)
+  const formData = new FormData();
+  formData.append("model", model);
+  formData.append("prompt", params.prompt);
+  formData.append("size", size);
+  if (params.duration) formData.append("seconds", String(params.duration));
 
-  const response = await fetch("https://api.openai.com/v1/videos/generations", {
+  const response = await fetch("https://api.openai.com/v1/videos", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
     },
-    body: JSON.stringify(body),
+    body: formData,
   });
 
   if (!response.ok) {
@@ -156,13 +154,13 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
   console.log(`[generate_video] OpenAI Sora job created: ${jobId}`);
 
   // Step 2: Poll GET /v1/videos/{id} until completed
-  const videoUrl = await pollUntilDone<string>(async () => {
+  const videoId = await pollUntilDone<string>(async () => {
     const pollResp = await fetch(`https://api.openai.com/v1/videos/${jobId}`, {
       headers: { "Authorization": `Bearer ${apiKey}` },
     });
     if (!pollResp.ok) {
-      const errText = await pollResp.text();
-      return { done: false, error: undefined };
+      await pollResp.text();
+      return { done: false };
     }
     const pollData = await pollResp.json();
     console.log(`[generate_video] Sora poll status: ${pollData.status}`);
@@ -170,19 +168,24 @@ async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGe
     if (pollData.status === "failed") {
       return { done: true, error: pollData.error?.message || "Video generation failed" } as any;
     }
-    if (pollData.status === "completed") {
-      const url = pollData.output?.url || pollData.data?.[0]?.url;
-      if (url) return { done: true, result: url };
+    if (pollData.status === "completed" || pollData.status === "succeeded") {
+      return { done: true, result: jobId };
     }
     return { done: false };
   }, 5000, 120);
 
-  // Download and re-upload to our storage
-  const videoResp = await fetch(videoUrl);
-  const videoBytes = new Uint8Array(await videoResp.arrayBuffer());
-  const storedUrl = await uploadVideoToStorage(videoBytes);
+  // Step 3: Download video content via GET /v1/videos/{id}/content
+  const contentResp = await fetch(`https://api.openai.com/v1/videos/${videoId}/content`, {
+    headers: { "Authorization": `Bearer ${apiKey}` },
+  });
 
-  return { videoUrl: storedUrl || videoUrl };
+  if (!contentResp.ok) {
+    throw new Error(`Failed to download Sora video: ${contentResp.status}`);
+  }
+
+  const videoBytes = new Uint8Array(await contentResp.arrayBuffer());
+  const storedUrl = await uploadVideoToStorage(videoBytes);
+  return { videoUrl: storedUrl || undefined };
 }
 
 // --- Runway ---
