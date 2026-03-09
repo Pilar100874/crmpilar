@@ -1233,7 +1233,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
                     src={resultVideo}
                     controls
                     className="w-full object-cover"
-                    style={{ maxHeight: imageExpanded ? 400 : 200 }}
+                    style={{ maxHeight: 200 }}
                   />
                 </div>
                 <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1386,6 +1386,19 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
           <img 
             src={resultImage} 
             alt="Preview" 
+            className="w-full h-full object-contain max-h-[85vh] rounded-lg"
+          />
+        </DialogContent>
+      </Dialog>
+    )}
+
+    {resultVideo && (
+      <Dialog open={imageExpanded} onOpenChange={setImageExpanded}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-2">
+          <video
+            src={resultVideo}
+            controls
+            autoPlay
             className="w-full h-full object-contain max-h-[85vh] rounded-lg"
           />
         </DialogContent>
