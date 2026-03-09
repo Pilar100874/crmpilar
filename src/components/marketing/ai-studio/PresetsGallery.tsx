@@ -370,7 +370,7 @@ const PRESETS: Preset[] = [
     id: 'audio-voiceover-commercial',
     name: 'Voice Over Comercial',
     description: 'Voz confiante e dinâmica para comerciais de TV e anúncios online.',
-    prompt: 'Confident commercial voice over, dynamic and engaging tone, advertising style, clear pronunciation',
+    prompt: 'Voice over comercial confiante, tom dinâmico e envolvente, estilo publicitário, pronúncia clara',
     image: presetAudioNarration,
     category: 'audio',
     toolType: 'audioGen',
