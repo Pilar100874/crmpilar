@@ -203,7 +203,7 @@ export function useStudioExecution() {
         referenceDescs.push(i._referenceDesc);
       }
     });
-    // Sort by priority: logo first, then produto, influencer, roupa, pose, ambiente, others last
+    // Sort by priority: produto first, then influencer, logo, roupa, pose, ambiente, others last
     bucketedImages.sort((a, b) => {
       const pa = rolePriority[a.role] ?? 99;
       const pb = rolePriority[b.role] ?? 99;
