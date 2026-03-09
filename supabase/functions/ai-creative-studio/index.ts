@@ -124,22 +124,23 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
 
 // --- OpenAI Sora ---
 async function generateVideoOpenAI(apiKey: string, params: any): Promise<VideoGenerationResult> {
-  const model = "sora";
-  const size = params.aspectRatio === "9:16" ? "1080x1920" : params.aspectRatio === "1:1" ? "1080x1080" : "1920x1080";
+  const model = params.model?.includes("sora-2-pro") ? "sora-2-pro" : "sora-2";
+  const size = params.aspectRatio === "9:16" ? "720x1280" : "1280x720";
 
-  // Step 1: Create video job via POST /v1/videos (multipart/form-data)
-  const formData = new FormData();
-  formData.append("model", model);
-  formData.append("prompt", params.prompt);
-  formData.append("size", size);
-  formData.append("n", "1");
+  // Step 1: Create video job via POST /v1/videos/generations (JSON body)
+  const body = {
+    model,
+    prompt: params.prompt,
+    size,
+  };
 
-  const response = await fetch("https://api.openai.com/v1/videos", {
+  const response = await fetch("https://api.openai.com/v1/videos/generations", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
     },
-    body: formData,
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
