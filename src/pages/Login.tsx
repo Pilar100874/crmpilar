@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
-import logoPilar from "@/assets/logo-pilar.jpg";
+import logo3 from "@/assets/logo-3.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -68,24 +68,27 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center py-8 px-4 bg-background relative">
+    <div className="min-h-screen flex flex-col items-center justify-center py-8 px-4 bg-background relative overflow-y-auto">
       <div
         className="absolute top-0 left-0 right-0 h-80"
         style={{ background: "var(--gradient-hero)" }}
       />
 
-      <div className="relative z-10 w-full max-w-md">
-        <Card className="border-border/50 shadow-lg">
+      <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
+        <div className="text-center">
+          <div className="inline-flex justify-center rounded-2xl bg-background/10 backdrop-blur-sm border border-primary-foreground/20 p-3">
+            <img
+              src={logo3}
+              alt="Logo Pilar"
+              className="h-20 md:h-24 w-auto object-contain"
+            />
+          </div>
+          <h1 className="text-3xl font-semibold text-primary-foreground mt-4">Sistema de Gestão</h1>
+          <p className="text-sm text-primary-foreground/80 mt-1">Plataforma Omnicanal</p>
+        </div>
+
+        <Card className="w-full border-border/50 shadow-lg">
           <CardContent className="pt-8 pb-8 px-8">
-            <div className="flex justify-center mb-6">
-              <img
-                src={logoPilar}
-                alt="Logo Pilar"
-                width={200}
-                height={96}
-                className="rounded-2xl shadow-xl"
-              />
-            </div>
             <div className="mb-6 text-center">
               <h2 className="text-xl font-semibold text-foreground">
                 Bem-vindo de volta
@@ -161,7 +164,7 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground/60 mt-4">
+        <p className="text-center text-xs text-muted-foreground/60 mt-1">
           Plataforma Omnicanal · Todos os direitos reservados
         </p>
       </div>
