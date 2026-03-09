@@ -296,7 +296,7 @@ const PRESETS: Preset[] = [
     id: 'music-lofi',
     name: 'Lo-Fi Chill',
     description: 'Batida lo-fi relaxante estilo "beats para estudar", com piano suave e sons de chuva.',
-    prompt: 'Lo-fi hip hop chill beat, soft piano, vinyl crackle, rain sounds, relaxing study music, mellow vibes',
+    prompt: 'Batida lo-fi hip hop chill, piano suave, chiado de vinil, sons de chuva, música relaxante para estudar, vibes tranquilas',
     image: presetMusicLofi,
     category: 'music',
     toolType: 'musicGen',
