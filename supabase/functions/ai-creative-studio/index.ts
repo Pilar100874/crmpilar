@@ -261,7 +261,7 @@ async function generateVideoKling(apiKey: string, params: any): Promise<VideoGen
       cfg_scale: params.cfgScale || 0.5,
       mode: params.model === "kling/v2.1" ? "highquality" : "std",
       aspect_ratio: params.aspectRatio || "16:9",
-      duration: "5",
+      duration: String(params.duration || 5),
     }),
   });
 
