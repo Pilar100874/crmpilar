@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.jpg";
 import logoFallback from "@/assets/logo_preto.png";
+import logo2 from "@/assets/logo-2.png";
 
 export default function Splash() {
   const navigate = useNavigate();
@@ -52,9 +53,9 @@ export default function Splash() {
             >
               <div className="absolute inset-0 blur-3xl opacity-30 bg-primary rounded-full scale-150" />
               <img
-                src={logo}
-                alt="Logo"
-                className="h-32 w-auto relative z-10 rounded-2xl shadow-2xl"
+                src={logo2}
+                alt="Logo Pilar"
+                className="h-36 w-auto relative z-10 drop-shadow-2xl"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = logoFallback;
                 }}

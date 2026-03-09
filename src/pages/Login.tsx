@@ -10,6 +10,7 @@ import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
 import logoBranco from "@/assets/logo_branco.png";
 import logoPreto from "@/assets/logo_preto.png";
+import logo2 from "@/assets/logo-2.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -85,10 +86,10 @@ export default function Login() {
         {/* Logo & Branding - on top of gradient */}
         <div className="text-center space-y-3">
           <img
-            src={logoBranco}
-            alt="Logo da Empresa"
-            className="h-20 w-auto mx-auto drop-shadow-lg"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoPreto; }}
+            src={logo2}
+            alt="Logo Pilar"
+            className="h-24 w-auto mx-auto drop-shadow-lg"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
           />
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-primary-foreground">
