@@ -8,7 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
-import logoPilar from "@/assets/logo.jpg";
+import logoPrincipal from "@/assets/logo-3.png";
+import logoFallback from "@/assets/logo_preto.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -68,7 +69,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center py-8 px-4 bg-background relative overflow-y-auto">
+    <div className="min-h-screen flex flex-col items-center px-4 pt-10 pb-8 bg-background relative overflow-y-auto">
       <div
         className="absolute top-0 left-0 right-0 h-80"
         style={{ background: "var(--gradient-hero)" }}
@@ -76,14 +77,13 @@ export default function Login() {
 
       <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
         <div className="text-center">
-          <div className="inline-flex min-h-24 min-w-56 items-center justify-center rounded-2xl bg-card border border-border shadow-lg p-3">
+          <div className="inline-flex min-h-28 min-w-60 items-center justify-center rounded-2xl bg-primary-foreground border border-primary-foreground/60 shadow-lg p-3">
             <img
-              src={logoPilar}
+              src={logoPrincipal}
               alt="Logo Pilar"
-              className="h-16 md:h-20 w-auto object-contain"
+              className="h-20 md:h-24 w-auto object-contain"
               onError={(e) => {
-                console.error("Falha ao carregar logo:", (e.target as HTMLImageElement).src);
-                (e.target as HTMLImageElement).style.display = "none";
+                (e.currentTarget as HTMLImageElement).src = logoFallback;
               }}
             />
           </div>
