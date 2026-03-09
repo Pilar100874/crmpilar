@@ -514,7 +514,7 @@ export function useStudioExecution() {
             if (result?.videoUrl) {
               return {
                 videoUrl: result.videoUrl,
-                imageUrl: result.thumbnailUrl || result.videoUrl,
+                ...(result.thumbnailUrl ? { imageUrl: result.thumbnailUrl } : {}),
                 text: `🎬 Vídeo gerado com ${videoModel.split('/').pop()} para: "${videoPrompt.substring(0, 60)}"`,
                 _isVideo: true,
               };

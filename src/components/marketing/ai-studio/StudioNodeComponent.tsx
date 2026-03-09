@@ -416,7 +416,7 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
   const resultFrames: string[] | undefined = activeResult?._animFrames;
   const resultFps: number = activeResult?._fps || 2;
   const resultGif: string | undefined = activeResult?._gifUrl;
-  const resultImage = resultFrames ? undefined : activeResult?.imageUrl;
+  const resultImage = resultFrames ? undefined : (activeResult?._isVideo ? undefined : activeResult?.imageUrl);
   const resultVideo = activeResult?.videoUrl;
   const resultAudio = activeResult?.audioUrl;
   const resultText = typeof activeResult === 'string'
