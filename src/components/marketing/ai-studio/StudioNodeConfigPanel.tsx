@@ -408,7 +408,7 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
 
   const filteredLLM = useMemo(() => filterModelsByProviders(LLM_MODELS, configuredProviders), [configuredProviders]);
   const filteredImage = useMemo(() => filterModelsByProviders(IMAGE_MODELS, configuredProviders), [configuredProviders]);
-  const filteredVideo = useMemo(() => filterModelsByProviders(VIDEO_MODELS, configuredProviders), [configuredProviders]);
+  const filteredVideo = useMemo(() => getVideoModelsWithStatus(VIDEO_MODELS, configuredProviders), [configuredProviders]);
   const filteredAudio = useMemo(() => filterModelsByProviders(AUDIO_MODELS, configuredProviders), [configuredProviders]);
   const filteredMusic = useMemo(() => filterModelsByProviders(MUSIC_MODELS, configuredProviders), [configuredProviders]);
 
