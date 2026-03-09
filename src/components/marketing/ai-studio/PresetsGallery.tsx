@@ -240,7 +240,7 @@ const PRESETS: Preset[] = [
     id: 'image-landscape',
     name: 'Paisagem Épica',
     description: 'Paisagem panorâmica de montanhas com pôr do sol, atmosfera cinematográfica.',
-    prompt: 'Epic mountain landscape panorama at sunset, atmospheric fog, cinematic lighting, nature photography, ultra high resolution',
+    prompt: 'Panorama épico de paisagem montanhosa ao pôr do sol, névoa atmosférica, iluminação cinematográfica, fotografia de natureza, ultra alta resolução',
     image: presetImageLandscape,
     category: 'image',
     toolType: 'imageGen',
