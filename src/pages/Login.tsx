@@ -75,28 +75,19 @@ export default function Login() {
         style={{ background: "var(--gradient-hero)" }}
       />
 
-      <div className="relative z-10 w-full max-w-md space-y-6">
-        <div className="text-center space-y-3">
-          <img
-            src={logo}
-            alt="Logo Pilar"
-            className="h-24 w-auto mx-auto rounded-2xl shadow-xl"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).src = logoPreto;
-            }}
-          />
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-white drop-shadow-md">
-              Sistema de Gestão
-            </h1>
-            <p className="text-sm text-white/70 mt-1">
-              Plataforma Omnicanal
-            </p>
-          </div>
-        </div>
-
+      <div className="relative z-10 w-full max-w-md">
         <Card className="border-border/50 shadow-lg">
           <CardContent className="pt-8 pb-8 px-8">
+            <div className="flex justify-center mb-4">
+              <img
+                src={logo}
+                alt="Logo Pilar"
+                className="h-20 w-auto rounded-xl shadow-md"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = logoPreto;
+                }}
+              />
+            </div>
             <div className="mb-6 text-center">
               <h2 className="text-xl font-semibold text-foreground">
                 Bem-vindo de volta
