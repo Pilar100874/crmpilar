@@ -438,6 +438,51 @@ export function useStudioExecution() {
       case 'videoGen': {
         const videoPrompt = combinedInput || 'A cinematic scene';
         const aspectRatio = config.aspectRatio || '16:9';
+        const videoModel = config.videoModel || 'free/gif-animated';
+        
+        // === PAID VIDEO MODEL PATH ===
+        if (videoModel !== 'free/gif-animated') {
+          nodeResultStore.setResult(node.id, { 
+            text: `🎬 Gerando vídeo com ${videoModel.split('/').pop()}...`, 
+          });
+          
+          try {
+            const estabId = localStorage.getItem('estabelecimentoId');
+            const result = await callStudio('generate_video', {
+              prompt: videoPrompt,
+              model: videoModel,
+              aspectRatio,
+              resolution: config.resolution || '1080p',
+              style: config.videoStyle || 'realistic',
+              cameraMovement: config.cameraMovement || 'none',
+              cameraSpeed: config.cameraSpeed ?? 1,
+              fps: config.fps || '24',
+              loop: config.loop ?? false,
+              withAudio: config.withAudio ?? false,
+              negativePrompt: config.videoNegativePrompt || '',
+              seed: config.videoSeed,
+              cfgScale: config.cfgScale ?? 7,
+              imageUrls: imageInputs.length > 0 ? imageInputs : undefined,
+              estabelecimentoId: estabId,
+            }, 300000); // 5 min timeout for video generation
+            
+            if (result?.videoUrl) {
+              return {
+                videoUrl: result.videoUrl,
+                imageUrl: result.thumbnailUrl || result.videoUrl,
+                text: `🎬 Vídeo gerado com ${videoModel.split('/').pop()} para: "${videoPrompt.substring(0, 60)}"`,
+                _isVideo: true,
+              };
+            } else {
+              throw new Error(result?.error || 'Nenhum vídeo retornado');
+            }
+          } catch (videoErr: any) {
+            console.error('[Studio] Video generation failed:', videoErr);
+            throw new Error(`Falha ao gerar vídeo: ${videoErr.message}`);
+          }
+        }
+        
+        // === FREE GIF ANIMATED PATH ===
         const frameCount = config.frameCount || 4;
         const motionStages = [
           'opening shot, beginning of movement',
@@ -476,7 +521,6 @@ export function useStudioExecution() {
           } catch (frameErr: any) {
             console.warn(`[Studio] Frame ${i + 1} failed, skipping:`, frameErr.message);
             toast.error(`Frame ${i + 1} falhou: ${frameErr.message?.substring(0, 80)}`, { duration: 4000 });
-            // Continue generating remaining frames
           }
         }
 
@@ -491,7 +535,6 @@ export function useStudioExecution() {
           });
           try {
             const { createAnimatedGif } = await import('./gifEncoder');
-            // Race GIF encoding against a 60s timeout
             const gifPromise = createAnimatedGif(frames, fps, 192, (current, total) => {
               nodeResultStore.setResult(node.id, { 
                 text: `🎬 Montando GIF animado (${current}/${total} frames)...`, 
