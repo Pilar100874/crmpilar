@@ -85,12 +85,16 @@ export default function Login() {
       <div className="relative z-10 w-full max-w-md space-y-6">
         {/* Logo & Branding - on top of gradient */}
         <div className="text-center space-y-4">
-          <div className="inline-block bg-zinc-900/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
+          <div className="inline-block bg-zinc-900/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl min-w-[160px] min-h-[100px]">
             <img
               src={logo2}
               alt="Logo Pilar"
-              className="h-20 w-auto mx-auto"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
+              className="h-20 w-auto mx-auto block"
+              onError={(e) => { 
+                console.log('Logo 2 failed to load');
+                (e.currentTarget as HTMLImageElement).src = logoBranco; 
+              }}
+              onLoad={() => console.log('Logo 2 loaded successfully')}
             />
           </div>
           <div>
