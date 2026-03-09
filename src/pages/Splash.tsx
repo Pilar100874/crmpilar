@@ -55,7 +55,8 @@ export default function Splash() {
               <img
                 src={logo2}
                 alt="Logo Pilar"
-                className="h-36 w-auto relative z-10 drop-shadow-2xl"
+                className="h-40 w-auto relative z-10"
+                style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 4px rgba(0,0,0,0.3))" }}
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = logoFallback;
                 }}

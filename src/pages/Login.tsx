@@ -70,7 +70,7 @@ export default function Login() {
   };
 
   return (
-    <div className="h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background relative overflow-y-auto">
       {/* Gradient header stripe - same as internal dashboards */}
       <div
         className="absolute top-0 left-0 right-0 h-72"
@@ -82,29 +82,22 @@ export default function Login() {
         style={{ background: "radial-gradient(circle, hsl(0 0% 100%) 0%, transparent 70%)" }}
       />
 
-      <div className="relative z-10 w-full max-w-md space-y-6">
-        {/* Logo & Branding - on top of gradient */}
-        <div className="text-center space-y-3">
-          <img
-            src={logo2}
-            alt="Logo Pilar"
-            className="h-24 w-auto mx-auto drop-shadow-lg"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
-          />
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-primary-foreground">
-              Sistema de Gestão
-            </h1>
-            <p className="text-sm text-primary-foreground/60 mt-1">
-              Plataforma Omnicanal
-            </p>
-          </div>
-        </div>
-
+      <div className="relative z-10 w-full max-w-md">
         {/* Login Card */}
         <Card className="border-border/50 shadow-lg">
           <CardContent className="pt-8 pb-8 px-8">
-            <div className="mb-6">
+            {/* Logo inside card */}
+            <div className="flex justify-center mb-6">
+              <div className="rounded-2xl p-5 shadow-lg" style={{ backgroundColor: '#27272a' }}>
+                <img
+                  src={logo2}
+                  alt="Logo Pilar"
+                  className="h-16 w-auto"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
+                />
+              </div>
+            </div>
+            <div className="mb-6 text-center">
               <h2 className="text-xl font-semibold text-foreground">
                 Bem-vindo de volta
               </h2>
