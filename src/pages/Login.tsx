@@ -8,8 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
-import logo from "@/assets/logo.jpg";
-import logoPreto from "@/assets/logo_preto.png";
+import logoPilar from "@/assets/logo-pilar.jpg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -76,13 +75,12 @@ export default function Login() {
       />
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Logo na área do gradiente */}
-        <div className="flex justify-center mb-6">
+        {/* Logo na área do gradiente laranja */}
+        <div className="flex justify-center mb-8">
           <img
-            src={logo}
+            src={logoPilar}
             alt="Logo Pilar"
-            className="h-20 w-auto object-contain rounded-xl shadow-lg"
-            style={{ border: "3px solid red", minHeight: "80px", minWidth: "80px", background: "white" }}
+            className="h-24 w-auto object-contain rounded-2xl shadow-xl"
           />
         </div>
 
@@ -163,7 +161,7 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground/60">
+        <p className="text-center text-xs text-muted-foreground/60 mt-4">
           Plataforma Omnicanal · Todos os direitos reservados
         </p>
       </div>
