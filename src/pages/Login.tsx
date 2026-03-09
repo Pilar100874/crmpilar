@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
-import logoPrincipal from "@/assets/logo_preto.png";
+import pilarBrand from "@/assets/pilar-brand.png";
 import logoFallback from "@/assets/logo.jpg";
 
 export default function Login() {
