@@ -1123,8 +1123,10 @@ Deno.serve(async (req) => {
           const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
           const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
           const sb = createClient(supabaseUrl, supabaseKey);
-          const fileName = `studio/${crypto.randomUUID()}.mp3`;
-          await sb.storage.from("marketing-audio").upload(fileName, audioBytes, { contentType: "audio/mpeg", upsert: true });
+          const mimeType = audioPart.inlineData.mimeType || "audio/mpeg";
+          const ext = mimeType.includes("wav") ? "wav" : mimeType.includes("ogg") ? "ogg" : "mp3";
+          const fileName = `studio/${crypto.randomUUID()}.${ext}`;
+          await sb.storage.from("marketing-audio").upload(fileName, audioBytes, { contentType: mimeType, upsert: true });
           const { data: pubData } = sb.storage.from("marketing-audio").getPublicUrl(fileName);
           return new Response(JSON.stringify({ result: { audioUrl: pubData.publicUrl, provider: "google" } }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
