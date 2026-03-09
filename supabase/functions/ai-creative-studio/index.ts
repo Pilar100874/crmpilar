@@ -179,10 +179,30 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
         return { done: true, error: `blocked:${reasons}` };
       }
       
+      // Helper to download from Google API and upload to our storage
+      const downloadAndStore = async (uri: string): Promise<{ done: true; result?: string; error?: string }> => {
+        try {
+          const downloadUrl = uri.includes("?") ? `${uri}&key=${apiKey}` : `${uri}?key=${apiKey}`;
+          console.log(`[generate_video] Downloading video from Google API...`);
+          const dlResp = await fetch(downloadUrl);
+          if (!dlResp.ok) {
+            console.log(`[generate_video] Download failed: ${dlResp.status}`);
+            return { done: true, error: `Failed to download video: ${dlResp.status}` };
+          }
+          const videoBytes = new Uint8Array(await dlResp.arrayBuffer());
+          console.log(`[generate_video] Downloaded ${videoBytes.length} bytes, uploading to storage...`);
+          const storedUrl = await uploadVideoToStorage(videoBytes);
+          return { done: true, result: storedUrl || undefined };
+        } catch (e) {
+          console.log(`[generate_video] Download error: ${e.message}`);
+          return { done: true, error: `Download error: ${e.message}` };
+        }
+      };
+
       // Try generateVideoResponse.generatedSamples first (confirmed structure)
       const genSamples = genResp?.generatedSamples;
       if (genSamples?.[0]?.video?.uri) {
-        return { done: true, result: genSamples[0].video.uri };
+        return await downloadAndStore(genSamples[0].video.uri);
       }
       if (genSamples?.[0]?.video?.bytesBase64Encoded) {
         const bytes = base64Decode(genSamples[0].video.bytesBase64Encoded);
@@ -193,13 +213,13 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
       // Fallback: try top-level structures
       const samples = resp?.generatedSamples || resp?.videos || resp?.predictions || [];
       const video = samples?.[0]?.video || samples?.[0];
-      if (video?.uri) return { done: true, result: video.uri };
+      if (video?.uri) return await downloadAndStore(video.uri);
       if (video?.bytesBase64Encoded) {
         const bytes = base64Decode(video.bytesBase64Encoded);
         const url = await uploadVideoToStorage(new Uint8Array(bytes));
         return { done: true, result: url || undefined };
       }
-      if (typeof video === "string" && video.startsWith("http")) return { done: true, result: video };
+      if (typeof video === "string" && video.startsWith("http")) return await downloadAndStore(video);
       
       return { done: true, error: `No video in response: ${JSON.stringify(resp).substring(0, 300)}` };
     }
