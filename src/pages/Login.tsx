@@ -88,7 +88,7 @@ export default function Login() {
           <CardContent className="pt-8 pb-8 px-8">
             {/* Logo inside card */}
             <div className="flex justify-center mb-6">
-              <div className="bg-zinc-800 rounded-2xl p-5 shadow-lg">
+              <div className="rounded-2xl p-5 shadow-lg" style={{ backgroundColor: '#27272a' }}>
                 <img
                   src={logo2}
                   alt="Logo Pilar"
