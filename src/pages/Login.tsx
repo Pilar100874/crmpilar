@@ -84,11 +84,11 @@ export default function Login() {
 
       {/* Logo & Branding - fixed position on gradient */}
       <div className="relative z-10 flex flex-col items-center pt-10 pb-6">
-        <div className="rounded-2xl p-5 mb-4" style={{ backgroundColor: 'rgba(39, 39, 42, 0.85)' }}>
+        <div style={{ width: '160px', height: '120px', backgroundColor: 'rgba(39, 39, 42, 0.85)', borderRadius: '16px', padding: '20px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <img
             src={logo2}
             alt="Logo Pilar"
-            className="h-20 w-auto"
+            style={{ maxHeight: '80px', width: 'auto' }}
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = logoBranco; }}
           />
         </div>
