@@ -67,6 +67,23 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
   };
   const modelId = modelMap[params.model] || "veo-3.0-generate-preview";
   
+  // Prepare image reference for image-to-video mode
+  let imagePayload: any = {};
+  const heroUrl = params.imageUrls?.[0];
+  if (heroUrl?.startsWith("http")) {
+    try {
+      const imgResp = await fetch(heroUrl);
+      if (imgResp.ok) {
+        const imgBuf = await imgResp.arrayBuffer();
+        const b64 = btoa(String.fromCharCode(...new Uint8Array(imgBuf)));
+        imagePayload = { image: { bytesBase64Encoded: b64 } };
+        console.log(`[generate_video] Google Veo: hero frame attached (${(imgBuf.byteLength / 1024).toFixed(0)}KB)`);
+      }
+    } catch (imgErr) {
+      console.warn(`[generate_video] Google Veo: failed to attach hero frame:`, imgErr);
+    }
+  }
+  
   // Submit generation request
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:predictLongRunning?key=${apiKey}`,
@@ -76,7 +93,7 @@ async function generateVideoGoogle(apiKey: string, params: any): Promise<VideoGe
       body: JSON.stringify({
         instances: [{
           prompt: params.prompt,
-          ...(params.imageUrls?.[0] ? { image: { bytesBase64Encoded: params.imageUrls[0].startsWith("data:") ? params.imageUrls[0].split(",")[1] : undefined, gcsUri: params.imageUrls[0].startsWith("http") ? undefined : undefined } } : {}),
+          ...imagePayload,
         }],
         parameters: {
           aspectRatio: params.aspectRatio || "16:9",
