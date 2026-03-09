@@ -391,3 +391,11 @@ All colors MUST be HSL.
 .react-flow__edge .react-flow__edge-interaction {
   stroke-width: 20px;
 }
+
+/* Hide native fullscreen button on studio videos */
+.studio-video-no-fullscreen::-webkit-media-controls-fullscreen-button {
+  display: none !important;
+}
+.studio-video-no-fullscreen::-webkit-media-controls-picture-in-picture-button {
+  display: none !important;
+}
