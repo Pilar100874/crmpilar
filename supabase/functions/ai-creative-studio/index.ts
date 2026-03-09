@@ -742,6 +742,14 @@ serve(async (req) => {
         });
       }
 
+      case "generate_video": {
+        console.log(`[generate_video] Starting video generation: model=${params.model}`);
+        const videoResult = await handleVideoGeneration(params);
+        return new Response(JSON.stringify({ result: videoResult }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       default:
         return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), {
           status: 400,
