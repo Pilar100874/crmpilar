@@ -207,7 +207,7 @@ const PRESETS: Preset[] = [
   {
     id: 'video-nature-timelapse', name: 'Timelapse Natureza',
     description: 'Nuvens se movendo sobre montanhas verdes. Compatível com qualquer modelo.',
-    prompt: 'A beautiful time-lapse of white clouds moving peacefully over green mountains from sunrise to sunset, colorful sky gradients, calm nature documentary style',
+    prompt: 'Timelapse de nuvens brancas se movendo pacificamente sobre montanhas verdes do nascer ao pôr do sol, gradientes coloridos no céu, estilo documentário de natureza calmo',
     image: fxTimelapse, category: 'video', videoSubcategory: 'geral', toolType: 'videoGen', isVideo: true,
   },
   {
