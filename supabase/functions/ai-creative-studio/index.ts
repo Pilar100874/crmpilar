@@ -2,11 +2,21 @@ import { createClient } from "npm:@supabase/supabase-js@2.49.1";
 
 function base64Encode(data: ArrayBuffer | Uint8Array): string {
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  const chunks: string[] = [];
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    chunks.push(String.fromCharCode(...bytes.subarray(i, i + chunkSize)));
   }
-  return btoa(binary);
+  return btoa(chunks.join(""));
+}
+
+function base64Decode(str: string): Uint8Array {
+  const binary = atob(str);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
 
 // ===== VIDEO PROVIDER API IMPLEMENTATIONS =====
