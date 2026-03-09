@@ -408,20 +408,37 @@ export function useStudioExecution() {
           enrichedPrompt = `${enrichedPrompt}\n\n[INSTRUÇÃO PADRÃO] A pessoa/influencer deve estar SEGURANDO o produto na mão, mostrando-o de forma natural e elegante. O produto deve estar visível e em destaque na mão da pessoa.`;
         }
         if (referenceDescs.length > 0) {
-          // Build image position map for the model
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
-              logo: 'LOGO (preserve exactly)', produto: 'PRODUCT (preserve exactly)',
-              influencer: 'PERSON/INFLUENCER (preserve exactly)', roupa: 'CLOTHING (preserve exactly)',
-              pose: 'POSE REFERENCE', estilo: 'STYLE REFERENCE', paleta: 'COLOR PALETTE',
-              textura: 'TEXTURE REFERENCE', ambiente: 'ENVIRONMENT (flexible, background only)',
+              logo: 'LOGO — COPIAR EXATAMENTE desta imagem', produto: 'PRODUTO/EMBALAGEM — COPIAR EXATAMENTE desta imagem',
+              influencer: 'PESSOA/INFLUENCER — COPIAR ROSTO E CORPO EXATAMENTE desta imagem', roupa: 'ROUPA — COPIAR EXATAMENTE desta imagem',
+              pose: 'REFERÊNCIA DE POSE (flexível)', estilo: 'REFERÊNCIA DE ESTILO (flexível)', paleta: 'PALETA DE CORES (flexível)',
+              textura: 'REFERÊNCIA DE TEXTURA (flexível)', ambiente: 'AMBIENTE/CENÁRIO (flexível, apenas fundo)',
             };
-            return `Image ${idx + 1}: ${roleLabel[b.role] || 'REFERENCE'}`;
+            return `Imagem ${idx + 1}: ${roleLabel[b.role] || 'REFERÊNCIA'}`;
           });
           const imagePositionHint = positionLabels.length > 0
-            ? `\n\n🔒 IMAGE ORDER (respect strictly):\n${positionLabels.join('\n')}`
+            ? `\n\n🔒 ORDEM DAS IMAGENS:\n${positionLabels.join('\n')}`
             : '';
-          enrichedPrompt = `${enrichedPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS (MUST FOLLOW):\nItems marked [NÃO ALTERAR] MUST be reproduced EXACTLY as shown — do NOT change, reimagine, or substitute them.\nEnvironment references affect ONLY the background/scenery, NEVER the product, person, clothing or logo.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
+          enrichedPrompt = `${enrichedPrompt}\n\n` + [
+            `⚠️ INSTRUÇÕES ABSOLUTAS DE FIDELIDADE (VIOLAÇÃO = ERRO):`,
+            ``,
+            `1. PESSOA/INFLUENCER: A pessoa na imagem de referência É a pessoa real que DEVE aparecer na imagem.`,
+            `   - Use EXATAMENTE o mesmo rosto, tom de pele, formato do rosto, cabelo, sobrancelhas, olhos, nariz, boca.`,
+            `   - NÃO gere uma pessoa parecida. NÃO altere nenhuma característica facial. É a MESMA pessoa.`,
+            ``,
+            `2. PRODUTO/EMBALAGEM: O produto na imagem de referência É o produto real com sua embalagem real.`,
+            `   - Use EXATAMENTE a mesma embalagem: cores, rótulo, formato, tipografia, logo, proporções.`,
+            `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. É o MESMO produto.`,
+            ``,
+            `3. LOGO: Reproduza pixel a pixel. Mesmas cores, mesma tipografia, mesmo layout.`,
+            `4. AMBIENTE/CENÁRIO: ÚNICO elemento que pode ser adaptado livremente.`,
+            ``,
+            `TÉCNICA: Trate as imagens de referência como FOTOGRAFIAS REAIS. Componha a cena INSERINDO esses sujeitos reais.`,
+            imagePositionHint,
+            ``,
+            referenceDescs.join('\n'),
+          ].join('\n');
         }
         const result = await callStudio('generate_image', {
           prompt: enrichedPrompt,
@@ -504,21 +521,43 @@ export function useStudioExecution() {
         if (formatWidth && formatHeight) {
           videoPrompt = `${videoPrompt}\n\n[FORMAT] Gere este vídeo otimizado para ${formatPlatform || 'redes sociais'} ${formatContentType || 'post'}, proporção ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
         }
-        // Inject reference descriptions with fidelity instructions (same as imageGen)
+        // Inject reference descriptions with STRICT fidelity instructions
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
-              logo: 'LOGO (preservar exatamente)', produto: 'PRODUTO (preservar exatamente)',
-              influencer: 'PESSOA/INFLUENCER (preservar exatamente)', roupa: 'ROUPA (preservar exatamente)',
-              pose: 'REFERÊNCIA DE POSE', estilo: 'REFERÊNCIA DE ESTILO', paleta: 'PALETA DE CORES',
-              textura: 'REFERÊNCIA DE TEXTURA', ambiente: 'AMBIENTE (flexível, apenas cenário)',
+              logo: 'LOGO — COPIAR EXATAMENTE desta imagem', produto: 'PRODUTO/EMBALAGEM — COPIAR EXATAMENTE desta imagem',
+              influencer: 'PESSOA/INFLUENCER — COPIAR ROSTO E CORPO EXATAMENTE desta imagem', roupa: 'ROUPA — COPIAR EXATAMENTE desta imagem',
+              pose: 'REFERÊNCIA DE POSE (flexível)', estilo: 'REFERÊNCIA DE ESTILO (flexível)', paleta: 'PALETA DE CORES (flexível)',
+              textura: 'REFERÊNCIA DE TEXTURA (flexível)', ambiente: 'AMBIENTE/CENÁRIO (flexível, apenas fundo)',
             };
             return `Imagem ${idx + 1}: ${roleLabel[b.role] || 'REFERÊNCIA'}`;
           });
           const imagePositionHint = positionLabels.length > 0
-            ? `\n\n🔒 ORDEM DAS IMAGENS (respeitar rigorosamente):\n${positionLabels.join('\n')}`
+            ? `\n\n🔒 ORDEM DAS IMAGENS:\n${positionLabels.join('\n')}`
             : '';
-          videoPrompt = `${videoPrompt}\n\n⚠️ INSTRUÇÕES CRÍTICAS DE REFERÊNCIA (OBRIGATÓRIO):\nItens marcados [NÃO ALTERAR] DEVEM ser reproduzidos EXATAMENTE como mostrados — NÃO altere, reimagine ou substitua.\nReferências de ambiente afetam APENAS o fundo/cenário, NUNCA o produto, pessoa, roupa ou logo.\nMantenha consistência visual com TODAS as referências ao longo de todo o vídeo.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
+          videoPrompt = `${videoPrompt}\n\n` + [
+            `⚠️ INSTRUÇÕES ABSOLUTAS DE FIDELIDADE (VIOLAÇÃO = ERRO):`,
+            ``,
+            `1. PESSOA/INFLUENCER: A pessoa na imagem de referência É a pessoa real que DEVE aparecer no vídeo.`,
+            `   - Use EXATAMENTE o mesmo rosto, tom de pele, formato do rosto, cabelo, sobrancelhas, olhos, nariz, boca.`,
+            `   - NÃO gere uma pessoa parecida. NÃO altere nenhuma característica facial. É a MESMA pessoa.`,
+            `   - Se a IA gerar um rosto diferente, o resultado está ERRADO.`,
+            ``,
+            `2. PRODUTO/EMBALAGEM: O produto na imagem de referência É o produto real com sua embalagem real.`,
+            `   - Use EXATAMENTE a mesma embalagem: cores, rótulo, formato, tipografia, logo, proporções.`,
+            `   - NÃO crie uma embalagem similar. NÃO redesenhe o produto. É o MESMO produto.`,
+            `   - Se a IA gerar uma embalagem diferente, o resultado está ERRADO.`,
+            ``,
+            `3. LOGO: Reproduza pixel a pixel. Mesmas cores, mesma tipografia, mesmo layout.`,
+            ``,
+            `4. AMBIENTE/CENÁRIO: Este é o ÚNICO elemento que pode ser adaptado livremente.`,
+            ``,
+            `TÉCNICA: Trate as imagens de referência como FOTOGRAFIAS REAIS de sujeitos reais.`,
+            `Componha a cena INSERINDO esses sujeitos reais no cenário, como uma montagem fotográfica profissional.`,
+            imagePositionHint,
+            ``,
+            referenceDescs.join('\n'),
+          ].join('\n');
         }
         
         // === PAID VIDEO MODEL PATH ===
@@ -600,24 +639,34 @@ export function useStudioExecution() {
         for (let i = 0; i < frameCount; i++) {
           const stage = motionStages[i % motionStages.length];
           
-          // Build frame prompt with fidelity-first approach (same as imageGen)
+          // Build frame prompt with strict fidelity
           let framePrompt: string;
           if (hasReferenceImages && referenceDescs.length > 0) {
-            // When references exist, use inpainting/multi-subject edit approach
             framePrompt = [
-              `🔒 MODO MULTI-SUBJECT EDIT — PRESERVAÇÃO PIXEL A PIXEL`,
-              `Você está editando/compondo uma cena usando as imagens de referência fornecidas.`,
-              `REGRA ABSOLUTA: Rostos, embalagens, logotipos e roupas das referências DEVEM ser preservados EXATAMENTE como aparecem — pixel a pixel. NÃO reimagine, NÃO substitua, NÃO altere proporções, cores ou detalhes.`,
-              `Apenas o AMBIENTE/CENÁRIO e a COMPOSIÇÃO DA CENA podem ser modificados.`,
+              `🔒 COMPOSIÇÃO FOTOGRÁFICA COM SUJEITOS REAIS`,
               ``,
-              `Cena: ${combinedInput || 'Uma cena cinematográfica'}`,
-              `Estilo: Fotografia cinematográfica de alta resolução, iluminação dramática, profundidade de campo rasa, proporção ${aspectRatio}, fotorrealista`,
+              `As imagens fornecidas são FOTOGRAFIAS DE PESSOAS E PRODUTOS REAIS.`,
+              `Você DEVE inserir esses sujeitos reais na cena, como uma montagem fotográfica profissional.`,
+              ``,
+              `PROIBIDO:`,
+              `- Gerar um rosto diferente do fornecido (mesmo que "parecido")`,
+              `- Redesenhar ou reinterpretar a embalagem do produto`,
+              `- Alterar cores, proporções ou detalhes de qualquer sujeito`,
+              `- Substituir qualquer elemento marcado como "NÃO ALTERAR"`,
+              ``,
+              `OBRIGATÓRIO:`,
+              `- COPIAR o rosto da pessoa EXATAMENTE como na foto de referência`,
+              `- COPIAR a embalagem/produto EXATAMENTE como na foto de referência`,
+              `- Manter iluminação e perspectiva consistentes entre sujeitos e cenário`,
+              ``,
+              `Cena solicitada: ${combinedInput || 'Uma cena cinematográfica'}`,
+              `Estilo visual: Fotografia cinematográfica, iluminação profissional, proporção ${aspectRatio}, fotorrealista`,
               `Sequência: Frame ${i + 1} de ${frameCount} — ${stage}`,
               ``,
               videoPrompt.includes('⚠️') ? videoPrompt.substring(videoPrompt.indexOf('⚠️')) : '',
             ].filter(Boolean).join('\n');
           } else {
-            framePrompt = `Fotografia cinematográfica de alta resolução, qualidade de produção cinematográfica, iluminação dramática, profundidade de campo rasa, proporção ${aspectRatio}, cinematografia profissional, fotorrealista, frame ${i + 1} de ${frameCount} — ${stage}: ${videoPrompt}`;
+            framePrompt = `Fotografia cinematográfica de alta resolução, qualidade de produção, iluminação dramática, profundidade de campo rasa, proporção ${aspectRatio}, fotorrealista, frame ${i + 1} de ${frameCount} — ${stage}: ${videoPrompt}`;
           }
           
           nodeResultStore.setResult(node.id, { 
