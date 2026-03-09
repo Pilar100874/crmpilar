@@ -352,7 +352,7 @@ const PRESETS: Preset[] = [
     id: 'audio-sfx-whoosh',
     name: 'Efeito Sonoro: Transição',
     description: 'Som de transição "whoosh" suave para cortes de vídeo e animações.',
-    prompt: 'Smooth whoosh transition sound effect, clean swipe, cinematic transition audio',
+    prompt: 'Efeito sonoro de transição whoosh suave, deslize limpo, áudio de transição cinematográfica',
     image: presetAudioSfx,
     category: 'audio',
     toolType: 'audioGen',
