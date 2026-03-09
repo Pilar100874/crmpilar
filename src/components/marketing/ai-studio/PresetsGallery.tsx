@@ -334,7 +334,7 @@ const PRESETS: Preset[] = [
     id: 'audio-narration',
     name: 'Narração Profissional',
     description: 'Voz profissional para narração de vídeos, podcasts e apresentações.',
-    prompt: 'Professional male narrator voice, clear enunciation, warm tone, documentary style narration',
+    prompt: 'Voz de narrador masculino profissional, enunciação clara, tom quente, narração estilo documentário',
     image: presetAudioNarration,
     category: 'audio',
     toolType: 'audioGen',
