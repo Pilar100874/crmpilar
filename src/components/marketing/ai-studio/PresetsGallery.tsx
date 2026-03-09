@@ -169,7 +169,7 @@ const PRESETS: Preset[] = [
   {
     id: 'kling-candle-flicker', name: 'Vela Cintilante',
     description: 'Chama de vela oscilando suavemente em ambiente aconchegante. Otimizado para Kling.',
-    prompt: 'A warm candle flame gently flickering in a cozy dark room, soft bokeh lights in background, intimate and peaceful atmosphere, cinematic closeup',
+    prompt: 'Chama de vela quente oscilando suavemente em um quarto escuro e aconchegante, luzes bokeh suaves ao fundo, atmosfera íntima e pacífica, close cinematográfico',
     image: presetMusicAmbient, category: 'video', videoSubcategory: 'kling', toolType: 'videoGen', isVideo: true, videoModel: 'kling/v2.1', duration: 5,
   },
   {
