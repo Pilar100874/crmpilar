@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/lib/toast-config";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { Lock, Mail } from "lucide-react";
-import logo3 from "@/assets/logo-3.png";
+import logoPilar from "@/assets/logo-pilar.jpg";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -76,9 +76,9 @@ export default function Login() {
 
       <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
         <div className="text-center">
-          <div className="inline-flex justify-center rounded-2xl bg-background/10 backdrop-blur-sm border border-primary-foreground/20 p-3">
+          <div className="inline-flex justify-center rounded-2xl bg-card border border-border shadow-lg p-2">
             <img
-              src={logo3}
+              src={logoPilar}
               alt="Logo Pilar"
               className="h-20 md:h-24 w-auto object-contain"
             />
