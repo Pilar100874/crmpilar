@@ -278,7 +278,7 @@ const PRESETS: Preset[] = [
     id: 'music-ambient',
     name: 'Ambiente Relaxante',
     description: 'Música ambiente suave para meditação, spa ou vídeos calmos. Sons etéreos e harmônicos.',
-    prompt: 'Soft ambient music for meditation, ethereal pads, gentle harmonic progression, calming atmosphere, 120 seconds',
+    prompt: 'Música ambiente suave para meditação, pads etéreos, progressão harmônica suave, atmosfera calmante, 120 segundos',
     image: presetMusicAmbient,
     category: 'music',
     toolType: 'musicGen',
