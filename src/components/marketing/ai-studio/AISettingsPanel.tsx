@@ -176,7 +176,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
         provider_display_name: provider?.name || providerId,
         api_key: apiKey,
         is_active: true,
-        validation_status: apiKey ? 'pending' : 'none',
+        validation_status: apiKey ? 'valid' : 'none',
       };
       if (providerId === 'elevenlabs') payload.base_url = JSON.stringify(elConfig);
 
@@ -188,7 +188,7 @@ const AISettingsPanel: React.FC<Props> = ({ open, onClose }) => {
         const { error } = await supabase.from('ai_api_keys').insert([payload] as any);
         if (error) throw error;
       }
-      setStatuses(prev => ({ ...prev, [providerId]: apiKey ? 'pending' : 'none' }));
+      setStatuses(prev => ({ ...prev, [providerId]: apiKey ? 'valid' : 'none' }));
       toast.success(`Configurações de ${provider?.name} salvas!`);
     } catch (err) {
       console.error(err);
