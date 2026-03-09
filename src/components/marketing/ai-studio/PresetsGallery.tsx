@@ -595,10 +595,17 @@ const VideoPreviewAnimation: React.FC<{ preset: Preset; isHovered: boolean }> = 
 
 const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose }) => {
   const [activeCategory, setActiveCategory] = useState('video');
+  const [activeVideoSub, setActiveVideoSub] = useState('todos');
   const [hoveredPreset, setHoveredPreset] = useState<string | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<Preset | null>(null);
 
-  const filteredPresets = PRESETS.filter((p) => p.category === activeCategory);
+  const filteredPresets = PRESETS.filter((p) => {
+    if (p.category !== activeCategory) return false;
+    if (activeCategory === 'video' && activeVideoSub !== 'todos') {
+      return p.videoSubcategory === activeVideoSub;
+    }
+    return true;
+  });
 
   return (
     <motion.div
@@ -625,7 +632,10 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
           return (
             <button
               key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
+              onClick={() => {
+                setActiveCategory(cat.id);
+                if (cat.id === 'video') setActiveVideoSub('todos');
+              }}
               className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all border whitespace-nowrap ${
                 activeCategory === cat.id
                   ? 'bg-foreground text-background border-foreground'
@@ -638,6 +648,25 @@ const PresetsGallery: React.FC<PresetsGalleryProps> = ({ onSelectPreset, onClose
           );
         })}
       </div>
+
+      {/* Sub-abas de vídeo */}
+      {activeCategory === 'video' && (
+        <div className="flex items-center gap-1.5 px-6 py-2 border-b overflow-x-auto bg-muted/30">
+          {VIDEO_SUBCATEGORIES.map((sub) => (
+            <button
+              key={sub.id}
+              onClick={() => setActiveVideoSub(sub.id)}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
+                activeVideoSub === sub.id
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              {sub.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Grade */}
       <ScrollArea className="flex-1">
