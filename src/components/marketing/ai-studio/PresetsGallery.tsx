@@ -129,7 +129,7 @@ const PRESETS: Preset[] = [
   {
     id: 'sora-product-rotation', name: 'Rotação de Produto',
     description: 'Objeto girando suavemente em fundo limpo de estúdio. Otimizado para Sora.',
-    prompt: 'A simple elegant object slowly rotating on a clean white studio background, soft professional lighting, smooth continuous rotation, commercial product video',
+    prompt: 'Objeto elegante e simples girando lentamente em fundo branco limpo de estúdio, iluminação profissional suave, rotação contínua suave, vídeo comercial de produto',
     image: camOrbit, category: 'video', videoSubcategory: 'sora', toolType: 'videoGen', isVideo: true, videoModel: 'openai/sora-2', duration: 8,
   },
   {
