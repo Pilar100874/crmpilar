@@ -446,7 +446,7 @@ const PRESETS: Preset[] = [
     id: 'ecom-clothing-tryon',
     name: 'Provador Virtual de Roupas',
     description: 'Vista uma peça de roupa em uma modelo automaticamente. Envie a foto da pessoa e do produto.',
-    prompt: 'Dress the person in this clothing item naturally. Maintain realistic body proportions, fabric draping, and lighting consistency.',
+    prompt: 'Vista a pessoa com esta peça de roupa naturalmente. Mantenha proporções corporais realistas, caimento do tecido e consistência de iluminação.',
     image: presetImagePortrait,
     category: 'ecommerce',
     toolType: 'productComposite',
