@@ -482,7 +482,7 @@ const PRESETS: Preset[] = [
     id: 'ecom-before-after',
     name: 'Antes e Depois',
     description: 'Gere uma imagem mostrando "antes sem produto" e "depois com produto" para comparação visual.',
-    prompt: 'Show a before and after comparison. Place the product on the person to create a compelling transformation visual for marketing.',
+    prompt: 'Mostre uma comparação antes e depois. Coloque o produto na pessoa para criar um visual de transformação convincente para marketing.',
     image: presetImageProduct,
     category: 'ecommerce',
     toolType: 'productComposite',
