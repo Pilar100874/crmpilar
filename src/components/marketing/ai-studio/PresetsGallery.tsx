@@ -323,7 +323,7 @@ const PRESETS: Preset[] = [
     id: 'music-jazz',
     name: 'Jazz Suave',
     description: 'Jazz suave com piano, contrabaixo e bateria leve. Perfeito para restaurantes e lounges.',
-    prompt: 'Smooth jazz, soft piano trio, upright bass, brushed drums, sophisticated lounge atmosphere, warm tones',
+    prompt: 'Jazz suave, trio de piano suave, contrabaixo acústico, bateria com vassourinha, atmosfera sofisticada de lounge, tons quentes',
     image: presetMusicAmbient,
     category: 'music',
     toolType: 'musicGen',
