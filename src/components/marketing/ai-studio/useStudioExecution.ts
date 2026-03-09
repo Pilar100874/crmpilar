@@ -486,28 +486,40 @@ export function useStudioExecution() {
       }
 
       case 'videoGen': {
-        let videoPrompt = combinedInput || 'A cinematic scene';
+        let videoPrompt = combinedInput || 'Uma cena cinematográfica';
         const aspectRatio = config.aspectRatio || '16:9';
         const videoModel = config.videoModel || 'free/gif-animated';
 
-        // Enrich prompt with reference descriptions (same logic as imageGen)
-        if (formatWidth && formatHeight) {
-          videoPrompt = `${videoPrompt}\n\n[FORMAT] Generate this video optimized for ${formatPlatform || 'social media'} ${formatContentType || 'post'}, aspect ratio ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
+        // Auto-detect product + influencer without explicit placement prompt → default to holding (same as imageGen)
+        const hasProductVideo = inputs.some((i) => i?._referenceRole === 'produto');
+        const hasInfluencerVideo = inputs.some((i) => i?._referenceRole === 'influencer');
+        const promptLowerVideo = (combinedInput || '').toLowerCase();
+        const hasPlacementHintVideo = /mesa|chão|prateleira|vitrine|cenário|cena|fundo|background|scene|table|shelf|display|flat\s*lay/i.test(promptLowerVideo);
+
+        if (hasProductVideo && hasInfluencerVideo && !hasPlacementHintVideo) {
+          videoPrompt = `${videoPrompt}\n\n[INSTRUÇÃO PADRÃO] A pessoa/influencer deve estar SEGURANDO o produto na mão, mostrando-o de forma natural e elegante. O produto deve estar visível e em destaque na mão da pessoa.`;
         }
+
+        // Inject platform format dimensions
+        if (formatWidth && formatHeight) {
+          videoPrompt = `${videoPrompt}\n\n[FORMAT] Gere este vídeo otimizado para ${formatPlatform || 'redes sociais'} ${formatContentType || 'post'}, proporção ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
+        }
+        // Inject reference descriptions with fidelity instructions (same as imageGen)
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
-              logo: 'LOGO (preserve exactly)', produto: 'PRODUCT (preserve exactly)',
-              influencer: 'PERSON/INFLUENCER (preserve exactly)', roupa: 'CLOTHING (preserve exactly)',
-              pose: 'POSE REFERENCE', estilo: 'STYLE REFERENCE', paleta: 'COLOR PALETTE',
-              textura: 'TEXTURE REFERENCE', ambiente: 'ENVIRONMENT (flexible, background only)',
+              logo: 'LOGO (preservar exatamente)', produto: 'PRODUTO (preservar exatamente)',
+              influencer: 'PESSOA/INFLUENCER (preservar exatamente)', roupa: 'ROUPA (preservar exatamente)',
+              pose: 'REFERÊNCIA DE POSE', estilo: 'REFERÊNCIA DE ESTILO', paleta: 'PALETA DE CORES',
+              textura: 'REFERÊNCIA DE TEXTURA', ambiente: 'AMBIENTE (flexível, apenas cenário)',
             };
-            return `Image ${idx + 1}: ${roleLabel[b.role] || 'REFERENCE'}`;
+            return `Imagem ${idx + 1}: ${roleLabel[b.role] || 'REFERÊNCIA'}`;
           });
           const imagePositionHint = positionLabels.length > 0
-            ? `\n\n🔒 IMAGE ORDER (respect strictly):\n${positionLabels.join('\n')}`
+            ? `\n\n🔒 ORDEM DAS IMAGENS (respeitar rigorosamente):\n${positionLabels.join('\n')}`
             : '';
-          videoPrompt = `${videoPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS:\nUse the provided reference images to guide the video content. Maintain consistency with the references throughout the video.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
+          videoPrompt = `${videoPrompt}\n\n⚠️ INSTRUÇÕES CRÍTICAS DE REFERÊNCIA (OBRIGATÓRIO):\nItens marcados [NÃO ALTERAR] DEVEM ser reproduzidos EXATAMENTE como mostrados — NÃO altere, reimagine ou substitua.\nReferências de ambiente afetam APENAS o fundo/cenário, NUNCA o produto, pessoa, roupa ou logo.\nMantenha consistência visual com TODAS as referências ao longo de todo o vídeo.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
+        }
         }
         
         // === PAID VIDEO MODEL PATH ===
