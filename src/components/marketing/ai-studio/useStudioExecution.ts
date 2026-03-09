@@ -229,9 +229,34 @@ export function useStudioExecution() {
       case 'systemPrompt':
         return { _isSystemPrompt: true, text: config.systemPrompt || '' };
 
-      case 'imageInput':
-        // Return all images as an array of imageUrl objects
-        return { imageUrls: config.images || [], imageUrl: config.images?.[0] };
+      case 'imageInput': {
+        // Return all images as an array of imageUrl objects, with optional reference role
+        const role = config.referenceRole;
+        const roleDescMap: Record<string, string> = {
+          influencer: '[PESSOA/INFLUENCER - NÃO ALTERAR] Você DEVE reproduzir esta pessoa EXATAMENTE como aparece: mesmo rosto, tom de pele, cabelo, traços faciais e aparência geral.',
+          logo: '[LOGO - NÃO ALTERAR] Reproduza este logo/marca EXATAMENTE como aparece, sem modificar cores, tipografia ou elementos gráficos.',
+          produto: '[PRODUTO - NÃO ALTERAR] Mantenha este produto EXATAMENTE como aparece na imagem de referência.',
+          ambiente: '[AMBIENTE - REFERÊNCIA FLEXÍVEL] Use como inspiração para o cenário/fundo.',
+          estilo: 'Use como referência de estilo visual.',
+          paleta: 'Use como referência de paleta de cores.',
+          textura: 'Use como referência de textura/material.',
+          pose: 'Use como referência de pose corporal.',
+          roupa: '[ROUPA - NÃO ALTERAR] Mantenha a roupa EXATAMENTE como aparece na referência.',
+        };
+        const images = config.images || [];
+        if (images.length === 0 && !role) {
+          return { imageUrls: [], imageUrl: undefined };
+        }
+        if (images.length === 0 && role) {
+          // Optional reference block with no image — skip silently
+          return null;
+        }
+        return {
+          imageUrls: images,
+          imageUrl: images[0],
+          ...(role ? { _referenceRole: role, _referenceDesc: roleDescMap[role] || 'Use esta imagem como referência visual.' } : {}),
+        };
+      }
 
       case 'productImageSelect':
         // Return the selected product image as reference with role context
