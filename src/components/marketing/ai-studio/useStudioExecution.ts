@@ -649,15 +649,16 @@ export function useStudioExecution() {
           const sceneDescription = combinedInput || 'Uma cena cinematográfica';
           
           if (hasReferenceImages) {
-            const parts: string[] = [
-              `Place the provided subjects into this scene: ${sceneDescription}`,
-              `Style: Cinematic photography, professional lighting, aspect ratio ${aspectRatio}, photorealistic`,
-              `Sequence: Frame ${i + 1} of ${frameCount} — ${stage}`,
-            ];
+            const parts: string[] = [];
             if (isFollowUpFrame) {
-              parts.push(`CONSISTENCY: Match the first reference image exactly — same person, same product, same lighting. Only vary the camera angle/pose slightly for animation.`);
+              parts.push(`EDIT the first image (frame reference): keep the EXACT same person and product, only change the pose/angle slightly for animation.`);
+              parts.push(`Scene: ${sceneDescription}`);
+            } else {
+              parts.push(`Create a PHOTOMONTAGE: cut the person and product from the provided photos and paste them into this scene: ${sceneDescription}`);
+              parts.push(`The person's face must be IDENTICAL to the photo. The product packaging must be IDENTICAL to the photo.`);
             }
-            // Add format info if present
+            parts.push(`Style: Cinematic photography, professional lighting, aspect ratio ${aspectRatio}`);
+            parts.push(`Animation sequence: Frame ${i + 1} of ${frameCount} — ${stage}`);
             if (formatWidth && formatHeight) {
               parts.push(`Format: ${formatPlatform || 'social media'} ${formatContentType || 'post'}, ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px)`);
             }
