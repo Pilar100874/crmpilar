@@ -796,72 +796,73 @@ const AICreativeStudioInner: React.FC = () => {
             </div>
           );
         })()}
-        <div className="flex items-center gap-2 px-3 py-1.5 flex-wrap">
+        <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 overflow-x-auto scrollbar-hide">
           <Button
             size="sm"
             onClick={() => handleExecute()}
             disabled={isExecuting || nodes.length === 0}
-            className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-lg text-xs h-8"
+            className="gap-1.5 sm:gap-2 bg-primary hover:bg-primary/90 text-primary-foreground border-0 rounded-lg text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0"
           >
-            <Play className="h-3.5 w-3.5" />
-            {isExecuting ? 'Executando...' : 'Executar Tudo'}
+            <Play className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+            <span className="hidden xs:inline">{isExecuting ? 'Executando...' : 'Executar'}</span>
+            <span className="xs:hidden">{isExecuting ? '...' : '▶'}</span>
           </Button>
           {selectedNode && (
             <Button
               size="sm"
               onClick={handleExecuteFromNode}
               disabled={isExecuting}
-              className="gap-2 bg-warning hover:bg-warning/90 text-warning-foreground border-0 rounded-lg text-xs h-8"
+              className="gap-1.5 bg-warning hover:bg-warning/90 text-warning-foreground border-0 rounded-lg text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0"
             >
-              <SkipForward className="h-3.5 w-3.5" />
-              Daqui em diante
+              <SkipForward className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+              <span className="hidden sm:inline">Daqui</span>
             </Button>
           )}
-          <div className="w-px h-5 bg-border" />
-          <Button size="icon" variant="ghost" onClick={deleteSelected} disabled={!selectedNode} title="Excluir" className="h-8 w-8">
-            <Trash2 className="h-3.5 w-3.5" />
+          <div className="w-px h-4 sm:h-5 bg-border shrink-0" />
+          <Button size="icon" variant="ghost" onClick={deleteSelected} disabled={!selectedNode} title="Excluir" className="h-7 w-7 sm:h-8 sm:w-8 shrink-0">
+            <Trash2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
           </Button>
-          <Button size="icon" variant="ghost" onClick={clearAll} title="Limpar" className="h-8 w-8 text-destructive/60 hover:text-destructive">
-            <Trash2 className="h-3.5 w-3.5" />
+          <Button size="icon" variant="ghost" onClick={clearAll} title="Limpar" className="h-7 w-7 sm:h-8 sm:w-8 text-destructive/60 hover:text-destructive shrink-0">
+            <Trash2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
           </Button>
-          <div className="w-px h-5 bg-border" />
+          <div className="w-px h-4 sm:h-5 bg-border shrink-0" />
           <Button
             size="sm"
             variant="ghost"
             onClick={handleSaveWorkflow}
             disabled={nodes.length === 0 || saving}
-            className="gap-1.5 text-xs h-8"
+            className="gap-1 sm:gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0"
           >
-            <Save className="h-3.5 w-3.5" />
-            {saving ? 'Salvando...' : 'Salvar'}
+            <Save className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+            <span className="hidden sm:inline">{saving ? 'Salvando...' : 'Salvar'}</span>
           </Button>
           {currentWorkflowName && (
-            <span className="text-[11px] text-muted-foreground max-w-[120px] truncate" title={currentWorkflowName}>
+            <span className="text-[10px] sm:text-[11px] text-muted-foreground max-w-[80px] sm:max-w-[120px] truncate shrink-0 hidden md:inline" title={currentWorkflowName}>
               {currentWorkflowName}
             </span>
           )}
-          <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1.5 text-xs h-8">
-            <Clapperboard className="h-3.5 w-3.5" />
+          <Button size="sm" variant="ghost" onClick={() => setShowPresets(true)} className="gap-1 sm:gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0 hidden sm:flex">
+            <Clapperboard className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
             Presets
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} className="gap-1.5 text-xs h-8">
-            <Settings2 className="h-3.5 w-3.5" />
+          <Button size="sm" variant="ghost" onClick={() => setShowSettings(true)} className="gap-1 sm:gap-1.5 text-[10px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 shrink-0 hidden sm:flex">
+            <Settings2 className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
             Config
           </Button>
-          <div className="w-px h-5 bg-border" />
+          <div className="w-px h-4 sm:h-5 bg-border shrink-0 hidden sm:block" />
           <Button
             size="icon"
             variant="ghost"
             onClick={() => setIsFullscreen(!isFullscreen)}
             title={isFullscreen ? 'Sair do Fullscreen' : 'Tela Cheia'}
-            className="h-8 w-8"
+            className="h-7 w-7 sm:h-8 sm:w-8 shrink-0"
           >
-            {isFullscreen ? <Minimize className="h-3.5 w-3.5" /> : <Maximize className="h-3.5 w-3.5" />}
+            {isFullscreen ? <Minimize className="h-3 sm:h-3.5 w-3 sm:w-3.5" /> : <Maximize className="h-3 sm:h-3.5 w-3 sm:w-3.5" />}
           </Button>
-          <div className="flex-1" />
-          <Button size="sm" variant="ghost" onClick={handleCloseCanvas} className="text-xs h-8 gap-1.5">
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Fechar
+          <div className="flex-1 min-w-0" />
+          <Button size="sm" variant="ghost" onClick={handleCloseCanvas} className="text-[10px] sm:text-xs h-7 sm:h-8 gap-1 sm:gap-1.5 px-2 sm:px-3 shrink-0">
+            <ArrowLeft className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
+            <span className="hidden sm:inline">Fechar</span>
           </Button>
         </div>
       </div>
