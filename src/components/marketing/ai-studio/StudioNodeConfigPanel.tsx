@@ -853,6 +853,33 @@ const StudioNodeConfigPanel: React.FC<Props> = ({ node, onUpdateConfig, onClose,
                     );
                   }
 
+                  // Providers with fixed duration options use Select, others use Slider
+                  const fixedOptions: { value: number; label: string }[] | null =
+                    isSora ? [{ value: 4, label: '4 segundos' }, { value: 8, label: '8 segundos' }, { value: 12, label: '12 segundos' }] :
+                    isRunway ? [{ value: 5, label: '5 segundos' }, { value: 10, label: '10 segundos' }] :
+                    isKling ? [{ value: 5, label: '5 segundos' }, { value: 10, label: '10 segundos' }] :
+                    null;
+
+                  if (fixedOptions) {
+                    return (
+                      <>
+                        <ConfigField label="Duração do Vídeo">
+                          <Select value={String(config.duration || defaultDur)} onValueChange={(v) => update('duration', Number(v))}>
+                            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {fixedOptions.map((opt) => (
+                                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </ConfigField>
+                        {durationNote && (
+                          <p className="text-[10px] text-muted-foreground -mt-1">{durationNote}</p>
+                        )}
+                      </>
+                    );
+                  }
+
                   return (
                     <>
                       <ConfigField label={`Duração (${config.duration || defaultDur}s)`}>
