@@ -83,7 +83,7 @@ export default function Login() {
               alt="Marca Pilar"
               className="h-20 md:h-24 w-auto object-contain"
               onError={(e) => {
-                (e.currentTarget as HTMLImageElement).src = logoFallback;
+                (e.currentTarget as HTMLImageElement).src = fallbackBrand;
               }}
             />
           </div>
