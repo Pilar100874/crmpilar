@@ -76,9 +76,9 @@ export default function Login() {
 
       <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6">
         <div className="text-center">
-          <div className="inline-flex justify-center rounded-2xl bg-background/10 backdrop-blur-sm border border-primary-foreground/20 p-3">
+          <div className="inline-flex justify-center rounded-2xl bg-card border border-border shadow-lg p-2">
             <img
-              src={logo3}
+              src={logoPilar}
               alt="Logo Pilar"
               className="h-20 md:h-24 w-auto object-contain"
             />
