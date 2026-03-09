@@ -1227,37 +1227,39 @@ const StudioNodeComponent: React.FC<NodeProps> = ({ data, selected, id }) => {
             {resultVideo && (
               <div className="relative group px-3 pb-3 pt-1">
                 <div 
-                  className="rounded-xl overflow-hidden border border-border/50"
+                  className="rounded-xl overflow-hidden border border-border/50 relative"
                   style={{ boxShadow: `0 4px 20px -4px ${accent}20` }}
                 >
                   <video
                     src={resultVideo}
                     controls
+                    controlsList="nofullscreen"
                     className="w-full object-cover"
                     style={{ maxHeight: 200 }}
                   />
-                </div>
-                <div className="absolute top-3 right-5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const link = document.createElement('a');
-                      link.href = resultVideo;
-                      link.download = `studio-${nodeData.type}-${id}.mp4`;
-                      link.click();
-                    }}
-                    className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
-                    title="Download"
-                  >
-                    <Download className="h-3 w-3 text-white" />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setVideoPreviewOpen(true); }}
-                    className="p-1.5 rounded-lg bg-black/60 backdrop-blur-sm hover:bg-black/80 transition-colors"
-                    title="Expandir"
-                  >
-                    <Maximize2 className="h-3 w-3 text-white" />
-                  </button>
+                  {/* Always-visible overlay buttons */}
+                  <div className="absolute top-2 right-2 flex gap-1 z-10">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const link = document.createElement('a');
+                        link.href = resultVideo;
+                        link.download = `studio-${nodeData.type}-${id}.mp4`;
+                        link.click();
+                      }}
+                      className="p-1.5 rounded-lg bg-black/70 hover:bg-black/90 transition-colors"
+                      title="Download"
+                    >
+                      <Download className="h-3 w-3 text-white" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setVideoPreviewOpen(true); }}
+                      className="p-1.5 rounded-lg bg-black/70 hover:bg-black/90 transition-colors"
+                      title="Expandir"
+                    >
+                      <Maximize2 className="h-3 w-3 text-white" />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
