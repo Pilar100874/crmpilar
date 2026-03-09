@@ -123,7 +123,7 @@ const PRESETS: Preset[] = [
   {
     id: 'sora-abstract-particles', name: 'Partículas Abstratas',
     description: 'Partículas luminosas dançando no espaço escuro. Otimizado para Sora.',
-    prompt: 'Abstract glowing particles dancing gracefully in dark space, soft blue and gold light trails, mesmerizing particle system, elegant motion graphics',
+    prompt: 'Partículas luminosas abstratas dançando graciosamente no espaço escuro, trilhas de luz azul e dourada suaves, sistema de partículas hipnotizante, motion graphics elegante',
     image: presetImageArt, category: 'video', videoSubcategory: 'sora', toolType: 'videoGen', isVideo: true, videoModel: 'openai/sora-2', duration: 4,
   },
   {
