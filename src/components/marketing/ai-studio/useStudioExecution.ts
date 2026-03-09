@@ -229,9 +229,34 @@ export function useStudioExecution() {
       case 'systemPrompt':
         return { _isSystemPrompt: true, text: config.systemPrompt || '' };
 
-      case 'imageInput':
-        // Return all images as an array of imageUrl objects
-        return { imageUrls: config.images || [], imageUrl: config.images?.[0] };
+      case 'imageInput': {
+        // Return all images as an array of imageUrl objects, with optional reference role
+        const role = config.referenceRole;
+        const roleDescMap: Record<string, string> = {
+          influencer: '[PESSOA/INFLUENCER - NÃO ALTERAR] Você DEVE reproduzir esta pessoa EXATAMENTE como aparece: mesmo rosto, tom de pele, cabelo, traços faciais e aparência geral.',
+          logo: '[LOGO - NÃO ALTERAR] Reproduza este logo/marca EXATAMENTE como aparece, sem modificar cores, tipografia ou elementos gráficos.',
+          produto: '[PRODUTO - NÃO ALTERAR] Mantenha este produto EXATAMENTE como aparece na imagem de referência.',
+          ambiente: '[AMBIENTE - REFERÊNCIA FLEXÍVEL] Use como inspiração para o cenário/fundo.',
+          estilo: 'Use como referência de estilo visual.',
+          paleta: 'Use como referência de paleta de cores.',
+          textura: 'Use como referência de textura/material.',
+          pose: 'Use como referência de pose corporal.',
+          roupa: '[ROUPA - NÃO ALTERAR] Mantenha a roupa EXATAMENTE como aparece na referência.',
+        };
+        const images = config.images || [];
+        if (images.length === 0 && !role) {
+          return { imageUrls: [], imageUrl: undefined };
+        }
+        if (images.length === 0 && role) {
+          // Optional reference block with no image — skip silently
+          return null;
+        }
+        return {
+          imageUrls: images,
+          imageUrl: images[0],
+          ...(role ? { _referenceRole: role, _referenceDesc: roleDescMap[role] || 'Use esta imagem como referência visual.' } : {}),
+        };
+      }
 
       case 'productImageSelect':
         // Return the selected product image as reference with role context
@@ -247,7 +272,8 @@ export function useStudioExecution() {
         if (allEdges && allNodes && hasDownstreamRandomPick(node.id, allEdges, allNodes)) {
           return { _referenceRole: 'produto', _referenceDesc: '[PRODUTO] Imagem aleatória da galeria de produtos.', _skipNoImage: true };
         }
-        throw new Error('Nenhum produto selecionado. Selecione um produto com imagem.');
+        // Optional block — return null to skip silently
+        return null;
 
       case 'galleryInfluencer':
       case 'galleryAmbiente':
@@ -293,7 +319,8 @@ export function useStudioExecution() {
           const role = type.replace('gallery', '').toLowerCase();
           return { _referenceRole: role, _referenceDesc: skipRoleMap[type] || 'Referência visual.', _skipNoImage: true };
         }
-        throw new Error('Nenhuma imagem selecionada da galeria. Selecione uma imagem.');
+        // Optional block — return null to skip silently
+        return null;
       }
 
       case 'textStyle':
@@ -459,28 +486,39 @@ export function useStudioExecution() {
       }
 
       case 'videoGen': {
-        let videoPrompt = combinedInput || 'A cinematic scene';
+        let videoPrompt = combinedInput || 'Uma cena cinematográfica';
         const aspectRatio = config.aspectRatio || '16:9';
         const videoModel = config.videoModel || 'free/gif-animated';
 
-        // Enrich prompt with reference descriptions (same logic as imageGen)
-        if (formatWidth && formatHeight) {
-          videoPrompt = `${videoPrompt}\n\n[FORMAT] Generate this video optimized for ${formatPlatform || 'social media'} ${formatContentType || 'post'}, aspect ratio ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
+        // Auto-detect product + influencer without explicit placement prompt → default to holding (same as imageGen)
+        const hasProductVideo = inputs.some((i) => i?._referenceRole === 'produto');
+        const hasInfluencerVideo = inputs.some((i) => i?._referenceRole === 'influencer');
+        const promptLowerVideo = (combinedInput || '').toLowerCase();
+        const hasPlacementHintVideo = /mesa|chão|prateleira|vitrine|cenário|cena|fundo|background|scene|table|shelf|display|flat\s*lay/i.test(promptLowerVideo);
+
+        if (hasProductVideo && hasInfluencerVideo && !hasPlacementHintVideo) {
+          videoPrompt = `${videoPrompt}\n\n[INSTRUÇÃO PADRÃO] A pessoa/influencer deve estar SEGURANDO o produto na mão, mostrando-o de forma natural e elegante. O produto deve estar visível e em destaque na mão da pessoa.`;
         }
+
+        // Inject platform format dimensions
+        if (formatWidth && formatHeight) {
+          videoPrompt = `${videoPrompt}\n\n[FORMAT] Gere este vídeo otimizado para ${formatPlatform || 'redes sociais'} ${formatContentType || 'post'}, proporção ${formatAspectRatio || '1:1'} (${formatWidth}x${formatHeight}px).`;
+        }
+        // Inject reference descriptions with fidelity instructions (same as imageGen)
         if (referenceDescs.length > 0) {
           const positionLabels = bucketedImages.map((b, idx) => {
             const roleLabel: Record<string, string> = {
-              logo: 'LOGO (preserve exactly)', produto: 'PRODUCT (preserve exactly)',
-              influencer: 'PERSON/INFLUENCER (preserve exactly)', roupa: 'CLOTHING (preserve exactly)',
-              pose: 'POSE REFERENCE', estilo: 'STYLE REFERENCE', paleta: 'COLOR PALETTE',
-              textura: 'TEXTURE REFERENCE', ambiente: 'ENVIRONMENT (flexible, background only)',
+              logo: 'LOGO (preservar exatamente)', produto: 'PRODUTO (preservar exatamente)',
+              influencer: 'PESSOA/INFLUENCER (preservar exatamente)', roupa: 'ROUPA (preservar exatamente)',
+              pose: 'REFERÊNCIA DE POSE', estilo: 'REFERÊNCIA DE ESTILO', paleta: 'PALETA DE CORES',
+              textura: 'REFERÊNCIA DE TEXTURA', ambiente: 'AMBIENTE (flexível, apenas cenário)',
             };
-            return `Image ${idx + 1}: ${roleLabel[b.role] || 'REFERENCE'}`;
+            return `Imagem ${idx + 1}: ${roleLabel[b.role] || 'REFERÊNCIA'}`;
           });
           const imagePositionHint = positionLabels.length > 0
-            ? `\n\n🔒 IMAGE ORDER (respect strictly):\n${positionLabels.join('\n')}`
+            ? `\n\n🔒 ORDEM DAS IMAGENS (respeitar rigorosamente):\n${positionLabels.join('\n')}`
             : '';
-          videoPrompt = `${videoPrompt}\n\n⚠️ CRITICAL REFERENCE INSTRUCTIONS:\nUse the provided reference images to guide the video content. Maintain consistency with the references throughout the video.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
+          videoPrompt = `${videoPrompt}\n\n⚠️ INSTRUÇÕES CRÍTICAS DE REFERÊNCIA (OBRIGATÓRIO):\nItens marcados [NÃO ALTERAR] DEVEM ser reproduzidos EXATAMENTE como mostrados — NÃO altere, reimagine ou substitua.\nReferências de ambiente afetam APENAS o fundo/cenário, NUNCA o produto, pessoa, roupa ou logo.\nMantenha consistência visual com TODAS as referências ao longo de todo o vídeo.${imagePositionHint}\n\n${referenceDescs.join('\n')}`;
         }
         
         // === PAID VIDEO MODEL PATH ===
