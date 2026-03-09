@@ -195,7 +195,7 @@ const PRESETS: Preset[] = [
   {
     id: 'video-cinematic-intro', name: 'Introdução Cinematográfica',
     description: 'Cena de abertura com câmera sobrevoando uma paisagem ao pôr do sol. Compatível com qualquer modelo.',
-    prompt: 'A smooth cinematic aerial camera flyover of a peaceful countryside landscape at golden hour, gentle camera descent, warm natural lighting, 4K commercial footage style',
+    prompt: 'Sobrevoo cinematográfico suave sobre uma paisagem campestre pacífica ao pôr do sol, câmera descendente suave, iluminação dourada natural, estilo filmagem comercial 4K',
     image: camFlythrough, category: 'video', videoSubcategory: 'geral', toolType: 'videoGen', isVideo: true,
   },
   {
