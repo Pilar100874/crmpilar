@@ -179,9 +179,9 @@ export function useStudioExecution() {
     // Collect all image URLs from inputs, bucketed by role for priority ordering
     const imageInputs: string[] = [];
     const referenceDescs: string[] = [];
-    // Priority buckets: logo > produto > influencer > roupa > pose > ambiente > others
+    // Priority buckets: produto > influencer > logo > roupa > pose > ambiente > others
     const rolePriority: Record<string, number> = {
-      logo: 0, produto: 1, influencer: 2, roupa: 3, pose: 4,
+      produto: 0, influencer: 1, logo: 2, roupa: 3, pose: 4,
       estilo: 5, paleta: 6, textura: 7, ambiente: 8, salvas: 9,
     };
     const bucketedImages: { role: string; urls: string[] }[] = [];
@@ -203,7 +203,7 @@ export function useStudioExecution() {
         referenceDescs.push(i._referenceDesc);
       }
     });
-    // Sort by priority: logo first, then produto, influencer, roupa, pose, ambiente, others last
+    // Sort by priority: produto first, then influencer, logo, roupa, pose, ambiente, others last
     bucketedImages.sort((a, b) => {
       const pa = rolePriority[a.role] ?? 99;
       const pb = rolePriority[b.role] ?? 99;
